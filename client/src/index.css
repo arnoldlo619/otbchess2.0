@@ -1,3 +1,25 @@
+/*
+ * OTB Chess — Global Design System
+ * Design Philosophy: "The Board Room" — Apple Minimalism + Chess.com Green
+ * 
+ * Core Principles:
+ * - Radical whitespace — sections breathe, nothing is crowded
+ * - One primary action per screen — every page has a single clear CTA
+ * - Chess.com green as primary brand color, white as the canvas
+ * - Illustrations do the heavy lifting — minimal explanatory text
+ * 
+ * Color System:
+ * - Background: #FFFFFF / #F0F5EE (sage)
+ * - Primary: #3D6B47 (deep forest green)
+ * - Board Green: #769656 (chess.com green)
+ * - Light Square: #EEEED2 (cream)
+ * - Text: #1A1A1A / #6B7280
+ * 
+ * Typography:
+ * - Display: Clash Display (bold, geometric, edgy)
+ * - Body: Inter (clean, legible)
+ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -40,77 +62,60 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* OTB Chess Custom Tokens */
+  --color-chess-green: var(--chess-green);
+  --color-chess-green-dark: var(--chess-green-dark);
+  --color-chess-green-light: var(--chess-green-light);
+  --color-chess-cream: var(--chess-cream);
+  --color-chess-cream-dark: var(--chess-cream-dark);
+  --color-chess-sage: var(--chess-sage);
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
+  /* OTB Chess Brand Colors */
+  --chess-green: oklch(0.44 0.12 145);        /* #3D6B47 deep forest green */
+  --chess-green-dark: oklch(0.32 0.10 145);   /* #2A4A32 darker green */
+  --chess-green-light: oklch(0.55 0.13 145);  /* #769656 chess.com board green */
+  --chess-cream: oklch(0.95 0.02 95);         /* #EEEED2 light square cream */
+  --chess-cream-dark: oklch(0.88 0.03 95);    /* #D4D4B0 slightly darker cream */
+  --chess-sage: oklch(0.97 0.01 145);         /* #F0F5EE sage white */
+
+  /* Semantic tokens */
+  --primary: var(--chess-green);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: var(--chess-sage);
+  --secondary-foreground: oklch(0.2 0.05 145);
+  --sidebar-primary: var(--chess-green);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --chart-1: var(--chess-green);
+  --chart-2: var(--chess-green-light);
+  --chart-3: var(--chess-cream);
+  --chart-4: oklch(0.65 0.10 145);
+  --chart-5: oklch(0.75 0.08 145);
+
+  --radius: 0.5rem;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
+  --foreground: oklch(0.12 0.01 145);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
+  --card-foreground: oklch(0.12 0.01 145);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
+  --popover-foreground: oklch(0.12 0.01 145);
+  --muted: oklch(0.97 0.01 145);
+  --muted-foreground: oklch(0.50 0.02 145);
+  --accent: oklch(0.97 0.01 145);
+  --accent-foreground: oklch(0.2 0.05 145);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
-}
-
-.dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --border: oklch(0.90 0.02 145);
+  --input: oklch(0.90 0.02 145);
+  --ring: var(--chess-green);
+  --sidebar: oklch(0.98 0.01 145);
+  --sidebar-foreground: oklch(0.12 0.01 145);
+  --sidebar-accent: oklch(0.95 0.02 145);
+  --sidebar-accent-foreground: oklch(0.2 0.05 145);
+  --sidebar-border: oklch(0.90 0.02 145);
+  --sidebar-ring: var(--chess-green);
 }
 
 @layer base {
@@ -119,6 +124,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -131,27 +139,20 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
+
+  h1, h2, h3 {
+    font-family: 'Clash Display', 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,16 +163,141 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
+  }
+
+  /* OTB Chess Custom Components */
+  .chess-board-bg {
+    background-image: 
+      repeating-conic-gradient(
+        oklch(0.95 0.02 95) 0% 25%, 
+        oklch(0.55 0.13 145 / 0.06) 0% 50%
+      );
+    background-size: 40px 40px;
+  }
+
+  .btn-chess-primary {
+    background-color: oklch(0.44 0.12 145);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.025em;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-chess-primary:hover {
+    background-color: oklch(0.38 0.11 145);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px oklch(0.44 0.12 145 / 0.3);
+  }
+
+  .btn-chess-secondary {
+    background-color: transparent;
+    color: oklch(0.44 0.12 145);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.025em;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.375rem;
+    border: 1.5px solid oklch(0.44 0.12 145);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-chess-secondary:hover {
+    background-color: oklch(0.44 0.12 145 / 0.06);
+    transform: translateY(-1px);
+  }
+
+  .card-chess {
+    background: white;
+    border: 1px solid oklch(0.90 0.02 145);
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .card-chess:hover {
+    border-color: oklch(0.55 0.13 145 / 0.4);
+    box-shadow: 0 8px 32px oklch(0.44 0.12 145 / 0.08);
+    transform: translateY(-2px);
+  }
+
+  .tag-elo {
+    background: oklch(0.97 0.01 145);
+    color: oklch(0.44 0.12 145);
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.25rem;
+    border: 1px solid oklch(0.90 0.02 145);
+    letter-spacing: 0.05em;
+  }
+
+  /* Fade-in animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.4s ease-out forwards;
+  }
+
+  .delay-100 { animation-delay: 0.1s; }
+  .delay-200 { animation-delay: 0.2s; }
+  .delay-300 { animation-delay: 0.3s; }
+  .delay-400 { animation-delay: 0.4s; }
+  .delay-500 { animation-delay: 0.5s; }
+  .delay-600 { animation-delay: 0.6s; }
+
+  .opacity-0-init {
+    opacity: 0;
   }
 }
