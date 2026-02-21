@@ -21,6 +21,7 @@ import { Link } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TournamentWizard } from "@/components/TournamentWizard";
 import {
   Trophy,
   Users,
@@ -59,7 +60,7 @@ function useInView(threshold = 0.15) {
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
-function Nav() {
+function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme } = useTheme();
@@ -126,7 +127,7 @@ function Nav() {
             Sign In
           </button>
           <button
-            onClick={() => toast.info("Feature coming soon")}
+            onClick={onCreateTournament}
             className="btn-chess-primary text-sm"
           >
             Start Tournament
@@ -160,7 +161,7 @@ function Nav() {
             </button>
           ))}
           <button
-            onClick={() => toast.info("Feature coming soon")}
+            onClick={onCreateTournament}
             className="btn-chess-primary w-full mt-4 text-sm"
           >
             Start Tournament
@@ -172,7 +173,7 @@ function Nav() {
 }
 
 // ─── Hero Section ────────────────────────────────────────────────────────────
-function Hero() {
+function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -226,7 +227,7 @@ function Hero() {
               style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
             >
               <button
-                onClick={() => toast.info("Feature coming soon")}
+                onClick={onCreateTournament}
                 className="btn-chess-primary flex items-center justify-center gap-2"
               >
                 Create Tournament
@@ -710,7 +711,7 @@ function Testimonials() {
 }
 
 // ─── CTA Section ─────────────────────────────────────────────────────────────
-function CTASection() {
+function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { ref, inView } = useInView();
 
   return (
@@ -728,7 +729,7 @@ function CTASection() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => toast.info("Feature coming soon")}
+              onClick={onCreateTournament}
               className="bg-white text-[#3D6B47] font-semibold text-sm px-8 py-3 rounded-md hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
             >
               Create Free Tournament
@@ -802,18 +803,21 @@ function Footer() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   return (
     <div className="min-h-screen">
-      <Nav />
-      <Hero />
+      <Nav onCreateTournament={() => setWizardOpen(true)} />
+      <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
       <HowItWorks />
       <Features />
       <Showcase />
       <PlayerDemo />
       <Testimonials />
-      <CTASection />
+      <CTASection onCreateTournament={() => setWizardOpen(true)} />
       <Footer />
+      <TournamentWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
     </div>
   );
 }
