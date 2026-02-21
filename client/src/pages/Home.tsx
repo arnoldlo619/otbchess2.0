@@ -17,8 +17,10 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { Link } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Trophy,
   Users,
@@ -35,8 +37,6 @@ import {
   Star,
   Shield,
   Globe,
-  Sun,
-  Moon,
 } from "lucide-react";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
@@ -56,38 +56,6 @@ function useInView(threshold = 0.15) {
     return () => obs.disconnect();
   }, [threshold]);
   return { ref, inView };
-}
-
-// ─── Theme Toggle Button ─────────────────────────────────────────────────────
-function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className="theme-toggle"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      title={isDark ? "Light mode" : "Dark mode"}
-    >
-      <span
-        className="transition-all duration-300"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transform: isDark ? "rotate(0deg)" : "rotate(180deg)",
-          opacity: 1,
-        }}
-      >
-        {isDark ? (
-          <Sun className="w-4 h-4" />
-        ) : (
-          <Moon className="w-4 h-4" />
-        )}
-      </span>
-    </button>
-  );
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
@@ -264,12 +232,13 @@ function Hero() {
                 Create Tournament
                 <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => toast.info("Feature coming soon")}
+              <Link
+                href="/tournament/otb-demo-2026"
                 className="btn-chess-secondary flex items-center justify-center gap-2"
               >
-                See How It Works
-              </button>
+                View Live Demo
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
 
             {/* Social proof */}
@@ -764,12 +733,12 @@ function CTASection() {
             >
               Create Free Tournament
             </button>
-            <button
-              onClick={() => toast.info("Feature coming soon")}
-              className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200"
+            <Link
+              href="/tournament/otb-demo-2026"
+              className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200 inline-block text-center"
             >
-              View Demo
-            </button>
+              View Live Demo
+            </Link>
           </div>
         </div>
       </div>
