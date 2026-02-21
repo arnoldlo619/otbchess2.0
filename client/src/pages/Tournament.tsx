@@ -38,6 +38,7 @@ import {
   Circle,
   Sun,
   Moon,
+  Shield,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -146,6 +147,17 @@ function TournamentNav() {
             <Share2 className="w-3.5 h-3.5" />
             Share
           </button>
+          <Link
+            href={`/tournament/otb-demo-2026/manage`}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
+              isDark
+                ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
+                : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+            }`}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            Director
+          </Link>
           <button
             onClick={() => toast.info("PDF export coming soon")}
             className="btn-chess-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
