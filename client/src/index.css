@@ -118,6 +118,48 @@
   --sidebar-ring: var(--chess-green);
 }
 
+/* ─── Dark Mode: Deep Forest Green CTA Aesthetic ─────────────────────────────
+ * Background: deep forest green (#2A3D2E)
+ * Sections alternate between darker/lighter greens
+ * Chess board pattern uses lighter green squares
+ * Text: white / off-white
+ * Cards: slightly lighter green surfaces
+ * ─────────────────────────────────────────────────────────────────────────── */
+.dark {
+  --background: oklch(0.20 0.06 145);           /* deep forest green */
+  --foreground: oklch(0.97 0.01 95);            /* near-white cream */
+  --card: oklch(0.25 0.07 145);                 /* slightly lighter green surface */
+  --card-foreground: oklch(0.97 0.01 95);
+  --popover: oklch(0.25 0.07 145);
+  --popover-foreground: oklch(0.97 0.01 95);
+  --primary: oklch(0.55 0.13 145);              /* brighter board green for dark mode */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.27 0.07 145);
+  --secondary-foreground: oklch(0.90 0.02 95);
+  --muted: oklch(0.27 0.07 145);
+  --muted-foreground: oklch(0.70 0.04 145);
+  --accent: oklch(0.30 0.08 145);
+  --accent-foreground: oklch(0.97 0.01 95);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 0.10);
+  --input: oklch(1 0 0 / 0.12);
+  --ring: oklch(0.55 0.13 145);
+  --sidebar: oklch(0.22 0.06 145);
+  --sidebar-foreground: oklch(0.97 0.01 95);
+  --sidebar-accent: oklch(0.27 0.07 145);
+  --sidebar-accent-foreground: oklch(0.97 0.01 95);
+  --sidebar-border: oklch(1 0 0 / 0.10);
+  --sidebar-ring: oklch(0.55 0.13 145);
+
+  /* OTB Chess dark brand overrides */
+  --chess-green: oklch(0.55 0.13 145);          /* brighter in dark mode */
+  --chess-green-dark: oklch(0.44 0.12 145);
+  --chess-green-light: oklch(0.65 0.14 145);
+  --chess-cream: oklch(0.35 0.06 145 / 0.5);   /* muted cream squares */
+  --chess-sage: oklch(0.27 0.07 145);           /* dark sage surface */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -186,6 +228,15 @@
     background-size: 40px 40px;
   }
 
+  .dark .chess-board-bg {
+    background-image:
+      repeating-conic-gradient(
+        oklch(0.28 0.08 145) 0% 25%,
+        oklch(0.22 0.06 145) 0% 50%
+      );
+    background-size: 40px 40px;
+  }
+
   .btn-chess-primary {
     background-color: oklch(0.44 0.12 145);
     color: white;
@@ -225,6 +276,15 @@
     transform: translateY(-1px);
   }
 
+  .dark .btn-chess-secondary {
+    color: oklch(0.75 0.10 145);
+    border-color: oklch(0.55 0.13 145);
+  }
+
+  .dark .btn-chess-secondary:hover {
+    background-color: oklch(0.55 0.13 145 / 0.15);
+  }
+
   .card-chess {
     background: white;
     border: 1px solid oklch(0.90 0.02 145);
@@ -238,6 +298,16 @@
     transform: translateY(-2px);
   }
 
+  .dark .card-chess {
+    background: oklch(0.25 0.07 145);
+    border-color: oklch(1 0 0 / 0.10);
+  }
+
+  .dark .card-chess:hover {
+    border-color: oklch(0.55 0.13 145 / 0.6);
+    box-shadow: 0 8px 32px oklch(0 0 0 / 0.3);
+  }
+
   .tag-elo {
     background: oklch(0.97 0.01 145);
     color: oklch(0.44 0.12 145);
@@ -248,6 +318,42 @@
     border-radius: 0.25rem;
     border: 1px solid oklch(0.90 0.02 145);
     letter-spacing: 0.05em;
+  }
+
+  .dark .tag-elo {
+    background: oklch(0.30 0.08 145);
+    color: oklch(0.75 0.10 145);
+    border-color: oklch(1 0 0 / 0.12);
+  }
+
+  /* Theme toggle button */
+  .theme-toggle {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1.5px solid oklch(0.90 0.02 145);
+    background: transparent;
+    color: oklch(0.44 0.12 145);
+    cursor: pointer;
+  }
+
+  .theme-toggle:hover {
+    background: oklch(0.97 0.01 145);
+    border-color: oklch(0.44 0.12 145 / 0.4);
+  }
+
+  .dark .theme-toggle {
+    border-color: oklch(1 0 0 / 0.15);
+    color: oklch(0.80 0.08 95);
+  }
+
+  .dark .theme-toggle:hover {
+    background: oklch(0.28 0.08 145);
+    border-color: oklch(0.55 0.13 145 / 0.5);
   }
 
   /* Fade-in animations */
