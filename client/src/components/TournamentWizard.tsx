@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
@@ -578,6 +579,149 @@ function StepTime({
   );
 }
 
+// ─── Animated QR Reveal Component ───────────────────────────────────────────
+function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean }) {
+  const [phase, setPhase] = useState<"hidden" | "appear" | "scan" | "done">("hidden");
+  const [scanY, setScanY] = useState(0);
+  const scanRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const SCAN_DURATION = 1200; // ms for one sweep
+
+  useEffect(() => {
+    // Phase 1: fade in after short delay
+    const t1 = setTimeout(() => setPhase("appear"), 120);
+    // Phase 2: start scan-line after appear animation
+    const t2 = setTimeout(() => {
+      setPhase("scan");
+      startTimeRef.current = performance.now();
+      const animate = (now: number) => {
+        const elapsed = now - (startTimeRef.current ?? now);
+        const progress = Math.min(elapsed / SCAN_DURATION, 1);
+        setScanY(progress * 100);
+        if (progress < 1) {
+          scanRef.current = requestAnimationFrame(animate);
+        } else {
+          setPhase("done");
+        }
+      };
+      scanRef.current = requestAnimationFrame(animate);
+    }, 600);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      if (scanRef.current) cancelAnimationFrame(scanRef.current);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`flex flex-col items-center gap-3 py-5 rounded-xl border transition-all duration-500 ${
+        phase === "hidden" ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"
+      } ${
+        isDark ? "border-white/12 bg-white/03" : "border-[#D1FAE5] bg-[#F0FDF4]"
+      }`}
+      style={{ transition: "opacity 0.5s ease, transform 0.5s ease" }}
+    >
+      {/* QR wrapper with scan-line overlay */}
+      <div className="relative" style={{ width: 160, height: 160 }}>
+        {/* White background pad */}
+        <div
+          className="absolute inset-0 rounded-xl bg-white"
+          style={{
+            boxShadow: phase === "done"
+              ? "0 0 0 3px #3D6B47, 0 8px 24px rgba(61,107,71,0.25)"
+              : "0 0 0 2px rgba(61,107,71,0.15), 0 4px 12px rgba(0,0,0,0.08)",
+            transition: "box-shadow 0.4s ease",
+          }}
+        />
+        {/* Actual QR code */}
+        <div className="absolute inset-0 flex items-center justify-center p-3">
+          <QRCodeSVG
+            value={inviteUrl}
+            size={134}
+            level="H"
+            includeMargin={false}
+            fgColor="#1a1a1a"
+            bgColor="#ffffff"
+          />
+        </div>
+        {/* Corner finder brackets */}
+        {[
+          "top-1 left-1",
+          "top-1 right-1",
+          "bottom-1 left-1",
+          "bottom-1 right-1",
+        ].map((pos) => (
+          <div
+            key={pos}
+            className={`absolute w-5 h-5 ${
+              pos.includes("top") && pos.includes("left") ? "border-t-2 border-l-2 rounded-tl-lg" :
+              pos.includes("top") && pos.includes("right") ? "border-t-2 border-r-2 rounded-tr-lg" :
+              pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-lg" :
+              "border-b-2 border-r-2 rounded-br-lg"
+            } transition-all duration-700 ${
+              phase === "done" ? "border-[#3D6B47] opacity-100" : "border-[#3D6B47]/40 opacity-60"
+            }`}
+            style={{ [pos.split(" ")[0]]: 4, [pos.split(" ")[1]]: 4 }}
+          />
+        ))}
+        {/* Scan line */}
+        {phase === "scan" && (
+          <div
+            className="absolute left-2 right-2 pointer-events-none"
+            style={{
+              top: `${scanY}%`,
+              height: 2,
+              background: "linear-gradient(90deg, transparent 0%, #4CAF50 20%, #4CAF50 80%, transparent 100%)",
+              boxShadow: "0 0 8px 2px rgba(76,175,80,0.6), 0 0 20px 4px rgba(76,175,80,0.25)",
+              borderRadius: 2,
+            }}
+          />
+        )}
+        {/* Done checkmark overlay */}
+        {phase === "done" && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ animation: "fadeInScale 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards" }}
+          >
+            <div
+              className="w-10 h-10 rounded-full bg-[#3D6B47] flex items-center justify-center"
+              style={{ boxShadow: "0 4px 16px rgba(61,107,71,0.45)" }}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Label */}
+      <div className="flex flex-col items-center gap-1">
+        <p
+          className={`text-xs font-semibold transition-colors duration-500 ${
+            phase === "done"
+              ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+              : "text-muted-foreground"
+          }`}
+        >
+          {phase === "done" ? "Ready to scan!" : phase === "scan" ? "Generating QR…" : "QR code — players scan to join"}
+        </p>
+        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          {inviteUrl.replace("https://", "")}
+        </p>
+      </div>
+
+      <style>{`
+        @keyframes fadeInScale {
+          from { opacity: 0; transform: scale(0.5); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // ─── Step 4: Invite & Share ───────────────────────────────────────────────────
 function StepShare({ data }: { data: WizardData }) {
   const { theme } = useTheme();
@@ -663,33 +807,8 @@ function StepShare({ data }: { data: WizardData }) {
         </div>
       </Field>
 
-      {/* QR placeholder */}
-      <div className={`flex flex-col items-center gap-3 py-5 rounded-xl border border-dashed ${
-        isDark ? "border-white/15 bg-white/03" : "border-[#D1D5DB] bg-[#F9FAF8]"
-      }`}>
-        {/* Minimal QR grid visual */}
-        <div className="grid grid-cols-7 gap-0.5 opacity-60">
-          {Array.from({ length: 49 }).map((_, i) => {
-            const pattern = [
-              1,1,1,1,1,1,1,
-              1,0,0,0,0,0,1,
-              1,0,1,0,1,0,1,
-              1,0,0,1,0,0,1,
-              1,0,1,0,1,0,1,
-              1,0,0,0,0,0,1,
-              1,1,1,1,1,1,1,
-            ];
-            const filled = pattern[i] === 1 || Math.random() > 0.55;
-            return (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-sm ${filled ? (isDark ? "bg-white/70" : "bg-[#1A1A1A]") : "bg-transparent"}`}
-              />
-            );
-          })}
-        </div>
-        <p className="text-xs text-muted-foreground">QR code — players scan to join</p>
-      </div>
+      {/* QR Code — animated reveal */}
+      <AnimatedQR inviteUrl={inviteUrl} isDark={isDark} />
 
       {/* Next steps hint */}
       <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs ${
