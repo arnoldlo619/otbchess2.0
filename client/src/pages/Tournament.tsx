@@ -112,34 +112,39 @@ function TournamentNav() {
   const isDark = theme === "dark";
 
   return (
-    <nav className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
-      isDark
-        ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"
-        : "bg-white/95 backdrop-blur-md border-[#EEEED2]"
-    }`}>
+    <nav
+      className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
+        isDark
+          ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"
+          : "bg-white/95 backdrop-blur-md border-[#EEEED2]"
+      }`}
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <div className="container flex items-center justify-between h-14 gap-2">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <Link href="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href="/"
+            className="touch-target -ml-1 flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 active:scale-95"
+          >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:block">Back</span>
           </Link>
-          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-white/15" : "bg-[#EEEED2]"}`} />
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-6 h-6 bg-[#3D6B47] rounded flex items-center justify-center flex-shrink-0">
               <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
             </div>
-            <span className="text-sm font-semibold text-foreground hidden md:block" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <span className="text-sm font-semibold text-foreground hidden sm:block truncate max-w-[130px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               OTB Chess
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5">
           <LiveBadge />
           <ThemeToggle />
           <button
             onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
-            className={`flex items-center gap-1.5 text-xs font-medium px-2 sm:px-3 py-1.5 rounded-md border transition-colors ${
+            className={`touch-target flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
                 : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
@@ -149,19 +154,8 @@ function TournamentNav() {
             <span className="hidden sm:block">Share</span>
           </button>
           <Link
-            href={`/tournament/otb-demo-2026/print`}
-            className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
-              isDark
-                ? "border-white/15 text-white/70 hover:bg-white/08"
-                : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
-            }`}
-          >
-            <Printer className="w-3.5 h-3.5" />
-            Print
-          </Link>
-          <Link
             href={`/tournament/otb-demo-2026/manage`}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-md border transition-colors ${
+            className={`touch-target flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
                 : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
@@ -170,13 +164,17 @@ function TournamentNav() {
             <Shield className="w-3.5 h-3.5" />
             <span className="hidden sm:block">Director</span>
           </Link>
-          <button
-            onClick={() => toast.info("PDF export coming soon")}
-            className="btn-chess-primary text-xs px-2 sm:px-3 py-1.5 flex items-center gap-1.5"
+          <Link
+            href={`/tournament/otb-demo-2026/print`}
+            className={`hidden sm:flex touch-target items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
+              isDark
+                ? "border-white/15 text-white/70 hover:bg-white/08"
+                : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
+            }`}
           >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:block">Export</span>
-          </button>
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print</span>
+          </Link>
         </div>
       </div>
     </nav>

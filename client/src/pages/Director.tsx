@@ -447,36 +447,25 @@ export default function Director() {
             ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
             : "bg-white/95 backdrop-blur-md border-gray-100"
         }`}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
-          {/* Left: Logo + back */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-7 h-7 bg-[#3D6B47] rounded-md flex items-center justify-center">
-                <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-              </div>
-              <span
-                className={`font-semibold text-sm hidden sm:block ${isDark ? "text-white/80" : "text-gray-600"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                OTB Chess
-              </span>
-            </Link>
-            <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
+          {/* Left: back + breadcrumb */}
+          <div className="flex items-center gap-2 min-w-0">
             <Link
               href={`/tournament/${id ?? "otb-demo-2026"}`}
-              className={`flex items-center gap-1 text-sm transition-colors ${
+              className={`touch-target -ml-1 flex items-center gap-1 text-sm transition-colors active:scale-95 ${
                 isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700"
               }`}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              Standings
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:block">Standings</span>
             </Link>
             <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-[#3D6B47]" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Shield className="w-3.5 h-3.5 text-[#3D6B47] flex-shrink-0" />
               <span
-                className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Director
@@ -498,24 +487,24 @@ export default function Director() {
           </div>
 
           {/* Right: Status + controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span
-              className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+              className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ${
                 state.status === "paused"
                   ? isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600"
                   : isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
               }`}
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full ${
+                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                   state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
                 }`}
               />
-              {state.status === "paused" ? "Paused" : "Live"}
+              <span className="hidden sm:block">{state.status === "paused" ? "Paused" : "Live"}</span>
             </span>
             <button
               onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); }}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
                 isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
               }`}
               title={state.status === "paused" ? "Resume" : "Pause"}
@@ -524,7 +513,7 @@ export default function Director() {
             </button>
             <button
               onClick={() => toast.info("Announcement feature coming soon")}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`touch-target p-2 rounded-xl transition-all active:scale-95 hidden sm:flex ${
                 isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
               }`}
               title="Announce"
@@ -670,9 +659,9 @@ export default function Director() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Tab switcher */}
+              {/* Tab switcher — pill style, large touch targets */}
               <div
-                className={`flex rounded-lg p-0.5 text-xs ${
+                className={`flex rounded-xl p-1 text-xs ${
                   isDark ? "bg-white/08" : "bg-gray-100"
                 }`}
               >
@@ -680,10 +669,10 @@ export default function Director() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-2 sm:px-3 py-1.5 rounded-md font-medium capitalize transition-all ${
+                    className={`touch-target px-3 py-1.5 rounded-lg font-medium capitalize transition-all active:scale-95 ${
                       activeTab === tab
                         ? isDark
-                          ? "bg-[#3D6B47] text-white"
+                          ? "bg-[#3D6B47] text-white shadow-sm"
                           : "bg-white text-gray-900 shadow-sm"
                         : isDark
                         ? "text-white/50 hover:text-white/70"
@@ -694,7 +683,6 @@ export default function Director() {
                   </button>
                 ))}
               </div>
-
               {/* Generate Next Round */}
               {canGenerateNext && (
                 <button
@@ -702,10 +690,11 @@ export default function Director() {
                     generateNextRound();
                     toast.success(`Round ${state.currentRound + 1} pairings generated!`);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#3D6B47] text-white text-xs font-semibold rounded-lg hover:bg-[#2A4A32] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg shadow-[#3D6B47]/30"
+                  className="touch-target flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-[#3D6B47] text-white text-xs font-semibold rounded-xl hover:bg-[#2A4A32] transition-all duration-200 active:scale-95 shadow-md shadow-[#3D6B47]/30"
                 >
                   <Zap className="w-3.5 h-3.5" />
-                  Generate Round {state.currentRound + 1}
+                  <span className="hidden sm:block">Generate Round {state.currentRound + 1}</span>
+                  <span className="sm:hidden">R{state.currentRound + 1}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
