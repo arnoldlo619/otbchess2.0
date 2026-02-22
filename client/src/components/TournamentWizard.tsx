@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { useConfetti } from "@/hooks/useConfetti";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
@@ -836,6 +837,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA, inviteCode: nanoid(8) });
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { fireConfetti } = useConfetti();
 
   // Reset on open
   useEffect(() => {
@@ -860,8 +862,17 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < STEPS.length - 1) setStep((s) => s + 1);
-    else onClose();
+    if (step < STEPS.length - 1) {
+      const nextStep = step + 1;
+      setStep(nextStep);
+      // Fire confetti when reaching the final Share step
+      if (nextStep === STEPS.length - 1) {
+        // Small delay so the modal content has settled into view
+        setTimeout(() => fireConfetti(130), 200);
+      }
+    } else {
+      onClose();
+    }
   };
 
   const handleBack = () => {
