@@ -11,6 +11,7 @@
  */
 
 import { useState } from "react";
+import { QRModal } from "@/components/QRModal";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -381,7 +382,9 @@ export default function Director() {
   } = useDirectorState();
 
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
+  const [showQR, setShowQR] = useState(false);
   const standings = getStandings(state.players);
+  const joinUrl = `${window.location.origin}/join/${id ?? "otb-demo-2026"}`;
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;
   const totalGames = currentRoundData?.games.length ?? 0;
 
@@ -572,7 +575,16 @@ export default function Director() {
           {/* Quick actions */}
           <div className="space-y-2">
             <button
-              onClick={() => { navigator.clipboard.writeText(`https://otbchess.app/join/${id ?? "otb-demo-2026"}`); toast.success("Join link copied!"); }}
+              onClick={() => setShowQR(true)}
+              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold border transition-all ${
+                isDark ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
+              Show QR Code
+            </button>
+            <button
+              onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
               className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium border transition-colors ${
                 isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
@@ -959,6 +971,15 @@ export default function Director() {
           )}
         </main>
       </div>
+
+      {/* ── QR Modal ─────────────────────────────────────────────────────────── */}
+      <QRModal
+        open={showQR}
+        onClose={() => setShowQR(false)}
+        tournamentName={DEMO_TOURNAMENT.name}
+        joinUrl={joinUrl}
+        code="OTB2026"
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import TournamentPage from "./pages/Tournament";
 import Director from "./pages/Director";
 import PrintPage from "./pages/Print";
+import JoinPage from "./pages/Join";
 
 
 function Router() {
@@ -17,6 +18,8 @@ function Router() {
       <Route path={"/tournament/:id"} component={TournamentPage} />
       <Route path={"/tournament/:id/manage"} component={Director} />
       <Route path={"/tournament/:id/print"} component={PrintPage} />
+      <Route path={"/join/:code"} component={JoinPage} />
+      <Route path={"/join"} component={JoinPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
