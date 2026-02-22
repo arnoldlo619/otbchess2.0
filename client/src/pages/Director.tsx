@@ -579,14 +579,14 @@ export default function Director() {
             >
               <Copy className="w-3.5 h-3.5" /> Copy join link
             </button>
-            <button
-              onClick={() => toast.info("Export feature coming soon")}
+            <Link
+              href={`/tournament/${id ?? "otb-demo-2026"}/print`}
               className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium border transition-colors ${
                 isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <Download className="w-3.5 h-3.5" /> Export results (PDF)
-            </button>
+              <Download className="w-3.5 h-3.5" /> Pairings &amp; Print Sheet
+            </Link>
           </div>
         </aside>
 

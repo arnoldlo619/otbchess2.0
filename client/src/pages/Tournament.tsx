@@ -39,6 +39,7 @@ import {
   Sun,
   Moon,
   Shield,
+  Printer,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -147,6 +148,17 @@ function TournamentNav() {
             <Share2 className="w-3.5 h-3.5" />
             Share
           </button>
+          <Link
+            href={`/tournament/otb-demo-2026/print`}
+            className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
+              isDark
+                ? "border-white/15 text-white/70 hover:bg-white/08"
+                : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
+            }`}
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Print
+          </Link>
           <Link
             href={`/tournament/otb-demo-2026/manage`}
             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
