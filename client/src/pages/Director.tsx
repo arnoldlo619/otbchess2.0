@@ -402,7 +402,7 @@ export default function Director() {
             : "bg-white/95 backdrop-blur-md border-gray-100"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
           {/* Left: Logo + back */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2 group">
@@ -439,7 +439,7 @@ export default function Director() {
           </div>
 
           {/* Center: Tournament name */}
-          <div className="hidden md:block text-center">
+          <div className="hidden lg:block text-center">
             <p
               className={`text-xs font-semibold truncate max-w-xs ${isDark ? "text-white/70" : "text-gray-700"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -491,7 +491,7 @@ export default function Director() {
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex gap-6">
         {/* ── Left Sidebar ──────────────────────────────────────────────────── */}
         <aside className="hidden lg:flex flex-col gap-4 w-64 flex-shrink-0">
           {/* Event Info Card */}
@@ -605,7 +605,7 @@ export default function Director() {
         {/* ── Main Panel ────────────────────────────────────────────────────── */}
         <main className="flex-1 min-w-0 space-y-5">
           {/* Page Title + Generate Next Round CTA */}
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <h1
                 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
@@ -634,7 +634,7 @@ export default function Director() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-3 py-1.5 rounded-md font-medium capitalize transition-all ${
+                    className={`px-2 sm:px-3 py-1.5 rounded-md font-medium capitalize transition-all ${
                       activeTab === tab
                         ? isDark
                           ? "bg-[#3D6B47] text-white"
@@ -800,12 +800,11 @@ export default function Director() {
 
           {/* ── Players Tab ─────────────────────────────────────────────────── */}
           {activeTab === "players" && (
-            <div
-              className={`rounded-xl border overflow-hidden ${
+            <div className="space-y-3">
+              {/* Header */}
+              <div className={`rounded-xl border px-4 py-3 ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
-              }`}
-            >
-              <div className={`px-5 py-3 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
+              }`}>
                 <h2
                   className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -813,66 +812,121 @@ export default function Director() {
                   Player Roster · {state.players.length} players
                 </h2>
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-white/06">
-                {standings.map((p, i) => (
-                  <div
-                    key={p.id}
-                    className={`flex items-center gap-4 px-5 py-3 transition-colors ${
-                      isDark ? "hover:bg-white/03 divide-white/06" : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <span
-                      className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}
+
+              {/* Desktop: list view */}
+              <div className={`hidden sm:block rounded-xl border overflow-hidden ${
+                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+              }`}>
+                <div className="divide-y divide-gray-100">
+                  {standings.map((p, i) => (
+                    <div
+                      key={p.id}
+                      className={`flex items-center gap-4 px-5 py-3 transition-colors ${
+                        isDark ? "hover:bg-white/03" : "hover:bg-gray-50"
+                      }`}
                     >
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
-                        >
-                          {p.name}
-                        </span>
-                        {p.title && (
-                          <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
-                            {p.title}
-                          </span>
-                        )}
-                        <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
-                      </div>
-                      <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                        @{p.username} · {p.elo} ELO
+                      <span className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>
+                        {i + 1}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-center">
-                      <div>
-                        <p className={`font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`}>{p.points}</p>
-                        <p className={isDark ? "text-white/30" : "text-gray-400"}>pts</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                          {p.title && (
+                            <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                          )}
+                          <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                        </div>
+                        <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
                       </div>
-                      <div className={`hidden sm:block ${isDark ? "text-white/30" : "text-gray-300"}`}>|</div>
-                      <div className="hidden sm:block">
-                        <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>
-                          {p.wins}W {p.draws}D {p.losses}L
-                        </p>
-                        <p className={isDark ? "text-white/30" : "text-gray-400"}>record</p>
-                      </div>
-                      <div className={`hidden md:block ${isDark ? "text-white/30" : "text-gray-300"}`}>|</div>
-                      <div className="hidden md:block">
-                        <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>{p.buchholz}</p>
-                        <p className={isDark ? "text-white/30" : "text-gray-400"}>Buch.</p>
-                      </div>
-                      <div className="flex gap-0.5 ml-1">
-                        {p.colorHistory.map((c, ci) => (
-                          <div
-                            key={ci}
-                            className={`w-3 h-3 rounded-sm border ${
+                      <div className="flex items-center gap-3 text-xs text-center">
+                        <div>
+                          <p className={`font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`}>{p.points}</p>
+                          <p className={isDark ? "text-white/30" : "text-gray-400"}>pts</p>
+                        </div>
+                        <div className={`${isDark ? "text-white/30" : "text-gray-300"}`}>|</div>
+                        <div>
+                          <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
+                          <p className={isDark ? "text-white/30" : "text-gray-400"}>record</p>
+                        </div>
+                        <div className={`hidden md:block ${isDark ? "text-white/30" : "text-gray-300"}`}>|</div>
+                        <div className="hidden md:block">
+                          <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>{p.buchholz}</p>
+                          <p className={isDark ? "text-white/30" : "text-gray-400"}>Buch.</p>
+                        </div>
+                        <div className="flex gap-0.5 ml-1">
+                          {p.colorHistory.map((c, ci) => (
+                            <div key={ci} className={`w-3 h-3 rounded-sm border ${
                               c === "W"
                                 ? isDark ? "bg-white/80 border-white/30" : "bg-white border-gray-300"
                                 : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-gray-800 border-gray-600"
-                            }`}
-                            title={c === "W" ? "White" : "Black"}
-                          />
-                        ))}
+                            }`} title={c === "W" ? "White" : "Black"} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile: card stack */}
+              <div className="grid grid-cols-1 gap-3 sm:hidden">
+                {standings.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className={`rounded-xl border p-4 transition-colors ${
+                      isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                    }`}
+                  >
+                    {/* Top row: rank + name + score */}
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`text-xs font-bold w-5 text-center ${
+                          i === 0 ? "text-amber-400" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-600" : isDark ? "text-white/30" : "text-gray-300"
+                        }`}>
+                          {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                            {p.title && (
+                              <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
+                            )}
+                            <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                          </div>
+                          <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={`text-xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          {p.points % 1 !== 0 ? `${Math.floor(p.points)}½` : p.points}
+                        </p>
+                        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>points</p>
+                      </div>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className={`flex items-center justify-between pt-3 border-t ${
+                      isDark ? "border-white/08" : "border-gray-100"
+                    }`}>
+                      <div className="text-center">
+                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>{p.wins}W {p.draws}D {p.losses}L</p>
+                        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>record</p>
+                      </div>
+                      <div className="text-center">
+                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>{p.buchholz.toFixed(1)}</p>
+                        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>Buchholz</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex gap-0.5 justify-center">
+                          {p.colorHistory.map((c, ci) => (
+                            <div key={ci} className={`w-3.5 h-3.5 rounded-sm border ${
+                              c === "W"
+                                ? isDark ? "bg-white/80 border-white/30" : "bg-white border-gray-300"
+                                : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-gray-800 border-gray-600"
+                            }`} />
+                          ))}
+                        </div>
+                        <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>colors</p>
                       </div>
                     </div>
                   </div>

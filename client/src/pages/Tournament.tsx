@@ -117,36 +117,36 @@ function TournamentNav() {
         ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"
         : "bg-white/95 backdrop-blur-md border-[#EEEED2]"
     }`}>
-      <div className="container flex items-center justify-between h-14">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
+      <div className="container flex items-center justify-between h-14 gap-2">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <Link href="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <span className="text-sm font-medium hidden sm:block">Back</span>
           </Link>
-          <span className={`w-px h-4 ${isDark ? "bg-white/15" : "bg-[#EEEED2]"}`} />
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#3D6B47] rounded flex items-center justify-center">
+          <span className={`hidden sm:block w-px h-4 ${isDark ? "bg-white/15" : "bg-[#EEEED2]"}`} />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 bg-[#3D6B47] rounded flex items-center justify-center flex-shrink-0">
               <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
             </div>
-            <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <span className="text-sm font-semibold text-foreground hidden md:block" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               OTB Chess
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <LiveBadge />
           <ThemeToggle />
           <button
             onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border transition-colors ${
+            className={`flex items-center gap-1.5 text-xs font-medium px-2 sm:px-3 py-1.5 rounded-md border transition-colors ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
                 : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
             }`}
           >
             <Share2 className="w-3.5 h-3.5" />
-            Share
+            <span className="hidden sm:block">Share</span>
           </button>
           <Link
             href={`/tournament/otb-demo-2026/print`}
@@ -161,21 +161,21 @@ function TournamentNav() {
           </Link>
           <Link
             href={`/tournament/otb-demo-2026/manage`}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md border transition-colors ${
+            className={`flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-md border transition-colors ${
               isDark
                 ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
                 : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
-            Director
+            <span className="hidden sm:block">Director</span>
           </Link>
           <button
             onClick={() => toast.info("PDF export coming soon")}
-            className="btn-chess-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+            className="btn-chess-primary text-xs px-2 sm:px-3 py-1.5 flex items-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
-            Export
+            <span className="hidden sm:block">Export</span>
           </button>
         </div>
       </div>
@@ -255,6 +255,119 @@ function TournamentHeader() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Mobile Standings Accordion ─────────────────────────────────────────────
+function MobileStandingsAccordion() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const standings = getStandings(DEMO_TOURNAMENT.players);
+  const [open, setOpen] = useState(false);
+
+  const medalColor = (rank: number) => {
+    if (rank === 1) return "text-amber-400";
+    if (rank === 2) return "text-slate-400";
+    if (rank === 3) return "text-amber-600";
+    return "text-muted-foreground";
+  };
+
+  const medals = ["🥇", "🥈", "🥉"];
+
+  return (
+    <div className={`rounded-xl border overflow-hidden transition-colors duration-300 ${
+      isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-white"
+    }`}>
+      {/* Header toggle */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
+          isDark ? "hover:bg-white/04" : "hover:bg-[#F9FAF8]"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-[#3D6B47]" />
+          <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            Standings
+          </span>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${
+            isDark ? "bg-white/10 text-white/50" : "bg-[#F0F5EE] text-[#6B7280]"
+          }`}>
+            After Round 3
+          </span>
+        </div>
+        <div className={`flex items-center gap-2 text-xs text-muted-foreground`}>
+          {/* Top 3 preview when collapsed */}
+          {!open && (
+            <div className="flex items-center gap-1.5">
+              {standings.slice(0, 3).map((p, i) => (
+                <span key={p.id} className="flex items-center gap-1">
+                  <span className="text-sm">{medals[i]}</span>
+                  <span className={`text-xs font-medium ${
+                    isDark ? "text-white/70" : "text-[#374151]"
+                  }`}>{p.name.split(" ")[0]}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${
+            open ? "rotate-90" : ""
+          }`} />
+        </div>
+      </button>
+
+      {/* Expanded standings cards */}
+      {open && (
+        <div className={`border-t ${
+          isDark ? "border-white/08" : "border-[#EEEED2]"
+        }`}>
+          {standings.map((player, idx) => {
+            const rank = idx + 1;
+            const isLeader = rank === 1;
+            return (
+              <div
+                key={player.id}
+                className={`flex items-center gap-3 px-4 py-3 border-b last:border-0 transition-colors ${
+                  isLeader
+                    ? isDark
+                      ? "bg-amber-500/05 border-white/06"
+                      : "bg-amber-50/60 border-[#EEEED2]"
+                    : isDark
+                    ? "border-white/06 hover:bg-white/02"
+                    : "border-[#F5F5F5] hover:bg-[#FAFAFA]"
+                }`}
+              >
+                {/* Rank */}
+                <span className={`text-sm font-bold w-6 text-center flex-shrink-0 ${medalColor(rank)}`}>
+                  {rank <= 3 ? medals[rank - 1] : rank}
+                </span>
+
+                {/* Player info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-semibold text-foreground truncate">{player.name}</span>
+                    {player.title && <TitleBadge title={player.title} />}
+                    <span className="text-xs">{FLAG_EMOJI[player.country]}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <ELOBadge elo={player.elo} />
+                    <span className="text-xs text-muted-foreground">
+                      {player.wins}W {player.draws}D {player.losses}L
+                    </span>
+                    <span className="text-xs font-mono text-muted-foreground">Buch. {player.buchholz.toFixed(1)}</span>
+                  </div>
+                </div>
+
+                {/* Score */}
+                <div className="flex-shrink-0">
+                  <ScorePill points={player.points} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -595,15 +708,20 @@ export default function TournamentPage() {
       </div>
 
       {/* Main content */}
-      <div className="container py-8">
+      <div className="container py-4 sm:py-8">
+        {/* Mobile: Standings accordion above pairings */}
+        <div className="block lg:hidden mb-4">
+          <MobileStandingsAccordion />
+        </div>
+
         <div className="grid lg:grid-cols-[1fr_380px] gap-8">
           {/* Left: Pairings */}
           <div>
             <PairingsPanel />
           </div>
 
-          {/* Right: Standings */}
-          <div>
+          {/* Right: Standings — desktop only */}
+          <div className="hidden lg:block">
             <StandingsPanel />
           </div>
         </div>
