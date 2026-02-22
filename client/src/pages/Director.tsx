@@ -38,6 +38,12 @@ import {
   BarChart3,
   RefreshCw,
   Shield,
+  Search,
+  X,
+  SortAsc,
+  SortDesc,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -387,6 +393,46 @@ export default function Director() {
   const joinUrl = `${window.location.origin}/join/${id ?? "otb-demo-2026"}`;
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;
   const totalGames = currentRoundData?.games.length ?? 0;
+
+  // ── Player search / filter / sort state ─────────────────────────────────
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [filterTitle, setFilterTitle] = useState<string>("all");
+  const [filterCountry, setFilterCountry] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<"rank" | "elo" | "name" | "points">("rank");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Derived: filtered + sorted player list
+  const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
+  const allCountries = Array.from(new Set(standings.map((p) => p.country)));
+
+  const filteredPlayers = standings
+    .filter((p) => {
+      const q = playerSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.username.toLowerCase().includes(q) ||
+        String(p.elo).includes(q);
+      const matchesTitle = filterTitle === "all" || p.title === filterTitle || (filterTitle === "untitled" && !p.title);
+      const matchesCountry = filterCountry === "all" || p.country === filterCountry;
+      return matchesSearch && matchesTitle && matchesCountry;
+    })
+    .sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "rank")   cmp = standings.indexOf(a) - standings.indexOf(b);
+      if (sortKey === "elo")    cmp = b.elo - a.elo;
+      if (sortKey === "name")   cmp = a.name.localeCompare(b.name);
+      if (sortKey === "points") cmp = b.points - a.points;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+  const activeFilterCount = (filterTitle !== "all" ? 1 : 0) + (filterCountry !== "all" ? 1 : 0);
+
+  function toggleSort(key: typeof sortKey) {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  }
 
   return (
     <div
@@ -792,33 +838,232 @@ export default function Director() {
                           </div>
                         </div>
                       ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </>
           )}
 
           {/* ── Players Tab ─────────────────────────────────────────────────── */}
           {activeTab === "players" && (
             <div className="space-y-3">
-              {/* Header */}
-              <div className={`rounded-xl border px-4 py-3 ${
+              {/* ── Search + Filter Toolbar ──────────────────────────────────────── */}
+              <div className={`rounded-xl border p-3 space-y-3 ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
               }`}>
-                <h2
-                  className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  Player Roster · {state.players.length} players
-                </h2>
+                {/* Top row: title + search + filter toggle */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <h2
+                      className={`text-sm font-semibold flex-shrink-0 ${isDark ? "text-white/80" : "text-gray-700"}`}
+                      style={{ fontFamily: "'Clash Display', sans-serif" }}
+                    >
+                      Roster
+                    </h2>
+                    <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                      isDark ? "bg-white/10 text-white/50" : "bg-[#F0F5EE] text-[#6B7280]"
+                    }`}>
+                      {filteredPlayers.length}/{state.players.length}
+                    </span>
+                  </div>
+
+                  {/* Search input */}
+                  <div className={`relative flex-1 min-w-[160px] max-w-xs`}>
+                    <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${
+                      isDark ? "text-white/30" : "text-gray-400"
+                    }`} />
+                    <input
+                      type="text"
+                      value={playerSearch}
+                      onChange={(e) => setPlayerSearch(e.target.value)}
+                      placeholder="Search name, username, ELO…"
+                      className={`w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border outline-none transition-colors ${
+                        isDark
+                          ? "bg-white/06 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50 focus:bg-white/08"
+                          : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]/40 focus:bg-white"
+                      }`}
+                    />
+                    {playerSearch && (
+                      <button
+                        onClick={() => setPlayerSearch("")}
+                        className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${
+                          isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter toggle button */}
+                  <button
+                    onClick={() => setShowFilters((f) => !f)}
+                    className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all flex-shrink-0 ${
+                      showFilters || activeFilterCount > 0
+                        ? isDark
+                          ? "bg-[#3D6B47]/30 border-[#4CAF50]/40 text-[#4CAF50]"
+                          : "bg-[#3D6B47]/08 border-[#3D6B47]/30 text-[#3D6B47]"
+                        : isDark
+                        ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
+                        : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Filter className="w-3 h-3" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                        isDark ? "bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#3D6B47] text-white"
+                      }`}>
+                        {activeFilterCount}
+                      </span>
+                    )}
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${
+                      showFilters ? "rotate-180" : ""
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Expanded filter panel */}
+                {showFilters && (
+                  <div className={`pt-3 border-t space-y-3 ${
+                    isDark ? "border-white/08" : "border-gray-100"
+                  }`}>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Title filter */}
+                      <div>
+                        <label className={`block text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
+                          isDark ? "text-white/30" : "text-gray-400"
+                        }`}>Title</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {["all", ...allTitles, "untitled"].map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setFilterTitle(t)}
+                              className={`text-xs px-2.5 py-1 rounded-md font-medium transition-all ${
+                                filterTitle === t
+                                  ? isDark
+                                    ? "bg-[#3D6B47] text-white"
+                                    : "bg-[#3D6B47] text-white"
+                                  : isDark
+                                  ? "bg-white/06 text-white/50 hover:bg-white/10 hover:text-white/70"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                              }`}
+                            >
+                              {t === "all" ? "All titles" : t === "untitled" ? "Untitled" : t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Country filter */}
+                      <div>
+                        <label className={`block text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
+                          isDark ? "text-white/30" : "text-gray-400"
+                        }`}>Country</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {["all", ...allCountries].map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => setFilterCountry(c)}
+                              className={`text-xs px-2.5 py-1 rounded-md font-medium transition-all ${
+                                filterCountry === c
+                                  ? isDark
+                                    ? "bg-[#3D6B47] text-white"
+                                    : "bg-[#3D6B47] text-white"
+                                  : isDark
+                                  ? "bg-white/06 text-white/50 hover:bg-white/10 hover:text-white/70"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                              }`}
+                            >
+                              {c === "all" ? "All countries" : `${FLAG_EMOJI[c] ?? ""} ${c}`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clear filters */}
+                    {activeFilterCount > 0 && (
+                      <button
+                        onClick={() => { setFilterTitle("all"); setFilterCountry("all"); }}
+                        className={`text-xs font-medium flex items-center gap-1 ${
+                          isDark ? "text-red-400 hover:text-red-300" : "text-red-500 hover:text-red-600"
+                        }`}
+                      >
+                        <X className="w-3 h-3" /> Clear all filters
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Sort controls */}
+                <div className={`flex items-center gap-1.5 pt-2 border-t ${
+                  isDark ? "border-white/06" : "border-gray-50"
+                }`}>
+                  <span className={`text-[10px] font-semibold uppercase tracking-widest mr-1 ${
+                    isDark ? "text-white/30" : "text-gray-400"
+                  }`}>Sort</span>
+                  {(["rank", "points", "elo", "name"] as const).map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => toggleSort(key)}
+                      className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-medium transition-all ${
+                        sortKey === key
+                          ? isDark
+                            ? "bg-[#3D6B47]/40 text-[#4CAF50] border border-[#4CAF50]/30"
+                            : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
+                          : isDark
+                          ? "text-white/40 hover:text-white/60 border border-transparent hover:border-white/10"
+                          : "text-gray-400 hover:text-gray-600 border border-transparent hover:border-gray-200"
+                      }`}
+                    >
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                      {sortKey === key && (
+                        sortDir === "asc"
+                          ? <SortAsc className="w-3 h-3" />
+                          : <SortDesc className="w-3 h-3" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              {/* Empty state */}
+              {filteredPlayers.length === 0 && (
+                <div className={`rounded-xl border flex flex-col items-center justify-center py-12 gap-3 ${
+                  isDark ? "border-white/08 bg-[oklch(0.22_0.06_145)]" : "border-gray-100 bg-white"
+                }`}>
+                  <Search className={`w-8 h-8 ${
+                    isDark ? "text-white/20" : "text-gray-200"
+                  }`} />
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${
+                      isDark ? "text-white/50" : "text-gray-500"
+                    }`}>No players found</p>
+                    <p className={`text-xs mt-0.5 ${
+                      isDark ? "text-white/30" : "text-gray-400"
+                    }`}>Try adjusting your search or filters</p>
+                  </div>
+                  <button
+                    onClick={() => { setPlayerSearch(""); setFilterTitle("all"); setFilterCountry("all"); }}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                      isDark
+                        ? "border-white/15 text-white/50 hover:bg-white/06"
+                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    Clear search &amp; filters
+                  </button>
+                </div>
+              )}
+
               {/* Desktop: list view */}
+              {filteredPlayers.length > 0 && (
               <div className={`hidden sm:block rounded-xl border overflow-hidden ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
               }`}>
                 <div className="divide-y divide-gray-100">
-                  {standings.map((p, i) => (
+                  {filteredPlayers.map((p, i) => (
                     <div
                       key={p.id}
                       className={`flex items-center gap-4 px-5 py-3 transition-colors ${
@@ -867,10 +1112,12 @@ export default function Director() {
                   ))}
                 </div>
               </div>
+              )}
 
               {/* Mobile: card stack */}
+              {filteredPlayers.length > 0 && (
               <div className="grid grid-cols-1 gap-3 sm:hidden">
-                {standings.map((p, i) => (
+                {filteredPlayers.map((p, i) => (
                   <div
                     key={p.id}
                     className={`rounded-xl border p-4 transition-colors ${
@@ -932,6 +1179,7 @@ export default function Director() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           )}
 
