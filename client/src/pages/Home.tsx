@@ -113,6 +113,17 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
               {link}
             </button>
           ))}
+          <Link href="/tournaments">
+            <span
+              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                isDark
+                  ? "text-white/60 hover:text-white"
+                  : "text-[#4B5563] hover:text-[#3D6B47]"
+              }`}
+            >
+              Archive
+            </span>
+          </Link>
         </div>
 
         {/* CTA + Toggle */}
