@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { useCountUp } from "@/hooks/useCountUp";
 import { useParams, Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -132,6 +133,98 @@ function StepDots({ step, isDark }: { step: Step; isDark: boolean }) {
         />
       ))}
     </div>
+  );
+}
+
+// ─── EloDisplay: animated count-up for Rapid, Blitz, Bullet ────────────────
+function EloStatBox({
+  label,
+  target,
+  isPrimary,
+  isDark,
+  textMain,
+  textMuted,
+}: {
+  label: string;
+  target: number;
+  isPrimary: boolean;
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+}) {
+  const { displayValue, done } = useCountUp({
+    target,
+    duration: isPrimary ? 1600 : 1200,
+    start: 0,
+    easing: "easeOutExpo",
+    trigger: true,
+  });
+
+  return (
+    <div
+      className={`rounded-xl px-3 py-2.5 text-center relative overflow-hidden ${
+        isPrimary
+          ? isDark
+            ? "bg-[#3D6B47]/20 ring-1 ring-[#4CAF50]/30"
+            : "bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
+          : isDark
+          ? "bg-white/05"
+          : "bg-gray-50"
+      }`}
+    >
+      {/* Shimmer sweep on primary box */}
+      {isPrimary && !done && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(61,107,71,0.15) 50%, transparent 100%)",
+            animation: "shimmer 1.6s ease-out forwards",
+          }}
+        />
+      )}
+      <p
+        className={`text-xl font-bold tabular-nums ${
+          isPrimary
+            ? isDark
+              ? "text-[#4CAF50]"
+              : "text-[#3D6B47]"
+            : textMain
+        }`}
+        style={{ fontFamily: "'Clash Display', sans-serif" }}
+      >
+        {displayValue}
+      </p>
+      <p className={`text-xs font-medium mt-0.5 ${textMuted}`}>{label}</p>
+    </div>
+  );
+}
+
+function EloDisplay({
+  profile,
+  isDark,
+  textMain,
+  textMuted,
+}: {
+  profile: { rapid: number; blitz: number; bullet: number };
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+}) {
+  return (
+    <>
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <EloStatBox label="Rapid" target={profile.rapid} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+        <EloStatBox label="Blitz" target={profile.blitz} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+        <EloStatBox label="Bullet" target={profile.bullet} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+      </div>
+    </>
   );
 }
 
@@ -467,32 +560,9 @@ export default function JoinPage() {
                   </div>
                 </div>
 
-                {/* ELO display */}
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Rapid", val: profile.rapid },
-                    { label: "Blitz", val: profile.blitz },
-                    { label: "Bullet", val: profile.bullet },
-                  ].map(({ label, val }) => {
-                    const tier = isDark ? eloTierDark(val) : eloTier(val);
-                    return (
-                      <div
-                        key={label}
-                        className={`rounded-xl px-3 py-2.5 text-center ${
-                          label === "Rapid"
-                            ? isDark ? "bg-[#3D6B47]/20 ring-1 ring-[#4CAF50]/30" : "bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
-                            : isDark ? "bg-white/05" : "bg-gray-50"
-                        }`}
-                      >
-                        <p className={`text-xl font-bold tabular-nums ${label === "Rapid" ? (isDark ? "text-[#4CAF50]" : "text-[#3D6B47]") : textMain}`}
-                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                          {val}
-                        </p>
-                        <p className={`text-xs font-medium mt-0.5 ${textMuted}`}>{label}</p>
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* ELO display — animated count-up */}
+                <EloDisplay profile={profile} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+
 
                 {/* Tier badge */}
                 {(() => {
