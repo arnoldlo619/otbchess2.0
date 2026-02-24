@@ -1,30 +1,64 @@
 # OTB Chess — Project TODO
 
-## Core Platform Features
-- [x] Landing page with hero section, features, ELO demo, testimonials
-- [x] Tournament View with boards/standings/players tabs and mobile responsiveness
-- [x] Director Dashboard with result entry, live standings, Swiss pairing engine
-- [x] Player Join flow with chess.com profile lookup and QR code registration
-- [x] Tournament Archive page
-- [x] Print View with pairing slips, wall chart, and PDF export capability
-- [x] Tournament creation wizard (4-step flow: Details → Format → Time → Share)
-- [x] Real chess.com API integration for live ELO lookup
-- [x] Full Swiss pairing engine with score grouping, color balancing, Buchholz tiebreaks
-- [x] localStorage persistence for tournament state (survives page refreshes)
-- [x] Cross-tab player registration (Join page writes directly to localStorage, Director Dashboard listens for storage events)
-- [x] "New" badge on recently joined players (within last 5 minutes) in Director Dashboard Players tab
+## Core Platform
 
-## Mobile & UX Polish
-- [x] Mobile responsiveness with safe area insets on all navs
-- [x] Touch-target class on all interactive elements
-- [x] active:scale-95 press states
-- [x] Pill-style tab switchers
-- [x] Compact breadcrumbs
-- [x] Mobile-optimized Director dashboard header
+- [x] Tournament creation wizard (name, format, rounds, time control, venue, date)
+- [x] Tournament registry (localStorage persistence, invite code generation)
+- [x] Director Dashboard — result entry per board
+- [x] Director Dashboard — Swiss pairing engine (generateNextRound)
+- [x] Director Dashboard — live standings with Buchholz tiebreaks
+- [x] Director Dashboard — round progress tracker
+- [x] Director Dashboard — pause/resume tournament
+- [x] Director Dashboard — player search, filter, sort in Players tab
+- [x] Director Dashboard — QR modal with real invite code
+- [x] Director Dashboard — remove player button
+- [x] Director Dashboard — complete tournament CTA (View Results / Print)
+- [x] Director Dashboard — real venue/date/time control in sidebar Event Info
+- [x] Director Dashboard — End Tournament button wired to completeTournament()
+- [x] Director Dashboard — Bell/Announce button copies join link
 
-## Future Enhancements (Suggested)
-- [ ] ELO count-up animation on Join page success screen
-- [ ] Tournament Archive page wired to list all created tournaments from registry
-- [ ] Player-facing tournament view (spectator mode)
-- [ ] Result confirmation from player devices
-- [ ] Post-tournament performance reports
+## Join Flow
+
+- [x] Join page — QR code / invite code entry
+- [x] Join page — chess.com username lookup with ELO fetch
+- [x] Join page — confirm step with tournament details
+- [x] Join page — success step with ELO count-up animation
+- [x] Join page — cross-tab registration (storage event → Director Dashboard)
+- [x] Join page — "New" badge on recently joined players in Director Dashboard
+- [x] Join page — resolveTournament() handles both invite codes and slugs
+- [x] Join page — displays real tournament name/venue/format from registry
+- [x] addPlayerToTournament initializes state for brand-new tournaments
+
+## Spectator & Print Views
+
+- [x] Tournament spectator view — wired to real localStorage data via useDirectorState
+- [x] Tournament spectator view — falls back to DEMO_TOURNAMENT for demo route
+- [x] Print view — wired to real tournament data (WallChart, StandingsTable, PairingSlips)
+- [x] Print view — falls back to DEMO_TOURNAMENT for demo route
+
+## Archive Page
+
+- [x] Archive page — shows curated historical tournaments
+- [x] Archive page — "Your Tournaments" section showing real user tournaments from registry
+- [x] Archive page — UserTournamentCard with Manage/View links
+
+## Landing Page
+
+- [x] Landing page — hero, stats bar, how it works, features, showcase, player demo, testimonials, CTA, footer
+- [x] Landing page — nav links smooth-scroll to section IDs (Features, How It Works, For Clubs, Pricing)
+- [x] Landing page — footer links use real hrefs (no more toast stubs)
+- [x] Landing page — Sign In button opens tournament wizard
+- [x] Landing page — Start a Tournament button in Showcase section
+
+## Global Polish
+
+- [x] 404 page — redesigned to match OTB Chess design system (green/dark theme)
+- [x] 404 page — quick links to Join, Archive, Demo Tournament
+- [x] All "Feature coming soon" toast stubs replaced with real actions
+- [x] Report Issue link uses mailto: in Tournament spectator view
+
+## Tests & Quality
+
+- [x] Vitest setup (vitest.config.ts, test script in package.json)
+- [x] 18 unit tests passing — Tournament Registry, Player Registration, Swiss Engine, loadTournamentState
+- [x] TypeScript: 0 errors across entire codebase

@@ -18,6 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDirectorState } from "@/lib/directorState";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
+import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import {
   Crown,
   ChevronLeft,
@@ -44,6 +45,7 @@ import {
   SortDesc,
   Filter,
   ChevronDown,
+  MapPin,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -386,22 +388,26 @@ export default function Director() {
     isRegistration,
     canStart,
     liveStandings,
-    lastSaved,
+      lastSaved,
     addPlayer,
+    removePlayer,
     startTournament,
     enterResult,
     generateNextRound,
     togglePause,
     resetTournament,
+    completeTournament,
   } = useDirectorState(tournamentId);
-
   const [resetConfirm, setResetConfirm] = useState(false);
-
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
   const [showQR, setShowQR] = useState(false);
+  // Look up real tournament config for invite code and extra metadata
+  const tournamentConfig = getTournamentConfig(tournamentId);
+  const inviteCode = tournamentConfig?.inviteCode ?? "OTB2026";
+  // Use invite code in join URL so it works with the wizard-generated QR links
+  const joinUrl = `${window.location.origin}/join/${inviteCode}`;
   // Use live standings from Swiss engine (includes live Buchholz tiebreaks)
   const standings = liveStandings.map((s) => s.player);
-  const joinUrl = `${window.location.origin}/join/${id ?? "otb-demo-2026"}`;
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;
   const totalGames = currentRoundData?.games.length ?? 0;
 
@@ -528,7 +534,7 @@ export default function Director() {
               {state.status === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
             </button>
             <button
-              onClick={() => toast.info("Announcement feature coming soon")}
+              onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied — share with players!"); }}
               className={`touch-target p-2 rounded-xl transition-all active:scale-95 hidden sm:flex ${
                 isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
               }`}
@@ -560,6 +566,9 @@ export default function Director() {
               {[
                 { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds}R` },
                 { icon: Users, label: "Players", value: `${state.players.length} registered` },
+                ...(tournamentConfig?.venue ? [{ icon: MapPin, label: "Venue", value: tournamentConfig.venue }] : []),
+                ...(tournamentConfig?.date ? [{ icon: Clock, label: "Date", value: tournamentConfig.date }] : []),
+                ...(tournamentConfig?.timePreset ? [{ icon: Clock, label: "Time Control", value: tournamentConfig.timePreset }] : []),
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center gap-2.5">
                   <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
@@ -764,11 +773,18 @@ export default function Director() {
                       <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-white/30" : "text-gray-400"}`}>{state.players.length} Player{state.players.length !== 1 ? "s" : ""} Registered</p>
                       <div className="space-y-1.5">
                         {state.players.map((p) => (
-                          <div key={p.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                          <div key={p.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg group ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
                             <span className="text-sm">{FLAG_EMOJI[p.country] ?? "🏳️"}</span>
                             <span className={`text-sm font-semibold flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
                             {p.title && <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>}
                             <span className={`text-xs tabular-nums ${isDark ? "text-white/40" : "text-gray-400"}`}>{p.elo}</span>
+                            <button
+                              onClick={() => { removePlayer(p.id); toast.success(`${p.name} removed`); }}
+                              className={`opacity-0 group-hover:opacity-100 focus:opacity-100 ml-1 p-1 rounded-md transition-all ${isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-gray-300 hover:text-red-500 hover:bg-red-50"}`}
+                              title="Remove player"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -815,16 +831,41 @@ export default function Director() {
 
               {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (
                 <div
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                  className={`rounded-xl border p-4 space-y-3 ${
                     isDark
-                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                      : "bg-amber-50 border-amber-200 text-amber-700"
+                      ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
+                      : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
                   }`}
                 >
-                  <Trophy className="w-4 h-4 flex-shrink-0" />
-                  <p className="text-sm font-medium">
-                    Tournament complete! All {state.totalRounds} rounds finished.
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
+                      <Trophy className={`w-4.5 h-4.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                        Tournament Complete!
+                      </p>
+                      <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                        All {state.totalRounds} rounds finished · Final standings ready
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link href={`/tournament/${tournamentId}`}>
+                      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
+                      }`}>
+                        <BarChart3 className="w-3.5 h-3.5" /> View Results
+                      </button>
+                    </Link>
+                    <Link href={`/tournament/${tournamentId}/print`}>
+                      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                        isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      }`}>
+                        <Download className="w-3.5 h-3.5" /> Print / Export
+                      </button>
+                    </Link>
+                  </div>
                 </div>
               )}
 
@@ -1279,6 +1320,12 @@ export default function Director() {
                   items: [
                     { label: "Name", value: state.tournamentName },
                     { label: "Format", value: `Swiss · ${state.totalRounds} rounds` },
+                    ...(tournamentConfig?.venue ? [{ label: "Venue", value: tournamentConfig.venue }] : []),
+                    ...(tournamentConfig?.date ? [{ label: "Date", value: tournamentConfig.date }] : []),
+                    ...(tournamentConfig?.timePreset ? [{ label: "Time Control", value: tournamentConfig.timePreset }] : []),
+                    ...(tournamentConfig?.ratingSystem ? [{ label: "Rating System", value: tournamentConfig.ratingSystem }] : []),
+                    ...(tournamentConfig?.maxPlayers ? [{ label: "Max Players", value: String(tournamentConfig.maxPlayers) }] : []),
+                    { label: "Invite Code", value: inviteCode },
                   ],
                 },
                 {
@@ -1305,7 +1352,7 @@ export default function Director() {
                       {section.title}
                     </h2>
                     <button
-                      onClick={() => toast.info("Edit feature coming soon")}
+                      onClick={() => toast.info("To edit tournament settings, create a new tournament from the home page.")}
                       className={`flex items-center gap-1 text-xs font-medium transition-colors ${
                         isDark ? "text-[#4CAF50] hover:text-[#6FCF7A]" : "text-[#3D6B47] hover:text-[#2A4A32]"
                       }`}
@@ -1385,7 +1432,7 @@ export default function Director() {
                     </p>
                   </div>
                   <button
-                    onClick={() => toast.error("This would end the tournament — disabled in demo")}
+                    onClick={() => { if (window.confirm("End tournament? This will finalize all results and lock the bracket.")) { completeTournament(); toast.success("Tournament finalized!"); } }}
                     className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                   >
                     End Tournament
@@ -1403,7 +1450,7 @@ export default function Director() {
         onClose={() => setShowQR(false)}
         tournamentName={state.tournamentName}
         joinUrl={joinUrl}
-        code="OTB2026"
+        code={inviteCode}
       />
     </div>
   );

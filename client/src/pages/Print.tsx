@@ -9,18 +9,20 @@
  * Print media: @media print hides all screen chrome, shows only the document
  */
 
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useMemo } from "react";
+import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DEMO_TOURNAMENT,
-  getStandings,
   FLAG_EMOJI,
   type Player,
   type Game,
   type Round,
 } from "@/lib/tournamentData";
+import { loadTournamentState } from "@/lib/directorState";
+import { computeStandings } from "@/lib/swiss";
+import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import {
   Crown,
   Printer,
@@ -256,13 +258,17 @@ function WallChart({
   players,
   rounds,
   isDark,
+  totalRounds,
+  currentRound,
 }: {
   players: Player[];
   rounds: Round[];
   isDark: boolean;
+  totalRounds: number;
+  currentRound: number;
 }) {
-  const standings = getStandings(players);
-  const totalRounds = DEMO_TOURNAMENT.rounds;
+  const standingRows = computeStandings(players, rounds);
+  const standings = standingRows.map((r) => r.player);
 
   // Build a lookup: playerId → round number → { result, color, opponent }
   const lookup: Record<string, Record<number, { res: string; color: "W" | "B"; oppName: string; oppElo: number }>> = {};
@@ -304,7 +310,7 @@ function WallChart({
                 <th
                   key={r}
                   className={`text-center px-3 py-3 text-xs font-bold uppercase tracking-wider border-b ${borderColor} w-20 ${
-                    r === DEMO_TOURNAMENT.currentRound
+                    r === currentRound
                       ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
                       : textMuted
                   }`}
@@ -367,7 +373,7 @@ function WallChart({
                   {/* Round cells */}
                   {Array.from({ length: totalRounds }, (_, i) => i + 1).map((r) => {
                     const cell = lookup[player.id]?.[r];
-                    const isCurrentRound = r === DEMO_TOURNAMENT.currentRound;
+                    const isCurrentRound = r === currentRound;
                     return (
                       <td
                         key={r}
@@ -433,8 +439,8 @@ function WallChart({
 }
 
 // ─── Standings Table ──────────────────────────────────────────────────────────
-function StandingsTable({ players, isDark }: { players: Player[]; isDark: boolean }) {
-  const standings = getStandings(players);
+function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds: Round[]; isDark: boolean }) {
+  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
   const medals = ["🥇", "🥈", "🥉"];
   const borderColor = isDark ? "border-white/08" : "border-gray-100";
   const textMuted = isDark ? "text-white/40" : "text-gray-400";
@@ -460,8 +466,8 @@ function StandingsTable({ players, isDark }: { players: Player[]; isDark: boolea
           </tr>
         </thead>
         <tbody>
-          {standings.map((p, i) => (
-            <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? rowBg : altRowBg}`}>
+          {standingRows.map((row, i) => (
+            <tr key={row.player.id} className={`transition-colors ${i % 2 === 0 ? rowBg : altRowBg}`}>
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
                 {i < 3 ? (
                   <span className="text-base">{medals[i]}</span>
@@ -472,26 +478,26 @@ function StandingsTable({ players, isDark }: { players: Player[]; isDark: boolea
               <td className={`px-4 py-3 border-b ${borderColor}`}>
                 <div className="flex items-center gap-2">
                   <span className={`font-semibold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {p.name}
+                    {row.player.name}
                   </span>
-                  {p.title && (
+                  {row.player.title && (
                     <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
-                      {p.title}
+                      {row.player.title}
                     </span>
                   )}
-                  <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                  <span className="text-xs">{FLAG_EMOJI[row.player.country] ?? ""}</span>
                 </div>
-                <span className={`text-xs ${textMuted}`}>@{p.username}</span>
+                <span className={`text-xs ${textMuted}`}>@{row.player.username}</span>
               </td>
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
                 <span className={`text-xs font-mono font-bold ${
-                  p.elo >= 2200 ? "text-purple-500"
-                  : p.elo >= 2000 ? "text-amber-500"
-                  : p.elo >= 1800 ? "text-sky-500"
+                  row.player.elo >= 2200 ? "text-purple-500"
+                  : row.player.elo >= 2000 ? "text-amber-500"
+                  : row.player.elo >= 1800 ? "text-sky-500"
                   : textMuted
-                }`}>{p.elo}</span>
+                }`}>{row.player.elo}</span>
               </td>
-              {[p.wins, p.draws, p.losses].map((v, vi) => (
+              {[row.wins, row.draws, row.losses].map((v, vi) => (
                 <td key={vi} className={`px-4 py-3 border-b ${borderColor} text-center`}>
                   <span className={`text-sm font-semibold tabular-nums ${
                     vi === 0 ? "text-emerald-500"
@@ -501,10 +507,10 @@ function StandingsTable({ players, isDark }: { players: Player[]; isDark: boolea
                 </td>
               ))}
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
-                <span className={`text-base font-bold tabular-nums ${textMain}`}>{p.points}</span>
+                <span className={`text-base font-bold tabular-nums ${textMain}`}>{row.points}</span>
               </td>
               <td className={`px-4 py-3 border-b ${borderColor} text-center`}>
-                <span className={`text-xs font-mono ${textMuted}`}>{p.buchholz}</span>
+                <span className={`text-xs font-mono ${textMuted}`}>{row.buchholz.toFixed(1)}</span>
               </td>
             </tr>
           ))}
@@ -519,9 +525,26 @@ export default function PrintPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeSection, setActiveSection] = useState<"slips" | "wallchart" | "standings">("slips");
+  const params = useParams<{ id: string }>();
+  const tournamentId = params?.id ?? "otb-demo-2026";
 
-  const tournament = DEMO_TOURNAMENT;
-  const currentRound = tournament.roundData.find((r) => r.number === tournament.currentRound);
+  // Load real tournament state; fall back to DEMO_TOURNAMENT for the demo route
+  const realState = useMemo(() => loadTournamentState(tournamentId), [tournamentId]);
+  const realConfig = useMemo(() => getTournamentConfig(tournamentId), [tournamentId]);
+
+  const isDemo = tournamentId === "otb-demo-2026" || !realState;
+  const tournament = isDemo ? DEMO_TOURNAMENT : {
+    name: realConfig?.name ?? "Tournament",
+    venue: realConfig?.venue ?? "",
+    date: realConfig?.date ?? new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+    timeControl: realConfig?.timePreset ?? "Standard",
+    format: realConfig?.format ?? "Swiss",
+    rounds: realConfig?.rounds ?? realState!.totalRounds,
+    currentRound: realState!.currentRound,
+    players: realState!.players,
+    roundData: realState!.rounds,
+  };
+  const currentRound = (tournament.roundData as typeof DEMO_TOURNAMENT.roundData).find((r) => r.number === tournament.currentRound);
   const players = tournament.players;
 
   const sectionTabs = [
@@ -824,7 +847,7 @@ export default function PrintPage() {
                   Highlighted column = current round.
                 </p>
               </div>
-              <WallChart players={players} rounds={tournament.roundData} isDark={isDark} />
+              <WallChart players={players} rounds={tournament.roundData as Round[]} isDark={isDark} totalRounds={tournament.rounds} currentRound={tournament.currentRound} />
               <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-300"}`}>
                 W = White pieces · B = Black pieces · 1 = Win · ½ = Draw · 0 = Loss · · = In progress
               </p>
@@ -845,7 +868,7 @@ export default function PrintPage() {
                   Sorted by points, then Buchholz tiebreak, then ELO. Updated after Round {tournament.currentRound - 1}.
                 </p>
               </div>
-              <StandingsTable players={players} isDark={isDark} />
+              <StandingsTable players={players} rounds={tournament.roundData as Round[]} isDark={isDark} />
               <p className={`text-xs ${isDark ? "text-white/25" : "text-gray-300"}`}>
                 Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses
               </p>

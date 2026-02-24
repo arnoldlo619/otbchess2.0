@@ -3,6 +3,9 @@
  * Design: "The Board Room" — Apple Minimalism + Chess.com Green
  * Dark Mode: Deep Forest Green CTA Aesthetic
  *
+ * Data: Reads from localStorage via useDirectorState (same store as Director Dashboard).
+ * Falls back to DEMO_TOURNAMENT when the URL id is "otb-demo-2026" or no real data exists.
+ *
  * Layout:
  * - Top header: tournament name, status badge, meta info
  * - Left column (2/3): Round tabs + pairings boards
@@ -10,19 +13,24 @@
  * - Bottom: Performance chart per player
  */
 
-import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import {
   DEMO_TOURNAMENT,
-  getPlayerById,
-  getStandings,
   getResultLabel,
   FLAG_EMOJI,
   type Result,
   type Player,
+  type Round,
 } from "@/lib/tournamentData";
+import {
+  loadTournamentState,
+  type DirectorState,
+} from "@/lib/directorState";
+import { computeStandings } from "@/lib/swiss";
+import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import {
   Crown,
   ArrowLeft,
@@ -32,12 +40,8 @@ import {
   Users,
   Trophy,
   Share2,
-  Download,
   ChevronRight,
   Wifi,
-  Circle,
-  Sun,
-  Moon,
   Shield,
   Printer,
 } from "lucide-react";
@@ -97,17 +101,25 @@ function ScorePill({ points }: { points: number }) {
 }
 
 // ─── Live Pulse Indicator ─────────────────────────────────────────────────────
-function LiveBadge() {
+function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number; totalRounds: number; status: string }) {
+  const isLive = status === "in_progress" || status === "paused";
+  if (!isLive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted border border-border px-2.5 py-1 rounded-full">
+        Completed
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-      Live · Round 4 of 5
+      Live · Round {currentRound} of {totalRounds}
     </span>
   );
 }
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────
-function TournamentNav() {
+function TournamentNav({ tournamentId }: { tournamentId: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -140,7 +152,6 @@ function TournamentNav() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <LiveBadge />
           <ThemeToggle />
           <button
             onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
@@ -154,7 +165,7 @@ function TournamentNav() {
             <span className="hidden sm:block">Share</span>
           </button>
           <Link
-            href={`/tournament/otb-demo-2026/manage`}
+            href={`/tournament/${tournamentId}/manage`}
             className={`touch-target flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
@@ -165,7 +176,7 @@ function TournamentNav() {
             <span className="hidden sm:block">Director</span>
           </Link>
           <Link
-            href={`/tournament/otb-demo-2026/print`}
+            href={`/tournament/${tournamentId}/print`}
             className={`hidden sm:flex touch-target items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
@@ -182,10 +193,27 @@ function TournamentNav() {
 }
 
 // ─── Tournament Header ────────────────────────────────────────────────────────
-function TournamentHeader() {
+function TournamentHeader({
+  name,
+  date,
+  venue,
+  timeControl,
+  playerCount,
+  format,
+  totalRounds,
+  currentRound,
+}: {
+  name: string;
+  date: string;
+  venue: string;
+  timeControl: string;
+  playerCount: number;
+  format: string;
+  totalRounds: number;
+  currentRound: number;
+}) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const t = DEMO_TOURNAMENT;
 
   return (
     <div className={`border-b transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
@@ -196,28 +224,34 @@ function TournamentHeader() {
               className="text-2xl lg:text-3xl font-semibold text-foreground mb-2 tracking-tight"
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
-              {t.name}
+              {name}
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                {t.date}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" />
-                {t.venue}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                {t.timeControl}
-              </span>
+              {date && (
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {date}
+                </span>
+              )}
+              {venue && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {venue}
+                </span>
+              )}
+              {timeControl && (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {timeControl}
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
-                {t.players.length} players
+                {playerCount} players
               </span>
               <span className="flex items-center gap-1.5">
                 <Trophy className="w-3.5 h-3.5" />
-                {t.format} · {t.rounds} rounds
+                {format} · {totalRounds} rounds
               </span>
             </div>
           </div>
@@ -226,18 +260,18 @@ function TournamentHeader() {
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#EEEED2]"}`}>
             <div className="text-center">
               <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                {t.currentRound}
+                {currentRound}
               </p>
               <p className="text-xs text-muted-foreground">Current</p>
             </div>
             <div className="flex gap-1">
-              {Array.from({ length: t.rounds }).map((_, i) => (
+              {Array.from({ length: totalRounds }).map((_, i) => (
                 <div
                   key={i}
                   className={`h-2 rounded-full transition-all ${
-                    i < t.currentRound - 1
+                    i < currentRound - 1
                       ? "w-6 bg-[#3D6B47]"
-                      : i === t.currentRound - 1
+                      : i === currentRound - 1
                       ? "w-6 bg-[#3D6B47] animate-pulse"
                       : isDark ? "w-6 bg-white/15" : "w-6 bg-[#EEEED2]"
                   }`}
@@ -246,7 +280,7 @@ function TournamentHeader() {
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                {t.rounds}
+                {totalRounds}
               </p>
               <p className="text-xs text-muted-foreground">Total</p>
             </div>
@@ -258,10 +292,10 @@ function TournamentHeader() {
 }
 
 // ─── Mobile Standings Accordion ─────────────────────────────────────────────
-function MobileStandingsAccordion() {
+function MobileStandingsAccordion({ players, rounds }: { players: Player[]; rounds: Round[] }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const standings = getStandings(DEMO_TOURNAMENT.players);
+  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
   const [open, setOpen] = useState(false);
 
   const medalColor = (rank: number) => {
@@ -292,19 +326,18 @@ function MobileStandingsAccordion() {
           <span className={`text-xs px-2 py-0.5 rounded-full ${
             isDark ? "bg-white/10 text-white/50" : "bg-[#F0F5EE] text-[#6B7280]"
           }`}>
-            After Round 3
+            {standingRows.length} players
           </span>
         </div>
         <div className={`flex items-center gap-2 text-xs text-muted-foreground`}>
-          {/* Top 3 preview when collapsed */}
           {!open && (
             <div className="flex items-center gap-1.5">
-              {standings.slice(0, 3).map((p, i) => (
-                <span key={p.id} className="flex items-center gap-1">
+              {standingRows.slice(0, 3).map((row, i) => (
+                <span key={row.player.id} className="flex items-center gap-1">
                   <span className="text-sm">{medals[i]}</span>
                   <span className={`text-xs font-medium ${
                     isDark ? "text-white/70" : "text-[#374151]"
-                  }`}>{p.name.split(" ")[0]}</span>
+                  }`}>{row.player.name.split(" ")[0]}</span>
                 </span>
               ))}
             </div>
@@ -314,18 +347,17 @@ function MobileStandingsAccordion() {
           }`} />
         </div>
       </button>
-
       {/* Expanded standings cards */}
       {open && (
         <div className={`border-t ${
           isDark ? "border-white/08" : "border-[#EEEED2]"
         }`}>
-          {standings.map((player, idx) => {
+          {standingRows.map((row, idx) => {
             const rank = idx + 1;
             const isLeader = rank === 1;
             return (
               <div
-                key={player.id}
+                key={row.player.id}
                 className={`flex items-center gap-3 px-4 py-3 border-b last:border-0 transition-colors ${
                   isLeader
                     ? isDark
@@ -336,30 +368,25 @@ function MobileStandingsAccordion() {
                     : "border-[#F5F5F5] hover:bg-[#FAFAFA]"
                 }`}
               >
-                {/* Rank */}
                 <span className={`text-sm font-bold w-6 text-center flex-shrink-0 ${medalColor(rank)}`}>
                   {rank <= 3 ? medals[rank - 1] : rank}
                 </span>
-
-                {/* Player info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground truncate">{player.name}</span>
-                    {player.title && <TitleBadge title={player.title} />}
-                    <span className="text-xs">{FLAG_EMOJI[player.country]}</span>
+                    <span className="text-sm font-semibold text-foreground truncate">{row.player.name}</span>
+                    {row.player.title && <TitleBadge title={row.player.title} />}
+                    <span className="text-xs">{FLAG_EMOJI[row.player.country] ?? ""}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <ELOBadge elo={player.elo} />
+                    <ELOBadge elo={row.player.elo} />
                     <span className="text-xs text-muted-foreground">
-                      {player.wins}W {player.draws}D {player.losses}L
+                      {row.wins}W {row.draws}D {row.losses}L
                     </span>
-                    <span className="text-xs font-mono text-muted-foreground">Buch. {player.buchholz.toFixed(1)}</span>
+                    <span className="text-xs font-mono text-muted-foreground">Buch. {row.buchholz.toFixed(1)}</span>
                   </div>
                 </div>
-
-                {/* Score */}
                 <div className="flex-shrink-0">
-                  <ScorePill points={player.points} />
+                  <ScorePill points={row.points} />
                 </div>
               </div>
             );
@@ -371,19 +398,35 @@ function MobileStandingsAccordion() {
 }
 
 // ─── Pairings Panel ───────────────────────────────────────────────────────────
-function PairingsPanel() {
+function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
+  players: Player[];
+  rounds: Round[];
+  totalRounds: number;
+  currentRound: number;
+}) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [activeRound, setActiveRound] = useState(DEMO_TOURNAMENT.currentRound);
-  const t = DEMO_TOURNAMENT;
+  const [activeRound, setActiveRound] = useState(currentRound);
 
-  const round = t.roundData.find((r) => r.number === activeRound);
+  // Keep activeRound in sync if currentRound changes
+  useEffect(() => {
+    setActiveRound(currentRound);
+  }, [currentRound]);
+
+  const round = rounds.find((r) => r.number === activeRound);
+
+  // Build a player lookup map from the real player list
+  const playerMap = useMemo(() => {
+    const map = new Map<string, Player>();
+    players.forEach((p) => map.set(p.id, p));
+    return map;
+  }, [players]);
 
   return (
     <div className="flex flex-col gap-4">
       {/* Round Tabs */}
       <div className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
-        {t.roundData.map((r) => (
+        {rounds.map((r) => (
           <button
             key={r.number}
             onClick={() => setActiveRound(r.number)}
@@ -405,13 +448,13 @@ function PairingsPanel() {
           </button>
         ))}
         {/* Upcoming rounds */}
-        {Array.from({ length: t.rounds - t.roundData.length }).map((_, i) => (
+        {Array.from({ length: totalRounds - rounds.length }).map((_, i) => (
           <button
             key={`upcoming-${i}`}
             disabled
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium ${isDark ? "text-white/20" : "text-[#C4C4C4]"} cursor-not-allowed`}
           >
-            R{t.roundData.length + i + 1}
+            R{rounds.length + i + 1}
           </button>
         ))}
       </div>
@@ -434,12 +477,20 @@ function PairingsPanel() {
         </div>
       )}
 
-      {/* Game Cards */}
-      {round?.games.map((game, idx) => {
-        const white = getPlayerById(game.whiteId)!;
-        const black = getPlayerById(game.blackId)!;
-        const isLive = game.result === "*";
+      {/* Empty state */}
+      {!round && (
+        <div className={`text-center py-12 rounded-xl border border-dashed ${isDark ? "border-white/10 text-white/30" : "border-gray-200 text-gray-400"}`}>
+          <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">No pairings yet for this round</p>
+        </div>
+      )}
 
+      {/* Game Cards */}
+      {round?.games.map((game) => {
+        const white = playerMap.get(game.whiteId);
+        const black = playerMap.get(game.blackId);
+        if (!white || !black) return null;
+        const isLive = game.result === "*";
         return (
           <div
             key={game.id}
@@ -457,11 +508,10 @@ function PairingsPanel() {
                     Live
                   </span>
                 ) : (
-                  <span className="text-muted-foreground">{game.duration}</span>
+                  <span className="text-muted-foreground">{game.duration ?? ""}</span>
                 )}
               </div>
             </div>
-
             {/* Players */}
             <div className="p-4 space-y-3">
               {/* White */}
@@ -476,24 +526,21 @@ function PairingsPanel() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-semibold text-foreground">{white.name}</span>
                       <TitleBadge title={white.title} />
-                      <span className="text-xs">{FLAG_EMOJI[white.country]}</span>
+                      <span className="text-xs">{FLAG_EMOJI[white.country] ?? ""}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <ELOBadge elo={white.elo} />
-                      <span className="text-xs text-muted-foreground">{white.points} pts</span>
                     </div>
                   </div>
                 </div>
                 <ResultPill result={game.result} perspective="white" />
               </div>
-
               {/* Divider */}
               <div className={`flex items-center gap-2 ${isDark ? "text-white/20" : "text-[#EEEED2]"}`}>
                 <div className="flex-1 h-px bg-current" />
                 <span className="text-xs text-muted-foreground font-medium">vs</span>
                 <div className="flex-1 h-px bg-current" />
               </div>
-
               {/* Black */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -506,11 +553,10 @@ function PairingsPanel() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-semibold text-foreground">{black.name}</span>
                       <TitleBadge title={black.title} />
-                      <span className="text-xs">{FLAG_EMOJI[black.country]}</span>
+                      <span className="text-xs">{FLAG_EMOJI[black.country] ?? ""}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <ELOBadge elo={black.elo} />
-                      <span className="text-xs text-muted-foreground">{black.points} pts</span>
                     </div>
                   </div>
                 </div>
@@ -525,10 +571,10 @@ function PairingsPanel() {
 }
 
 // ─── Standings Panel ──────────────────────────────────────────────────────────
-function StandingsPanel() {
+function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[] }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const standings = getStandings(DEMO_TOURNAMENT.players);
+  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
 
   const medalColor = (rank: number) => {
     if (rank === 1) return "text-amber-400";
@@ -543,7 +589,7 @@ function StandingsPanel() {
         <h3 className="font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           Standings
         </h3>
-        <span className="text-xs text-muted-foreground">After Round 3</span>
+        <span className="text-xs text-muted-foreground">{standingRows.length} players</span>
       </div>
 
       {/* Header row */}
@@ -557,13 +603,13 @@ function StandingsPanel() {
       </div>
 
       {/* Player rows */}
-      {standings.map((player, idx) => {
+      {standingRows.map((row, idx) => {
         const rank = idx + 1;
         const isLeader = rank === 1;
 
         return (
           <div
-            key={player.id}
+            key={row.player.id}
             className={`grid grid-cols-[1.5rem_1fr_auto_auto] gap-2 items-center px-3 py-3 rounded-xl border transition-all duration-200 hover:scale-[1.01] ${
               isLeader
                 ? isDark
@@ -582,26 +628,26 @@ function StandingsPanel() {
             {/* Player info */}
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-sm font-semibold text-foreground truncate">{player.name}</span>
-                {player.title && <TitleBadge title={player.title} />}
+                <span className="text-sm font-semibold text-foreground truncate">{row.player.name}</span>
+                {row.player.title && <TitleBadge title={row.player.title} />}
               </div>
               <div className="flex items-center gap-1.5">
-                <ELOBadge elo={player.elo} />
-                <span className="text-xs">{FLAG_EMOJI[player.country]}</span>
+                <ELOBadge elo={row.player.elo} />
+                <span className="text-xs">{FLAG_EMOJI[row.player.country] ?? ""}</span>
                 <span className="text-xs text-muted-foreground">
-                  {player.wins}W {player.draws}D {player.losses}L
+                  {row.wins}W {row.draws}D {row.losses}L
                 </span>
               </div>
             </div>
 
             {/* Points */}
             <div className="w-10 flex justify-center">
-              <ScorePill points={player.points} />
+              <ScorePill points={row.points} />
             </div>
 
             {/* Buchholz */}
             <div className="w-12 text-right">
-              <span className="text-xs font-mono text-muted-foreground">{player.buchholz.toFixed(1)}</span>
+              <span className="text-xs font-mono text-muted-foreground">{row.buchholz.toFixed(1)}</span>
             </div>
           </div>
         );
@@ -617,11 +663,14 @@ function StandingsPanel() {
 }
 
 // ─── Performance Bars ─────────────────────────────────────────────────────────
-function PerformanceSection() {
+function PerformanceSection({ players, rounds, currentRound }: { players: Player[]; rounds: Round[]; currentRound: number }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const standings = getStandings(DEMO_TOURNAMENT.players);
-  const maxPoints = Math.max(...standings.map((p) => p.points));
+  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
+  const maxPoints = standingRows.length > 0 ? Math.max(...standingRows.map((r) => r.points)) : 1;
+  const completedRounds = Math.max(1, currentRound - 1);
+
+  if (standingRows.length === 0) return null;
 
   return (
     <div className={`rounded-2xl border p-6 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
@@ -629,17 +678,17 @@ function PerformanceSection() {
         <h3 className="font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           Score Distribution
         </h3>
-        <span className="text-xs text-muted-foreground">After Round 3 · Max {maxPoints} pts</span>
+        <span className="text-xs text-muted-foreground">After Round {completedRounds} · Max {maxPoints} pts</span>
       </div>
 
       <div className="space-y-3">
-        {standings.map((player, idx) => {
-          const pct = (player.points / (DEMO_TOURNAMENT.currentRound - 1)) * 100;
+        {standingRows.map((row, idx) => {
+          const pct = completedRounds > 0 ? (row.points / completedRounds) * 100 : 0;
           return (
-            <div key={player.id} className="flex items-center gap-3">
+            <div key={row.player.id} className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground w-4 text-right">{idx + 1}</span>
               <div className="w-28 truncate">
-                <span className="text-xs font-medium text-foreground">{player.name.split(" ")[0]}</span>
+                <span className="text-xs font-medium text-foreground">{row.player.name.split(" ")[0]}</span>
               </div>
               <div className="flex-1 relative h-5 flex items-center">
                 <div className={`absolute inset-0 rounded-full ${isDark ? "bg-white/08" : "bg-[#EEEED2]"}`} />
@@ -655,13 +704,38 @@ function PerformanceSection() {
                   }}
                 />
                 <span className="relative z-10 pl-2 text-xs font-mono font-bold text-white mix-blend-luminosity">
-                  {player.points % 1 !== 0 ? `${Math.floor(player.points)}½` : player.points}
+                  {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                 </span>
               </div>
-              <ELOBadge elo={player.elo} />
+              <ELOBadge elo={row.player.elo} />
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Registration Waiting State ───────────────────────────────────────────────
+function RegistrationState({ tournamentName, playerCount }: { tournamentName: string; playerCount: number }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <div className={`min-h-[60vh] flex items-center justify-center ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+      <div className="text-center max-w-md px-6">
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"}`}>
+          <Trophy className={`w-8 h-8 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+        </div>
+        <h2 className="text-xl font-bold text-foreground mb-2" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          {tournamentName}
+        </h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          Registration is open · {playerCount} player{playerCount !== 1 ? "s" : ""} registered
+        </p>
+        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          Waiting for tournament to start
+        </div>
       </div>
     </div>
   );
@@ -671,6 +745,57 @@ function PerformanceSection() {
 export default function TournamentPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { id } = useParams<{ id: string }>();
+  const tournamentId = id ?? "otb-demo-2026";
+
+  // Load real tournament state from localStorage; fall back to demo data
+  const [tournamentState, setTournamentState] = useState<DirectorState | null>(() => {
+    return loadTournamentState(tournamentId);
+  });
+
+  // Listen for real-time updates from the Director Dashboard (storage events)
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key === `otb-director-${tournamentId}` && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.state) setTournamentState(parsed.state as DirectorState);
+        } catch { /* ignore */ }
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [tournamentId]);
+
+  // Also poll every 5s for same-tab updates (Director is in same tab sometimes)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const fresh = loadTournamentState(tournamentId);
+      if (fresh) setTournamentState(fresh);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [tournamentId]);
+
+  // Get extra config (venue, date, timePreset) from registry
+  const config = getTournamentConfig(tournamentId);
+
+  // Build display data — prefer real state, fall back to DEMO_TOURNAMENT
+  const isDemo = tournamentId === "otb-demo-2026" && !tournamentState;
+  const displayState = tournamentState ?? {
+    tournamentId: DEMO_TOURNAMENT.id,
+    tournamentName: DEMO_TOURNAMENT.name,
+    totalRounds: DEMO_TOURNAMENT.rounds,
+    players: DEMO_TOURNAMENT.players,
+    rounds: DEMO_TOURNAMENT.roundData,
+    currentRound: DEMO_TOURNAMENT.currentRound,
+    status: DEMO_TOURNAMENT.status as DirectorState["status"],
+  };
+
+  const displayName = displayState.tournamentName;
+  const displayDate = config?.date ?? (isDemo ? DEMO_TOURNAMENT.date : "");
+  const displayVenue = config?.venue ?? (isDemo ? DEMO_TOURNAMENT.venue : "");
+  const displayTimeControl = config?.timePreset ?? (isDemo ? DEMO_TOURNAMENT.timeControl : "");
+  const displayFormat = config?.format ? (config.format.charAt(0).toUpperCase() + config.format.slice(1)) : (isDemo ? DEMO_TOURNAMENT.format : "Swiss");
 
   // Simulate live clock
   const [elapsed, setElapsed] = useState(0);
@@ -686,49 +811,92 @@ export default function TournamentPage() {
     return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
   };
 
+  const liveGames = displayState.rounds
+    .find((r) => r.number === displayState.currentRound)
+    ?.games.filter((g) => g.result === "*").length ?? 0;
+
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-      <TournamentNav />
-      <TournamentHeader />
+      <TournamentNav tournamentId={tournamentId} />
+      <TournamentHeader
+        name={displayName}
+        date={displayDate}
+        venue={displayVenue}
+        timeControl={displayTimeControl}
+        playerCount={displayState.players.length}
+        format={displayFormat}
+        totalRounds={displayState.totalRounds}
+        currentRound={displayState.currentRound}
+      />
 
-      {/* Live clock banner */}
-      <div className="bg-[#3D6B47] py-2">
-        <div className="container flex items-center justify-between">
-          <div className="flex items-center gap-2 text-white/80 text-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            Round 4 in progress — 4 boards active
+      {/* Registration waiting state */}
+      {displayState.status === "registration" && (
+        <RegistrationState tournamentName={displayName} playerCount={displayState.players.length} />
+      )}
+
+      {/* Live / completed tournament */}
+      {displayState.status !== "registration" && (
+        <>
+          {/* Live clock banner */}
+          <div className="bg-[#3D6B47] py-2">
+            <div className="container flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white/80 text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                {displayState.status === "completed"
+                  ? `Tournament complete — ${displayState.totalRounds} rounds`
+                  : `Round ${displayState.currentRound} in progress${liveGames > 0 ? ` — ${liveGames} board${liveGames !== 1 ? "s" : ""} active` : ""}`}
+              </div>
+              <div className="flex items-center gap-2">
+                <LiveBadge
+                  currentRound={displayState.currentRound}
+                  totalRounds={displayState.totalRounds}
+                  status={displayState.status}
+                />
+                {displayState.status === "in_progress" && (
+                  <div className="flex items-center gap-1.5 text-white text-xs font-mono font-bold">
+                    <Clock className="w-3.5 h-3.5 text-white/70" />
+                    {formatElapsed(elapsed + 5432)}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-white text-xs font-mono font-bold">
-            <Clock className="w-3.5 h-3.5 text-white/70" />
-            {formatElapsed(elapsed + 5432)}
+
+          {/* Main content */}
+          <div className="container py-4 sm:py-8">
+            {/* Mobile: Standings accordion above pairings */}
+            <div className="block lg:hidden mb-4">
+              <MobileStandingsAccordion players={displayState.players} rounds={displayState.rounds} />
+            </div>
+
+            <div className="grid lg:grid-cols-[1fr_380px] gap-8">
+              {/* Left: Pairings */}
+              <div>
+                <PairingsPanel
+                  players={displayState.players}
+                  rounds={displayState.rounds}
+                  totalRounds={displayState.totalRounds}
+                  currentRound={displayState.currentRound}
+                />
+              </div>
+
+              {/* Right: Standings — desktop only */}
+              <div className="hidden lg:block">
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} />
+              </div>
+            </div>
+
+            {/* Performance section */}
+            <div className="mt-8">
+              <PerformanceSection
+                players={displayState.players}
+                rounds={displayState.rounds}
+                currentRound={displayState.currentRound}
+              />
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="container py-4 sm:py-8">
-        {/* Mobile: Standings accordion above pairings */}
-        <div className="block lg:hidden mb-4">
-          <MobileStandingsAccordion />
-        </div>
-
-        <div className="grid lg:grid-cols-[1fr_380px] gap-8">
-          {/* Left: Pairings */}
-          <div>
-            <PairingsPanel />
-          </div>
-
-          {/* Right: Standings — desktop only */}
-          <div className="hidden lg:block">
-            <StandingsPanel />
-          </div>
-        </div>
-
-        {/* Performance section */}
-        <div className="mt-8">
-          <PerformanceSection />
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Footer */}
       <footer className={`border-t py-6 mt-8 transition-colors duration-300 ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
@@ -741,9 +909,9 @@ export default function TournamentPage() {
           </div>
           <div className="flex items-center gap-4">
             <span>Powered by chess.com API</span>
-            <button onClick={() => toast.info("Feature coming soon")} className="hover:text-foreground transition-colors">
+            <a href="mailto:hello@otbchess.app?subject=Issue+Report" className="hover:text-foreground transition-colors">
               Report Issue
-            </button>
+            </a>
           </div>
         </div>
       </footer>

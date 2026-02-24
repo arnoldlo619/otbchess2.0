@@ -63,6 +63,19 @@ export function getTournamentByCode(code: string): TournamentConfig | null {
   return registry.find((c) => c.inviteCode.toUpperCase() === code.toUpperCase()) ?? null;
 }
 
+/**
+ * Resolve a tournament from either a short invite code or a URL slug.
+ * The Join page URL param can be either — this handles both cases.
+ */
+export function resolveTournament(codeOrSlug: string): TournamentConfig | null {
+  const registry = loadRegistry();
+  // Try invite code first (short uppercase codes like "ABCD1234")
+  const byCode = registry.find((c) => c.inviteCode.toUpperCase() === codeOrSlug.toUpperCase());
+  if (byCode) return byCode;
+  // Fall back to slug lookup
+  return registry.find((c) => c.id === codeOrSlug) ?? null;
+}
+
 /** List all tournaments in creation order (newest first). */
 export function listTournaments(): TournamentConfig[] {
   return [...loadRegistry()].reverse();

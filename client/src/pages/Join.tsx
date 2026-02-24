@@ -21,7 +21,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
-import { getTournamentByCode } from "@/lib/tournamentRegistry";
+import { resolveTournament, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { addPlayerToTournament } from "@/lib/directorState";
 import {
   Crown,
@@ -258,8 +258,25 @@ export default function JoinPage() {
     setTimeout(() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
   }, [step]);
 
+  // Resolve the real tournament config from the registry (by invite code or slug)
+  // Falls back to DEMO_TOURNAMENT for the demo code
+  const resolvedConfig: TournamentConfig | null = tournamentCode
+    ? resolveTournament(tournamentCode)
+    : null;
+  const isDemoCode = tournamentCode.toUpperCase() === "OTB2026";
+  // Display name/venue/format/timeControl for the tournament chip and success card
+  const tournamentDisplay = {
+    name: resolvedConfig?.name ?? DEMO_TOURNAMENT.name,
+    venue: resolvedConfig?.venue ?? DEMO_TOURNAMENT.venue,
+    format: resolvedConfig
+      ? (resolvedConfig.format === "swiss" ? "Swiss" : resolvedConfig.format === "roundrobin" ? "Round Robin" : "Elimination")
+      : DEMO_TOURNAMENT.format,
+    timeControl: resolvedConfig?.timePreset ?? DEMO_TOURNAMENT.timeControl,
+    playerCount: DEMO_TOURNAMENT.players.length,
+  };
+  // Keep tournament as DEMO_TOURNAMENT for ShareSheet type compatibility
   const tournament = DEMO_TOURNAMENT;
-  const isValidCode = tournamentCode.toUpperCase() === "OTB2026" || tournamentCode.length >= 4;
+  const isValidCode = isDemoCode || (tournamentCode.length >= 4 && (isDemoCode || resolvedConfig !== null || tournamentCode.length >= 6));
 
   function advanceStep(next: Step) {
     setStepKey((k) => k + 1);
@@ -297,7 +314,7 @@ export default function JoinPage() {
     // Persist the player to the tournament's localStorage store so the Director
     // Dashboard picks them up immediately (via storage event listener)
     if (profile) {
-      const config = getTournamentByCode(tournamentCode);
+      const config = resolveTournament(tournamentCode);
       if (config) {
         const player: Player = {
           id: `player-${profile.username}-${Date.now()}`,
@@ -384,15 +401,15 @@ export default function JoinPage() {
               <div className="flex-1 min-w-0">
                 <p className={`font-bold text-sm truncate ${textMain}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                  {tournament.name}
+                  {tournamentDisplay.name}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <span className={`text-xs flex items-center gap-1 ${textMuted}`}>
-                    <MapPin className="w-2.5 h-2.5" />{tournament.venue}
+                    <MapPin className="w-2.5 h-2.5" />{tournamentDisplay.venue}
                   </span>
                   <span className={`text-xs ${isDark ? "text-white/15" : "text-gray-200"}`}>·</span>
                   <span className={`text-xs flex items-center gap-1 ${textMuted}`}>
-                    <Users className="w-2.5 h-2.5" />{tournament.players.length} players
+                    <Users className="w-2.5 h-2.5" />{tournamentDisplay.playerCount} players
                   </span>
                 </div>
               </div>
@@ -571,10 +588,10 @@ export default function JoinPage() {
                   {/* Tournament details */}
                   <div className={`rounded-xl px-4 py-3 space-y-2 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
                     {[
-                      { icon: Trophy, text: tournament.name },
-                      { icon: MapPin, text: tournament.venue },
-                      { icon: Clock, text: `${tournament.timeControl} · ${tournament.format}` },
-                      { icon: Users, text: `${tournament.players.length} players registered` },
+                      { icon: Trophy, text: tournamentDisplay.name },
+                      { icon: MapPin, text: tournamentDisplay.venue },
+                      { icon: Clock, text: `${tournamentDisplay.timeControl} · ${tournamentDisplay.format}` },
+                      { icon: Users, text: `${tournamentDisplay.playerCount} players registered` },
                     ].map(({ icon: Icon, text }) => (
                       <div key={text} className="flex items-center gap-2.5">
                         <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
@@ -653,10 +670,10 @@ export default function JoinPage() {
                   {/* Details grid */}
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: "Tournament", value: tournament.name, span: true },
-                      { label: "Format", value: tournament.format },
-                      { label: "Time Control", value: tournament.timeControl },
-                      { label: "Venue", value: tournament.venue, span: true },
+                      { label: "Tournament", value: tournamentDisplay.name, span: true },
+                      { label: "Format", value: tournamentDisplay.format },
+                      { label: "Time Control", value: tournamentDisplay.timeControl },
+                      { label: "Venue", value: tournamentDisplay.venue, span: true },
                     ].map(({ label, value, span }) => (
                       <div key={label} className={span ? "col-span-2" : ""}>
                         <p className={`text-xs ${labelCls} mb-0.5`}>{label}</p>

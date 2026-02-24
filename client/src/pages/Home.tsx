@@ -73,7 +73,16 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const navLinks = ["Features", "How It Works", "For Clubs", "Pricing"];
+  const navLinks: { label: string; id: string }[] = [
+    { label: "Features", id: "features" },
+    { label: "How It Works", id: "how-it-works" },
+    { label: "For Clubs", id: "for-clubs" },
+    { label: "Pricing", id: "testimonials" },
+  ];
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <nav
@@ -103,15 +112,15 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <button
-              key={link}
-              onClick={() => toast.info("Feature coming soon")}
+              key={link.id}
+              onClick={() => scrollTo(link.id)}
               className={`text-sm font-medium transition-colors duration-200 ${
                 isDark
                   ? "text-white/60 hover:text-white"
                   : "text-[#4B5563] hover:text-[#3D6B47]"
               }`}
             >
-              {link}
+              {link.label}
             </button>
           ))}
           <Link href="/tournaments">
@@ -131,7 +140,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
           <button
-            onClick={() => toast.info("Feature coming soon")}
+            onClick={onCreateTournament}
             className={`text-sm font-medium transition-colors ${
               isDark ? "text-white/70 hover:text-white" : "text-[#3D6B47] hover:text-[#2A4A32]"
             }`}
@@ -163,13 +172,13 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
         <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-[#EEEED2]"}`}>
           {navLinks.map((link) => (
             <button
-              key={link}
-              onClick={() => { toast.info("Feature coming soon"); setMobileOpen(false); }}
+              key={link.id}
+              onClick={() => { scrollTo(link.id); setMobileOpen(false); }}
               className={`block w-full text-left py-3 text-sm font-medium border-b last:border-0 ${
                 isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
               }`}
             >
-              {link}
+              {link.label}
             </button>
           ))}
           <button
@@ -381,7 +390,7 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="py-24 transition-colors duration-500 bg-background" ref={ref}>
+    <section id="how-it-works" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
@@ -443,6 +452,7 @@ function Features() {
 
   return (
     <section
+      id="features"
       className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#F0F5EE]"}`}
       ref={ref}
     >
@@ -488,7 +498,7 @@ function Showcase() {
   const isDark = theme === "dark";
 
   return (
-    <section className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
+    <section id="for-clubs" className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
@@ -532,13 +542,14 @@ function Showcase() {
               ))}
             </div>
 
-            <button
-              onClick={() => toast.info("Feature coming soon")}
-              className="btn-chess-primary flex items-center gap-2"
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className="btn-chess-primary flex items-center gap-2 inline-flex"
             >
-              Start for Free
+              Start a Tournament
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -562,6 +573,7 @@ function PlayerDemo() {
 
   return (
     <section
+      id="player-demo"
       className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#F0F5EE]"}`}
       ref={ref}
     >
@@ -695,7 +707,7 @@ function Testimonials() {
   ];
 
   return (
-    <section className="py-24 transition-colors duration-500 bg-background" ref={ref}>
+    <section id="testimonials" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
@@ -773,10 +785,25 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer() {
-  const links = {
-    Product: ["Features", "Pricing", "Changelog", "Roadmap"],
-    Community: ["Chess Clubs", "Blog", "Discord", "Twitter"],
-    Company: ["About", "Contact", "Privacy", "Terms"],
+  const links: Record<string, { label: string; href: string }[]> = {
+    Product: [
+      { label: "Features", href: "/#features" },
+      { label: "How It Works", href: "/#how-it-works" },
+      { label: "Archive", href: "/tournaments" },
+      { label: "Demo", href: "/tournament/otb-demo-2026" },
+    ],
+    Community: [
+      { label: "Join a Tournament", href: "/join" },
+      { label: "Discord", href: "https://discord.gg" },
+      { label: "Twitter", href: "https://twitter.com" },
+      { label: "chess.com", href: "https://chess.com" },
+    ],
+    Company: [
+      { label: "About", href: "/#how-it-works" },
+      { label: "Contact", href: "mailto:hello@otbchess.app" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+    ],
   };
 
   return (
@@ -802,13 +829,13 @@ function Footer() {
               <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mb-4">{category}</p>
               <ul className="space-y-2.5">
                 {items.map((item) => (
-                  <li key={item}>
-                    <button
-                      onClick={() => toast.info("Feature coming soon")}
+                  <li key={item.label}>
+                    <a
+                      href={item.href}
                       className="text-sm text-white/60 hover:text-white transition-colors"
                     >
-                      {item}
-                    </button>
+                      {item.label}
+                    </a>
                   </li>
                 ))}
               </ul>

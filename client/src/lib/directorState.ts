@@ -94,6 +94,11 @@ function saveToStorage(tournamentId: string, state: DirectorState): void {
   }
 }
 
+/** Load a tournament's director state from localStorage (read-only, no hook). */
+export function loadTournamentState(tournamentId: string): DirectorState | null {
+  return loadFromStorage(tournamentId);
+}
+
 /**
  * Standalone function — can be called from any page (e.g. Join page) to add a
  * player directly to a tournament's localStorage store without needing the hook.
@@ -101,8 +106,13 @@ function saveToStorage(tournamentId: string, state: DirectorState): void {
  */
 export function addPlayerToTournament(tournamentId: string, player: Player): void {
   try {
-    const existing = loadFromStorage(tournamentId);
-    if (!existing) return; // tournament not yet initialised — silently skip
+    let existing = loadFromStorage(tournamentId);
+    // If no persisted state yet, try to bootstrap from registry config
+    if (!existing) {
+      const config = getTournamentConfig(tournamentId);
+      if (!config) return; // unknown tournament — silently skip
+      existing = getNewTournamentState(config);
+    }
     // Prevent duplicate registrations
     if (existing.players.some((p) => p.id === player.id || p.username === player.username)) return;
     const playerWithTimestamp: Player = { ...player, joinedAt: Date.now() };
@@ -188,6 +198,14 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         return prev;
       }
       return { ...prev, players: [...prev.players, player] };
+    });
+  }, []);
+
+  // Remove a player from the registration list (only during registration phase)
+  const removePlayer = useCallback((playerId: string) => {
+    setState((prev) => {
+      if (prev.status !== "registration") return prev;
+      return { ...prev, players: prev.players.filter((p) => p.id !== playerId) };
     });
   }, []);
 
@@ -315,6 +333,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     liveStandings,
     lastSaved,
     addPlayer,
+    removePlayer,
     startTournament,
     enterResult,
     generateNextRound,

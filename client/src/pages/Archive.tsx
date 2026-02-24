@@ -5,7 +5,7 @@
  * Light/dark mode aware via useTheme()
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,6 +35,9 @@ import {
   type ArchiveTournament,
   type ArchivePlayer,
 } from "@/lib/archiveData";
+import { listTournaments, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { loadTournamentState } from "@/lib/directorState";
+import { computeStandings } from "@/lib/swiss";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -394,6 +397,92 @@ function TournamentCard({
   );
 }
 
+// ── User Tournament Card (real data from localStorage) ──────────────────────
+
+function UserTournamentCard({
+  config,
+  isDark,
+}: {
+  config: TournamentConfig;
+  isDark: boolean;
+}) {
+  const state = loadTournamentState(config.id);
+  const standings = state ? computeStandings(state.players, state.rounds) : [];
+  const winner = standings[0];
+  const statusLabel = state?.status === "completed" ? "Completed" : state?.status === "in_progress" ? "In Progress" : "Registration";
+  const statusColor = state?.status === "completed"
+    ? isDark ? "bg-[#3D6B47]/20 text-[#4CAF50] border-[#3D6B47]/30" : "bg-[#3D6B47]/08 text-[#3D6B47] border-[#3D6B47]/20"
+    : state?.status === "in_progress"
+    ? isDark ? "bg-amber-500/15 text-amber-400 border-amber-500/25" : "bg-amber-50 text-amber-700 border-amber-200"
+    : isDark ? "bg-white/05 text-white/40 border-white/10" : "bg-gray-50 text-gray-500 border-gray-200";
+  const formatLabel = config.format === "swiss" ? "Swiss" : config.format === "roundrobin" ? "Round Robin" : "Elimination";
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${
+      isDark ? "bg-[oklch(0.18_0.05_145)] border-white/08" : "bg-white border-gray-100"
+    }`}>
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusColor}`}>
+                {statusLabel}
+              </span>
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                isDark ? "bg-[#3D6B47]/10 text-[#4CAF50] border-[#3D6B47]/20" : "bg-[#3D6B47]/08 text-[#3D6B47] border-[#3D6B47]/20"
+              }`}>
+                {formatLabel}
+              </span>
+            </div>
+            <h3 className={`text-lg font-bold leading-tight mb-1 ${isDark ? "text-white" : "text-gray-900"}`}
+              style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {config.name}
+            </h3>
+            <div className={`flex flex-wrap items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              {config.date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{config.date}</span>}
+              {config.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{config.venue}</span>}
+              <span className="flex items-center gap-1"><Users className="w-3 h-3" />{state?.players.length ?? 0} players</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{config.timePreset}</span>
+              <span className="flex items-center gap-1"><BarChart2 className="w-3 h-3" />{config.rounds} rounds</span>
+            </div>
+          </div>
+          <Link href={`/tournament/${config.id}`}>
+            <button className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              isDark ? "bg-[#3D6B47]/20 text-[#4CAF50] hover:bg-[#3D6B47]/30" : "bg-[#3D6B47]/08 text-[#3D6B47] hover:bg-[#3D6B47]/15"
+            }`}>
+              {state?.status === "registration" ? "Manage" : "View"}
+            </button>
+          </Link>
+        </div>
+        {winner ? (
+          <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl ${
+            isDark ? "bg-amber-500/08 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
+          }`}>
+            <Crown className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <div className="min-w-0">
+              <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                {winner.player.name}
+              </span>
+              <span className={`text-xs ml-1.5 ${isDark ? "text-amber-400" : "text-amber-700"}`}>
+                {winner.points} pts
+              </span>
+            </div>
+            <span className={`ml-auto text-xs font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              {winner.player.elo} ELO
+            </span>
+          </div>
+        ) : (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs ${
+            isDark ? "bg-white/04 text-white/30" : "bg-gray-50 text-gray-400"
+          }`}>
+            <Trophy className="w-3.5 h-3.5" />
+            {state?.status === "registration" ? "Waiting for players to register" : "No results yet"}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 
 function StatCard({
@@ -440,8 +529,13 @@ export default function Archive() {
   const [sortKey, setSortKey] = useState<"date" | "players" | "elo">("date");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-
+  const [userTournaments, setUserTournaments] = useState<TournamentConfig[]>([]);
   const formats = ["All", "Swiss", "Round Robin", "Elimination"];
+
+  // Load user's own tournaments from localStorage on mount
+  useEffect(() => {
+    setUserTournaments(listTournaments());
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...ARCHIVE_TOURNAMENTS];
@@ -712,6 +806,38 @@ export default function Archive() {
           </AnimatePresence>
         </motion.div>
 
+        {/* ── Your Tournaments ─────────────────────────────────────────── */}
+        {userTournaments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <h2
+                className={`text-sm font-bold uppercase tracking-widest ${
+                  isDark ? "text-white/40" : "text-gray-400"
+                }`}
+              >
+                Your Tournaments
+              </h2>
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                isDark ? "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47]"
+              }`}>
+                {userTournaments.length} created
+              </span>
+            </div>
+            <div className="space-y-3">
+              {userTournaments.map((config) => (
+                <UserTournamentCard key={config.id} config={config} isDark={isDark} />
+              ))}
+            </div>
+            <div className={`border-b ${
+              isDark ? "border-white/08" : "border-gray-100"
+            }`} />
+          </motion.div>
+        )}
         {/* ── Results count ───────────────────────────────────────────────── */}
         <div className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
           Showing {filtered.length} of {ARCHIVE_TOURNAMENTS.length} tournaments
