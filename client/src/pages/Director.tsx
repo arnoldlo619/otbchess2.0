@@ -382,6 +382,7 @@ export default function Director() {
     currentRoundData,
     allResultsIn,
     canGenerateNext,
+    liveStandings,
     enterResult,
     generateNextRound,
     togglePause,
@@ -389,7 +390,8 @@ export default function Director() {
 
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
   const [showQR, setShowQR] = useState(false);
-  const standings = getStandings(state.players);
+  // Use live standings from Swiss engine (includes live Buchholz tiebreaks)
+  const standings = liveStandings.map((s) => s.player);
   const joinUrl = `${window.location.origin}/join/${id ?? "otb-demo-2026"}`;
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;
   const totalGames = currentRoundData?.games.length ?? 0;
