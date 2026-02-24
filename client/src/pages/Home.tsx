@@ -85,7 +85,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
         scrolled
           ? isDark
             ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-b border-white/10 shadow-sm"
-            : "bg-white/95 backdrop-blur-md border-b border-[#EEEED2] shadow-sm"
+            : "bg-[#F2F7F3]/96 backdrop-blur-md border-b border-[#3D6B47]/12 shadow-sm"
           : "bg-transparent"
       }`}
     >
