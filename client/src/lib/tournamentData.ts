@@ -26,6 +26,10 @@ export interface Player {
   avatarUrl?: string;
   /** Lichess flair emoji, e.g. "🔥" */
   flairEmoji?: string;
+  /** Optional phone number for WhatsApp sharing (E.164 or local format) */
+  phone?: string;
+  /** Optional email address for result sharing */
+  email?: string;
 }
 
 export interface Game {

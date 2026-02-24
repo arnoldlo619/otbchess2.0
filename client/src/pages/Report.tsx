@@ -5,6 +5,7 @@
  * Displays post-tournament performance cards for every player.
  * Each card can be downloaded as a 1080×1080 PNG for social media sharing.
  * Also supports a "Download All" flow that exports every card sequentially.
+ * "Share Results" broadcasts player stats via WhatsApp or email.
  */
 import { useState, useRef, useCallback } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
@@ -20,6 +21,7 @@ import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import PlayerStatsCard from "@/components/PlayerStatsCard";
 import CrossTable from "@/components/CrossTable";
 import RoundTimeline from "@/components/RoundTimeline";
+import { ShareResultsModal, useShareModal } from "@/components/ShareResultsModal";
 import {
   ChevronLeft,
   Download,
@@ -34,6 +36,7 @@ import {
   Grid3x3,
   ListOrdered,
   LayoutGrid,
+  MessageCircle,
 } from "lucide-react";
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -181,6 +184,7 @@ function ExportableCard({
   isDark,
   avatarUrl,
   avatarStatus,
+  onShareSingle,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
@@ -188,6 +192,7 @@ function ExportableCard({
   isDark: boolean;
   avatarUrl?: string | null;
   avatarStatus?: "loading" | "loaded";
+  onShareSingle: (perf: PlayerPerformance) => void;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -226,7 +231,6 @@ function ExportableCard({
             text: `Check out my performance at ${tournamentName}! 🏆 #OTBChess`,
           });
         } else {
-          // Fallback: copy to clipboard
           await navigator.clipboard.write([
             new ClipboardItem({ "image/png": blob }),
           ]);
@@ -254,7 +258,7 @@ function ExportableCard({
       />
 
       {/* Overlay controls — appear on hover */}
-      <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-3">
+      <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
         <button
           onClick={handleExport}
           disabled={exporting}
@@ -273,7 +277,14 @@ function ExportableCard({
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 text-white font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30 disabled:opacity-60"
         >
           <Share2 className="w-4 h-4" />
-          Share
+          Share Image
+        </button>
+        <button
+          onClick={() => onShareSingle(perf)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366]/20 text-[#25D366] font-semibold text-sm hover:bg-[#25D366]/30 transition-colors border border-[#25D366]/30"
+        >
+          <MessageCircle className="w-4 h-4" />
+          Send via WhatsApp / Email
         </button>
       </div>
 
@@ -337,7 +348,7 @@ export default function ReportPage() {
       try {
         const filename = `${perf.player.username}-${tournamentName.toLowerCase().replace(/\s+/g, "-")}.png`;
         await exportCardAsPng(el, filename);
-        await new Promise((r) => setTimeout(r, 300)); // small delay between exports
+        await new Promise((r) => setTimeout(r, 300));
       } catch {
         // continue
       }
@@ -345,6 +356,14 @@ export default function ReportPage() {
     setDownloadingAll(false);
     toast.success("All cards downloaded!");
   }, [performances, tournamentName]);
+
+  // Share modal
+  const shareModal = useShareModal();
+  // Build a shareable report URL from current window location
+  const reportUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : "";
 
   // Empty state
   if (performances.length === 0) {
@@ -412,22 +431,38 @@ export default function ReportPage() {
 
           <div className="flex items-center gap-2">
             {activeTab === "cards" && (
-              <button
-                onClick={handleDownloadAll}
-                disabled={downloadingAll}
-                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                  isDark
-                    ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
-                    : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-                } disabled:opacity-60`}
-              >
-                {downloadingAll ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Download className="w-3.5 h-3.5" />
-                )}
-                Download All
-              </button>
+              <>
+                {/* Share Results button */}
+                <button
+                  onClick={shareModal.openBroadcast}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                    isDark
+                      ? "bg-[#25D366]/15 text-[#25D366] hover:bg-[#25D366]/25"
+                      : "bg-[#25D366]/10 text-[#1a9e4e] hover:bg-[#25D366]/20 border border-[#25D366]/30"
+                  }`}
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Share Results</span>
+                </button>
+
+                {/* Download All button */}
+                <button
+                  onClick={handleDownloadAll}
+                  disabled={downloadingAll}
+                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                    isDark
+                      ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
+                      : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
+                  } disabled:opacity-60`}
+                >
+                  {downloadingAll ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5" />
+                  )}
+                  Download All
+                </button>
+              </>
             )}
             <ThemeToggle />
           </div>
@@ -507,6 +542,7 @@ export default function ReportPage() {
                 isDark={isDark}
                 avatarUrl={avatars.get(perf.player.username.toLowerCase())}
                 avatarStatus={avatarsLoaded ? "loaded" : "loading"}
+                onShareSingle={shareModal.openSingle}
               />
             </div>
           ))}
@@ -578,6 +614,18 @@ export default function ReportPage() {
         {/* Bottom padding */}
         <div className="h-16" />
       </main>
+
+      {/* ── Share Results Modal ── */}
+      {shareModal.open && (
+        <ShareResultsModal
+          performances={performances}
+          tournamentName={tournamentName}
+          reportUrl={reportUrl}
+          isDark={isDark}
+          onClose={shareModal.close}
+          singlePlayer={shareModal.singlePlayer}
+        />
+      )}
     </div>
   );
 }

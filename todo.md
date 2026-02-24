@@ -108,3 +108,18 @@
 - [x] Trend badge (+N / -N / ±0) in sparkline section header
 - [x] Shimmer skeleton while rating history is loading
 - [x] 17 unit tests for sparkline data helpers (ratingToY, computeTrend, formatTrend, countResults)
+
+## Share Results Feature
+
+- [x] Add optional phone/email fields to Player type
+- [x] ShareResultsModal component — WhatsApp and email broadcast flows
+- [x] Pre-filled WhatsApp deep-links (wa.me) with player stats message
+- [x] Pre-filled mailto deep-links with player stats email
+- [x] Broadcast All mode — list all players with individual Send buttons
+- [x] Single-player mode — triggered from per-card hover overlay
+- [x] Copy message to clipboard per player and Copy All button
+- [x] Channel toggle (WhatsApp / Email) with distinct colour themes
+- [x] Share Results button in Report page header (cards tab)
+- [x] "Send via WhatsApp / Email" button in per-card hover overlay
+- [x] Report URL auto-populated from window.location.href
+- [x] 26 unit tests for message generators and URL builders
