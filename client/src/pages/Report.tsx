@@ -18,6 +18,8 @@ import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import { computeAllPerformances, type PlayerPerformance } from "@/lib/performanceStats";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import PlayerStatsCard from "@/components/PlayerStatsCard";
+import CrossTable from "@/components/CrossTable";
+import RoundTimeline from "@/components/RoundTimeline";
 import {
   ChevronLeft,
   Download,
@@ -29,7 +31,52 @@ import {
   Crown,
   Loader2,
   ImageDown,
+  Grid3x3,
+  ListOrdered,
+  LayoutGrid,
 } from "lucide-react";
+
+// ─── Tab type ─────────────────────────────────────────────────────────────────
+type ReportTab = "cards" | "crosstable" | "rounds";
+
+// ─── Tab Bar ─────────────────────────────────────────────────────────────────
+function TabBar({
+  activeTab,
+  onTabChange,
+  isDark,
+}: {
+  activeTab: ReportTab;
+  onTabChange: (tab: ReportTab) => void;
+  isDark: boolean;
+}) {
+  const tabs: { id: ReportTab; label: string; icon: React.ElementType }[] = [
+    { id: "cards",      label: "Player Cards",  icon: LayoutGrid  },
+    { id: "crosstable", label: "Cross-Table",   icon: Grid3x3     },
+    { id: "rounds",     label: "Rounds",        icon: ListOrdered },
+  ];
+  return (
+    <div className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`}>
+      {tabs.map(({ id, label, icon: Icon }) => (
+        <button
+          key={id}
+          onClick={() => onTabChange(id)}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+            activeTab === id
+              ? isDark
+                ? "bg-[#3D6B47] text-white shadow-sm"
+                : "bg-white text-[#3D6B47] shadow-sm"
+              : isDark
+              ? "text-white/50 hover:text-white/80"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="hidden sm:inline">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 // ─── Export helper ────────────────────────────────────────────────────────────
 async function exportCardAsPng(
@@ -266,6 +313,9 @@ export default function ReportPage() {
   const usernames = performances.map((p) => p.player.username);
   const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<ReportTab>("cards");
+
   // Search
   const [search, setSearch] = useState("");
   const filtered = performances.filter((p) =>
@@ -361,24 +411,30 @@ export default function ReportPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleDownloadAll}
-              disabled={downloadingAll}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                isDark
-                  ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
-                  : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-              } disabled:opacity-60`}
-            >
-              {downloadingAll ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Download className="w-3.5 h-3.5" />
-              )}
-              Download All
-            </button>
+            {activeTab === "cards" && (
+              <button
+                onClick={handleDownloadAll}
+                disabled={downloadingAll}
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                  isDark
+                    ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
+                    : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
+                } disabled:opacity-60`}
+              >
+                {downloadingAll ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                Download All
+              </button>
+            )}
             <ThemeToggle />
           </div>
+        </div>
+        {/* Tab bar */}
+        <div className="max-w-6xl mx-auto px-4 pb-3">
+          <TabBar activeTab={activeTab} onTabChange={setActiveTab} isDark={isDark} />
         </div>
       </header>
 
@@ -391,6 +447,8 @@ export default function ReportPage() {
           isDark={isDark}
         />
 
+        {/* ── Tab: Player Cards ── */}
+        {activeTab === "cards" && (<div>
         {/* Search */}
         <div className="mb-5">
           <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
@@ -493,6 +551,28 @@ export default function ReportPage() {
               </div>
             </div>
           </div>
+        )}
+
+        </div>)} {/* end cards tab */}
+
+        {/* ── Tab: Cross-Table ── */}
+        {activeTab === "crosstable" && (
+          <CrossTable
+            players={players}
+            rounds={rounds}
+            tournamentName={tournamentName}
+            isDark={isDark}
+          />
+        )}
+
+        {/* ── Tab: Rounds ── */}
+        {activeTab === "rounds" && (
+          <RoundTimeline
+            players={players}
+            rounds={rounds}
+            tournamentName={tournamentName}
+            isDark={isDark}
+          />
         )}
 
         {/* Bottom padding */}

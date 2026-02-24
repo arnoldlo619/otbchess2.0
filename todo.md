@@ -81,3 +81,10 @@
 - [x] Integrate avatar into Director Dashboard player list (registration panel + Players tab)
 - [x] Integrate avatar into Join page success step
 - [x] PlayerAvatar reusable component (shimmer skeleton, initials fallback, verified badge)
+
+## Wall Chart & Cross-Table
+
+- [ ] Cross-table component (N×N player vs. player results grid with scores)
+- [ ] Round-by-round pairings timeline component
+- [ ] PNG export for wall chart section
+- [ ] Integrate into Report page with tab navigation (Cards / Cross-Table / Rounds)
