@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDirectorState } from "@/lib/directorState";
-import { getStandings, FLAG_EMOJI, DEMO_TOURNAMENT, type Result } from "@/lib/tournamentData";
+import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import {
   Crown,
   ChevronLeft,
@@ -377,18 +377,23 @@ export default function Director() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { id } = useParams<{ id: string }>();
+  const tournamentId = id ?? "otb-demo-2026";
   const {
     state,
     currentRoundData,
     allResultsIn,
     canGenerateNext,
+    isRegistration,
+    canStart,
     liveStandings,
     lastSaved,
+    addPlayer,
+    startTournament,
     enterResult,
     generateNextRound,
     togglePause,
     resetTournament,
-  } = useDirectorState();
+  } = useDirectorState(tournamentId);
 
   const [resetConfirm, setResetConfirm] = useState(false);
 
@@ -485,10 +490,10 @@ export default function Director() {
               className={`text-xs font-semibold truncate max-w-xs ${isDark ? "text-white/70" : "text-gray-700"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
-              {DEMO_TOURNAMENT.name}
+              {state.tournamentName}
             </p>
             <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
-              Round {state.currentRound} of {DEMO_TOURNAMENT.rounds} · {DEMO_TOURNAMENT.timeControl}
+              {isRegistration ? `Registration · ${state.players.length} players` : `Round ${state.currentRound} of ${state.totalRounds}`}
               {lastSaved && (
                 <span className={`ml-2 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`}>
                   · 💾 Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -553,8 +558,7 @@ export default function Director() {
             </h3>
             <div className="space-y-2.5">
               {[
-                { icon: Trophy, label: "Format", value: `${DEMO_TOURNAMENT.format} · ${DEMO_TOURNAMENT.rounds}R` },
-                { icon: Clock, label: "Time Control", value: DEMO_TOURNAMENT.timeControl },
+                { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds}R` },
                 { icon: Users, label: "Players", value: `${state.players.length} registered` },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center gap-2.5">
@@ -582,7 +586,7 @@ export default function Director() {
             <RoundProgress
               rounds={state.rounds}
               currentRound={state.currentRound}
-              totalRounds={DEMO_TOURNAMENT.rounds}
+              totalRounds={state.totalRounds}
               isDark={isDark}
             />
             <div className={`mt-3 pt-3 border-t ${isDark ? "border-white/08" : "border-gray-100"}`}>
@@ -715,8 +719,76 @@ export default function Director() {
           {/* ── Boards Tab ──────────────────────────────────────────────────── */}
           {activeTab === "boards" && (
             <>
+              {/* Registration panel — shown for newly created tournaments */}
+              {isRegistration && (
+                <div className={`rounded-2xl border p-6 space-y-5 ${isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-gray-100"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
+                      <Users className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                    </div>
+                    <div>
+                      <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Registration Open</h3>
+                      <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>Share the join link so players can register</p>
+                    </div>
+                  </div>
+
+                  {/* Join URL */}
+                  <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                    <span className={`text-xs font-mono flex-1 truncate ${isDark ? "text-white/60" : "text-gray-600"}`}>{joinUrl}</span>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
+                      className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"}`}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setShowQR(true)}
+                      className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"}`}
+                    >
+                      QR
+                    </button>
+                  </div>
+
+                  {/* Registered players */}
+                  {state.players.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-white/30" : "text-gray-400"}`}>{state.players.length} Player{state.players.length !== 1 ? "s" : ""} Registered</p>
+                      <div className="space-y-1.5">
+                        {state.players.map((p) => (
+                          <div key={p.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                            <span className="text-sm">{FLAG_EMOJI[p.country] ?? "🏳️"}</span>
+                            <span className={`text-sm font-semibold flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                            {p.title && <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>}
+                            <span className={`text-xs tabular-nums ${isDark ? "text-white/40" : "text-gray-400"}`}>{p.elo}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`text-center py-6 rounded-xl border border-dashed ${isDark ? "border-white/10 text-white/30" : "border-gray-200 text-gray-400"}`}>
+                      <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No players yet — share the join link above</p>
+                    </div>
+                  )}
+
+                  {/* Start button */}
+                  <button
+                    onClick={() => { if (canStart) { startTournament(); toast.success("Round 1 pairings generated!"); } }}
+                    disabled={!canStart}
+                    className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                      canStart
+                        ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-md"
+                        : isDark ? "bg-white/08 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                    }`}
+                  >
+                    <Zap className="w-4 h-4" />
+                    {canStart ? `Start Tournament → Generate Round 1` : `Need at least 2 players to start`}
+                  </button>
+                </div>
+              )}
+
               {/* Status banner */}
-              {allResultsIn && canGenerateNext && (
+              {!isRegistration && allResultsIn && canGenerateNext && (
                 <div
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
                     isDark
@@ -732,7 +804,7 @@ export default function Director() {
                 </div>
               )}
 
-              {allResultsIn && !canGenerateNext && state.currentRound >= DEMO_TOURNAMENT.rounds && (
+              {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (
                 <div
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
                     isDark
@@ -742,7 +814,7 @@ export default function Director() {
                 >
                   <Trophy className="w-4 h-4 flex-shrink-0" />
                   <p className="text-sm font-medium">
-                    Tournament complete! All {DEMO_TOURNAMENT.rounds} rounds finished.
+                    Tournament complete! All {state.totalRounds} rounds finished.
                   </p>
                 </div>
               )}
@@ -762,8 +834,8 @@ export default function Director() {
                 </div>
               )}
 
-              {/* Board cards grid */}
-              {currentRoundData ? (
+              {/* Board cards grid — only shown after tournament starts */}
+              {!isRegistration && currentRoundData ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {currentRoundData.games.map((game) => (
                     <BoardCard
@@ -1190,11 +1262,8 @@ export default function Director() {
                 {
                   title: "Tournament Details",
                   items: [
-                    { label: "Name", value: DEMO_TOURNAMENT.name },
-                    { label: "Venue", value: DEMO_TOURNAMENT.venue },
-                    { label: "Date", value: DEMO_TOURNAMENT.date },
-                    { label: "Format", value: `${DEMO_TOURNAMENT.format} · ${DEMO_TOURNAMENT.rounds} rounds` },
-                    { label: "Time Control", value: DEMO_TOURNAMENT.timeControl },
+                    { label: "Name", value: state.tournamentName },
+                    { label: "Format", value: `Swiss · ${state.totalRounds} rounds` },
                   ],
                 },
                 {
@@ -1317,7 +1386,7 @@ export default function Director() {
       <QRModal
         open={showQR}
         onClose={() => setShowQR(false)}
-        tournamentName={DEMO_TOURNAMENT.name}
+        tournamentName={state.tournamentName}
         joinUrl={joinUrl}
         code="OTB2026"
       />

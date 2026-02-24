@@ -15,6 +15,8 @@ import { useConfetti } from "@/hooks/useConfetti";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
+import { useLocation } from "wouter";
+import { registerTournament, makeSlug } from "@/lib/tournamentRegistry";
 import {
   X,
   Crown,
@@ -835,15 +837,16 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA, inviteCode: nanoid(8) });
+  const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase() });
   const overlayRef = useRef<HTMLDivElement>(null);
   const { fireConfetti } = useConfetti();
+  const [, navigate] = useLocation();
 
   // Reset on open
   useEffect(() => {
     if (open) {
       setStep(0);
-      setData({ ...DEFAULT_DATA, inviteCode: nanoid(8) });
+      setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase() });
     }
   }, [open]);
 
@@ -871,7 +874,26 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         setTimeout(() => fireConfetti(130), 200);
       }
     } else {
+      // Final step — save tournament config and navigate to the new director dashboard
+      const slug = makeSlug(data.name, data.date);
+      registerTournament({
+        id: slug,
+        inviteCode: data.inviteCode,
+        name: data.name,
+        venue: data.venue,
+        date: data.date,
+        description: data.description,
+        format: data.format,
+        rounds: data.rounds,
+        maxPlayers: data.maxPlayers,
+        timeBase: data.timeBase,
+        timeIncrement: data.timeIncrement,
+        timePreset: data.timePreset,
+        ratingSystem: data.ratingSystem,
+        createdAt: new Date().toISOString(),
+      });
       onClose();
+      navigate(`/tournament/${slug}/manage`);
     }
   };
 
