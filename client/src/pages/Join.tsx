@@ -17,6 +17,7 @@ import { useState, useRef, useEffect } from "react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
+import { useLichessProfile } from "@/hooks/useLichessProfile";
 import { useParams, Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -48,8 +49,12 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-import type { ChessComProfile as ChessProfile } from "@/hooks/useChessComProfile";
+import type { ChessComProfile } from "@/hooks/useChessComProfile";
+import type { LichessProfile } from "@/hooks/useLichessProfile";
 
+/** Unified profile type covering both chess.com and Lichess */
+type UnifiedProfile = (ChessComProfile & { platform: "chesscom" }) | LichessProfile;
+type Platform = "chesscom" | "lichess";
 type Step = "code" | "username" | "confirm" | "success";
 
 function eloTier(elo: number) {
@@ -120,7 +125,7 @@ function EloStatBox({
 function ShareSheet({
   profile, tournament, onClose, isDark,
 }: {
-  profile: ChessProfile; tournament: typeof DEMO_TOURNAMENT;
+  profile: UnifiedProfile; tournament: typeof DEMO_TOURNAMENT;
   onClose: () => void; isDark: boolean;
 }) {
   const [copied, setCopied] = useState(false);
@@ -245,7 +250,20 @@ export default function JoinPage() {
   const [step, setStep] = useState<Step>(urlCode ? "username" : "code");
   const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
   const [username, setUsername] = useState("");
-  const { status: lookupStatus, profile, error: lookupError, lookup, reset: resetLookup } = useChessComProfile();
+  const [platform, setPlatform] = useState<Platform>("chesscom");
+
+  // Both hooks are always mounted; only the active one is called
+  const chesscom = useChessComProfile();
+  const lichess = useLichessProfile();
+  const active = platform === "chesscom" ? chesscom : lichess;
+  const lookupStatus = active.status;
+  const lookupError = active.error;
+
+  // Unified profile state — normalised from whichever platform was used
+  const [unifiedProfile, setUnifiedProfile] = useState<UnifiedProfile | null>(null);
+  // Alias for backwards compat with existing JSX that references `profile`
+  const profile = unifiedProfile;
+
   const loading = lookupStatus === "loading";
   const [error, setError] = useState("");
   const [showShare, setShowShare] = useState(false);
@@ -295,19 +313,22 @@ export default function JoinPage() {
     e.preventDefault();
     if (!username.trim()) return;
     setError("");
-    await lookup(username.trim());
+    await active.lookup(username.trim());
     // advance handled via useEffect watching lookupStatus
   }
-
-  // Advance to confirm step once lookup succeeds
+  // Advance to confirm step once lookup succeeds; normalise into UnifiedProfile
   useEffect(() => {
-    if (lookupStatus === "success" && profile && step === "username") {
-      advanceStep("confirm");
+    if (lookupStatus === "success" && step === "username") {
+      const raw = active.profile;
+      if (raw) {
+        setUnifiedProfile(raw as UnifiedProfile);
+        advanceStep("confirm");
+      }
     }
     if (lookupStatus === "not_found" || lookupStatus === "error") {
       setError(lookupError);
     }
-  }, [lookupStatus, profile]);
+  }, [lookupStatus]);;
 
   const [confirming, setConfirming] = useState(false);
   async function handleConfirm() {
@@ -321,7 +342,7 @@ export default function JoinPage() {
           id: `player-${profile.username}-${Date.now()}`,
           name: profile.name || profile.username,
           username: profile.username,
-          elo: profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
+          elo: profile.elo ?? profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
           title: profile.title as Player["title"] | undefined,
           country: profile.country ?? "",
           points: 0,
@@ -330,6 +351,10 @@ export default function JoinPage() {
           losses: 0,
           buchholz: 0,
           colorHistory: [],
+          platform: profile.platform,
+          avatarUrl: profile.platform === "chesscom" ? (profile as ChessComProfile).avatar : undefined,
+          flairEmoji: profile.platform === "lichess" ? (profile as LichessProfile).flairEmoji : undefined,
+          joinedAt: Date.now(),
         };
         addPlayerToTournament(config.id, player);
       }
@@ -364,7 +389,7 @@ export default function JoinPage() {
             <button
               onClick={() => {
                 if (step === "username") advanceStep("code");
-                else if (step === "confirm") { advanceStep("username"); resetLookup(); }
+                else if (step === "confirm") { advanceStep("username"); active.reset(); setUnifiedProfile(null); }
               }}
               className={`touch-target -ml-2 rounded-xl ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-700"} transition-colors`}
             >
@@ -468,22 +493,53 @@ export default function JoinPage() {
               </div>
             </div>
           )}
-
-          {/* ══ STEP 2 — chess.com username ═══════════════════════════════════ */}
+          {/* ══ STEP 2 — Platform + username ═════════════════════════════════════════════════════════ */}
           {step === "username" && (
             <div key={`step2-${stepKey}`} className="animate-spring-in space-y-4">
               <div className="pt-2">
                 <h2 className={`text-xl font-bold tracking-tight ${textMain}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                  Your chess.com username
+                  Your chess profile
                 </h2>
                 <p className={`text-sm mt-1 ${textMuted}`}>
-                  We'll pull your ELO and set up your pairing.
+                  We'll pull your rating and set up your pairing.
                 </p>
               </div>
 
+              {/* Platform toggle */}
+              <div className={`mobile-card border ${card} p-1.5 flex gap-1`}>
+                {(["chesscom", "lichess"] as Platform[]).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { setPlatform(p); setUsername(""); setError(""); active.reset(); }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      platform === p
+                        ? p === "chesscom"
+                          ? isDark ? "bg-[#3D6B47]/30 text-[#4CAF50] shadow-sm" : "bg-[#3D6B47]/10 text-[#3D6B47] shadow-sm"
+                          : isDark ? "bg-orange-400/20 text-orange-300 shadow-sm" : "bg-orange-50 text-orange-600 shadow-sm"
+                        : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {p === "chesscom" ? (
+                      <>
+                        <span className="text-base">&#9812;</span>
+                        chess.com
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-base">&#9822;</span>
+                        Lichess
+                      </>
+                    )}
+                  </button>
+                ))}
+              </div>
+
               <div className={`mobile-card border ${card} p-5`}>
-                <label className={`mobile-section-label block mb-2 ${labelCls}`}>Username</label>
+                <label className={`mobile-section-label block mb-2 ${labelCls}`}>
+                  {platform === "chesscom" ? "chess.com username" : "Lichess username"}
+                </label>
                 <div className="relative">
                   <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
                   <input
@@ -491,7 +547,7 @@ export default function JoinPage() {
                     type="text"
                     value={username}
                     onChange={(e) => { setUsername(e.target.value); setError(""); }}
-                    placeholder="e.g. hikaru"
+                    placeholder={platform === "chesscom" ? "e.g. hikaru" : "e.g. DrNykterstein"}
                     className={`${inputBase} !pl-10 text-base`}
                     autoComplete="off"
                     autoCapitalize="none"
@@ -501,7 +557,9 @@ export default function JoinPage() {
                   />
                 </div>
                 <p className={`text-xs mt-2 ${textMuted}`}>
-                  Try: hikaru · gothamchess · magnuscarlsen
+                  {platform === "chesscom"
+                    ? "Try: hikaru · gothamchess · magnuscarlsen"
+                    : "Try: DrNykterstein · Hikaru · penguingim1"}
                 </p>
                 {error && (
                   <div className="flex items-start gap-2 text-red-500 text-xs mt-2.5">
@@ -527,8 +585,12 @@ export default function JoinPage() {
 
               {/* Profile card */}
               <div className={`mobile-card border ${card}`}>
-                {/* Green accent bar */}
-                <div className="h-1 bg-gradient-to-r from-[#3D6B47] via-[#4CAF50] to-[#3D6B47]" />
+                {/* Accent bar — green for chess.com, orange for Lichess */}
+                <div className={`h-1 bg-gradient-to-r ${
+                  profile.platform === "lichess"
+                    ? "from-orange-600 via-orange-400 to-orange-600"
+                    : "from-[#3D6B47] via-[#4CAF50] to-[#3D6B47]"
+                }`} />
 
                 <div className="p-5 space-y-4">
                   {/* Avatar + name */}
@@ -546,7 +608,7 @@ export default function JoinPage() {
                       </div>
                       <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 ${
                         isDark ? "border-[oklch(0.22_0.06_145)]" : "border-white"
-                      } ${profile.status === "online" ? "status-dot-online" : "status-dot-offline"}`} />
+                      } ${profile.platform === "chesscom" && (profile as ChessComProfile).status === "online" ? "status-dot-online" : "status-dot-offline"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -560,7 +622,16 @@ export default function JoinPage() {
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm ${textMuted}`}>@{profile.username}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className={`text-sm ${textMuted}`}>@{profile.username}</p>
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
+                          profile.platform === "lichess"
+                            ? isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-600"
+                            : isDark ? "bg-[#4CAF50]/10 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                        }`}>
+                          {profile.platform === "lichess" ? "&#9822; Lichess" : "&#9812; chess.com"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -568,9 +639,19 @@ export default function JoinPage() {
                   <div>
                     <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
                     <div className="grid grid-cols-3 gap-2">
-                      <EloStatBox label="Rapid" target={profile.rapid} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
-                      <EloStatBox label="Blitz" target={profile.blitz} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
-                      <EloStatBox label="Bullet" target={profile.bullet} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                      {profile.platform === "lichess" ? (
+                        <>
+                          <EloStatBox label="Classical" target={(profile as LichessProfile).classical} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Rapid" target={profile.rapid} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Blitz" target={profile.blitz} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                        </>
+                      ) : (
+                        <>
+                          <EloStatBox label="Rapid" target={profile.rapid} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Blitz" target={profile.blitz} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Bullet" target={profile.bullet} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -643,7 +724,16 @@ export default function JoinPage() {
                   {/* Player + ELO */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <PlayerAvatar username={profile.username} name={profile.name ?? profile.username} size={40} showBadge className="rounded-xl" />
+                      <PlayerAvatar
+                        username={profile.username}
+                        name={profile.name ?? profile.username}
+                        size={40}
+                        showBadge
+                        className="rounded-xl"
+                        platform={profile.platform}
+                        avatarUrl={profile.platform === "chesscom" ? (profile as import("@/hooks/useChessComProfile").ChessComProfile).avatar : undefined}
+                        flairEmoji={profile.platform === "lichess" ? (profile as import("@/hooks/useLichessProfile").LichessProfile).flairEmoji : undefined}
+                      />
                       <div>
                         <p className={`font-bold text-sm ${textMain}`}
                           style={{ fontFamily: "'Clash Display', sans-serif" }}>

@@ -1,15 +1,20 @@
 /**
  * OTB Chess — PlayerAvatar
  *
- * A compact, reusable avatar component that fetches a player's chess.com
- * profile photo and displays it in a rounded container. Falls back to
- * styled initials when no photo is available or while loading.
+ * A compact, reusable avatar component that:
+ *  - Fetches a chess.com profile photo (with sessionStorage caching)
+ *  - Renders a Lichess flair emoji when platform is "lichess"
+ *  - Falls back to styled initials when no photo is available
  *
  * Props:
- *   username  — chess.com username (used for API fetch)
- *   name      — display name (used for initials fallback)
- *   size      — pixel size of the avatar (default 32)
- *   className — additional Tailwind classes for the outer wrapper
+ *   username    — chess.com or Lichess username (used for API fetch)
+ *   name        — display name (used for initials fallback)
+ *   platform    — "chesscom" | "lichess" | undefined (defaults to chesscom)
+ *   avatarUrl   — pre-fetched avatar URL (skips the hook fetch if provided)
+ *   flairEmoji  — Lichess flair emoji (e.g. "🔥") for Lichess players
+ *   size        — pixel size of the avatar (default 32)
+ *   className   — additional Tailwind classes for the outer wrapper
+ *   showBadge   — when true, shows a platform badge on the photo
  */
 
 import { useState } from "react";
@@ -37,20 +42,31 @@ function usernameToColor(username: string): string {
 interface PlayerAvatarProps {
   username: string;
   name: string;
+  platform?: "chesscom" | "lichess";
+  /** Pre-fetched avatar URL — skips the internal hook fetch */
+  avatarUrl?: string;
+  /** Lichess flair emoji for Lichess players */
+  flairEmoji?: string;
   size?: number;
   className?: string;
-  /** When true, shows a small chess.com badge on the photo */
+  /** When true, shows a small platform badge on the photo */
   showBadge?: boolean;
 }
 
 export function PlayerAvatar({
   username,
   name,
+  platform = "chesscom",
+  avatarUrl: propAvatarUrl,
+  flairEmoji,
   size = 32,
   className = "",
   showBadge = false,
 }: PlayerAvatarProps) {
-  const { url, status } = useChessAvatar(username);
+  // Only fetch from chess.com if no pre-fetched URL is provided and platform is chesscom
+  const { url: fetchedUrl, status } = useChessAvatar(
+    platform === "chesscom" && !propAvatarUrl ? username : ""
+  );
   const [imgError, setImgError] = useState(false);
 
   const initials = name
@@ -61,9 +77,12 @@ export function PlayerAvatar({
     .toUpperCase();
 
   const colorClass = usernameToColor(username);
-  const showPhoto = status === "loaded" && url && !imgError;
-  const showShimmer = status === "loading";
+  const resolvedUrl = propAvatarUrl || fetchedUrl;
+  const showPhoto = resolvedUrl && !imgError && platform === "chesscom";
+  const showShimmer = !propAvatarUrl && status === "loading" && platform === "chesscom";
+  const showFlair = platform === "lichess" && flairEmoji;
   const fontSize = Math.round(size * 0.38);
+  const emojiFontSize = Math.round(size * 0.52);
   const badgeSize = Math.round(size * 0.38);
 
   return (
@@ -72,17 +91,29 @@ export function PlayerAvatar({
       style={{ width: size, height: size }}
     >
       {showShimmer ? (
-        /* Shimmer skeleton */
+        /* Shimmer skeleton while chess.com avatar loads */
         <div className="w-full h-full animate-shimmer rounded-full" />
       ) : showPhoto ? (
         /* chess.com avatar photo */
         <img
-          src={url}
+          src={resolvedUrl!}
           alt={`${username}'s avatar`}
           className="w-full h-full object-cover"
           crossOrigin="anonymous"
           onError={() => setImgError(true)}
         />
+      ) : showFlair ? (
+        /* Lichess flair emoji on a dark gradient background */
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-500 to-orange-700">
+          <span
+            className="leading-none select-none"
+            style={{ fontSize: emojiFontSize }}
+            role="img"
+            aria-label="Lichess flair"
+          >
+            {flairEmoji}
+          </span>
+        </div>
       ) : (
         /* Initials fallback */
         <div
@@ -97,20 +128,34 @@ export function PlayerAvatar({
         </div>
       )}
 
-      {/* chess.com verified badge */}
-      {showBadge && showPhoto && (
+      {/* Platform badge */}
+      {showBadge && (showPhoto || showFlair) && (
         <div
-          className="absolute -bottom-0.5 -right-0.5 rounded-full bg-[#81b64c] border border-white/30 flex items-center justify-center"
+          className={`absolute -bottom-0.5 -right-0.5 rounded-full border border-white/30 flex items-center justify-center ${
+            platform === "lichess" ? "bg-orange-500" : "bg-[#81b64c]"
+          }`}
           style={{ width: badgeSize, height: badgeSize }}
-          title="chess.com verified"
+          title={platform === "lichess" ? "Lichess verified" : "chess.com verified"}
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="fill-white"
-            style={{ width: badgeSize * 0.6, height: badgeSize * 0.6 }}
-          >
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-          </svg>
+          {platform === "lichess" ? (
+            /* Lichess knight icon */
+            <svg
+              viewBox="0 0 24 24"
+              className="fill-white"
+              style={{ width: badgeSize * 0.65, height: badgeSize * 0.65 }}
+            >
+              <path d="M19 22H5v-2h14v2M13 2a5 5 0 0 1 5 5c0 1.64-.8 3.09-2.03 4L17 13H7l1.03-2C6.8 10.09 6 8.64 6 7a5 5 0 0 1 5-5h2m0 2h-2a3 3 0 0 0-3 3c0 1.12.61 2.1 1.5 2.63L9.5 11h5l-.5-2.37A3 3 0 0 0 15.5 7a3 3 0 0 0-2.5-3z" />
+            </svg>
+          ) : (
+            /* chess.com checkmark */
+            <svg
+              viewBox="0 0 24 24"
+              className="fill-white"
+              style={{ width: badgeSize * 0.6, height: badgeSize * 0.6 }}
+            >
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+            </svg>
+          )}
         </div>
       )}
     </div>

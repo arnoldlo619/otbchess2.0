@@ -25,6 +25,8 @@ export interface ChessComProfile {
   elo: number;
   status: "online" | "offline";
   joined?: number;
+  /** Source platform identifier */
+  platform: "chesscom";
 }
 
 export type FetchStatus = "idle" | "loading" | "success" | "not_found" | "error";
@@ -98,6 +100,7 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
     elo,
     status: profileData.status === "online" ? "online" : "offline",
     joined: profileData.joined,
+    platform: "chesscom",
   };
 
   cache.set(key, profile);

@@ -84,7 +84,16 @@
 
 ## Wall Chart & Cross-Table
 
-- [ ] Cross-table component (N×N player vs. player results grid with scores)
-- [ ] Round-by-round pairings timeline component
-- [ ] PNG export for wall chart section
-- [ ] Integrate into Report page with tab navigation (Cards / Cross-Table / Rounds)
+- [x] Cross-table component (N×N player vs. player results grid with scores)
+- [x] Round-by-round pairings timeline component
+- [x] PNG export for wall chart section
+- [x] Integrate into Report page with tab navigation (Cards / Cross-Table / Rounds)
+
+## Lichess API Integration
+
+- [ ] Build useLichessProfile hook (API fetch, rating, title, avatar, caching)
+- [ ] Add platform toggle (chess.com / Lichess) to Join page username step
+- [ ] Wire useLichessProfile into Join page alongside useChessComProfile
+- [ ] Update PlayerAvatar to support Lichess avatar URLs
+- [ ] Update tournament wizard ratingSystem field to drive allowed platforms
+- [ ] Unit tests for useLichessProfile data parsing

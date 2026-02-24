@@ -20,6 +20,12 @@ export interface Player {
   buchholz: number;
   colorHistory: ("W" | "B")[];
   joinedAt?: number; // Unix timestamp ms — set when player registers via Join page
+  /** Source platform: chess.com or Lichess */
+  platform?: "chesscom" | "lichess";
+  /** Avatar URL (chess.com only; Lichess doesn't provide profile photos) */
+  avatarUrl?: string;
+  /** Lichess flair emoji, e.g. "🔥" */
+  flairEmoji?: string;
 }
 
 export interface Game {

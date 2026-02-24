@@ -775,7 +775,7 @@ export default function Director() {
                       <div className="space-y-1.5">
                         {state.players.map((p) => (
                           <div key={p.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg group ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
-                            <PlayerAvatar username={p.username} name={p.name} size={28} showBadge />
+                            <PlayerAvatar username={p.username} name={p.name} size={28} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                             <span className={`text-sm font-semibold flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
                             {p.title && <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>}
                             <span className={`text-xs tabular-nums ${isDark ? "text-white/40" : "text-gray-400"}`}>{p.elo}</span>
@@ -1203,7 +1203,7 @@ export default function Director() {
                       <span className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>
                         {i + 1}
                       </span>
-                      <PlayerAvatar username={p.username} name={p.name} size={32} showBadge />
+                      <PlayerAvatar username={p.username} name={p.name} size={32} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
