@@ -11,6 +11,7 @@
  */
 
 import { useState } from "react";
+import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
@@ -48,6 +49,8 @@ import {
   Filter,
   ChevronDown,
   MapPin,
+  UserPlus,
+  PlayCircle,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -424,10 +427,13 @@ export default function Director() {
   const [sortKey, setSortKey] = useState<"rank" | "elo" | "name" | "points">("rank");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   // Derived: filtered + sorted player list
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
   const allCountries = Array.from(new Set(standings.map((p) => p.country)));
+  const existingUsernames = state.players.map((p) => p.username);
 
   const filteredPlayers = standings
     .filter((p) => {
@@ -1056,6 +1062,17 @@ export default function Director() {
                       showFilters ? "rotate-180" : ""
                     }`} />
                   </button>
+                  {/* Add Player button — only during registration */}
+                  {isRegistration && (
+                    <button
+                      onClick={() => setShowAddPlayer(true)}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex-shrink-0"
+                      style={{ background: "#3D6B47", color: "#FFFFFF" }}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      Add Player
+                    </button>
+                  )}
                 </div>
 
                 {/* Expanded filter panel */}
@@ -1326,10 +1343,60 @@ export default function Director() {
                 ))}
               </div>
               )}
+              {/* ── Start Tournament CTA (registration phase only) ─────────── */}
+              {isRegistration && (
+                <div
+                  className={`rounded-xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                    isDark
+                      ? "bg-[oklch(0.22_0.06_145)] border-[#4CAF50]/25"
+                      : "bg-[#F0FDF4] border-[#3D6B47]/20"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: "#3D6B47" }}
+                    >
+                      <PlayCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p
+                        className={`text-sm font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        {canStart ? "Ready to start" : "Waiting for players"}
+                      </p>
+                      <p className={`text-xs ${
+                        isDark ? "text-white/40" : "text-gray-500"
+                      }`}>
+                        {canStart
+                          ? `${state.players.length} player${state.players.length !== 1 ? "s" : ""} registered · ${state.totalRounds} rounds`
+                          : `Need at least 2 players to start`}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => canStart && setShowStartConfirm(true)}
+                    disabled={!canStart}
+                    className="flex items-center gap-2 text-sm font-bold rounded-xl transition-all duration-200 flex-shrink-0 w-full sm:w-auto justify-center"
+                    style={{
+                      padding: "11px 24px",
+                      background: canStart ? "#3D6B47" : isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB",
+                      color: canStart ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF",
+                      cursor: canStart ? "pointer" : "not-allowed",
+                      boxShadow: canStart ? "0 4px 16px rgba(61,107,71,0.35)" : "none",
+                    }}
+                  >
+                    <PlayCircle className="w-4 h-4" />
+                    Start Tournament
+                  </button>
+                </div>
+              )}
             </div>
           )}
-
-          {/* ── Settings Tab ────────────────────────────────────────────────── */}
+          {/* ── Settings Tabb ────────────────────────────────────────────────── */}
           {activeTab === "settings" && (
             <div className="space-y-4">
               {[

@@ -218,19 +218,12 @@ function HeroPanel({
       />
 
       {/* Logo mark */}
-      <div className="relative flex items-center gap-2.5">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.15)" }}
-        >
-          <Crown className="w-4 h-4 text-white" strokeWidth={2} />
-        </div>
-        <span
-          className="text-white/80 text-sm font-semibold tracking-wide"
-          style={{ fontFamily: "'Clash Display', sans-serif" }}
-        >
-          OTB Chess
-        </span>
+      <div className="relative flex items-center">
+        <img
+          src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+          alt="OTB Chess"
+          style={{ height: 36, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
+        />
       </div>
 
       {/* Step content */}

@@ -396,14 +396,12 @@ export default function JoinPage() {
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#3D6B47] rounded-lg flex items-center justify-center shadow-sm">
-              <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-            </div>
-            <span className={`font-bold text-sm ${textMain}`}
-              style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              OTB Chess
-            </span>
+          <Link href="/" className="flex items-center">
+            <img
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+              alt="OTB Chess"
+              className="h-8 w-auto object-contain"
+            />
           </Link>
         </div>
         <ThemeToggle />

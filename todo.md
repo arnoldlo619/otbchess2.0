@@ -163,3 +163,15 @@
 - [x] Keyboard navigation (Enter to advance, Escape to exit)
 - [x] Mobile: single-column stacked layout, bottom nav bar
 - [x] Consistent with platform design system (green/white, Clash Display, OKLCH tokens)
+
+## Manual Player Entry & Start Tournament
+
+- [ ] AddPlayerModal — name, platform (chess.com/lichess/manual), username, ELO lookup button
+- [ ] "Add Player" button in Players tab header
+- [ ] Persist manually-added players to tournament registry
+- [ ] Remove player from Players tab (with confirmation)
+- [ ] Start Tournament button in Director Dashboard header
+- [ ] Confirmation dialog before starting (shows player count, rounds, format)
+- [ ] Tournament status transitions: lobby → active → complete
+- [ ] Disable Start if fewer than 2 players registered
+- [ ] Lock player registration once tournament is started

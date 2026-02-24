@@ -74,10 +74,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
   }, []);
 
   const navLinks: { label: string; id: string }[] = [
-    { label: "Features", id: "features" },
-    { label: "How It Works", id: "how-it-works" },
     { label: "For Clubs", id: "for-clubs" },
-    { label: "Pricing", id: "testimonials" },
   ];
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
@@ -96,16 +93,12 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
     >
       <div className="container flex items-center justify-between h-16">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 bg-[#3D6B47] rounded-md flex items-center justify-center">
-            <Crown className="w-4 h-4 text-white" strokeWidth={2} />
-          </div>
-          <span
-            className="font-semibold text-lg tracking-tight text-foreground"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            OTB Chess
-          </span>
+        <a href="/" className="flex items-center gap-1 group">
+          <img
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+            alt="OTB Chess"
+            className="h-10 w-auto object-contain"
+          />
         </a>
 
         {/* Desktop Links */}
@@ -811,13 +804,12 @@ function Footer() {
       <div className="container">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 bg-[#3D6B47] rounded-md flex items-center justify-center">
-                <Crown className="w-4 h-4 text-white" strokeWidth={2} />
-              </div>
-              <span className="text-white font-semibold text-lg" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                OTB Chess
-              </span>
+            <div className="flex items-center gap-1 mb-4">
+              <img
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+                alt="OTB Chess"
+                className="h-9 w-auto object-contain"
+              />
             </div>
             <p className="text-sm text-white/50 leading-relaxed">
               Over The Board. Built for chess clubs that take the game seriously.
