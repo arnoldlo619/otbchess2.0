@@ -91,13 +91,13 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           : "bg-transparent"
       }`}
     >
-      <div className="container flex items-center justify-between h-16">
+      <div className="container flex items-center justify-between h-[72px]">
         {/* Logo */}
         <a href="/" className="flex items-center gap-1 group">
           <img
             src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
             alt="OTB Chess"
-            className="h-10 w-auto object-contain"
+            className="h-14 w-auto object-contain"
           />
         </a>
 
