@@ -160,7 +160,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-[#EEEED2]"}`}>
+        <div className={`md:hidden border-b px-4 pb-4 ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-[#F2F7F3] border-[#3D6B47]/12"}`}>
           {navLinks.map((link) => (
             <button
               key={link.id}
