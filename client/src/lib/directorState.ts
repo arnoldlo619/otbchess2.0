@@ -94,6 +94,25 @@ function saveToStorage(tournamentId: string, state: DirectorState): void {
   }
 }
 
+/**
+ * Standalone function — can be called from any page (e.g. Join page) to add a
+ * player directly to a tournament's localStorage store without needing the hook.
+ * The Director Dashboard will pick up the change via the storage event listener.
+ */
+export function addPlayerToTournament(tournamentId: string, player: Player): void {
+  try {
+    const existing = loadFromStorage(tournamentId);
+    if (!existing) return; // tournament not yet initialised — silently skip
+    // Prevent duplicate registrations
+    if (existing.players.some((p) => p.id === player.id || p.username === player.username)) return;
+    const playerWithTimestamp: Player = { ...player, joinedAt: Date.now() };
+    const updated: DirectorState = { ...existing, players: [...existing.players, playerWithTimestamp] };
+    saveToStorage(tournamentId, updated);
+  } catch {
+    // fail silently
+  }
+}
+
 function getSavedAt(tournamentId: string): string | null {
   try {
     const raw = localStorage.getItem(storageKey(tournamentId));
@@ -142,6 +161,24 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [state, tournamentId]);
+
+  // Listen for storage events from other tabs (e.g. Join page adding a player)
+  useEffect(() => {
+    function handleStorageEvent(e: StorageEvent) {
+      if (e.key === storageKey(tournamentId) && e.newValue) {
+        try {
+          const parsed: PersistedState = JSON.parse(e.newValue);
+          if (parsed.schemaVersion === SCHEMA_VERSION) {
+            setState(parsed.state);
+          }
+        } catch {
+          // ignore malformed data
+        }
+      }
+    }
+    window.addEventListener("storage", handleStorageEvent);
+    return () => window.removeEventListener("storage", handleStorageEvent);
+  }, [tournamentId]);
 
   // Add a player to the registration list
   const addPlayer = useCallback((player: Player) => {

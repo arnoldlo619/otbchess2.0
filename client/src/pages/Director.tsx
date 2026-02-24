@@ -684,7 +684,7 @@ export default function Director() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`touch-target px-3 py-1.5 rounded-lg font-medium capitalize transition-all active:scale-95 ${
+                    className={`touch-target px-3 py-1.5 rounded-lg font-medium capitalize transition-all active:scale-95 flex items-center gap-1.5 ${
                       activeTab === tab
                         ? isDark
                           ? "bg-[#3D6B47] text-white shadow-sm"
@@ -695,6 +695,15 @@ export default function Director() {
                     }`}
                   >
                     {tab}
+                    {tab === "players" && state.players.length > 0 && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                        activeTab === "players"
+                          ? isDark ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+                          : isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
+                      }`}>
+                        {state.players.length}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -1152,6 +1161,9 @@ export default function Director() {
                             <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                           )}
                           <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                          {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
+                          )}
                         </div>
                         <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
                       </div>
@@ -1211,6 +1223,9 @@ export default function Director() {
                               <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                             )}
                             <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                            {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
+                            )}
                           </div>
                           <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
                         </div>

@@ -19,6 +19,7 @@ export interface Player {
   losses: number;
   buchholz: number;
   colorHistory: ("W" | "B")[];
+  joinedAt?: number; // Unix timestamp ms — set when player registers via Join page
 }
 
 export interface Game {

@@ -20,6 +20,9 @@ import { useParams, Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
+import type { Player } from "@/lib/tournamentData";
+import { getTournamentByCode } from "@/lib/tournamentRegistry";
+import { addPlayerToTournament } from "@/lib/directorState";
 import {
   Crown,
   ChevronRight,
@@ -291,6 +294,28 @@ export default function JoinPage() {
   const [confirming, setConfirming] = useState(false);
   async function handleConfirm() {
     setConfirming(true);
+    // Persist the player to the tournament's localStorage store so the Director
+    // Dashboard picks them up immediately (via storage event listener)
+    if (profile) {
+      const config = getTournamentByCode(tournamentCode);
+      if (config) {
+        const player: Player = {
+          id: `player-${profile.username}-${Date.now()}`,
+          name: profile.name || profile.username,
+          username: profile.username,
+          elo: profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
+          title: profile.title as Player["title"] | undefined,
+          country: profile.country ?? "",
+          points: 0,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          buchholz: 0,
+          colorHistory: [],
+        };
+        addPlayerToTournament(config.id, player);
+      }
+    }
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
     advanceStep("success");
