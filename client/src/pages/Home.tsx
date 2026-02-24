@@ -73,9 +73,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const navLinks: { label: string; id: string }[] = [
-    { label: "For Clubs", id: "for-clubs" },
-  ];
+  const navLinks: { label: string; id: string }[] = [];
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
