@@ -475,14 +475,32 @@ function UserTournamentCard({
             isDark ? "bg-white/04 text-white/30" : "bg-gray-50 text-gray-400"
           }`}>
             <Trophy className="w-3.5 h-3.5" />
-            {state?.status === "registration" ? "Waiting for players to register" : "No results yet"}
+             {state?.status === "registration" ? "Waiting for players to register" : "No results yet"}
           </div>
+        )}
+      </div>
+      {/* Action buttons */}
+      <div className="flex gap-2 px-5 pb-4">
+        <Link href={`/tournament/${config.id}/manage`} className="flex-1">
+          <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+            isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
+          }`}>
+            <BarChart2 className="w-3.5 h-3.5" /> Manage
+          </button>
+        </Link>
+        {state?.status === "completed" && (
+          <Link href={`/tournament/${config.id}/report`} className="flex-1">
+            <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              isDark ? "bg-amber-500/15 text-amber-400 hover:bg-amber-500/25" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
+            }`}>
+              <Trophy className="w-3.5 h-3.5" /> Player Reports
+            </button>
+          </Link>
         )}
       </div>
     </div>
   );
 }
-
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 
 function StatCard({

@@ -62,3 +62,14 @@
 - [x] Vitest setup (vitest.config.ts, test script in package.json)
 - [x] 18 unit tests passing — Tournament Registry, Player Registration, Swiss Engine, loadTournamentState
 - [x] TypeScript: 0 errors across entire codebase
+
+## Post-Tournament Performance Reports
+
+- [x] Performance stats computation engine (computePerformanceStats per player)
+- [x] PlayerStatsCard component — shareable visual card (social media optimized)
+- [x] TournamentReport page — full report with all player cards
+- [x] Wire report into Director Dashboard post-tournament CTA
+- [x] Wire report into Archive page UserTournamentCard
+- [x] Canvas-based PNG export for social media sharing
+- [x] Add /tournament/:id/report route to App.tsx
+- [x] Unit tests for performance stats computation (18 tests, all passing)

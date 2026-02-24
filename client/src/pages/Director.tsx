@@ -858,6 +858,13 @@ export default function Director() {
                         <BarChart3 className="w-3.5 h-3.5" /> View Results
                       </button>
                     </Link>
+                    <Link href={`/tournament/${tournamentId}/report`}>
+                      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                        isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
+                      }`}>
+                        <Trophy className="w-3.5 h-3.5" /> Player Reports
+                      </button>
+                    </Link>
                     <Link href={`/tournament/${tournamentId}/print`}>
                       <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                         isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
