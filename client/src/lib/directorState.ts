@@ -2,10 +2,16 @@
  * OTB Chess — Director State Management
  * Manages mutable tournament state: results, pairings, standings
  * Uses the full Swiss engine from swiss.ts for pairing and tiebreaks
+ * Persists all state to localStorage with versioned schema and graceful recovery
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
 import { generateSwissPairings, applyResultToPlayers, computeStandings } from "./swiss";
+
+// ─── Schema Version ───────────────────────────────────────────────────────────
+// Bump this when the DirectorState shape changes to force a clean reset
+const SCHEMA_VERSION = 2;
+const STORAGE_KEY = "otb-director-state-v" + SCHEMA_VERSION;
 
 // ─── Mutable State ────────────────────────────────────────────────────────────
 export interface DirectorState {
@@ -15,9 +21,15 @@ export interface DirectorState {
   status: "in_progress" | "completed" | "paused";
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-export function useDirectorState() {
-  const [state, setState] = useState<DirectorState>(() => ({
+interface PersistedState {
+  schemaVersion: number;
+  savedAt: string;
+  state: DirectorState;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getInitialState(): DirectorState {
+  return {
     players: DEMO_TOURNAMENT.players.map((p) => ({ ...p })),
     rounds: DEMO_TOURNAMENT.roundData.map((r) => ({
       ...r,
@@ -25,7 +37,67 @@ export function useDirectorState() {
     })),
     currentRound: DEMO_TOURNAMENT.currentRound,
     status: "in_progress",
-  }));
+  };
+}
+
+function loadFromStorage(): DirectorState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return getInitialState();
+    const parsed: PersistedState = JSON.parse(raw);
+    if (parsed.schemaVersion !== SCHEMA_VERSION) {
+      // Schema mismatch — clear old data and start fresh
+      localStorage.removeItem(STORAGE_KEY);
+      return getInitialState();
+    }
+    return parsed.state;
+  } catch {
+    // Corrupted JSON — silently fall back to initial state
+    return getInitialState();
+  }
+}
+
+function saveToStorage(state: DirectorState): void {
+  try {
+    const persisted: PersistedState = {
+      schemaVersion: SCHEMA_VERSION,
+      savedAt: new Date().toISOString(),
+      state,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+  } catch {
+    // localStorage may be full or unavailable — fail silently
+  }
+}
+
+function getSavedAt(): string | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: PersistedState = JSON.parse(raw);
+    return parsed.savedAt ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+export function useDirectorState() {
+  const [state, setState] = useState<DirectorState>(loadFromStorage);
+  const [lastSaved, setLastSaved] = useState<string | null>(getSavedAt);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-save to localStorage whenever state changes (debounced 300ms)
+  useEffect(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveToStorage(state);
+      setLastSaved(new Date().toISOString());
+    }, 300);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [state]);
 
   // Enter a result for a game
   const enterResult = useCallback((gameId: string, result: Result) => {
@@ -105,6 +177,14 @@ export function useDirectorState() {
     }));
   }, []);
 
+  // Reset tournament — clears localStorage and restores initial state
+  const resetTournament = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    const fresh = getInitialState();
+    setState(fresh);
+    setLastSaved(null);
+  }, []);
+
   // Derived values
   const currentRoundData = state.rounds.find((r) => r.number === state.currentRound);
   const allResultsIn = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
@@ -119,8 +199,10 @@ export function useDirectorState() {
     allResultsIn,
     canGenerateNext,
     liveStandings,
+    lastSaved,
     enterResult,
     generateNextRound,
     togglePause,
+    resetTournament,
   };
 }

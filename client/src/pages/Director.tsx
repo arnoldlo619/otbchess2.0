@@ -383,10 +383,14 @@ export default function Director() {
     allResultsIn,
     canGenerateNext,
     liveStandings,
+    lastSaved,
     enterResult,
     generateNextRound,
     togglePause,
+    resetTournament,
   } = useDirectorState();
+
+  const [resetConfirm, setResetConfirm] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
   const [showQR, setShowQR] = useState(false);
@@ -485,6 +489,11 @@ export default function Director() {
             </p>
             <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
               Round {state.currentRound} of {DEMO_TOURNAMENT.rounds} · {DEMO_TOURNAMENT.timeControl}
+              {lastSaved && (
+                <span className={`ml-2 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`}>
+                  · 💾 Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </p>
           </div>
 
@@ -1245,6 +1254,45 @@ export default function Director() {
                 <div className={`px-5 py-3 border-b ${isDark ? "border-red-500/20" : "border-red-50"}`}>
                   <h2 className="text-sm font-semibold text-red-500">Danger Zone</h2>
                 </div>
+                {/* Reset Tournament */}
+                <div className="px-5 py-4 flex items-center justify-between border-b border-red-50">
+                  <div>
+                    <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>Reset Tournament</p>
+                    <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                      Clears all rounds and results, restores initial state
+                    </p>
+                  </div>
+                  {resetConfirm ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          resetTournament();
+                          setResetConfirm(false);
+                          toast.success("Tournament reset to initial state");
+                        }}
+                        className="text-xs font-semibold text-white bg-red-500 px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        Confirm Reset
+                      </button>
+                      <button
+                        onClick={() => setResetConfirm(false)}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                          isDark ? "text-white/50 hover:bg-white/08" : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setResetConfirm(true)}
+                      className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+                {/* End Tournament */}
                 <div className="px-5 py-4 flex items-center justify-between">
                   <div>
                     <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>End Tournament</p>
