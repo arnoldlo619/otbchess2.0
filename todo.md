@@ -149,3 +149,17 @@
 - [x] SparklineSection holds tc state; passes timeControl to useRatingHistory
 - [x] Empty-state message is TC-aware ("No blitz games in the last 10 games")
 - [x] 35 unit tests for classifyChessComTC, classifyLichessPerf, filterPoints
+
+## Full-Screen Tournament Creation Wizard Redesign
+
+- [x] Full-screen overlay (fixed inset-0) replacing the cramped modal
+- [x] Thin top progress bar (4 segments, animated fill)
+- [x] Two-column layout: left hero panel (step context) + right input panel
+- [x] Step 1 — Details: large name input hero, venue/date/description below
+- [x] Step 2 — Format: large format cards with icons, rounds/players as big tap targets
+- [x] Step 3 — Time Control: time preset as large visual cards, custom stepper
+- [x] Step 4 — Share: full-width QR + invite link, confetti
+- [x] Smooth horizontal slide-in/out transitions between steps
+- [x] Keyboard navigation (Enter to advance, Escape to exit)
+- [x] Mobile: single-column stacked layout, bottom nav bar
+- [x] Consistent with platform design system (green/white, Clash Display, OKLCH tokens)

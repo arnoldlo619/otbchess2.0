@@ -1,15 +1,23 @@
 /*
- * OTB Chess — Tournament Creation Wizard
- * Design: "The Board Room" — Apple Minimalism + Chess.com Green
+ * OTB Chess — Tournament Creation Wizard (Full-Screen Redesign)
+ *
+ * Design philosophy:
+ *   - Full viewport canvas — no modal chrome, no scroll
+ *   - Two-column layout on desktop: left = contextual hero, right = focused inputs
+ *   - One primary action per step — no cognitive overload
+ *   - Thin top progress bar + minimal step labels
+ *   - Smooth horizontal slide transitions between steps
+ *   - Consistent with platform design system (green/white, Clash Display, OKLCH)
  *
  * Steps:
- * 1. Tournament Details  (name, venue, date)
- * 2. Format & Rounds     (Swiss/RR, round count, player limit)
- * 3. Time Control        (preset or custom)
- * 4. Invite & Share      (generated link + QR placeholder)
+ *   1. Details      — name, venue, date, description, rating system
+ *   2. Format       — Swiss / Round Robin / Elimination, rounds, player cap
+ *   3. Time Control — preset tiles or custom stepper
+ *   4. Share        — invite link, QR code, confetti
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -34,10 +42,11 @@ import {
   Shuffle,
   BarChart3,
   Zap,
-  Info,
+  ArrowRight,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
 interface WizardData {
   name: string;
   venue: string;
@@ -46,8 +55,8 @@ interface WizardData {
   format: "swiss" | "roundrobin" | "elimination";
   rounds: number;
   maxPlayers: number;
-  timeBase: number;   // minutes
-  timeIncrement: number; // seconds
+  timeBase: number;
+  timeIncrement: number;
   timePreset: string;
   ratingSystem: "chess.com" | "lichess" | "fide" | "unrated";
   inviteCode: string;
@@ -68,97 +77,224 @@ const DEFAULT_DATA: WizardData = {
   inviteCode: "",
 };
 
-// ─── Step Indicator ───────────────────────────────────────────────────────────
+// ─── Step metadata ────────────────────────────────────────────────────────────
+
 const STEPS = [
-  { label: "Details", icon: Trophy },
-  { label: "Format", icon: Shuffle },
-  { label: "Time", icon: Clock },
-  { label: "Share", icon: Share2 },
+  {
+    id: 0,
+    label: "Details",
+    icon: Trophy,
+    hero: {
+      eyebrow: "Step 1 of 4",
+      title: "Name your\ntournament",
+      body: "Give your event a name players will remember. Add a venue and date so everyone knows where to show up.",
+    },
+  },
+  {
+    id: 1,
+    label: "Format",
+    icon: Shuffle,
+    hero: {
+      eyebrow: "Step 2 of 4",
+      title: "Choose a\nformat",
+      body: "Swiss pairs players by score — ideal for large groups. Round Robin has everyone play everyone. Elimination is pure knockout drama.",
+    },
+  },
+  {
+    id: 2,
+    label: "Time",
+    icon: Clock,
+    hero: {
+      eyebrow: "Step 3 of 4",
+      title: "Set the\nclock",
+      body: "Pick a time control that fits your venue. Blitz keeps energy high. Rapid gives players room to think. Classical is for the purists.",
+    },
+  },
+  {
+    id: 3,
+    label: "Share",
+    icon: Share2,
+    hero: {
+      eyebrow: "Step 4 of 4",
+      title: "You're\nready!",
+      body: "Share the invite link or QR code with your players. They enter their chess.com username and you're off.",
+    },
+  },
 ];
 
-function StepIndicator({ current }: { current: number }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+// ─── Design tokens ────────────────────────────────────────────────────────────
 
+const T = {
+  green: "#3D6B47",
+  greenDark: "#2A4A32",
+  greenBg: "rgba(61,107,71,0.08)",
+  greenRing: "rgba(61,107,71,0.25)",
+  // light
+  lBg: "#FFFFFF",
+  lPanel: "#F7F9F6",
+  lBorder: "#E5E7EB",
+  lBorderFocus: "#3D6B47",
+  lText: "#1A1A1A",
+  lSub: "#6B7280",
+  lMuted: "#9CA3AF",
+  lInput: "#FFFFFF",
+  lInputBorder: "#D1D5DB",
+  // dark
+  dBg: "oklch(0.18 0.05 145)",
+  dPanel: "oklch(0.22 0.06 145)",
+  dCard: "oklch(0.25 0.07 145)",
+  dBorder: "rgba(255,255,255,0.10)",
+  dBorderFocus: "#3D6B47",
+  dText: "#FFFFFF",
+  dSub: "rgba(255,255,255,0.55)",
+  dMuted: "rgba(255,255,255,0.30)",
+  dInput: "oklch(0.25 0.07 145)",
+  dInputBorder: "rgba(255,255,255,0.12)",
+};
+
+// ─── Progress Bar ─────────────────────────────────────────────────────────────
+
+function ProgressBar({ step, total, isDark }: { step: number; total: number; isDark: boolean }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-8">
-      {STEPS.map((step, idx) => {
-        const Icon = step.icon;
-        const done = idx < current;
-        const active = idx === current;
-
-        return (
-          <div key={idx} className="flex items-center">
-            <div className="flex flex-col items-center gap-1.5">
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  done
-                    ? "bg-[#3D6B47] text-white"
-                    : active
-                    ? isDark
-                      ? "bg-[oklch(0.38_0.10_145)] text-white ring-2 ring-[oklch(0.55_0.14_145)] ring-offset-2 ring-offset-[oklch(0.20_0.06_145)]"
-                      : "bg-[#3D6B47] text-white ring-2 ring-[#3D6B47]/30 ring-offset-2"
-                    : isDark
-                    ? "bg-white/08 text-white/30"
-                    : "bg-[#F0F5EE] text-[#9CA3AF]"
-                }`}
-              >
-                {done ? (
-                  <Check className="w-4 h-4" strokeWidth={2.5} />
-                ) : (
-                  <Icon className="w-4 h-4" strokeWidth={2} />
-                )}
-              </div>
-              <span
-                className={`text-xs font-medium transition-colors duration-200 ${
-                  active
-                    ? isDark ? "text-white" : "text-[#1A1A1A]"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {step.label}
-              </span>
-            </div>
-
-            {idx < STEPS.length - 1 && (
-              <div
-                className={`w-12 h-px mb-5 mx-1 transition-all duration-500 ${
-                  done
-                    ? "bg-[#3D6B47]"
-                    : isDark ? "bg-white/10" : "bg-[#EEEED2]"
-                }`}
-              />
-            )}
-          </div>
-        );
-      })}
+    <div
+      className="absolute top-0 left-0 right-0 h-[3px] flex gap-[2px]"
+      style={{ zIndex: 10 }}
+    >
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className="flex-1 transition-all duration-500"
+          style={{
+            background:
+              i < step
+                ? T.green
+                : i === step
+                ? `linear-gradient(90deg, ${T.green} 0%, ${isDark ? "rgba(255,255,255,0.12)" : "#E5E7EB"} 100%)`
+                : isDark
+                ? "rgba(255,255,255,0.10)"
+                : "#E5E7EB",
+            opacity: i <= step ? 1 : 0.5,
+          }}
+        />
+      ))}
     </div>
   );
 }
 
-// ─── Input Primitives ─────────────────────────────────────────────────────────
-function Field({
-  label,
-  hint,
-  children,
+// ─── Hero Panel (left column) ─────────────────────────────────────────────────
+
+function HeroPanel({
+  step,
+  isDark,
+  direction,
 }: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
+  step: number;
+  isDark: boolean;
+  direction: 1 | -1;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const s = STEPS[step];
+  const Icon = s.icon;
+
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <label className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-[#374151]"}`}>
-          {label}
-        </label>
-        {hint && (
-          <span className="text-xs text-muted-foreground">({hint})</span>
-        )}
+    <div
+      className="relative flex flex-col justify-between h-full px-10 py-12 overflow-hidden"
+      style={{
+        background: isDark
+          ? "oklch(0.20 0.08 145)"
+          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #3D6B47 100%)",
+      }}
+    >
+      {/* Subtle chess-board texture overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            repeating-conic-gradient(
+              rgba(255,255,255,0.025) 0% 25%,
+              transparent 0% 50%
+            )`,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* Logo mark */}
+      <div className="relative flex items-center gap-2.5">
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: "rgba(255,255,255,0.15)" }}
+        >
+          <Crown className="w-4 h-4 text-white" strokeWidth={2} />
+        </div>
+        <span
+          className="text-white/80 text-sm font-semibold tracking-wide"
+          style={{ fontFamily: "'Clash Display', sans-serif" }}
+        >
+          OTB Chess
+        </span>
       </div>
-      {children}
+
+      {/* Step content */}
+      <div
+        className="relative"
+        key={step}
+        style={{ animation: `heroIn 0.45s cubic-bezier(0.22,1,0.36,1) both` }}
+      >
+        <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mb-4">
+          {s.hero.eyebrow}
+        </p>
+        <div className="flex items-start gap-3 mb-6">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1"
+            style={{ background: "rgba(255,255,255,0.15)" }}
+          >
+            <Icon className="w-5 h-5 text-white" strokeWidth={1.8} />
+          </div>
+          <h2
+            className="text-4xl font-bold text-white leading-tight"
+            style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
+          >
+            {s.hero.title}
+          </h2>
+        </div>
+        <p className="text-white/55 text-sm leading-relaxed max-w-xs">
+          {s.hero.body}
+        </p>
+      </div>
+
+      {/* Step dots */}
+      <div className="relative flex items-center gap-2">
+        {STEPS.map((_, i) => (
+          <div
+            key={i}
+            className="rounded-full transition-all duration-400"
+            style={{
+              width: i === step ? 20 : 6,
+              height: 6,
+              background: i === step ? "#FFFFFF" : "rgba(255,255,255,0.25)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Input primitives ─────────────────────────────────────────────────────────
+
+function Label({ children, hint, isDark }: { children: React.ReactNode; hint?: string; isDark: boolean }) {
+  return (
+    <div className="flex items-baseline gap-1.5 mb-2">
+      <label
+        className="text-sm font-semibold"
+        style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}
+      >
+        {children}
+      </label>
+      {hint && (
+        <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          {hint}
+        </span>
+      )}
     </div>
   );
 }
@@ -169,180 +305,241 @@ function TextInput({
   placeholder,
   type = "text",
   icon: Icon,
+  autoFocus,
+  isDark,
+  large,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
   icon?: React.ElementType;
+  autoFocus?: boolean;
+  isDark: boolean;
+  large?: boolean;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   return (
     <div className="relative">
       {Icon && (
-        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Icon
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+          style={{ color: isDark ? T.dMuted : T.lMuted }}
+        />
       )}
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[#3D6B47]/30 focus:border-[#3D6B47] ${
-          Icon ? "pl-9" : ""
-        } ${
-          isDark
-            ? "bg-[oklch(0.25_0.07_145)] border-white/12 text-white placeholder:text-white/30 focus:bg-[oklch(0.27_0.08_145)]"
-            : "bg-white border-[#D1D5DB] text-[#1A1A1A] placeholder:text-[#9CA3AF] focus:bg-white"
-        }`}
+        autoFocus={autoFocus}
+        className="w-full rounded-xl border outline-none transition-all duration-200"
+        style={{
+          padding: large ? "14px 16px 14px 48px" : Icon ? "11px 14px 11px 44px" : "11px 14px",
+          fontSize: large ? 18 : 14,
+          fontWeight: large ? 600 : 400,
+          background: isDark ? T.dInput : T.lInput,
+          border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+          color: isDark ? T.dText : T.lText,
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = T.green;
+          e.target.style.boxShadow = `0 0 0 3px ${T.greenRing}`;
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = isDark ? T.dInputBorder : T.lInputBorder;
+          e.target.style.boxShadow = "none";
+        }}
       />
     </div>
   );
 }
 
-// ─── Step 1: Tournament Details ───────────────────────────────────────────────
-function StepDetails({
-  data,
+function TextArea({
+  value,
   onChange,
+  placeholder,
+  isDark,
 }: {
-  data: WizardData;
-  onChange: (patch: Partial<WizardData>) => void;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  isDark: boolean;
 }) {
   return (
-    <div className="space-y-5">
-      <Field label="Tournament Name" hint="required">
-        <TextInput
-          value={data.name}
-          onChange={(v) => onChange({ name: v })}
-          placeholder="e.g. NYC Chess Society — Spring Open 2026"
-          icon={Trophy}
-        />
-      </Field>
-
-      <Field label="Venue" hint="optional">
-        <TextInput
-          value={data.venue}
-          onChange={(v) => onChange({ venue: v })}
-          placeholder="e.g. The Marshall Chess Club, New York"
-          icon={MapPin}
-        />
-      </Field>
-
-      <Field label="Date">
-        <TextInput
-          value={data.date}
-          onChange={(v) => onChange({ date: v })}
-          type="date"
-          icon={Calendar}
-        />
-      </Field>
-
-      <Field label="Description" hint="optional">
-        <textarea
-          value={data.description}
-          onChange={(e) => onChange({ description: e.target.value })}
-          placeholder="Any notes for players — prizes, rules, dress code..."
-          rows={3}
-          className={`w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition-all duration-200 resize-none focus:ring-2 focus:ring-[#3D6B47]/30 focus:border-[#3D6B47] ${
-            useTheme().theme === "dark"
-              ? "bg-[oklch(0.25_0.07_145)] border-white/12 text-white placeholder:text-white/30"
-              : "bg-white border-[#D1D5DB] text-[#1A1A1A] placeholder:text-[#9CA3AF]"
-          }`}
-        />
-      </Field>
-
-      <Field label="Rating System">
-        <RatingSystemPicker
-          value={data.ratingSystem}
-          onChange={(v) => onChange({ ratingSystem: v })}
-        />
-      </Field>
-    </div>
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={3}
+      className="w-full rounded-xl border outline-none transition-all duration-200 resize-none"
+      style={{
+        padding: "11px 14px",
+        fontSize: 14,
+        background: isDark ? T.dInput : T.lInput,
+        border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+        color: isDark ? T.dText : T.lText,
+      }}
+      onFocus={(e) => {
+        e.target.style.borderColor = T.green;
+        e.target.style.boxShadow = `0 0 0 3px ${T.greenRing}`;
+      }}
+      onBlur={(e) => {
+        e.target.style.borderColor = isDark ? T.dInputBorder : T.lInputBorder;
+        e.target.style.boxShadow = "none";
+      }}
+    />
   );
 }
 
-function RatingSystemPicker({
-  value,
+// ─── Step 1: Details ──────────────────────────────────────────────────────────
+
+function StepDetails({
+  data,
   onChange,
+  isDark,
 }: {
-  value: WizardData["ratingSystem"];
-  onChange: (v: WizardData["ratingSystem"]) => void;
+  data: WizardData;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const options: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
-    { value: "chess.com", label: "chess.com", sub: "Rapid/Blitz ELO" },
+  const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
+    { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
     { value: "lichess", label: "Lichess", sub: "Lichess rating" },
     { value: "fide", label: "FIDE", sub: "Classical rating" },
     { value: "unrated", label: "Unrated", sub: "No ELO required" },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={`flex flex-col items-start px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${
-            value === opt.value
-              ? "border-[#3D6B47] bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
-              : isDark
-              ? "border-white/10 bg-[oklch(0.25_0.07_145)] hover:border-white/20"
-              : "border-[#D1D5DB] bg-white hover:border-[#3D6B47]/40"
-          }`}
-        >
-          <span className={`text-sm font-semibold ${value === opt.value ? "text-[#3D6B47]" : "text-foreground"}`}>
-            {opt.label}
-          </span>
-          <span className="text-xs text-muted-foreground">{opt.sub}</span>
-        </button>
-      ))}
+    <div className="space-y-6">
+      {/* Tournament name — hero input */}
+      <div>
+        <Label isDark={isDark} hint="required">Tournament Name</Label>
+        <TextInput
+          value={data.name}
+          onChange={(v) => onChange({ name: v })}
+          placeholder="e.g. Spring Open 2026"
+          icon={Trophy}
+          autoFocus
+          isDark={isDark}
+          large
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label isDark={isDark} hint="optional">Venue</Label>
+          <TextInput
+            value={data.venue}
+            onChange={(v) => onChange({ venue: v })}
+            placeholder="Marshall Chess Club"
+            icon={MapPin}
+            isDark={isDark}
+          />
+        </div>
+        <div>
+          <Label isDark={isDark}>Date</Label>
+          <TextInput
+            value={data.date}
+            onChange={(v) => onChange({ date: v })}
+            type="date"
+            icon={Calendar}
+            isDark={isDark}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label isDark={isDark} hint="optional">Description</Label>
+        <TextArea
+          value={data.description}
+          onChange={(v) => onChange({ description: v })}
+          placeholder="Prizes, dress code, parking info…"
+          isDark={isDark}
+        />
+      </div>
+
+      <div>
+        <Label isDark={isDark}>Rating System</Label>
+        <div className="grid grid-cols-2 gap-2.5">
+          {ratingOptions.map((opt) => {
+            const active = data.ratingSystem === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange({ ratingSystem: opt.value })}
+                className="flex flex-col items-start rounded-xl border text-left transition-all duration-200"
+                style={{
+                  padding: "12px 14px",
+                  background: active
+                    ? T.greenBg
+                    : isDark ? T.dCard : "#FAFAFA",
+                  border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                  boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                }}
+              >
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
+                >
+                  {opt.label}
+                </span>
+                <span
+                  className="text-xs mt-0.5"
+                  style={{ color: isDark ? T.dMuted : T.lMuted }}
+                >
+                  {opt.sub}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── Step 2: Format & Rounds ──────────────────────────────────────────────────
+// ─── Step 2: Format ───────────────────────────────────────────────────────────
+
 function StepFormat({
   data,
   onChange,
+  isDark,
 }: {
   data: WizardData;
-  onChange: (patch: Partial<WizardData>) => void;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   const formats = [
     {
       value: "swiss" as const,
       label: "Swiss System",
-      desc: "Players are paired by score. Best for large groups.",
+      desc: "Paired by score — best for large groups.",
       icon: Shuffle,
     },
     {
       value: "roundrobin" as const,
       label: "Round Robin",
-      desc: "Everyone plays everyone. Best for small groups.",
+      desc: "Everyone plays everyone — best for small groups.",
       icon: Users,
     },
     {
       value: "elimination" as const,
       label: "Elimination",
-      desc: "Single knockout bracket. Fast and exciting.",
+      desc: "Single knockout bracket — fast and exciting.",
       icon: Trophy,
     },
   ];
 
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
-  const playerOptions = [8, 12, 16, 24, 32, 48, 64, 128];
+  const playerOptions = [8, 12, 16, 20, 24, 32, 64];
 
   return (
-    <div className="space-y-6">
-      {/* Format selector */}
-      <Field label="Tournament Format">
-        <div className="space-y-2">
+    <div className="space-y-7">
+      {/* Format cards */}
+      <div>
+        <Label isDark={isDark}>Tournament Format</Label>
+        <div className="space-y-2.5">
           {formats.map((f) => {
             const Icon = f.icon;
             const active = data.format === f.value;
@@ -351,92 +548,114 @@ function StepFormat({
                 key={f.value}
                 type="button"
                 onClick={() => onChange({ format: f.value })}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-200 ${
-                  active
-                    ? "border-[#3D6B47] bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
-                    : isDark
-                    ? "border-white/10 bg-[oklch(0.25_0.07_145)] hover:border-white/20"
-                    : "border-[#D1D5DB] bg-white hover:border-[#3D6B47]/40"
-                }`}
+                className="w-full flex items-center gap-4 rounded-xl border text-left transition-all duration-200"
+                style={{
+                  padding: "14px 16px",
+                  background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                  border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                  boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                }}
               >
                 <div
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    active ? "bg-[#3D6B47] text-white" : isDark ? "bg-white/08 text-white/50" : "bg-[#F0F5EE] text-[#6B7280]"
-                  }`}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
+                  }}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" strokeWidth={1.8} />
                 </div>
-                <div>
-                  <p className={`text-sm font-semibold ${active ? "text-[#3D6B47]" : "text-foreground"}`}>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
+                  >
                     {f.label}
                   </p>
-                  <p className="text-xs text-muted-foreground">{f.desc}</p>
+                  <p className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                    {f.desc}
+                  </p>
                 </div>
                 {active && (
-                  <Check className="w-4 h-4 text-[#3D6B47] ml-auto flex-shrink-0" strokeWidth={2.5} />
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: T.green }}
+                  >
+                    <Check className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                  </div>
                 )}
               </button>
             );
           })}
         </div>
-      </Field>
-
-      <div className="grid grid-cols-2 gap-4">
-        {/* Rounds */}
-        <Field label="Rounds">
-          <div className="flex flex-wrap gap-1.5">
-            {roundOptions.map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => onChange({ rounds: r })}
-                className={`w-9 h-9 rounded-lg text-sm font-bold transition-all duration-200 ${
-                  data.rounds === r
-                    ? "bg-[#3D6B47] text-white"
-                    : isDark
-                    ? "bg-white/08 text-white/60 hover:bg-white/15"
-                    : "bg-[#F0F5EE] text-[#4B5563] hover:bg-[#3D6B47]/10"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </Field>
-
-        {/* Max players */}
-        <Field label="Max Players">
-          <div className="flex flex-wrap gap-1.5">
-            {playerOptions.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => onChange({ maxPlayers: p })}
-                className={`px-2.5 h-9 rounded-lg text-sm font-bold transition-all duration-200 ${
-                  data.maxPlayers === p
-                    ? "bg-[#3D6B47] text-white"
-                    : isDark
-                    ? "bg-white/08 text-white/60 hover:bg-white/15"
-                    : "bg-[#F0F5EE] text-[#4B5563] hover:bg-[#3D6B47]/10"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </Field>
       </div>
 
-      {/* Summary hint */}
-      <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs ${
-        isDark ? "bg-[#3D6B47]/15 text-white/60" : "bg-[#F0F5EE] text-[#6B7280]"
-      }`}>
-        <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[#3D6B47]" />
+      <div className="grid grid-cols-2 gap-6">
+        {/* Rounds */}
+        <div>
+          <Label isDark={isDark}>Rounds</Label>
+          <div className="flex flex-wrap gap-2">
+            {roundOptions.map((r) => {
+              const active = data.rounds === r;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => onChange({ rounds: r })}
+                  className="w-10 h-10 rounded-xl text-sm font-bold transition-all duration-200"
+                  style={{
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
+                    boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
+                  }}
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Max players */}
+        <div>
+          <Label isDark={isDark}>Max Players</Label>
+          <div className="flex flex-wrap gap-2">
+            {playerOptions.map((p) => {
+              const active = data.maxPlayers === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => onChange({ maxPlayers: p })}
+                  className="h-10 px-3 rounded-xl text-sm font-bold transition-all duration-200"
+                  style={{
+                    background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
+                    boxShadow: active ? `0 2px 8px ${T.greenRing}` : "none",
+                  }}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Hint */}
+      <div
+        className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-xs"
+        style={{
+          background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE",
+          color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
+        }}
+      >
+        <Zap className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
           {data.format === "swiss"
-            ? `Swiss with ${data.rounds} rounds supports up to ${data.maxPlayers} players. Optimal for ${Math.pow(2, data.rounds - 1)} players.`
+            ? `Swiss · ${data.rounds} rounds · up to ${data.maxPlayers} players. Optimal for ${Math.pow(2, data.rounds - 1)} players.`
             : data.format === "roundrobin"
-            ? `Round Robin with ${data.maxPlayers} players = ${(data.maxPlayers * (data.maxPlayers - 1)) / 2} total games.`
+            ? `Round Robin · ${data.maxPlayers} players = ${(data.maxPlayers * (data.maxPlayers - 1)) / 2} total games.`
             : `Single elimination bracket for up to ${data.maxPlayers} players.`}
         </span>
       </div>
@@ -445,6 +664,7 @@ function StepFormat({
 }
 
 // ─── Step 3: Time Control ─────────────────────────────────────────────────────
+
 const TIME_PRESETS = [
   { label: "Bullet", sub: "1+0", base: 1, inc: 0, tag: "Ultra-fast" },
   { label: "Blitz", sub: "3+2", base: 3, inc: 2, tag: "Fast" },
@@ -459,12 +679,12 @@ const TIME_PRESETS = [
 function StepTime({
   data,
   onChange,
+  isDark,
 }: {
   data: WizardData;
-  onChange: (patch: Partial<WizardData>) => void;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
 }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
   const isCustom = data.timePreset === "custom";
 
   const selectPreset = (p: typeof TIME_PRESETS[0]) => {
@@ -476,16 +696,17 @@ function StepTime({
   };
 
   const estimatedDuration = () => {
-    const perGame = data.timeBase * 2 + (data.timeIncrement * 40) / 60; // rough estimate
-    const totalMins = perGame * data.rounds * 0.6; // overlap factor
+    const perGame = data.timeBase * 2 + (data.timeIncrement * 40) / 60;
+    const totalMins = perGame * data.rounds * 0.6;
     if (totalMins < 60) return `~${Math.round(totalMins)} min`;
     return `~${(totalMins / 60).toFixed(1)} hrs`;
   };
 
   return (
-    <div className="space-y-5">
-      <Field label="Time Control Preset">
-        <div className="grid grid-cols-2 gap-2">
+    <div className="space-y-6">
+      <div>
+        <Label isDark={isDark}>Time Control</Label>
+        <div className="grid grid-cols-4 gap-2">
           {TIME_PRESETS.map((p) => {
             const active = data.timePreset === p.sub;
             return (
@@ -493,28 +714,34 @@ function StepTime({
                 key={p.sub}
                 type="button"
                 onClick={() => selectPreset(p)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition-all duration-200 ${
-                  active
-                    ? "border-[#3D6B47] bg-[#3D6B47]/08 ring-1 ring-[#3D6B47]/20"
-                    : isDark
-                    ? "border-white/10 bg-[oklch(0.25_0.07_145)] hover:border-white/20"
-                    : "border-[#D1D5DB] bg-white hover:border-[#3D6B47]/40"
-                }`}
+                className="flex flex-col items-center rounded-xl border transition-all duration-200"
+                style={{
+                  padding: "12px 8px",
+                  background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                  border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                  boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                }}
               >
-                <div>
-                  <p className={`text-sm font-bold ${active ? "text-[#3D6B47]" : "text-foreground"}`}>
-                    {p.sub === "custom" ? "Custom" : p.sub}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{p.sub === "custom" ? "Set manually" : p.label}</p>
-                </div>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
+                >
+                  {p.sub === "custom" ? "Custom" : p.sub}
+                </span>
+                <span
+                  className="text-[10px] mt-0.5 font-medium"
+                  style={{ color: isDark ? T.dMuted : T.lMuted }}
+                >
+                  {p.sub === "custom" ? "Manual" : p.label}
+                </span>
                 {p.tag && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${
-                    active
-                      ? "bg-[#3D6B47] text-white"
-                      : isDark
-                      ? "bg-white/08 text-white/50"
-                      : "bg-[#F0F5EE] text-[#6B7280]"
-                  }`}>
+                  <span
+                    className="text-[9px] mt-1 px-1.5 py-0.5 rounded-full font-semibold"
+                    style={{
+                      background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                      color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : "#6B7280",
+                    }}
+                  >
                     {p.tag}
                   </span>
                 )}
@@ -522,78 +749,112 @@ function StepTime({
             );
           })}
         </div>
-      </Field>
+      </div>
 
-      {/* Custom controls */}
+      {/* Custom stepper */}
       {isCustom && (
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Base time (min)">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onChange({ timeBase: Math.max(1, data.timeBase - 1) })}
-                className={`w-9 h-9 rounded-lg font-bold text-lg flex items-center justify-center transition-colors ${isDark ? "bg-white/08 hover:bg-white/15 text-white" : "bg-[#F0F5EE] hover:bg-[#EEEED2] text-[#1A1A1A]"}`}
+          {[
+            {
+              label: "Base time",
+              unit: "min",
+              value: data.timeBase,
+              min: 1,
+              max: 180,
+              key: "timeBase" as const,
+            },
+            {
+              label: "Increment",
+              unit: "sec",
+              value: data.timeIncrement,
+              min: 0,
+              max: 60,
+              key: "timeIncrement" as const,
+            },
+          ].map((field) => (
+            <div key={field.key}>
+              <Label isDark={isDark}>
+                {field.label}{" "}
+                <span style={{ color: isDark ? T.dMuted : T.lMuted, fontWeight: 400 }}>
+                  ({field.unit})
+                </span>
+              </Label>
+              <div
+                className="flex items-center gap-3 rounded-xl border"
+                style={{
+                  padding: "10px 14px",
+                  background: isDark ? T.dCard : "#FAFAFA",
+                  border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+                }}
               >
-                −
-              </button>
-              <span className="flex-1 text-center text-lg font-bold text-foreground font-mono">{data.timeBase}</span>
-              <button
-                type="button"
-                onClick={() => onChange({ timeBase: Math.min(180, data.timeBase + 1) })}
-                className={`w-9 h-9 rounded-lg font-bold text-lg flex items-center justify-center transition-colors ${isDark ? "bg-white/08 hover:bg-white/15 text-white" : "bg-[#F0F5EE] hover:bg-[#EEEED2] text-[#1A1A1A]"}`}
-              >
-                +
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onChange({ [field.key]: Math.max(field.min, field.value - 1) })}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
+                  style={{
+                    background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    color: isDark ? T.dText : T.lText,
+                  }}
+                >
+                  −
+                </button>
+                <span
+                  className="flex-1 text-center text-xl font-bold font-mono"
+                  style={{ color: isDark ? T.dText : T.lText }}
+                >
+                  {field.value}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ [field.key]: Math.min(field.max, field.value + 1) })}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
+                  style={{
+                    background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+                    color: isDark ? T.dText : T.lText,
+                  }}
+                >
+                  +
+                </button>
+              </div>
             </div>
-          </Field>
-          <Field label="Increment (sec)">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onChange({ timeIncrement: Math.max(0, data.timeIncrement - 1) })}
-                className={`w-9 h-9 rounded-lg font-bold text-lg flex items-center justify-center transition-colors ${isDark ? "bg-white/08 hover:bg-white/15 text-white" : "bg-[#F0F5EE] hover:bg-[#EEEED2] text-[#1A1A1A]"}`}
-              >
-                −
-              </button>
-              <span className="flex-1 text-center text-lg font-bold text-foreground font-mono">{data.timeIncrement}</span>
-              <button
-                type="button"
-                onClick={() => onChange({ timeIncrement: Math.min(60, data.timeIncrement + 1) })}
-                className={`w-9 h-9 rounded-lg font-bold text-lg flex items-center justify-center transition-colors ${isDark ? "bg-white/08 hover:bg-white/15 text-white" : "bg-[#F0F5EE] hover:bg-[#EEEED2] text-[#1A1A1A]"}`}
-              >
-                +
-              </button>
-            </div>
-          </Field>
+          ))}
         </div>
       )}
 
       {/* Duration estimate */}
-      <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${
-        isDark ? "border-white/10 bg-[oklch(0.25_0.07_145)]" : "border-[#EEEED2] bg-[#F9FAF8]"
-      }`}>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div
+        className="flex items-center justify-between rounded-xl border px-4 py-3"
+        style={{
+          background: isDark ? T.dCard : "#F9FAF8",
+          border: `1.5px solid ${isDark ? T.dBorder : "#EEEED2"}`,
+        }}
+      >
+        <div className="flex items-center gap-2 text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>
           <Clock className="w-4 h-4" />
           <span>Estimated tournament duration</span>
         </div>
-        <span className="text-sm font-bold text-foreground">{estimatedDuration()}</span>
+        <span
+          className="text-sm font-bold"
+          style={{ color: isDark ? T.dText : T.lText }}
+        >
+          {estimatedDuration()}
+        </span>
       </div>
     </div>
   );
 }
 
-// ─── Animated QR Reveal Component ───────────────────────────────────────────
+// ─── Animated QR ──────────────────────────────────────────────────────────────
+
 function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean }) {
   const [phase, setPhase] = useState<"hidden" | "appear" | "scan" | "done">("hidden");
   const [scanY, setScanY] = useState(0);
   const scanRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
-  const SCAN_DURATION = 1200; // ms for one sweep
+  const SCAN_DURATION = 1200;
 
   useEffect(() => {
-    // Phase 1: fade in after short delay
     const t1 = setTimeout(() => setPhase("appear"), 120);
-    // Phase 2: start scan-line after appear animation
     const t2 = setTimeout(() => {
       setPhase("scan");
       startTimeRef.current = performance.now();
@@ -618,57 +879,53 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
 
   return (
     <div
-      className={`flex flex-col items-center gap-3 py-5 rounded-xl border transition-all duration-500 ${
-        phase === "hidden" ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"
-      } ${
-        isDark ? "border-white/12 bg-white/03" : "border-[#D1FAE5] bg-[#F0FDF4]"
-      }`}
-      style={{ transition: "opacity 0.5s ease, transform 0.5s ease" }}
+      className="flex flex-col items-center gap-3 py-6 rounded-2xl border transition-all duration-500"
+      style={{
+        opacity: phase === "hidden" ? 0 : 1,
+        transform: phase === "hidden" ? "translateY(8px)" : "translateY(0)",
+        background: isDark ? "rgba(255,255,255,0.03)" : "#F0FDF4",
+        border: `1.5px solid ${isDark ? "rgba(255,255,255,0.10)" : "#D1FAE5"}`,
+      }}
     >
-      {/* QR wrapper with scan-line overlay */}
-      <div className="relative" style={{ width: 160, height: 160 }}>
-        {/* White background pad */}
+      <div className="relative" style={{ width: 180, height: 180 }}>
         <div
           className="absolute inset-0 rounded-xl bg-white"
           style={{
-            boxShadow: phase === "done"
-              ? "0 0 0 3px #3D6B47, 0 8px 24px rgba(61,107,71,0.25)"
-              : "0 0 0 2px rgba(61,107,71,0.15), 0 4px 12px rgba(0,0,0,0.08)",
+            boxShadow:
+              phase === "done"
+                ? `0 0 0 3px ${T.green}, 0 8px 24px rgba(61,107,71,0.25)`
+                : "0 0 0 2px rgba(61,107,71,0.15), 0 4px 12px rgba(0,0,0,0.08)",
             transition: "box-shadow 0.4s ease",
           }}
         />
-        {/* Actual QR code */}
         <div className="absolute inset-0 flex items-center justify-center p-3">
           <QRCodeSVG
             value={inviteUrl}
-            size={134}
+            size={154}
             level="H"
             includeMargin={false}
             fgColor="#1a1a1a"
             bgColor="#ffffff"
           />
         </div>
-        {/* Corner finder brackets */}
-        {[
-          "top-1 left-1",
-          "top-1 right-1",
-          "bottom-1 left-1",
-          "bottom-1 right-1",
-        ].map((pos) => (
+        {/* Corner brackets */}
+        {(["top-1 left-1", "top-1 right-1", "bottom-1 left-1", "bottom-1 right-1"] as const).map((pos) => (
           <div
             key={pos}
-            className={`absolute w-5 h-5 ${
+            className={`absolute w-5 h-5 transition-all duration-700 ${
               pos.includes("top") && pos.includes("left") ? "border-t-2 border-l-2 rounded-tl-lg" :
               pos.includes("top") && pos.includes("right") ? "border-t-2 border-r-2 rounded-tr-lg" :
               pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-lg" :
               "border-b-2 border-r-2 rounded-br-lg"
-            } transition-all duration-700 ${
-              phase === "done" ? "border-[#3D6B47] opacity-100" : "border-[#3D6B47]/40 opacity-60"
             }`}
-            style={{ [pos.split(" ")[0]]: 4, [pos.split(" ")[1]]: 4 }}
+            style={{
+              borderColor: phase === "done" ? T.green : "rgba(61,107,71,0.4)",
+              opacity: phase === "done" ? 1 : 0.6,
+              [pos.split(" ")[0]]: 4,
+              [pos.split(" ")[1]]: 4,
+            }}
           />
         ))}
-        {/* Scan line */}
         {phase === "scan" && (
           <div
             className="absolute left-2 right-2 pointer-events-none"
@@ -676,59 +933,40 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
               top: `${scanY}%`,
               height: 2,
               background: "linear-gradient(90deg, transparent 0%, #4CAF50 20%, #4CAF50 80%, transparent 100%)",
-              boxShadow: "0 0 8px 2px rgba(76,175,80,0.6), 0 0 20px 4px rgba(76,175,80,0.25)",
+              boxShadow: "0 0 8px 2px rgba(76,175,80,0.6)",
               borderRadius: 2,
             }}
           />
         )}
-        {/* Done checkmark overlay */}
         {phase === "done" && (
           <div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
             style={{ animation: "fadeInScale 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards" }}
           >
             <div
-              className="w-10 h-10 rounded-full bg-[#3D6B47] flex items-center justify-center"
-              style={{ boxShadow: "0 4px 16px rgba(61,107,71,0.45)" }}
+              className="w-11 h-11 rounded-full flex items-center justify-center"
+              style={{ background: T.green, boxShadow: "0 4px 16px rgba(61,107,71,0.45)" }}
             >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
           </div>
         )}
       </div>
-
-      {/* Label */}
-      <div className="flex flex-col items-center gap-1">
-        <p
-          className={`text-xs font-semibold transition-colors duration-500 ${
-            phase === "done"
-              ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-              : "text-muted-foreground"
-          }`}
-        >
-          {phase === "done" ? "Ready to scan!" : phase === "scan" ? "Generating QR…" : "QR code — players scan to join"}
-        </p>
-        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
-          {inviteUrl.replace("https://", "")}
-        </p>
-      </div>
-
-      <style>{`
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.5); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
+      <p
+        className="text-xs font-semibold transition-colors duration-500"
+        style={{ color: phase === "done" ? T.green : isDark ? T.dMuted : T.lMuted }}
+      >
+        {phase === "done" ? "Ready to scan!" : phase === "scan" ? "Generating QR…" : "Players scan to join"}
+      </p>
     </div>
   );
 }
 
-// ─── Step 4: Invite & Share ───────────────────────────────────────────────────
-function StepShare({ data }: { data: WizardData }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+// ─── Step 4: Share ────────────────────────────────────────────────────────────
+
+function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
   const inviteUrl = `https://otbchess.app/join/${data.inviteCode}`;
 
@@ -739,88 +977,88 @@ function StepShare({ data }: { data: WizardData }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination";
-  const timeLabel = data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
+  const formatLabel =
+    data.format === "swiss" ? "Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination";
+  const timeLabel =
+    data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (
     <div className="space-y-5">
-      {/* Success banner */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-[#3D6B47] rounded-xl text-white">
-        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-          <Check className="w-4 h-4" strokeWidth={2.5} />
-        </div>
-        <div>
-          <p className="text-sm font-bold">Tournament Created!</p>
-          <p className="text-xs text-white/70">Share the link below to invite players</p>
-        </div>
-      </div>
-
-      {/* Summary card */}
-      <div className={`rounded-xl border p-4 space-y-3 ${isDark ? "border-white/10 bg-[oklch(0.25_0.07_145)]" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
-        <p className="text-sm font-bold text-foreground">{data.name || "Untitled Tournament"}</p>
-        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-          {data.venue && (
-            <span className="flex items-center gap-1.5">
-              <MapPin className="w-3 h-3" /> {data.venue}
+      {/* Summary strip */}
+      <div
+        className="grid grid-cols-3 gap-3 rounded-xl border p-4"
+        style={{
+          background: isDark ? T.dCard : "#F9FAF8",
+          border: `1.5px solid ${isDark ? T.dBorder : "#EEEED2"}`,
+        }}
+      >
+        {[
+          { icon: Shuffle, label: formatLabel, sub: `${data.rounds} rounds` },
+          { icon: Clock, label: timeLabel, sub: "time control" },
+          { icon: Users, label: `${data.maxPlayers}`, sub: "max players" },
+        ].map(({ icon: Icon, label, sub }) => (
+          <div key={label} className="flex flex-col items-center gap-1 text-center">
+            <Icon className="w-4 h-4" style={{ color: T.green }} strokeWidth={1.8} />
+            <span className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>
+              {label}
             </span>
-          )}
-          {data.date && (
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-3 h-3" /> {data.date}
+            <span className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+              {sub}
             </span>
-          )}
-          <span className="flex items-center gap-1.5">
-            <Shuffle className="w-3 h-3" /> {formatLabel} · {data.rounds} rounds
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="w-3 h-3" /> {timeLabel}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Users className="w-3 h-3" /> Up to {data.maxPlayers} players
-          </span>
-          <span className="flex items-center gap-1.5">
-            <BarChart3 className="w-3 h-3" /> {data.ratingSystem}
-          </span>
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* Invite link */}
-      <Field label="Player Invite Link">
+      <div>
+        <Label isDark={isDark}>Player Invite Link</Label>
         <div className="flex gap-2">
-          <div className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-mono truncate ${
-            isDark ? "bg-[oklch(0.25_0.07_145)] border-white/12 text-white/70" : "bg-white border-[#D1D5DB] text-[#6B7280]"
-          }`}>
-            <Link2 className="w-3.5 h-3.5 flex-shrink-0 text-[#3D6B47]" />
+          <div
+            className="flex-1 flex items-center gap-2 rounded-xl border text-sm font-mono truncate"
+            style={{
+              padding: "10px 14px",
+              background: isDark ? T.dCard : "#FAFAFA",
+              border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+              color: isDark ? T.dSub : T.lSub,
+            }}
+          >
+            <Link2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
             <span className="truncate">{inviteUrl}</span>
           </div>
           <button
             type="button"
             onClick={copyLink}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 flex-shrink-0 ${
-              copied
-                ? "bg-[#3D6B47] text-white"
-                : isDark
-                ? "bg-white/10 text-white hover:bg-white/15"
-                : "bg-[#F0F5EE] text-[#374151] hover:bg-[#3D6B47]/10"
-            }`}
+            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
+            style={{
+              padding: "10px 18px",
+              background: copied ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE",
+              color: copied ? "#FFFFFF" : isDark ? T.dText : "#374151",
+            }}
           >
             {copied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
-      </Field>
+      </div>
 
-      {/* QR Code — animated reveal */}
+      {/* QR */}
       <AnimatedQR inviteUrl={inviteUrl} isDark={isDark} />
 
-      {/* Next steps hint */}
-      <div className={`flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs ${
-        isDark ? "bg-[#3D6B47]/15 text-white/60" : "bg-[#F0F5EE] text-[#6B7280]"
-      }`}>
-        <Zap className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[#3D6B47]" />
+      {/* Hint */}
+      <div
+        className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-xs"
+        style={{
+          background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE",
+          color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
+        }}
+      >
+        <BarChart3 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
-          Players join by entering their <strong className={isDark ? "text-white/80" : "text-[#374151]"}>{data.ratingSystem}</strong> username.
-          Their ELO is pulled automatically and pairings are generated when you start Round 1.
+          Players join with their{" "}
+          <strong style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}>
+            {data.ratingSystem}
+          </strong>{" "}
+          username. ELO is fetched automatically and pairings are generated when you start Round 1.
         </span>
       </div>
     </div>
@@ -828,6 +1066,7 @@ function StepShare({ data }: { data: WizardData }) {
 }
 
 // ─── Main Wizard ──────────────────────────────────────────────────────────────
+
 interface TournamentWizardProps {
   open: boolean;
   onClose: () => void;
@@ -837,8 +1076,11 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase() });
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [data, setData] = useState<WizardData>({
+    ...DEFAULT_DATA,
+    inviteCode: nanoid(8).toUpperCase(),
+  });
   const { fireConfetti } = useConfetti();
   const [, navigate] = useLocation();
 
@@ -846,35 +1088,23 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   useEffect(() => {
     if (open) {
       setStep(0);
+      setDirection(1);
       setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase() });
     }
   }, [open]);
 
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    if (open) window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  // Keyboard: Escape to close, Enter to advance
+  const canAdvance = step === 0 ? data.name.trim().length > 0 : true;
 
-  const patch = (p: Partial<WizardData>) => setData((d) => ({ ...d, ...p }));
-
-  const canAdvance = () => {
-    if (step === 0) return data.name.trim().length > 0;
-    return true;
-  };
-
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (step < STEPS.length - 1) {
-      const nextStep = step + 1;
-      setStep(nextStep);
-      // Fire confetti when reaching the final Share step
-      if (nextStep === STEPS.length - 1) {
-        // Small delay so the modal content has settled into view
-        setTimeout(() => fireConfetti(130), 200);
+      setDirection(1);
+      const next = step + 1;
+      setStep(next);
+      if (next === STEPS.length - 1) {
+        setTimeout(() => fireConfetti(130), 300);
       }
     } else {
-      // Final step — save tournament config and navigate to the new director dashboard
       const slug = makeSlug(data.name, data.date);
       registerTournament({
         id: slug,
@@ -895,146 +1125,258 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       onClose();
       navigate(`/tournament/${slug}/manage`);
     }
-  };
+  }, [step, data, fireConfetti, onClose, navigate]);
 
-  const handleBack = () => {
-    if (step > 0) setStep((s) => s - 1);
-    else onClose();
-  };
+  const handleBack = useCallback(() => {
+    if (step > 0) {
+      setDirection(-1);
+      setStep((s) => s - 1);
+    } else {
+      onClose();
+    }
+  }, [step, onClose]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!open) return;
+      if (e.key === "Escape") onClose();
+      if (e.key === "Enter" && canAdvance && !(e.target instanceof HTMLTextAreaElement)) {
+        handleNext();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, canAdvance, handleNext, onClose]);
+
+  const patch = (p: Partial<WizardData>) => setData((d) => ({ ...d, ...p }));
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
-      ref={overlayRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+      className="fixed inset-0 z-[200] flex"
+      style={{
+        background: isDark ? T.dBg : T.lBg,
+        animation: "wizardFadeIn 0.3s ease both",
+      }}
     >
+      {/* ── Left hero panel (hidden on mobile) ── */}
+      <div className="hidden lg:flex lg:w-[38%] xl:w-[40%] flex-shrink-0">
+        <HeroPanel step={step} isDark={isDark} direction={direction} />
+      </div>
+
+      {/* ── Right input panel ── */}
       <div
-        className={`relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transition-colors duration-300 ${
-          isDark
-            ? "bg-[oklch(0.22_0.06_145)] border border-white/10"
-            : "bg-white border border-[#E5E7EB]"
-        }`}
-        style={{
-          animation: "wizardIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        }}
+        className="flex-1 flex flex-col relative overflow-hidden"
+        style={{ background: isDark ? T.dPanel : "#FFFFFF" }}
       >
-        {/* Header */}
-        <div className={`flex items-center justify-between px-6 pt-6 pb-0`}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-[#3D6B47] rounded-lg flex items-center justify-center">
+        {/* Progress bar */}
+        <ProgressBar step={step} total={STEPS.length} isDark={isDark} />
+
+        {/* Top bar */}
+        <div
+          className="flex items-center justify-between px-8 pt-8 pb-0 flex-shrink-0"
+        >
+          {/* Mobile: logo */}
+          <div className="flex lg:hidden items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: T.green }}
+            >
               <Crown className="w-4 h-4 text-white" strokeWidth={2} />
             </div>
             <span
-              className="text-base font-bold text-foreground"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
+              className="text-sm font-bold"
+              style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
             >
               New Tournament
             </span>
           </div>
+          {/* Desktop: step label */}
+          <div className="hidden lg:flex items-center gap-3">
+            <span
+              className="text-xs font-semibold tracking-widest uppercase"
+              style={{ color: isDark ? T.dMuted : T.lMuted }}
+            >
+              {STEPS[step].label}
+            </span>
+          </div>
+
+          {/* Close */}
           <button
             onClick={onClose}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-              isDark ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-[#F0F5EE] text-[#9CA3AF] hover:text-[#374151]"
-            }`}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+            style={{
+              background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+              color: isDark ? T.dSub : T.lSub,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = isDark
+                ? "rgba(255,255,255,0.12)"
+                : "#E5E7EB";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = isDark
+                ? "rgba(255,255,255,0.06)"
+                : "#F3F4F6";
+            }}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Step indicator */}
-        <div className="px-6 pt-6">
-          <StepIndicator current={step} />
-        </div>
+        {/* Step content — scrollable on mobile, centered on desktop */}
+        <div className="flex-1 overflow-y-auto">
+          <div
+            className="max-w-lg mx-auto px-8 py-10"
+            key={step}
+            style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
+          >
+            {/* Mobile step eyebrow */}
+            <p
+              className="lg:hidden text-xs font-semibold tracking-widest uppercase mb-2"
+              style={{ color: isDark ? T.dMuted : T.lMuted }}
+            >
+              {STEPS[step].hero.eyebrow}
+            </p>
+            {/* Mobile step title */}
+            <h2
+              className="lg:hidden text-2xl font-bold mb-6"
+              style={{
+                fontFamily: "'Clash Display', sans-serif",
+                color: isDark ? T.dText : T.lText,
+              }}
+            >
+              {STEPS[step].hero.title.replace("\n", " ")}
+            </h2>
 
-        {/* Step content */}
-        <div
-          className="px-6 pb-2 overflow-y-auto"
-          style={{ maxHeight: "55vh" }}
-          key={step}
-        >
-          <div style={{ animation: "stepIn 0.2s ease both" }}>
-            {step === 0 && <StepDetails data={data} onChange={patch} />}
-            {step === 1 && <StepFormat data={data} onChange={patch} />}
-            {step === 2 && <StepTime data={data} onChange={patch} />}
-            {step === 3 && <StepShare data={data} />}
+            {step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} />}
+            {step === 1 && <StepFormat data={data} onChange={patch} isDark={isDark} />}
+            {step === 2 && <StepTime data={data} onChange={patch} isDark={isDark} />}
+            {step === 3 && <StepShare data={data} isDark={isDark} />}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className={`flex items-center justify-between px-6 py-4 mt-2 border-t ${isDark ? "border-white/08" : "border-[#F0F5EE]"}`}>
+        {/* Bottom navigation bar */}
+        <div
+          className="flex-shrink-0 flex items-center justify-between px-8 py-5 border-t"
+          style={{
+            borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
+            background: isDark ? T.dPanel : "#FFFFFF",
+          }}
+        >
+          {/* Back / Cancel */}
           <button
             type="button"
             onClick={handleBack}
-            className={`flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-              isDark
-                ? "text-white/60 hover:text-white hover:bg-white/08"
-                : "text-[#6B7280] hover:text-[#1A1A1A] hover:bg-[#F0F5EE]"
-            }`}
+            className="flex items-center gap-1.5 text-sm font-medium rounded-xl transition-all duration-200"
+            style={{
+              padding: "10px 16px",
+              color: isDark ? T.dSub : T.lSub,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = isDark
+                ? "rgba(255,255,255,0.06)"
+                : "#F3F4F6";
+              (e.currentTarget as HTMLButtonElement).style.color = isDark ? T.dText : T.lText;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = isDark ? T.dSub : T.lSub;
+            }}
           >
             <ChevronLeft className="w-4 h-4" />
             {step === 0 ? "Cancel" : "Back"}
           </button>
 
-          <div className="flex items-center gap-2">
-            {/* Dot progress */}
-            <div className="flex gap-1 mr-2">
-              {STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`rounded-full transition-all duration-300 ${
+          {/* Step dots (desktop only) */}
+          <div className="hidden sm:flex items-center gap-1.5">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === step ? 20 : 6,
+                  height: 6,
+                  background:
                     i === step
-                      ? "w-4 h-1.5 bg-[#3D6B47]"
+                      ? T.green
                       : i < step
-                      ? "w-1.5 h-1.5 bg-[#3D6B47]/50"
+                      ? "rgba(61,107,71,0.45)"
                       : isDark
-                      ? "w-1.5 h-1.5 bg-white/15"
-                      : "w-1.5 h-1.5 bg-[#D1D5DB]"
-                  }`}
-                />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={!canAdvance()}
-              className={`flex items-center gap-1.5 text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-200 ${
-                canAdvance()
-                  ? "bg-[#3D6B47] text-white hover:bg-[#2A4A32] hover:-translate-y-0.5 hover:shadow-md"
-                  : isDark
-                  ? "bg-white/08 text-white/25 cursor-not-allowed"
-                  : "bg-[#F0F5EE] text-[#9CA3AF] cursor-not-allowed"
-              }`}
-            >
-              {step === STEPS.length - 1 ? (
-                <>
-                  Go to Tournament
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              ) : (
-                <>
-                  Continue
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+                      ? "rgba(255,255,255,0.15)"
+                      : "#D1D5DB",
+                }}
+              />
+            ))}
           </div>
+
+          {/* Continue / Go to Tournament */}
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!canAdvance}
+            className="flex items-center gap-2 text-sm font-semibold rounded-xl transition-all duration-200"
+            style={{
+              padding: "10px 22px",
+              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+              color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
+              cursor: canAdvance ? "pointer" : "not-allowed",
+              boxShadow: canAdvance ? `0 4px 14px rgba(61,107,71,0.30)` : "none",
+            }}
+            onMouseEnter={(e) => {
+              if (!canAdvance) return;
+              (e.currentTarget as HTMLButtonElement).style.background = T.greenDark;
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                "0 6px 20px rgba(61,107,71,0.40)";
+            }}
+            onMouseLeave={(e) => {
+              if (!canAdvance) return;
+              (e.currentTarget as HTMLButtonElement).style.background = T.green;
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow =
+                "0 4px 14px rgba(61,107,71,0.30)";
+            }}
+          >
+            {step === STEPS.length - 1 ? (
+              <>
+                Go to Tournament
+                <ArrowRight className="w-4 h-4" />
+              </>
+            ) : (
+              <>
+                Continue
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
         </div>
       </div>
 
       <style>{`
-        @keyframes wizardIn {
-          from { opacity: 0; transform: scale(0.94) translateY(12px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes wizardFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
-        @keyframes stepIn {
-          from { opacity: 0; transform: translateX(12px); }
+        @keyframes heroIn {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes stepSlideInRight {
+          from { opacity: 0; transform: translateX(28px); }
           to   { opacity: 1; transform: translateX(0); }
         }
+        @keyframes stepSlideInLeft {
+          from { opacity: 0; transform: translateX(-28px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInScale {
+          from { opacity: 0; transform: scale(0.5); }
+          to   { opacity: 1; transform: scale(1); }
+        }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 }
