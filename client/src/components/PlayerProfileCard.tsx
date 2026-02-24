@@ -9,6 +9,7 @@
  *   - W / D / L record as a mini bar chart
  *   - Color history (W/B chips for each round played)
  *   - Buchholz tiebreak score
+ *   - Rating history sparkline (last 10 rated games, live from API)
  *   - "New" badge if joined in the last 5 minutes
  *
  * Usage:
@@ -24,6 +25,7 @@ import { createPortal } from "react-dom";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
+import { useRatingHistory, type RatingPoint } from "@/hooks/useRatingHistory";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,9 +62,226 @@ function ColorChip({ color }: { color: "W" | "B" }) {
   );
 }
 
+// ─── Sparkline ────────────────────────────────────────────────────────────────
+
+interface SparklineProps {
+  points: RatingPoint[];
+  width?: number;
+  height?: number;
+  isDark: boolean;
+}
+
+function Sparkline({ points, width = 224, height = 44, isDark }: SparklineProps) {
+  if (points.length < 2) return null;
+
+  const ratings = points.map((p) => p.rating);
+  const minR = Math.min(...ratings);
+  const maxR = Math.max(...ratings);
+  const range = maxR - minR || 1;
+
+  const padX = 4;
+  const padY = 6;
+  const innerW = width - padX * 2;
+  const innerH = height - padY * 2;
+
+  // Map each point to SVG coordinates
+  const coords = points.map((p, i) => ({
+    x: padX + (i / (points.length - 1)) * innerW,
+    y: padY + (1 - (p.rating - minR) / range) * innerH,
+    result: p.result,
+    rating: p.rating,
+  }));
+
+  // Build smooth polyline path using cardinal spline approximation
+  function smoothPath(pts: { x: number; y: number }[]): string {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cp1x = pts[i].x + (pts[i + 1].x - (pts[i - 1]?.x ?? pts[i].x)) / 6;
+      const cp1y = pts[i].y + (pts[i + 1].y - (pts[i - 1]?.y ?? pts[i].y)) / 6;
+      const cp2x = pts[i + 1].x - (pts[i + 2]?.x ?? pts[i + 1].x - pts[i].x + pts[i + 1].x - pts[i].x) / 6;
+      const cp2y = pts[i + 1].y - (pts[i + 2]?.y ?? pts[i + 1].y - pts[i].y + pts[i + 1].y - pts[i].y) / 6;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pts[i + 1].x},${pts[i + 1].y}`;
+    }
+    return d;
+  }
+
+  // Area fill path (close at bottom)
+  function areaPath(pts: { x: number; y: number }[]): string {
+    const line = smoothPath(pts);
+    return `${line} L ${pts[pts.length - 1].x},${padY + innerH} L ${pts[0].x},${padY + innerH} Z`;
+  }
+
+  const linePath = smoothPath(coords);
+  const fillPath = areaPath(coords);
+
+  // Trend: compare last point to first
+  const trend = ratings[ratings.length - 1] - ratings[0];
+  const lineColor =
+    trend > 0 ? "#22c55e" : trend < 0 ? "#f87171" : isDark ? "#6b7280" : "#9ca3af";
+  const fillId = `spark-fill-${Math.random().toString(36).slice(2, 7)}`;
+
+  // Last point for the endpoint dot
+  const last = coords[coords.length - 1];
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className="overflow-visible"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={lineColor} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={lineColor} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+
+      {/* Area fill */}
+      <path d={fillPath} fill={`url(#${fillId})`} />
+
+      {/* Line */}
+      <path
+        d={linePath}
+        fill="none"
+        stroke={lineColor}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Result dots on each data point */}
+      {coords.map((c, i) => {
+        const dotColor =
+          c.result === "win"
+            ? "#22c55e"
+            : c.result === "loss"
+            ? "#f87171"
+            : isDark
+            ? "#60a5fa"
+            : "#3b82f6";
+        return (
+          <circle
+            key={i}
+            cx={c.x}
+            cy={c.y}
+            r={i === coords.length - 1 ? 3 : 2}
+            fill={dotColor}
+            stroke={isDark ? "#1a2e1f" : "#ffffff"}
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      {/* Endpoint rating label */}
+      <text
+        x={last.x + 5}
+        y={last.y + 4}
+        fontSize="9"
+        fontWeight="600"
+        fill={lineColor}
+        className="tabular-nums"
+      >
+        {last.rating}
+      </text>
+    </svg>
+  );
+}
+
+// ─── Sparkline shimmer skeleton ───────────────────────────────────────────────
+
+function SparklineSkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <div
+      className={`h-11 rounded-lg animate-pulse ${
+        isDark ? "bg-white/05" : "bg-gray-100"
+      }`}
+    />
+  );
+}
+
+// ─── Sparkline section (with hook) ───────────────────────────────────────────
+
+function SparklineSection({
+  player,
+  isDark,
+  visible,
+}: {
+  player: Player;
+  isDark: boolean;
+  visible: boolean;
+}) {
+  const platform = player.platform ?? "chesscom";
+  const { status, points } = useRatingHistory({
+    username: player.username,
+    platform,
+    count: 10,
+    enabled: visible && !!player.username,
+  });
+
+  const textSub = isDark ? "text-white/40" : "text-gray-400";
+  const divider = isDark ? "border-white/08" : "border-gray-100";
+
+  // Don't render the section at all if there's an error and no data
+  if (status === "error") return null;
+
+  // Compute trend label
+  let trendLabel = "";
+  let trendColor = textSub;
+  if (points.length >= 2) {
+    const delta = points[points.length - 1].rating - points[0].rating;
+    if (delta > 0) {
+      trendLabel = `+${delta}`;
+      trendColor = "text-emerald-500";
+    } else if (delta < 0) {
+      trendLabel = `${delta}`;
+      trendColor = "text-red-400";
+    } else {
+      trendLabel = "±0";
+    }
+  }
+
+  return (
+    <div className={`px-4 pb-4 border-t ${divider} pt-3`}>
+      <div className="flex items-center justify-between mb-2">
+        <p className={`text-[10px] uppercase tracking-wider font-semibold ${textSub}`}>
+          Rating History
+        </p>
+        {trendLabel && (
+          <span className={`text-[10px] font-bold tabular-nums ${trendColor}`}>
+            {trendLabel} last 10
+          </span>
+        )}
+      </div>
+
+      {status === "loading" && <SparklineSkeleton isDark={isDark} />}
+
+      {status === "success" && points.length >= 2 && (
+        <Sparkline points={points} isDark={isDark} />
+      )}
+
+      {status === "success" && points.length < 2 && (
+        <p className={`text-[10px] ${textSub} italic`}>
+          Not enough rated games to display
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Card Content ─────────────────────────────────────────────────────────────
 
-function CardContent({ player, isDark }: { player: Player; isDark: boolean }) {
+function CardContent({
+  player,
+  isDark,
+  visible,
+}: {
+  player: Player;
+  isDark: boolean;
+  visible: boolean;
+}) {
   const total = player.wins + player.draws + player.losses;
   const winPct = total > 0 ? (player.wins / total) * 100 : 0;
   const drawPct = total > 0 ? (player.draws / total) * 100 : 0;
@@ -203,6 +422,11 @@ function CardContent({ player, isDark }: { player: Player; isDark: boolean }) {
           </div>
         </div>
       )}
+
+      {/* Rating history sparkline */}
+      {player.username && (
+        <SparklineSection player={player} isDark={isDark} visible={visible} />
+      )}
     </div>
   );
 }
@@ -241,7 +465,7 @@ export function PlayerHoverCard({
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const cardW = 256; // w-64
-    const cardH = 340; // approximate
+    const cardH = 420; // approximate (taller now with sparkline)
     const gap = 8;
 
     // Default: below and aligned to left of trigger
@@ -312,7 +536,7 @@ export function PlayerHoverCard({
             onMouseEnter={handleCardMouseEnter}
             onMouseLeave={handleCardMouseLeave}
           >
-            <CardContent player={player} isDark={isDark} />
+            <CardContent player={player} isDark={isDark} visible={visible} />
           </div>,
           document.body
         )}

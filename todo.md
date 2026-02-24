@@ -103,3 +103,8 @@
 - [x] Wire into Director Dashboard Players tab list rows
 - [x] Wire into Director Dashboard Boards tab (white/black player names in BoardCard)
 - [x] Smooth enter/exit animation, smart positioning (flip when near viewport edge)
+- [x] useRatingHistory hook — chess.com archive walk + Lichess NDJSON games API, sessionStorage cache
+- [x] SVG sparkline with smooth cardinal spline, area fill, result-coloured dots, endpoint label
+- [x] Trend badge (+N / -N / ±0) in sparkline section header
+- [x] Shimmer skeleton while rating history is loading
+- [x] 17 unit tests for sparkline data helpers (ratingToY, computeTrend, formatTrend, countResults)
