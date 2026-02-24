@@ -15,6 +15,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useParams, Link } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -43,45 +44,9 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface ChessProfile {
-  username: string;
-  name?: string;
-  avatar?: string;
-  elo: number;
-  rapid: number;
-  blitz: number;
-  bullet: number;
-  country?: string;
-  title?: string;
-  joined?: number;
-  status: "online" | "offline";
-}
+import type { ChessComProfile as ChessProfile } from "@/hooks/useChessComProfile";
 
 type Step = "code" | "username" | "confirm" | "success";
-
-// ─── Mock chess.com API ───────────────────────────────────────────────────────
-const MOCK_PROFILES: Record<string, ChessProfile> = {
-  hikaru: { username: "hikaru", name: "Hikaru Nakamura", elo: 3250, rapid: 3250, blitz: 3400, bullet: 3450, country: "US", title: "GM", status: "online" },
-  gothamchess: { username: "GothamChess", name: "Levy Rozman", elo: 2650, rapid: 2650, blitz: 2700, bullet: 2580, country: "US", title: "IM", status: "online" },
-  magnuscarlsen: { username: "magnuscarlsen", name: "Magnus Carlsen", elo: 2830, rapid: 2880, blitz: 2900, bullet: 3100, country: "NO", title: "GM", status: "offline" },
-  danielnaroditsky: { username: "DanielNaroditsky", name: "Daniel Naroditsky", elo: 3050, rapid: 3050, blitz: 3100, bullet: 3200, country: "US", title: "GM", status: "online" },
-  fabianocaruana: { username: "FabianoCaruana", name: "Fabiano Caruana", elo: 2820, rapid: 2820, blitz: 2800, bullet: 2750, country: "US", title: "GM", status: "offline" },
-};
-
-async function fetchChessProfile(username: string): Promise<ChessProfile> {
-  await new Promise((r) => setTimeout(r, 800 + Math.random() * 400));
-  const key = username.toLowerCase();
-  if (MOCK_PROFILES[key]) return MOCK_PROFILES[key];
-  const elo = 800 + Math.floor(Math.random() * 1400);
-  return {
-    username,
-    elo,
-    rapid: elo,
-    blitz: elo + Math.floor(Math.random() * 200 - 100),
-    bullet: elo + Math.floor(Math.random() * 300 - 150),
-    status: Math.random() > 0.5 ? "online" : "offline",
-  };
-}
 
 function eloTier(elo: number) {
   if (elo >= 2500) return { label: "Grandmaster", color: "text-amber-700", bg: "bg-amber-50 border border-amber-200" };
@@ -276,8 +241,8 @@ export default function JoinPage() {
   const [step, setStep] = useState<Step>(urlCode ? "username" : "code");
   const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
   const [username, setUsername] = useState("");
-  const [profile, setProfile] = useState<ChessProfile | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { status: lookupStatus, profile, error: lookupError, lookup, reset: resetLookup } = useChessComProfile();
+  const loading = lookupStatus === "loading";
   const [error, setError] = useState("");
   const [showShare, setShowShare] = useState(false);
   const [stepKey, setStepKey] = useState(0); // force re-mount for animation
@@ -308,20 +273,26 @@ export default function JoinPage() {
   async function handleUsernameSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!username.trim()) return;
-    setLoading(true); setError("");
-    try {
-      const p = await fetchChessProfile(username.trim());
-      setProfile(p);
-      advanceStep("confirm");
-    } catch {
-      setError("Username not found on chess.com. Please check and try again.");
-    } finally { setLoading(false); }
+    setError("");
+    await lookup(username.trim());
+    // advance handled via useEffect watching lookupStatus
   }
 
+  // Advance to confirm step once lookup succeeds
+  useEffect(() => {
+    if (lookupStatus === "success" && profile && step === "username") {
+      advanceStep("confirm");
+    }
+    if (lookupStatus === "not_found" || lookupStatus === "error") {
+      setError(lookupError);
+    }
+  }, [lookupStatus, profile]);
+
+  const [confirming, setConfirming] = useState(false);
   async function handleConfirm() {
-    setLoading(true);
+    setConfirming(true);
     await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
+    setConfirming(false);
     advanceStep("success");
   }
 
@@ -350,7 +321,7 @@ export default function JoinPage() {
             <button
               onClick={() => {
                 if (step === "username") advanceStep("code");
-                else if (step === "confirm") { advanceStep("username"); setProfile(null); }
+                else if (step === "confirm") { advanceStep("username"); resetLookup(); }
               }}
               className={`touch-target -ml-2 rounded-xl ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-700"} transition-colors`}
             >

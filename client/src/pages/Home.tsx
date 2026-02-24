@@ -17,6 +17,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -551,29 +552,12 @@ function PlayerDemo() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [player, setPlayer] = useState<null | { username: string; elo: number; title?: string }>(null);
-
-  const mockPlayers: Record<string, { elo: number; title?: string }> = {
-    hikaru: { elo: 3212, title: "GM" },
-    magnuscarlsen: { elo: 2882, title: "GM" },
-    gothamchess: { elo: 2612, title: "IM" },
-    danielnaroditsky: { elo: 2736, title: "GM" },
-  };
+  const { status, profile, error: lookupError, lookup, reset } = useChessComProfile();
+  const loading = status === "loading";
 
   const handleLookup = () => {
     if (!username.trim()) return;
-    setLoading(true);
-    setTimeout(() => {
-      const key = username.toLowerCase().replace(/\s/g, "");
-      const found = mockPlayers[key];
-      if (found) {
-        setPlayer({ username, ...found });
-      } else {
-        setPlayer({ username, elo: Math.floor(Math.random() * 800) + 1000 });
-      }
-      setLoading(false);
-    }, 900);
+    lookup(username.trim());
   };
 
   return (
@@ -623,23 +607,36 @@ function PlayerDemo() {
               </button>
             </div>
 
-            {player && !loading && (
+            {/* Error state */}
+            {(status === "not_found" || status === "error") && (
+              <div className={`rounded-xl p-3 text-sm text-center ${isDark ? "bg-red-900/20 text-red-300 border border-red-800/30" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                {lookupError || "Username not found on chess.com."}
+              </div>
+            )}
+
+            {/* Profile card */}
+            {profile && status === "success" && (
               <div className={`border rounded-xl p-4 animate-fade-in-up ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-[#F0F5EE]/50"}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#3D6B47] rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {player.username[0].toUpperCase()}
-                    </div>
+                    {profile.avatar ? (
+                      <img src={profile.avatar} alt={profile.username} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 bg-[#3D6B47] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {profile.username[0].toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-foreground text-sm">{player.username}</p>
-                        {player.title && (
+                        <p className="font-semibold text-foreground text-sm">{profile.name || profile.username}</p>
+                        {profile.title && (
                           <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isDark ? "text-[oklch(0.65_0.14_145)] bg-[oklch(0.65_0.14_145)]/15" : "text-[#3D6B47] bg-[#3D6B47]/10"}`}>
-                            {player.title}
+                            {profile.title}
                           </span>
                         )}
+                        {profile.countryFlag && <span className="text-base">{profile.countryFlag}</span>}
                       </div>
-                      <p className="text-xs text-muted-foreground">chess.com verified</p>
+                      <p className="text-xs text-muted-foreground">chess.com verified · Live data</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -647,14 +644,30 @@ function PlayerDemo() {
                       className={`text-2xl font-bold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
                       style={{ fontFamily: "'JetBrains Mono', monospace" }}
                     >
-                      {player.elo}
+                      {profile.rapid || profile.blitz || profile.bullet || "—"}
                     </p>
-                    <p className="text-xs text-muted-foreground">ELO Rating</p>
+                    <p className="text-xs text-muted-foreground">Rapid ELO</p>
                   </div>
                 </div>
+                {(profile.blitz > 0 || profile.bullet > 0) && (
+                  <div className={`mt-3 pt-3 border-t flex gap-4 ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
+                    {profile.blitz > 0 && (
+                      <div className="text-center flex-1">
+                        <p className="text-sm font-bold text-foreground">{profile.blitz}</p>
+                        <p className="text-xs text-muted-foreground">Blitz</p>
+                      </div>
+                    )}
+                    {profile.bullet > 0 && (
+                      <div className="text-center flex-1">
+                        <p className="text-sm font-bold text-foreground">{profile.bullet}</p>
+                        <p className="text-xs text-muted-foreground">Bullet</p>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className={`mt-3 pt-3 border-t ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
                   <button
-                    onClick={() => toast.success(`${player.username} added to tournament!`)}
+                    onClick={() => toast.success(`${profile.username} added to tournament!`)}
                     className="w-full btn-chess-primary text-sm py-2"
                   >
                     Add to Tournament
