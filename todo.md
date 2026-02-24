@@ -164,6 +164,14 @@
 - [x] Mobile: single-column stacked layout, bottom nav bar
 - [x] Consistent with platform design system (green/white, Clash Display, OKLCH tokens)
 
+## Phone & Email on Join Page
+
+- [x] Add optional `phone` and `email` fields to the Player interface
+- [x] Add phone and email inputs to the Join page registration form
+- [x] Persist phone/email in tournament registry when player joins
+- [x] Wire phone/email into ShareResultsModal for pre-filled WhatsApp/mailto links
+- [x] Unit tests for phone/email field validation helpers (19 tests)
+
 ## Manual Player Entry & Start Tournament
 
 - [ ] AddPlayerModal — name, platform (chess.com/lichess/manual), username, ELO lookup button

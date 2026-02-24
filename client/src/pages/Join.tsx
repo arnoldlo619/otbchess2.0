@@ -46,6 +46,8 @@ import {
   Twitter,
   MessageCircle,
   ChevronLeft,
+  Phone,
+  Mail,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -268,6 +270,8 @@ export default function JoinPage() {
   const [error, setError] = useState("");
   const [showShare, setShowShare] = useState(false);
   const [stepKey, setStepKey] = useState(0); // force re-mount for animation
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -355,6 +359,8 @@ export default function JoinPage() {
           avatarUrl: profile.platform === "chesscom" ? (profile as ChessComProfile).avatar : undefined,
           flairEmoji: profile.platform === "lichess" ? (profile as LichessProfile).flairEmoji : undefined,
           joinedAt: Date.now(),
+          phone: phone.trim() || undefined,
+          email: email.trim() || undefined,
         };
         addPlayerToTournament(config.id, player);
       }
@@ -679,9 +685,40 @@ export default function JoinPage() {
                       </div>
                     ))}
                   </div>
+                  {/* ── Optional contact fields ─────────────────────────── */}
+                  <div className={`h-px ${divider}`} />
+                  <div className="space-y-3">
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${labelCls}`}>Contact (optional)</p>
+                    <p className={`text-xs ${textMuted}`}>Let the director send you your results after the tournament.</p>
+                    {/* Phone */}
+                    <div className="relative">
+                      <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-gray-300"}`} />
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="Phone / WhatsApp number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className={`${inputBase} w-full pl-10`}
+                      />
+                    </div>
+                    {/* Email */}
+                    <div className="relative">
+                      <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/25" : "text-gray-300"}`} />
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="Email address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={`${inputBase} w-full pl-10`}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-
               {error && (
                 <div className="flex items-start gap-2 text-red-500 text-xs px-1">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
@@ -689,7 +726,6 @@ export default function JoinPage() {
               )}
             </div>
           )}
-
           {/* ══ STEP 4 — Success ══════════════════════════════════════════════ */}
           {step === "success" && profile && (
             <div key={`step4-${stepKey}`} className="animate-spring-in space-y-4">
