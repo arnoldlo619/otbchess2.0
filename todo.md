@@ -123,3 +123,16 @@
 - [x] "Send via WhatsApp / Email" button in per-card hover overlay
 - [x] Report URL auto-populated from window.location.href
 - [x] 26 unit tests for message generators and URL builders
+
+## Sparkline Tooltip
+
+- [x] formatDate helper (Unix-ms \u2192 "Mon DD" string)
+- [x] useState activeIdx to track hovered dot index
+- [x] Invisible enlarged hit-target circles (r=10) over each dot for easy hover
+- [x] Dot grows on hover (r 2\u21924) with CSS transition
+- [x] Vertical dashed crosshair line on active dot
+- [x] Floating tooltip via SVG foreignObject (rating, date, result label)
+- [x] Tooltip flips left when near right edge of sparkline
+- [x] Tooltip y clamped to never go above SVG top
+- [x] Endpoint rating label hidden while a dot is active
+- [x] 19 unit tests for formatDate, tooltipX, tooltipY, resultLabel

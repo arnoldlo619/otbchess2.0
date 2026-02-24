@@ -71,7 +71,15 @@ interface SparklineProps {
   isDark: boolean;
 }
 
+/** Format a Unix-ms timestamp as "Mon DD" (e.g. "Feb 18") */
+function formatDate(ms: number): string {
+  if (!ms) return "Unknown date";
+  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 function Sparkline({ points, width = 224, height = 44, isDark }: SparklineProps) {
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
+
   if (points.length < 2) return null;
 
   const ratings = points.map((p) => p.rating);
@@ -90,6 +98,7 @@ function Sparkline({ points, width = 224, height = 44, isDark }: SparklineProps)
     y: padY + (1 - (p.rating - minR) / range) * innerH,
     result: p.result,
     rating: p.rating,
+    date: p.date,
   }));
 
   // Build smooth polyline path using cardinal spline approximation
@@ -119,74 +128,193 @@ function Sparkline({ points, width = 224, height = 44, isDark }: SparklineProps)
   const trend = ratings[ratings.length - 1] - ratings[0];
   const lineColor =
     trend > 0 ? "#22c55e" : trend < 0 ? "#f87171" : isDark ? "#6b7280" : "#9ca3af";
-  const fillId = `spark-fill-${Math.random().toString(36).slice(2, 7)}`;
+  // Stable fill gradient ID (no random — avoids re-render flicker)
+  const fillId = "spark-fill-static";
 
   // Last point for the endpoint dot
   const last = coords[coords.length - 1];
 
+  // Tooltip for the active dot
+  const activeDot = activeIdx !== null ? coords[activeIdx] : null;
+  const activePoint = activeIdx !== null ? points[activeIdx] : null;
+
+  // Tooltip positioning — flip left if near right edge
+  const TOOLTIP_W = 80;
+  const tooltipX = activeDot
+    ? activeDot.x + TOOLTIP_W > width
+      ? activeDot.x - TOOLTIP_W - 4
+      : activeDot.x + 6
+    : 0;
+  const tooltipY = activeDot ? Math.max(0, activeDot.y - 28) : 0;
+
+  const tooltipBg = isDark ? "#1a2e1f" : "#ffffff";
+  const tooltipBorder = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)";
+  const tooltipText = isDark ? "#ffffff" : "#111827";
+  const tooltipSub = isDark ? "rgba(255,255,255,0.45)" : "#6b7280";
+
+  const resultLabel =
+    activePoint?.result === "win"
+      ? "Win"
+      : activePoint?.result === "loss"
+      ? "Loss"
+      : "Draw";
+  const resultColor =
+    activePoint?.result === "win"
+      ? "#22c55e"
+      : activePoint?.result === "loss"
+      ? "#f87171"
+      : isDark
+      ? "#60a5fa"
+      : "#3b82f6";
+
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      className="overflow-visible"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={lineColor} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={lineColor} stopOpacity="0.02" />
-        </linearGradient>
-      </defs>
-
-      {/* Area fill */}
-      <path d={fillPath} fill={`url(#${fillId})`} />
-
-      {/* Line */}
-      <path
-        d={linePath}
-        fill="none"
-        stroke={lineColor}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Result dots on each data point */}
-      {coords.map((c, i) => {
-        const dotColor =
-          c.result === "win"
-            ? "#22c55e"
-            : c.result === "loss"
-            ? "#f87171"
-            : isDark
-            ? "#60a5fa"
-            : "#3b82f6";
-        return (
-          <circle
-            key={i}
-            cx={c.x}
-            cy={c.y}
-            r={i === coords.length - 1 ? 3 : 2}
-            fill={dotColor}
-            stroke={isDark ? "#1a2e1f" : "#ffffff"}
-            strokeWidth="1"
-          />
-        );
-      })}
-
-      {/* Endpoint rating label */}
-      <text
-        x={last.x + 5}
-        y={last.y + 4}
-        fontSize="9"
-        fontWeight="600"
-        fill={lineColor}
-        className="tabular-nums"
+    <div className="relative" style={{ width, height: height + 2 }}>
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="overflow-visible block"
+        onMouseLeave={() => setActiveIdx(null)}
+        aria-label="Rating history sparkline"
       >
-        {last.rating}
-      </text>
-    </svg>
+        <defs>
+          <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={lineColor} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={lineColor} stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        {/* Area fill */}
+        <path d={fillPath} fill={`url(#${fillId})`} />
+
+        {/* Line */}
+        <path
+          d={linePath}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Vertical crosshair on active dot */}
+        {activeDot && (
+          <line
+            x1={activeDot.x}
+            y1={padY}
+            x2={activeDot.x}
+            y2={padY + innerH}
+            stroke={isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"}
+            strokeWidth="1"
+            strokeDasharray="2 2"
+          />
+        )}
+
+        {/* Result dots on each data point */}
+        {coords.map((c, i) => {
+          const isActive = i === activeIdx;
+          const dotColor =
+            c.result === "win"
+              ? "#22c55e"
+              : c.result === "loss"
+              ? "#f87171"
+              : isDark
+              ? "#60a5fa"
+              : "#3b82f6";
+          return (
+            <g key={i}>
+              {/* Visible dot */}
+              <circle
+                cx={c.x}
+                cy={c.y}
+                r={isActive ? 4 : i === coords.length - 1 ? 3 : 2}
+                fill={dotColor}
+                stroke={isDark ? "#1a2e1f" : "#ffffff"}
+                strokeWidth={isActive ? 1.5 : 1}
+                style={{ transition: "r 0.1s ease" }}
+              />
+              {/* Invisible enlarged hit target */}
+              <circle
+                cx={c.x}
+                cy={c.y}
+                r={10}
+                fill="transparent"
+                onMouseEnter={() => setActiveIdx(i)}
+                style={{ cursor: "crosshair" }}
+              />
+            </g>
+          );
+        })}
+
+        {/* Endpoint rating label (hidden when a dot is active) */}
+        {activeIdx === null && (
+          <text
+            x={last.x + 5}
+            y={last.y + 4}
+            fontSize="9"
+            fontWeight="600"
+            fill={lineColor}
+            className="tabular-nums"
+          >
+            {last.rating}
+          </text>
+        )}
+
+        {/* Floating tooltip rendered inside SVG as a foreignObject */}
+        {activeDot && activePoint && (
+          <foreignObject
+            x={tooltipX}
+            y={tooltipY}
+            width={TOOLTIP_W}
+            height={44}
+            style={{ overflow: "visible", pointerEvents: "none" }}
+          >
+            <div
+              style={{
+                background: tooltipBg,
+                border: `1px solid ${tooltipBorder}`,
+                borderRadius: 8,
+                padding: "4px 7px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
+                whiteSpace: "nowrap",
+                display: "inline-block",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: tooltipText,
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: 1.3,
+                }}
+              >
+                {activeDot.rating}
+              </div>
+              <div
+                style={{
+                  fontSize: 9.5,
+                  color: tooltipSub,
+                  lineHeight: 1.3,
+                }}
+              >
+                {formatDate(activePoint.date)}
+              </div>
+              <div
+                style={{
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: resultColor,
+                  lineHeight: 1.3,
+                }}
+              >
+                {resultLabel}
+              </div>
+            </div>
+          </foreignObject>
+        )}
+      </svg>
+    </div>
   );
 }
 
