@@ -136,3 +136,16 @@
 - [x] Tooltip y clamped to never go above SVG top
 - [x] Endpoint rating label hidden while a dot is active
 - [x] 19 unit tests for formatDate, tooltipX, tooltipY, resultLabel
+
+## Sparkline Time-Control Filter
+
+- [x] TimeControl type exported from useRatingHistory ("all" | "bullet" | "blitz" | "rapid" | "classical")
+- [x] RatingPoint extended with timeControl field
+- [x] classifyChessComTC helper (time_class field + time_control string fallback)
+- [x] classifyLichessPerf helper (perf field, case-insensitive, ultraBullet support)
+- [x] Hook fetches count*4 games to fill all TC buckets; client-side filter + slice(-count)
+- [x] Cache key bumped to v2 to avoid stale entries without timeControl field
+- [x] TCPill component (All / Rapid / Blitz / Bullet) with active/inactive styles
+- [x] SparklineSection holds tc state; passes timeControl to useRatingHistory
+- [x] Empty-state message is TC-aware ("No blitz games in the last 10 games")
+- [x] 35 unit tests for classifyChessComTC, classifyLichessPerf, filterPoints

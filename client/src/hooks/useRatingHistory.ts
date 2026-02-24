@@ -2,18 +2,23 @@
  * useRatingHistory
  *
  * Fetches a player's last N rated games' post-game ratings from chess.com or
- * Lichess, returning a time-ordered array of { date, rating } data points
- * suitable for rendering a sparkline.
+ * Lichess, returning a time-ordered array of RatingPoint data points suitable
+ * for rendering a sparkline.
  *
- * chess.com strategy:
- *   1. Fetch /pub/player/{username}/games/archives to get monthly archive URLs
- *   2. Walk archives newest-first, fetching each month's games until we have ≥ N
- *   3. Extract the "post_game_rating" from the player's side of each rated game
+ * Strategy: fetch ALL rated games once (up to count * 4 to ensure enough data
+ * per time-control bucket), tag each game with its time control, cache the full
+ * set, then filter client-side by the requested time control. This avoids
+ * redundant API calls when the user switches the time-control pill.
  *
- * Lichess strategy:
- *   1. Fetch /api/games/user/{username}?max=N&rated=true&perfType=rapid,blitz,bullet
- *      with Accept: application/x-ndjson
- *   2. Parse NDJSON, extract the player's rating from each game's "players" object
+ * chess.com time-control classification:
+ *   - Bullet  : initial_setup time < 3 min  (< 180s)
+ *   - Blitz   : 3–9 min  (180–539s)
+ *   - Rapid   : 10–29 min (540–1799s)
+ *   - Classical: ≥ 30 min (≥ 1800s)
+ *   (time_class field on the game object is used when available)
+ *
+ * Lichess time-control classification:
+ *   - perf field on the game object ("bullet" | "blitz" | "rapid" | "classical")
  *
  * Both paths use sessionStorage caching (5-minute TTL) to avoid redundant calls.
  */
@@ -22,6 +27,8 @@ import { useState, useEffect, useRef } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type TimeControl = "all" | "bullet" | "blitz" | "rapid" | "classical";
+
 export interface RatingPoint {
   /** Unix timestamp (ms) of the game */
   date: number;
@@ -29,6 +36,8 @@ export interface RatingPoint {
   rating: number;
   /** Result from the player's perspective */
   result: "win" | "draw" | "loss";
+  /** Time control of the game */
+  timeControl: Exclude<TimeControl, "all">;
 }
 
 export type RatingHistoryStatus = "idle" | "loading" | "success" | "error";
@@ -43,7 +52,7 @@ interface CacheEntry {
 }
 
 function cacheKey(platform: "chesscom" | "lichess", username: string) {
-  return `otb_rating_history_${platform}_${username.toLowerCase()}`;
+  return `otb_rating_history_v2_${platform}_${username.toLowerCase()}`;
 }
 
 function readCache(key: string): RatingPoint[] | null {
@@ -70,6 +79,38 @@ function writeCache(key: string, data: RatingPoint[]) {
   }
 }
 
+// ─── chess.com time-control classifier ───────────────────────────────────────
+
+/**
+ * Classify a chess.com game's time control.
+ * Prefers the `time_class` field; falls back to parsing the `time_control`
+ * string (e.g. "600" or "600+5").
+ */
+function classifyChessComTC(
+  timeClass: string | undefined,
+  timeControlStr: string | undefined
+): Exclude<TimeControl, "all"> {
+  // chess.com provides time_class directly in most cases
+  if (timeClass) {
+    const tc = timeClass.toLowerCase();
+    if (tc === "bullet") return "bullet";
+    if (tc === "blitz") return "blitz";
+    if (tc === "rapid") return "rapid";
+    if (tc === "classical" || tc === "daily") return "classical";
+  }
+  // Fallback: parse seconds from "600" or "600+5"
+  if (timeControlStr) {
+    const base = parseInt(timeControlStr.split("+")[0], 10);
+    if (!isNaN(base)) {
+      if (base < 180) return "bullet";
+      if (base < 540) return "blitz";
+      if (base < 1800) return "rapid";
+      return "classical";
+    }
+  }
+  return "rapid"; // safe default
+}
+
 // ─── chess.com fetcher ────────────────────────────────────────────────────────
 
 async function fetchChessComHistory(
@@ -90,38 +131,39 @@ async function fetchChessComHistory(
   const archivesData = await archivesRes.json();
   const archives: string[] = archivesData.archives ?? [];
 
-  // Walk archives newest-first
+  // Fetch enough games to fill all time-control buckets (count * 4)
+  const target = count * 4;
   const points: RatingPoint[] = [];
-  for (let i = archives.length - 1; i >= 0 && points.length < count; i--) {
+
+  for (let i = archives.length - 1; i >= 0 && points.length < target; i--) {
     const monthRes = await fetch(archives[i], { headers });
     if (!monthRes.ok) continue;
     const monthData = await monthRes.json();
     const games: unknown[] = monthData.games ?? [];
 
     // Process newest games first within the month
-    for (let j = games.length - 1; j >= 0 && points.length < count; j--) {
+    for (let j = games.length - 1; j >= 0 && points.length < target; j--) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const g: any = games[j];
       if (!g.rated) continue;
       if (g.rules && g.rules !== "chess") continue; // skip variants
 
-      // Determine which side the player is on
-      const isWhite =
-        (g.white?.username ?? "").toLowerCase() === u;
+      const isWhite = (g.white?.username ?? "").toLowerCase() === u;
       const side = isWhite ? g.white : g.black;
       if (!side?.rating) continue;
 
       const rating: number = side.rating;
       const endTime: number = (g.end_time ?? 0) * 1000;
 
-      // Determine result
       let result: "win" | "draw" | "loss" = "draw";
       const res: string = side.result ?? "";
       if (res === "win") result = "win";
       else if (["checkmated", "timeout", "resigned", "lose", "abandoned"].includes(res))
         result = "loss";
 
-      points.push({ date: endTime, rating, result });
+      const timeControl = classifyChessComTC(g.time_class, g.time_control);
+
+      points.push({ date: endTime, rating, result, timeControl });
     }
   }
 
@@ -133,6 +175,16 @@ async function fetchChessComHistory(
 
 // ─── Lichess fetcher ──────────────────────────────────────────────────────────
 
+function classifyLichessPerf(perf: string | undefined): Exclude<TimeControl, "all"> {
+  if (!perf) return "rapid";
+  const p = perf.toLowerCase();
+  if (p === "bullet" || p === "ultrabullet") return "bullet";
+  if (p === "blitz") return "blitz";
+  if (p === "rapid") return "rapid";
+  if (p === "classical" || p === "correspondence") return "classical";
+  return "rapid";
+}
+
 async function fetchLichessHistory(
   username: string,
   count: number
@@ -142,10 +194,10 @@ async function fetchLichessHistory(
   if (cached) return cached;
 
   const u = encodeURIComponent(username.toLowerCase().trim());
-  // Request more than needed to account for non-rated or filtered games
+  // Request more than needed to fill all time-control buckets
   const url =
     `https://lichess.org/api/games/user/${u}` +
-    `?max=${count * 2}&rated=true&perfType=rapid,blitz,bullet,classical` +
+    `?max=${count * 4}&rated=true&perfType=rapid,blitz,bullet,classical` +
     `&moves=false&clocks=false&evals=false&opening=false`;
 
   const res = await fetch(url, {
@@ -161,7 +213,6 @@ async function fetchLichessHistory(
   const points: RatingPoint[] = [];
 
   for (const line of lines) {
-    if (points.length >= count) break;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const g: any = JSON.parse(line);
@@ -174,7 +225,6 @@ async function fetchLichessHistory(
 
       const date: number = g.createdAt ?? g.lastMoveAt ?? 0;
 
-      // Determine result
       let result: "win" | "draw" | "loss" = "draw";
       const status: string = g.status ?? "";
       const winner: string | undefined = g.winner;
@@ -186,7 +236,9 @@ async function fetchLichessHistory(
         result = "draw";
       }
 
-      points.push({ date, rating, result });
+      const timeControl = classifyLichessPerf(g.perf);
+
+      points.push({ date, rating, result, timeControl });
     } catch {
       // Malformed NDJSON line — skip
     }
@@ -204,6 +256,8 @@ interface UseRatingHistoryOptions {
   username: string;
   platform: "chesscom" | "lichess";
   count?: number;
+  /** Filter to a specific time control; "all" returns every rated game */
+  timeControl?: TimeControl;
   /** Only fetch when enabled (e.g. when the hover card is visible) */
   enabled?: boolean;
 }
@@ -212,10 +266,11 @@ export function useRatingHistory({
   username,
   platform,
   count = 10,
+  timeControl = "all",
   enabled = true,
 }: UseRatingHistoryOptions) {
   const [status, setStatus] = useState<RatingHistoryStatus>("idle");
-  const [points, setPoints] = useState<RatingPoint[]>([]);
+  const [allPoints, setAllPoints] = useState<RatingPoint[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -225,13 +280,13 @@ export function useRatingHistory({
     const key = cacheKey(platform, username);
     const cached = readCache(key);
     if (cached) {
-      setPoints(cached);
+      setAllPoints(cached);
       setStatus("success");
       return;
     }
 
     setStatus("loading");
-    setPoints([]);
+    setAllPoints([]);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -244,7 +299,7 @@ export function useRatingHistory({
     fetcher
       .then((data) => {
         if (controller.signal.aborted) return;
-        setPoints(data);
+        setAllPoints(data);
         setStatus("success");
       })
       .catch(() => {
@@ -256,6 +311,12 @@ export function useRatingHistory({
       controller.abort();
     };
   }, [username, platform, count, enabled]);
+
+  // Client-side filter by time control, then take the last `count` games
+  const points =
+    timeControl === "all"
+      ? allPoints.slice(-count)
+      : allPoints.filter((p) => p.timeControl === timeControl).slice(-count);
 
   return { status, points };
 }

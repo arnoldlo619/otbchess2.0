@@ -25,7 +25,7 @@ import { createPortal } from "react-dom";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
-import { useRatingHistory, type RatingPoint } from "@/hooks/useRatingHistory";
+import { useRatingHistory, type RatingPoint, type TimeControl } from "@/hooks/useRatingHistory";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -330,7 +330,43 @@ function SparklineSkeleton({ isDark }: { isDark: boolean }) {
   );
 }
 
-// ─── Sparkline section (with hook) ───────────────────────────────────────────
+// ─── Time-control pill toggle ────────────────────────────────────────────────────
+
+const TC_PILLS: { label: string; value: TimeControl }[] = [
+  { label: "All", value: "all" },
+  { label: "Rapid", value: "rapid" },
+  { label: "Blitz", value: "blitz" },
+  { label: "Bullet", value: "bullet" },
+];
+
+function TCPill({
+  label,
+  active,
+  isDark,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  isDark: boolean;
+  onClick: () => void;
+}) {
+  const base = "text-[9px] font-semibold px-1.5 py-0.5 rounded-full cursor-pointer transition-all select-none";
+  const activeStyle = "bg-[#3D6B47] text-white";
+  const inactiveStyle = isDark
+    ? "bg-white/08 text-white/50 hover:bg-white/15 hover:text-white/80"
+    : "bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600";
+  return (
+    <button
+      type="button"
+      className={`${base} ${active ? activeStyle : inactiveStyle}`}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ─── Sparkline section (with hook) ───────────────────────────────────────────────
 
 function SparklineSection({
   player,
@@ -341,11 +377,13 @@ function SparklineSection({
   isDark: boolean;
   visible: boolean;
 }) {
+  const [tc, setTc] = useState<TimeControl>("all");
   const platform = player.platform ?? "chesscom";
   const { status, points } = useRatingHistory({
     username: player.username,
     platform,
     count: 10,
+    timeControl: tc,
     enabled: visible && !!player.username,
   });
 
@@ -355,7 +393,7 @@ function SparklineSection({
   // Don't render the section at all if there's an error and no data
   if (status === "error") return null;
 
-  // Compute trend label
+  // Compute trend label from filtered points
   let trendLabel = "";
   let trendColor = textSub;
   if (points.length >= 2) {
@@ -373,6 +411,7 @@ function SparklineSection({
 
   return (
     <div className={`px-4 pb-4 border-t ${divider} pt-3`}>
+      {/* Header row: label + trend badge */}
       <div className="flex items-center justify-between mb-2">
         <p className={`text-[10px] uppercase tracking-wider font-semibold ${textSub}`}>
           Rating History
@@ -384,6 +423,19 @@ function SparklineSection({
         )}
       </div>
 
+      {/* Time-control pill row */}
+      <div className="flex items-center gap-1 mb-2">
+        {TC_PILLS.map((pill) => (
+          <TCPill
+            key={pill.value}
+            label={pill.label}
+            active={tc === pill.value}
+            isDark={isDark}
+            onClick={() => setTc(pill.value)}
+          />
+        ))}
+      </div>
+
       {status === "loading" && <SparklineSkeleton isDark={isDark} />}
 
       {status === "success" && points.length >= 2 && (
@@ -392,7 +444,9 @@ function SparklineSection({
 
       {status === "success" && points.length < 2 && (
         <p className={`text-[10px] ${textSub} italic`}>
-          Not enough rated games to display
+          {tc === "all"
+            ? "Not enough rated games to display"
+            : `No ${tc} games in the last 10 games`}
         </p>
       )}
     </div>
