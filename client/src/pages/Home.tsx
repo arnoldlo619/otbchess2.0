@@ -84,7 +84,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
           ? isDark
-            ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-b border-white/10 shadow-sm"
+            ? "bg-[oklch(0.20_0.06_145)] backdrop-blur-md border-b border-white/10 shadow-sm"
             : "bg-[#F2F7F3]/96 backdrop-blur-md border-b border-[#3D6B47]/12 shadow-sm"
           : "bg-transparent"
       }`}
@@ -95,7 +95,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           <img
             src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
             alt="OTB Chess"
-            className="h-14 w-auto object-contain"
+            className={`h-14 w-auto object-contain transition-all duration-300 ${isDark ? "drop-shadow-[0_0_8px_rgba(100,200,100,0.25)]" : ""}`}
           />
         </a>
 
@@ -806,7 +806,7 @@ function Footer() {
               <img
                 src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
                 alt="OTB Chess"
-                className="h-9 w-auto object-contain"
+                className="h-9 w-auto object-contain drop-shadow-[0_0_6px_rgba(100,200,100,0.2)]"
               />
             </div>
             <p className="text-sm text-white/50 leading-relaxed">
