@@ -909,20 +909,20 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
           />
         </div>
         {/* Corner brackets */}
-        {(["top-1 left-1", "top-1 right-1", "bottom-1 left-1", "bottom-1 right-1"] as const).map((pos) => (
+        {([
+          { vPos: "top", hPos: "left",  cls: "border-t-2 border-l-2 rounded-tl-lg" },
+          { vPos: "top", hPos: "right", cls: "border-t-2 border-r-2 rounded-tr-lg" },
+          { vPos: "bottom", hPos: "left",  cls: "border-b-2 border-l-2 rounded-bl-lg" },
+          { vPos: "bottom", hPos: "right", cls: "border-b-2 border-r-2 rounded-br-lg" },
+        ] as const).map(({ vPos, hPos, cls }) => (
           <div
-            key={pos}
-            className={`absolute w-5 h-5 transition-all duration-700 ${
-              pos.includes("top") && pos.includes("left") ? "border-t-2 border-l-2 rounded-tl-lg" :
-              pos.includes("top") && pos.includes("right") ? "border-t-2 border-r-2 rounded-tr-lg" :
-              pos.includes("bottom") && pos.includes("left") ? "border-b-2 border-l-2 rounded-bl-lg" :
-              "border-b-2 border-r-2 rounded-br-lg"
-            }`}
+            key={`${vPos}-${hPos}`}
+            className={`absolute w-5 h-5 transition-all duration-700 ${cls}`}
             style={{
               borderColor: phase === "done" ? T.green : "rgba(61,107,71,0.4)",
               opacity: phase === "done" ? 1 : 0.6,
-              [pos.split(" ")[0]]: 4,
-              [pos.split(" ")[1]]: 4,
+              [vPos]: 4,
+              [hPos]: 4,
             }}
           />
         ))}
