@@ -8,21 +8,23 @@
  *   - Responsive for in-app display
  *
  * Props:
- *   perf         — PlayerPerformance object from performanceStats.ts
+ *   perf           — PlayerPerformance object from performanceStats.ts
  *   tournamentName — display name of the tournament
  *   tournamentDate — display date string
- *   forExport    — when true, renders in a fixed 540×540px container
- *                  suitable for 2× canvas capture → 1080×1080 PNG
+ *   avatarUrl      — chess.com avatar URL (optional); falls back to initials
+ *   avatarStatus   — "loading" | "loaded" — shows shimmer skeleton when loading
+ *   forExport      — when true, renders in a fixed 540×540px container
+ *                    suitable for 2× canvas capture → 1080×1080 PNG
  */
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 
 // ─── Badge color map ──────────────────────────────────────────────────────────
 const BADGE_GRADIENT: Record<string, string> = {
-  champion:    "from-[#B8860B] via-[#FFD700] to-[#DAA520]",
-  runner_up:   "from-[#6B7280] via-[#9CA3AF] to-[#D1D5DB]",
-  third_place: "from-[#92400E] via-[#B45309] to-[#D97706]",
+  champion:      "from-[#B8860B] via-[#FFD700] to-[#DAA520]",
+  runner_up:     "from-[#6B7280] via-[#9CA3AF] to-[#D1D5DB]",
+  third_place:   "from-[#92400E] via-[#B45309] to-[#D97706]",
   perfect_score: "from-[#065F46] via-[#059669] to-[#34D399]",
   giant_killer:  "from-[#4C1D95] via-[#7C3AED] to-[#A78BFA]",
   iron_wall:     "from-[#1E3A5F] via-[#1D4ED8] to-[#60A5FA]",
@@ -31,16 +33,17 @@ const BADGE_GRADIENT: Record<string, string> = {
   participant:   "from-[#1F2937] via-[#374151] to-[#6B7280]",
 };
 
-const BADGE_TEXT: Record<string, string> = {
-  champion:    "text-[#7C5C00]",
-  runner_up:   "text-[#374151]",
-  third_place: "text-[#78350F]",
-  perfect_score: "text-[#065F46]",
-  giant_killer:  "text-[#4C1D95]",
-  iron_wall:     "text-[#1E3A5F]",
-  comeback:      "text-[#7F1D1D]",
-  consistent:    "text-[#064E3B]",
-  participant:   "text-[#1F2937]",
+// Avatar ring gradient — matches the badge gradient for visual cohesion
+const RING_GRADIENT: Record<string, string> = {
+  champion:      "from-[#FFD700] to-[#B8860B]",
+  runner_up:     "from-[#D1D5DB] to-[#6B7280]",
+  third_place:   "from-[#D97706] to-[#92400E]",
+  perfect_score: "from-[#34D399] to-[#065F46]",
+  giant_killer:  "from-[#A78BFA] to-[#4C1D95]",
+  iron_wall:     "from-[#60A5FA] to-[#1E3A5F]",
+  comeback:      "from-[#F87171] to-[#7F1D1D]",
+  consistent:    "from-[#6EE7B7] to-[#064E3B]",
+  participant:   "from-[#6B7280] to-[#1F2937]",
 };
 
 // ─── Stat Pill ────────────────────────────────────────────────────────────────
@@ -52,26 +55,25 @@ function StatPill({
 }: {
   label: string;
   value: string | number;
-  sub?: string;
+  sub?: React.ReactNode;
   accent?: boolean;
 }) {
   return (
     <div
       className={`flex flex-col items-center justify-center rounded-2xl px-3 py-3 ${
-        accent
-          ? "bg-[#3D6B47] text-white"
-          : "bg-black/08 text-white"
+        accent ? "bg-[#3D6B47] text-white" : "bg-black/08 text-white"
       }`}
     >
-      <span className={`text-[10px] font-semibold uppercase tracking-widest opacity-70 mb-0.5`}>
+      <span className="text-[10px] font-semibold uppercase tracking-widest opacity-70 mb-0.5">
         {label}
       </span>
-      <span className="text-xl font-black leading-none" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+      <span
+        className="text-xl font-black leading-none"
+        style={{ fontFamily: "'Clash Display', sans-serif" }}
+      >
         {value}
       </span>
-      {sub && (
-        <span className="text-[9px] opacity-60 mt-0.5">{sub}</span>
-      )}
+      {sub && <span className="text-[9px] opacity-60 mt-0.5">{sub}</span>}
     </div>
   );
 }
@@ -87,22 +89,13 @@ function RecordBar({ wins, draws, losses }: { wins: number; draws: number; losse
     <div className="w-full space-y-1">
       <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5">
         {wins > 0 && (
-          <div
-            className="bg-emerald-400 rounded-full transition-all"
-            style={{ width: `${wPct}%` }}
-          />
+          <div className="bg-emerald-400 rounded-full transition-all" style={{ width: `${wPct}%` }} />
         )}
         {draws > 0 && (
-          <div
-            className="bg-blue-400 rounded-full transition-all"
-            style={{ width: `${dPct}%` }}
-          />
+          <div className="bg-blue-400 rounded-full transition-all" style={{ width: `${dPct}%` }} />
         )}
         {losses > 0 && (
-          <div
-            className="bg-red-400 rounded-full transition-all"
-            style={{ width: `${lPct}%` }}
-          />
+          <div className="bg-red-400 rounded-full transition-all" style={{ width: `${lPct}%` }} />
         )}
       </div>
       <div className="flex justify-between text-[9px] font-semibold opacity-70">
@@ -120,13 +113,104 @@ function RatingChangePill({ change }: { change: number }) {
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-        positive
-          ? "bg-emerald-400/20 text-emerald-300"
-          : "bg-red-400/20 text-red-300"
+        positive ? "bg-emerald-400/20 text-emerald-300" : "bg-red-400/20 text-red-300"
       }`}
     >
       {positive ? "▲" : "▼"} {Math.abs(change)}
     </span>
+  );
+}
+
+// ─── Avatar Component ─────────────────────────────────────────────────────────
+/**
+ * Renders the player avatar with:
+ *  - A gradient ring matching the badge colour
+ *  - The chess.com photo when available
+ *  - A shimmer skeleton while the URL is loading
+ *  - Polished initials fallback when no photo exists
+ */
+function PlayerAvatar({
+  name,
+  username,
+  avatarUrl,
+  avatarStatus,
+  badge,
+  size,
+}: {
+  name: string;
+  username: string;
+  avatarUrl: string | null | undefined;
+  avatarStatus: "loading" | "loaded";
+  badge: string;
+  size: number; // px
+}) {
+  const [imgError, setImgError] = useState(false);
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const ringGradient = RING_GRADIENT[badge] ?? RING_GRADIENT.participant;
+  const showPhoto = avatarStatus === "loaded" && avatarUrl && !imgError;
+  const showShimmer = avatarStatus === "loading";
+
+  // Ring is 3px, gap is 2px → inner content is size - 10px
+  const innerSize = size - 10;
+
+  return (
+    <div
+      className="flex-shrink-0 relative"
+      style={{ width: size, height: size }}
+    >
+      {/* Gradient ring */}
+      <div
+        className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${ringGradient} p-[3px]`}
+      >
+        <div className="w-full h-full rounded-[10px] overflow-hidden bg-black/30">
+          {showShimmer ? (
+            /* Shimmer skeleton */
+            <div className="w-full h-full animate-shimmer" />
+          ) : showPhoto ? (
+            /* Real chess.com avatar */
+            <img
+              src={avatarUrl!}
+              alt={`${username}'s chess.com avatar`}
+              className="w-full h-full object-cover"
+              crossOrigin="anonymous"
+              onError={() => setImgError(true)}
+              style={{ width: innerSize, height: innerSize }}
+            />
+          ) : (
+            /* Initials fallback */
+            <div className="w-full h-full flex items-center justify-center">
+              <span
+                className="font-black text-white/90"
+                style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: Math.round(innerSize * 0.36),
+                }}
+              >
+                {initials}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* chess.com logo badge — only when showing real photo */}
+      {showPhoto && (
+        <div
+          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#81b64c] border-2 border-white/20 flex items-center justify-center"
+          title="chess.com verified"
+        >
+          <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+          </svg>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -135,20 +219,49 @@ export interface PlayerStatsCardProps {
   perf: PlayerPerformance;
   tournamentName: string;
   tournamentDate?: string;
+  /** Chess.com avatar URL — pass null for confirmed no-avatar, undefined while loading */
+  avatarUrl?: string | null;
+  /** "loading" shows shimmer skeleton; "loaded" shows photo or initials fallback */
+  avatarStatus?: "loading" | "loaded";
   forExport?: boolean;
 }
 
 const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
-  ({ perf, tournamentName, tournamentDate, forExport = false }, ref) => {
-    const { player, rank, totalPlayers, points, wins, draws, losses,
-            performanceRating, ratingChange, bestWin, biggestUpset,
-            longestStreak, buchholz, badge, badgeLabel } = perf;
+  (
+    {
+      perf,
+      tournamentName,
+      tournamentDate,
+      avatarUrl,
+      avatarStatus = "loaded",
+      forExport = false,
+    },
+    ref
+  ) => {
+    const {
+      player,
+      rank,
+      totalPlayers,
+      points,
+      wins,
+      draws,
+      losses,
+      performanceRating,
+      ratingChange,
+      bestWin,
+      biggestUpset,
+      longestStreak,
+      buchholz,
+      badge,
+      badgeLabel,
+    } = perf;
 
     const gradient = BADGE_GRADIENT[badge] ?? BADGE_GRADIENT.participant;
     const flag = FLAG_EMOJI[player.country] ?? "";
+    const ordinal =
+      rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`;
 
-    // Rank ordinal
-    const ordinal = rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`;
+    const avatarSize = forExport ? 72 : 56;
 
     return (
       <div
@@ -201,23 +314,30 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             <div className="flex items-center gap-1 ml-3 flex-shrink-0">
               <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
-                  <path d="M3 3h4v4H3V3zm7 0h4v4h-4V3zm7 0h4v4h-4V3zM3 10h4v4H3v-4zm7 0h4v4h-4v-4zm7 0h4v4h-4v-4zM3 17h4v4H3v-4zm7 0h4v4h-4v-4zm7 0h4v4h-4v-4z"/>
+                  <path d="M3 3h4v4H3V3zm7 0h4v4h-4V3zm7 0h4v4h-4V3zM3 10h4v4H3v-4zm7 0h4v4h-4v-4zm7 0h4v4h-4v-4zM3 17h4v4H3v-4zm7 0h4v4h-4v-4zm7 0h4v4h-4v-4z" />
                 </svg>
               </div>
-              <span className="text-[9px] font-bold opacity-70" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              <span
+                className="text-[9px] font-bold opacity-70"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
                 OTBChess
               </span>
             </div>
           </div>
 
           {/* Player identity */}
-          <div className="flex items-center gap-3 mb-4">
-            {/* Avatar placeholder with initials */}
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/30">
-              <span className="text-xl font-black" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                {player.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-              </span>
-            </div>
+          <div className="flex items-center gap-3 mb-3">
+            {/* Avatar with gradient ring */}
+            <PlayerAvatar
+              name={player.name}
+              username={player.username}
+              avatarUrl={avatarUrl}
+              avatarStatus={avatarStatus}
+              badge={badge}
+              size={avatarSize}
+            />
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 {player.title && (
@@ -225,15 +345,22 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                     {player.title}
                   </span>
                 )}
-                <span className="text-lg font-black leading-tight truncate" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                <span
+                  className="text-lg font-black leading-tight truncate"
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
                   {player.name}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="text-sm">{flag}</span>
-                <span className="text-[10px] opacity-60 font-medium">@{player.username}</span>
+                <span className="text-[10px] opacity-60 font-medium">
+                  @{player.username}
+                </span>
                 <span className="text-[10px] opacity-50">·</span>
-                <span className="text-[10px] opacity-60 font-medium">{player.elo} ELO</span>
+                <span className="text-[10px] opacity-60 font-medium">
+                  {player.elo} ELO
+                </span>
               </div>
             </div>
           </div>
@@ -248,8 +375,12 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           {/* Main stats grid */}
           <div className="grid grid-cols-4 gap-1.5 mb-3">
             <StatPill label="Rank" value={ordinal} sub={`of ${totalPlayers}`} accent />
-            <StatPill label="Score" value={points} sub={`pts`} />
-            <StatPill label="Perf." value={performanceRating} sub={<RatingChangePill change={ratingChange} /> as any} />
+            <StatPill label="Score" value={points} sub="pts" />
+            <StatPill
+              label="Perf."
+              value={performanceRating}
+              sub={<RatingChangePill change={ratingChange} />}
+            />
             <StatPill label="Streak" value={`${longestStreak}W`} sub="best run" />
           </div>
 
@@ -262,28 +393,34 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           <div className="flex gap-1.5 mb-3">
             {bestWin && (
               <div className="flex-1 bg-black/20 backdrop-blur-sm rounded-xl px-2.5 py-2 border border-white/10">
-                <p className="text-[8px] font-bold uppercase tracking-widest opacity-50 mb-0.5">Best Win</p>
+                <p className="text-[8px] font-bold uppercase tracking-widest opacity-50 mb-0.5">
+                  Best Win
+                </p>
                 <p className="text-xs font-bold truncate">{bestWin.opponent.name}</p>
                 <p className="text-[9px] opacity-60">{bestWin.opponent.elo} ELO</p>
               </div>
             )}
             {biggestUpset && (
               <div className="flex-1 bg-black/20 backdrop-blur-sm rounded-xl px-2.5 py-2 border border-white/10">
-                <p className="text-[8px] font-bold uppercase tracking-widest opacity-50 mb-0.5">Biggest Upset</p>
+                <p className="text-[8px] font-bold uppercase tracking-widest opacity-50 mb-0.5">
+                  Biggest Upset
+                </p>
                 <p className="text-xs font-bold truncate">{biggestUpset.opponent.name}</p>
                 <p className="text-[9px] opacity-60">+{biggestUpset.eloGap} ELO gap</p>
               </div>
             )}
             {!bestWin && !biggestUpset && (
               <div className="flex-1 bg-black/20 backdrop-blur-sm rounded-xl px-2.5 py-2 border border-white/10">
-                <p className="text-[8px] font-bold uppercase tracking-widest opacity-50 mb-0.5">Buchholz</p>
+                <p className="text-[8px] font-bold uppercase tracking-widest opacity-50 mb-0.5">
+                  Buchholz
+                </p>
                 <p className="text-xs font-bold">{buchholz.toFixed(1)}</p>
                 <p className="text-[9px] opacity-60">tiebreak score</p>
               </div>
             )}
           </div>
 
-          {/* Footer: Buchholz + color balance */}
+          {/* Footer: color balance + branding */}
           <div className="mt-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">

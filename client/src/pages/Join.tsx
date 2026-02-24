@@ -14,6 +14,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useParams, Link } from "wouter";
@@ -642,12 +643,7 @@ export default function JoinPage() {
                   {/* Player + ELO */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#3D6B47]/12 flex items-center justify-center">
-                        <span className="text-lg font-bold text-[#3D6B47]"
-                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                          {profile.username[0].toUpperCase()}
-                        </span>
-                      </div>
+                      <PlayerAvatar username={profile.username} name={profile.name ?? profile.username} size={40} showBadge className="rounded-xl" />
                       <div>
                         <p className={`font-bold text-sm ${textMain}`}
                           style={{ fontFamily: "'Clash Display', sans-serif" }}>

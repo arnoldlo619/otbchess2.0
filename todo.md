@@ -73,3 +73,11 @@
 - [x] Canvas-based PNG export for social media sharing
 - [x] Add /tournament/:id/report route to App.tsx
 - [x] Unit tests for performance stats computation (18 tests, all passing)
+
+## Avatar Enhancement
+
+- [x] Build useChessAvatar hook (chess.com API fetch, sessionStorage cache, fallback)
+- [x] Integrate avatar into PlayerStatsCard (photo ring, shimmer loading, initials fallback)
+- [x] Integrate avatar into Director Dashboard player list (registration panel + Players tab)
+- [x] Integrate avatar into Join page success step
+- [x] PlayerAvatar reusable component (shimmer skeleton, initials fallback, verified badge)

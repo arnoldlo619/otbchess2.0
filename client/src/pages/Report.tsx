@@ -7,6 +7,7 @@
  * Also supports a "Download All" flow that exports every card sequentially.
  */
 import { useState, useRef, useCallback } from "react";
+import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useParams, Link } from "wouter";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
@@ -131,11 +132,15 @@ function ExportableCard({
   tournamentName,
   tournamentDate,
   isDark,
+  avatarUrl,
+  avatarStatus,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
   tournamentDate: string;
   isDark: boolean;
+  avatarUrl?: string | null;
+  avatarStatus?: "loading" | "loaded";
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -196,6 +201,8 @@ function ExportableCard({
         perf={perf}
         tournamentName={tournamentName}
         tournamentDate={tournamentDate}
+        avatarUrl={avatarUrl}
+        avatarStatus={avatarStatus}
         forExport={false}
       />
 
@@ -254,6 +261,10 @@ export default function ReportPage() {
   const tournamentDate = config?.date ?? "";
 
   const performances = computeAllPerformances(players, rounds);
+
+  // Pre-fetch all player avatars in parallel
+  const usernames = performances.map((p) => p.player.username);
+  const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
 
   // Search
   const [search, setSearch] = useState("");
@@ -425,6 +436,8 @@ export default function ReportPage() {
                   perf={perf}
                   tournamentName={tournamentName}
                   tournamentDate={tournamentDate}
+                  avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                  avatarStatus="loaded"
                   forExport
                 />
               </div>
@@ -434,6 +447,8 @@ export default function ReportPage() {
                 tournamentName={tournamentName}
                 tournamentDate={tournamentDate}
                 isDark={isDark}
+                avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                avatarStatus={avatarsLoaded ? "loaded" : "loading"}
               />
             </div>
           ))}
