@@ -18,6 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDirectorState } from "@/lib/directorState";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import {
@@ -140,11 +141,13 @@ function BoardCard({
             />
             <div>
               <div className="flex items-center gap-1.5">
-                <span
-                  className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
-                >
-                  {white.name}
-                </span>
+                <PlayerHoverCard player={white} isDark={isDark}>
+                  <span
+                    className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
+                  >
+                    {white.name}
+                  </span>
+                </PlayerHoverCard>
                 {white.title && (
                   <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
                     {white.title}
@@ -185,11 +188,13 @@ function BoardCard({
             />
             <div>
               <div className="flex items-center gap-1.5">
-                <span
-                  className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
-                >
-                  {black.name}
-                </span>
+                <PlayerHoverCard player={black} isDark={isDark}>
+                  <span
+                    className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
+                  >
+                    {black.name}
+                  </span>
+                </PlayerHoverCard>
                 {black.title && (
                   <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
                     {black.title}
@@ -1206,7 +1211,9 @@ export default function Director() {
                       <PlayerAvatar username={p.username} name={p.name} size={32} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                          <PlayerHoverCard player={p} isDark={isDark}>
+                            <span className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                          </PlayerHoverCard>
                           {p.title && (
                             <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                           )}
@@ -1268,7 +1275,9 @@ export default function Director() {
                         </span>
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                            <PlayerHoverCard player={p} isDark={isDark}>
+                              <span className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                            </PlayerHoverCard>
                             {p.title && (
                               <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                             )}

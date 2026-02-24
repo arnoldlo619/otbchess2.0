@@ -91,9 +91,15 @@
 
 ## Lichess API Integration
 
-- [ ] Build useLichessProfile hook (API fetch, rating, title, avatar, caching)
-- [ ] Add platform toggle (chess.com / Lichess) to Join page username step
-- [ ] Wire useLichessProfile into Join page alongside useChessComProfile
-- [ ] Update PlayerAvatar to support Lichess avatar URLs
-- [ ] Update tournament wizard ratingSystem field to drive allowed platforms
-- [ ] Unit tests for useLichessProfile data parsing
+- [x] Build useLichessProfile hook (API fetch, rating, title, avatar, caching)
+- [x] Add platform toggle (chess.com / Lichess) to Join page username step
+- [x] Wire useLichessProfile into Join page alongside useChessComProfile
+- [x] Update PlayerAvatar to support Lichess flair emoji and platform badges
+- [x] platform/avatarUrl/flairEmoji stored on Player object
+
+## Player Profile Hover Card
+
+- [x] PlayerProfileCard component (avatar, rating, title, country, W/D/L, color history, recent form)
+- [x] Wire into Director Dashboard Players tab list rows
+- [x] Wire into Director Dashboard Boards tab (white/black player names in BoardCard)
+- [x] Smooth enter/exit animation, smart positioning (flip when near viewport edge)

@@ -736,3 +736,14 @@
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
+
+@keyframes profileCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
