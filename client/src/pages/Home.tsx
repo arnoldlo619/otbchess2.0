@@ -821,9 +821,9 @@ function Testimonials() {
   const isDark = theme === "dark";
 
   const testimonials = [
-    { quote: "We used to spend an hour doing pairings manually. Now it's done before the first round even starts. Our club members love it.", author: "Marcus T.", role: "Club President, NYC Chess Society", elo: "1842" },
-    { quote: "The chess.com integration is genius. No more arguing about ratings — everyone's ELO is pulled directly from their profile.", author: "Aisha K.", role: "Tournament Director, London Chess Club", elo: "2105" },
-    { quote: "Ran our first 32-player Swiss tournament with zero issues. The live standings board was a hit — people kept checking it between rounds.", author: "Rafael M.", role: "Organizer, São Paulo Open Chess", elo: "1654" },
+    { quote: "We ran a 24-player Swiss last Saturday. I shared the QR code, players scanned and registered in under 2 minutes, and Round 1 pairings were ready before everyone had even sat down. Genuinely the smoothest tournament I've ever directed.", author: "Marcus T.", role: "Club President, NYC Chess Society", elo: "1842" },
+    { quote: "The ELO pull from chess.com eliminated every rating dispute we used to have. One player tried to claim a higher rating — I just showed him the screen. Done. No spreadsheets, no arguments, no drama.", author: "Aisha K.", role: "Tournament Director, London Chess Club", elo: "2105" },
+    { quote: "Our club night went from 45 minutes of setup chaos to 8 minutes flat. 32 players, 5 rounds of Swiss, live standings on the projector. People were checking standings between moves. We're not going back to paper.", author: "Rafael M.", role: "Organizer, São Paulo Open Chess", elo: "1654" },
   ];
 
   return (
