@@ -62,6 +62,62 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
+// ─── Count-Up Hook ───────────────────────────────────────────────────────────
+// Animates a number from 0 → target over `duration` ms using easeOutExpo.
+// `suffix` is appended verbatim (e.g. "+", "★"). `decimals` controls precision.
+function useCountUp(
+  target: number,
+  active: boolean,
+  { duration = 1800, suffix = "", decimals = 0, delay = 0 }: {
+    duration?: number;
+    suffix?: string;
+    decimals?: number;
+    delay?: number;
+  } = {}
+) {
+  const [display, setDisplay] = useState(`0${suffix}`);
+  const rafRef = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!active) return;
+    // Respect prefers-reduced-motion — jump straight to target
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const fmt = decimals > 0
+        ? target.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+        : target.toLocaleString();
+      setDisplay(`${fmt}${suffix}`);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const easeOutExpo = (t: number) =>
+        t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      const tick = (timestamp: number) => {
+        if (!startRef.current) startRef.current = timestamp;
+        const elapsed = timestamp - startRef.current;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutExpo(progress);
+        const current = eased * target;
+        const fmt = decimals > 0
+          ? current.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+          : Math.floor(current).toLocaleString();
+        setDisplay(`${fmt}${suffix}`);
+        if (progress < 1) {
+          rafRef.current = requestAnimationFrame(tick);
+        }
+      };
+      rafRef.current = requestAnimationFrame(tick);
+    }, delay);
+    return () => {
+      clearTimeout(timer);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      startRef.current = null;
+    };
+  }, [active, target, duration, suffix, decimals, delay]);
+
+  return display;
+}
+
 // ─── Navigation ─────────────────────────────────────────────────────────────
 function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
   const [scrolled, setScrolled] = useState(false);
@@ -323,16 +379,32 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   );
 }
 
-// ─── Stats Bar ───────────────────────────────────────────────────────────────
+/// ─── Stats Bar ───────────────────────────────────────────────────────────────
+function StatItem({
+  target, suffix, decimals, label, delay, active,
+}: {
+  target: number; suffix: string; decimals: number;
+  label: string; delay: number; active: boolean;
+}) {
+  const display = useCountUp(target, active, { duration: 1600, suffix, decimals, delay });
+  return (
+    <div>
+      <p className="text-3xl font-bold text-white mb-1 tabular-nums" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+        {display}
+      </p>
+      <p className="text-sm text-white/70 font-medium">{label}</p>
+    </div>
+  );
+}
+
 function StatsBar() {
   const { ref, inView } = useInView();
-  const stats = [
-    { value: "2,400+", label: "Tournaments Hosted" },
-    { value: "18,000+", label: "Players Registered" },
-    { value: "200+", label: "Chess Clubs" },
-    { value: "4.9★", label: "Average Rating" },
+  const stats: { target: number; suffix: string; decimals: number; label: string }[] = [
+    { target: 2400, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
+    { target: 18000, suffix: "+", decimals: 0, label: "Players Registered" },
+    { target: 200, suffix: "+", decimals: 0, label: "Chess Clubs" },
+    { target: 4.9, suffix: "★", decimals: 1, label: "Average Rating" },
   ];
-
   return (
     <section ref={ref} className="bg-[#3D6B47] py-10">
       <div className="container">
@@ -343,10 +415,14 @@ function StatsBar() {
               className={`stat-item text-center ${inView ? "animate-stat-pop" : "opacity-0"}`}
               style={{ animationDelay: `${i * 90}ms`, animationFillMode: "forwards" }}
             >
-              <p className="text-3xl font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                {stat.value}
-              </p>
-              <p className="text-sm text-white/70 font-medium">{stat.label}</p>
+              <StatItem
+                target={stat.target}
+                suffix={stat.suffix}
+                decimals={stat.decimals}
+                label={stat.label}
+                delay={i * 90}
+                active={inView}
+              />
             </div>
           ))}
         </div>
