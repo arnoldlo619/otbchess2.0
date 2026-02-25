@@ -639,7 +639,7 @@ function StepFormat({
 
       {/* Hint */}
       <div
-        className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-xs"
+        className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
         style={{
           background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE",
           color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
@@ -978,13 +978,13 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
     data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Summary strip */}
       <div
-        className="grid grid-cols-3 gap-3 rounded-xl border p-4"
+        className="grid grid-cols-3 gap-4 rounded-2xl border p-5"
         style={{
           background: isDark ? T.dCard : "#F9FAF8",
-          border: `1.5px solid ${isDark ? T.dBorder : "#EEEED2"}`,
+          border: `2px solid ${isDark ? T.dBorder : "#EEEED2"}`,
         }}
       >
         {[
@@ -992,12 +992,12 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
           { icon: Clock, label: timeLabel, sub: "time control" },
           { icon: Users, label: `${data.maxPlayers}`, sub: "max players" },
         ].map(({ icon: Icon, label, sub }) => (
-          <div key={label} className="flex flex-col items-center gap-1 text-center">
-            <Icon className="w-4 h-4" style={{ color: T.green }} strokeWidth={1.8} />
-            <span className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>
+          <div key={label} className="flex flex-col items-center gap-1.5 text-center">
+            <Icon className="w-5 h-5" style={{ color: T.green }} strokeWidth={1.8} />
+            <span className="text-base font-bold" style={{ color: isDark ? T.dText : T.lText }}>
               {label}
             </span>
-            <span className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
               {sub}
             </span>
           </div>
@@ -1009,11 +1009,11 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
         <Label isDark={isDark}>Player Invite Link</Label>
         <div className="flex gap-2">
           <div
-            className="flex-1 flex items-center gap-2 rounded-xl border text-sm font-mono truncate"
+            className="flex-1 flex items-center gap-2 rounded-2xl border text-sm font-mono truncate"
             style={{
-              padding: "10px 14px",
+              padding: "14px 18px",
               background: isDark ? T.dCard : "#FAFAFA",
-              border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+              border: `2px solid ${isDark ? T.dBorder : T.lBorder}`,
               color: isDark ? T.dSub : T.lSub,
             }}
           >
@@ -1023,9 +1023,9 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
           <button
             type="button"
             onClick={copyLink}
-            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
+            className="flex items-center gap-1.5 rounded-2xl text-base font-semibold transition-all duration-200 flex-shrink-0"
             style={{
-              padding: "10px 18px",
+              padding: "14px 20px",
               background: copied ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE",
               color: copied ? "#FFFFFF" : isDark ? T.dText : "#374151",
             }}
@@ -1041,7 +1041,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
 
       {/* Hint */}
       <div
-        className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-xs"
+        className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
         style={{
           background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE",
           color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
@@ -1170,7 +1170,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
 
         {/* Top bar */}
         <div
-          className="flex items-center justify-between px-8 pt-8 pb-0 flex-shrink-0"
+          className="flex items-center justify-between px-10 pt-8 pb-0 flex-shrink-0"
         >
           {/* Mobile: logo */}
           <div className="flex lg:hidden items-center gap-2">
@@ -1221,9 +1221,9 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         </div>
 
         {/* Step content — scrollable on mobile, centered on desktop */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto flex flex-col">
           <div
-            className="max-w-2xl mx-auto px-10 py-10"
+            className="max-w-2xl w-full mx-auto px-10 py-12 flex-1"
             key={step}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
@@ -1254,7 +1254,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
 
         {/* Bottom navigation bar */}
         <div
-          className="flex-shrink-0 flex items-center justify-between px-8 py-5 border-t"
+          className="flex-shrink-0 flex items-center justify-between px-10 py-5 border-t"
           style={{
             borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
             background: isDark ? T.dPanel : "#FFFFFF",
