@@ -1168,42 +1168,73 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         {/* Progress bar */}
         <ProgressBar step={step} total={STEPS.length} isDark={isDark} />
 
-        {/* Top bar */}
+        {/* ── Mobile top bar (full-screen, compact, branded) ── */}
         <div
-          className="flex items-center justify-between px-8 sm:px-12 lg:px-16 xl:px-20 pt-8 pb-0 flex-shrink-0"
+          className="lg:hidden flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0 border-b"
+          style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "#F0F0F0" }}
         >
-          {/* Mobile: sticky step progress indicator */}
-          <div className="flex lg:hidden items-center gap-2.5">
-            {/* Step badge */}
+          {/* Brand mark + step label */}
+          <div className="flex items-center gap-2">
             <div
-              className="flex items-center justify-center rounded-lg text-xs font-bold px-2 py-1"
-              style={{
-                background: T.green,
-                color: "#FFFFFF",
-                minWidth: 28,
-                fontFamily: "'Clash Display', sans-serif",
-              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: T.green }}
             >
-              {step + 1}/{STEPS.length}
+              <Crown className="w-4 h-4 text-white" strokeWidth={2} />
             </div>
-            {/* Step label */}
-            <div className="flex flex-col">
+            <div className="flex flex-col leading-none">
               <span
-                className="text-[10px] font-semibold tracking-widest uppercase leading-none"
+                className="text-[9px] font-semibold tracking-widest uppercase"
                 style={{ color: isDark ? T.dMuted : T.lMuted }}
               >
                 Step {step + 1} of {STEPS.length}
               </span>
               <span
-                className="text-sm font-bold leading-tight mt-0.5"
+                className="text-sm font-bold"
                 style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
               >
                 {STEPS[step].label}
               </span>
             </div>
           </div>
-          {/* Desktop: step label */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Mobile step dots */}
+          <div className="flex items-center gap-1.5">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === step ? 18 : 5,
+                  height: 5,
+                  background:
+                    i === step
+                      ? T.green
+                      : i < step
+                      ? "rgba(61,107,71,0.5)"
+                      : isDark
+                      ? "rgba(255,255,255,0.15)"
+                      : "#D1D5DB",
+                }}
+              />
+            ))}
+          </div>
+          {/* Close */}
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+            style={{
+              background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+              color: isDark ? T.dSub : T.lSub,
+            }}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* ── Desktop top bar ── */}
+        <div
+          className="hidden lg:flex items-center justify-between px-16 xl:px-20 pt-8 pb-0 flex-shrink-0"
+        >
+          <div className="flex items-center gap-3">
             <span
               className="text-xs font-semibold tracking-widest uppercase"
               style={{ color: isDark ? T.dMuted : T.lMuted }}
@@ -1211,7 +1242,6 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
               {STEPS[step].label}
             </span>
           </div>
-
           {/* Close */}
           <button
             onClick={onClose}
@@ -1267,9 +1297,55 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
           </div>
         </div>
 
-        {/* Bottom navigation bar */}
+        {/* ── Mobile bottom nav: full-width Continue + Back link ── */}
         <div
-          className="flex-shrink-0 flex items-center justify-between px-8 sm:px-12 lg:px-16 xl:px-20 py-5 border-t"
+          className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-5 py-4 border-t"
+          style={{
+            borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
+            background: isDark ? T.dPanel : "#FFFFFF",
+          }}
+        >
+          {/* Full-width Continue button */}
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!canAdvance}
+            className="w-full flex items-center justify-center gap-2 text-base font-semibold rounded-2xl transition-all duration-200"
+            style={{
+              padding: "14px 24px",
+              background: canAdvance ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
+              color: canAdvance ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.25)" : T.lMuted,
+              cursor: canAdvance ? "pointer" : "not-allowed",
+              boxShadow: canAdvance ? `0 4px 18px rgba(61,107,71,0.35)` : "none",
+            }}
+          >
+            {step === STEPS.length - 1 ? (
+              <>
+                Go to Tournament
+                <ArrowRight className="w-5 h-5" />
+              </>
+            ) : (
+              <>
+                Continue
+                <ChevronRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
+          {/* Back / Cancel as a small text link */}
+          <button
+            type="button"
+            onClick={handleBack}
+            className="w-full flex items-center justify-center gap-1 text-sm font-medium rounded-xl transition-all duration-200 py-2"
+            style={{ color: isDark ? T.dSub : T.lSub }}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {step === 0 ? "Cancel" : "Back"}
+          </button>
+        </div>
+
+        {/* ── Desktop bottom nav: Back | dots | Continue ── */}
+        <div
+          className="hidden lg:flex flex-shrink-0 items-center justify-between px-16 xl:px-20 py-5 border-t"
           style={{
             borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
             background: isDark ? T.dPanel : "#FFFFFF",
@@ -1298,9 +1374,8 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
             <ChevronLeft className="w-4 h-4" />
             {step === 0 ? "Cancel" : "Back"}
           </button>
-
-          {/* Step dots (desktop only) */}
-          <div className="hidden sm:flex items-center gap-1.5">
+          {/* Step dots */}
+          <div className="flex items-center gap-1.5">
             {STEPS.map((_, i) => (
               <div
                 key={i}
@@ -1320,7 +1395,6 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
               />
             ))}
           </div>
-
           {/* Continue / Go to Tournament */}
           <button
             type="button"
@@ -1363,7 +1437,6 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
           </button>
         </div>
       </div>
-
       <style>{`
         @keyframes wizardFadeIn {
           from { opacity: 0; }
