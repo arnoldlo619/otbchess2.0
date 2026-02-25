@@ -1,5 +1,5 @@
 /*
- * OTB Chess — Player Join Page
+ * OTB Chess - Player Join Page
  * Mobile-first design: primary touchpoint for in-person tournament registration
  *
  * Mobile Design Principles Applied:
@@ -50,7 +50,7 @@ import {
   Mail,
 } from "lucide-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// --- Types --------------------------------------------------------------------
 import type { ChessComProfile } from "@/hooks/useChessComProfile";
 import type { LichessProfile } from "@/hooks/useLichessProfile";
 
@@ -75,7 +75,7 @@ function eloTierDark(elo: number) {
   return { label: "Beginner", color: "text-white/50", bg: "bg-white/05 border border-white/10" };
 }
 
-// ─── Step Progress Bar ────────────────────────────────────────────────────────
+// --- Step Progress Bar --------------------------------------------------------
 function StepProgress({ step }: { step: Step }) {
   const steps: Step[] = ["code", "username", "confirm", "success"];
   const idx = steps.indexOf(step);
@@ -91,7 +91,7 @@ function StepProgress({ step }: { step: Step }) {
   );
 }
 
-// ─── ELO Animated Stat Box ────────────────────────────────────────────────────
+// --- ELO Animated Stat Box ----------------------------------------------------
 function EloStatBox({
   label, target, isPrimary, isDark, textMain, textMuted,
 }: {
@@ -123,7 +123,7 @@ function EloStatBox({
   );
 }
 
-// ─── Social Share Sheet ───────────────────────────────────────────────────────
+// --- Social Share Sheet -------------------------------------------------------
 function ShareSheet({
   profile, tournament, onClose, isDark,
 }: {
@@ -243,7 +243,7 @@ function ShareSheet({
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// --- Main Page ----------------------------------------------------------------
 export default function JoinPage() {
   const { code: urlCode } = useParams<{ code: string }>();
   const { theme } = useTheme();
@@ -261,7 +261,7 @@ export default function JoinPage() {
   const lookupStatus = active.status;
   const lookupError = active.error;
 
-  // Unified profile state — normalised from whichever platform was used
+  // Unified profile state - normalised from whichever platform was used
   const [unifiedProfile, setUnifiedProfile] = useState<UnifiedProfile | null>(null);
   // Alias for backwards compat with existing JSX that references `profile`
   const profile = unifiedProfile;
@@ -370,7 +370,7 @@ export default function JoinPage() {
     advanceStep("success");
   }
 
-  // ── Shared style tokens ─────────────────────────────────────────────────────
+  // -- Shared style tokens -----------------------------------------------------
   const bg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]";
   const card = isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100/80";
   const inputBase = `mobile-input ${isDark
@@ -385,7 +385,7 @@ export default function JoinPage() {
     <div className={`min-h-screen ${bg} flex flex-col transition-colors duration-300`}
       style={{ WebkitTapHighlightColor: "transparent" }}>
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* -- Header ----------------------------------------------------------- */}
       <header className={`flex items-center justify-between px-4 pt-safe-top pb-3 pt-3 border-b ${
         isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-gray-100 bg-[#F7FAF8]"
       } sticky top-0 z-30 backdrop-blur-md`}
@@ -413,10 +413,10 @@ export default function JoinPage() {
         <ThemeToggle />
       </header>
 
-      {/* ── Progress bar ───────────────────────────────────────────────────── */}
+      {/* -- Progress bar ----------------------------------------------------- */}
       <StepProgress step={step} />
 
-      {/* ── Scrollable content ─────────────────────────────────────────────── */}
+      {/* -- Scrollable content ----------------------------------------------- */}
       <div ref={contentRef} className="flex-1 overflow-y-auto overscroll-none">
         <div className="px-4 pt-5 pb-32 max-w-sm mx-auto space-y-4">
 
@@ -446,7 +446,7 @@ export default function JoinPage() {
             </div>
           )}
 
-          {/* ══ STEP 1 — Tournament code ══════════════════════════════════════ */}
+          {/* == STEP 1 - Tournament code ====================================== */}
           {step === "code" && (
             <div key={`step1-${stepKey}`} className="animate-spring-in space-y-5">
               {/* Hero */}
@@ -497,7 +497,7 @@ export default function JoinPage() {
               </div>
             </div>
           )}
-          {/* ══ STEP 2 — Platform + username ═════════════════════════════════════════════════════════ */}
+          {/* == STEP 2 - Platform + username ========================================================= */}
           {step === "username" && (
             <div key={`step2-${stepKey}`} className="animate-spring-in space-y-4">
               <div className="pt-2">
@@ -574,7 +574,7 @@ export default function JoinPage() {
             </div>
           )}
 
-          {/* ══ STEP 3 — Confirm profile ══════════════════════════════════════ */}
+          {/* == STEP 3 - Confirm profile ====================================== */}
           {step === "confirm" && profile && (
             <div key={`step3-${stepKey}`} className="animate-spring-in space-y-4">
               <div className="pt-2">
@@ -589,7 +589,7 @@ export default function JoinPage() {
 
               {/* Profile card */}
               <div className={`mobile-card border ${card}`}>
-                {/* Accent bar — green for chess.com, orange for Lichess */}
+                {/* Accent bar - green for chess.com, orange for Lichess */}
                 <div className={`h-1 bg-gradient-to-r ${
                   profile.platform === "lichess"
                     ? "from-orange-600 via-orange-400 to-orange-600"
@@ -685,7 +685,7 @@ export default function JoinPage() {
                       </div>
                     ))}
                   </div>
-                  {/* ── Optional contact fields ─────────────────────────── */}
+                  {/* -- Optional contact fields --------------------------- */}
                   <div className={`h-px ${divider}`} />
                   <div className="space-y-3">
                     <p className={`text-xs font-semibold uppercase tracking-wider ${labelCls}`}>Contact (optional)</p>
@@ -726,7 +726,7 @@ export default function JoinPage() {
               )}
             </div>
           )}
-          {/* ══ STEP 4 — Success ══════════════════════════════════════════════ */}
+          {/* == STEP 4 - Success ============================================== */}
           {step === "success" && profile && (
             <div key={`step4-${stepKey}`} className="animate-spring-in space-y-4">
               {/* Hero */}
@@ -812,7 +812,7 @@ export default function JoinPage() {
                     <ul className="space-y-1.5">
                       {[
                         "Show up at the venue before Round 1",
-                        "Director will announce pairings — check the board list",
+                        "Director will announce pairings - check the board list",
                         "First opponent matched by ELO proximity",
                       ].map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
@@ -831,7 +831,7 @@ export default function JoinPage() {
         </div>
       </div>
 
-      {/* ── Fixed bottom CTA bar ────────────────────────────────────────────── */}
+      {/* -- Fixed bottom CTA bar ---------------------------------------------- */}
       <div className="mobile-action-bar">
         {step === "code" && (
           <button
@@ -899,7 +899,7 @@ export default function JoinPage() {
         )}
       </div>
 
-      {/* ── Social share sheet ──────────────────────────────────────────────── */}
+      {/* -- Social share sheet ------------------------------------------------ */}
       {showShare && profile && (
         <ShareSheet
           profile={profile}
@@ -909,7 +909,7 @@ export default function JoinPage() {
         />
       )}
 
-      {/* ── Bottom branding ─────────────────────────────────────────────────── */}
+      {/* -- Bottom branding --------------------------------------------------- */}
     </div>
   );
 }

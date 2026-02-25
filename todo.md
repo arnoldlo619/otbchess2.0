@@ -174,12 +174,15 @@
 
 ## Manual Player Entry & Start Tournament
 
-- [ ] AddPlayerModal — name, platform (chess.com/lichess/manual), username, ELO lookup button
-- [ ] "Add Player" button in Players tab header
-- [ ] Persist manually-added players to tournament registry
-- [ ] Remove player from Players tab (with confirmation)
-- [ ] Start Tournament button in Director Dashboard header
-- [ ] Confirmation dialog before starting (shows player count, rounds, format)
-- [ ] Tournament status transitions: lobby → active → complete
-- [ ] Disable Start if fewer than 2 players registered
-- [ ] Lock player registration once tournament is started
+- [x] AddPlayerModal — name, platform (chess.com/lichess/manual), username, ELO lookup button
+- [x] "Add Player" button in Players tab header
+- [x] Persist manually-added players to tournament registry
+- [x] Remove player from Players tab (with confirmation)
+- [x] Start Tournament button in Director Dashboard Players tab
+- [x] Confirmation dialog before starting (shows player count, rounds, format)
+- [x] Tournament status transitions: lobby → active → complete
+- [x] Disable Start if fewer than 2 players registered
+- [x] Lock player registration once tournament is started
+- [x] AddPlayerModal render call wired in Director.tsx return statement
+- [x] Start Tournament confirmation dialog render wired in Director.tsx return statement
+- [x] Fixed esbuild false-positive in Join.tsx (Unicode box-drawing chars replaced with ASCII)

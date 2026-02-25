@@ -1537,6 +1537,85 @@ export default function Director() {
         joinUrl={joinUrl}
         code={inviteCode}
       />
+
+      {/* ── Add Player Modal ─────────────────────────────────────────────────── */}
+      <AddPlayerModal
+        open={showAddPlayer}
+        onClose={() => setShowAddPlayer(false)}
+        onAdd={(player) => {
+          addPlayer(player);
+          toast.success(`${player.name} added to the tournament`);
+        }}
+        existingUsernames={existingUsernames}
+      />
+
+      {/* ── Start Tournament Confirmation Dialog ─────────────────────────────── */}
+      {showStartConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowStartConfirm(false)}
+          />
+          {/* Dialog */}
+          <div
+            className={`relative z-10 w-full max-w-sm rounded-2xl p-6 shadow-2xl ${
+              isDark ? "bg-[oklch(0.18_0.04_145)] border border-white/10" : "bg-white border border-gray-100"
+            }`}
+          >
+            {/* Icon */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mx-auto mb-4">
+              <PlayCircle className="w-6 h-6 text-[#3D6B47]" />
+            </div>
+            {/* Title */}
+            <h2 className={`text-lg font-bold text-center mb-1 ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}>
+              Start Tournament?
+            </h2>
+            <p className={`text-sm text-center mb-5 ${
+              isDark ? "text-white/50" : "text-gray-500"
+            }`}>
+              This will generate Round 1 pairings for{" "}
+              <span className="font-semibold">{state.players.length} players</span>.
+              Players can no longer join after the tournament starts.
+            </p>
+            {/* Player count summary */}
+            <div className={`rounded-xl px-4 py-3 mb-5 flex items-center justify-between ${
+              isDark ? "bg-white/05" : "bg-gray-50"
+            }`}>
+              <span className={`text-sm ${ isDark ? "text-white/60" : "text-gray-500" }`}>Players registered</span>
+              <span className={`text-sm font-bold ${ isDark ? "text-white" : "text-gray-900" }`}>
+                {state.players.length}
+              </span>
+            </div>
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowStartConfirm(false)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  isDark
+                    ? "bg-white/08 text-white/70 hover:bg-white/12"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  startTournament();
+                  setShowStartConfirm(false);
+                  toast.success("Round 1 pairings generated! Tournament is live.");
+                }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+                style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
+              >
+                Start Tournament
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
