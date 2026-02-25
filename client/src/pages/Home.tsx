@@ -43,9 +43,9 @@ import {
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/syykEFmtWqRKgoyE.png";
-const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/MgGEgZtfWrtTkXmB.png";
-const KING_FEATURES_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/mUsfdnNsAHWLVUeB.png";
-const KNIGHT_HOW_IT_WORKS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/AQbAacruZPTgtRGH.png";
+const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/KtkgItbVXxACUcyO.png";
+const KING_FEATURES_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ZGDIeAamTKnUjHkK.png";
+const KNIGHT_HOW_IT_WORKS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/jtgWLDQhoDOleocz.png";
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
 function useInView(threshold = 0.15) {
