@@ -20,6 +20,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { useConfetti } from "@/hooks/useConfetti";
+import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
@@ -1078,6 +1079,8 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   });
   const { fireConfetti } = useConfetti();
   const [, navigate] = useLocation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  useKeyboardScroll(scrollContainerRef, 24);
 
   // Reset on open
   useEffect(() => {
@@ -1266,7 +1269,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         </div>
 
         {/* Step content — scrollable on mobile, centered on desktop */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
           <div
             className="w-full px-8 sm:px-12 lg:px-16 xl:px-20 py-10 max-w-3xl mx-auto"
             key={step}
