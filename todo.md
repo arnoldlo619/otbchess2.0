@@ -224,3 +224,13 @@
 - [x] Service worker push event handler — show notification with board assignment deep-link
 - [x] notificationclick handler — opens /tournament/:id when user taps notification
 - [x] Unit tests for push subscription helpers (16 tests passing)
+
+## Push Subscriptions — DB Persistence
+
+- [x] Add push_subscriptions table to Drizzle schema (id, tournament_id, endpoint, p256dh, auth, created_at)
+- [x] Run pnpm db:push migration (table created in TiDB Cloud)
+- [x] Refactor /api/push/subscribe POST to upsert into DB
+- [x] Refactor /api/push/subscribe DELETE to remove from DB
+- [x] Refactor /api/push/notify/:tournamentId to query DB and clean stale rows
+- [x] GET /api/push/count/:tournamentId endpoint for subscriber count
+- [x] Unit tests for DB-backed push subscription helpers (13 tests passing)
