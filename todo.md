@@ -204,3 +204,11 @@
 - [x] Knight mascot — same style (generated, available as CDN asset)
 - [x] Pawn mascot — same style, double-fist flex, added to CTA "Start Your Tournament" section
 - [x] Favicon — rook face crop, 4 sizes (32px, 180px, 192px, 512px) wired into index.html
+
+## PWA (Progressive Web App)
+
+- [x] manifest.json with name, icons, theme_color, display standalone
+- [x] Wire manifest + apple-touch-icon into index.html
+- [x] Service worker (cache-first for static assets, network-first for API)
+- [x] Register service worker in main.tsx
+- [x] PWA shortcuts: Create Tournament (/?action=create) and Join Tournament (/join)

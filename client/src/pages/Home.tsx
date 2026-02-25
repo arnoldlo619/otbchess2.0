@@ -973,6 +973,16 @@ function Footer() {
 export default function Home() {
   const [wizardOpen, setWizardOpen] = useState(false);
 
+  // Handle PWA shortcut: /?action=create opens the wizard immediately
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "create") {
+      setWizardOpen(true);
+      // Clean the URL without reloading
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Nav onCreateTournament={() => setWizardOpen(true)} />
