@@ -1,8 +1,9 @@
 /**
  * useLichessProfile
  *
- * Fetches a player's profile and ratings from the Lichess public API.
- * - Calls https://lichess.org/api/user/{username}
+ * Fetches a player's profile and ratings via the OTB Chess server-side proxy
+ * (/api/lichess/player/:username), which calls the Lichess public API.
+ * - Calls https://lichess.org/api/user/{username} server-side
  * - In-memory cache prevents duplicate requests within the same session
  * - Distinguishes between "not found" (404) and generic network errors
  * - Extracts: rapid, blitz, bullet, classical ratings; title; country; flair
@@ -155,17 +156,13 @@ function extractBestElo(perfs: LichessPerfs): number {
   return 1500; // default unrated
 }
 
-// ─── API fetch ────────────────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// ─── API fetch via server proxy ───────────────────────────────────────────────
 async function fetchFromLichess(username: string): Promise<LichessProfile> {
   const key = username.toLowerCase().trim();
   if (cache.has(key)) return cache.get(key)!;
 
-  const res = await fetch(`https://lichess.org/api/user/${encodeURIComponent(key)}`, {
-    headers: {
-      "Accept": "application/json",
-    },
-  });
+  // Route through the server-side proxy to avoid CORS and rate-limiting issues
+  const res = await fetch(`/api/lichess/player/${encodeURIComponent(key)}`);
 
   if (res.status === 404) {
     const err = new Error("not_found");

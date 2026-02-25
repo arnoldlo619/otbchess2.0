@@ -150,7 +150,89 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+/**
+ * Vite plugin: server-side proxy for chess.com and Lichess APIs
+ * Avoids browser User-Agent restrictions and Cloudflare rate-limiting.
+ * In production, Express handles these routes in server/index.ts.
+ */
+function vitePluginChessProxy(): Plugin {
+  return {
+    name: "chess-proxy",
+    configureServer(server: ViteDevServer) {
+      // GET /api/chess/player/:username
+      server.middlewares.use("/api/chess/player", async (req, res, next) => {
+        const username = req.url?.replace(/^\//, "").split("?")[0];
+        if (!username) return next();
+        try {
+          const key = decodeURIComponent(username).toLowerCase().trim();
+          const headers = {
+            "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
+            "Accept": "application/json",
+          };
+          const base = `https://api.chess.com/pub/player/${key}`;
+          const [profileRes, statsRes] = await Promise.all([
+            fetch(base, { headers }),
+            fetch(`${base}/stats`, { headers }),
+          ]);
+          if (profileRes.status === 404) {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "not_found" }));
+            return;
+          }
+          if (!profileRes.ok) {
+            res.writeHead(profileRes.status, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: `chess.com returned ${profileRes.status}` }));
+            return;
+          }
+          const [profile, stats] = await Promise.all([
+            profileRes.json(),
+            statsRes.ok ? statsRes.json() : Promise.resolve({}),
+          ]);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ profile, stats }));
+        } catch (err) {
+          console.error("[chess proxy]", err);
+          res.writeHead(502, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Could not reach chess.com" }));
+        }
+      });
+
+      // GET /api/lichess/player/:username
+      server.middlewares.use("/api/lichess/player", async (req, res, next) => {
+        const username = req.url?.replace(/^\//, "").split("?")[0];
+        if (!username) return next();
+        try {
+          const key = decodeURIComponent(username).toLowerCase().trim();
+          const lichessRes = await fetch(`https://lichess.org/api/user/${key}`, {
+            headers: {
+              "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
+              "Accept": "application/json",
+            },
+          });
+          if (lichessRes.status === 404) {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "not_found" }));
+            return;
+          }
+          if (!lichessRes.ok) {
+            res.writeHead(lichessRes.status, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: `lichess returned ${lichessRes.status}` }));
+            return;
+          }
+          const data = await lichessRes.json();
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(data));
+        } catch (err) {
+          console.error("[lichess proxy]", err);
+          res.writeHead(502, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Could not reach lichess.org" }));
+        }
+      });
+    },
+  };
+}
+
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginChessProxy()];
 
 export default defineConfig({
   plugins,
