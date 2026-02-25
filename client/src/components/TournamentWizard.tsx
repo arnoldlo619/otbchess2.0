@@ -276,15 +276,15 @@ function HeroPanel({
 
 function Label({ children, hint, isDark }: { children: React.ReactNode; hint?: string; isDark: boolean }) {
   return (
-    <div className="flex items-baseline gap-1.5 mb-2">
+    <div className="flex items-baseline gap-2 mb-3">
       <label
-        className="text-sm font-semibold"
-        style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}
+        className="text-base font-semibold"
+        style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}
       >
         {children}
       </label>
       {hint && (
-        <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+        <span className="text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>
           {hint}
         </span>
       )}
@@ -325,14 +325,15 @@ function TextInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full rounded-xl border outline-none transition-all duration-200"
+        className="w-full rounded-2xl border outline-none transition-all duration-200"
         style={{
-          padding: large ? "14px 16px 14px 48px" : Icon ? "11px 14px 11px 44px" : "11px 14px",
-          fontSize: large ? 18 : 14,
+          padding: large ? "16px 18px 16px 52px" : Icon ? "14px 16px 14px 50px" : "14px 18px",
+          fontSize: large ? 20 : 16,
           fontWeight: large ? 600 : 400,
           background: isDark ? T.dInput : T.lInput,
-          border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+          border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
           color: isDark ? T.dText : T.lText,
+          lineHeight: "1.5",
         }}
         onFocus={(e) => {
           e.target.style.borderColor = T.green;
@@ -364,12 +365,13 @@ function TextArea({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={3}
-      className="w-full rounded-xl border outline-none transition-all duration-200 resize-none"
+      className="w-full rounded-2xl border outline-none transition-all duration-200 resize-none"
       style={{
-        padding: "11px 14px",
-        fontSize: 14,
+        padding: "14px 18px",
+        fontSize: 16,
+        lineHeight: "1.6",
         background: isDark ? T.dInput : T.lInput,
-        border: `1.5px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
+        border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
         color: isDark ? T.dText : T.lText,
       }}
       onFocus={(e) => {
@@ -403,7 +405,7 @@ function StepDetails({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Tournament name — hero input */}
       <div>
         <Label isDark={isDark} hint="required">Tournament Name</Label>
@@ -528,8 +530,8 @@ function StepFormat({
   const playerOptions = [8, 12, 16, 20, 24, 32, 64];
 
   return (
-    <div className="space-y-7">
-      {/* Format cards */}
+    <div className="space-y-8">
+      {/* Format selector */}
       <div>
         <Label isDark={isDark}>Tournament Format</Label>
         <div className="space-y-2.5">
@@ -1221,7 +1223,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         {/* Step content — scrollable on mobile, centered on desktop */}
         <div className="flex-1 overflow-y-auto">
           <div
-            className="max-w-lg mx-auto px-8 py-10"
+            className="max-w-2xl mx-auto px-10 py-10"
             key={step}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
