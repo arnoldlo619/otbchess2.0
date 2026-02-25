@@ -698,10 +698,10 @@ function StepTime({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <Label isDark={isDark}>Time Control</Label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           {TIME_PRESETS.map((p) => {
             const active = data.timePreset === p.sub;
             return (
@@ -709,29 +709,29 @@ function StepTime({
                 key={p.sub}
                 type="button"
                 onClick={() => selectPreset(p)}
-                className="flex flex-col items-center rounded-xl border transition-all duration-200"
+                className="flex flex-col items-center rounded-2xl border transition-all duration-200"
                 style={{
-                  padding: "12px 8px",
+                  padding: "16px 10px",
                   background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                  border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                  border: `2px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
                   boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
                 }}
               >
                 <span
-                  className="text-sm font-bold"
+                  className="text-base font-bold"
                   style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
                 >
                   {p.sub === "custom" ? "Custom" : p.sub}
                 </span>
                 <span
-                  className="text-[10px] mt-0.5 font-medium"
+                  className="text-xs mt-1 font-medium"
                   style={{ color: isDark ? T.dMuted : T.lMuted }}
                 >
                   {p.sub === "custom" ? "Manual" : p.label}
                 </span>
                 {p.tag && (
                   <span
-                    className="text-[9px] mt-1 px-1.5 py-0.5 rounded-full font-semibold"
+                    className="text-[10px] mt-1.5 px-2 py-0.5 rounded-full font-semibold"
                     style={{
                       background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
                       color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.45)" : "#6B7280",
@@ -775,11 +775,11 @@ function StepTime({
                 </span>
               </Label>
               <div
-                className="flex items-center gap-3 rounded-xl border"
+                className="flex items-center gap-3 rounded-2xl border"
                 style={{
-                  padding: "10px 14px",
+                  padding: "14px 18px",
                   background: isDark ? T.dCard : "#FAFAFA",
-                  border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+                  border: `2px solid ${isDark ? T.dBorder : T.lBorder}`,
                 }}
               >
                 <button
