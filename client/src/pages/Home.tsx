@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
-const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/dZuSquOOqgihMojy.png";
+const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/syykEFmtWqRKgoyE.png";
 const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/qceLUpTKVkOniZtu.png";
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
