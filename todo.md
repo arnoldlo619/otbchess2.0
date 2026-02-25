@@ -196,3 +196,11 @@
 - [x] applyResultToPlayers skips BYE games (pre-scored)
 - [x] ByeCard component in Boards tab — player avatar, +½ badge, round explanation
 - [x] ByeCard rendered in Boards tab grid when whiteId === "BYE"
+
+## Mascot Illustrations
+
+- [x] Rook mascot — woodcut style, cartoon eyes, neon-green glow, flexing pose (hero + Built for Serious Players section)
+- [x] King mascot — same style (generated, available as CDN asset)
+- [x] Knight mascot — same style (generated, available as CDN asset)
+- [x] Pawn mascot — same style, double-fist flex, added to CTA "Start Your Tournament" section
+- [x] Favicon — rook face crop, 4 sizes (32px, 180px, 192px, 512px) wired into index.html

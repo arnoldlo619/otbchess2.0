@@ -46,6 +46,7 @@ const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/sess
 const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/JZcOUObQNVIvuVBL.png";
 const KING_FEATURES_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/MAQjbVVdkwkXwUFi.png";
 const KNIGHT_HOW_IT_WORKS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/rVvlZfiptmIXsYLB.png";
+const PAWN_CTA_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/IMRHwCuquwDNLjre.png";
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
 function useInView(threshold = 0.15) {
@@ -837,29 +838,62 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
   return (
     <section className="py-24 bg-[#3D6B47] relative overflow-hidden" ref={ref}>
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
-      <div className="container relative z-10 text-center">
-        <div className={`${inView ? "animate-fade-up-soft" : "opacity-0"}`} style={{ animationFillMode: "forwards" }}>
-          <h2 className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-4" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Your next tournament
-            <br />
-            starts here.
-          </h2>
-          <p className="text-white/75 text-lg mb-10 max-w-md mx-auto">
-            Free for clubs with up to 20 players. No credit card required.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={onCreateTournament}
-              className="bg-white text-[#3D6B47] font-semibold text-sm px-8 py-3 rounded-md hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+
+      {/* Radial glow behind pawn */}
+      <div
+        className="absolute bottom-0 right-0 w-[50vw] h-[100%] pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at 85% 80%, oklch(0.55 0.18 145 / 0.25) 0%, transparent 60%)",
+        }}
+      />
+
+      <div className="container relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+          {/* Left — Copy */}
+          <div
+            className={`flex-1 text-center lg:text-left ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+            style={{ animationFillMode: "forwards" }}
+          >
+            <h2
+              className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-4"
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
-              Create Free Tournament
-            </button>
-            <Link
-              href="/tournament/otb-demo-2026"
-              className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200 inline-block text-center"
-            >
-              View Live Demo
-            </Link>
+              Your next tournament
+              <br />
+              starts here.
+            </h2>
+            <p className="text-white/75 text-lg mb-10 max-w-md mx-auto lg:mx-0">
+              Free for clubs with up to 20 players. No credit card required.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <button
+                onClick={onCreateTournament}
+                className="bg-white text-[#3D6B47] font-semibold text-sm px-8 py-3 rounded-md hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Create Free Tournament
+              </button>
+              <Link
+                href="/tournament/otb-demo-2026"
+                className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200 inline-block text-center"
+              >
+                View Live Demo
+              </Link>
+            </div>
+          </div>
+
+          {/* Right — Pawn mascot */}
+          <div
+            className={`flex-shrink-0 w-56 lg:w-72 xl:w-80 select-none ${
+              inView ? "animate-fade-up-soft" : "opacity-0"
+            }`}
+            style={{ animationDelay: "150ms", animationFillMode: "forwards" }}
+          >
+            <img
+              src={PAWN_CTA_IMG}
+              alt="OTB Chess pawn mascot — double-fist flex"
+              className="w-full h-auto object-contain drop-shadow-[0_0_32px_rgba(100,255,100,0.35)] hover:scale-105 transition-transform duration-500"
+              draggable={false}
+            />
           </div>
         </div>
       </div>
