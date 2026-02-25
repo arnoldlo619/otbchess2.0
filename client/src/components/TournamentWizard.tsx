@@ -1156,7 +1156,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       }}
     >
       {/* ── Left hero panel (hidden on mobile) ── */}
-      <div className="hidden lg:flex lg:w-[38%] xl:w-[40%] flex-shrink-0">
+      <div className="hidden lg:flex lg:w-[32%] xl:w-[34%] flex-shrink-0">
         <HeroPanel step={step} isDark={isDark} direction={direction} />
       </div>
 
@@ -1170,7 +1170,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
 
         {/* Top bar */}
         <div
-          className="flex items-center justify-between px-10 pt-8 pb-0 flex-shrink-0"
+          className="flex items-center justify-between px-8 sm:px-12 lg:px-16 xl:px-20 pt-8 pb-0 flex-shrink-0"
         >
           {/* Mobile: sticky step progress indicator */}
           <div className="flex lg:hidden items-center gap-2.5">
@@ -1236,9 +1236,9 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         </div>
 
         {/* Step content — scrollable on mobile, centered on desktop */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 overflow-y-auto">
           <div
-            className="max-w-2xl w-full mx-auto px-10 py-12 flex-1"
+            className="w-full px-8 sm:px-12 lg:px-16 xl:px-20 py-10 max-w-3xl mx-auto"
             key={step}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
@@ -1269,7 +1269,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
 
         {/* Bottom navigation bar */}
         <div
-          className="flex-shrink-0 flex items-center justify-between px-10 py-5 border-t"
+          className="flex-shrink-0 flex items-center justify-between px-8 sm:px-12 lg:px-16 xl:px-20 py-5 border-t"
           style={{
             borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
             background: isDark ? T.dPanel : "#FFFFFF",
