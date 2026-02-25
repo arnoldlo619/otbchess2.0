@@ -220,7 +220,7 @@ function HeroPanel({
       {/* Logo mark */}
       <div className="relative flex items-center">
         <img
-          src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+          src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
           alt="OTB Chess"
           style={{ height: 36, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
         />

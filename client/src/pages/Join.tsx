@@ -404,7 +404,7 @@ export default function JoinPage() {
           )}
           <Link href="/" className="flex items-center">
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
               alt="OTB Chess"
               className="h-8 w-auto object-contain"
             />

@@ -93,7 +93,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
         {/* Logo */}
         <a href="/" className="flex items-center gap-1 group">
           <img
-            src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
             alt="OTB Chess"
             className={`h-14 w-auto object-contain transition-all duration-300 ${isDark ? "drop-shadow-[0_0_8px_rgba(100,200,100,0.25)]" : ""}`}
           />
@@ -804,7 +804,7 @@ function Footer() {
           <div>
             <div className="flex items-center gap-1 mb-4">
               <img
-                src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/gtrwTPikdIEZyFmG.png"
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
                 alt="OTB Chess"
                 className="h-9 w-auto object-contain drop-shadow-[0_0_6px_rgba(100,200,100,0.2)]"
               />
