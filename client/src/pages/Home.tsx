@@ -44,6 +44,7 @@ import {
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/syykEFmtWqRKgoyE.png";
 const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/JZcOUObQNVIvuVBL.png";
+const KING_FEATURES_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/rFiQUUYtiJzKGXFP.png";
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
 function useInView(threshold = 0.15) {
@@ -459,12 +460,32 @@ function Features() {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-10 items-start">
+          {/* King illustration column */}
+          <div
+            className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+            style={{ transitionDelay: "0ms" }}
+          >
+            <div className="relative">
+              <div
+                className="absolute inset-0 rounded-2xl"
+                style={{ background: isDark ? "oklch(0.18 0.06 145 / 0.6)" : "oklch(0.44 0.12 145 / 0.08)", borderRadius: "1rem" }}
+              />
+              <img
+                src={KING_FEATURES_IMG}
+                alt="OTB Chess — fierce chess king woodcut illustration"
+                className="w-full h-auto rounded-2xl"
+                style={{ boxShadow: isDark ? "0 8px 40px oklch(0.18 0.06 145 / 0.8)" : "0 8px 40px oklch(0.44 0.12 145 / 0.18)" }}
+              />
+            </div>
+          </div>
+          {/* Feature cards column */}
+          <div className="grid sm:grid-cols-2 gap-5">
           {features.map((feature, i) => (
             <div
               key={feature.title}
               className={`card-chess p-6 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{ transitionDelay: `${i * 80}ms` }}
+              style={{ transitionDelay: `${(i + 1) * 80}ms` }}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
@@ -476,6 +497,7 @@ function Features() {
               <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </div>
           ))}
+          </div>
         </div>
       </div>
     </section>
