@@ -455,7 +455,7 @@ function StepDetails({
 
       <div>
         <Label isDark={isDark}>Rating System</Label>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-3">
           {ratingOptions.map((opt) => {
             const active = data.ratingSystem === opt.value;
             return (
@@ -463,24 +463,24 @@ function StepDetails({
                 key={opt.value}
                 type="button"
                 onClick={() => onChange({ ratingSystem: opt.value })}
-                className="flex flex-col items-start rounded-xl border text-left transition-all duration-200"
+                className="flex flex-col items-start rounded-2xl border text-left transition-all duration-200"
                 style={{
-                  padding: "12px 14px",
+                  padding: "16px 18px",
                   background: active
                     ? T.greenBg
                     : isDark ? T.dCard : "#FAFAFA",
-                  border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                  border: `2px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
                   boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
                 }}
               >
                 <span
-                  className="text-sm font-semibold"
+                  className="text-base font-semibold"
                   style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
                 >
                   {opt.label}
                 </span>
                 <span
-                  className="text-xs mt-0.5"
+                  className="text-sm mt-1"
                   style={{ color: isDark ? T.dMuted : T.lMuted }}
                 >
                   {opt.sub}
@@ -543,40 +543,40 @@ function StepFormat({
                 key={f.value}
                 type="button"
                 onClick={() => onChange({ format: f.value })}
-                className="w-full flex items-center gap-4 rounded-xl border text-left transition-all duration-200"
+                className="w-full flex items-center gap-5 rounded-2xl border text-left transition-all duration-200"
                 style={{
-                  padding: "14px 16px",
+                  padding: "18px 20px",
                   background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                  border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                  border: `2px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
                   boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
                 }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{
                     background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
                     color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
                   }}
                 >
-                  <Icon className="w-5 h-5" strokeWidth={1.8} />
+                  <Icon className="w-6 h-6" strokeWidth={1.8} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p
-                    className="text-sm font-semibold"
+                    className="text-base font-semibold"
                     style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
                   >
                     {f.label}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                  <p className="text-sm mt-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                     {f.desc}
                   </p>
                 </div>
                 {active && (
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: T.green }}
                   >
-                    <Check className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                    <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
                   </div>
                 )}
               </button>
@@ -597,7 +597,7 @@ function StepFormat({
                   key={r}
                   type="button"
                   onClick={() => onChange({ rounds: r })}
-                  className="w-10 h-10 rounded-xl text-sm font-bold transition-all duration-200"
+                  className="w-12 h-12 rounded-xl text-base font-bold transition-all duration-200"
                   style={{
                     background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
                     color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
@@ -622,7 +622,7 @@ function StepFormat({
                   key={p}
                   type="button"
                   onClick={() => onChange({ maxPlayers: p })}
-                  className="h-10 px-3 rounded-xl text-sm font-bold transition-all duration-200"
+                  className="h-12 px-4 rounded-xl text-base font-bold transition-all duration-200"
                   style={{
                     background: active ? T.green : isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
                     color: active ? "#FFFFFF" : isDark ? "rgba(255,255,255,0.60)" : "#4B5563",
