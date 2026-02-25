@@ -63,7 +63,12 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
         drawsMap.set(game.whiteId, (drawsMap.get(game.whiteId) ?? 0) + 1);
         drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
       }
-      // Bye: whiteId === "BYE" or blackId === "BYE" handled below
+      // Bye: whiteId === "BYE" means the blackId player gets ½ point (FIDE standard)
+      if (game.whiteId === "BYE") {
+        pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
+        drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
+        continue;
+      }
     }
   }
 
@@ -327,7 +332,7 @@ export function generateSwissPairings(
       board,
       whiteId: "BYE",
       blackId: byePlayerId,
-      result: "0-1", // bye = ½ point, represented as black wins for simplicity
+      result: "½-½", // bye = ½ point (FIDE standard)
     });
   }
 
@@ -343,6 +348,9 @@ export function applyResultToPlayers(
   game: Game,
   newResult: Result
 ): Player[] {
+  // Bye games are pre-scored; skip applyResultToPlayers for them
+  if (game.whiteId === "BYE" || game.blackId === "BYE") return players;
+
   return players.map((p) => {
     if (p.id !== game.whiteId && p.id !== game.blackId) return p;
     const isWhite = p.id === game.whiteId;

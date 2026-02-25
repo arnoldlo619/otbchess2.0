@@ -74,6 +74,73 @@ function pointsFor(result: Result, side: "white" | "black"): string {
   return result === "0-1" ? "1" : "0";
 }
 
+// ─── Bye Card ───────────────────────────────────────────────────────────────
+function ByeCard({ game, players, isDark }: {
+  game: import("@/lib/tournamentData").Game;
+  players: import("@/lib/tournamentData").Player[];
+  isDark: boolean;
+}) {
+  const byePlayer = players.find((p) => p.id === game.blackId);
+  if (!byePlayer) return null;
+  return (
+    <div
+      className={`rounded-xl border transition-all duration-200 ${
+        isDark
+          ? "bg-[oklch(0.22_0.06_145)] border-white/10"
+          : "bg-white border-gray-100"
+      }`}
+    >
+      <div
+        className={`flex items-center justify-between px-4 py-2.5 border-b rounded-t-xl ${
+          isDark ? "border-white/08 bg-white/04" : "border-gray-50 bg-gray-50/80"
+        }`}
+      >
+        <span className={`text-xs font-bold tracking-widest uppercase ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          Board {game.board}
+        </span>
+        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+          isDark ? "bg-blue-500/20 text-blue-300" : "bg-blue-50 text-blue-600"
+        }`}>
+          BYE
+        </span>
+      </div>
+      <div className="px-4 py-4 flex items-center gap-3">
+        <PlayerAvatar
+          username={byePlayer.username}
+          name={byePlayer.name}
+          platform={byePlayer.platform === "lichess" ? "lichess" : "chesscom"}
+          size={36}
+          showBadge
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+              {byePlayer.name}
+            </span>
+            {byePlayer.title && (
+              <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                {byePlayer.title}
+              </span>
+            )}
+          </div>
+          <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            {byePlayer.elo} ELO
+          </span>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-bold text-blue-500">+½</div>
+          <div className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>bye point</div>
+        </div>
+      </div>
+      <div className="px-4 pb-3">
+        <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          Odd number of players — this player receives a half-point bye this round.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Board Result Card ────────────────────────────────────────────────────────
 function BoardCard({
   game,
@@ -906,15 +973,24 @@ export default function Director() {
               {/* Board cards grid — only shown after tournament starts */}
               {!isRegistration && currentRoundData ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {currentRoundData.games.map((game) => (
-                    <BoardCard
-                      key={game.id}
-                      game={game}
-                      players={state.players}
-                      onResult={enterResult}
-                      isDark={isDark}
-                    />
-                  ))}
+                  {currentRoundData.games.map((game) =>
+                    game.whiteId === "BYE" ? (
+                      <ByeCard
+                        key={game.id}
+                        game={game}
+                        players={state.players}
+                        isDark={isDark}
+                      />
+                    ) : (
+                      <BoardCard
+                        key={game.id}
+                        game={game}
+                        players={state.players}
+                        onResult={enterResult}
+                        isDark={isDark}
+                      />
+                    )
+                  )}
                 </div>
               ) : (
                 <div

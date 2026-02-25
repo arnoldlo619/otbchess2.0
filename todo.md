@@ -186,3 +186,13 @@
 - [x] AddPlayerModal render call wired in Director.tsx return statement
 - [x] Start Tournament confirmation dialog render wired in Director.tsx return statement
 - [x] Fixed esbuild false-positive in Join.tsx (Unicode box-drawing chars replaced with ASCII)
+
+## Bye Handling (Odd Player Count)
+
+- [x] Swiss engine: detect odd player count, assign bye to lowest-ranked player who hasn't had a bye
+- [x] Award ½ point (FIDE standard) to bye player — fixed from incorrect 1 point
+- [x] Track bye history per player to avoid repeat byes (getByeRecipients)
+- [x] computeStandings handles BYE games without double-counting
+- [x] applyResultToPlayers skips BYE games (pre-scored)
+- [x] ByeCard component in Boards tab — player avatar, +½ badge, round explanation
+- [x] ByeCard rendered in Boards tab grid when whiteId === "BYE"
