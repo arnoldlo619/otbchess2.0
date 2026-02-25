@@ -304,6 +304,84 @@ async function startServer() {
     }
   });
 
+  // ── Push: POST /api/push/notify/:tournamentId/results ────────────────────
+  // Broadcasts a push notification when all results for a round are posted.
+  // Body: { round: number, tournamentName: string }
+  app.post("/api/push/notify/:tournamentId/results", async (req, res) => {
+    const { tournamentId } = req.params;
+    const { round, tournamentName } = req.body as {
+      round: number;
+      tournamentName: string;
+    };
+
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      return res.status(503).json({ error: "Push notifications not configured" });
+    }
+
+    try {
+      const db = await getDb();
+
+      const rows = await db
+        .select()
+        .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.tournamentId, tournamentId));
+
+      if (rows.length === 0) {
+        return res.json({ ok: true, sent: 0, failed: 0 });
+      }
+
+      const payload = JSON.stringify({
+        title: `Round ${round} Results Posted`,
+        body: `${tournamentName} — All results are in. Check the standings now.`,
+        icon: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/iqZHgEQGHFmYeOzw.png",
+        badge: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/sffLnKtDRYocchPn.png",
+        tag: `otb-results-${tournamentId}-${round}`,
+        url: `/tournament/${tournamentId}`,
+      });
+
+      let sent = 0;
+      let failed = 0;
+      const staleIds: string[] = [];
+
+      await Promise.allSettled(
+        rows.map(async (row) => {
+          const sub: PushSub = {
+            endpoint: row.endpoint,
+            keys: { p256dh: row.p256dh, auth: row.auth },
+          };
+          try {
+            await webpush.sendNotification(sub, payload);
+            sent++;
+          } catch (err: unknown) {
+            failed++;
+            if (err && typeof err === "object" && "statusCode" in err) {
+              const code = (err as { statusCode: number }).statusCode;
+              if (code === 410 || code === 404) {
+                staleIds.push(row.id);
+              }
+            }
+            console.warn("[push] Failed to send results notification:", err);
+          }
+        })
+      );
+
+      if (staleIds.length > 0) {
+        await Promise.all(
+          staleIds.map((id) =>
+            db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, id))
+          )
+        );
+        console.log(`[push] Removed ${staleIds.length} stale subscription(s)`);
+      }
+
+      console.log(`[push] Round ${round} results notification for ${tournamentId}: ${sent} sent, ${failed} failed`);
+      res.json({ ok: true, sent, failed });
+    } catch (err) {
+      console.error("[push] results notify error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
   // Serve static files from dist/public in production
   const staticPath =
     process.env.NODE_ENV === "production"

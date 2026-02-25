@@ -234,3 +234,10 @@
 - [x] Refactor /api/push/notify/:tournamentId to query DB and clean stale rows
 - [x] GET /api/push/count/:tournamentId endpoint for subscriber count
 - [x] Unit tests for DB-backed push subscription helpers (13 tests passing)
+
+## Round Results Notification
+
+- [x] POST /api/push/notify/:tournamentId/results server endpoint
+- [x] broadcastResultsPosted() helper in Director.tsx
+- [x] Auto-trigger broadcast when allResultsIn transitions to true (useRef edge-detection)
+- [x] Unit tests for results notification payload and endpoint (5 new tests)

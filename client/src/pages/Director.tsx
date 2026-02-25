@@ -10,7 +10,7 @@
  *   - Round progress tracker
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
 import { Link, useParams } from "wouter";
@@ -497,7 +497,7 @@ export default function Director() {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
-  // ── Push notification broadcast ──────────────────────────────────────────
+  // ── Push notification broadcasts ────────────────────────────────────────
   const broadcastRoundStart = useCallback(async (round: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
@@ -516,6 +516,41 @@ export default function Director() {
       // Silent fail — push is a best-effort enhancement
     }
   }, [tournamentId, state.tournamentName]);
+
+  const broadcastResultsPosted = useCallback(async (round: number) => {
+    const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
+    try {
+      const res = await fetch(`/api/push/notify/${tournamentId}/results`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ round, tournamentName }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { sent: number; failed: number };
+        if (data.sent > 0) {
+          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Round ${round} results posted`);
+        }
+      }
+    } catch {
+      // Silent fail — push is a best-effort enhancement
+    }
+  }, [tournamentId, state.tournamentName]);
+
+  // Auto-broadcast results notification when all games in the current round
+  // transition from incomplete to complete. We track the previous value of
+  // allResultsIn so we only fire once per round, not on every re-render.
+  const prevAllResultsIn = useRef(false);
+  useEffect(() => {
+    if (
+      allResultsIn &&
+      !prevAllResultsIn.current &&
+      !isRegistration &&
+      state.currentRound > 0
+    ) {
+      broadcastResultsPosted(state.currentRound);
+    }
+    prevAllResultsIn.current = allResultsIn;
+  }, [allResultsIn, isRegistration, state.currentRound, broadcastResultsPosted]);
 
   // Derived: filtered + sorted player list
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];

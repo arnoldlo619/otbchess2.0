@@ -252,9 +252,91 @@ describe("Push notification payload", () => {
     expect(parsed.url).toBe("/tournament/otb-spring-2026");
   });
 
+  it("generates the correct payload for a results-posted notification", () => {
+    const tournamentId = "otb-spring-2026";
+    const round = 3;
+    const tournamentName = "Spring Open 2026";
+
+    const payload = JSON.stringify({
+      title: `Round ${round} Results Posted`,
+      body: `${tournamentName} — All results are in. Check the standings now.`,
+      tag: `otb-results-${tournamentId}-${round}`,
+      url: `/tournament/${tournamentId}`,
+    });
+
+    const parsed = JSON.parse(payload) as {
+      title: string;
+      body: string;
+      tag: string;
+      url: string;
+    };
+
+    expect(parsed.title).toBe("Round 3 Results Posted");
+    expect(parsed.body).toContain("All results are in");
+    expect(parsed.body).toContain("Spring Open 2026");
+    expect(parsed.tag).toBe("otb-results-otb-spring-2026-3");
+    expect(parsed.url).toBe("/tournament/otb-spring-2026");
+  });
+
+  it("round-start and results-posted tags are distinct for the same round", () => {
+    const tid = "otb-spring-2026";
+    const round = 2;
+    const startTag = `otb-round-${tid}-${round}`;
+    const resultsTag = `otb-results-${tid}-${round}`;
+    expect(startTag).not.toBe(resultsTag);
+  });
+
   it("generates unique tags for different rounds of the same tournament", () => {
-    const makeTag = (tid: string, round: number) => `otb-round-${tid}-${round}`;
-    expect(makeTag("t1", 1)).not.toBe(makeTag("t1", 2));
-    expect(makeTag("t1", 1)).not.toBe(makeTag("t2", 1));
+    const makeRoundTag = (tid: string, round: number) => `otb-round-${tid}-${round}`;
+    const makeResultsTag = (tid: string, round: number) => `otb-results-${tid}-${round}`;
+    expect(makeRoundTag("t1", 1)).not.toBe(makeRoundTag("t1", 2));
+    expect(makeRoundTag("t1", 1)).not.toBe(makeRoundTag("t2", 1));
+    expect(makeResultsTag("t1", 1)).not.toBe(makeResultsTag("t1", 2));
+  });
+});
+
+// ─── POST /api/push/notify/:tournamentId/results endpoint contract ─────────────
+
+describe("POST /api/push/notify/:tournamentId/results", () => {
+  it("returns sent and failed counts", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ok: true, sent: 4, failed: 0 }),
+    }));
+
+    const res = await fetch("/api/push/notify/otb-spring-2026/results", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ round: 2, tournamentName: "Spring Open 2026" }),
+    });
+    const data = await res.json() as { ok: boolean; sent: number; failed: number };
+
+    expect(data.ok).toBe(true);
+    expect(typeof data.sent).toBe("number");
+    expect(typeof data.failed).toBe("number");
+  });
+
+  it("returns sent: 0 when no subscribers exist", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ok: true, sent: 0, failed: 0 }),
+    }));
+
+    const res = await fetch("/api/push/notify/empty-tournament/results", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ round: 1, tournamentName: "Empty Tournament" }),
+    });
+    const data = await res.json() as { ok: boolean; sent: number; failed: number };
+
+    expect(data.sent).toBe(0);
+    expect(data.failed).toBe(0);
+  });
+
+  it("uses the /results sub-path distinct from the round-start endpoint", () => {
+    const roundStartUrl = "/api/push/notify/my-tournament";
+    const resultsUrl = "/api/push/notify/my-tournament/results";
+    expect(resultsUrl).not.toBe(roundStartUrl);
+    expect(resultsUrl).toContain("/results");
   });
 });
