@@ -331,7 +331,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Trusted by <strong className="text-foreground">200+ chess clubs</strong> worldwide
+                  Trusted by <strong className="text-foreground">80+ chess clubs</strong> worldwide
                 </p>
               </div>
             </div>
@@ -400,9 +400,9 @@ function StatItem({
 function StatsBar() {
   const { ref, inView } = useInView();
   const stats: { target: number; suffix: string; decimals: number; label: string }[] = [
-    { target: 2400, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
-    { target: 18000, suffix: "+", decimals: 0, label: "Players Registered" },
-    { target: 200, suffix: "+", decimals: 0, label: "Chess Clubs" },
+    { target: 300, suffix: "+", decimals: 0, label: "Tournaments Hosted" },
+    { target: 550, suffix: "+", decimals: 0, label: "Players Registered" },
+    { target: 80, suffix: "+", decimals: 0, label: "Chess Clubs" },
     { target: 4.9, suffix: "★", decimals: 1, label: "Average Rating" },
   ];
   return (
