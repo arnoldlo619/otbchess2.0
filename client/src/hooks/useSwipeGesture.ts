@@ -11,6 +11,30 @@ export interface SwipeGestureOptions {
   onSwipeRight?: () => void;
   /** When true the hook does nothing (e.g. on desktop). Default: false */
   disabled?: boolean;
+  /**
+   * Haptic feedback duration in ms for a forward (swipe-left) gesture.
+   * Set to 0 to disable. Default: 10
+   */
+  hapticForward?: number;
+  /**
+   * Haptic feedback duration in ms for a backward (swipe-right) gesture.
+   * Set to 0 to disable. Default: 20
+   */
+  hapticBack?: number;
+}
+
+/**
+ * Trigger a short vibration if the Vibration API is available.
+ * Silently no-ops on iOS and desktop browsers that don't support it.
+ */
+function vibrate(ms: number) {
+  if (ms > 0 && typeof navigator !== "undefined" && "vibrate" in navigator) {
+    try {
+      navigator.vibrate(ms);
+    } catch {
+      // Some browsers throw if vibration is not permitted — ignore
+    }
+  }
 }
 
 /**
@@ -18,7 +42,7 @@ export interface SwipeGestureOptions {
  *
  * Attaches touchstart / touchmove / touchend listeners to the given container
  * ref and fires onSwipeLeft / onSwipeRight when a qualifying horizontal swipe
- * is detected.
+ * is detected. Triggers haptic feedback via navigator.vibrate on Android.
  *
  * Cancellation rules:
  *  - Vertical drift > maxVerticalDrift → cancel (user is scrolling)
@@ -36,6 +60,8 @@ export function useSwipeGesture(
     onSwipeLeft,
     onSwipeRight,
     disabled = false,
+    hapticForward = 10,
+    hapticBack = 20,
   } = options;
 
   // Keep callbacks in a ref so the effect doesn't need to re-run when they change
@@ -43,6 +69,12 @@ export function useSwipeGesture(
   useEffect(() => {
     callbacksRef.current = { onSwipeLeft, onSwipeRight };
   }, [onSwipeLeft, onSwipeRight]);
+
+  // Keep haptic values in a ref too
+  const hapticRef = useRef({ hapticForward, hapticBack });
+  useEffect(() => {
+    hapticRef.current = { hapticForward, hapticBack };
+  }, [hapticForward, hapticBack]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -89,9 +121,11 @@ export function useSwipeGesture(
 
       if (dx < 0) {
         // Swipe left → next step
+        vibrate(hapticRef.current.hapticForward);
         callbacksRef.current.onSwipeLeft?.();
       } else {
         // Swipe right → previous step
+        vibrate(hapticRef.current.hapticBack);
         callbacksRef.current.onSwipeRight?.();
       }
     };

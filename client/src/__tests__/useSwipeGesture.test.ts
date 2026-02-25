@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useRef } from "react";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
@@ -142,5 +142,62 @@ describe("useSwipeGesture", () => {
     });
 
     expect(addSpy).not.toHaveBeenCalled();
+  });
+
+  describe("haptic feedback", () => {
+    beforeEach(() => {
+      // Mock navigator.vibrate
+      Object.defineProperty(navigator, "vibrate", {
+        value: vi.fn(),
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("calls navigator.vibrate with hapticForward duration on swipe left", () => {
+      const container = document.createElement("div");
+      const onSwipeLeft = vi.fn();
+
+      renderHook(() => {
+        const ref = useRef<HTMLDivElement>(container as unknown as HTMLDivElement);
+        useSwipeGesture(ref, { onSwipeLeft, hapticForward: 15, threshold: 60 });
+      });
+
+      fireTouchEvent(container, "touchstart", [makeTouch(200, 300)]);
+      fireTouchEvent(container, "touchend", [], [makeTouch(130, 305)]);
+
+      expect(navigator.vibrate).toHaveBeenCalledWith(15);
+      expect(onSwipeLeft).toHaveBeenCalledOnce();
+    });
+
+    it("calls navigator.vibrate with hapticBack duration on swipe right", () => {
+      const container = document.createElement("div");
+      const onSwipeRight = vi.fn();
+
+      renderHook(() => {
+        const ref = useRef<HTMLDivElement>(container as unknown as HTMLDivElement);
+        useSwipeGesture(ref, { onSwipeRight, hapticBack: 25, threshold: 60 });
+      });
+
+      fireTouchEvent(container, "touchstart", [makeTouch(100, 300)]);
+      fireTouchEvent(container, "touchend", [], [makeTouch(170, 305)]);
+
+      expect(navigator.vibrate).toHaveBeenCalledWith(25);
+      expect(onSwipeRight).toHaveBeenCalledOnce();
+    });
+
+    it("does not vibrate when hapticForward is 0", () => {
+      const container = document.createElement("div");
+
+      renderHook(() => {
+        const ref = useRef<HTMLDivElement>(container as unknown as HTMLDivElement);
+        useSwipeGesture(ref, { hapticForward: 0, threshold: 60 });
+      });
+
+      fireTouchEvent(container, "touchstart", [makeTouch(200, 300)]);
+      fireTouchEvent(container, "touchend", [], [makeTouch(130, 305)]);
+
+      expect(navigator.vibrate).not.toHaveBeenCalled();
+    });
   });
 });
