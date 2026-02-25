@@ -461,7 +461,7 @@ function HowItWorks() {
   return (
     <section id="how-it-works" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
-        <div className="grid lg:grid-cols-[2fr_1fr] gap-12 items-center">
+        <div>
           {/* Steps column */}
           <div>
             <div className="mb-12">
@@ -501,23 +501,6 @@ function HowItWorks() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-          {/* Knight illustration column */}
-          <div
-            className={`transition-all duration-700 delay-300 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-          >
-            <div className="relative">
-              <div
-                className="absolute inset-0 rounded-2xl"
-                style={{ background: isDark ? "oklch(0.18 0.06 145 / 0.5)" : "oklch(0.44 0.12 145 / 0.06)", borderRadius: "1rem" }}
-              />
-              <img
-                src={KNIGHT_HOW_IT_WORKS_IMG}
-                alt="OTB Chess — fierce chess knight woodcut illustration"
-                className="w-full h-auto rounded-2xl illus-hover"
-                style={{ boxShadow: isDark ? "0 8px 40px oklch(0.18 0.06 145 / 0.8)" : "0 8px 40px oklch(0.44 0.12 145 / 0.15)" }}
-              />
             </div>
           </div>
         </div>
@@ -561,27 +544,8 @@ function Features() {
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-10 items-start">
-          {/* King illustration column */}
-          <div
-            className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-            style={{ transitionDelay: "0ms" }}
-          >
-            <div className="relative">
-              <div
-                className="absolute inset-0 rounded-2xl"
-                style={{ background: isDark ? "oklch(0.18 0.06 145 / 0.6)" : "oklch(0.44 0.12 145 / 0.08)", borderRadius: "1rem" }}
-              />
-              <img
-                src={KING_FEATURES_IMG}
-                alt="OTB Chess — fierce chess king woodcut illustration"
-                className="w-full h-auto rounded-2xl illus-hover"
-                style={{ boxShadow: isDark ? "0 8px 40px oklch(0.18 0.06 145 / 0.8)" : "0 8px 40px oklch(0.44 0.12 145 / 0.18)" }}
-              />
-            </div>
-          </div>
-          {/* Feature cards column */}
-          <div className="grid sm:grid-cols-2 gap-5">
+        {/* Feature cards — full width 3-column grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((feature, i) => (
             <div
               key={feature.title}
@@ -598,14 +562,12 @@ function Features() {
               <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </div>
           ))}
-          </div>
         </div>
       </div>
     </section>
   );
 }
-
-// ─── Visual Showcase ─────────────────────────────────────────────────────────
+// ─── Visual Showcasee ─────────────────────────────────────────────────────────
 function Showcase() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
