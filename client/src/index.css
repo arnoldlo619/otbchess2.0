@@ -747,3 +747,163 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ── Premium Landing Page Animations ────────────────────────────────────────
+ * Soft, subtle micro-interactions for visual depth and polish.
+ * All animations respect prefers-reduced-motion.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* Floating idle animation for hero illustration */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: floatY 5s ease-in-out infinite;
+}
+
+/* Gentle glow pulse for the hero image container */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.44 0.12 145 / 0); }
+  50%       { box-shadow: 0 0 40px 8px oklch(0.44 0.12 145 / 0.12); }
+}
+.animate-glow-pulse {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+/* Stat counter pop-in */
+@keyframes statPop {
+  0%   { opacity: 0; transform: scale(0.85) translateY(12px); }
+  70%  { transform: scale(1.04) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-stat-pop {
+  animation: statPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Slide in from left (for illustration columns) */
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-from-left {
+  animation: slideInFromLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Slide in from right (for text columns) */
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-from-right {
+  animation: slideInFromRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Soft fade-up with longer travel for section headings */
+@keyframes fadeUpSoft {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up-soft {
+  animation: fadeUpSoft 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Illustration parallax hover — applied via JS class toggle */
+.illus-hover {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.illus-hover:hover {
+  transform: scale(1.025) translateY(-6px);
+  box-shadow: 0 24px 64px oklch(0.44 0.12 145 / 0.20) !important;
+}
+.dark .illus-hover:hover {
+  box-shadow: 0 24px 64px oklch(0.18 0.06 145 / 0.60) !important;
+}
+
+/* Enhanced card hover — lift + green border glow */
+.card-chess {
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform, box-shadow;
+}
+.card-chess:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 40px oklch(0.44 0.12 145 / 0.12) !important;
+  border-color: oklch(0.55 0.13 145 / 0.5) !important;
+}
+.dark .card-chess:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 40px oklch(0 0 0 / 0.4) !important;
+  border-color: oklch(0.55 0.13 145 / 0.7) !important;
+}
+
+/* Testimonial card hover — subtle tilt + lift */
+.card-testimonial {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, box-shadow;
+}
+.card-testimonial:hover {
+  transform: translateY(-5px) rotate(0.4deg);
+  box-shadow: 0 16px 48px oklch(0.44 0.12 145 / 0.10);
+}
+.dark .card-testimonial:hover {
+  box-shadow: 0 16px 48px oklch(0 0 0 / 0.35);
+}
+
+/* Step number shimmer on hover */
+.step-card:hover .step-number {
+  opacity: 0.25;
+  transition: opacity 0.3s ease;
+}
+.step-number {
+  transition: opacity 0.3s ease;
+}
+
+/* Stat item hover highlight */
+.stat-item {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.stat-item:hover {
+  transform: translateY(-3px);
+}
+
+/* Section label badge pop */
+@keyframes badgePop {
+  from { opacity: 0; transform: scale(0.9) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-badge-pop {
+  animation: badgePop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Checklist item stagger reveal */
+@keyframes checkReveal {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-check-reveal {
+  animation: checkReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-glow-pulse,
+  .animate-stat-pop,
+  .animate-slide-from-left,
+  .animate-slide-from-right,
+  .animate-fade-up-soft,
+  .animate-badge-pop,
+  .animate-check-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .illus-hover:hover,
+  .card-chess:hover,
+  .card-testimonial:hover,
+  .stat-item:hover {
+    transform: none !important;
+  }
+}

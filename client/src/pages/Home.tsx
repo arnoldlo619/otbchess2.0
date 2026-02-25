@@ -283,7 +283,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
           {/* Right — Illustration */}
           <div className="opacity-0-init animate-fade-in relative" style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
-            <div className="relative">
+            <div className="relative animate-glow-pulse rounded-2xl">
               {/* Floating stat cards */}
               <div className={`absolute top-8 -left-4 z-10 rounded-xl shadow-lg border px-4 py-3 animate-fade-in-up ${isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#EEEED2]"}`} style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}>
                 <div className="flex items-center gap-2.5">
@@ -312,7 +312,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               <img
                 src={HERO_ILLUSTRATION}
                 alt="Chess tournament illustration"
-                className="w-full h-auto rounded-2xl"
+                className="w-full h-auto rounded-2xl animate-float illus-hover"
                 style={{ maxHeight: "580px", objectFit: "cover", objectPosition: "left center" }}
               />
             </div>
@@ -340,8 +340,8 @@ function StatsBar() {
           {stats.map((stat, i) => (
             <div
               key={stat.label}
-              className={`text-center transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-              style={{ transitionDelay: `${i * 80}ms` }}
+              className={`stat-item text-center ${inView ? "animate-stat-pop" : "opacity-0"}`}
+              style={{ animationDelay: `${i * 90}ms`, animationFillMode: "forwards" }}
             >
               <p className="text-3xl font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 {stat.value}
@@ -389,10 +389,12 @@ function HowItWorks() {
           {/* Steps column */}
           <div>
             <div className="mb-12">
-              <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
+              <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
+                style={{ animationFillMode: "forwards" }}>
                 Simple Process
               </p>
-              <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+                style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
                 From zero to tournament
                 <br />
                 in three moves.
@@ -406,13 +408,13 @@ function HowItWorks() {
                   className={`relative transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
                   style={{ transitionDelay: `${i * 120}ms` }}
                 >
-                  <div className="card-chess p-6">
+                  <div className="card-chess step-card p-6">
                     <div className="flex items-start justify-between mb-5">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
                         {step.icon}
                       </div>
                       <span
-                        className={`text-4xl font-bold ${isDark ? "text-white/10" : "text-[#EEEED2]"}`}
+                        className={`step-number text-4xl font-bold ${isDark ? "text-white/10" : "text-[#EEEED2]"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
                       >
                         {step.number}
@@ -437,7 +439,7 @@ function HowItWorks() {
               <img
                 src={KNIGHT_HOW_IT_WORKS_IMG}
                 alt="OTB Chess — fierce chess knight woodcut illustration"
-                className="w-full h-auto rounded-2xl"
+                className="w-full h-auto rounded-2xl illus-hover"
                 style={{ boxShadow: isDark ? "0 8px 40px oklch(0.18 0.06 145 / 0.8)" : "0 8px 40px oklch(0.44 0.12 145 / 0.15)" }}
               />
             </div>
@@ -471,10 +473,12 @@ function Features() {
     >
       <div className="container">
         <div className="text-center mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
+            style={{ animationFillMode: "forwards" }}>
             Platform Features
           </p>
-          <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
             Everything your club needs.
             <br />
             Nothing it doesn't.
@@ -495,7 +499,7 @@ function Features() {
               <img
                 src={KING_FEATURES_IMG}
                 alt="OTB Chess — fierce chess king woodcut illustration"
-                className="w-full h-auto rounded-2xl"
+                className="w-full h-auto rounded-2xl illus-hover"
                 style={{ boxShadow: isDark ? "0 8px 40px oklch(0.18 0.06 145 / 0.8)" : "0 8px 40px oklch(0.44 0.12 145 / 0.18)" }}
               />
             </div>
@@ -544,16 +548,18 @@ function Showcase() {
               <img
                 src={KINGS_QUEENS_IMG}
                 alt="OTB Chess — Kings and Queens editorial illustration"
-                className="w-full h-auto rounded-2xl shadow-xl"
+                className="w-full h-auto rounded-2xl shadow-xl illus-hover"
               />
             </div>
           </div>
 
           <div className={`transition-all duration-700 delay-200 ${inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
-            <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
+            <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
+              style={{ animationFillMode: "forwards" }}>
               Built for Serious Players
             </p>
-            <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+              style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "120ms", animationFillMode: "forwards" }}>
               Every game deserves
               <br />
               a proper stage.
@@ -568,8 +574,12 @@ function Showcase() {
                 "Support for up to 256 players per tournament",
                 "Printable pairing sheets and result slips",
                 "Post-tournament performance reports",
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3">
+              ].map((item, idx) => (
+                <div
+                  key={item}
+                  className={`flex items-start gap-3 ${inView ? "animate-check-reveal" : "opacity-0"}`}
+                  style={{ animationDelay: `${400 + idx * 80}ms`, animationFillMode: "forwards" }}
+                >
                   <CheckCircle2 className={`w-5 h-5 mt-0.5 flex-shrink-0 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`} />
                   <span className="text-sm text-muted-foreground">{item}</span>
                 </div>
@@ -744,10 +754,12 @@ function Testimonials() {
     <section id="testimonials" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
         <div className="text-center mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
+            style={{ animationFillMode: "forwards" }}>
             From the Community
           </p>
-          <h2 className="text-4xl font-semibold tracking-tight text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          <h2 className={`text-4xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
             Clubs that made the move.
           </h2>
         </div>
@@ -756,8 +768,8 @@ function Testimonials() {
           {testimonials.map((t, i) => (
             <div
               key={t.author}
-              className={`card-chess p-6 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{ transitionDelay: `${i * 100}ms` }}
+              className={`card-chess card-testimonial p-6 ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+              style={{ animationDelay: `${200 + i * 120}ms`, animationFillMode: "forwards" }}
             >
               <div className="flex items-center gap-1 mb-4">
                 {[...Array(5)].map((_, j) => (
@@ -788,7 +800,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
     <section className="py-24 bg-[#3D6B47] relative overflow-hidden" ref={ref}>
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
       <div className="container relative z-10 text-center">
-        <div className={`transition-all duration-600 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        <div className={`${inView ? "animate-fade-up-soft" : "opacity-0"}`} style={{ animationFillMode: "forwards" }}>
           <h2 className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-4" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Your next tournament
             <br />
