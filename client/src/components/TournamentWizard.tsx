@@ -21,6 +21,7 @@ import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { useConfetti } from "@/hooks/useConfetti";
 import { useKeyboardScroll } from "@/hooks/useKeyboardScroll";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
@@ -1146,6 +1147,13 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [open, canAdvance, handleNext, onClose]);
 
+  // Swipe gesture navigation (mobile only)
+  useSwipeGesture(scrollContainerRef, {
+    onSwipeLeft: () => { if (canAdvance) handleNext(); },
+    onSwipeRight: handleBack,
+    threshold: 60,
+    maxVerticalDrift: 80,
+  });
   const patch = (p: Partial<WizardData>) => setData((d) => ({ ...d, ...p }));
 
   if (!open) return null;
