@@ -1172,20 +1172,35 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         <div
           className="flex items-center justify-between px-10 pt-8 pb-0 flex-shrink-0"
         >
-          {/* Mobile: logo */}
-          <div className="flex lg:hidden items-center gap-2">
+          {/* Mobile: sticky step progress indicator */}
+          <div className="flex lg:hidden items-center gap-2.5">
+            {/* Step badge */}
             <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: T.green }}
+              className="flex items-center justify-center rounded-lg text-xs font-bold px-2 py-1"
+              style={{
+                background: T.green,
+                color: "#FFFFFF",
+                minWidth: 28,
+                fontFamily: "'Clash Display', sans-serif",
+              }}
             >
-              <Crown className="w-4 h-4 text-white" strokeWidth={2} />
+              {step + 1}/{STEPS.length}
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
-            >
-              New Tournament
-            </span>
+            {/* Step label */}
+            <div className="flex flex-col">
+              <span
+                className="text-[10px] font-semibold tracking-widest uppercase leading-none"
+                style={{ color: isDark ? T.dMuted : T.lMuted }}
+              >
+                Step {step + 1} of {STEPS.length}
+              </span>
+              <span
+                className="text-sm font-bold leading-tight mt-0.5"
+                style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
+              >
+                {STEPS[step].label}
+              </span>
+            </div>
           </div>
           {/* Desktop: step label */}
           <div className="hidden lg:flex items-center gap-3">
