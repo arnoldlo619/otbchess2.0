@@ -15,6 +15,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { NotifyBell } from "@/components/NotifyBell";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useLichessProfile } from "@/hooks/useLichessProfile";
@@ -803,6 +804,17 @@ export default function JoinPage() {
                   </div>
 
                   <div className={`h-px ${divider}`} />
+
+                  {/* Push notification opt-in */}
+                  {resolvedConfig && (
+                    <div className={`rounded-xl overflow-hidden ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
+                      <NotifyBell
+                        tournamentId={resolvedConfig.id}
+                        tournamentName={tournamentDisplay.name}
+                        className={isDark ? "!bg-transparent !border-0" : "!bg-transparent !border-0"}
+                      />
+                    </div>
+                  )}
 
                   {/* What's next */}
                   <div className={`rounded-xl px-4 py-3 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/06"}`}>

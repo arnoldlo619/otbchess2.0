@@ -212,3 +212,15 @@
 - [x] Service worker (cache-first for static assets, network-first for API)
 - [x] Register service worker in main.tsx
 - [x] PWA shortcuts: Create Tournament (/?action=create) and Join Tournament (/join)
+
+## Push Notifications
+
+- [x] Generate VAPID key pair and store as env secrets
+- [x] Install web-push on server, expose /api/push/vapid-public-key and /api/push/subscribe endpoints
+- [x] POST /api/push/notify/:tournamentId endpoint for director to broadcast round start
+- [x] usePushSubscription hook — request permission, subscribe, POST to server
+- [x] NotifyBell component — subscribe/unsubscribe toggle for players on Join success page
+- [x] Director Dashboard — broadcastRoundStart() called on Generate Round and Start Tournament
+- [x] Service worker push event handler — show notification with board assignment deep-link
+- [x] notificationclick handler — opens /tournament/:id when user taps notification
+- [x] Unit tests for push subscription helpers (16 tests passing)

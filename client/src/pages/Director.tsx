@@ -10,7 +10,7 @@
  *   - Round progress tracker
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
 import { Link, useParams } from "wouter";
@@ -497,6 +497,26 @@ export default function Director() {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
+  // ── Push notification broadcast ──────────────────────────────────────────
+  const broadcastRoundStart = useCallback(async (round: number) => {
+    const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
+    try {
+      const res = await fetch(`/api/push/notify/${tournamentId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ round, tournamentName }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { sent: number; failed: number };
+        if (data.sent > 0) {
+          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} about Round ${round} pairings`);
+        }
+      }
+    } catch {
+      // Silent fail — push is a best-effort enhancement
+    }
+  }, [tournamentId, state.tournamentName]);
+
   // Derived: filtered + sorted player list
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
   const allCountries = Array.from(new Set(standings.map((p) => p.country)));
@@ -799,8 +819,10 @@ export default function Director() {
               {canGenerateNext && (
                 <button
                   onClick={() => {
+                    const nextRound = state.currentRound + 1;
                     generateNextRound();
-                    toast.success(`Round ${state.currentRound + 1} pairings generated!`);
+                    toast.success(`Round ${nextRound} pairings generated!`);
+                    broadcastRoundStart(nextRound);
                   }}
                   className="touch-target flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-[#3D6B47] text-white text-xs font-semibold rounded-xl hover:bg-[#2A4A32] transition-all duration-200 active:scale-95 shadow-md shadow-[#3D6B47]/30"
                 >
@@ -877,7 +899,7 @@ export default function Director() {
 
                   {/* Start button */}
                   <button
-                    onClick={() => { if (canStart) { startTournament(); toast.success("Round 1 pairings generated!"); } }}
+                    onClick={() => { if (canStart) { startTournament(); toast.success("Round 1 pairings generated!"); broadcastRoundStart(1); } }}
                     disabled={!canStart}
                     className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
                       canStart
