@@ -45,6 +45,7 @@ import {
 const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/syykEFmtWqRKgoyE.png";
 const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/JZcOUObQNVIvuVBL.png";
 const KING_FEATURES_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/rFiQUUYtiJzKGXFP.png";
+const KNIGHT_HOW_IT_WORKS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ciEtFaIVMlBsOcwL.png";
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
 function useInView(threshold = 0.15) {
@@ -384,43 +385,63 @@ function HowItWorks() {
   return (
     <section id="how-it-works" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
-        <div className="text-center mb-16">
-          <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
-            Simple Process
-          </p>
-          <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            From zero to tournament
-            <br />
-            in three moves.
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 relative">
-          <div className={`hidden md:block absolute top-12 left-1/3 right-1/3 h-px ${isDark ? "bg-white/10" : "bg-[#EEEED2]"}`} />
-
-          {steps.map((step, i) => (
-            <div
-              key={step.number}
-              className={`relative transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{ transitionDelay: `${i * 120}ms` }}
-            >
-              <div className="card-chess p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
-                    {step.icon}
-                  </div>
-                  <span
-                    className={`text-5xl font-bold ${isDark ? "text-white/10" : "text-[#EEEED2]"}`}
-                    style={{ fontFamily: "'Clash Display', sans-serif" }}
-                  >
-                    {step.number}
-                  </span>
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">{step.title}</h3>
-                <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
-              </div>
+        <div className="grid lg:grid-cols-[2fr_1fr] gap-12 items-center">
+          {/* Steps column */}
+          <div>
+            <div className="mb-12">
+              <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
+                Simple Process
+              </p>
+              <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                From zero to tournament
+                <br />
+                in three moves.
+              </h2>
             </div>
-          ))}
+            <div className="grid md:grid-cols-3 gap-6 relative">
+              <div className={`hidden md:block absolute top-12 left-1/3 right-1/3 h-px ${isDark ? "bg-white/10" : "bg-[#EEEED2]"}`} />
+              {steps.map((step, i) => (
+                <div
+                  key={step.number}
+                  className={`relative transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                  style={{ transitionDelay: `${i * 120}ms` }}
+                >
+                  <div className="card-chess p-6">
+                    <div className="flex items-start justify-between mb-5">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
+                        {step.icon}
+                      </div>
+                      <span
+                        className={`text-4xl font-bold ${isDark ? "text-white/10" : "text-[#EEEED2]"}`}
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        {step.number}
+                      </span>
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Knight illustration column */}
+          <div
+            className={`transition-all duration-700 delay-300 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+          >
+            <div className="relative">
+              <div
+                className="absolute inset-0 rounded-2xl"
+                style={{ background: isDark ? "oklch(0.18 0.06 145 / 0.5)" : "oklch(0.44 0.12 145 / 0.06)", borderRadius: "1rem" }}
+              />
+              <img
+                src={KNIGHT_HOW_IT_WORKS_IMG}
+                alt="OTB Chess — fierce chess knight woodcut illustration"
+                className="w-full h-auto rounded-2xl"
+                style={{ boxShadow: isDark ? "0 8px 40px oklch(0.18 0.06 145 / 0.8)" : "0 8px 40px oklch(0.44 0.12 145 / 0.15)" }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>
