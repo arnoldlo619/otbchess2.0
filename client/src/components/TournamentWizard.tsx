@@ -26,7 +26,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
-import { registerTournament, makeSlug } from "@/lib/tournamentRegistry";
+import { registerTournament, makeSlug, generateDirectorCode, grantDirectorSession } from "@/lib/tournamentRegistry";
 import {
   X,
   Crown,
@@ -45,6 +45,9 @@ import {
   BarChart3,
   Zap,
   ArrowRight,
+  Shield,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -62,6 +65,8 @@ interface WizardData {
   timePreset: string;
   ratingSystem: "chess.com" | "lichess" | "fide" | "unrated";
   inviteCode: string;
+  /** Private director access code shown only to the tournament creator. */
+  directorCode: string;
 }
 
 const DEFAULT_DATA: WizardData = {
@@ -77,6 +82,7 @@ const DEFAULT_DATA: WizardData = {
   timePreset: "10+5",
   ratingSystem: "chess.com",
   inviteCode: "",
+  directorCode: "",
 };
 
 // ─── Step metadata ────────────────────────────────────────────────────────────
@@ -638,8 +644,7 @@ function StepFormat({
           </div>
         </div>
       </div>
-
-      {/* Hint */}
+      {/* Format summary hint */}
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
         style={{
@@ -659,7 +664,6 @@ function StepFormat({
     </div>
   );
 }
-
 // ─── Step 3: Time Control ─────────────────────────────────────────────────────
 
 const TIME_PRESETS = [
@@ -965,6 +969,8 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
 
 function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
+  const [dirCopied, setDirCopied] = useState(false);
+  const [showDirCode, setShowDirCode] = useState(false);
   const inviteUrl = `https://otbchess.app/join/${data.inviteCode}`;
 
   const copyLink = () => {
@@ -972,6 +978,12 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
     setCopied(true);
     toast.success("Invite link copied!");
     setTimeout(() => setCopied(false), 2000);
+  };
+  const copyDirCode = () => {
+    navigator.clipboard.writeText(data.directorCode);
+    setDirCopied(true);
+    toast.success("Director code copied!");
+    setTimeout(() => setDirCopied(false), 2000);
   };
 
   const formatLabel =
@@ -1041,6 +1053,72 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
       {/* QR */}
       <AnimatedQR inviteUrl={inviteUrl} isDark={isDark} />
 
+      {/* Director Code */}
+      <div
+        className="rounded-2xl border p-5 space-y-3"
+        style={{
+          background: isDark ? "rgba(245,158,11,0.08)" : "#FFFBEB",
+          border: `2px solid ${isDark ? "rgba(245,158,11,0.25)" : "#FDE68A"}`,
+        }}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <Shield className="w-4 h-4" style={{ color: isDark ? "#FBBF24" : "#D97706" }} strokeWidth={1.8} />
+          <span className="text-sm font-bold" style={{ color: isDark ? "#FBBF24" : "#92400E" }}>
+            Your Director Code
+          </span>
+          <span
+            className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
+            style={{
+              background: isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7",
+              color: isDark ? "#FBBF24" : "#92400E",
+            }}
+          >
+            Private
+          </span>
+        </div>
+        <p className="text-xs leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#78350F" }}>
+          Use this code to access the Director Dashboard from any device. Keep it private — anyone with this code can manage your tournament.
+        </p>
+        <div className="flex gap-2 items-center">
+          <div
+            className="flex-1 flex items-center gap-2 rounded-xl border font-mono font-bold tracking-widest text-base"
+            style={{
+              padding: "12px 16px",
+              background: isDark ? "rgba(0,0,0,0.25)" : "#FFFFFF",
+              border: `1.5px solid ${isDark ? "rgba(245,158,11,0.20)" : "#FDE68A"}`,
+              color: isDark ? "#FBBF24" : "#92400E",
+              letterSpacing: "0.15em",
+            }}
+          >
+            <span>{showDirCode ? data.directorCode : data.directorCode.replace(/[A-Z0-9]/g, "•")}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDirCode((v) => !v)}
+            className="rounded-xl p-3 transition-colors"
+            style={{
+              background: isDark ? "rgba(245,158,11,0.12)" : "#FEF3C7",
+              color: isDark ? "#FBBF24" : "#D97706",
+            }}
+            title={showDirCode ? "Hide code" : "Reveal code"}
+          >
+            {showDirCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={copyDirCode}
+            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            style={{
+              padding: "12px 16px",
+              background: dirCopied ? "#D97706" : isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7",
+              color: dirCopied ? "#FFFFFF" : isDark ? "#FBBF24" : "#92400E",
+            }}
+          >
+            {dirCopied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
+            {dirCopied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+      </div>
       {/* Hint */}
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
@@ -1077,6 +1155,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const [data, setData] = useState<WizardData>({
     ...DEFAULT_DATA,
     inviteCode: nanoid(8).toUpperCase(),
+    directorCode: generateDirectorCode(),
   });
   const { fireConfetti } = useConfetti();
   const [, navigate] = useLocation();
@@ -1088,7 +1167,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
     if (open) {
       setStep(0);
       setDirection(1);
-      setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase() });
+      setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase(), directorCode: generateDirectorCode() });
     }
   }, [open]);
 
@@ -1108,6 +1187,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       registerTournament({
         id: slug,
         inviteCode: data.inviteCode,
+        directorCode: data.directorCode,
         name: data.name,
         venue: data.venue,
         date: data.date,
@@ -1121,6 +1201,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         ratingSystem: data.ratingSystem,
         createdAt: new Date().toISOString(),
       });
+      grantDirectorSession(slug);
       onClose();
       navigate(`/tournament/${slug}/manage`);
     }

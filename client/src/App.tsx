@@ -11,6 +11,7 @@ import PrintPage from "./pages/Print";
 import JoinPage from "./pages/Join";
 import Archive from "./pages/Archive";
 import ReportPage from "./pages/Report";
+import DirectorAccessPage from "./pages/DirectorAccess";
 
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
       <Route path={"/join"} component={JoinPage} />
       <Route path={"/tournaments"} component={Archive} />
       <Route path={"/tournament/:id/report"} component={ReportPage} />
+      <Route path={"/director-access"} component={DirectorAccessPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -273,3 +273,14 @@
 - [x] Show "Already Registered" banner when a matching entry is found (name, rating, tournament name, "Not me" escape hatch)
 - [x] pruneOldRegistrations(90) called on mount to keep localStorage tidy
 - [x] Unit tests for registrationStore (14 tests passing)
+
+## Director Code System
+
+- [x] Generate a unique director code (DIR-XXXXXX format) when a tournament is created and store it in TournamentConfig
+- [x] Add resolveByDirectorCode() helper to tournamentRegistry (case-insensitive)
+- [x] Add /director-access route — clean code entry page with amber shield icon
+- [x] Validate director code, resolve tournament, grant director session, redirect to /tournament/:id/manage
+- [x] grantDirectorSession() / hasDirectorSession() / clearDirectorSession() helpers
+- [x] Auto-grant director session after tournament creation in wizard
+- [x] Surface director code in wizard Share step (amber card, Private badge, reveal/copy toggle)
+- [x] Unit tests for director code system (10 tests passing)
