@@ -254,3 +254,13 @@
 - [x] Remove hero mascot illustration and simplify hero to centered text layout with stat chips
 - [x] Remove pawn mascot from CTA section and simplify to centered text layout
 - [x] Replace Showcase illustration with clean stat card grid on chess-board background
+
+## Join Tournament Flow
+
+- [x] Add "Join Tournament" button to nav bar (desktop + mobile menu) and hero section
+- [x] Ensure /join route is accessible and linked from nav
+- [x] Join page step 1: tournament code entry (pre-filled from QR code /join/:code URL)
+- [x] Join page step 2: chess.com username entry with live ELO lookup
+- [x] Join page step 3: confirmation / success screen with NotifyBell
+- [x] QR code scanner: camera overlay with jsQR decoding, extracts code from /join/:code URL
+- [x] Mobile-optimised layout for the full join flow

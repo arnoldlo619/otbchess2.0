@@ -16,6 +16,7 @@
 import { useState, useRef, useEffect } from "react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { NotifyBell } from "@/components/NotifyBell";
+import { QrScanner } from "@/components/QrScanner";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useLichessProfile } from "@/hooks/useLichessProfile";
@@ -49,6 +50,8 @@ import {
   ChevronLeft,
   Phone,
   Mail,
+  QrCode,
+  Camera,
 } from "lucide-react";
 
 // --- Types --------------------------------------------------------------------
@@ -273,6 +276,7 @@ export default function JoinPage() {
   const [stepKey, setStepKey] = useState(0); // force re-mount for animation
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -461,6 +465,35 @@ export default function JoinPage() {
                 </h1>
                 <p className={`text-sm mt-1.5 leading-relaxed ${textMuted}`}>
                   Enter the code from your host<br />or scan their QR code
+
+              {/* QR Scan button */}
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-dashed transition-all active:scale-97 ${
+                  isDark
+                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/06"
+                    : "border-[#3D6B47]/25 text-[#3D6B47] hover:bg-[#3D6B47]/04"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
+                }`}>
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold">Scan QR Code</p>
+                  <p className={`text-xs ${textMuted}`}>Point camera at host's QR code</p>
+                </div>
+                <QrCode className="w-4 h-4 ml-auto opacity-50" />
+              </button>
+
+              <div className={`flex items-center gap-3 ${textMuted}`}>
+                <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                <span className="text-xs font-medium">or enter manually</span>
+                <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+              </div>
+
                 </p>
               </div>
 
@@ -912,6 +945,19 @@ export default function JoinPage() {
       </div>
 
       {/* -- Social share sheet ------------------------------------------------ */}
+      {/* -- QR Scanner overlay ------------------------------------------------ */}
+      {showScanner && (
+        <QrScanner
+          isDark={isDark}
+          onClose={() => setShowScanner(false)}
+          onScan={(code) => {
+            setTournamentCode(code);
+            setShowScanner(false);
+            setError("");
+          }}
+        />
+      )}
+
       {showShare && profile && (
         <ShareSheet
           profile={profile}

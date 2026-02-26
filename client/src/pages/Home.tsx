@@ -193,6 +193,15 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           >
             Sign In
           </button>
+          <Link href="/join">
+            <span className={`text-sm font-semibold px-4 py-2 rounded-md border transition-all duration-200 cursor-pointer ${
+              isDark
+                ? "border-white/20 text-white/80 hover:bg-white/08"
+                : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/06"
+            }`}>
+              Join Tournament
+            </span>
+          </Link>
           <button
             onClick={onCreateTournament}
             className="btn-chess-primary text-sm"
@@ -227,9 +236,21 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
               {link.label}
             </button>
           ))}
+          <Link href="/join">
+            <span
+              className={`block w-full text-center py-3 text-sm font-semibold rounded-md border mt-3 ${
+                isDark
+                  ? "border-white/20 text-white/80"
+                  : "border-[#3D6B47]/30 text-[#3D6B47]"
+              }`}
+              onClick={() => setMobileOpen(false)}
+            >
+              Join Tournament
+            </span>
+          </Link>
           <button
             onClick={onCreateTournament}
-            className="btn-chess-primary w-full mt-4 text-sm"
+            className="btn-chess-primary w-full mt-3 text-sm"
           >
             Start Tournament
           </button>
@@ -295,15 +316,28 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               onClick={onCreateTournament}
               className="btn-chess-primary flex items-center justify-center gap-2"
             >
-              Create Tournament
+              Start a Tournament
               <ArrowRight className="w-4 h-4" />
             </button>
             <Link
-              href="/tournament/otb-demo-2026"
+              href="/join"
               className="btn-chess-secondary flex items-center justify-center gap-2"
             >
-              View Live Demo
+              Join a Tournament
               <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div
+            className="opacity-0-init animate-fade-in-up mt-3"
+            style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
+          >
+            <Link
+              href="/tournament/otb-demo-2026"
+              className={`text-sm font-medium underline underline-offset-4 ${
+                isDark ? "text-white/50 hover:text-white/80" : "text-[#4B5563] hover:text-[#3D6B47]"
+              }`}
+            >
+              View live demo →
             </Link>
           </div>
 
