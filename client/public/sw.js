@@ -10,7 +10,7 @@
  *    so the SPA still loads offline.
  */
 
-const CACHE_VERSION = "otb-chess-v1";
+const CACHE_VERSION = "otb-chess-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -50,6 +50,15 @@ self.addEventListener("fetch", (event) => {
 
   // Skip non-GET requests and browser-extension requests
   if (request.method !== "GET" || !url.protocol.startsWith("http")) return;
+
+  // Skip Vite dev server internals — these change on every restart and must never be cached.
+  // In production (built assets), these paths don't exist so this guard is harmless.
+  if (
+    url.pathname.startsWith("/@") ||
+    url.pathname.startsWith("/node_modules/") ||
+    url.pathname.startsWith("/__manus__") ||
+    url.search.includes("v=")
+  ) return;
 
   // API requests: Network-First with timeout fallback
   if (url.pathname.startsWith("/api/")) {
