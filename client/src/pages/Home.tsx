@@ -42,11 +42,7 @@ import {
 } from "lucide-react";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
-const HERO_ILLUSTRATION = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/syykEFmtWqRKgoyE.png";
-const KINGS_QUEENS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/JZcOUObQNVIvuVBL.png";
-const KING_FEATURES_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/MAQjbVVdkwkXwUFi.png";
-const KNIGHT_HOW_IT_WORKS_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/rVvlZfiptmIXsYLB.png";
-const PAWN_CTA_IMG = "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/IMRHwCuquwDNLjre.png";
+// (mascot illustrations removed — sections use clean text-only layouts)
 
 // ─── Intersection Observer Hook ─────────────────────────────────────────────
 function useInView(threshold = 0.15) {
@@ -253,126 +249,111 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
-      {/* Radial glow */}
+      {/* Subtle radial glow */}
       <div
-        className="absolute top-0 right-0 w-[60vw] h-[80vh] pointer-events-none"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[60vh] pointer-events-none"
         style={{
           background: isDark
-            ? "radial-gradient(ellipse at 80% 20%, oklch(0.44 0.12 145 / 0.18) 0%, transparent 65%)"
-            : "radial-gradient(ellipse at 80% 20%, oklch(0.55 0.13 145 / 0.08) 0%, transparent 65%)",
+            ? "radial-gradient(ellipse at 50% 0%, oklch(0.44 0.12 145 / 0.14) 0%, transparent 70%)"
+            : "radial-gradient(ellipse at 50% 0%, oklch(0.55 0.13 145 / 0.07) 0%, transparent 70%)",
         }}
       />
 
       <div className="container relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-4rem)]">
-          {/* Left — Copy */}
-          <div className="py-16 lg:py-0">
-            <div className="opacity-0-init animate-fade-in-up" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
-              <span className={`inline-flex items-center text-xs font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full border mb-6 ${
-                isDark ? "border-white/20 text-white/70 bg-white/05" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06"
-              }`}>
-                For Chess Clubs & Communities
-              </span>
+        <div className="max-w-3xl mx-auto text-center py-24 lg:py-32">
+          <div className="opacity-0-init animate-fade-in-up" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
+            <span className={`inline-flex items-center text-xs font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full border mb-8 ${
+              isDark ? "border-white/20 text-white/70 bg-white/05" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06"
+            }`}>
+              For Chess Clubs & Communities
+            </span>
+          </div>
+
+          <h1
+            className="opacity-0-init animate-fade-in-up text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight mb-6 text-foreground"
+            style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
+          >
+            Chess Tournaments,
+            <br />
+            <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}>
+              Over The Board.
+            </span>
+          </h1>
+
+          <p
+            className="opacity-0-init animate-fade-in-up text-lg leading-relaxed mb-10 max-w-xl mx-auto text-muted-foreground"
+            style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
+          >
+            Set up a rated in-person tournament in minutes. Players sign up with their chess.com username — we pull their ELO and generate optimal pairings automatically.
+          </p>
+
+          <div
+            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center"
+            style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
+          >
+            <button
+              onClick={onCreateTournament}
+              className="btn-chess-primary flex items-center justify-center gap-2"
+            >
+              Create Tournament
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <Link
+              href="/tournament/otb-demo-2026"
+              className="btn-chess-secondary flex items-center justify-center gap-2"
+            >
+              View Live Demo
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Social proof */}
+          <div
+            className="opacity-0-init animate-fade-in-up mt-10 flex items-center justify-center gap-6"
+            style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}
+          >
+            <div className="flex -space-x-2">
+              {["#3D6B47", "#769656", "#2A4A32", "#5A8A6A"].map((c, i) => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: c }}>
+                  {["M", "A", "K", "R"][i]}
+                </div>
+              ))}
             </div>
-
-            <h1
-              className="opacity-0-init animate-fade-in-up text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight mb-6 text-foreground"
-              style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
-            >
-              Chess Tournaments,
-              <br />
-              <span className={isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}>
-                Over The Board.
-              </span>
-            </h1>
-
-            <p
-              className="opacity-0-init animate-fade-in-up text-lg leading-relaxed mb-8 max-w-lg text-muted-foreground"
-              style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
-            >
-              Set up a rated in-person tournament in minutes. Players sign up with their chess.com username — we pull their ELO and generate optimal pairings automatically.
-            </p>
-
-            <div
-              className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3"
-              style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
-            >
-              <button
-                onClick={onCreateTournament}
-                className="btn-chess-primary flex items-center justify-center gap-2"
-              >
-                Create Tournament
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <Link
-                href="/tournament/otb-demo-2026"
-                className="btn-chess-secondary flex items-center justify-center gap-2"
-              >
-                View Live Demo
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Social proof */}
-            <div
-              className="opacity-0-init animate-fade-in-up mt-10 flex items-center gap-6"
-              style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}
-            >
-              <div className="flex -space-x-2">
-                {["#3D6B47", "#769656", "#2A4A32", "#5A8A6A"].map((c, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: c }}>
-                    {["M", "A", "K", "R"][i]}
-                  </div>
+            <div>
+              <div className="flex items-center gap-1 mb-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`w-3.5 h-3.5 ${isDark ? "fill-[oklch(0.65_0.14_145)] text-[oklch(0.65_0.14_145)]" : "fill-[#3D6B47] text-[#3D6B47]"}`} />
                 ))}
               </div>
-              <div>
-                <div className="flex items-center gap-1 mb-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-3.5 h-3.5 ${isDark ? "fill-[oklch(0.65_0.14_145)] text-[oklch(0.65_0.14_145)]" : "fill-[#3D6B47] text-[#3D6B47]"}`} />
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Trusted by <strong className="text-foreground">80+ chess clubs</strong> worldwide
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Trusted by <strong className="text-foreground">80+ chess clubs</strong> worldwide
+              </p>
             </div>
           </div>
 
-          {/* Right — Illustration */}
-          <div className="opacity-0-init animate-fade-in relative" style={{ animationDelay: "0.3s", animationFillMode: "forwards" }}>
-            <div className="relative animate-glow-pulse rounded-2xl">
-              {/* Floating stat cards */}
-              <div className={`absolute top-8 -left-4 z-10 rounded-xl shadow-lg border px-4 py-3 animate-fade-in-up ${isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#EEEED2]"}`} style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}>
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10" : "bg-[#3D6B47]/10"}`}>
-                    <Zap className={`w-4 h-4 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">Setup Time</p>
-                    <p className="text-sm font-bold text-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{"< 3 min"}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`absolute bottom-12 -right-2 z-10 rounded-xl shadow-lg border px-4 py-3 animate-fade-in-up ${isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#EEEED2]"}`} style={{ animationDelay: "0.8s", animationFillMode: "forwards" }}>
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10" : "bg-[#3D6B47]/10"}`}>
-                    <BarChart3 className={`w-4 h-4 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">ELO Accuracy</p>
-                    <p className="text-sm font-bold text-foreground" style={{ fontFamily: "'JetBrains Mono', monospace" }}>99.9%</p>
-                  </div>
-                </div>
-              </div>
-
-              <img
-                src={HERO_ILLUSTRATION}
-                alt="Chess tournament illustration"
-                className="w-full h-auto rounded-2xl animate-float illus-hover"
-                style={{ maxHeight: "580px", objectFit: "cover", objectPosition: "left center" }}
-              />
-            </div>
+          {/* Quick-stat chips */}
+          <div
+            className="opacity-0-init animate-fade-in-up mt-14 flex flex-wrap justify-center gap-3"
+            style={{ animationDelay: "0.65s", animationFillMode: "forwards" }}
+          >
+            {[
+              { icon: <Zap className="w-3.5 h-3.5" />, label: "Setup in < 3 min" },
+              { icon: <BarChart3 className="w-3.5 h-3.5" />, label: "99.9% ELO accuracy" },
+              { icon: <Shield className="w-3.5 h-3.5" />, label: "Swiss & Round Robin" },
+              { icon: <Globe className="w-3.5 h-3.5" />, label: "80+ clubs worldwide" },
+            ].map(({ icon, label }) => (
+              <span
+                key={label}
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border ${
+                  isDark
+                    ? "border-white/15 text-white/60 bg-white/04"
+                    : "border-[#3D6B47]/20 text-[#3D6B47]/80 bg-[#3D6B47]/05"
+                }`}
+              >
+                {icon}
+                {label}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -579,16 +560,44 @@ function Showcase() {
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
-            <div className="relative">
-              <div
-                className="absolute inset-0 rounded-2xl"
-                style={{ background: "linear-gradient(135deg, oklch(0.44 0.12 145 / 0.12) 0%, transparent 60%)" }}
-              />
-              <img
-                src={KINGS_QUEENS_IMG}
-                alt="OTB Chess — Kings and Queens editorial illustration"
-                className="w-full h-auto rounded-2xl shadow-xl illus-hover"
-              />
+            <div
+              className={`relative rounded-2xl overflow-hidden shadow-xl ${
+                isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-[#F2F7F3]"
+              }`}
+              style={{ minHeight: "360px" }}
+            >
+              {/* Decorative chess board grid */}
+              <div className="absolute inset-0 chess-board-bg opacity-30" />
+              {/* Centered stat block */}
+              <div className="relative z-10 flex flex-col items-center justify-center h-full min-h-[360px] gap-8 p-10">
+                <div className="grid grid-cols-2 gap-4 w-full max-w-xs">
+                  {[
+                    { label: "Tournaments", value: "300+" },
+                    { label: "Players", value: "550+" },
+                    { label: "Chess Clubs", value: "80+" },
+                    { label: "Avg Rating", value: "4.9★" },
+                  ].map(({ label, value }) => (
+                    <div
+                      key={label}
+                      className={`rounded-xl p-4 text-center border ${
+                        isDark
+                          ? "bg-[oklch(0.28_0.07_145)] border-white/10"
+                          : "bg-white border-[#3D6B47]/12 shadow-sm"
+                      }`}
+                    >
+                      <p
+                        className={`text-2xl font-bold mb-1 ${
+                          isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"
+                        }`}
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        {value}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-medium">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -836,64 +845,44 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-24 bg-[#3D6B47] relative overflow-hidden" ref={ref}>
+    <section className="py-28 bg-[#3D6B47] relative overflow-hidden" ref={ref}>
       <div className="absolute inset-0 chess-board-bg opacity-10 pointer-events-none" />
-
-      {/* Radial glow behind pawn */}
       <div
-        className="absolute bottom-0 right-0 w-[50vw] h-[100%] pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at 85% 80%, oklch(0.55 0.18 145 / 0.25) 0%, transparent 60%)",
+          background: "radial-gradient(ellipse at 50% 50%, oklch(0.55 0.18 145 / 0.18) 0%, transparent 65%)",
         }}
       />
 
       <div className="container relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-          {/* Left — Copy */}
-          <div
-            className={`flex-1 text-center lg:text-left ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-            style={{ animationFillMode: "forwards" }}
+        <div
+          className={`max-w-2xl mx-auto text-center ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
+          style={{ animationFillMode: "forwards" }}
+        >
+          <h2
+            className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-5"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            <h2
-              className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-4"
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            Your next tournament
+            <br />
+            starts here.
+          </h2>
+          <p className="text-white/75 text-lg mb-10">
+            Free for clubs with up to 20 players. No credit card required.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={onCreateTournament}
+              className="bg-white text-[#3D6B47] font-semibold text-sm px-8 py-3 rounded-md hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
             >
-              Your next tournament
-              <br />
-              starts here.
-            </h2>
-            <p className="text-white/75 text-lg mb-10 max-w-md mx-auto lg:mx-0">
-              Free for clubs with up to 20 players. No credit card required.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button
-                onClick={onCreateTournament}
-                className="bg-white text-[#3D6B47] font-semibold text-sm px-8 py-3 rounded-md hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                Create Free Tournament
-              </button>
-              <Link
-                href="/tournament/otb-demo-2026"
-                className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200 inline-block text-center"
-              >
-                View Live Demo
-              </Link>
-            </div>
-          </div>
-
-          {/* Right — Pawn mascot */}
-          <div
-            className={`flex-shrink-0 w-56 lg:w-72 xl:w-80 select-none ${
-              inView ? "animate-fade-up-soft" : "opacity-0"
-            }`}
-            style={{ animationDelay: "150ms", animationFillMode: "forwards" }}
-          >
-            <img
-              src={PAWN_CTA_IMG}
-              alt="OTB Chess pawn mascot — double-fist flex"
-              className="w-full h-auto object-contain drop-shadow-[0_0_32px_rgba(100,255,100,0.35)] hover:scale-105 transition-transform duration-500"
-              draggable={false}
-            />
+              Create Free Tournament
+            </button>
+            <Link
+              href="/tournament/otb-demo-2026"
+              className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200 inline-block text-center"
+            >
+              View Live Demo
+            </Link>
           </div>
         </div>
       </div>

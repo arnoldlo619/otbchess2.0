@@ -241,3 +241,16 @@
 - [x] broadcastResultsPosted() helper in Director.tsx
 - [x] Auto-trigger broadcast when allResultsIn transitions to true (useRef edge-detection)
 - [x] Unit tests for results notification payload and endpoint (5 new tests)
+
+## Subscription Cleanup Job
+
+- [ ] purgeExpiredSubscriptions() function — delete rows where created_at < NOW() - 90 days
+- [ ] Run on server startup (non-blocking)
+- [ ] Schedule to re-run every 24 hours via setInterval
+- [ ] Unit tests for expiry logic
+
+## Visual Simplification
+
+- [x] Remove hero mascot illustration and simplify hero to centered text layout with stat chips
+- [x] Remove pawn mascot from CTA section and simplify to centered text layout
+- [x] Replace Showcase illustration with clean stat card grid on chess-board background
