@@ -264,3 +264,12 @@
 - [x] Join page step 3: confirmation / success screen with NotifyBell
 - [x] QR code scanner: camera overlay with jsQR decoding, extracts code from /join/:code URL
 - [x] Mobile-optimised layout for the full join flow
+
+## Already-Registered Detection (Join Page)
+
+- [x] Create registrationStore helper — read/write/clear localStorage key `otb_registrations`
+- [x] On Join success step: persist { tournamentId, username, name, rating, tournamentName, registeredAt } to localStorage
+- [x] On Join page load with a tournament code: check localStorage before rendering the form
+- [x] Show "Already Registered" banner when a matching entry is found (name, rating, tournament name, "Not me" escape hatch)
+- [x] pruneOldRegistrations(90) called on mount to keep localStorage tidy
+- [x] Unit tests for registrationStore (14 tests passing)

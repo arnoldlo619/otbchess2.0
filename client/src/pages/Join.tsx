@@ -28,6 +28,13 @@ import type { Player } from "@/lib/tournamentData";
 import { resolveTournament, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { addPlayerToTournament } from "@/lib/directorState";
 import {
+  saveRegistration,
+  getRegistration,
+  clearRegistration,
+  pruneOldRegistrations,
+  type RegistrationEntry,
+} from "@/lib/registrationStore";
+import {
   Crown,
   ChevronRight,
   CheckCircle2,
@@ -280,6 +287,20 @@ export default function JoinPage() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Already-registered detection — check localStorage on mount and whenever the code changes
+  const [existingReg, setExistingReg] = useState<RegistrationEntry | null>(null);
+  useEffect(() => {
+    pruneOldRegistrations(90);
+  }, []);
+  useEffect(() => {
+    if (tournamentCode) {
+      const reg = getRegistration(tournamentCode);
+      setExistingReg(reg);
+    } else {
+      setExistingReg(null);
+    }
+  }, [tournamentCode]);
+
   useEffect(() => {
     if (step === "username") setTimeout(() => usernameRef.current?.focus(), 350);
     // Scroll to top of content on step change
@@ -370,6 +391,18 @@ export default function JoinPage() {
         addPlayerToTournament(config.id, player);
       }
     }
+    // Persist registration to localStorage for duplicate detection
+    if (profile) {
+      saveRegistration({
+        tournamentId: tournamentCode,
+        username: profile.username,
+        name: profile.name ?? profile.username,
+        rating: profile.elo ?? profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
+        tournamentName: tournamentDisplay.name,
+        registeredAt: new Date().toISOString(),
+      });
+      setExistingReg(getRegistration(tournamentCode));
+    }
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
     advanceStep("success");
@@ -454,6 +487,50 @@ export default function JoinPage() {
           {/* == STEP 1 - Tournament code ====================================== */}
           {step === "code" && (
             <div key={`step1-${stepKey}`} className="animate-spring-in space-y-5">
+              {/* Already-registered banner — shown when a prior registration is found */}
+              {existingReg && (
+                <div className={`rounded-2xl border p-4 ${
+                  isDark
+                    ? "bg-[#3D6B47]/15 border-[#4CAF50]/25"
+                    : "bg-[#3D6B47]/06 border-[#3D6B47]/18"
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/12"
+                    }`}>
+                      <CheckCircle2 className={`w-5 h-5 ${
+                        isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                      }`} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-bold ${
+                        isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                      }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                        Already registered
+                      </p>
+                      <p className={`text-xs mt-0.5 leading-relaxed ${
+                        isDark ? "text-white/55" : "text-gray-500"
+                      }`}>
+                        <span className="font-semibold">{existingReg.name}</span>
+                        {" "}({existingReg.rating} ELO) is registered for{" "}
+                        <span className="font-semibold">{existingReg.tournamentName}</span>.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          clearRegistration(existingReg.tournamentId, existingReg.username);
+                          setExistingReg(null);
+                        }}
+                        className={`mt-2 text-xs font-medium underline underline-offset-2 ${
+                          isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      >
+                        Not me — register again
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Hero */}
               <div className="text-center pt-4 pb-2">
                 <div className="w-16 h-16 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-[#3D6B47]/25 animate-pulse-ring">
