@@ -50,6 +50,7 @@ import {
   Eye,
   EyeOff,
   Bolt,
+  ChevronDown,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -605,6 +606,19 @@ function QuickstartForm({
   onChange: (p: Partial<WizardData>) => void;
   isDark: boolean;
 }) {
+  const [showRatingPicker, setShowRatingPicker] = useState(false);
+
+  const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
+    { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
+    { value: "lichess",   label: "Lichess",   sub: "Lichess rating" },
+    { value: "fide",      label: "FIDE",      sub: "Classical rating" },
+    { value: "unrated",   label: "Unrated",   sub: "No ELO required" },
+  ];
+
+  // Display label for the currently selected rating system
+  const activeRating = ratingOptions.find((o) => o.value === data.ratingSystem);
+  const isNonDefault = data.ratingSystem !== "chess.com";
+
   return (
     <div className="space-y-7">
       {/* Tournament name */}
@@ -665,17 +679,73 @@ function QuickstartForm({
             ["Rounds", "5"],
             ["Max Players", "16"],
             ["Time Control", "10+5 Rapid"],
-            ["Rating", "chess.com ELO"],
+            ["Rating", activeRating?.label ?? "chess.com"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-center justify-between gap-2">
               <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{label}</span>
-              <span className="text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{value}</span>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: label === "Rating" && isNonDefault ? T.green : isDark ? T.dText : T.lText }}
+              >
+                {value}
+              </span>
             </div>
           ))}
         </div>
         <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
           You can adjust format, rounds, and time control from the Director Dashboard after creating the tournament.
         </p>
+      </div>
+
+      {/* Optional rating system toggle */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowRatingPicker((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          style={{ color: isNonDefault ? T.green : isDark ? T.dMuted : T.lMuted }}
+        >
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform duration-200"
+            style={{ transform: showRatingPicker ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+          {isNonDefault
+            ? `Rating: ${activeRating?.label} · Change`
+            : "Not using chess.com? Change rating system"}
+        </button>
+
+        {showRatingPicker && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {ratingOptions.map((opt) => {
+              const active = data.ratingSystem === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onChange({ ratingSystem: opt.value });
+                    // Collapse picker after selection (unless already collapsed)
+                    if (active) setShowRatingPicker(false);
+                  }}
+                  className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
+                  style={{
+                    padding: "10px 14px",
+                    background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                    border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                    boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                  }}
+                >
+                  <span className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                    {opt.label}
+                  </span>
+                  <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                    {opt.sub}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
