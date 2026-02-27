@@ -488,15 +488,19 @@ function UserTournamentCard({
             <BarChart2 className="w-3.5 h-3.5" /> Manage
           </button>
         </Link>
-        {state?.status === "completed" && (
-          <Link href={`/tournament/${config.id}/report`} className="flex-1">
-            <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-              isDark ? "bg-amber-500/15 text-amber-400 hover:bg-amber-500/25" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
-            }`}>
-              <Trophy className="w-3.5 h-3.5" /> Player Reports
-            </button>
-          </Link>
-        )}
+        <Link href={`/tournament/${config.id}/report`} className="flex-1">
+          <button className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+            state?.status === "completed"
+              ? isDark
+                ? "bg-[#3D6B47]/20 text-[#7ec89a] hover:bg-[#3D6B47]/35"
+                : "bg-[#3D6B47]/10 border border-[#3D6B47]/30 text-[#2d5236] hover:bg-[#3D6B47]/20"
+              : isDark
+                ? "bg-white/08 text-white/60 hover:bg-white/12"
+                : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100"
+          }`}>
+            <Trophy className="w-3.5 h-3.5" /> View Report
+          </button>
+        </Link>
       </div>
     </div>
   );

@@ -328,3 +328,7 @@
 - [x] Search + format filter + sort bar (date / players / ELO)
 - [x] Route wired in App.tsx, Archive link in Home.tsx nav (desktop + mobile)
 - [x] Unit tests for archive data integrity and listTournaments helper (12 tests passing)
+
+## Archive → Report Link
+
+- [x] "View Report" button on UserTournamentCard links to /tournament/:id/report for all tournaments (green accent for completed, muted for in-progress)
