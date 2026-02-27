@@ -292,31 +292,39 @@ function BoardCard({
       <div
         className={`px-4 pb-4 pt-1 flex gap-2 ${isComplete ? "opacity-60" : ""}`}
       >
-        {RESULT_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => {
-              onResult(game.id, opt.value);
-              toast.success(`Board ${game.board}: ${opt.label} recorded`);
-            }}
-            className={`flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-95 ${
-              game.result === opt.value
-                ? opt.value === "1-0"
-                  ? "bg-emerald-500 border-emerald-500 text-white"
-                  : opt.value === "0-1"
-                  ? "bg-red-500 border-red-500 text-white"
-                  : "bg-blue-500 border-blue-500 text-white"
-                : isDark
-                ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
-                : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            }`}
-          >
-            {opt.short}
-          </button>
-        ))}
+        {RESULT_OPTIONS.map((opt) => {
+          const isSelected = game.result === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => {
+                // Haptic feedback — short pulse on record, double-pulse on re-select
+                if (navigator.vibrate) {
+                  navigator.vibrate(isSelected ? [30, 20, 30] : 40);
+                }
+                onResult(game.id, opt.value);
+                toast.success(`Board ${game.board}: ${opt.label} recorded`);
+              }}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-95 ${
+                isSelected
+                  ? opt.value === "1-0"
+                    ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-[1.03]"
+                    : opt.value === "0-1"
+                    ? "bg-red-500 border-red-500 text-white shadow-md shadow-red-500/30 scale-[1.03]"
+                    : "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/30 scale-[1.03]"
+                  : isDark
+                  ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                  : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              }`}
+            >
+              {opt.short}
+            </button>
+          );
+        })}
         {isComplete && (
           <button
             onClick={() => {
+              if (navigator.vibrate) navigator.vibrate(20);
               onResult(game.id, "*");
               toast.info(`Board ${game.board}: result cleared`);
             }}

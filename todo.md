@@ -407,3 +407,8 @@
 - [x] Game card player row: add min-w-0 + truncate to prevent name overflow
 - [x] Live clock banner: hide elapsed clock on mobile, keep status text + LiveBadge only
 - [x] PerformanceSection: reduce player name column width on mobile (w-20 instead of w-28)
+
+## Haptic Feedback on Result Entry
+
+- [x] Add vibration API haptic pulse to result entry buttons in BoardCard (Director Dashboard)
+- [x] Add scale-pulse animation on the selected result button after recording (scale-[1.03] + coloured shadow)
