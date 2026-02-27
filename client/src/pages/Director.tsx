@@ -13,7 +13,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
-import { Link, useParams } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,7 +21,7 @@ import { useDirectorState } from "@/lib/directorState";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
-import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import {
   Crown,
   ChevronLeft,
@@ -456,6 +456,22 @@ export default function Director() {
   const isDark = theme === "dark";
   const { id } = useParams<{ id: string }>();
   const tournamentId = id ?? "otb-demo-2026";
+  const [, navigate] = useLocation();
+  const [accessChecked, setAccessChecked] = useState(false);
+
+  // ── Director session guard ───────────────────────────────────────────────
+  // The demo tournament is always accessible so reviewers can explore freely.
+  // All real tournaments require a valid director session stored in localStorage.
+  useEffect(() => {
+    const isDemo = tournamentId === "otb-demo-2026";
+    if (isDemo || hasDirectorSession(tournamentId)) {
+      setAccessChecked(true);
+    } else {
+      // Redirect to director-access with a ?next= param so the host can
+      // re-enter their code and land back here automatically.
+      navigate(`/director-access?next=/tournament/${tournamentId}/manage`);
+    }
+  }, [tournamentId, navigate]);
   const {
     state,
     currentRoundData,
@@ -583,6 +599,28 @@ export default function Director() {
   function toggleSort(key: typeof sortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
+  }
+
+  // Show a minimal loading screen while the session check runs (avoids flash)
+  if (!accessChecked) {
+    return (
+      <div
+        className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+          isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
+        }`}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <Shield className={`w-8 h-8 animate-pulse ${
+            isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+          }`} />
+          <p className={`text-sm font-medium ${
+            isDark ? "text-white/50" : "text-gray-400"
+          }`}>
+            Checking director access…
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

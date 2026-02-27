@@ -301,3 +301,11 @@
 - [x] localStorage dismissal — remember dismiss for 14 days, never show in standalone mode
 - [x] Wire InstallBanner into App.tsx layout (renders on all routes, hidden on md+)
 - [x] Unit tests for usePwaInstall hook logic (12 tests passing)
+
+## Director Session Guard
+
+- [x] Check hasDirectorSession(tournamentId) at the top of Director.tsx
+- [x] Redirect to /director-access?next=/tournament/:id/manage if session is missing
+- [x] Show a brief "Checking director access…" loading screen with animated Shield icon
+- [x] Demo tournament (otb-demo-2026) bypasses the guard for open exploration
+- [x] Unit tests for the session guard logic (10 tests passing)
