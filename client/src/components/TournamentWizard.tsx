@@ -321,6 +321,7 @@ function TextInput({
   autoFocus,
   isDark,
   large,
+  onKeyDown,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -330,6 +331,7 @@ function TextInput({
   autoFocus?: boolean;
   isDark: boolean;
   large?: boolean;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className="relative">
@@ -343,6 +345,7 @@ function TextInput({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
         autoFocus={autoFocus}
         className="w-full rounded-2xl border outline-none transition-all duration-200"
@@ -602,10 +605,13 @@ function QuickstartForm({
   data,
   onChange,
   isDark,
+  onSubmit,
 }: {
   data: WizardData;
   onChange: (p: Partial<WizardData>) => void;
   isDark: boolean;
+  /** Called when the user presses Enter in a text field and the form is valid. */
+  onSubmit?: () => void;
 }) {
   const [showRatingPicker, setShowRatingPicker] = useState(false);
   const [showRoundsPicker, setShowRoundsPicker] = useState(false);
@@ -642,6 +648,14 @@ function QuickstartForm({
   const optimalRounds = recommendedRounds(data.maxPlayers);
   const currentHint = roundsHint(data.maxPlayers, data.rounds);
 
+  // Enter key: submit the form if the name is filled in
+  const handleFieldEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && data.name.trim().length > 0) {
+      e.preventDefault();
+      onSubmit?.();
+    }
+  };
+
   return (
     <div className="space-y-7">
       {/* Tournament name */}
@@ -650,6 +664,7 @@ function QuickstartForm({
         <TextInput
           value={data.name}
           onChange={(v) => onChange({ name: v })}
+          onKeyDown={handleFieldEnter}
           placeholder="e.g. Friday Night Blitz"
           icon={Trophy}
           autoFocus
@@ -664,6 +679,7 @@ function QuickstartForm({
         <TextInput
           value={data.venue}
           onChange={(v) => onChange({ venue: v })}
+          onKeyDown={handleFieldEnter}
           placeholder="e.g. Marshall Chess Club"
           icon={MapPin}
           isDark={isDark}
@@ -676,6 +692,7 @@ function QuickstartForm({
         <TextInput
           value={data.date}
           onChange={(v) => onChange({ date: v })}
+          onKeyDown={handleFieldEnter}
           type="date"
           icon={Calendar}
           isDark={isDark}
@@ -1775,7 +1792,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
             </h2>
 
             {/* Quickstart path */}
-            {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} />}
+            {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} onSubmit={canAdvance ? handleNext : undefined} />}
             {mode === "quickstart" && step === 1 && <StepShare data={data} isDark={isDark} />}
 
             {/* Schedule path */}

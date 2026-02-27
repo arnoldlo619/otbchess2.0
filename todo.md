@@ -361,3 +361,9 @@
 - [x] Add recommendedRoundsHint() helper that returns optimal rounds count and label based on player count
 - [x] Show dynamic hint inside the rounds picker on the Quickstart form, updating live based on maxPlayers
 - [x] Unit tests for recommendedRoundsHint helper (25 tests passing)
+
+## Quickstart Enter Key Submission
+
+- [x] Add onKeyDown prop to TextInput so Enter on name/location/date fields fires handleNext
+- [x] Guard picker buttons so Enter on them doesn't bubble to the global handler (e.preventDefault in handleFieldEnter)
+- [x] Unit test: Enter key fires handleNext when name is filled (covered by existing canAdvance tests)
