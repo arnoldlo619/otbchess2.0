@@ -201,38 +201,35 @@ function BoardCard({
       </div>
 
       {/* Players */}
-      <div className="px-5 py-4 space-y-3">
+      <div className="px-4 py-4 space-y-3">
         {/* White */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-8 h-8 rounded-lg border-2 flex-shrink-0 ${
-                isDark ? "bg-white/90 border-white/30" : "bg-white border-gray-200"
-              }`}
-            />
-            <div>
-              <div className="flex items-center gap-2">
-                <PlayerHoverCard player={white} isDark={isDark}>
-                  <span
-                    className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
-                  >
-                    {white.name}
-                  </span>
-                </PlayerHoverCard>
-                {white.title && (
-                  <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
-                    {white.title}
-                  </span>
-                )}
-                <span className="text-sm">{FLAG_EMOJI[white.country]}</span>
-              </div>
-              <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                {white.elo} ELO · {white.points}pts
-              </span>
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-8 h-8 rounded-lg border-2 flex-shrink-0 ${
+              isDark ? "bg-white/90 border-white/30" : "bg-white border-gray-200"
+            }`}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <PlayerHoverCard player={white} isDark={isDark}>
+                <span
+                  className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors truncate ${isDark ? "text-white" : "text-gray-900"}`}
+                >
+                  {white.name}
+                </span>
+              </PlayerHoverCard>
+              {white.title && (
+                <span className="flex-shrink-0 text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                  {white.title}
+                </span>
+              )}
             </div>
+            <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              {white.elo} ELO · {white.points}pts
+            </span>
           </div>
           <span
-            className={`text-xl font-bold tabular-nums ${
+            className={`flex-shrink-0 text-xl font-bold tabular-nums ${
               game.result === "1-0"
                 ? "text-emerald-500"
                 : game.result === "0-1"
@@ -250,36 +247,33 @@ function BoardCard({
         <div className={`border-t ${isDark ? "border-white/06" : "border-gray-100"}`} />
 
         {/* Black */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-8 h-8 rounded-lg border-2 flex-shrink-0 ${
-                isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-gray-800 border-gray-600"
-              }`}
-            />
-            <div>
-              <div className="flex items-center gap-2">
-                <PlayerHoverCard player={black} isDark={isDark}>
-                  <span
-                    className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
-                  >
-                    {black.name}
-                  </span>
-                </PlayerHoverCard>
-                {black.title && (
-                  <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
-                    {black.title}
-                  </span>
-                )}
-                <span className="text-sm">{FLAG_EMOJI[black.country]}</span>
-              </div>
-              <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                {black.elo} ELO · {black.points}pts
-              </span>
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-8 h-8 rounded-lg border-2 flex-shrink-0 ${
+              isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-gray-800 border-gray-600"
+            }`}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <PlayerHoverCard player={black} isDark={isDark}>
+                <span
+                  className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors truncate ${isDark ? "text-white" : "text-gray-900"}`}
+                >
+                  {black.name}
+                </span>
+              </PlayerHoverCard>
+              {black.title && (
+                <span className="flex-shrink-0 text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                  {black.title}
+                </span>
+              )}
             </div>
+            <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              {black.elo} ELO · {black.points}pts
+            </span>
           </div>
           <span
-            className={`text-xl font-bold tabular-nums ${
+            className={`flex-shrink-0 text-xl font-bold tabular-nums ${
               game.result === "0-1"
                 ? "text-emerald-500"
                 : game.result === "1-0"
@@ -296,7 +290,7 @@ function BoardCard({
 
       {/* Result entry buttons */}
       <div
-        className={`px-5 pb-5 pt-1 flex gap-2.5 ${isComplete ? "opacity-60" : ""}`}
+        className={`px-4 pb-4 pt-1 flex gap-2 ${isComplete ? "opacity-60" : ""}`}
       >
         {RESULT_OPTIONS.map((opt) => (
           <button
@@ -305,7 +299,7 @@ function BoardCard({
               onResult(game.id, opt.value);
               toast.success(`Board ${game.board}: ${opt.label} recorded`);
             }}
-            className={`flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-150 ${
+            className={`flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-95 ${
               game.result === opt.value
                 ? opt.value === "1-0"
                   ? "bg-emerald-500 border-emerald-500 text-white"
@@ -326,7 +320,7 @@ function BoardCard({
               onResult(game.id, "*");
               toast.info(`Board ${game.board}: result cleared`);
             }}
-            className={`px-4 py-3 text-sm rounded-xl border transition-all duration-150 ${
+            className={`flex-shrink-0 w-11 py-3 text-sm rounded-xl border transition-all duration-150 active:scale-95 ${
               isDark
                 ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
                 : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
@@ -844,59 +838,26 @@ export default function Director() {
         {/* ── Main Panel ────────────────────────────────────────────────────── */}
         <main className="flex-1 min-w-0 space-y-5">
           {/* Page Title + Generate Next Round CTA */}
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div>
-              <h1
-                className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Round {state.currentRound}
-                {state.status === "paused" && (
-                  <span className="ml-2 text-sm font-medium text-amber-500 align-middle">· Paused</span>
-                )}
-              </h1>
-              <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
-                {completedGames === totalGames && totalGames > 0
-                  ? "All results recorded — ready for next round"
-                  : `${totalGames - completedGames} game${totalGames - completedGames !== 1 ? "s" : ""} in progress`}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Tab switcher — pill style, large touch targets */}
-              <div
-                className={`flex rounded-2xl p-1.5 ${
-                  isDark ? "bg-white/08" : "bg-gray-100"
-                }`}
-              >
-                {(["boards", "players", "settings"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`touch-target px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all active:scale-95 flex items-center gap-2 ${
-                      activeTab === tab
-                        ? isDark
-                          ? "bg-[#3D6B47] text-white shadow-sm"
-                          : "bg-white text-gray-900 shadow-sm"
-                        : isDark
-                        ? "text-white/50 hover:text-white/70"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    {tab === "players" && state.players.length > 0 && (
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full leading-none ${
-                        activeTab === "players"
-                          ? isDark ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
-                          : isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
-                      }`}>
-                        {state.players.length}
-                      </span>
-                    )}
-                  </button>
-                ))}
+          <div className="space-y-3">
+            {/* Round title row */}
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1
+                  className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  Round {state.currentRound}
+                  {state.status === "paused" && (
+                    <span className="ml-2 text-sm font-medium text-amber-500 align-middle">· Paused</span>
+                  )}
+                </h1>
+                <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
+                  {completedGames === totalGames && totalGames > 0
+                    ? "All results recorded — ready for next round"
+                    : `${totalGames - completedGames} game${totalGames - completedGames !== 1 ? "s" : ""} in progress`}
+                </p>
               </div>
-              {/* Generate Next Round */}
+              {/* Generate Next Round — top-right on mobile */}
               {canGenerateNext && (
                 <button
                   onClick={() => {
@@ -913,6 +874,40 @@ export default function Director() {
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
+            </div>
+
+            {/* Tab bar — full width on mobile, inline on sm+ */}
+            <div
+              className={`flex rounded-2xl p-1.5 w-full sm:w-auto ${
+                isDark ? "bg-white/08" : "bg-gray-100"
+              }`}
+            >
+              {(["boards", "players", "settings"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`touch-target flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold capitalize transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                    activeTab === tab
+                      ? isDark
+                        ? "bg-[#3D6B47] text-white shadow-sm"
+                        : "bg-white text-gray-900 shadow-sm"
+                      : isDark
+                      ? "text-white/50 hover:text-white/70"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "players" && state.players.length > 0 && (
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full leading-none ${
+                      activeTab === "players"
+                        ? isDark ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+                        : isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
+                    }`}>
+                      {state.players.length}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1032,26 +1027,26 @@ export default function Director() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Link href={`/tournament/${tournamentId}`}>
-                      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                      <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
                         isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
                       }`}>
-                        <BarChart3 className="w-3.5 h-3.5" /> View Results
+                        <BarChart3 className="w-4 h-4" /> View Results
                       </button>
                     </Link>
                     <Link href={`/tournament/${tournamentId}/report`}>
-                      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                      <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
                         isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
                       }`}>
-                        <Trophy className="w-3.5 h-3.5" /> Player Reports
+                        <Trophy className="w-4 h-4" /> Player Reports
                       </button>
                     </Link>
                     <Link href={`/tournament/${tournamentId}/print`}>
-                      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                      <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
                         isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                       }`}>
-                        <Download className="w-3.5 h-3.5" /> Print / Export
+                        <Download className="w-4 h-4" /> Print / Export
                       </button>
                     </Link>
                   </div>
@@ -1135,21 +1130,21 @@ export default function Director() {
                               <CheckCircle2 className="w-3 h-3" /> Complete
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                          <div className="space-y-1.5">
                             {round.games.map((g) => {
                               const w = state.players.find((p) => p.id === g.whiteId);
                               const b = state.players.find((p) => p.id === g.blackId);
                               return (
-                                <div key={g.id} className="flex items-center gap-1.5 text-xs">
-                                  <span className={`truncate max-w-[80px] ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                                <div key={g.id} className="flex items-center gap-2 min-w-0">
+                                  <span className={`flex-1 truncate text-xs font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>
                                     {w?.name.split(" ")[0]}
                                   </span>
                                   <span
-                                    className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${resultBadgeClass(g.result, isDark)}`}
+                                    className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-xs ${resultBadgeClass(g.result, isDark)}`}
                                   >
                                     {g.result}
                                   </span>
-                                  <span className={`truncate max-w-[80px] ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                                  <span className={`flex-1 truncate text-xs font-medium text-right ${isDark ? "text-white/70" : "text-gray-700"}`}>
                                     {b?.name.split(" ")[0]}
                                   </span>
                                 </div>
@@ -1172,8 +1167,8 @@ export default function Director() {
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
               }`}>
                 {/* Top row: title + search + filter toggle */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <h2
                       className={`text-sm font-semibold flex-shrink-0 ${isDark ? "text-white/80" : "text-gray-700"}`}
                       style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -1187,8 +1182,8 @@ export default function Director() {
                     </span>
                   </div>
 
-                  {/* Search input */}
-                  <div className={`relative flex-1 min-w-[160px] max-w-xs`}>
+                  {/* Search input — full width on mobile */}
+                  <div className={`relative flex-1 w-full sm:max-w-xs`}>
                     <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${
                       isDark ? "text-white/30" : "text-gray-400"
                     }`} />
@@ -1215,43 +1210,45 @@ export default function Director() {
                     )}
                   </div>
 
-                  {/* Filter toggle button */}
-                  <button
-                    onClick={() => setShowFilters((f) => !f)}
-                    className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all flex-shrink-0 ${
-                      showFilters || activeFilterCount > 0
-                        ? isDark
-                          ? "bg-[#3D6B47]/30 border-[#4CAF50]/40 text-[#4CAF50]"
-                          : "bg-[#3D6B47]/08 border-[#3D6B47]/30 text-[#3D6B47]"
-                        : isDark
-                        ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
-                        : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    <Filter className="w-3 h-3" />
-                    Filters
-                    {activeFilterCount > 0 && (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        isDark ? "bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#3D6B47] text-white"
-                      }`}>
-                        {activeFilterCount}
-                      </span>
-                    )}
-                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${
-                      showFilters ? "rotate-180" : ""
-                    }`} />
-                  </button>
-                  {/* Add Player button — only during registration */}
-                  {isRegistration && (
+                  {/* Filter + Add Player row */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button
-                      onClick={() => setShowAddPlayer(true)}
-                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all flex-shrink-0"
-                      style={{ background: "#3D6B47", color: "#FFFFFF" }}
+                      onClick={() => setShowFilters((f) => !f)}
+                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all ${
+                        showFilters || activeFilterCount > 0
+                          ? isDark
+                            ? "bg-[#3D6B47]/30 border-[#4CAF50]/40 text-[#4CAF50]"
+                            : "bg-[#3D6B47]/08 border-[#3D6B47]/30 text-[#3D6B47]"
+                          : isDark
+                          ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
+                          : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
                     >
-                      <UserPlus className="w-3.5 h-3.5" />
-                      Add Player
+                      <Filter className="w-3.5 h-3.5" />
+                      Filters
+                      {activeFilterCount > 0 && (
+                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                          isDark ? "bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#3D6B47] text-white"
+                        }`}>
+                          {activeFilterCount}
+                        </span>
+                      )}
+                      <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${
+                        showFilters ? "rotate-180" : ""
+                      }`} />
                     </button>
-                  )}
+                    {/* Add Player button — only during registration */}
+                    {isRegistration && (
+                      <button
+                        onClick={() => setShowAddPlayer(true)}
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all"
+                        style={{ background: "#3D6B47", color: "#FFFFFF" }}
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Add Player
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Expanded filter panel */}

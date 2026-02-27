@@ -388,3 +388,13 @@
 - [x] Tournament page: upgrade round tab bar — larger tabs, clearer active/completed/upcoming states
 - [x] Tournament page: upgrade live clock banner — bolder, more prominent
 - [x] Apply consistent spacing tokens and remove all text-[10px] / text-xs from primary content
+
+## Mobile Layout Audit (Director Dashboard — 375px)
+
+- [x] Tab bar + Generate Round: stack tab bar full-width on mobile, button below on xs
+- [x] BoardCard: truncate player name, prevent overflow on 375px
+- [x] BoardCard result buttons: ensure 4-button row (3 results + clear) doesn't overflow
+- [x] Previous rounds summary: upgrade from text-[10px] to text-xs, improve grid layout
+- [x] Registration panel: fix join URL overflow, ensure copy+QR buttons don't get squished
+- [x] Players tab toolbar: fix search input min-width overflow at 375px
+- [x] Tournament Complete buttons: stack or wrap on mobile
