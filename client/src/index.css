@@ -1094,3 +1094,22 @@
     animation: none !important;
   }
 }
+
+/* ── Participant "My Game" highlight ─────────────────────────────────────────
+ * A green ring pulses twice on mount then settles to a static ring,
+ * giving the participant an instant visual anchor to their own board.
+ * ─────────────────────────────────────────────────────────────────────────── */
+@keyframes myGamePulse {
+  0%   { box-shadow: 0 0 0 0   oklch(0.44 0.12 145 / 0.55), 0 0 0 3px oklch(0.44 0.12 145 / 0.20); }
+  40%  { box-shadow: 0 0 0 10px oklch(0.44 0.12 145 / 0),   0 0 0 3px oklch(0.44 0.12 145 / 0.20); }
+  60%  { box-shadow: 0 0 0 0   oklch(0.44 0.12 145 / 0.40), 0 0 0 3px oklch(0.44 0.12 145 / 0.20); }
+  100% { box-shadow: 0 0 0 8px oklch(0.44 0.12 145 / 0),    0 0 0 3px oklch(0.44 0.12 145 / 0.20); }
+}
+
+.my-game-highlight {
+  /* Static green ring that stays visible */
+  outline: 2px solid oklch(0.44 0.12 145 / 0.50);
+  outline-offset: 2px;
+  /* Pulse animation plays twice then stops */
+  animation: myGamePulse 1.2s ease-out 2;
+}

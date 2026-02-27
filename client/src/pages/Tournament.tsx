@@ -13,7 +13,7 @@
  * - Bottom: Performance chart per player
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
@@ -31,6 +31,7 @@ import {
 } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { getRegistration } from "@/lib/registrationStore";
 import {
   Crown,
   ArrowLeft,
@@ -398,11 +399,12 @@ function MobileStandingsAccordion({ players, rounds }: { players: Player[]; roun
 }
 
 // ─── Pairings Panel ───────────────────────────────────────────────────────────
-function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
+function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId }: {
   players: Player[];
   rounds: Round[];
   totalRounds: number;
   currentRound: number;
+  myPlayerId?: string;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -421,6 +423,25 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
     players.forEach((p) => map.set(p.id, p));
     return map;
   }, [players]);
+
+  // Ref map for each game card so we can scroll to the participant's game
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // Auto-scroll to the participant's game card when the round or myPlayerId changes
+  useEffect(() => {
+    if (!myPlayerId || !round) return;
+    const myGame = round.games.find(
+      (g) => g.whiteId === myPlayerId || g.blackId === myPlayerId
+    );
+    if (!myGame) return;
+    const el = cardRefs.current.get(myGame.id);
+    if (el) {
+      // Small delay so the DOM has settled after round tab switch
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 120);
+    }
+  }, [myPlayerId, activeRound, round]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -491,16 +512,38 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
         const black = playerMap.get(game.blackId);
         if (!white || !black) return null;
         const isLive = game.result === "*";
+        const isMyGame = !!myPlayerId && (game.whiteId === myPlayerId || game.blackId === myPlayerId);
         return (
           <div
             key={game.id}
-            className={`card-chess overflow-hidden transition-all duration-200 ${isLive ? "ring-1 ring-amber-400/30" : ""}`}
+            ref={(el) => {
+              if (el) cardRefs.current.set(game.id, el);
+              else cardRefs.current.delete(game.id);
+            }}
+            className={`card-chess overflow-hidden transition-all duration-200 ${
+              isMyGame
+                ? "my-game-highlight"
+                : isLive
+                ? "ring-1 ring-amber-400/30"
+                : ""
+            }`}
           >
             {/* Board number + status */}
             <div className={`flex items-center justify-between px-5 py-3 border-b text-sm font-semibold ${
-              isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"
+              isMyGame
+                ? isDark ? "border-[#3D6B47]/40 bg-[#3D6B47]/10" : "border-[#3D6B47]/20 bg-[#F0F8F2]"
+                : isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"
             }`}>
-              <span className={`tracking-widest uppercase ${isDark ? "text-white/50" : "text-gray-500"}`}>Board {game.board}</span>
+              <div className="flex items-center gap-2">
+                <span className={`tracking-widest uppercase ${isDark ? "text-white/50" : "text-gray-500"}`}>Board {game.board}</span>
+                {isMyGame && (
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    isDark ? "bg-[#3D6B47]/30 text-emerald-400" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                  }`}>
+                    Your Game
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {isLive ? (
                   <span className="flex items-center gap-1.5 text-amber-500 font-bold">
@@ -813,6 +856,17 @@ export default function TournamentPage() {
     .find((r) => r.number === displayState.currentRound)
     ?.games.filter((g) => g.result === "*").length ?? 0;
 
+  // Identify the viewing participant — look up their registration in localStorage
+  const myPlayerId = useMemo(() => {
+    const reg = getRegistration(tournamentId);
+    if (!reg) return undefined;
+    // Match by username (case-insensitive) against the player list
+    const match = displayState.players.find(
+      (p) => p.username?.toLowerCase() === reg.username.toLowerCase()
+    );
+    return match?.id;
+  }, [tournamentId, displayState.players]);
+
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       <TournamentNav tournamentId={tournamentId} />
@@ -878,6 +932,7 @@ export default function TournamentPage() {
                   rounds={displayState.rounds}
                   totalRounds={displayState.totalRounds}
                   currentRound={displayState.currentRound}
+                  myPlayerId={myPlayerId}
                 />
               </div>
 

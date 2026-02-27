@@ -412,3 +412,13 @@
 
 - [x] Add vibration API haptic pulse to result entry buttons in BoardCard (Director Dashboard)
 - [x] Add scale-pulse animation on the selected result button after recording (scale-[1.03] + coloured shadow)
+
+## Participant "My Game" Highlight
+
+- [x] Read registered username from registrationStore for the current tournamentId
+- [x] Find the player object whose username matches the registered username
+- [x] Pass myPlayerId down to PairingsPanel and GameCard
+- [x] Auto-scroll to the participant's game card on mount (useEffect + scrollIntoView)
+- [x] Add green ring + "Your Game" badge to the participant's game card
+- [x] Add keyframe pulse animation that fades after 3s (myGamePulse plays twice then settles to static ring)
+- [x] Unit tests for findMyGame helper (21 tests passing)
