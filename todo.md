@@ -284,3 +284,7 @@
 - [x] Auto-grant director session after tournament creation in wizard
 - [x] Surface director code in wizard Share step (amber card, Private badge, reveal/copy toggle)
 - [x] Unit tests for director code system (10 tests passing)
+
+## Home Page Hover Animations
+
+- [x] Add soft shiny hover animations to feature cards, stat cards, How It Works steps, and testimonial cards (shineSweep diagonal highlight + lift + glow)

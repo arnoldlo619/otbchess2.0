@@ -907,3 +907,140 @@
     transform: none !important;
   }
 }
+
+/* ── Premium shiny hover system ─────────────────────────────────────────────── */
+
+/* Shine sweep keyframe — a diagonal highlight that slides across on hover */
+@keyframes shineSweep {
+  0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+}
+
+/* card-chess: add shine overlay on hover */
+.card-chess {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.card-chess::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    oklch(1 0 0 / 0.07) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-chess:hover::before {
+  animation: shineSweep 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dark .card-chess::before {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    oklch(1 0 0 / 0.11) 50%,
+    transparent 65%
+  );
+}
+
+/* Testimonial cards: tilt + shine */
+.card-testimonial {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.card-testimonial::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    oklch(1 0 0 / 0.06) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-testimonial:hover::before {
+  animation: shineSweep 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Step cards: lift + glow on hover */
+.step-card {
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.step-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    oklch(1 0 0 / 0.07) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.step-card:hover::before {
+  animation: shineSweep 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.step-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px oklch(0.44 0.12 145 / 0.10);
+}
+
+.dark .step-card:hover {
+  box-shadow: 0 10px 32px oklch(0 0 0 / 0.35);
+}
+
+/* Stat items: scale pop + subtle glow */
+.stat-item {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.25s ease;
+  cursor: default;
+}
+
+.stat-item:hover {
+  transform: translateY(-4px) scale(1.03);
+  filter: drop-shadow(0 4px 12px oklch(0.44 0.12 145 / 0.18));
+}
+
+.dark .stat-item:hover {
+  filter: drop-shadow(0 4px 12px oklch(0.65 0.14 145 / 0.25));
+}
+
+/* Reduced motion: disable all shine and extra transforms */
+@media (prefers-reduced-motion: reduce) {
+  .card-chess::before,
+  .card-testimonial::before,
+  .step-card::before {
+    display: none !important;
+  }
+  .step-card:hover,
+  .stat-item:hover {
+    transform: none !important;
+    filter: none !important;
+  }
+}
