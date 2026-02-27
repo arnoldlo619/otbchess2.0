@@ -150,7 +150,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           <img
             src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
             alt="OTB Chess"
-            className={`h-14 w-auto object-contain transition-all duration-300 ${isDark ? "drop-shadow-[0_0_8px_rgba(100,200,100,0.25)]" : ""}`}
+            className={`nav-logo h-14 w-auto object-contain ${isDark ? "nav-logo-dark" : ""}`}
           />
         </a>
 

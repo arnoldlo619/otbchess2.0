@@ -288,3 +288,7 @@
 ## Home Page Hover Animations
 
 - [x] Add soft shiny hover animations to feature cards, stat cards, How It Works steps, and testimonial cards (shineSweep diagonal highlight + lift + glow)
+
+## Logo Hover Animation
+
+- [x] Add soft hover animation to OTB!! nav logo (scale 1.06 + green drop-shadow glow, dark mode variant, reduced-motion safe)
