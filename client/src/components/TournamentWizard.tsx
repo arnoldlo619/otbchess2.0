@@ -1,6 +1,13 @@
 /*
  * OTB Chess — Tournament Creation Wizard (Full-Screen Redesign)
  *
+ * Two-path onboarding:
+ *   - Mode Select: choose "Quickstart" or "Schedule Tournament"
+ *   - Quickstart: single screen — name, location, auto-filled today's date
+ *                 smart defaults applied (Swiss, 5 rounds, 16 players, 10+5, chess.com)
+ *                 skips directly to Share step
+ *   - Schedule Tournament: full 4-step wizard (existing flow, renamed)
+ *
  * Design philosophy:
  *   - Full viewport canvas — no modal chrome, no scroll
  *   - Two-column layout on desktop: left = contextual hero, right = focused inputs
@@ -8,12 +15,6 @@
  *   - Thin top progress bar + minimal step labels
  *   - Smooth horizontal slide transitions between steps
  *   - Consistent with platform design system (green/white, Clash Display, OKLCH)
- *
- * Steps:
- *   1. Details      — name, venue, date, description, rating system
- *   2. Format       — Swiss / Round Robin / Elimination, rounds, player cap
- *   3. Time Control — preset tiles or custom stepper
- *   4. Share        — invite link, QR code, confetti
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -48,9 +49,12 @@ import {
   Shield,
   Eye,
   EyeOff,
+  Bolt,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+type WizardMode = "select" | "quickstart" | "schedule";
 
 interface WizardData {
   name: string;
@@ -69,6 +73,14 @@ interface WizardData {
   directorCode: string;
 }
 
+function todayIso(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 const DEFAULT_DATA: WizardData = {
   name: "",
   venue: "",
@@ -85,9 +97,9 @@ const DEFAULT_DATA: WizardData = {
   directorCode: "",
 };
 
-// ─── Step metadata ────────────────────────────────────────────────────────────
+// ─── Schedule steps metadata ──────────────────────────────────────────────────
 
-const STEPS = [
+const SCHEDULE_STEPS = [
   {
     id: 0,
     label: "Details",
@@ -130,6 +142,17 @@ const STEPS = [
   },
 ];
 
+// Quickstart hero panel content
+const QUICKSTART_HERO = {
+  label: "Quickstart",
+  icon: Bolt,
+  hero: {
+    eyebrow: "Quickstart",
+    title: "Start in\nseconds",
+    body: "Just give your tournament a name and location. We'll set up Swiss pairings, 5 rounds, and 10+5 time control — you can adjust everything later.",
+  },
+};
+
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const T = {
@@ -164,10 +187,7 @@ const T = {
 
 function ProgressBar({ step, total, isDark }: { step: number; total: number; isDark: boolean }) {
   return (
-    <div
-      className="absolute top-0 left-0 right-0 h-[3px] flex gap-[2px]"
-      style={{ zIndex: 10 }}
-    >
+    <div className="absolute top-0 left-0 right-0 h-[3px] flex gap-[2px]" style={{ zIndex: 10 }}>
       {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
@@ -194,14 +214,17 @@ function ProgressBar({ step, total, isDark }: { step: number; total: number; isD
 function HeroPanel({
   step,
   isDark,
-  direction,
+  mode,
 }: {
   step: number;
   isDark: boolean;
-  direction: 1 | -1;
+  mode: "quickstart" | "schedule";
 }) {
-  const s = STEPS[step];
+  const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
   const Icon = s.icon;
+
+  const dots = mode === "quickstart" ? 2 : SCHEDULE_STEPS.length; // quickstart: mode-select + quickstart form
+  const activeDot = mode === "quickstart" ? 1 : step;
 
   return (
     <div
@@ -216,11 +239,7 @@ function HeroPanel({
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `
-            repeating-conic-gradient(
-              rgba(255,255,255,0.025) 0% 25%,
-              transparent 0% 50%
-            )`,
+          backgroundImage: `repeating-conic-gradient(rgba(255,255,255,0.025) 0% 25%, transparent 0% 50%)`,
           backgroundSize: "40px 40px",
         }}
       />
@@ -235,11 +254,7 @@ function HeroPanel({
       </div>
 
       {/* Step content */}
-      <div
-        className="relative"
-        key={step}
-        style={{ animation: `heroIn 0.45s cubic-bezier(0.22,1,0.36,1) both` }}
-      >
+      <div className="relative" key={`${mode}-${step}`} style={{ animation: `heroIn 0.45s cubic-bezier(0.22,1,0.36,1) both` }}>
         <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mb-4">
           {s.hero.eyebrow}
         </p>
@@ -257,21 +272,19 @@ function HeroPanel({
             {s.hero.title}
           </h2>
         </div>
-        <p className="text-white/55 text-sm leading-relaxed max-w-xs">
-          {s.hero.body}
-        </p>
+        <p className="text-white/55 text-sm leading-relaxed max-w-xs">{s.hero.body}</p>
       </div>
 
       {/* Step dots */}
       <div className="relative flex items-center gap-2">
-        {STEPS.map((_, i) => (
+        {Array.from({ length: dots }).map((_, i) => (
           <div
             key={i}
             className="rounded-full transition-all duration-400"
             style={{
-              width: i === step ? 20 : 6,
+              width: i === activeDot ? 20 : 6,
               height: 6,
-              background: i === step ? "#FFFFFF" : "rgba(255,255,255,0.25)",
+              background: i === activeDot ? "#FFFFFF" : "rgba(255,255,255,0.25)",
             }}
           />
         ))}
@@ -285,10 +298,7 @@ function HeroPanel({
 function Label({ children, hint, isDark }: { children: React.ReactNode; hint?: string; isDark: boolean }) {
   return (
     <div className="flex items-baseline gap-2 mb-3">
-      <label
-        className="text-base font-semibold"
-        style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}
-      >
+      <label className="text-base font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
         {children}
       </label>
       {hint && (
@@ -394,7 +404,284 @@ function TextArea({
   );
 }
 
-// ─── Step 1: Details ──────────────────────────────────────────────────────────
+// ─── Mode Selection Screen ────────────────────────────────────────────────────
+
+function ModeSelect({
+  isDark,
+  onSelect,
+  onClose,
+}: {
+  isDark: boolean;
+  onSelect: (mode: "quickstart" | "schedule") => void;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center"
+      style={{
+        background: isDark
+          ? "oklch(0.14 0.04 145)"
+          : "linear-gradient(145deg, #1A3A22 0%, #2A5535 60%, #3D6B47 100%)",
+        animation: "wizardFadeIn 0.3s ease both",
+      }}
+    >
+      {/* Chess-board texture */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `repeating-conic-gradient(rgba(255,255,255,0.025) 0% 25%, transparent 0% 50%)`,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+        style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.70)" }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.18)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)"; }}
+      >
+        <X className="w-4 h-4" />
+      </button>
+
+      {/* Content */}
+      <div className="relative w-full max-w-xl mx-auto px-6 py-12 flex flex-col items-center gap-10">
+        {/* Logo */}
+        <img
+          src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+          alt="OTB Chess"
+          style={{ height: 32, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
+        />
+
+        {/* Headline */}
+        <div className="text-center">
+          <h2
+            className="text-4xl sm:text-5xl font-black text-white leading-tight mb-3"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            Create a Tournament
+          </h2>
+          <p className="text-white/50 text-base">How would you like to get started?</p>
+        </div>
+
+        {/* Mode cards */}
+        <div className="w-full grid sm:grid-cols-2 gap-4">
+          {/* Quickstart */}
+          <button
+            type="button"
+            onClick={() => onSelect("quickstart")}
+            className="group relative flex flex-col items-start gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            style={{
+              padding: "28px 24px",
+              background: "rgba(61,107,71,0.25)",
+              border: "2px solid rgba(61,107,71,0.55)",
+              backdropFilter: "blur(8px)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.40)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "#3D6B47";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(61,107,71,0.35)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(61,107,71,0.55)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+            }}
+          >
+            {/* Badge */}
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+              style={{ background: T.green, color: "#FFFFFF" }}
+            >
+              Recommended
+            </span>
+
+            {/* Icon */}
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.15)" }}
+            >
+              <Bolt className="w-6 h-6 text-white" strokeWidth={1.8} />
+            </div>
+
+            <div>
+              <h3
+                className="text-xl font-bold text-white mb-1.5"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Quickstart
+              </h3>
+              <p className="text-white/55 text-sm leading-relaxed">
+                Fill in just a name and location. We handle the rest — perfect for same-day tournaments.
+              </p>
+            </div>
+
+            {/* Time estimate */}
+            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
+              <Clock className="w-3.5 h-3.5" />
+              Ready in under 30 seconds
+            </div>
+
+            {/* Arrow */}
+            <ArrowRight
+              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+              style={{ color: "rgba(255,255,255,0.35)" }}
+            />
+          </button>
+
+          {/* Schedule Tournament */}
+          <button
+            type="button"
+            onClick={() => onSelect("schedule")}
+            className="group relative flex flex-col items-start gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            style={{
+              padding: "28px 24px",
+              background: "rgba(255,255,255,0.06)",
+              border: "2px solid rgba(255,255,255,0.12)",
+              backdropFilter: "blur(8px)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+            }}
+          >
+            {/* Icon */}
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mt-7"
+              style={{ background: "rgba(255,255,255,0.10)" }}
+            >
+              <Calendar className="w-6 h-6 text-white" strokeWidth={1.8} />
+            </div>
+
+            <div>
+              <h3
+                className="text-xl font-bold text-white mb-1.5"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Schedule Tournament
+              </h3>
+              <p className="text-white/55 text-sm leading-relaxed">
+                Full setup wizard — choose format, rounds, time control, and rating system.
+              </p>
+            </div>
+
+            {/* Time estimate */}
+            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <Clock className="w-3.5 h-3.5" />
+              ~2 minutes · 4 steps
+            </div>
+
+            {/* Arrow */}
+            <ArrowRight
+              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+              style={{ color: "rgba(255,255,255,0.25)" }}
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Quickstart Form ──────────────────────────────────────────────────────────
+
+function QuickstartForm({
+  data,
+  onChange,
+  isDark,
+}: {
+  data: WizardData;
+  onChange: (p: Partial<WizardData>) => void;
+  isDark: boolean;
+}) {
+  return (
+    <div className="space-y-7">
+      {/* Tournament name */}
+      <div>
+        <Label isDark={isDark} hint="required">Tournament Name</Label>
+        <TextInput
+          value={data.name}
+          onChange={(v) => onChange({ name: v })}
+          placeholder="e.g. Friday Night Blitz"
+          icon={Trophy}
+          autoFocus
+          isDark={isDark}
+          large
+        />
+      </div>
+
+      {/* Location */}
+      <div>
+        <Label isDark={isDark} hint="optional">Location</Label>
+        <TextInput
+          value={data.venue}
+          onChange={(v) => onChange({ venue: v })}
+          placeholder="e.g. Marshall Chess Club"
+          icon={MapPin}
+          isDark={isDark}
+        />
+      </div>
+
+      {/* Date — pre-filled with today */}
+      <div>
+        <Label isDark={isDark}>Date</Label>
+        <TextInput
+          value={data.date}
+          onChange={(v) => onChange({ date: v })}
+          type="date"
+          icon={Calendar}
+          isDark={isDark}
+        />
+      </div>
+
+      {/* Smart defaults summary */}
+      <div
+        className="rounded-2xl border px-5 py-4 space-y-3"
+        style={{
+          background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
+          border: `1.5px solid ${isDark ? "rgba(61,107,71,0.25)" : "rgba(61,107,71,0.18)"}`,
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Zap className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.green }}>
+            Smart Defaults Applied
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+          {[
+            ["Format", "Swiss System"],
+            ["Rounds", "5"],
+            ["Max Players", "16"],
+            ["Time Control", "10+5 Rapid"],
+            ["Rating", "chess.com ELO"],
+          ].map(([label, value]) => (
+            <div key={label} className="flex items-center justify-between gap-2">
+              <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{label}</span>
+              <span className="text-xs font-semibold" style={{ color: isDark ? T.dText : T.lText }}>{value}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+          You can adjust format, rounds, and time control from the Director Dashboard after creating the tournament.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 1: Details (Schedule path) ─────────────────────────────────────────
 
 function StepDetails({
   data,
@@ -474,23 +761,15 @@ function StepDetails({
                 className="flex flex-col items-start rounded-2xl border text-left transition-all duration-200"
                 style={{
                   padding: "16px 18px",
-                  background: active
-                    ? T.greenBg
-                    : isDark ? T.dCard : "#FAFAFA",
+                  background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
                   border: `2px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
                   boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
                 }}
               >
-                <span
-                  className="text-base font-semibold"
-                  style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
-                >
+                <span className="text-base font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
                   {opt.label}
                 </span>
-                <span
-                  className="text-sm mt-1"
-                  style={{ color: isDark ? T.dMuted : T.lMuted }}
-                >
+                <span className="text-sm mt-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                   {opt.sub}
                 </span>
               </button>
@@ -514,24 +793,9 @@ function StepFormat({
   isDark: boolean;
 }) {
   const formats = [
-    {
-      value: "swiss" as const,
-      label: "Swiss System",
-      desc: "Paired by score — best for large groups.",
-      icon: Shuffle,
-    },
-    {
-      value: "roundrobin" as const,
-      label: "Round Robin",
-      desc: "Everyone plays everyone — best for small groups.",
-      icon: Users,
-    },
-    {
-      value: "elimination" as const,
-      label: "Elimination",
-      desc: "Single knockout bracket — fast and exciting.",
-      icon: Trophy,
-    },
+    { value: "swiss" as const, label: "Swiss System", desc: "Paired by score — best for large groups.", icon: Shuffle },
+    { value: "roundrobin" as const, label: "Round Robin", desc: "Everyone plays everyone — best for small groups.", icon: Users },
+    { value: "elimination" as const, label: "Elimination", desc: "Single knockout bracket — fast and exciting.", icon: Trophy },
   ];
 
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
@@ -539,7 +803,6 @@ function StepFormat({
 
   return (
     <div className="space-y-8">
-      {/* Format selector */}
       <div>
         <Label isDark={isDark}>Tournament Format</Label>
         <div className="space-y-2.5">
@@ -569,10 +832,7 @@ function StepFormat({
                   <Icon className="w-6 h-6" strokeWidth={1.8} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className="text-base font-semibold"
-                    style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
-                  >
+                  <p className="text-base font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
                     {f.label}
                   </p>
                   <p className="text-sm mt-1" style={{ color: isDark ? T.dMuted : T.lMuted }}>
@@ -580,10 +840,7 @@ function StepFormat({
                   </p>
                 </div>
                 {active && (
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: T.green }}
-                  >
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
                     <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
                   </div>
                 )}
@@ -594,7 +851,6 @@ function StepFormat({
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* Rounds */}
         <div>
           <Label isDark={isDark}>Rounds</Label>
           <div className="flex flex-wrap gap-2">
@@ -618,8 +874,6 @@ function StepFormat({
             })}
           </div>
         </div>
-
-        {/* Max players */}
         <div>
           <Label isDark={isDark}>Max Players</Label>
           <div className="flex flex-wrap gap-2">
@@ -644,13 +898,10 @@ function StepFormat({
           </div>
         </div>
       </div>
-      {/* Format summary hint */}
+
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{
-          background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE",
-          color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
-        }}
+        style={{ background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE", color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}
       >
         <Zap className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
@@ -664,6 +915,7 @@ function StepFormat({
     </div>
   );
 }
+
 // ─── Step 3: Time Control ─────────────────────────────────────────────────────
 
 const TIME_PRESETS = [
@@ -688,19 +940,12 @@ function StepTime({
 }) {
   const isCustom = data.timePreset === "custom";
 
-  const selectPreset = (p: typeof TIME_PRESETS[0]) => {
+  const selectPreset = (p: (typeof TIME_PRESETS)[0]) => {
     if (p.base === -1) {
       onChange({ timePreset: "custom" });
     } else {
       onChange({ timePreset: p.sub, timeBase: p.base, timeIncrement: p.inc });
     }
-  };
-
-  const estimatedDuration = () => {
-    const perGame = data.timeBase * 2 + (data.timeIncrement * 40) / 60;
-    const totalMins = perGame * data.rounds * 0.6;
-    if (totalMins < 60) return `~${Math.round(totalMins)} min`;
-    return `~${(totalMins / 60).toFixed(1)} hrs`;
   };
 
   return (
@@ -723,16 +968,10 @@ function StepTime({
                   boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
                 }}
               >
-                <span
-                  className="text-base font-bold"
-                  style={{ color: active ? T.green : isDark ? T.dText : T.lText }}
-                >
+                <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
                   {p.sub === "custom" ? "Custom" : p.sub}
                 </span>
-                <span
-                  className="text-xs mt-1 font-medium"
-                  style={{ color: isDark ? T.dMuted : T.lMuted }}
-                >
+                <span className="text-xs mt-1 font-medium" style={{ color: isDark ? T.dMuted : T.lMuted }}>
                   {p.sub === "custom" ? "Manual" : p.label}
                 </span>
                 {p.tag && (
@@ -752,67 +991,37 @@ function StepTime({
         </div>
       </div>
 
-      {/* Custom stepper */}
       {isCustom && (
         <div className="grid grid-cols-2 gap-4">
           {[
-            {
-              label: "Base time",
-              unit: "min",
-              value: data.timeBase,
-              min: 1,
-              max: 180,
-              key: "timeBase" as const,
-            },
-            {
-              label: "Increment",
-              unit: "sec",
-              value: data.timeIncrement,
-              min: 0,
-              max: 60,
-              key: "timeIncrement" as const,
-            },
+            { label: "Base time", unit: "min", value: data.timeBase, min: 1, max: 180, key: "timeBase" as const },
+            { label: "Increment", unit: "sec", value: data.timeIncrement, min: 0, max: 60, key: "timeIncrement" as const },
           ].map((field) => (
             <div key={field.key}>
               <Label isDark={isDark}>
                 {field.label}{" "}
-                <span style={{ color: isDark ? T.dMuted : T.lMuted, fontWeight: 400 }}>
-                  ({field.unit})
-                </span>
+                <span style={{ color: isDark ? T.dMuted : T.lMuted, fontWeight: 400 }}>({field.unit})</span>
               </Label>
               <div
                 className="flex items-center gap-3 rounded-2xl border"
-                style={{
-                  padding: "14px 18px",
-                  background: isDark ? T.dCard : "#FAFAFA",
-                  border: `2px solid ${isDark ? T.dBorder : T.lBorder}`,
-                }}
+                style={{ padding: "14px 18px", background: isDark ? T.dCard : "#FAFAFA", border: `2px solid ${isDark ? T.dBorder : T.lBorder}` }}
               >
                 <button
                   type="button"
                   onClick={() => onChange({ [field.key]: Math.max(field.min, field.value - 1) })}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
-                  style={{
-                    background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
-                    color: isDark ? T.dText : T.lText,
-                  }}
+                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE", color: isDark ? T.dText : T.lText }}
                 >
                   −
                 </button>
-                <span
-                  className="flex-1 text-center text-xl font-bold font-mono"
-                  style={{ color: isDark ? T.dText : T.lText }}
-                >
+                <span className="flex-1 text-center text-xl font-bold" style={{ color: isDark ? T.dText : T.lText }}>
                   {field.value}
                 </span>
                 <button
                   type="button"
                   onClick={() => onChange({ [field.key]: Math.min(field.max, field.value + 1) })}
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors"
-                  style={{
-                    background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE",
-                    color: isDark ? T.dText : T.lText,
-                  }}
+                  style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#F0F5EE", color: isDark ? T.dText : T.lText }}
                 >
                   +
                 </button>
@@ -822,109 +1031,86 @@ function StepTime({
         </div>
       )}
 
-      {/* Duration estimate */}
       <div
-        className="flex items-center justify-between rounded-xl border px-4 py-3"
-        style={{
-          background: isDark ? T.dCard : "#F9FAF8",
-          border: `1.5px solid ${isDark ? T.dBorder : "#EEEED2"}`,
-        }}
+        className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
+        style={{ background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE", color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}
       >
-        <div className="flex items-center gap-2 text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>
-          <Clock className="w-4 h-4" />
-          <span>Estimated tournament duration</span>
-        </div>
-        <span
-          className="text-sm font-bold"
-          style={{ color: isDark ? T.dText : T.lText }}
-        >
-          {estimatedDuration()}
+        <Clock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
+        <span>
+          {isCustom
+            ? `Custom · ${data.timeBase}+${data.timeIncrement} · estimated ${(() => {
+                const perGame = data.timeBase * 2 + (data.timeIncrement * 40) / 60;
+                const totalMins = perGame * data.rounds * 0.6;
+                return totalMins < 60 ? `~${Math.round(totalMins)} min` : `~${(totalMins / 60).toFixed(1)} hrs`;
+              })()}`
+            : `${data.timePreset} · estimated ${(() => {
+                const perGame = data.timeBase * 2 + (data.timeIncrement * 40) / 60;
+                const totalMins = perGame * data.rounds * 0.6;
+                return totalMins < 60 ? `~${Math.round(totalMins)} min` : `~${(totalMins / 60).toFixed(1)} hrs`;
+              })()}`}
         </span>
       </div>
     </div>
   );
 }
 
-// ─── Animated QR ──────────────────────────────────────────────────────────────
+// ─── Animated QR ─────────────────────────────────────────────────────────────
 
 function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean }) {
-  const [phase, setPhase] = useState<"hidden" | "appear" | "scan" | "done">("hidden");
-  const [scanY, setScanY] = useState(0);
-  const scanRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-  const SCAN_DURATION = 1200;
+  const [phase, setPhase] = useState<"idle" | "scan" | "done">("idle");
+  const [scanY, setScanY] = useState(10);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("appear"), 120);
-    const t2 = setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setPhase("scan");
-      startTimeRef.current = performance.now();
-      const animate = (now: number) => {
-        const elapsed = now - (startTimeRef.current ?? now);
-        const progress = Math.min(elapsed / SCAN_DURATION, 1);
-        setScanY(progress * 100);
-        if (progress < 1) {
-          scanRef.current = requestAnimationFrame(animate);
-        } else {
-          setPhase("done");
-        }
+      let y = 10;
+      let dir = 1;
+      const animate = () => {
+        y += dir * 1.2;
+        if (y >= 88) dir = -1;
+        if (y <= 10) dir = 1;
+        setScanY(y);
+        rafRef.current = requestAnimationFrame(animate);
       };
-      scanRef.current = requestAnimationFrame(animate);
+      rafRef.current = requestAnimationFrame(animate);
+      setTimeout(() => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        setPhase("done");
+      }, 2200);
     }, 600);
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      if (scanRef.current) cancelAnimationFrame(scanRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
   return (
-    <div
-      className="flex flex-col items-center gap-3 py-6 rounded-2xl border transition-all duration-500"
-      style={{
-        opacity: phase === "hidden" ? 0 : 1,
-        transform: phase === "hidden" ? "translateY(8px)" : "translateY(0)",
-        background: isDark ? "rgba(255,255,255,0.03)" : "#F0FDF4",
-        border: `1.5px solid ${isDark ? "rgba(255,255,255,0.10)" : "#D1FAE5"}`,
-      }}
-    >
-      <div className="relative" style={{ width: 180, height: 180 }}>
-        <div
-          className="absolute inset-0 rounded-xl bg-white"
-          style={{
-            boxShadow:
-              phase === "done"
-                ? `0 0 0 3px ${T.green}, 0 8px 24px rgba(61,107,71,0.25)`
-                : "0 0 0 2px rgba(61,107,71,0.15), 0 4px 12px rgba(0,0,0,0.08)",
-            transition: "box-shadow 0.4s ease",
-          }}
-        />
+    <div className="flex flex-col items-center gap-3">
+      <div
+        className="relative rounded-2xl overflow-hidden"
+        style={{
+          width: 180,
+          height: 180,
+          background: "#FFFFFF",
+          boxShadow: phase === "done" ? `0 0 0 3px ${T.green}, 0 8px 24px rgba(61,107,71,0.25)` : `0 4px 16px rgba(0,0,0,0.12)`,
+          transition: "box-shadow 0.5s ease",
+        }}
+      >
         <div className="absolute inset-0 flex items-center justify-center p-3">
-          <QRCodeSVG
-            value={inviteUrl}
-            size={154}
-            level="H"
-            includeMargin={false}
-            fgColor="#1a1a1a"
-            bgColor="#ffffff"
-          />
+          <QRCodeSVG value={inviteUrl} size={154} level="H" includeMargin={false} fgColor="#1a1a1a" bgColor="#ffffff" />
         </div>
-        {/* Corner brackets */}
         {([
-          { vPos: "top", hPos: "left",  cls: "border-t-2 border-l-2 rounded-tl-lg" },
+          { vPos: "top", hPos: "left", cls: "border-t-2 border-l-2 rounded-tl-lg" },
           { vPos: "top", hPos: "right", cls: "border-t-2 border-r-2 rounded-tr-lg" },
-          { vPos: "bottom", hPos: "left",  cls: "border-b-2 border-l-2 rounded-bl-lg" },
+          { vPos: "bottom", hPos: "left", cls: "border-b-2 border-l-2 rounded-bl-lg" },
           { vPos: "bottom", hPos: "right", cls: "border-b-2 border-r-2 rounded-br-lg" },
         ] as const).map(({ vPos, hPos, cls }) => (
           <div
             key={`${vPos}-${hPos}`}
             className={`absolute w-5 h-5 transition-all duration-700 ${cls}`}
-            style={{
-              borderColor: phase === "done" ? T.green : "rgba(61,107,71,0.4)",
-              opacity: phase === "done" ? 1 : 0.6,
-              [vPos]: 4,
-              [hPos]: 4,
-            }}
+            style={{ borderColor: phase === "done" ? T.green : "rgba(61,107,71,0.4)", opacity: phase === "done" ? 1 : 0.6, [vPos]: 4, [hPos]: 4 }}
           />
         ))}
         {phase === "scan" && (
@@ -940,14 +1126,8 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
           />
         )}
         {phase === "done" && (
-          <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            style={{ animation: "fadeInScale 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards" }}
-          >
-            <div
-              className="w-11 h-11 rounded-full flex items-center justify-center"
-              style={{ background: T.green, boxShadow: "0 4px 16px rgba(61,107,71,0.45)" }}
-            >
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ animation: "fadeInScale 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards" }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: T.green, boxShadow: "0 4px 16px rgba(61,107,71,0.45)" }}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
@@ -955,17 +1135,14 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
           </div>
         )}
       </div>
-      <p
-        className="text-xs font-semibold transition-colors duration-500"
-        style={{ color: phase === "done" ? T.green : isDark ? T.dMuted : T.lMuted }}
-      >
+      <p className="text-xs font-semibold transition-colors duration-500" style={{ color: phase === "done" ? T.green : isDark ? T.dMuted : T.lMuted }}>
         {phase === "done" ? "Ready to scan!" : phase === "scan" ? "Generating QR…" : "Players scan to join"}
       </p>
     </div>
   );
 }
 
-// ─── Step 4: Share ────────────────────────────────────────────────────────────
+// ─── Step 4 / Quickstart final: Share ────────────────────────────────────────
 
 function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
@@ -986,20 +1163,15 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
     setTimeout(() => setDirCopied(false), 2000);
   };
 
-  const formatLabel =
-    data.format === "swiss" ? "Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination";
-  const timeLabel =
-    data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
+  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination";
+  const timeLabel = data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (
     <div className="space-y-6">
       {/* Summary strip */}
       <div
         className="grid grid-cols-3 gap-4 rounded-2xl border p-5"
-        style={{
-          background: isDark ? T.dCard : "#F9FAF8",
-          border: `2px solid ${isDark ? T.dBorder : "#EEEED2"}`,
-        }}
+        style={{ background: isDark ? T.dCard : "#F9FAF8", border: `2px solid ${isDark ? T.dBorder : "#EEEED2"}` }}
       >
         {[
           { icon: Shuffle, label: formatLabel, sub: `${data.rounds} rounds` },
@@ -1008,12 +1180,8 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
         ].map(({ icon: Icon, label, sub }) => (
           <div key={label} className="flex flex-col items-center gap-1.5 text-center">
             <Icon className="w-5 h-5" style={{ color: T.green }} strokeWidth={1.8} />
-            <span className="text-base font-bold" style={{ color: isDark ? T.dText : T.lText }}>
-              {label}
-            </span>
-            <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-              {sub}
-            </span>
+            <span className="text-base font-bold" style={{ color: isDark ? T.dText : T.lText }}>{label}</span>
+            <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{sub}</span>
           </div>
         ))}
       </div>
@@ -1024,12 +1192,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
         <div className="flex gap-2">
           <div
             className="flex-1 flex items-center gap-2 rounded-2xl border text-sm font-mono truncate"
-            style={{
-              padding: "14px 18px",
-              background: isDark ? T.dCard : "#FAFAFA",
-              border: `2px solid ${isDark ? T.dBorder : T.lBorder}`,
-              color: isDark ? T.dSub : T.lSub,
-            }}
+            style={{ padding: "14px 18px", background: isDark ? T.dCard : "#FAFAFA", border: `2px solid ${isDark ? T.dBorder : T.lBorder}`, color: isDark ? T.dSub : T.lSub }}
           >
             <Link2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
             <span className="truncate">{inviteUrl}</span>
@@ -1038,11 +1201,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
             type="button"
             onClick={copyLink}
             className="flex items-center gap-1.5 rounded-2xl text-base font-semibold transition-all duration-200 flex-shrink-0"
-            style={{
-              padding: "14px 20px",
-              background: copied ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE",
-              color: copied ? "#FFFFFF" : isDark ? T.dText : "#374151",
-            }}
+            style={{ padding: "14px 20px", background: copied ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE", color: copied ? "#FFFFFF" : isDark ? T.dText : "#374151" }}
           >
             {copied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
             {copied ? "Copied!" : "Copy"}
@@ -1056,23 +1215,12 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
       {/* Director Code */}
       <div
         className="rounded-2xl border p-5 space-y-3"
-        style={{
-          background: isDark ? "rgba(245,158,11,0.08)" : "#FFFBEB",
-          border: `2px solid ${isDark ? "rgba(245,158,11,0.25)" : "#FDE68A"}`,
-        }}
+        style={{ background: isDark ? "rgba(245,158,11,0.08)" : "#FFFBEB", border: `2px solid ${isDark ? "rgba(245,158,11,0.25)" : "#FDE68A"}` }}
       >
         <div className="flex items-center gap-2 mb-1">
           <Shield className="w-4 h-4" style={{ color: isDark ? "#FBBF24" : "#D97706" }} strokeWidth={1.8} />
-          <span className="text-sm font-bold" style={{ color: isDark ? "#FBBF24" : "#92400E" }}>
-            Your Director Code
-          </span>
-          <span
-            className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
-            style={{
-              background: isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7",
-              color: isDark ? "#FBBF24" : "#92400E",
-            }}
-          >
+          <span className="text-sm font-bold" style={{ color: isDark ? "#FBBF24" : "#92400E" }}>Your Director Code</span>
+          <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7", color: isDark ? "#FBBF24" : "#92400E" }}>
             Private
           </span>
         </div>
@@ -1082,13 +1230,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
         <div className="flex gap-2 items-center">
           <div
             className="flex-1 flex items-center gap-2 rounded-xl border font-mono font-bold tracking-widest text-base"
-            style={{
-              padding: "12px 16px",
-              background: isDark ? "rgba(0,0,0,0.25)" : "#FFFFFF",
-              border: `1.5px solid ${isDark ? "rgba(245,158,11,0.20)" : "#FDE68A"}`,
-              color: isDark ? "#FBBF24" : "#92400E",
-              letterSpacing: "0.15em",
-            }}
+            style={{ padding: "12px 16px", background: isDark ? "rgba(0,0,0,0.25)" : "#FFFFFF", border: `1.5px solid ${isDark ? "rgba(245,158,11,0.20)" : "#FDE68A"}`, color: isDark ? "#FBBF24" : "#92400E", letterSpacing: "0.15em" }}
           >
             <span>{showDirCode ? data.directorCode : data.directorCode.replace(/[A-Z0-9]/g, "•")}</span>
           </div>
@@ -1096,10 +1238,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
             type="button"
             onClick={() => setShowDirCode((v) => !v)}
             className="rounded-xl p-3 transition-colors"
-            style={{
-              background: isDark ? "rgba(245,158,11,0.12)" : "#FEF3C7",
-              color: isDark ? "#FBBF24" : "#D97706",
-            }}
+            style={{ background: isDark ? "rgba(245,158,11,0.12)" : "#FEF3C7", color: isDark ? "#FBBF24" : "#D97706" }}
             title={showDirCode ? "Hide code" : "Reveal code"}
           >
             {showDirCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -1108,31 +1247,22 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
             type="button"
             onClick={copyDirCode}
             className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200"
-            style={{
-              padding: "12px 16px",
-              background: dirCopied ? "#D97706" : isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7",
-              color: dirCopied ? "#FFFFFF" : isDark ? "#FBBF24" : "#92400E",
-            }}
+            style={{ padding: "12px 16px", background: dirCopied ? "#D97706" : isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7", color: dirCopied ? "#FFFFFF" : isDark ? "#FBBF24" : "#92400E" }}
           >
             {dirCopied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
             {dirCopied ? "Copied!" : "Copy"}
           </button>
         </div>
       </div>
-      {/* Hint */}
+
       <div
         className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{
-          background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE",
-          color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280",
-        }}
+        style={{ background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE", color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}
       >
         <BarChart3 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
           Players join with their{" "}
-          <strong style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}>
-            {data.ratingSystem}
-          </strong>{" "}
+          <strong style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}>{data.ratingSystem}</strong>{" "}
           username. ELO is fetched automatically and pairings are generated when you start Round 1.
         </span>
       </div>
@@ -1150,6 +1280,7 @@ interface TournamentWizardProps {
 export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [mode, setMode] = useState<WizardMode>("select");
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [data, setData] = useState<WizardData>({
@@ -1165,239 +1296,275 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   // Reset on open
   useEffect(() => {
     if (open) {
+      setMode("select");
       setStep(0);
       setDirection(1);
       setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase(), directorCode: generateDirectorCode() });
     }
   }, [open]);
 
-  // Keyboard: Escape to close, Enter to advance
-  const canAdvance = step === 0 ? data.name.trim().length > 0 : true;
+  // When entering quickstart mode, auto-fill today's date
+  const handleSelectMode = (m: "quickstart" | "schedule") => {
+    if (m === "quickstart") {
+      setData((d) => ({ ...d, date: todayIso() }));
+    }
+    setMode(m);
+    setStep(0);
+    setDirection(1);
+  };
+
+  // ── Schedule path: 4 steps (0..3) ──────────────────────────────────────────
+  // ── Quickstart path: 1 step (0 = form) then directly to share (step 1) ───
+
+  const scheduleStepCount = SCHEDULE_STEPS.length; // 4
+  const quickstartStepCount = 2; // form + share
+
+  const totalSteps = mode === "quickstart" ? quickstartStepCount : scheduleStepCount;
+
+  const canAdvance =
+    mode === "select"
+      ? false
+      : mode === "quickstart"
+      ? step === 0
+        ? data.name.trim().length > 0
+        : true
+      : step === 0
+      ? data.name.trim().length > 0
+      : true;
+
+  const commitTournament = useCallback(() => {
+    const slug = makeSlug(data.name, data.date);
+    registerTournament({
+      id: slug,
+      inviteCode: data.inviteCode,
+      directorCode: data.directorCode,
+      name: data.name,
+      venue: data.venue,
+      date: data.date,
+      description: data.description,
+      format: data.format,
+      rounds: data.rounds,
+      maxPlayers: data.maxPlayers,
+      timeBase: data.timeBase,
+      timeIncrement: data.timeIncrement,
+      timePreset: data.timePreset,
+      ratingSystem: data.ratingSystem,
+      createdAt: new Date().toISOString(),
+    });
+    grantDirectorSession(slug);
+    onClose();
+    navigate(`/tournament/${slug}/manage`);
+  }, [data, onClose, navigate]);
 
   const handleNext = useCallback(() => {
-    if (step < STEPS.length - 1) {
+    if (mode === "select") return;
+
+    if (step < totalSteps - 1) {
       setDirection(1);
       const next = step + 1;
       setStep(next);
-      if (next === STEPS.length - 1) {
+      // Fire confetti when reaching the share step
+      if (
+        (mode === "quickstart" && next === 1) ||
+        (mode === "schedule" && next === SCHEDULE_STEPS.length - 1)
+      ) {
         setTimeout(() => fireConfetti(130), 300);
       }
     } else {
-      const slug = makeSlug(data.name, data.date);
-      registerTournament({
-        id: slug,
-        inviteCode: data.inviteCode,
-        directorCode: data.directorCode,
-        name: data.name,
-        venue: data.venue,
-        date: data.date,
-        description: data.description,
-        format: data.format,
-        rounds: data.rounds,
-        maxPlayers: data.maxPlayers,
-        timeBase: data.timeBase,
-        timeIncrement: data.timeIncrement,
-        timePreset: data.timePreset,
-        ratingSystem: data.ratingSystem,
-        createdAt: new Date().toISOString(),
-      });
-      grantDirectorSession(slug);
-      onClose();
-      navigate(`/tournament/${slug}/manage`);
+      commitTournament();
     }
-  }, [step, data, fireConfetti, onClose, navigate]);
+  }, [mode, step, totalSteps, fireConfetti, commitTournament]);
 
   const handleBack = useCallback(() => {
+    if (mode === "select") {
+      onClose();
+      return;
+    }
     if (step > 0) {
       setDirection(-1);
       setStep((s) => s - 1);
     } else {
-      onClose();
+      // Back from first step of either path → return to mode select
+      setMode("select");
     }
-  }, [step, onClose]);
+  }, [mode, step, onClose]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!open) return;
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (mode === "select") onClose();
+        else setMode("select");
+      }
       if (e.key === "Enter" && canAdvance && !(e.target instanceof HTMLTextAreaElement)) {
         handleNext();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, canAdvance, handleNext, onClose]);
+  }, [open, canAdvance, handleNext, mode, onClose]);
 
-  // Swipe gesture navigation (mobile only)
   useSwipeGesture(scrollContainerRef, {
     onSwipeLeft: () => { if (canAdvance) handleNext(); },
     onSwipeRight: handleBack,
     threshold: 60,
     maxVerticalDrift: 80,
   });
+
   const patch = (p: Partial<WizardData>) => setData((d) => ({ ...d, ...p }));
 
   if (!open) return null;
 
+  // ── Mode selection screen ─────────────────────────────────────────────────
+  if (mode === "select") {
+    return createPortal(
+      <>
+        <ModeSelect isDark={isDark} onSelect={handleSelectMode} onClose={onClose} />
+        <style>{`
+          @keyframes wizardFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        `}</style>
+      </>,
+      document.body
+    );
+  }
+
+  // ── Determine which step component to render ──────────────────────────────
+  const isShareStep =
+    (mode === "quickstart" && step === 1) ||
+    (mode === "schedule" && step === SCHEDULE_STEPS.length - 1);
+
+  const heroStep = mode === "schedule" ? step : 0;
+
+  const stepLabel =
+    mode === "quickstart"
+      ? step === 0
+        ? "Quickstart"
+        : "Share"
+      : SCHEDULE_STEPS[step].label;
+
+  const stepEyebrow =
+    mode === "quickstart"
+      ? step === 0
+        ? "Quickstart"
+        : "Almost there!"
+      : SCHEDULE_STEPS[step].hero.eyebrow;
+
+  const stepTitle =
+    mode === "quickstart"
+      ? step === 0
+        ? "Start in\nseconds"
+        : "You're\nready!"
+      : SCHEDULE_STEPS[step].hero.title.replace("\n", " ");
+
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex"
-      style={{
-        background: isDark ? T.dBg : T.lBg,
-        animation: "wizardFadeIn 0.3s ease both",
-      }}
+      style={{ background: isDark ? T.dBg : T.lBg, animation: "wizardFadeIn 0.3s ease both" }}
     >
       {/* ── Left hero panel (hidden on mobile) ── */}
       <div className="hidden lg:flex lg:w-[32%] xl:w-[34%] flex-shrink-0">
-        <HeroPanel step={step} isDark={isDark} direction={direction} />
+        <HeroPanel step={heroStep} isDark={isDark} mode={mode} />
       </div>
 
       {/* ── Right input panel ── */}
-      <div
-        className="flex-1 flex flex-col relative overflow-hidden"
-        style={{ background: isDark ? T.dPanel : "#FFFFFF" }}
-      >
+      <div className="flex-1 flex flex-col relative overflow-hidden" style={{ background: isDark ? T.dPanel : "#FFFFFF" }}>
         {/* Progress bar */}
-        <ProgressBar step={step} total={STEPS.length} isDark={isDark} />
+        <ProgressBar step={step} total={totalSteps} isDark={isDark} />
 
-        {/* ── Mobile top bar (full-screen, compact, branded) ── */}
+        {/* ── Mobile top bar ── */}
         <div
           className="lg:hidden flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0 border-b"
           style={{ borderColor: isDark ? "rgba(255,255,255,0.07)" : "#F0F0F0" }}
         >
-          {/* Brand mark + step label */}
           <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: T.green }}
-            >
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
               <Crown className="w-4 h-4 text-white" strokeWidth={2} />
             </div>
             <div className="flex flex-col leading-none">
-              <span
-                className="text-[9px] font-semibold tracking-widest uppercase"
-                style={{ color: isDark ? T.dMuted : T.lMuted }}
-              >
-                Step {step + 1} of {STEPS.length}
+              <span className="text-[9px] font-semibold tracking-widest uppercase" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                Step {step + 1} of {totalSteps}
               </span>
-              <span
-                className="text-sm font-bold"
-                style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
-              >
-                {STEPS[step].label}
+              <span className="text-sm font-bold" style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}>
+                {stepLabel}
               </span>
             </div>
           </div>
-          {/* Mobile step dots */}
           <div className="flex items-center gap-1.5">
-            {STEPS.map((_, i) => (
+            {Array.from({ length: totalSteps }).map((_, i) => (
               <div
                 key={i}
                 className="rounded-full transition-all duration-300"
                 style={{
                   width: i === step ? 18 : 5,
                   height: 5,
-                  background:
-                    i === step
-                      ? T.green
-                      : i < step
-                      ? "rgba(61,107,71,0.5)"
-                      : isDark
-                      ? "rgba(255,255,255,0.15)"
-                      : "#D1D5DB",
+                  background: i === step ? T.green : i < step ? "rgba(61,107,71,0.5)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
                 }}
               />
             ))}
           </div>
-          {/* Close */}
           <button
-            onClick={onClose}
+            onClick={() => setMode("select")}
             className="w-8 h-8 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
-            style={{
-              background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-              color: isDark ? T.dSub : T.lSub,
-            }}
+            style={{ background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6", color: isDark ? T.dSub : T.lSub }}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* ── Desktop top bar ── */}
-        <div
-          className="hidden lg:flex items-center justify-between px-16 xl:px-20 pt-8 pb-0 flex-shrink-0"
-        >
+        <div className="hidden lg:flex items-center justify-between px-16 xl:px-20 pt-8 pb-0 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <span
-              className="text-xs font-semibold tracking-widest uppercase"
-              style={{ color: isDark ? T.dMuted : T.lMuted }}
-            >
-              {STEPS[step].label}
+            <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+              {stepLabel}
             </span>
           </div>
-          {/* Close */}
           <button
-            onClick={onClose}
+            onClick={() => setMode("select")}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-              color: isDark ? T.dSub : T.lSub,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = isDark
-                ? "rgba(255,255,255,0.12)"
-                : "#E5E7EB";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = isDark
-                ? "rgba(255,255,255,0.06)"
-                : "#F3F4F6";
-            }}
+            style={{ background: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6", color: isDark ? T.dSub : T.lSub }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = isDark ? "rgba(255,255,255,0.12)" : "#E5E7EB"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6"; }}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Step content — scrollable on mobile, centered on desktop */}
+        {/* Step content */}
         <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
           <div
             className="w-full px-8 sm:px-12 lg:px-16 xl:px-20 py-10 max-w-3xl mx-auto"
-            key={step}
+            key={`${mode}-${step}`}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
             {/* Mobile step eyebrow */}
-            <p
-              className="lg:hidden text-xs font-semibold tracking-widest uppercase mb-2"
-              style={{ color: isDark ? T.dMuted : T.lMuted }}
-            >
-              {STEPS[step].hero.eyebrow}
+            <p className="lg:hidden text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+              {stepEyebrow}
             </p>
             {/* Mobile step title */}
             <h2
               className="lg:hidden text-2xl font-bold mb-6"
-              style={{
-                fontFamily: "'Clash Display', sans-serif",
-                color: isDark ? T.dText : T.lText,
-              }}
+              style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? T.dText : T.lText }}
             >
-              {STEPS[step].hero.title.replace("\n", " ")}
+              {stepTitle}
             </h2>
 
-            {step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} />}
-            {step === 1 && <StepFormat data={data} onChange={patch} isDark={isDark} />}
-            {step === 2 && <StepTime data={data} onChange={patch} isDark={isDark} />}
-            {step === 3 && <StepShare data={data} isDark={isDark} />}
+            {/* Quickstart path */}
+            {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} />}
+            {mode === "quickstart" && step === 1 && <StepShare data={data} isDark={isDark} />}
+
+            {/* Schedule path */}
+            {mode === "schedule" && step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} />}
+            {mode === "schedule" && step === 1 && <StepFormat data={data} onChange={patch} isDark={isDark} />}
+            {mode === "schedule" && step === 2 && <StepTime data={data} onChange={patch} isDark={isDark} />}
+            {mode === "schedule" && step === 3 && <StepShare data={data} isDark={isDark} />}
           </div>
         </div>
 
-        {/* ── Mobile bottom nav: full-width Continue + Back link ── */}
+        {/* ── Mobile bottom nav ── */}
         <div
           className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-5 py-4 border-t"
-          style={{
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
-            background: isDark ? T.dPanel : "#FFFFFF",
-          }}
+          style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
         >
-          {/* Full-width Continue button */}
           <button
             type="button"
             onClick={handleNext}
@@ -1411,19 +1578,12 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
               boxShadow: canAdvance ? `0 4px 18px rgba(61,107,71,0.35)` : "none",
             }}
           >
-            {step === STEPS.length - 1 ? (
-              <>
-                Go to Tournament
-                <ArrowRight className="w-5 h-5" />
-              </>
+            {isShareStep ? (
+              <><ArrowRight className="w-5 h-5" /> Go to Tournament</>
             ) : (
-              <>
-                Continue
-                <ChevronRight className="w-5 h-5" />
-              </>
+              <>Continue <ChevronRight className="w-5 h-5" /></>
             )}
           </button>
-          {/* Back / Cancel as a small text link */}
           <button
             type="button"
             onClick={handleBack}
@@ -1431,63 +1591,41 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
             style={{ color: isDark ? T.dSub : T.lSub }}
           >
             <ChevronLeft className="w-4 h-4" />
-            {step === 0 ? "Cancel" : "Back"}
+            {step === 0 ? "Back to options" : "Back"}
           </button>
         </div>
 
-        {/* ── Desktop bottom nav: Back | dots | Continue ── */}
+        {/* ── Desktop bottom nav ── */}
         <div
           className="hidden lg:flex flex-shrink-0 items-center justify-between px-16 xl:px-20 py-5 border-t"
-          style={{
-            borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0",
-            background: isDark ? T.dPanel : "#FFFFFF",
-          }}
+          style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
         >
-          {/* Back / Cancel */}
           <button
             type="button"
             onClick={handleBack}
             className="flex items-center gap-1.5 text-sm font-medium rounded-xl transition-all duration-200"
-            style={{
-              padding: "10px 16px",
-              color: isDark ? T.dSub : T.lSub,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = isDark
-                ? "rgba(255,255,255,0.06)"
-                : "#F3F4F6";
-              (e.currentTarget as HTMLButtonElement).style.color = isDark ? T.dText : T.lText;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              (e.currentTarget as HTMLButtonElement).style.color = isDark ? T.dSub : T.lSub;
-            }}
+            style={{ padding: "10px 16px", color: isDark ? T.dSub : T.lSub }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6"; (e.currentTarget as HTMLButtonElement).style.color = isDark ? T.dText : T.lText; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = isDark ? T.dSub : T.lSub; }}
           >
             <ChevronLeft className="w-4 h-4" />
-            {step === 0 ? "Cancel" : "Back"}
+            {step === 0 ? "Back to options" : "Back"}
           </button>
-          {/* Step dots */}
+
           <div className="flex items-center gap-1.5">
-            {STEPS.map((_, i) => (
+            {Array.from({ length: totalSteps }).map((_, i) => (
               <div
                 key={i}
                 className="rounded-full transition-all duration-300"
                 style={{
                   width: i === step ? 20 : 6,
                   height: 6,
-                  background:
-                    i === step
-                      ? T.green
-                      : i < step
-                      ? "rgba(61,107,71,0.45)"
-                      : isDark
-                      ? "rgba(255,255,255,0.15)"
-                      : "#D1D5DB",
+                  background: i === step ? T.green : i < step ? "rgba(61,107,71,0.45)" : isDark ? "rgba(255,255,255,0.15)" : "#D1D5DB",
                 }}
               />
             ))}
           </div>
-          {/* Continue / Go to Tournament */}
+
           <button
             type="button"
             onClick={handleNext}
@@ -1500,56 +1638,24 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
               cursor: canAdvance ? "pointer" : "not-allowed",
               boxShadow: canAdvance ? `0 4px 14px rgba(61,107,71,0.30)` : "none",
             }}
-            onMouseEnter={(e) => {
-              if (!canAdvance) return;
-              (e.currentTarget as HTMLButtonElement).style.background = T.greenDark;
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                "0 6px 20px rgba(61,107,71,0.40)";
-            }}
-            onMouseLeave={(e) => {
-              if (!canAdvance) return;
-              (e.currentTarget as HTMLButtonElement).style.background = T.green;
-              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLButtonElement).style.boxShadow =
-                "0 4px 14px rgba(61,107,71,0.30)";
-            }}
+            onMouseEnter={(e) => { if (!canAdvance) return; (e.currentTarget as HTMLButtonElement).style.background = T.greenDark; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 20px rgba(61,107,71,0.40)"; }}
+            onMouseLeave={(e) => { if (!canAdvance) return; (e.currentTarget as HTMLButtonElement).style.background = T.green; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 14px rgba(61,107,71,0.30)"; }}
           >
-            {step === STEPS.length - 1 ? (
-              <>
-                Go to Tournament
-                <ArrowRight className="w-4 h-4" />
-              </>
+            {isShareStep ? (
+              <><ArrowRight className="w-4 h-4" /> Go to Tournament</>
             ) : (
-              <>
-                Continue
-                <ChevronRight className="w-4 h-4" />
-              </>
+              <>Continue <ChevronRight className="w-4 h-4" /></>
             )}
           </button>
         </div>
       </div>
+
       <style>{`
-        @keyframes wizardFadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes heroIn {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes stepSlideInRight {
-          from { opacity: 0; transform: translateX(28px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes stepSlideInLeft {
-          from { opacity: 0; transform: translateX(-28px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.5); }
-          to   { opacity: 1; transform: scale(1); }
-        }
+        @keyframes wizardFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes heroIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes stepSlideInRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes stepSlideInLeft { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
       `}</style>
     </div>,
     document.body

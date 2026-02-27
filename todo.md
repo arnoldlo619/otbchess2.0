@@ -338,3 +338,11 @@
 - [x] Create exportStandings utility in client/src/lib/exportCsv.ts
 - [x] Add Download CSV button to UserTournamentCard (completed tournaments only)
 - [x] Write unit tests for exportStandings CSV utility (27 tests passing)
+
+## Two-Path Onboarding (Quickstart vs Schedule Tournament)
+
+- [x] Add mode-selection screen to TournamentWizard (Quickstart card + Schedule Tournament card)
+- [x] Build Quickstart single-screen form: name, location, auto-filled today's date
+- [x] Apply smart defaults for Quickstart: Swiss, 5 rounds, 16 players, 10+5 time, chess.com
+- [x] Rename existing 4-step wizard path to "Schedule Tournament"
+- [x] Wire both paths so they share the same Share/confirmation step
