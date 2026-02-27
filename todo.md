@@ -318,3 +318,13 @@
 - [x] Empty state — friendly message with Trophy icon if no tournaments found on this device
 - [x] Modal animates in with slideUpModal spring keyframe
 - [x] Unit tests for forgot-code flow (9 tests passing)
+
+## Tournament Archive Page
+
+- [x] /tournaments route — full archive page with card grid
+- [x] UserTournamentCard — shows name, date, venue, format, round count, player count, winner badge
+- [x] Standings drawer — expandable card with final standings (rank, name, score, ELO, wins/draws/losses)
+- [x] Empty state — friendly Trophy icon prompt to create first tournament
+- [x] Search + format filter + sort bar (date / players / ELO)
+- [x] Route wired in App.tsx, Archive link in Home.tsx nav (desktop + mobile)
+- [x] Unit tests for archive data integrity and listTournaments helper (12 tests passing)
