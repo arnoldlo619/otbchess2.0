@@ -217,63 +217,63 @@ function TournamentHeader({
 
   return (
     <div className={`border-b transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
-      <div className="container py-8">
+      <div className="container py-6 sm:py-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <h1
-            className={`text-3xl lg:text-4xl font-bold text-foreground mb-3 tracking-tight`}
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3 tracking-tight"
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {name}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-base text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-muted-foreground">
               {date && (
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {date}
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate max-w-[120px] sm:max-w-none">{date}</span>
                 </span>
               )}
               {venue && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {venue}
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate max-w-[100px] sm:max-w-none">{venue}</span>
                 </span>
               )}
               {timeControl && (
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                   {timeControl}
                 </span>
               )}
-              <span className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-1">
+                <Users className="w-3.5 h-3.5 flex-shrink-0" />
                 {playerCount} players
               </span>
-              <span className="flex items-center gap-1.5">
-                <Trophy className="w-3.5 h-3.5" />
-                {format} · {totalRounds} rounds
+              <span className="flex items-center gap-1">
+                <Trophy className="w-3.5 h-3.5 flex-shrink-0" />
+                {format} · {totalRounds}R
               </span>
             </div>
           </div>
 
-          {/* Progress */}
-          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#EEEED2]"}`}>
+          {/* Progress — hidden on mobile to save space */}
+          <div className={`hidden md:flex items-center gap-3 px-4 py-3 rounded-xl border flex-shrink-0 ${isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10" : "bg-white border-[#EEEED2]"}`}>
             <div className="text-center">
               <p className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 {currentRound}
               </p>
-              <p className="text-xs text-muted-foreground">Current</p>
+              <p className="text-xs text-muted-foreground">Round</p>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-wrap max-w-[180px]">
               {Array.from({ length: totalRounds }).map((_, i) => (
                 <div
                   key={i}
                   className={`h-2 rounded-full transition-all ${
                     i < currentRound - 1
-                      ? "w-6 bg-[#3D6B47]"
+                      ? "w-5 bg-[#3D6B47]"
                       : i === currentRound - 1
-                      ? "w-6 bg-[#3D6B47] animate-pulse"
-                      : isDark ? "w-6 bg-white/15" : "w-6 bg-[#EEEED2]"
+                      ? "w-5 bg-[#3D6B47] animate-pulse"
+                      : isDark ? "w-5 bg-white/15" : "w-5 bg-[#EEEED2]"
                   }`}
                 />
               ))}
@@ -424,13 +424,13 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Round Tabs */}
-      <div className={`flex gap-1.5 p-1.5 rounded-2xl ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
+      {/* Round Tabs — scrollable on mobile */}
+      <div className={`flex gap-1.5 p-1.5 rounded-2xl overflow-x-auto scrollbar-none ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
         {rounds.map((r) => (
           <button
             key={r.number}
             onClick={() => setActiveRound(r.number)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            className={`flex-shrink-0 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 ${
               activeRound === r.number
                 ? "bg-[#3D6B47] text-white shadow-sm"
                 : isDark
@@ -452,7 +452,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
           <button
             key={`upcoming-${i}`}
             disabled
-            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium ${isDark ? "text-white/20" : "text-[#C4C4C4]"} cursor-not-allowed`}
+            className={`flex-shrink-0 py-2.5 px-4 rounded-xl text-sm font-medium ${isDark ? "text-white/20" : "text-[#C4C4C4]"} cursor-not-allowed`}
           >
             R{rounds.length + i + 1}
           </button>
@@ -513,27 +513,26 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
               </div>
             </div>
             {/* Players */}
-            <div className="p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-4">
               {/* White */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
-                    isDark ? "bg-white/90 border-white/20 text-[#1A1A1A]" : "bg-white border-[#EEEED2] text-[#1A1A1A]"
-                  }`}>
-                    ♝
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
+                  isDark ? "bg-white/90 border-white/20 text-[#1A1A1A]" : "bg-white border-[#EEEED2] text-[#1A1A1A]"
+                }`}>
+                  ♝
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-base font-bold text-foreground truncate">{white.name}</span>
+                    {white.title && <TitleBadge title={white.title} />}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-bold text-foreground">{white.name}</span>
-                      <TitleBadge title={white.title} />
-                      <span className="text-sm">{FLAG_EMOJI[white.country] ?? ""}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <ELOBadge elo={white.elo} size="md" />
-                    </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <ELOBadge elo={white.elo} size="md" />
                   </div>
                 </div>
-                <ResultPill result={game.result} perspective="white" />
+                <div className="flex-shrink-0">
+                  <ResultPill result={game.result} perspective="white" />
+                </div>
               </div>
               {/* Divider */}
               <div className={`flex items-center gap-3 ${isDark ? "text-white/20" : "text-[#EEEED2]"}`}>
@@ -542,25 +541,24 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
                 <div className="flex-1 h-px bg-current" />
               </div>
               {/* Black */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
-                    isDark ? "bg-[oklch(0.18_0.05_145)] border-white/15 text-white" : "bg-[#1A1A1A] border-[#333] text-white"
-                  }`}>
-                    ♚
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
+                  isDark ? "bg-[oklch(0.18_0.05_145)] border-white/15 text-white" : "bg-[#1A1A1A] border-[#333] text-white"
+                }`}>
+                  ♚
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-base font-bold text-foreground truncate">{black.name}</span>
+                    {black.title && <TitleBadge title={black.title} />}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-bold text-foreground">{black.name}</span>
-                      <TitleBadge title={black.title} />
-                      <span className="text-sm">{FLAG_EMOJI[black.country] ?? ""}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <ELOBadge elo={black.elo} size="md" />
-                    </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <ELOBadge elo={black.elo} size="md" />
                   </div>
                 </div>
-                <ResultPill result={game.result} perspective="black" />
+                <div className="flex-shrink-0">
+                  <ResultPill result={game.result} perspective="black" />
+                </div>
               </div>
             </div>
           </div>
@@ -686,8 +684,8 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
           const pct = completedRounds > 0 ? (row.points / completedRounds) * 100 : 0;
           return (
             <div key={row.player.id} className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-4 text-right">{idx + 1}</span>
-              <div className="w-28 truncate">
+              <span className="text-xs text-muted-foreground w-4 text-right flex-shrink-0">{idx + 1}</span>
+              <div className="w-20 sm:w-28 flex-shrink-0 truncate">
                 <span className="text-xs font-medium text-foreground">{row.player.name.split(" ")[0]}</span>
               </div>
               <div className="flex-1 relative h-5 flex items-center">
@@ -838,22 +836,25 @@ export default function TournamentPage() {
       {displayState.status !== "registration" && (
         <>
           {/* Live clock banner */}
-          <div className="bg-[#3D6B47] py-2">
-            <div className="container flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white/80 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                {displayState.status === "completed"
-                  ? `Tournament complete — ${displayState.totalRounds} rounds`
-                  : `Round ${displayState.currentRound} in progress${liveGames > 0 ? ` — ${liveGames} board${liveGames !== 1 ? "s" : ""} active` : ""}`}
+          <div className="bg-[#3D6B47] py-2.5">
+            <div className="container flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-white/80 text-sm min-w-0">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
+                <span className="truncate">
+                  {displayState.status === "completed"
+                    ? `Complete · ${displayState.totalRounds} rounds`
+                    : `Round ${displayState.currentRound}${liveGames > 0 ? ` · ${liveGames} active` : ""}`}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <LiveBadge
                   currentRound={displayState.currentRound}
                   totalRounds={displayState.totalRounds}
                   status={displayState.status}
                 />
+                {/* Elapsed clock — hidden on mobile to save space */}
                 {displayState.status === "in_progress" && (
-                  <div className="flex items-center gap-1.5 text-white text-xs font-mono font-bold">
+                  <div className="hidden sm:flex items-center gap-1.5 text-white text-xs font-mono font-bold">
                     <Clock className="w-3.5 h-3.5 text-white/70" />
                     {formatElapsed(elapsed + 5432)}
                   </div>

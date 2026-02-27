@@ -398,3 +398,12 @@
 - [x] Registration panel: fix join URL overflow, ensure copy+QR buttons don't get squished
 - [x] Players tab toolbar: fix search input min-width overflow at 375px
 - [x] Tournament Complete buttons: stack or wrap on mobile
+
+## Mobile Layout Audit (Participant Dashboard — 375px)
+
+- [x] TournamentHeader: reduce meta row gap and font size on mobile, prevent 5-item wrap
+- [x] TournamentHeader: hide progress widget on mobile (xs/sm), show only on md+
+- [x] Round tab bar: add overflow-x-auto scroll so 7+ round tabs don't overflow 375px
+- [x] Game card player row: add min-w-0 + truncate to prevent name overflow
+- [x] Live clock banner: hide elapsed clock on mobile, keep status text + LiveBadge only
+- [x] PerformanceSection: reduce player name column width on mobile (w-20 instead of w-28)
