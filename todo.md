@@ -429,3 +429,11 @@
 - [x] Apply green left-border + green-tinted bg to participant's own row in StandingsPanel
 - [x] Apply same highlight to participant's row in MobileStandingsAccordion
 - [x] Pass myPlayerId from TournamentPage to both components
+
+## Player Cap Enforcement
+
+- [x] addPlayerToTournament returns { success, reason } instead of void — "full" | "duplicate" | "ok"
+- [x] Join page handleConfirm checks return value and shows toast if reason === "full"
+- [x] Toast banner: amber warning, "Tournament Full", player count + max shown
+- [x] Confirm button disabled on the confirm step if tournament is already full
+- [x] Unit tests for cap enforcement in addPlayerToTournament (13 tests passing)

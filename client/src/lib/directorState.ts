@@ -104,22 +104,35 @@ export function loadTournamentState(tournamentId: string): DirectorState | null 
  * player directly to a tournament's localStorage store without needing the hook.
  * The Director Dashboard will pick up the change via the storage event listener.
  */
-export function addPlayerToTournament(tournamentId: string, player: Player): void {
+export type AddPlayerResult =
+  | { success: true; reason: "ok" }
+  | { success: false; reason: "duplicate" | "full" | "unknown" };
+
+export function addPlayerToTournament(tournamentId: string, player: Player): AddPlayerResult {
   try {
     let existing = loadFromStorage(tournamentId);
     // If no persisted state yet, try to bootstrap from registry config
     if (!existing) {
       const config = getTournamentConfig(tournamentId);
-      if (!config) return; // unknown tournament — silently skip
+      if (!config) return { success: false, reason: "unknown" };
       existing = getNewTournamentState(config);
     }
     // Prevent duplicate registrations
-    if (existing.players.some((p) => p.id === player.id || p.username === player.username)) return;
+    if (existing.players.some((p) => p.id === player.id || p.username === player.username)) {
+      return { success: false, reason: "duplicate" };
+    }
+    // Enforce player cap from registry config
+    const config = getTournamentConfig(tournamentId);
+    const maxPlayers = config?.maxPlayers ?? Infinity;
+    if (existing.players.length >= maxPlayers) {
+      return { success: false, reason: "full" };
+    }
     const playerWithTimestamp: Player = { ...player, joinedAt: Date.now() };
     const updated: DirectorState = { ...existing, players: [...existing.players, playerWithTimestamp] };
     saveToStorage(tournamentId, updated);
+    return { success: true, reason: "ok" };
   } catch {
-    // fail silently
+    return { success: false, reason: "unknown" };
   }
 }
 

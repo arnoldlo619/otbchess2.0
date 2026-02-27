@@ -327,6 +327,20 @@ export default function JoinPage() {
   const tournament = DEMO_TOURNAMENT;
   const isValidCode = isDemoCode || (tournamentCode.length >= 4 && (isDemoCode || resolvedConfig !== null || tournamentCode.length >= 6));
 
+  // Derive whether the tournament has hit its player cap (for disabling the confirm button)
+  const isTournamentFull = (() => {
+    if (!resolvedConfig || isDemoCode) return false;
+    try {
+      const raw = localStorage.getItem(`otb-director-${resolvedConfig.id}`);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      const playerCount: number = parsed?.state?.players?.length ?? 0;
+      return playerCount >= (resolvedConfig.maxPlayers ?? Infinity);
+    } catch {
+      return false;
+    }
+  })();
+
   function advanceStep(next: Step) {
     setStepKey((k) => k + 1);
     setStep(next);
@@ -361,6 +375,13 @@ export default function JoinPage() {
   }, [lookupStatus]);;
 
   const [confirming, setConfirming] = useState(false);
+  const [capToast, setCapToast] = useState<{ type: "full" | "duplicate" } | null>(null);
+
+  function showCapToast(type: "full" | "duplicate") {
+    setCapToast({ type });
+    setTimeout(() => setCapToast(null), 5000);
+  }
+
   async function handleConfirm() {
     setConfirming(true);
     // Persist the player to the tournament's localStorage store so the Director
@@ -388,7 +409,12 @@ export default function JoinPage() {
           phone: phone.trim() || undefined,
           email: email.trim() || undefined,
         };
-        addPlayerToTournament(config.id, player);
+        const result = addPlayerToTournament(config.id, player);
+        if (!result.success) {
+          setConfirming(false);
+          showCapToast(result.reason === "full" ? "full" : "duplicate");
+          return;
+        }
       }
     }
     // Persist registration to localStorage for duplicate detection
@@ -453,6 +479,44 @@ export default function JoinPage() {
 
       {/* -- Progress bar ----------------------------------------------------- */}
       <StepProgress step={step} />
+
+      {/* -- Cap / Duplicate Toast -------------------------------------------- */}
+      {capToast && (
+        <div
+          className={`fixed top-[calc(env(safe-area-inset-top)+60px)] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm animate-slide-down-fade ${
+            capToast.type === "full"
+              ? isDark
+                ? "bg-amber-500/15 border border-amber-500/30 text-amber-300"
+                : "bg-amber-50 border border-amber-300 text-amber-800"
+              : isDark
+              ? "bg-blue-500/15 border border-blue-500/30 text-blue-300"
+              : "bg-blue-50 border border-blue-300 text-blue-800"
+          } rounded-2xl px-4 py-3.5 flex items-start gap-3 shadow-lg`}
+        >
+          <div className={`mt-0.5 w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center ${
+            capToast.type === "full" ? "bg-amber-400/20" : "bg-blue-400/20"
+          }`}>
+            <AlertCircle className="w-3.5 h-3.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold leading-tight">
+              {capToast.type === "full" ? "Tournament Full" : "Already Registered"}
+            </p>
+            <p className="text-xs mt-0.5 opacity-80">
+              {capToast.type === "full"
+                ? `This tournament has reached its player limit. Ask the director to increase the cap or join the waitlist.`
+                : `You're already registered for this tournament with this username.`}
+            </p>
+          </div>
+          <button
+            onClick={() => setCapToast(null)}
+            className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity text-lg leading-none mt-0.5"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* -- Scrollable content ----------------------------------------------- */}
       <div ref={contentRef} className="flex-1 overflow-y-auto overscroll-none">
@@ -981,13 +1045,23 @@ export default function JoinPage() {
 
         {step === "confirm" && profile && (
           <div className="space-y-2">
+            {isTournamentFull && (
+              <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-medium ${
+                isDark ? "bg-amber-500/12 border border-amber-500/25 text-amber-300" : "bg-amber-50 border border-amber-300 text-amber-800"
+              }`}>
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>This tournament is full. Ask the director to increase the player cap.</span>
+              </div>
+            )}
             <button
               onClick={handleConfirm}
-              disabled={loading}
-              className="mobile-cta"
+              disabled={loading || isTournamentFull}
+              className="mobile-cta disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {confirming ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Registering…</>
+              ) : isTournamentFull ? (
+                <><AlertCircle className="w-4 h-4" /> Tournament Full</>
               ) : (
                 <><CheckCircle2 className="w-4 h-4" /> Confirm Registration</>
               )}
