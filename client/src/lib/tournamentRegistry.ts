@@ -99,6 +99,23 @@ export function listTournaments(): TournamentConfig[] {
   return [...loadRegistry()].reverse();
 }
 
+/**
+ * Update specific fields of an existing tournament config.
+ * Returns the updated config, or null if the tournament was not found.
+ */
+export function updateTournamentConfig(
+  id: string,
+  patch: Partial<Omit<TournamentConfig, "id" | "inviteCode" | "directorCode" | "createdAt">>
+): TournamentConfig | null {
+  const registry = loadRegistry();
+  const idx = registry.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+  const updated: TournamentConfig = { ...registry[idx], ...patch };
+  registry[idx] = updated;
+  saveRegistry(registry);
+  return updated;
+}
+
 /** Delete a tournament config and its associated director state. */
 export function deleteTournament(id: string): void {
   const registry = loadRegistry();

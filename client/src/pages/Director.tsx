@@ -22,6 +22,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import {
   Crown,
   ChevronLeft,
@@ -489,6 +490,7 @@ export default function Director() {
     togglePause,
     resetTournament,
     completeTournament,
+    updateSettings,
   } = useDirectorState(tournamentId);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
@@ -502,6 +504,8 @@ export default function Director() {
   const standings = liveStandings.map((s) => s.player);
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;
   const totalGames = currentRoundData?.games.length ?? 0;
+  // Settings are locked once any round has been generated
+  const isSettingsLocked = state.rounds.length > 0 || state.status !== "registration";
 
   // ── Player search / filter / sort state ─────────────────────────────────
   const [playerSearch, setPlayerSearch] = useState("");
@@ -1567,70 +1571,46 @@ export default function Director() {
               )}
             </div>
           )}
-          {/* ── Settings Tabb ────────────────────────────────────────────────── */}
+          {/* ── Settings Tab ─────────────────────────────────────────────────── */}
           {activeTab === "settings" && (
             <div className="space-y-4">
-              {[
-                {
-                  title: "Tournament Details",
-                  items: [
-                    { label: "Name", value: state.tournamentName },
-                    { label: "Format", value: `Swiss · ${state.totalRounds} rounds` },
-                    ...(tournamentConfig?.venue ? [{ label: "Venue", value: tournamentConfig.venue }] : []),
-                    ...(tournamentConfig?.date ? [{ label: "Date", value: tournamentConfig.date }] : []),
-                    ...(tournamentConfig?.timePreset ? [{ label: "Time Control", value: tournamentConfig.timePreset }] : []),
-                    ...(tournamentConfig?.ratingSystem ? [{ label: "Rating System", value: tournamentConfig.ratingSystem }] : []),
-                    ...(tournamentConfig?.maxPlayers ? [{ label: "Max Players", value: String(tournamentConfig.maxPlayers) }] : []),
-                    { label: "Invite Code", value: inviteCode },
-                  ],
-                },
-                {
-                  title: "Pairing Settings",
-                  items: [
-                    { label: "Algorithm", value: "Swiss (FIDE)" },
-                    { label: "Color Balance", value: "Automatic" },
-                    { label: "Rematch Prevention", value: "Enabled" },
-                    { label: "Bye Assignment", value: "Lowest score" },
-                  ],
-                },
-              ].map((section) => (
+              {/* Editable tournament settings panel */}
+              {tournamentId !== "otb-demo-2026" ? (
+                <TournamentSettingsPanel
+                  tournamentId={tournamentId}
+                  isLocked={isSettingsLocked}
+                  isDark={isDark}
+                  onSaved={(updated) => {
+                    // Sync name and rounds back into live director state
+                    updateSettings({
+                      tournamentName: updated.name,
+                      totalRounds: updated.rounds,
+                    });
+                  }}
+                />
+              ) : (
+                /* Demo tournament — show read-only info */
                 <div
-                  key={section.title}
                   className={`rounded-xl border overflow-hidden ${
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
                   }`}
                 >
-                  <div className={`flex items-center justify-between px-5 py-3 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
-                    <h2
-                      className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}
-                      style={{ fontFamily: "'Clash Display', sans-serif" }}
-                    >
-                      {section.title}
-                    </h2>
-                    <button
-                      onClick={() => toast.info("To edit tournament settings, create a new tournament from the home page.")}
-                      className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-                        isDark ? "text-[#4CAF50] hover:text-[#6FCF7A]" : "text-[#3D6B47] hover:text-[#2A4A32]"
-                      }`}
-                    >
-                      <Settings className="w-3 h-3" /> Edit
-                    </button>
+                  <div className="px-5 py-3 border-b" style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0" }}>
+                    <h2 className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Tournament Details</h2>
                   </div>
                   <div className="divide-y">
-                    {section.items.map(({ label, value }) => (
-                      <div
-                        key={label}
-                        className={`flex items-center justify-between px-5 py-3 ${
-                          isDark ? "divide-white/06" : ""
-                        }`}
-                      >
+                    {[
+                      { label: "Name", value: state.tournamentName },
+                      { label: "Format", value: `Swiss · ${state.totalRounds} rounds` },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-center justify-between px-5 py-3">
                         <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</span>
                         <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-800"}`}>{value}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
+              )}
 
               {/* Danger zone */}
               <div

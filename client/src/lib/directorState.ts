@@ -305,6 +305,14 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     }));
   }, []);
 
+  // Update mutable tournament settings (name, totalRounds) from the Settings panel
+  const updateSettings = useCallback(
+    (patch: { tournamentName?: string; totalRounds?: number }) => {
+      setState((prev) => ({ ...prev, ...patch }));
+    },
+    []
+  );
+
   // Reset tournament — clears localStorage and restores initial state
   const resetTournament = useCallback(() => {
     localStorage.removeItem(storageKey(tournamentId));
@@ -340,5 +348,6 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     completeTournament,
     togglePause,
     resetTournament,
+    updateSettings,
   };
 }

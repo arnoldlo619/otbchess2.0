@@ -346,3 +346,12 @@
 - [x] Apply smart defaults for Quickstart: Swiss, 5 rounds, 16 players, 10+5 time, chess.com
 - [x] Rename existing 4-step wizard path to "Schedule Tournament"
 - [x] Wire both paths so they share the same Share/confirmation step
+
+## Tournament Settings Panel (Director Dashboard)
+
+- [x] Add updateTournamentConfig() helper to tournamentRegistry.ts
+- [x] Build TournamentSettingsPanel component (editable fields: name, venue, date, description, format, rounds, max players, time control, rating system)
+- [x] Lock editing once tournament is active (rounds > 0 or status !== registration)
+- [x] Wire panel into Director Dashboard Settings tab (replace static read-only display)
+- [x] Sync name/rounds changes back to directorState (tournamentName, totalRounds)
+- [x] Unit tests for updateTournamentConfig helper (20 tests passing)
