@@ -1077,3 +1077,20 @@
     filter: none !important;
   }
 }
+
+/* ── Install banner slide-up animation ──────────────────────────────────────── */
+
+@keyframes slideUpBanner {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-slide-up-banner {
+  animation: slideUpBanner 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up-banner {
+    animation: none !important;
+  }
+}

@@ -292,3 +292,12 @@
 ## Logo Hover Animation
 
 - [x] Add soft hover animation to OTB!! nav logo (scale 1.06 + green drop-shadow glow, dark mode variant, reduced-motion safe)
+
+## PWA Install Banner
+
+- [x] usePwaInstall hook — capture beforeinstallprompt, detect iOS Safari, check standalone mode
+- [x] InstallBanner component — bottom-anchored mobile strip with OTB logo, install CTA, dismiss button
+- [x] iOS variant — shows Share icon + step-by-step instruction sheet (bottom sheet)
+- [x] localStorage dismissal — remember dismiss for 14 days, never show in standalone mode
+- [x] Wire InstallBanner into App.tsx layout (renders on all routes, hidden on md+)
+- [x] Unit tests for usePwaInstall hook logic (12 tests passing)

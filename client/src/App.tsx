@@ -12,6 +12,7 @@ import JoinPage from "./pages/Join";
 import Archive from "./pages/Archive";
 import ReportPage from "./pages/Report";
 import DirectorAccessPage from "./pages/DirectorAccess";
+import { InstallBanner } from "./components/InstallBanner";
 
 
 function Router() {
@@ -48,6 +49,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <InstallBanner />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
