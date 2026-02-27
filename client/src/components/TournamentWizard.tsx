@@ -607,6 +607,7 @@ function QuickstartForm({
   isDark: boolean;
 }) {
   const [showRatingPicker, setShowRatingPicker] = useState(false);
+  const [showRoundsPicker, setShowRoundsPicker] = useState(false);
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -615,9 +616,15 @@ function QuickstartForm({
     { value: "unrated",   label: "Unrated",   sub: "No ELO required" },
   ];
 
+  const roundOptions = [3, 4, 5, 6, 7, 9, 11];
+  const DEFAULT_ROUNDS = 5;
+
   // Display label for the currently selected rating system
   const activeRating = ratingOptions.find((o) => o.value === data.ratingSystem);
-  const isNonDefault = data.ratingSystem !== "chess.com";
+  const isNonDefaultRating = data.ratingSystem !== "chess.com";
+  const isNonDefaultRounds = data.rounds !== DEFAULT_ROUNDS;
+  // keep old alias for existing JSX references
+  const isNonDefault = isNonDefaultRating;
 
   return (
     <div className="space-y-7">
@@ -675,17 +682,23 @@ function QuickstartForm({
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
           {[
-            ["Format", "Swiss System"],
-            ["Rounds", "5"],
-            ["Max Players", "16"],
+            ["Format",       "Swiss System"],
+            ["Rounds",       String(data.rounds)],
+            ["Max Players",  "16"],
             ["Time Control", "10+5 Rapid"],
-            ["Rating", activeRating?.label ?? "chess.com"],
+            ["Rating",       activeRating?.label ?? "chess.com"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-center justify-between gap-2">
               <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{label}</span>
               <span
                 className="text-xs font-semibold"
-                style={{ color: label === "Rating" && isNonDefault ? T.green : isDark ? T.dText : T.lText }}
+                style={{
+                  color:
+                    (label === "Rating" && isNonDefaultRating) ||
+                    (label === "Rounds" && isNonDefaultRounds)
+                      ? T.green
+                      : isDark ? T.dText : T.lText,
+                }}
               >
                 {value}
               </span>
@@ -693,8 +706,59 @@ function QuickstartForm({
           ))}
         </div>
         <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
-          You can adjust format, rounds, and time control from the Director Dashboard after creating the tournament.
+          You can adjust format and time control from the Director Dashboard after creating the tournament.
         </p>
+      </div>
+
+      {/* Optional rounds picker toggle */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowRoundsPicker((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          style={{ color: isNonDefaultRounds ? T.green : isDark ? T.dMuted : T.lMuted }}
+        >
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform duration-200"
+            style={{ transform: showRoundsPicker ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+          {isNonDefaultRounds
+            ? `Rounds: ${data.rounds} · Change`
+            : "Want a different number of rounds?"}
+        </button>
+
+        {showRoundsPicker && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {roundOptions.map((r) => {
+              const active = data.rounds === r;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => {
+                    onChange({ rounds: r });
+                    if (active) setShowRoundsPicker(false);
+                  }}
+                  className="flex flex-col items-center rounded-xl border transition-all duration-150"
+                  style={{
+                    padding: "10px 18px",
+                    background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                    border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                    boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                    minWidth: "56px",
+                  }}
+                >
+                  <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                    {r}
+                  </span>
+                  <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                    {r === 1 ? "round" : "rounds"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Optional rating system toggle */}
