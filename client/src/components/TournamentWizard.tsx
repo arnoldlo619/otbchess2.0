@@ -608,6 +608,7 @@ function QuickstartForm({
 }) {
   const [showRatingPicker, setShowRatingPicker] = useState(false);
   const [showRoundsPicker, setShowRoundsPicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -616,13 +617,23 @@ function QuickstartForm({
     { value: "unrated",   label: "Unrated",   sub: "No ELO required" },
   ];
 
+  const timeControlOptions: { preset: string; label: string; sub: string; base: number; inc: number }[] = [
+    { preset: "1+0",  label: "Bullet",    sub: "1 min · no increment",  base: 1,  inc: 0  },
+    { preset: "3+2",  label: "Blitz",     sub: "3 min + 2 sec",         base: 3,  inc: 2  },
+    { preset: "10+5", label: "Rapid",     sub: "10 min + 5 sec",        base: 10, inc: 5  },
+    { preset: "30+0", label: "Classical", sub: "30 min · no increment", base: 30, inc: 0  },
+  ];
+
+  const DEFAULT_TIME_PRESET = "10+5";
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
   const DEFAULT_ROUNDS = 5;
 
   // Display label for the currently selected rating system
   const activeRating = ratingOptions.find((o) => o.value === data.ratingSystem);
+  const activeTime = timeControlOptions.find((o) => o.preset === data.timePreset);
   const isNonDefaultRating = data.ratingSystem !== "chess.com";
   const isNonDefaultRounds = data.rounds !== DEFAULT_ROUNDS;
+  const isNonDefaultTime = data.timePreset !== DEFAULT_TIME_PRESET;
   // keep old alias for existing JSX references
   const isNonDefault = isNonDefaultRating;
 
@@ -685,7 +696,7 @@ function QuickstartForm({
             ["Format",       "Swiss System"],
             ["Rounds",       String(data.rounds)],
             ["Max Players",  "16"],
-            ["Time Control", "10+5 Rapid"],
+            ["Time Control", activeTime ? `${activeTime.preset} ${activeTime.label}` : `${data.timePreset} Rapid`],
             ["Rating",       activeRating?.label ?? "chess.com"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-center justify-between gap-2">
@@ -695,7 +706,8 @@ function QuickstartForm({
                 style={{
                   color:
                     (label === "Rating" && isNonDefaultRating) ||
-                    (label === "Rounds" && isNonDefaultRounds)
+                    (label === "Rounds" && isNonDefaultRounds) ||
+                    (label === "Time Control" && isNonDefaultTime)
                       ? T.green
                       : isDark ? T.dText : T.lText,
                 }}
@@ -708,6 +720,56 @@ function QuickstartForm({
         <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
           You can adjust format and time control from the Director Dashboard after creating the tournament.
         </p>
+      </div>
+
+      {/* Optional time control picker toggle */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowTimePicker((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          style={{ color: isNonDefaultTime ? T.green : isDark ? T.dMuted : T.lMuted }}
+        >
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform duration-200"
+            style={{ transform: showTimePicker ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+          {isNonDefaultTime
+            ? `Time: ${activeTime?.label ?? data.timePreset} · Change`
+            : "Want a different time control?"}
+        </button>
+
+        {showTimePicker && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {timeControlOptions.map((opt) => {
+              const active = data.timePreset === opt.preset;
+              return (
+                <button
+                  key={opt.preset}
+                  type="button"
+                  onClick={() => {
+                    onChange({ timePreset: opt.preset, timeBase: opt.base, timeIncrement: opt.inc });
+                    if (active) setShowTimePicker(false);
+                  }}
+                  className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
+                  style={{
+                    padding: "10px 14px",
+                    background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                    border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                    boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                  }}
+                >
+                  <span className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                    {opt.label}
+                  </span>
+                  <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                    {opt.sub}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Optional rounds picker toggle */}
