@@ -616,6 +616,7 @@ function QuickstartForm({
   const [showRatingPicker, setShowRatingPicker] = useState(false);
   const [showRoundsPicker, setShowRoundsPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showCapPicker, setShowCapPicker] = useState(false);
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -634,6 +635,8 @@ function QuickstartForm({
   const DEFAULT_TIME_PRESET = "10+5";
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
   const DEFAULT_ROUNDS = 5;
+  const capOptions = [8, 12, 16, 24, 32];
+  const DEFAULT_CAP = 16;
 
   // Display label for the currently selected rating system
   const activeRating = ratingOptions.find((o) => o.value === data.ratingSystem);
@@ -641,6 +644,7 @@ function QuickstartForm({
   const isNonDefaultRating = data.ratingSystem !== "chess.com";
   const isNonDefaultRounds = data.rounds !== DEFAULT_ROUNDS;
   const isNonDefaultTime = data.timePreset !== DEFAULT_TIME_PRESET;
+  const isNonDefaultCap = data.maxPlayers !== DEFAULT_CAP;
   // keep old alias for existing JSX references
   const isNonDefault = isNonDefaultRating;
 
@@ -717,7 +721,7 @@ function QuickstartForm({
           {[
             ["Format",       "Swiss System"],
             ["Rounds",       String(data.rounds)],
-            ["Max Players",  "16"],
+            ["Max Players",  String(data.maxPlayers)],
             ["Time Control", activeTime ? `${activeTime.preset} ${activeTime.label}` : `${data.timePreset} Rapid`],
             ["Rating",       activeRating?.label ?? "chess.com"],
           ].map(([label, value]) => (
@@ -729,7 +733,8 @@ function QuickstartForm({
                   color:
                     (label === "Rating" && isNonDefaultRating) ||
                     (label === "Rounds" && isNonDefaultRounds) ||
-                    (label === "Time Control" && isNonDefaultTime)
+                    (label === "Time Control" && isNonDefaultTime) ||
+                    (label === "Max Players" && isNonDefaultCap)
                       ? T.green
                       : isDark ? T.dText : T.lText,
                 }}
@@ -864,6 +869,74 @@ function QuickstartForm({
             >
               <span className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
                 {currentHint}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Optional player cap picker toggle */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowCapPicker((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          style={{ color: isNonDefaultCap ? T.green : isDark ? T.dMuted : T.lMuted }}
+        >
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform duration-200"
+            style={{ transform: showCapPicker ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+          {isNonDefaultCap
+            ? `Max Players: ${data.maxPlayers} · Change`
+            : "Expecting more or fewer players? Set cap"}
+        </button>
+
+        {showCapPicker && (
+          <div className="mt-3 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {capOptions.map((cap) => {
+                const active = data.maxPlayers === cap;
+                const optRounds = recommendedRounds(cap);
+                return (
+                  <button
+                    key={cap}
+                    type="button"
+                    onClick={() => {
+                      onChange({ maxPlayers: cap });
+                      if (active) setShowCapPicker(false);
+                    }}
+                    className="flex flex-col items-center rounded-xl border transition-all duration-150"
+                    style={{
+                      padding: "10px 18px",
+                      background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                      border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                      boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                      minWidth: "60px",
+                    }}
+                  >
+                    <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                      {cap}
+                    </span>
+                    <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                      {cap === 1 ? "player" : "players"}
+                    </span>
+                    <span
+                      className="text-[10px] mt-1 font-medium"
+                      style={{ color: active ? T.green : isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
+                    >
+                      {optRounds}R opt.
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div
+              className="rounded-xl px-3 py-2.5"
+              style={{ background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE" }}
+            >
+              <span className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+                Cap limits how many players can join via the invite link. The recommended rounds count updates automatically.
               </span>
             </div>
           </div>

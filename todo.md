@@ -367,3 +367,9 @@
 - [x] Add onKeyDown prop to TextInput so Enter on name/location/date fields fires handleNext
 - [x] Guard picker buttons so Enter on them doesn't bubble to the global handler (e.preventDefault in handleFieldEnter)
 - [x] Unit test: Enter key fires handleNext when name is filled (covered by existing canAdvance tests)
+
+## Quickstart Player Cap Picker
+
+- [x] Add collapsible player cap picker (8/12/16/24/32) to QuickstartForm
+- [x] Update Smart Defaults card to show live max players value
+- [x] Update recommended rounds hint to react to selected player cap
