@@ -27,6 +27,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
+import { recommendedRounds, roundsHint, roundRangeLabel } from "@/lib/recommendedRounds";
 import { registerTournament, makeSlug, generateDirectorCode, grantDirectorSession } from "@/lib/tournamentRegistry";
 import {
   X,
@@ -637,6 +638,10 @@ function QuickstartForm({
   // keep old alias for existing JSX references
   const isNonDefault = isNonDefaultRating;
 
+  // Recommended rounds hint — based on maxPlayers (default 16)
+  const optimalRounds = recommendedRounds(data.maxPlayers);
+  const currentHint = roundsHint(data.maxPlayers, data.rounds);
+
   return (
     <div className="space-y-7">
       {/* Tournament name */}
@@ -790,35 +795,60 @@ function QuickstartForm({
         </button>
 
         {showRoundsPicker && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {roundOptions.map((r) => {
-              const active = data.rounds === r;
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => {
-                    onChange({ rounds: r });
-                    if (active) setShowRoundsPicker(false);
-                  }}
-                  className="flex flex-col items-center rounded-xl border transition-all duration-150"
-                  style={{
-                    padding: "10px 18px",
-                    background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                    border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
-                    boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
-                    minWidth: "56px",
-                  }}
-                >
-                  <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                    {r}
-                  </span>
-                  <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                    {r === 1 ? "round" : "rounds"}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="mt-3 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {roundOptions.map((r) => {
+                const active = data.rounds === r;
+                const isOptimal = r === optimalRounds;
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => {
+                      onChange({ rounds: r });
+                      if (active) setShowRoundsPicker(false);
+                    }}
+                    className="flex flex-col items-center rounded-xl border transition-all duration-150 relative"
+                    style={{
+                      padding: "10px 18px",
+                      background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                      border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                      boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                      minWidth: "56px",
+                    }}
+                  >
+                    {isOptimal && (
+                      <span
+                        className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                        style={{
+                          background: active ? T.green : isDark ? "rgba(61,107,71,0.35)" : "#D1FAE5",
+                          color: active ? "#FFFFFF" : T.green,
+                        }}
+                      >
+                        ★ Best
+                      </span>
+                    )}
+                    <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                      {r}
+                    </span>
+                    <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                      {r === 1 ? "round" : "rounds"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Dynamic hint based on current selection */}
+            <div
+              className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+              style={{
+                background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
+              }}
+            >
+              <span className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+                {currentHint}
+              </span>
+            </div>
           </div>
         )}
       </div>

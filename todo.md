@@ -355,3 +355,9 @@
 - [x] Wire panel into Director Dashboard Settings tab (replace static read-only display)
 - [x] Sync name/rounds changes back to directorState (tournamentName, totalRounds)
 - [x] Unit tests for updateTournamentConfig helper (20 tests passing)
+
+## Recommended Rounds Hint
+
+- [x] Add recommendedRoundsHint() helper that returns optimal rounds count and label based on player count
+- [x] Show dynamic hint inside the rounds picker on the Quickstart form, updating live based on maxPlayers
+- [x] Unit tests for recommendedRoundsHint helper (25 tests passing)
