@@ -172,28 +172,28 @@ function BoardCard({
     >
       {/* Board header */}
       <div
-        className={`flex items-center justify-between px-4 py-2.5 border-b rounded-t-xl ${
+        className={`flex items-center justify-between px-5 py-3 border-b rounded-t-xl ${
           isDark ? "border-white/08 bg-white/04" : "border-gray-50 bg-gray-50/80"
         }`}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span
-            className={`text-xs font-bold tracking-widest uppercase ${
-              isDark ? "text-white/40" : "text-gray-400"
+            className={`text-sm font-bold tracking-widest uppercase ${
+              isDark ? "text-white/50" : "text-gray-500"
             }`}
           >
             Board {game.board}
           </span>
           {!isComplete && (
-            <span className="flex items-center gap-1 text-xs text-amber-500 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="flex items-center gap-1.5 text-sm text-amber-500 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               Live
             </span>
           )}
         </div>
         {isComplete && (
           <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${resultBadgeClass(game.result, isDark)}`}
+            className={`text-sm font-bold px-3 py-1 rounded-full ${resultBadgeClass(game.result, isDark)}`}
           >
             {game.result}
           </span>
@@ -201,20 +201,20 @@ function BoardCard({
       </div>
 
       {/* Players */}
-      <div className="px-4 py-3 space-y-2">
+      <div className="px-5 py-4 space-y-3">
         {/* White */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className={`w-6 h-6 rounded border-2 flex-shrink-0 ${
+              className={`w-8 h-8 rounded-lg border-2 flex-shrink-0 ${
                 isDark ? "bg-white/90 border-white/30" : "bg-white border-gray-200"
               }`}
             />
             <div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <PlayerHoverCard player={white} isDark={isDark}>
                   <span
-                    className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
+                    className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
                   >
                     {white.name}
                   </span>
@@ -224,15 +224,15 @@ function BoardCard({
                     {white.title}
                   </span>
                 )}
-                <span className="text-xs">{FLAG_EMOJI[white.country]}</span>
+                <span className="text-sm">{FLAG_EMOJI[white.country]}</span>
               </div>
-              <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
                 {white.elo} ELO · {white.points}pts
               </span>
             </div>
           </div>
           <span
-            className={`text-lg font-bold tabular-nums ${
+            className={`text-xl font-bold tabular-nums ${
               game.result === "1-0"
                 ? "text-emerald-500"
                 : game.result === "0-1"
@@ -251,17 +251,17 @@ function BoardCard({
 
         {/* Black */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className={`w-6 h-6 rounded border-2 flex-shrink-0 ${
+              className={`w-8 h-8 rounded-lg border-2 flex-shrink-0 ${
                 isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-gray-800 border-gray-600"
               }`}
             />
             <div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <PlayerHoverCard player={black} isDark={isDark}>
                   <span
-                    className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
+                    className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
                   >
                     {black.name}
                   </span>
@@ -271,15 +271,15 @@ function BoardCard({
                     {black.title}
                   </span>
                 )}
-                <span className="text-xs">{FLAG_EMOJI[black.country]}</span>
+                <span className="text-sm">{FLAG_EMOJI[black.country]}</span>
               </div>
-              <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
                 {black.elo} ELO · {black.points}pts
               </span>
             </div>
           </div>
           <span
-            className={`text-lg font-bold tabular-nums ${
+            className={`text-xl font-bold tabular-nums ${
               game.result === "0-1"
                 ? "text-emerald-500"
                 : game.result === "1-0"
@@ -296,7 +296,7 @@ function BoardCard({
 
       {/* Result entry buttons */}
       <div
-        className={`px-4 pb-4 pt-1 flex gap-2 ${isComplete ? "opacity-60" : ""}`}
+        className={`px-5 pb-5 pt-1 flex gap-2.5 ${isComplete ? "opacity-60" : ""}`}
       >
         {RESULT_OPTIONS.map((opt) => (
           <button
@@ -305,7 +305,7 @@ function BoardCard({
               onResult(game.id, opt.value);
               toast.success(`Board ${game.board}: ${opt.label} recorded`);
             }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all duration-150 ${
+            className={`flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-150 ${
               game.result === opt.value
                 ? opt.value === "1-0"
                   ? "bg-emerald-500 border-emerald-500 text-white"
@@ -326,7 +326,7 @@ function BoardCard({
               onResult(game.id, "*");
               toast.info(`Board ${game.board}: result cleared`);
             }}
-            className={`px-3 py-2 text-xs rounded-lg border transition-all duration-150 ${
+            className={`px-4 py-3 text-sm rounded-xl border transition-all duration-150 ${
               isDark
                 ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
                 : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
@@ -353,11 +353,11 @@ function StandingsPanel({
   const medals = ["🥇", "🥈", "🥉"];
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {standings.map((p, i) => (
         <div
           key={p.id}
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors ${
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
             i < 3
               ? isDark
                 ? "bg-[#3D6B47]/20"
@@ -365,26 +365,26 @@ function StandingsPanel({
               : ""
           }`}
         >
-          <span className="text-sm w-5 text-center">
-            {i < 3 ? medals[i] : <span className={`text-xs font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>{i + 1}</span>}
+          <span className="text-base w-6 text-center flex-shrink-0">
+            {i < 3 ? medals[i] : <span className={`text-sm font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>{i + 1}</span>}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span
-                className={`text-xs font-semibold truncate ${isDark ? "text-white/90" : "text-gray-800"}`}
+                className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}
               >
                 {p.name.split(" ")[0]}
               </span>
               {p.title && (
-                <span className="text-[10px] font-bold text-[#3D6B47]">{p.title}</span>
+                <span className="text-xs font-bold text-[#3D6B47]">{p.title}</span>
               )}
             </div>
-            <span className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
-              {p.elo}
+            <span className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>
+              {p.elo} ELO
             </span>
           </div>
           <span
-            className={`text-sm font-bold tabular-nums ${
+            className={`text-base font-bold tabular-nums ${
               isDark ? "text-white" : "text-gray-900"
             }`}
           >
@@ -417,9 +417,9 @@ function RoundProgress({
         const isUpcoming = !roundData;
 
         return (
-          <div key={r} className="flex items-center gap-1.5">
+          <div key={r} className="flex items-center gap-2">
             <div
-              className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-all ${
+              className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold transition-all ${
                 isComplete
                   ? "bg-[#3D6B47] text-white"
                   : isCurrent
@@ -431,11 +431,11 @@ function RoundProgress({
                   : "bg-gray-100 text-gray-300 border border-gray-200"
               }`}
             >
-              {isComplete ? <CheckCircle2 className="w-3.5 h-3.5" /> : r}
+              {isComplete ? <CheckCircle2 className="w-4 h-4" /> : r}
             </div>
             {r < totalRounds && (
               <div
-                className={`h-0.5 w-4 rounded-full ${
+                className={`h-0.5 w-5 rounded-full ${
                   isComplete
                     ? "bg-[#3D6B47]"
                     : isDark
@@ -642,12 +642,12 @@ export default function Director() {
         }`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-3">
           {/* Left: back + breadcrumb */}
           <div className="flex items-center gap-2 min-w-0">
             <Link
               href={`/tournament/${id ?? "otb-demo-2026"}`}
-              className={`touch-target -ml-1 flex items-center gap-1 text-sm transition-colors active:scale-95 ${
+              className={`touch-target -ml-1 flex items-center gap-1.5 text-sm font-medium transition-colors active:scale-95 ${
                 isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700"
               }`}
             >
@@ -655,10 +655,12 @@ export default function Director() {
               <span className="hidden sm:block">Standings</span>
             </Link>
             <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Shield className="w-3.5 h-3.5 text-[#3D6B47] flex-shrink-0" />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
+                <Shield className="w-4 h-4 text-[#3D6B47]" />
+              </div>
               <span
-                className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}
+                className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 Director
@@ -669,16 +671,16 @@ export default function Director() {
           {/* Center: Tournament name */}
           <div className="hidden lg:block text-center">
             <p
-              className={`text-xs font-semibold truncate max-w-xs ${isDark ? "text-white/70" : "text-gray-700"}`}
+              className={`text-sm font-bold truncate max-w-xs ${isDark ? "text-white" : "text-gray-900"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {state.tournamentName}
             </p>
-            <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
               {isRegistration ? `Registration · ${state.players.length} players` : `Round ${state.currentRound} of ${state.totalRounds}`}
               {lastSaved && (
                 <span className={`ml-2 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`}>
-                  · 💾 Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  · Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
             </p>
@@ -687,14 +689,14 @@ export default function Director() {
           {/* Right: Status + controls */}
           <div className="flex items-center gap-1.5">
             <span
-              className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full ${
+              className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full ${
                 state.status === "paused"
                   ? isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600"
                   : isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
               }`}
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                className={`w-2 h-2 rounded-full flex-shrink-0 ${
                   state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
                 }`}
               />
@@ -724,21 +726,21 @@ export default function Director() {
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8 flex gap-8">
         {/* ── Left Sidebar ──────────────────────────────────────────────────── */}
-        <aside className="hidden lg:flex flex-col gap-4 w-64 flex-shrink-0">
+        <aside className="hidden lg:flex flex-col gap-5 w-72 flex-shrink-0">
           {/* Event Info Card */}
           <div
-            className={`rounded-xl border p-4 ${
+            className={`rounded-2xl border p-5 ${
               isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
             }`}
           >
             <h3
-              className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}
+              className={`text-xs font-bold uppercase tracking-widest mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}
             >
               Event Info
             </h3>
-            <div className="space-y-2.5">
+            <div className="space-y-4">
               {[
                 { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds}R` },
                 { icon: Users, label: "Players", value: `${state.players.length} registered` },
@@ -746,11 +748,13 @@ export default function Director() {
                 ...(tournamentConfig?.date ? [{ icon: Clock, label: "Date", value: tournamentConfig.date }] : []),
                 ...(tournamentConfig?.timePreset ? [{ icon: Clock, label: "Time Control", value: tournamentConfig.timePreset }] : []),
               ].map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                <div key={label} className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"}`}>
+                    <Icon className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                  </div>
                   <div>
-                    <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>{label}</p>
-                    <p className={`text-xs font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>{value}</p>
+                    <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</p>
+                    <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{value}</p>
                   </div>
                 </div>
               ))}
@@ -759,12 +763,12 @@ export default function Director() {
 
           {/* Round Progress */}
           <div
-            className={`rounded-xl border p-4 ${
+            className={`rounded-2xl border p-5 ${
               isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
             }`}
           >
             <h3
-              className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}
+              className={`text-xs font-bold uppercase tracking-widest mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}
             >
               Round Progress
             </h3>
@@ -774,14 +778,14 @@ export default function Director() {
               totalRounds={state.totalRounds}
               isDark={isDark}
             />
-            <div className={`mt-3 pt-3 border-t ${isDark ? "border-white/08" : "border-gray-100"}`}>
-              <div className="flex justify-between text-xs">
-                <span className={isDark ? "text-white/40" : "text-gray-400"}>Round {state.currentRound}</span>
-                <span className={`font-semibold ${isDark ? "text-white/70" : "text-gray-700"}`}>
+            <div className={`mt-4 pt-4 border-t ${isDark ? "border-white/08" : "border-gray-100"}`}>
+              <div className="flex justify-between text-sm">
+                <span className={isDark ? "text-white/50" : "text-gray-500"}>Round {state.currentRound}</span>
+                <span className={`font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
                   {completedGames}/{totalGames} results
                 </span>
               </div>
-              <div className={`mt-1.5 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
+              <div className={`mt-2 h-2 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
                 <div
                   className="h-full bg-[#3D6B47] rounded-full transition-all duration-500"
                   style={{ width: totalGames ? `${(completedGames / totalGames) * 100}%` : "0%" }}
@@ -792,47 +796,47 @@ export default function Director() {
 
           {/* Live Standings */}
           <div
-            className={`rounded-xl border p-4 flex-1 ${
+            className={`rounded-2xl border p-5 flex-1 ${
               isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <h3
                 className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-400"}`}
               >
                 Live Standings
               </h3>
-              <BarChart3 className={`w-3.5 h-3.5 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+              <BarChart3 className={`w-4 h-4 ${isDark ? "text-white/30" : "text-gray-300"}`} />
             </div>
             <StandingsPanel players={state.players} isDark={isDark} />
           </div>
 
           {/* Quick actions */}
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <button
               onClick={() => setShowQR(true)}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold border transition-all ${
+              className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all ${
                 isDark ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
               }`}
             >
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
               Show QR Code
             </button>
             <button
               onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium border transition-colors ${
+              className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
                 isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <Copy className="w-3.5 h-3.5" /> Copy join link
+              <Copy className="w-4 h-4" /> Copy join link
             </button>
             <Link
               href={`/tournament/${id ?? "otb-demo-2026"}/print`}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium border transition-colors ${
+              className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
                 isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <Download className="w-3.5 h-3.5" /> Pairings &amp; Print Sheet
+              <Download className="w-4 h-4" /> Pairings &amp; Print Sheet
             </Link>
           </div>
         </aside>
@@ -861,7 +865,7 @@ export default function Director() {
             <div className="flex items-center gap-2">
               {/* Tab switcher — pill style, large touch targets */}
               <div
-                className={`flex rounded-xl p-1 text-xs ${
+                className={`flex rounded-2xl p-1.5 ${
                   isDark ? "bg-white/08" : "bg-gray-100"
                 }`}
               >
@@ -869,7 +873,7 @@ export default function Director() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`touch-target px-3 py-1.5 rounded-lg font-medium capitalize transition-all active:scale-95 flex items-center gap-1.5 ${
+                    className={`touch-target px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all active:scale-95 flex items-center gap-2 ${
                       activeTab === tab
                         ? isDark
                           ? "bg-[#3D6B47] text-white shadow-sm"
@@ -879,9 +883,9 @@ export default function Director() {
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    {tab}
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     {tab === "players" && state.players.length > 0 && (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full leading-none ${
                         activeTab === "players"
                           ? isDark ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
                           : isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
@@ -901,7 +905,7 @@ export default function Director() {
                     toast.success(`Round ${nextRound} pairings generated!`);
                     broadcastRoundStart(nextRound);
                   }}
-                  className="touch-target flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-[#3D6B47] text-white text-xs font-semibold rounded-xl hover:bg-[#2A4A32] transition-all duration-200 active:scale-95 shadow-md shadow-[#3D6B47]/30"
+                  className="touch-target flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-[#3D6B47] text-white text-sm font-bold rounded-xl hover:bg-[#2A4A32] transition-all duration-200 active:scale-95 shadow-md shadow-[#3D6B47]/30"
                 >
                   <Zap className="w-3.5 h-3.5" />
                   <span className="hidden sm:block">Generate Round {state.currentRound + 1}</span>
@@ -1393,32 +1397,32 @@ export default function Director() {
                   {filteredPlayers.map((p, i) => (
                     <div
                       key={p.id}
-                      className={`flex items-center gap-4 px-5 py-3 transition-colors ${
+                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${
                         isDark ? "hover:bg-white/03" : "hover:bg-gray-50"
                       }`}
                     >
-                      <span className={`w-5 text-center text-xs font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>
+                      <span className={`w-6 text-center text-sm font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>
                         {i + 1}
                       </span>
-                      <PlayerAvatar username={p.username} name={p.name} size={32} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
+                      <PlayerAvatar username={p.username} name={p.name} size={36} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <PlayerHoverCard player={p} isDark={isDark}>
-                            <span className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                            <span className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
                           </PlayerHoverCard>
                           {p.title && (
                             <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                           )}
-                          <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                          <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                           {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
                           )}
                         </div>
-                        <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
+                        <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-center">
+                      <div className="flex items-center gap-4 text-sm text-center">
                         <div>
-                          <p className={`font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`}>{p.points}</p>
+                          <p className={`font-bold text-lg ${isDark ? "text-white" : "text-gray-900"}`}>{p.points}</p>
                           <p className={isDark ? "text-white/30" : "text-gray-400"}>pts</p>
                         </div>
                         <div className={`${isDark ? "text-white/30" : "text-gray-300"}`}>|</div>
@@ -1431,9 +1435,9 @@ export default function Director() {
                           <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>{p.buchholz}</p>
                           <p className={isDark ? "text-white/30" : "text-gray-400"}>Buch.</p>
                         </div>
-                        <div className="flex gap-0.5 ml-1">
+                        <div className="flex gap-1 ml-1">
                           {p.colorHistory.map((c, ci) => (
-                            <div key={ci} className={`w-3 h-3 rounded-sm border ${
+                            <div key={ci} className={`w-3.5 h-3.5 rounded border ${
                               c === "W"
                                 ? isDark ? "bg-white/80 border-white/30" : "bg-white border-gray-300"
                                 : isDark ? "bg-[oklch(0.15_0.04_145)] border-white/10" : "bg-gray-800 border-gray-600"
@@ -1453,39 +1457,39 @@ export default function Director() {
                 {filteredPlayers.map((p, i) => (
                   <div
                     key={p.id}
-                    className={`rounded-xl border p-4 transition-colors ${
+                    className={`rounded-2xl border p-5 transition-colors ${
                       isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
                     }`}
                   >
                     {/* Top row: rank + name + score */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`text-xs font-bold w-5 text-center ${
+                    <div className="flex items-start justify-between gap-2 mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className={`text-base font-bold w-6 text-center ${
                           i === 0 ? "text-amber-400" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-600" : isDark ? "text-white/30" : "text-gray-300"
                         }`}>
                           {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
                         </span>
                         <div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <PlayerHoverCard player={p} isDark={isDark}>
-                              <span className={`text-sm font-semibold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
+                              <span className={`text-base font-bold cursor-default hover:text-[#3D6B47] transition-colors ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
                             </PlayerHoverCard>
                             {p.title && (
                               <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>
                             )}
-                            <span className="text-xs">{FLAG_EMOJI[p.country]}</span>
+                            <span className="text-sm">{FLAG_EMOJI[p.country]}</span>
                             {p.joinedAt && Date.now() - p.joinedAt < 5 * 60 * 1000 && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
                             )}
                           </div>
-                          <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
+                          <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className={`text-xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                           {p.points % 1 !== 0 ? `${Math.floor(p.points)}½` : p.points}
                         </p>
-                        <p className={`text-[10px] ${isDark ? "text-white/30" : "text-gray-400"}`}>points</p>
+                        <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>points</p>
                       </div>
                     </div>
 

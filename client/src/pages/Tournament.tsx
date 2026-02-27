@@ -105,14 +105,14 @@ function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number
   const isLive = status === "in_progress" || status === "paused";
   if (!isLive) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted border border-border px-2.5 py-1 rounded-full">
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground bg-muted border border-border px-3 py-1.5 rounded-full">
         Completed
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+    <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
       Live · Round {currentRound} of {totalRounds}
     </span>
   );
@@ -132,7 +132,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
       }`}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="container flex items-center justify-between h-14 gap-2">
+      <div className="container flex items-center justify-between h-16 gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Link
             href="/"
@@ -142,10 +142,10 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
             <span className="text-sm font-medium hidden sm:block">Back</span>
           </Link>
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-6 h-6 bg-[#3D6B47] rounded flex items-center justify-center flex-shrink-0">
-              <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+            <div className="w-8 h-8 bg-[#3D6B47] rounded-lg flex items-center justify-center flex-shrink-0">
+              <Crown className="w-4 h-4 text-white" strokeWidth={2} />
             </div>
-            <span className="text-sm font-semibold text-foreground hidden sm:block truncate max-w-[130px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            <span className="text-base font-bold text-foreground hidden sm:block truncate max-w-[160px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
               OTB Chess
             </span>
           </div>
@@ -155,35 +155,35 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
           <ThemeToggle />
           <button
             onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
-            className={`touch-target flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
+            className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
                 : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
             }`}
           >
-            <Share2 className="w-3.5 h-3.5" />
+            <Share2 className="w-4 h-4" />
             <span className="hidden sm:block">Share</span>
           </button>
           <Link
             href={`/tournament/${tournamentId}/manage`}
-            className={`touch-target flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
+            className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
                 : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
             }`}
           >
-            <Shield className="w-3.5 h-3.5" />
+            <Shield className="w-4 h-4" />
             <span className="hidden sm:block">Director</span>
           </Link>
           <Link
             href={`/tournament/${tournamentId}/print`}
-            className={`hidden sm:flex touch-target items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-xl border transition-all active:scale-95 ${
+            className={`hidden sm:flex touch-target items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all active:scale-95 ${
               isDark
                 ? "border-white/15 text-white/70 hover:bg-white/08"
                 : "border-[#EEEED2] text-[#4B5563] hover:bg-[#F0F5EE]"
             }`}
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-4 h-4" />
             <span>Print</span>
           </Link>
         </div>
@@ -221,12 +221,12 @@ function TournamentHeader({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1
-              className="text-2xl lg:text-3xl font-semibold text-foreground mb-2 tracking-tight"
+            className={`text-3xl lg:text-4xl font-bold text-foreground mb-3 tracking-tight`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {name}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-base text-muted-foreground">
               {date && (
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
@@ -314,16 +314,16 @@ function MobileStandingsAccordion({ players, rounds }: { players: Player[]; roun
       {/* Header toggle */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
+        className={`w-full flex items-center justify-between px-5 py-4 transition-colors ${
           isDark ? "hover:bg-white/04" : "hover:bg-[#F9FAF8]"
         }`}
       >
-        <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-[#3D6B47]" />
-          <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+        <div className="flex items-center gap-2.5">
+          <Trophy className="w-5 h-5 text-[#3D6B47]" />
+          <span className="text-base font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Standings
           </span>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
+          <span className={`text-sm px-2.5 py-0.5 rounded-full ${
             isDark ? "bg-white/10 text-white/50" : "bg-[#F0F5EE] text-[#6B7280]"
           }`}>
             {standingRows.length} players
@@ -358,7 +358,7 @@ function MobileStandingsAccordion({ players, rounds }: { players: Player[]; roun
             return (
               <div
                 key={row.player.id}
-                className={`flex items-center gap-3 px-4 py-3 border-b last:border-0 transition-colors ${
+                className={`flex items-center gap-3 px-5 py-4 border-b last:border-0 transition-colors ${
                   isLeader
                     ? isDark
                       ? "bg-amber-500/05 border-white/06"
@@ -368,21 +368,21 @@ function MobileStandingsAccordion({ players, rounds }: { players: Player[]; roun
                     : "border-[#F5F5F5] hover:bg-[#FAFAFA]"
                 }`}
               >
-                <span className={`text-sm font-bold w-6 text-center flex-shrink-0 ${medalColor(rank)}`}>
+                <span className={`text-base font-bold w-7 text-center flex-shrink-0 ${medalColor(rank)}`}>
                   {rank <= 3 ? medals[rank - 1] : rank}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground truncate">{row.player.name}</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-base font-bold text-foreground truncate">{row.player.name}</span>
                     {row.player.title && <TitleBadge title={row.player.title} />}
-                    <span className="text-xs">{FLAG_EMOJI[row.player.country] ?? ""}</span>
+                    <span className="text-sm">{FLAG_EMOJI[row.player.country] ?? ""}</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <ELOBadge elo={row.player.elo} />
-                    <span className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <ELOBadge elo={row.player.elo} size="md" />
+                    <span className="text-sm text-muted-foreground">
                       {row.wins}W {row.draws}D {row.losses}L
                     </span>
-                    <span className="text-xs font-mono text-muted-foreground">Buch. {row.buchholz.toFixed(1)}</span>
+                    <span className="text-sm font-mono text-muted-foreground">Buch. {row.buchholz.toFixed(1)}</span>
                   </div>
                 </div>
                 <div className="flex-shrink-0">
@@ -425,12 +425,12 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
   return (
     <div className="flex flex-col gap-4">
       {/* Round Tabs */}
-      <div className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
+      <div className={`flex gap-1.5 p-1.5 rounded-2xl ${isDark ? "bg-[oklch(0.25_0.07_145)]" : "bg-[#F0F5EE]"}`}>
         {rounds.map((r) => (
           <button
             key={r.number}
             onClick={() => setActiveRound(r.number)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
               activeRound === r.number
                 ? "bg-[#3D6B47] text-white shadow-sm"
                 : isDark
@@ -440,10 +440,10 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
           >
             R{r.number}
             {r.status === "in_progress" && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
             )}
             {r.status === "completed" && (
-              <span className={`w-1.5 h-1.5 rounded-full ${activeRound === r.number ? "bg-white/60" : "bg-[#3D6B47]"}`} />
+              <span className={`w-2 h-2 rounded-full ${activeRound === r.number ? "bg-white/60" : "bg-[#3D6B47]"}`} />
             )}
           </button>
         ))}
@@ -452,7 +452,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
           <button
             key={`upcoming-${i}`}
             disabled
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium ${isDark ? "text-white/20" : "text-[#C4C4C4]"} cursor-not-allowed`}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium ${isDark ? "text-white/20" : "text-[#C4C4C4]"} cursor-not-allowed`}
           >
             R{rounds.length + i + 1}
           </button>
@@ -462,10 +462,10 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
       {/* Round Status */}
       {round && (
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Round {round.number} Pairings
           </h3>
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+          <span className={`text-sm font-semibold px-3 py-1.5 rounded-full border ${
             round.status === "in_progress"
               ? "text-amber-600 bg-amber-500/10 border-amber-500/20"
               : round.status === "completed"
@@ -497,14 +497,14 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
             className={`card-chess overflow-hidden transition-all duration-200 ${isLive ? "ring-1 ring-amber-400/30" : ""}`}
           >
             {/* Board number + status */}
-            <div className={`flex items-center justify-between px-4 py-2 border-b text-xs font-medium ${
+            <div className={`flex items-center justify-between px-5 py-3 border-b text-sm font-semibold ${
               isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"
             }`}>
-              <span className="text-muted-foreground">Board {game.board}</span>
+              <span className={`tracking-widest uppercase ${isDark ? "text-white/50" : "text-gray-500"}`}>Board {game.board}</span>
               <div className="flex items-center gap-2">
                 {isLive ? (
-                  <span className="flex items-center gap-1 text-amber-500 font-semibold">
-                    <Wifi className="w-3 h-3" />
+                  <span className="flex items-center gap-1.5 text-amber-500 font-bold">
+                    <Wifi className="w-4 h-4" />
                     Live
                   </span>
                 ) : (
@@ -513,50 +513,50 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound }: {
               </div>
             </div>
             {/* Players */}
-            <div className="p-4 space-y-3">
+            <div className="p-5 space-y-4">
               {/* White */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                  <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
                     isDark ? "bg-white/90 border-white/20 text-[#1A1A1A]" : "bg-white border-[#EEEED2] text-[#1A1A1A]"
                   }`}>
-                    ♔
+                    ♝
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-foreground">{white.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold text-foreground">{white.name}</span>
                       <TitleBadge title={white.title} />
-                      <span className="text-xs">{FLAG_EMOJI[white.country] ?? ""}</span>
+                      <span className="text-sm">{FLAG_EMOJI[white.country] ?? ""}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <ELOBadge elo={white.elo} />
+                      <ELOBadge elo={white.elo} size="md" />
                     </div>
                   </div>
                 </div>
                 <ResultPill result={game.result} perspective="white" />
               </div>
               {/* Divider */}
-              <div className={`flex items-center gap-2 ${isDark ? "text-white/20" : "text-[#EEEED2]"}`}>
+              <div className={`flex items-center gap-3 ${isDark ? "text-white/20" : "text-[#EEEED2]"}`}>
                 <div className="flex-1 h-px bg-current" />
-                <span className="text-xs text-muted-foreground font-medium">vs</span>
+                <span className="text-sm text-muted-foreground font-semibold">vs</span>
                 <div className="flex-1 h-px bg-current" />
               </div>
               {/* Black */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                  <div className={`w-9 h-9 rounded-xl border-2 flex items-center justify-center text-base font-bold flex-shrink-0 ${
                     isDark ? "bg-[oklch(0.18_0.05_145)] border-white/15 text-white" : "bg-[#1A1A1A] border-[#333] text-white"
                   }`}>
                     ♚
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-foreground">{black.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold text-foreground">{black.name}</span>
                       <TitleBadge title={black.title} />
-                      <span className="text-xs">{FLAG_EMOJI[black.country] ?? ""}</span>
+                      <span className="text-sm">{FLAG_EMOJI[black.country] ?? ""}</span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <ELOBadge elo={black.elo} />
+                      <ELOBadge elo={black.elo} size="md" />
                     </div>
                   </div>
                 </div>
@@ -586,20 +586,20 @@ function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+        <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           Standings
         </h3>
-        <span className="text-xs text-muted-foreground">{standingRows.length} players</span>
+        <span className="text-sm text-muted-foreground">{standingRows.length} players</span>
       </div>
 
       {/* Header row */}
-      <div className={`grid grid-cols-[1.5rem_1fr_auto_auto] gap-2 items-center px-3 py-2 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wider ${
+      <div className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground uppercase tracking-wider ${
         isDark ? "bg-white/05" : "bg-[#F0F5EE]"
       }`}>
         <span>#</span>
         <span>Player</span>
-        <span className="text-center w-10">Pts</span>
-        <span className="text-right w-12">Buch.</span>
+        <span className="text-center w-12">Pts</span>
+        <span className="text-right w-14">Buch.</span>
       </div>
 
       {/* Player rows */}
@@ -610,7 +610,7 @@ function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[
         return (
           <div
             key={row.player.id}
-            className={`grid grid-cols-[1.5rem_1fr_auto_auto] gap-2 items-center px-3 py-3 rounded-xl border transition-all duration-200 hover:scale-[1.01] ${
+            className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] ${
               isLeader
                 ? isDark
                   ? "border-amber-500/30 bg-amber-500/05"
@@ -621,41 +621,41 @@ function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[
             }`}
           >
             {/* Rank */}
-            <span className={`text-sm font-bold ${medalColor(rank)}`}>
+            <span className={`text-base font-bold ${medalColor(rank)}`}>
               {rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : rank}
             </span>
 
             {/* Player info */}
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-sm font-semibold text-foreground truncate">{row.player.name}</span>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base font-bold text-foreground truncate">{row.player.name}</span>
                 {row.player.title && <TitleBadge title={row.player.title} />}
               </div>
-              <div className="flex items-center gap-1.5">
-                <ELOBadge elo={row.player.elo} />
-                <span className="text-xs">{FLAG_EMOJI[row.player.country] ?? ""}</span>
-                <span className="text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <ELOBadge elo={row.player.elo} size="md" />
+                <span className="text-sm">{FLAG_EMOJI[row.player.country] ?? ""}</span>
+                <span className="text-sm text-muted-foreground">
                   {row.wins}W {row.draws}D {row.losses}L
                 </span>
               </div>
             </div>
 
             {/* Points */}
-            <div className="w-10 flex justify-center">
+            <div className="w-12 flex justify-center">
               <ScorePill points={row.points} />
             </div>
 
             {/* Buchholz */}
-            <div className="w-12 text-right">
-              <span className="text-xs font-mono text-muted-foreground">{row.buchholz.toFixed(1)}</span>
+            <div className="w-14 text-right">
+              <span className="text-sm font-mono text-muted-foreground">{row.buchholz.toFixed(1)}</span>
             </div>
           </div>
         );
       })}
 
       {/* Legend */}
-      <div className={`mt-2 px-3 py-2.5 rounded-lg text-xs text-muted-foreground space-y-1 border ${isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
-        <p className="font-semibold text-foreground mb-1.5">Tiebreak: Buchholz</p>
+      <div className={`mt-2 px-4 py-3 rounded-xl text-sm text-muted-foreground space-y-1 border ${isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
+        <p className="font-semibold text-foreground mb-1">Tiebreak: Buchholz</p>
         <p>Sum of opponents' scores. Higher = stronger opposition faced.</p>
       </div>
     </div>

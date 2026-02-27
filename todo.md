@@ -373,3 +373,18 @@
 - [x] Add collapsible player cap picker (8/12/16/24/32) to QuickstartForm
 - [x] Update Smart Defaults card to show live max players value
 - [x] Update recommended rounds hint to react to selected player cap
+
+## Premium Dashboard UI Redesign
+
+- [x] Director Dashboard: upgrade header — larger tournament name, bolder status badge, generous padding
+- [x] Director Dashboard: upgrade sidebar — larger type, bigger icon targets, section dividers
+- [x] Director Dashboard: upgrade tab bar — pill tabs with larger text, bolder active state
+- [x] Director Dashboard: upgrade board cards — bigger board number, larger player names, bolder result buttons
+- [x] Director Dashboard: upgrade standings sidebar — larger rank numbers, player name hierarchy
+- [x] Director Dashboard: upgrade Generate Round CTA — full-width primary button, confident sizing
+- [x] Tournament (participant) page: upgrade hero header — editorial tournament name, meta pill row
+- [x] Tournament page: upgrade pairings cards — bigger player names, cleaner board header, bolder result pills
+- [x] Tournament page: upgrade standings panel — larger rank, name, score hierarchy
+- [x] Tournament page: upgrade round tab bar — larger tabs, clearer active/completed/upcoming states
+- [x] Tournament page: upgrade live clock banner — bolder, more prominent
+- [x] Apply consistent spacing tokens and remove all text-[10px] / text-xs from primary content
