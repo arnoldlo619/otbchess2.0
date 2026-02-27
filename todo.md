@@ -332,3 +332,9 @@
 ## Archive → Report Link
 
 - [x] "View Report" button on UserTournamentCard links to /tournament/:id/report for all tournaments (green accent for completed, muted for in-progress)
+
+## CSV Export
+
+- [x] Create exportStandings utility in client/src/lib/exportCsv.ts
+- [x] Add Download CSV button to UserTournamentCard (completed tournaments only)
+- [x] Write unit tests for exportStandings CSV utility (27 tests passing)

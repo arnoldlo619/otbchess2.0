@@ -27,6 +27,7 @@ import {
   Globe,
   X,
   TrendingUp,
+  Download,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -38,6 +39,7 @@ import {
 import { listTournaments, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
+import { exportStandingsCsv } from "@/lib/exportCsv";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -501,6 +503,25 @@ function UserTournamentCard({
             <Trophy className="w-3.5 h-3.5" /> View Report
           </button>
         </Link>
+        {state?.status === "completed" && standings.length > 0 && (
+          <button
+            title="Download standings as CSV"
+            onClick={() =>
+              exportStandingsCsv(standings, {
+                tournamentName: config.name,
+                date: config.date,
+              })
+            }
+            className={`flex-shrink-0 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+              isDark
+                ? "bg-white/08 text-white/60 hover:bg-white/14 hover:text-white/90"
+                : "bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">CSV</span>
+          </button>
+        )}
       </div>
     </div>
   );
