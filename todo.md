@@ -309,3 +309,12 @@
 - [x] Show a brief "Checking director access…" loading screen with animated Shield icon
 - [x] Demo tournament (otb-demo-2026) bypasses the guard for open exploration
 - [x] Unit tests for the session guard logic (10 tests passing)
+
+## Forgot Director Code Recovery
+
+- [x] listTournaments() used to read all local tournaments with their director codes
+- [x] "Forgot your director code?" link on DirectorAccess page opens a recovery modal
+- [x] Recovery modal — lists tournaments, reveal/hide toggle, copy button, "Use this" fills main input
+- [x] Empty state — friendly message with Trophy icon if no tournaments found on this device
+- [x] Modal animates in with slideUpModal spring keyframe
+- [x] Unit tests for forgot-code flow (9 tests passing)
