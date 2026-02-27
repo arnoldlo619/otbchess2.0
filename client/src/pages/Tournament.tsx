@@ -293,7 +293,7 @@ function TournamentHeader({
 }
 
 // ─── Mobile Standings Accordion ─────────────────────────────────────────────
-function MobileStandingsAccordion({ players, rounds }: { players: Player[]; rounds: Round[] }) {
+function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Player[]; rounds: Round[]; myPlayerId?: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
@@ -359,8 +359,12 @@ function MobileStandingsAccordion({ players, rounds }: { players: Player[]; roun
             return (
               <div
                 key={row.player.id}
-                className={`flex items-center gap-3 px-5 py-4 border-b last:border-0 transition-colors ${
-                  isLeader
+                className={`flex items-center gap-3 px-5 py-4 border-b last:border-0 transition-colors relative ${
+                  row.player.id === myPlayerId
+                    ? isDark
+                      ? "bg-[#3D6B47]/12 border-[#3D6B47]/30"
+                      : "bg-[#F0F8F2] border-[#3D6B47]/20"
+                    : isLeader
                     ? isDark
                       ? "bg-amber-500/05 border-white/06"
                       : "bg-amber-50/60 border-[#EEEED2]"
@@ -369,6 +373,10 @@ function MobileStandingsAccordion({ players, rounds }: { players: Player[]; roun
                     : "border-[#F5F5F5] hover:bg-[#FAFAFA]"
                 }`}
               >
+                {/* Green left-border accent for participant's own row */}
+                {row.player.id === myPlayerId && (
+                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-[#3D6B47]" />
+                )}
                 <span className={`text-base font-bold w-7 text-center flex-shrink-0 ${medalColor(rank)}`}>
                   {rank <= 3 ? medals[rank - 1] : rank}
                 </span>
@@ -612,7 +620,7 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
 }
 
 // ─── Standings Panel ──────────────────────────────────────────────────────────
-function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[] }) {
+function StandingsPanel({ players, rounds, myPlayerId }: { players: Player[]; rounds: Round[]; myPlayerId?: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
@@ -651,8 +659,12 @@ function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[
         return (
           <div
             key={row.player.id}
-            className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] ${
-              isLeader
+            className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] relative overflow-hidden ${
+              row.player.id === myPlayerId
+                ? isDark
+                  ? "border-[#3D6B47]/50 bg-[#3D6B47]/10 ring-1 ring-[#3D6B47]/30"
+                  : "border-[#3D6B47]/30 bg-[#F0F8F2] ring-1 ring-[#3D6B47]/20"
+                : isLeader
                 ? isDark
                   ? "border-amber-500/30 bg-amber-500/05"
                   : "border-amber-400/40 bg-amber-50/60"
@@ -661,6 +673,10 @@ function StandingsPanel({ players, rounds }: { players: Player[]; rounds: Round[
                 : "border-[#EEEED2] bg-white hover:border-[#3D6B47]/20"
             }`}
           >
+            {/* Green left-border accent for participant's own row */}
+            {row.player.id === myPlayerId && (
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#3D6B47] rounded-r-sm" />
+            )}
             {/* Rank */}
             <span className={`text-base font-bold ${medalColor(rank)}`}>
               {rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : rank}
@@ -921,7 +937,7 @@ export default function TournamentPage() {
           <div className="container py-4 sm:py-8">
             {/* Mobile: Standings accordion above pairings */}
             <div className="block lg:hidden mb-4">
-              <MobileStandingsAccordion players={displayState.players} rounds={displayState.rounds} />
+              <MobileStandingsAccordion players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
             </div>
 
             <div className="grid lg:grid-cols-[1fr_380px] gap-8">
@@ -938,7 +954,7 @@ export default function TournamentPage() {
 
               {/* Right: Standings — desktop only */}
               <div className="hidden lg:block">
-                <StandingsPanel players={displayState.players} rounds={displayState.rounds} />
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
               </div>
             </div>
 

@@ -422,3 +422,10 @@
 - [x] Add green ring + "Your Game" badge to the participant's game card
 - [x] Add keyframe pulse animation that fades after 3s (myGamePulse plays twice then settles to static ring)
 - [x] Unit tests for findMyGame helper (21 tests passing)
+
+## Participant "My Standing" Row Highlight
+
+- [x] Pass myPlayerId to StandingsPanel (desktop) and MobileStandingsAccordion
+- [x] Apply green left-border + green-tinted bg to participant's own row in StandingsPanel
+- [x] Apply same highlight to participant's row in MobileStandingsAccordion
+- [x] Pass myPlayerId from TournamentPage to both components
