@@ -425,9 +425,53 @@ function StatsBar() {
 
 // ─── How It Works ────────────────────────────────────────────────────────────
 function HowItWorks() {
-  const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  // Per-element refs for scroll-reveal
+  const labelRef = useRef<HTMLParagraphElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const cardRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      // Skip animation — ensure elements are visible
+      [labelRef, headingRef, ...cardRefs].forEach(r => {
+        if (r.current) {
+          r.current.style.opacity = "1";
+          r.current.style.transform = "none";
+        }
+      });
+      return;
+    }
+
+    const targets: Array<{ el: HTMLElement; delay: number; cls: string }> = [
+      { el: labelRef.current!, delay: 0,   cls: "scroll-reveal-init" },
+      { el: headingRef.current!, delay: 80, cls: "scroll-reveal-heading" },
+      ...cardRefs.map((r, i) => ({ el: r.current!, delay: 160 + i * 110, cls: "scroll-reveal-init" })),
+    ].filter(t => t.el);
+
+    const observers: IntersectionObserver[] = [];
+
+    targets.forEach(({ el, delay, cls }) => {
+      el.classList.add(cls);
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => el.classList.add("scroll-revealed"), delay);
+            obs.disconnect();
+          }
+        },
+        { threshold: 0.15 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach(o => o.disconnect());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const steps = [
     {
@@ -451,18 +495,23 @@ function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 transition-colors duration-500 bg-background" ref={ref}>
+    <section id="how-it-works" className="py-24 transition-colors duration-500 bg-background">
       <div className="container">
         <div>
           {/* Steps column */}
           <div>
             <div className="mb-12">
-              <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
-                style={{ animationFillMode: "forwards" }}>
+              <p
+                ref={labelRef}
+                className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
+              >
                 Simple Process
               </p>
-              <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
+              <h2
+                ref={headingRef}
+                className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
                 From zero to tournament
                 <br />
                 in three moves.
@@ -473,8 +522,8 @@ function HowItWorks() {
               {steps.map((step, i) => (
                 <div
                   key={step.number}
-                  className={`relative transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-                  style={{ transitionDelay: `${i * 120}ms` }}
+                  ref={cardRefs[i]}
+                  className="relative"
                 >
                   <div className="card-chess step-card p-6">
                     <div className="flex items-start justify-between mb-5">

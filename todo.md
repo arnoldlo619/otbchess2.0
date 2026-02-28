@@ -530,3 +530,11 @@
 - [x] Rename hero primary button from "Start a Tournament" → "Host Tournament"
 - [x] Rename hero secondary button from "Join a Tournament" → "Join"
 - [x] Add soft gradient glow hover animation to the four feature pills (Setup in <3 min, 99.9% ELO accuracy, Swiss & Round Robin, 80+ clubs worldwide)
+
+## "How it Works" Scroll-Reveal Animations
+
+- [x] Add scroll-reveal CSS keyframes (fade-in-up, 0.6s cubic-bezier ease-out) to index.css
+- [x] Per-element IntersectionObserver wired directly in HowItWorks component (threshold 0.15, fires once)
+- [x] Cards stagger at 160ms, 270ms, 380ms; heading at 80ms; label at 0ms
+- [x] Section heading and label badge also fade in on scroll
+- [x] Respects prefers-reduced-motion (elements made immediately visible, no animation)
