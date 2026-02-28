@@ -523,3 +523,10 @@
 - [x] RoundTimerDisplay component: compact read-only ring + MM:SS, near-end amber state, "Time's Up" red state
 - [x] Wire RoundTimerDisplay into Tournament.tsx participant page (below round header, hidden when no timer is running)
 - [x] Unit tests for useParticipantTimer snapshot-to-remaining computation — 19 tests passing (509 total)
+
+## Landing Page Nav & Hero Refinement
+
+- [x] Remove "Join Tournament" and "Start Tournament" buttons from header nav bar (keep only Sign In + theme toggle)
+- [x] Rename hero primary button from "Start a Tournament" → "Host Tournament"
+- [x] Rename hero secondary button from "Join a Tournament" → "Join"
+- [x] Add soft gradient glow hover animation to the four feature pills (Setup in <3 min, 99.9% ELO accuracy, Swiss & Round Robin, 80+ clubs worldwide)

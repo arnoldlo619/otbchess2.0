@@ -193,21 +193,6 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           >
             Sign In
           </button>
-          <Link href="/join">
-            <span className={`text-sm font-semibold px-4 py-2 rounded-md border transition-all duration-200 cursor-pointer ${
-              isDark
-                ? "border-white/20 text-white/80 hover:bg-white/08"
-                : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/06"
-            }`}>
-              Join Tournament
-            </span>
-          </Link>
-          <button
-            onClick={onCreateTournament}
-            className="btn-chess-primary text-sm"
-          >
-            Start Tournament
-          </button>
         </div>
 
         {/* Mobile: toggle + menu */}
@@ -236,23 +221,13 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
               {link.label}
             </button>
           ))}
-          <Link href="/join">
-            <span
-              className={`block w-full text-center py-3 text-sm font-semibold rounded-md border mt-3 ${
-                isDark
-                  ? "border-white/20 text-white/80"
-                  : "border-[#3D6B47]/30 text-[#3D6B47]"
-              }`}
-              onClick={() => setMobileOpen(false)}
-            >
-              Join Tournament
-            </span>
-          </Link>
           <button
-            onClick={onCreateTournament}
-            className="btn-chess-primary w-full mt-3 text-sm"
+            onClick={() => { onCreateTournament(); setMobileOpen(false); }}
+            className={`block w-full text-left py-3 text-sm font-medium border-b last:border-0 ${
+              isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
+            }`}
           >
-            Start Tournament
+            Sign In
           </button>
         </div>
       )}
@@ -316,14 +291,14 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               onClick={onCreateTournament}
               className="btn-chess-primary flex items-center justify-center gap-2"
             >
-              Start a Tournament
+              Host Tournament
               <ArrowRight className="w-4 h-4" />
             </button>
             <Link
               href="/join"
               className="btn-chess-secondary flex items-center justify-center gap-2"
             >
-              Join a Tournament
+              Join
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -378,11 +353,12 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             ].map(({ icon, label }) => (
               <span
                 key={label}
-                className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border ${
+                className={`stat-pill inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all duration-300 cursor-default select-none ${
                   isDark
-                    ? "border-white/15 text-white/60 bg-white/04"
-                    : "border-[#3D6B47]/20 text-[#3D6B47]/80 bg-[#3D6B47]/05"
+                    ? "border-white/15 text-white/60 bg-white/04 hover:border-[oklch(0.65_0.14_145)]/50 hover:text-white/90 hover:bg-[oklch(0.65_0.14_145)]/10"
+                    : "border-[#3D6B47]/20 text-[#3D6B47]/80 bg-[#3D6B47]/05 hover:border-[#3D6B47]/50 hover:text-[#3D6B47] hover:bg-[#3D6B47]/10"
                 }`}
+                style={{ position: "relative" }}
               >
                 {icon}
                 {label}

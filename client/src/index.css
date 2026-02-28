@@ -285,6 +285,50 @@
     background-color: oklch(0.55 0.13 145 / 0.15);
   }
 
+  /* ── Feature pill glow hover ─────────────────────────────────────────────── */
+  .stat-pill {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Soft inner glow pseudo-element that fades in on hover */
+  .stat-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      oklch(0.65 0.14 145 / 0.18) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+
+  .stat-pill:hover::before {
+    opacity: 1;
+  }
+
+  /* Dark mode: slightly brighter glow */
+  .dark .stat-pill::before {
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      oklch(0.72 0.16 145 / 0.22) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Subtle box-shadow glow on hover (light mode) */
+  .stat-pill:hover {
+    box-shadow: 0 0 12px 2px oklch(0.55 0.13 145 / 0.18);
+  }
+
+  .dark .stat-pill:hover {
+    box-shadow: 0 0 14px 3px oklch(0.65 0.14 145 / 0.25);
+  }
+
   .card-chess {
     background: white;
     border: 1px solid oklch(0.90 0.02 145);
