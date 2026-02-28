@@ -26,6 +26,8 @@ import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { CapacityBadge } from "@/components/CapacityBadge";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
+import { RoundTimerCard } from "@/components/RoundTimerCard";
+import { useRoundTimer } from "@/hooks/useRoundTimer";
 import {
   Crown,
   ChevronLeft,
@@ -501,6 +503,27 @@ export default function Director() {
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
     useUndoResult(enterResult);
 
+  // ── Round timer ────────────────────────────────────────────────────────
+  const roundTimer = useRoundTimer({
+    roundNumber: state.currentRound,
+    onNearEnd: () => {
+      // Broadcast 5-minute warning push notification
+      fetch(`/api/push/notify/${tournamentId}/timer-warning`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          round: state.currentRound,
+          tournamentName: state.tournamentName,
+          minutesLeft: 5,
+        }),
+      }).catch((err) => console.warn("[timer] push warning failed:", err));
+      toast.warning(`⏰ 5-minute warning sent to all participants for Round ${state.currentRound}`);
+    },
+    onExpired: () => {
+      toast.error(`⏰ Round ${state.currentRound} time is up!`);
+    },
+  });
+
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
   const [showQR, setShowQR] = useState(false);
@@ -823,6 +846,15 @@ export default function Director() {
               </div>
             </div>
           </div>
+
+          {/* Round Timer — only when tournament is active */}
+          {!isRegistration && (
+            <RoundTimerCard
+              timer={roundTimer}
+              roundNumber={state.currentRound}
+              isDark={isDark}
+            />
+          )}
 
           {/* Live Standings */}
           <div

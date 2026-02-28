@@ -495,3 +495,13 @@
 - [x] Undo reverts the game result back to pending (*) and hides snackbar immediately
 - [x] New result entry while snackbar is visible replaces the pending undo (no stacking)
 - [x] Unit tests for useUndoResult hook — 12 tests passing (452 total)
+
+## Per-Round Countdown Clock
+
+- [x] Create useRoundTimer hook: duration config, start/pause/reset, elapsed tracking, near-end flag
+- [x] RoundTimerCard component: large circular progress ring, MM:SS display, start/pause/reset buttons, duration selector
+- [x] Wire RoundTimerCard into Director Dashboard sidebar (below Round Progress card)
+- [x] Near-end threshold: trigger push notification broadcast at 5 minutes remaining (configurable)
+- [x] Push notification: "⏰ 5 minutes left in Round N — finish your games!" to all tournament subscribers
+- [x] Timer resets automatically when director generates next round
+- [x] Unit tests for useRoundTimer hook — 19 tests passing (471 total)
