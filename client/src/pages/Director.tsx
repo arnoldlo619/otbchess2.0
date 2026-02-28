@@ -23,6 +23,7 @@ import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
+import { CapacityBadge } from "@/components/CapacityBadge";
 import {
   Crown,
   ChevronLeft,
@@ -690,6 +691,15 @@ export default function Director() {
 
           {/* Right: Status + controls */}
           <div className="flex items-center gap-1.5">
+            {/* Capacity badge — only shown when a maxPlayers cap is set */}
+            {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
+              <CapacityBadge
+                current={state.players.length}
+                max={tournamentConfig.maxPlayers}
+                isDark={isDark}
+                size="sm"
+              />
+            )}
             <span
               className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full ${
                 state.status === "paused"
@@ -745,7 +755,10 @@ export default function Director() {
             <div className="space-y-4">
               {[
                 { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds}R` },
-                { icon: Users, label: "Players", value: `${state.players.length} registered` },
+                // Players row replaced below with CapacityBadge — see separate render
+                ...(tournamentConfig?.maxPlayers == null || tournamentConfig.maxPlayers <= 0
+                  ? [{ icon: Users, label: "Players", value: `${state.players.length} registered` }]
+                  : []),
                 ...(tournamentConfig?.venue ? [{ icon: MapPin, label: "Venue", value: tournamentConfig.venue }] : []),
                 ...(tournamentConfig?.date ? [{ icon: Clock, label: "Date", value: tournamentConfig.date }] : []),
                 ...(tournamentConfig?.timePreset ? [{ icon: Clock, label: "Time Control", value: tournamentConfig.timePreset }] : []),
@@ -760,6 +773,15 @@ export default function Director() {
                   </div>
                 </div>
               ))}
+              {/* Capacity row — only when maxPlayers is set */}
+              {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
+                <CapacityBadge
+                  current={state.players.length}
+                  max={tournamentConfig.maxPlayers}
+                  isDark={isDark}
+                  size="md"
+                />
+              )}
             </div>
           </div>
 

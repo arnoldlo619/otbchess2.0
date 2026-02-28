@@ -478,3 +478,11 @@
 - [x] Generate 1200×630 OG banner with !! logo, OTB Chess branding, chess board texture
 - [x] Upload banner to CDN
 - [x] Update og:image and twitter:image in index.html
+
+## Director Dashboard — Player Capacity Badge
+
+- [x] Create CapacityBadge component: shows "X / Y players", fill bar, colour states (green/amber/red)
+- [x] Wire badge into Director Dashboard header (next to tournament name / status)
+- [x] Colour thresholds: green <75%, amber 75–99%, red 100% (full)
+- [x] Show "Full" label when at capacity
+- [x] Unit tests for capacity colour/label logic — 17 tests passing (440 total)
