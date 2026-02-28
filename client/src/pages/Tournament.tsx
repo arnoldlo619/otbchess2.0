@@ -32,6 +32,7 @@ import {
 import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import { getRegistration } from "@/lib/registrationStore";
+import { useVisibilitySync } from "@/lib/useVisibilitySync";
 import {
   Crown,
   ArrowLeft,
@@ -808,6 +809,12 @@ export default function TournamentPage() {
   // Load real tournament state from localStorage; fall back to demo data
   const [tournamentState, setTournamentState] = useState<DirectorState | null>(() => {
     return loadTournamentState(tournamentId);
+  });
+
+  // Re-sync from localStorage when the tab regains visibility (phone unlock, app switch)
+  useVisibilitySync(() => {
+    const fresh = loadTournamentState(tournamentId);
+    if (fresh) setTournamentState(fresh);
   });
 
   // Listen for real-time updates from the Director Dashboard (storage events)

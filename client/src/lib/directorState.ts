@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
 import { generateSwissPairings, applyResultToPlayers, computeStandings } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
+import { useVisibilitySync } from "./useVisibilitySync";
 
 // ─── Schema Version ───────────────────────────────────────────────────────────
 // Bump this when the DirectorState shape changes to force a clean reset
@@ -184,6 +185,12 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [state, tournamentId]);
+
+  // Re-sync from localStorage when the tab regains visibility (phone unlock, app switch)
+  useVisibilitySync(() => {
+    const fresh = loadFromStorage(tournamentId);
+    if (fresh) setState(fresh);
+  });
 
   // Listen for storage events from other tabs (e.g. Join page adding a player)
   useEffect(() => {

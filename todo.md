@@ -447,3 +447,11 @@
 - [x] InstallBanner: raise z-index to z-[80] (iOS sheet z-[90]) so it doesn't conflict with Join page action bar
 - [x] Join page: mobile-action-bar CSS raised to z-index 85, above InstallBanner
 - [x] QuickstartForm: step content scroll area has pb-6 so pickers don't get clipped behind mobile bottom nav
+
+## Offline Resilience — visibilitychange Re-sync
+
+- [x] Create useVisibilitySync hook that re-reads localStorage on visibilitychange (document.hidden === false)
+- [x] Wire useVisibilitySync into directorState.ts so Director Dashboard re-syncs on tab focus
+- [x] Wire useVisibilitySync into Tournament.tsx participant page so pairings/standings re-sync on tab focus
+- [x] Show a subtle "Synced" toast when state is refreshed after returning from background
+- [x] Unit tests for useVisibilitySync hook — 11 tests passing (410 total)
