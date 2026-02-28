@@ -36,7 +36,7 @@ export function InstallBanner() {
       {/* ── Main banner strip ─────────────────────────────────────────────── */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0 z-50
+          fixed bottom-0 left-0 right-0 z-[80]
           md:hidden
           safe-bottom
           animate-slide-up-banner
@@ -103,7 +103,7 @@ export function InstallBanner() {
       {/* ── iOS instruction sheet ──────────────────────────────────────────── */}
       {iosSheetOpen && (
         <div
-          className="fixed inset-0 z-[60] md:hidden flex flex-col justify-end"
+          className="fixed inset-0 z-[90] md:hidden flex flex-col justify-end"
           onClick={() => setIosSheetOpen(false)}
         >
           {/* Backdrop */}

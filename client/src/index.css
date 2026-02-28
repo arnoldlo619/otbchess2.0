@@ -661,7 +661,7 @@
     border-top: 1px solid oklch(0.92 0.02 145);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    z-index: 50;
+    z-index: 85;
   }
 
   .dark .mobile-action-bar {

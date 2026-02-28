@@ -422,7 +422,7 @@ function ModeSelect({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center"
+      className="fixed inset-0 z-[200] flex flex-col overflow-y-auto"
       style={{
         background: isDark
           ? "oklch(0.14 0.04 145)"
@@ -451,7 +451,7 @@ function ModeSelect({
       </button>
 
       {/* Content */}
-      <div className="relative w-full max-w-xl mx-auto px-6 py-12 flex flex-col items-center gap-10">
+      <div className="relative w-full max-w-xl mx-auto px-6 py-8 sm:py-12 flex flex-col items-center gap-6 sm:gap-8 min-h-full justify-center">
         {/* Logo */}
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
@@ -462,7 +462,7 @@ function ModeSelect({
         {/* Headline */}
         <div className="text-center">
           <h2
-            className="text-4xl sm:text-5xl font-black text-white leading-tight mb-3"
+            className="text-2xl sm:text-5xl font-black text-white leading-tight mb-2 sm:mb-3"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
             Create a Tournament
@@ -471,14 +471,14 @@ function ModeSelect({
         </div>
 
         {/* Mode cards */}
-        <div className="w-full grid sm:grid-cols-2 gap-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {/* Quickstart */}
           <button
             type="button"
             onClick={() => onSelect("quickstart")}
-            className="group relative flex flex-col items-start gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
             style={{
-              padding: "28px 24px",
+              padding: "16px 16px",
               background: "rgba(61,107,71,0.25)",
               border: "2px solid rgba(61,107,71,0.55)",
               backdropFilter: "blur(8px)",
@@ -506,7 +506,7 @@ function ModeSelect({
 
             {/* Icon */}
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center"
               style={{ background: "rgba(255,255,255,0.15)" }}
             >
               <Bolt className="w-6 h-6 text-white" strokeWidth={1.8} />
@@ -541,9 +541,9 @@ function ModeSelect({
           <button
             type="button"
             onClick={() => onSelect("schedule")}
-            className="group relative flex flex-col items-start gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
             style={{
-              padding: "28px 24px",
+              padding: "16px 16px",
               background: "rgba(255,255,255,0.06)",
               border: "2px solid rgba(255,255,255,0.12)",
               backdropFilter: "blur(8px)",
@@ -563,7 +563,7 @@ function ModeSelect({
           >
             {/* Icon */}
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mt-7"
+              className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center mt-0 sm:mt-7"
               style={{ background: "rgba(255,255,255,0.10)" }}
             >
               <Calendar className="w-6 h-6 text-white" strokeWidth={1.8} />
@@ -1609,13 +1609,17 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useKeyboardScroll(scrollContainerRef, 24);
 
-  // Reset on open
+  // Reset on open + body scroll lock
   useEffect(() => {
     if (open) {
       setMode("select");
       setStep(0);
       setDirection(1);
       setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase(), directorCode: generateDirectorCode() });
+      // Prevent background scroll on iOS/Android while wizard is open
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
     }
   }, [open]);
 
@@ -1848,7 +1852,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         {/* Step content */}
         <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
           <div
-            className="w-full px-8 sm:px-12 lg:px-16 xl:px-20 py-10 max-w-3xl mx-auto"
+            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-8 sm:py-10 pb-6 max-w-3xl mx-auto"
             key={`${mode}-${step}`}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >
@@ -1878,8 +1882,8 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
 
         {/* ── Mobile bottom nav ── */}
         <div
-          className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-5 py-4 border-t"
-          style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
+          className="lg:hidden flex-shrink-0 flex flex-col gap-2 px-5 border-t"
+          style={{ paddingTop: '1rem', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))', borderColor: isDark ? "rgba(255,255,255,0.08)" : "#F0F0F0", background: isDark ? T.dPanel : "#FFFFFF" }}
         >
           <button
             type="button"

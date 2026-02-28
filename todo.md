@@ -437,3 +437,13 @@
 - [x] Toast banner: amber warning, "Tournament Full", player count + max shown
 - [x] Confirm button disabled on the confirm step if tournament is already full
 - [x] Unit tests for cap enforcement in addPlayerToTournament (13 tests passing)
+
+## Mobile Overlay & Accessibility Fixes
+
+- [x] ModeSelect: make content scrollable on short screens (overflow-y-auto, remove items-center justify-center)
+- [x] ModeSelect: reduce py-12 gap-10 to py-6 gap-6 on mobile, keep desktop spacing
+- [x] Wizard: add body scroll lock (overflow:hidden on document.body) when open, restore on close
+- [x] Wizard: add env(safe-area-inset-bottom) padding to mobile bottom nav bar
+- [x] InstallBanner: raise z-index to z-[80] (iOS sheet z-[90]) so it doesn't conflict with Join page action bar
+- [x] Join page: mobile-action-bar CSS raised to z-index 85, above InstallBanner
+- [x] QuickstartForm: step content scroll area has pb-6 so pickers don't get clipped behind mobile bottom nav
