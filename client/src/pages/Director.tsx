@@ -24,6 +24,8 @@ import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { CapacityBadge } from "@/components/CapacityBadge";
+import { UndoSnackbar } from "@/components/UndoSnackbar";
+import { useUndoResult } from "@/hooks/useUndoResult";
 import {
   Crown,
   ChevronLeft,
@@ -495,6 +497,10 @@ export default function Director() {
     completeTournament,
     updateSettings,
   } = useDirectorState(tournamentId);
+  // ── Undo result snackbar ────────────────────────────────────────────────
+  const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
+    useUndoResult(enterResult);
+
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
   const [showQR, setShowQR] = useState(false);
@@ -1114,7 +1120,22 @@ export default function Director() {
                         key={game.id}
                         game={game}
                         players={state.players}
-                        onResult={enterResult}
+                        onResult={(gameId, newResult) => {
+                          const prevResult = game.result;
+                          const white = state.players.find((p) => p.id === game.whiteId);
+                          const black = state.players.find((p) => p.id === game.blackId);
+                          const label =
+                            newResult === "*"
+                              ? `Board ${game.board}: cleared`
+                              : `Board ${game.board}: ${
+                                  newResult === "1-0"
+                                    ? `${white?.name ?? "White"} wins`
+                                    : newResult === "0-1"
+                                    ? `${black?.name ?? "Black"} wins`
+                                    : "Draw"
+                                }`;
+                          recordWithUndo(gameId, newResult, prevResult, label);
+                        }}
                         isDark={isDark}
                       />
                     )
@@ -1798,6 +1819,14 @@ export default function Director() {
           </div>
         </div>
       )}
+
+      {/* ── Undo Result Snackbar ──────────────────────────────────────────── */}
+      <UndoSnackbar
+        pending={undoPending}
+        onUndo={undoResult}
+        onDismiss={dismissUndo}
+        isDark={isDark}
+      />
     </div>
   );
 }

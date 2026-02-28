@@ -486,3 +486,12 @@
 - [x] Colour thresholds: green <75%, amber 75–99%, red 100% (full)
 - [x] Show "Full" label when at capacity
 - [x] Unit tests for capacity colour/label logic — 17 tests passing (440 total)
+
+## Undo Result Snackbar
+
+- [x] Create UndoSnackbar component: floating bottom-centre, countdown ring, Undo + Dismiss buttons
+- [x] Create useUndoResult hook: stores previous result, 5s timer, auto-dismiss, undo callback
+- [x] Wire into Director.tsx setResult flow: capture previous result before applying, show snackbar
+- [x] Undo reverts the game result back to pending (*) and hides snackbar immediately
+- [x] New result entry while snackbar is visible replaces the pending undo (no stacking)
+- [x] Unit tests for useUndoResult hook — 12 tests passing (452 total)
