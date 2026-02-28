@@ -465,3 +465,10 @@
 - [x] Chip is hidden when the participant's own row is already visible in the viewport (IntersectionObserver)
 - [x] Tapping the chip scrolls the participant's row into view
 - [x] Unit tests for myRankRow derivation helper — 13 tests passing (423 total)
+
+## Favicon & PWA Icon Replacement
+
+- [x] Generate all icon sizes from !! logo (16, 32, 180, 192, 512px + favicon.ico)
+- [x] Upload icons to CDN via manus-upload-file --webdev
+- [x] Update index.html: favicon.ico, favicon-16/32, apple-touch-icon, theme-color meta
+- [x] Update manifest.json: icons array with 192 and 512 CDN URLs
