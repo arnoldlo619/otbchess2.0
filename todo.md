@@ -505,3 +505,13 @@
 - [x] Push notification: "⏰ 5 minutes left in Round N — finish your games!" to all tournament subscribers
 - [x] Timer resets automatically when director generates next round
 - [x] Unit tests for useRoundTimer hook — 19 tests passing (471 total)
+
+## Download Results PDF
+
+- [x] Install jsPDF + jspdf-autotable for client-side PDF generation
+- [x] Create generateResultsPdf helper: tournament header, final standings table, cross-table
+- [x] Standings table columns: Rank, Name, ELO, Points, W/D/L, Buchholz
+- [x] Cross-table: players as rows and columns, result cells (1/0/½/–), diagonal greyed out
+- [x] "Download Results" button in Director Dashboard Quick Actions (visible when tournament has ≥1 completed round)
+- [x] Filename: otb-{tournamentName}-results.pdf
+- [x] Unit tests for generateResultsPdf helpers — 19 tests passing (490 total)

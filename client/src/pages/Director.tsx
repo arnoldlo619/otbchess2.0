@@ -28,6 +28,7 @@ import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { RoundTimerCard } from "@/components/RoundTimerCard";
 import { useRoundTimer } from "@/hooks/useRoundTimer";
+import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import {
   Crown,
   ChevronLeft,
@@ -900,6 +901,31 @@ export default function Director() {
             >
               <Download className="w-4 h-4" /> Pairings &amp; Print Sheet
             </Link>
+            {/* Download Results PDF — visible once at least one round has results */}
+            {state.rounds.some((r) => r.games.some((g) => g.result !== "*")) && (
+              <button
+                onClick={() => {
+                  generateResultsPdf({
+                    tournamentName: state.tournamentName,
+                    date: tournamentConfig?.date,
+                    location: tournamentConfig?.venue,
+                    timeControl: tournamentConfig?.timePreset,
+                    totalRounds: state.totalRounds,
+                    players: state.players,
+                    rounds: state.rounds,
+                  });
+                  toast.success("Results PDF downloaded!");
+                }}
+                className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
+                  isDark
+                    ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20"
+                    : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
+                }`}
+              >
+                <Download className="w-4 h-4" />
+                Download Results PDF
+              </button>
+            )}
           </div>
         </aside>
 
