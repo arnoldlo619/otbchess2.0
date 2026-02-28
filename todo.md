@@ -472,3 +472,9 @@
 - [x] Upload icons to CDN via manus-upload-file --webdev
 - [x] Update index.html: favicon.ico, favicon-16/32, apple-touch-icon, theme-color meta
 - [x] Update manifest.json: icons array with 192 and 512 CDN URLs
+
+## Open Graph Banner (1200×630)
+
+- [x] Generate 1200×630 OG banner with !! logo, OTB Chess branding, chess board texture
+- [x] Upload banner to CDN
+- [x] Update og:image and twitter:image in index.html
