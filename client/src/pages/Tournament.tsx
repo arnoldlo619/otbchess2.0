@@ -299,24 +299,60 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
   const isDark = theme === "dark";
   const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
   const [open, setOpen] = useState(false);
+  // Tracks whether the participant's own row is currently visible in the list
+  const [myRowVisible, setMyRowVisible] = useState(false);
+  const myRowRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Derive the participant's rank row once
+  const myRankEntry = useMemo(() => {
+    if (!myPlayerId) return null;
+    const idx = standingRows.findIndex((r) => r.player.id === myPlayerId);
+    if (idx === -1) return null;
+    return { rank: idx + 1, row: standingRows[idx] };
+  }, [standingRows, myPlayerId]);
+
+  // IntersectionObserver: hide chip when own row is in view, show when scrolled away
+  useEffect(() => {
+    if (!open || !myRowRef.current) {
+      setMyRowVisible(false);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setMyRowVisible(entry.isIntersecting),
+      { threshold: 0.5 }
+    );
+    observer.observe(myRowRef.current);
+    return () => observer.disconnect();
+  }, [open, myRankEntry]);
+
+  const scrollToMyRow = () => {
+    myRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   const medalColor = (rank: number) => {
     if (rank === 1) return "text-amber-400";
     if (rank === 2) return "text-slate-400";
     if (rank === 3) return "text-amber-600";
-    return "text-muted-foreground";
+    return "text-[#3D6B47]";
   };
 
   const medals = ["🥇", "🥈", "🥉"];
 
+  const rankLabel = (rank: number) => (rank <= 3 ? medals[rank - 1] : `#${rank}`);
+
   return (
-    <div className={`rounded-xl border overflow-hidden transition-colors duration-300 ${
+    <div className={`rounded-xl border transition-colors duration-300 ${
+      open ? "overflow-visible" : "overflow-hidden"
+    } ${
       isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-white"
     }`}>
       {/* Header toggle */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center justify-between px-5 py-4 transition-colors ${
+        className={`w-full flex items-center justify-between px-5 py-4 transition-colors rounded-xl ${
+          open ? "rounded-b-none" : ""
+        } ${
           isDark ? "hover:bg-white/04" : "hover:bg-[#F9FAF8]"
         }`}
       >
@@ -349,19 +385,25 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
           }`} />
         </div>
       </button>
+
       {/* Expanded standings cards */}
       {open && (
-        <div className={`border-t ${
-          isDark ? "border-white/08" : "border-[#EEEED2]"
-        }`}>
+        <div
+          ref={scrollContainerRef}
+          className={`border-t ${
+            isDark ? "border-white/08" : "border-[#EEEED2]"
+          }`}
+        >
           {standingRows.map((row, idx) => {
             const rank = idx + 1;
             const isLeader = rank === 1;
+            const isMe = row.player.id === myPlayerId;
             return (
               <div
                 key={row.player.id}
+                ref={isMe ? myRowRef : undefined}
                 className={`flex items-center gap-3 px-5 py-4 border-b last:border-0 transition-colors relative ${
-                  row.player.id === myPlayerId
+                  isMe
                     ? isDark
                       ? "bg-[#3D6B47]/12 border-[#3D6B47]/30"
                       : "bg-[#F0F8F2] border-[#3D6B47]/20"
@@ -375,7 +417,7 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
                 }`}
               >
                 {/* Green left-border accent for participant's own row */}
-                {row.player.id === myPlayerId && (
+                {isMe && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-[#3D6B47]" />
                 )}
                 <span className={`text-base font-bold w-7 text-center flex-shrink-0 ${medalColor(rank)}`}>
@@ -401,6 +443,61 @@ function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Pl
               </div>
             );
           })}
+
+          {/* ── My Rank sticky chip ── */}
+          {myRankEntry && !myRowVisible && (
+            <div
+              className={`sticky bottom-0 z-10 border-t ${
+                isDark ? "border-[#3D6B47]/40" : "border-[#3D6B47]/25"
+              }`}
+            >
+              <button
+                onClick={scrollToMyRow}
+                aria-label={`You are ranked ${myRankEntry.rank}. Tap to scroll to your position.`}
+                className={`w-full flex items-center gap-3 px-5 py-3 transition-all active:scale-[0.98] ${
+                  isDark
+                    ? "bg-[oklch(0.20_0.07_145)] hover:bg-[oklch(0.23_0.07_145)]"
+                    : "bg-[#F0F8F2] hover:bg-[#E6F3EA]"
+                }`}
+              >
+                {/* Green left accent stripe */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#3D6B47]" />
+
+                {/* "My Rank" label */}
+                <span className={`text-xs font-semibold uppercase tracking-wider flex-shrink-0 ${
+                  isDark ? "text-[#3D6B47]" : "text-[#3D6B47]"
+                }`}>
+                  My Rank
+                </span>
+
+                {/* Rank badge */}
+                <span className={`text-base font-bold flex-shrink-0 ${
+                  myRankEntry.rank <= 3 ? medalColor(myRankEntry.rank) : "text-[#3D6B47]"
+                }`}>
+                  {rankLabel(myRankEntry.rank)}
+                </span>
+
+                {/* Player name */}
+                <span className={`flex-1 min-w-0 text-sm font-semibold truncate ${
+                  isDark ? "text-white/90" : "text-[#1A2E1A]"
+                }`}>
+                  {myRankEntry.row.player.name}
+                </span>
+
+                {/* Score */}
+                <span className={`flex-shrink-0 font-mono font-bold text-base ${
+                  isDark ? "text-white" : "text-[#1A2E1A]"
+                }`}>
+                  {myRankEntry.row.points % 1 !== 0
+                    ? `${Math.floor(myRankEntry.row.points)}½`
+                    : `${myRankEntry.row.points}`}
+                </span>
+
+                {/* Scroll hint arrow */}
+                <ChevronRight className="w-4 h-4 text-[#3D6B47] flex-shrink-0 rotate-[-90deg]" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

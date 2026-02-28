@@ -455,3 +455,13 @@
 - [x] Wire useVisibilitySync into Tournament.tsx participant page so pairings/standings re-sync on tab focus
 - [x] Show a subtle "Synced" toast when state is refreshed after returning from background
 - [x] Unit tests for useVisibilitySync hook — 11 tests passing (410 total)
+
+## "My Rank" Sticky Chip (Mobile Standings)
+
+- [x] Compute myRankRow from standingRows where player.id === myPlayerId
+- [x] Show sticky chip only when: myPlayerId is set, myRankRow exists, and accordion is open
+- [x] Chip floats at the bottom of the MobileStandingsAccordion card (sticky bottom-0 inside the expanded panel)
+- [x] Chip displays: rank medal/number, player name (truncated), score pill
+- [x] Chip is hidden when the participant's own row is already visible in the viewport (IntersectionObserver)
+- [x] Tapping the chip scrolls the participant's row into view
+- [x] Unit tests for myRankRow derivation helper — 13 tests passing (423 total)
