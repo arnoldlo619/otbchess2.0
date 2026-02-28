@@ -507,6 +507,7 @@ export default function Director() {
   // ── Round timer ────────────────────────────────────────────────────────
   const roundTimer = useRoundTimer({
     roundNumber: state.currentRound,
+    tournamentId,
     onNearEnd: () => {
       // Broadcast 5-minute warning push notification
       fetch(`/api/push/notify/${tournamentId}/timer-warning`, {

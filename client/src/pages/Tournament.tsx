@@ -48,6 +48,7 @@ import {
   Printer,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RoundTimerDisplay } from "@/components/RoundTimerDisplay";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -1006,36 +1007,43 @@ export default function TournamentPage() {
         <RegistrationState tournamentName={displayName} playerCount={displayState.players.length} />
       )}
 
-      {/* Live / completed tournament */}
-      {displayState.status !== "registration" && (
-        <>
-          {/* Live clock banner */}
-          <div className="bg-[#3D6B47] py-2.5">
-            <div className="container flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-white/80 text-sm min-w-0">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
-                <span className="truncate">
-                  {displayState.status === "completed"
-                    ? `Complete · ${displayState.totalRounds} rounds`
-                    : `Round ${displayState.currentRound}${liveGames > 0 ? ` · ${liveGames} active` : ""}`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <LiveBadge
-                  currentRound={displayState.currentRound}
-                  totalRounds={displayState.totalRounds}
-                  status={displayState.status}
-                />
-                {/* Elapsed clock — hidden on mobile to save space */}
-                {displayState.status === "in_progress" && (
-                  <div className="hidden sm:flex items-center gap-1.5 text-white text-xs font-mono font-bold">
-                    <Clock className="w-3.5 h-3.5 text-white/70" />
-                    {formatElapsed(elapsed + 5432)}
+          {/* Live / completed tournament */}
+          {displayState.status !== "registration" && (
+            <>
+              {/* Live clock banner */}
+              <div className="bg-[#3D6B47] py-2.5">
+                <div className="container flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-white/80 text-sm min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
+                    <span className="truncate">
+                      {displayState.status === "completed"
+                        ? `Complete · ${displayState.totalRounds} rounds`
+                        : `Round ${displayState.currentRound}${liveGames > 0 ? ` · ${liveGames} active` : ""}`}
+                    </span>
                   </div>
-                )}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <LiveBadge
+                      currentRound={displayState.currentRound}
+                      totalRounds={displayState.totalRounds}
+                      status={displayState.status}
+                    />
+                    {/* Elapsed clock — hidden on mobile to save space */}
+                    {displayState.status === "in_progress" && (
+                      <div className="hidden sm:flex items-center gap-1.5 text-white text-xs font-mono font-bold">
+                        <Clock className="w-3.5 h-3.5 text-white/70" />
+                        {formatElapsed(elapsed + 5432)}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Round timer display — shown below banner when director has an active timer */}
+              {displayState.status === "in_progress" && (
+                <div className="container pt-3">
+                  <RoundTimerDisplay tournamentId={tournamentId} />
+                </div>
+              )}
 
           {/* Main content */}
           <div className="container py-4 sm:py-8">

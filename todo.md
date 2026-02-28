@@ -515,3 +515,11 @@
 - [x] "Download Results" button in Director Dashboard Quick Actions (visible when tournament has ≥1 completed round)
 - [x] Filename: otb-{tournamentName}-results.pdf
 - [x] Unit tests for generateResultsPdf helpers — 19 tests passing (490 total)
+
+## Participant Round Timer (Read-Only)
+
+- [x] Persist timer state (startWallMs, elapsedAtPauseMs, status, durationSec) to localStorage in useRoundTimer on every tick
+- [x] Create useParticipantTimer hook: reads timer snapshot from localStorage, re-computes remaining time locally via rAF
+- [x] RoundTimerDisplay component: compact read-only ring + MM:SS, near-end amber state, "Time's Up" red state
+- [x] Wire RoundTimerDisplay into Tournament.tsx participant page (below round header, hidden when no timer is running)
+- [x] Unit tests for useParticipantTimer snapshot-to-remaining computation — 19 tests passing (509 total)

@@ -16,6 +16,50 @@ import { useState, useRef, useCallback, useEffect } from "react";
 
 export type TimerStatus = "idle" | "running" | "paused" | "expired";
 
+// ─── localStorage persistence ─────────────────────────────────────────────────
+// Key pattern: otb-timer-{tournamentId}
+// Snapshot written by the director; read by the participant page.
+
+export interface TimerSnapshot {
+  status: TimerStatus;
+  durationSec: number;
+  /** Wall-clock ms when the timer was last started/resumed */
+  startWallMs: number;
+  /** Elapsed seconds accumulated before the last pause */
+  elapsedAtPauseMs: number;
+  /** Unix ms when the snapshot was written (for staleness checks) */
+  savedAt: number;
+}
+
+export function timerStorageKey(tournamentId: string): string {
+  return `otb-timer-${tournamentId}`;
+}
+
+export function saveTimerSnapshot(tournamentId: string, snap: TimerSnapshot): void {
+  try {
+    localStorage.setItem(timerStorageKey(tournamentId), JSON.stringify(snap));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+export function loadTimerSnapshot(tournamentId: string): TimerSnapshot | null {
+  try {
+    const raw = localStorage.getItem(timerStorageKey(tournamentId));
+    return raw ? (JSON.parse(raw) as TimerSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Compute remaining seconds from a snapshot at the current wall-clock time. */
+export function remainingFromSnapshot(snap: TimerSnapshot, nowMs = Date.now()): number {
+  if (snap.status === "idle" || snap.status === "expired") return 0;
+  const elapsedSec =
+    snap.status === "running"
+      ? snap.elapsedAtPauseMs / 1000 + (nowMs - snap.startWallMs) / 1000
+      : snap.elapsedAtPauseMs / 1000;
+  return Math.max(0, snap.durationSec - elapsedSec);
+}
+
 export interface RoundTimerState {
   status: TimerStatus;
   /** Total duration in seconds */
@@ -39,6 +83,8 @@ export interface UseRoundTimerOptions {
   onExpired?: () => void;
   /** Round number — when this changes the timer auto-resets */
   roundNumber?: number;
+  /** Tournament ID — when provided, timer state is persisted to localStorage */
+  tournamentId?: string;
 }
 
 export interface UseRoundTimerReturn extends RoundTimerState {
@@ -57,6 +103,7 @@ export function useRoundTimer({
   onNearEnd,
   onExpired,
   roundNumber,
+  tournamentId,
 }: UseRoundTimerOptions = {}): UseRoundTimerReturn {
   const [durationSec, setDurationSec] = useState(initialDurationMin * 60);
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -102,6 +149,15 @@ export function useRoundTimer({
       if (next >= durationSec) {
         setStatus("expired");
         onExpiredRef.current?.();
+        if (tournamentId) {
+          saveTimerSnapshot(tournamentId, {
+            status: "expired",
+            durationSec,
+            startWallMs: startWallRef.current,
+            elapsedAtPauseMs: durationSec * 1000,
+            savedAt: Date.now(),
+          });
+        }
         return durationSec;
       }
 
@@ -109,7 +165,7 @@ export function useRoundTimer({
     });
 
     rafRef.current = requestAnimationFrame(tick);
-  }, [durationSec, nearEndThresholdSec]);
+  }, [durationSec, nearEndThresholdSec, tournamentId]);
 
   const start = useCallback(() => {
     setStatus((prev) => {
@@ -117,18 +173,38 @@ export function useRoundTimer({
       startWallRef.current = Date.now();
       elapsedAtPauseRef.current = prev === "paused" ? elapsedSec : 0;
       rafRef.current = requestAnimationFrame(tick);
+      // Persist immediately so participant page picks up the start
+      if (tournamentId) {
+        saveTimerSnapshot(tournamentId, {
+          status: "running",
+          durationSec,
+          startWallMs: startWallRef.current,
+          elapsedAtPauseMs: elapsedAtPauseRef.current * 1000,
+          savedAt: Date.now(),
+        });
+      }
       return "running";
     });
-  }, [elapsedSec, tick]);
+  }, [elapsedSec, tick, tournamentId, durationSec]);
 
   const pause = useCallback(() => {
     setStatus((prev) => {
       if (prev !== "running") return prev;
       cancelRaf();
       elapsedAtPauseRef.current = elapsedSec;
+      // Persist paused state
+      if (tournamentId) {
+        saveTimerSnapshot(tournamentId, {
+          status: "paused",
+          durationSec,
+          startWallMs: startWallRef.current,
+          elapsedAtPauseMs: elapsedSec * 1000,
+          savedAt: Date.now(),
+        });
+      }
       return "paused";
     });
-  }, [elapsedSec, cancelRaf]);
+  }, [elapsedSec, cancelRaf, tournamentId, durationSec]);
 
   const reset = useCallback(() => {
     cancelRaf();
@@ -136,7 +212,17 @@ export function useRoundTimer({
     setElapsedSec(0);
     setNearEndFired(false);
     setStatus("idle");
-  }, [cancelRaf]);
+    // Persist idle state so participant page hides the clock
+    if (tournamentId) {
+      saveTimerSnapshot(tournamentId, {
+        status: "idle",
+        durationSec,
+        startWallMs: 0,
+        elapsedAtPauseMs: 0,
+        savedAt: Date.now(),
+      });
+    }
+  }, [cancelRaf, tournamentId, durationSec]);
 
   const setDurationMin = useCallback((min: number) => {
     const sec = Math.max(1, min) * 60;
