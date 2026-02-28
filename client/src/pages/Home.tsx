@@ -154,7 +154,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           />
         </a>
 
-        {/* Desktop Links */}
+        {/* Desktop Links — centre (empty if navLinks is empty) */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <button
@@ -169,6 +169,18 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
               {link.label}
             </button>
           ))}
+        </div>
+
+        {/* Right-side: Sign In → Archive → Toggle */}
+        <div className="hidden md:flex items-center gap-4">
+          <button
+            onClick={onCreateTournament}
+            className={`text-sm font-medium transition-colors ${
+              isDark ? "text-white/70 hover:text-white" : "text-[#3D6B47] hover:text-[#2A4A32]"
+            }`}
+          >
+            Sign In
+          </button>
           <Link href="/tournaments">
             <span
               className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
@@ -180,19 +192,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
               Archive
             </span>
           </Link>
-        </div>
-
-        {/* CTA + Toggle */}
-        <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
-          <button
-            onClick={onCreateTournament}
-            className={`text-sm font-medium transition-colors ${
-              isDark ? "text-white/70 hover:text-white" : "text-[#3D6B47] hover:text-[#2A4A32]"
-            }`}
-          >
-            Sign In
-          </button>
         </div>
 
         {/* Mobile: toggle + menu */}
@@ -223,12 +223,22 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           ))}
           <button
             onClick={() => { onCreateTournament(); setMobileOpen(false); }}
-            className={`block w-full text-left py-3 text-sm font-medium border-b last:border-0 ${
+            className={`block w-full text-left py-3 text-sm font-medium border-b ${
               isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
             }`}
           >
             Sign In
           </button>
+          <Link href="/tournaments">
+            <span
+              className={`block w-full py-3 text-sm font-medium ${
+                isDark ? "text-white/70" : "text-[#4B5563]"
+              }`}
+              onClick={() => setMobileOpen(false)}
+            >
+              Archive
+            </span>
+          </Link>
         </div>
       )}
     </nav>

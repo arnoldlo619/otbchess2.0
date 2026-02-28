@@ -538,3 +538,9 @@
 - [x] Cards stagger at 160ms, 270ms, 380ms; heading at 80ms; label at 0ms
 - [x] Section heading and label badge also fade in on scroll
 - [x] Respects prefers-reduced-motion (elements made immediately visible, no animation)
+
+## Nav Bar — Archive Link Reorder
+
+- [x] Remove Archive from centre desktop nav links section
+- [x] Add Archive to right-side desktop CTA group, ordered: Sign In → Archive → Theme Toggle
+- [x] Update mobile menu to show Archive below Sign In
