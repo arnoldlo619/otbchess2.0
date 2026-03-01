@@ -816,22 +816,7 @@ export default function Director() {
                   </span>
                 </div>
               )}
-              {/* Generate next round CTA — compact in header strip */}
-              {canGenerateNext && (
-                <button
-                  onClick={() => {
-                    const nextRound = state.currentRound + 1;
-                    generateNextRound();
-                    toast.success(`Round ${nextRound} pairings generated!`);
-                    broadcastRoundStart(nextRound);
-                  }}
-                  className="ml-auto flex items-center gap-1.5 px-3 py-1 bg-[#3D6B47] text-white text-xs font-bold rounded-lg hover:bg-[#2A4A32] transition-all active:scale-95 shadow-sm"
-                >
-                  <Zap className="w-3 h-3" />
-                  Generate R{state.currentRound + 1}
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              )}
+              {/* progress bar only — generate button lives in Boards tab */}
             </div>
           </div>
         )}
@@ -862,23 +847,7 @@ export default function Director() {
                     : `${totalGames - completedGames} game${totalGames - completedGames !== 1 ? "s" : ""} in progress`}
                 </p>
               </div>
-              {/* Generate Next Round — top-right on mobile */}
-              {canGenerateNext && (
-                <button
-                  onClick={() => {
-                    const nextRound = state.currentRound + 1;
-                    generateNextRound();
-                    toast.success(`Round ${nextRound} pairings generated!`);
-                    broadcastRoundStart(nextRound);
-                  }}
-                  className="touch-target flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-[#3D6B47] text-white text-sm font-bold rounded-xl hover:bg-[#2A4A32] transition-all duration-200 active:scale-95 shadow-md shadow-[#3D6B47]/30"
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span className="hidden sm:block">Generate Round {state.currentRound + 1}</span>
-                  <span className="sm:hidden">R{state.currentRound + 1}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              )}
+              {/* generate button lives in Boards tab — nothing here */}
             </div>
 
             {/* Unified 5-tab bar */}
@@ -1313,21 +1282,7 @@ export default function Director() {
                           <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>No results yet</p>
                         )}
                       </div>
-                      {canGenerateNext && (
-                        <button
-                          onClick={() => {
-                            const nextRound = state.currentRound + 1;
-                            generateNextRound();
-                            toast.success(`Round ${nextRound} pairings generated!`);
-                            broadcastRoundStart(nextRound);
-                          }}
-                          className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
-                          style={{ background: "#3D6B47", boxShadow: "0 4px 12px rgba(61,107,71,0.3)" }}
-                        >
-                          <Zap className="w-4 h-4" />
-                          Generate Round {state.currentRound + 1}
-                        </button>
-                      )}
+                      {/* generate button lives in Boards tab */}
                     </div>
                   </div>
                 </>
@@ -1427,20 +1382,45 @@ export default function Director() {
                 </div>
               )}
 
-              {/* Status banner */}
+              {/* ── Single canonical Generate Next Round CTA ─────────────────── */}
               {!isRegistration && allResultsIn && canGenerateNext && (
                 <div
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                  className={`rounded-xl border overflow-hidden ${
                     isDark
-                      ? "bg-[#3D6B47]/20 border-[#4CAF50]/30 text-[#4CAF50]"
-                      : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47]"
+                      ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
+                      : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  <p className="text-sm font-medium">
-                    All results for Round {state.currentRound} are in. Click{" "}
-                    <strong>Generate Round {state.currentRound + 1}</strong> to create Swiss pairings.
-                  </p>
+                  {/* Info row */}
+                  <div className={`flex items-center gap-3 px-4 py-3 border-b ${
+                    isDark ? "border-[#4CAF50]/15" : "border-[#3D6B47]/10"
+                  }`}>
+                    <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${
+                      isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                    }`} />
+                    <p className={`text-sm font-medium ${
+                      isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                    }`}>
+                      All {totalGames} result{totalGames !== 1 ? "s" : ""} for Round {state.currentRound} recorded — ready for Round {state.currentRound + 1}
+                    </p>
+                  </div>
+                  {/* CTA row */}
+                  <div className="px-4 py-3">
+                    <button
+                      onClick={() => {
+                        const nextRound = state.currentRound + 1;
+                        generateNextRound();
+                        toast.success(`Round ${nextRound} pairings generated!`);
+                        broadcastRoundStart(nextRound);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                      style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
+                    >
+                      <Zap className="w-4 h-4" />
+                      Generate Round {state.currentRound + 1} — Swiss Pairings
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               )}
 

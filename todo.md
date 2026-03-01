@@ -614,3 +614,11 @@
 - [x] Player count badge showing X / maxPlayers (or X registered if no cap)
 - [x] Remove player button (×) on each row for the director
 - [x] Minimum players warning if count < 2 (disable Start button)
+
+## Consolidate "Generate Next Round" Button
+
+- [x] Remove compact "Generate R{N}" button from the header round-progress strip (line ~820)
+- [x] Remove "Generate Round N" button from the top-right of the Round title row (line ~866)
+- [x] Remove "Generate Round N" button from the Home tab Round Status card (line ~1316)
+- [x] Keep single "Generate Round N" CTA in the Boards tab status banner (full-width, prominent)
+- [x] Boards tab: make the status banner CTA the canonical action (inline with the "All results in" message)
