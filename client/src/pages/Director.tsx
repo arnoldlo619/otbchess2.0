@@ -637,6 +637,30 @@ export default function Director() {
     prevAllResultsIn.current = allResultsIn;
   }, [allResultsIn, isRegistration, state.currentRound, broadcastResultsPosted]);
 
+  // ── Server player sync polling ────────────────────────────────────────────
+  // During the registration phase, poll the server every 5 seconds for new
+  // players registered from other devices (e.g. players who scanned the QR code).
+  // Players already in local state are skipped to avoid duplicates.
+  useEffect(() => {
+    if (!isRegistration || tournamentId === "otb-demo-2026") return;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`);
+        if (!res.ok) return;
+        const data = await res.json() as { players: import("@/lib/tournamentData").Player[] };
+        if (!Array.isArray(data.players)) return;
+        data.players.forEach((serverPlayer) => {
+          addPlayer(serverPlayer);
+        });
+      } catch {
+        // Silent fail — polling is a best-effort enhancement
+      }
+    };
+    poll(); // immediate first fetch
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
+  }, [isRegistration, tournamentId, addPlayer]);
+
   // Auto-scroll to the Generate CTA when all results are entered on the Boards tab.
   // A short delay lets the last result's animation settle before scrolling.
   const generateCtaRef = useRef<HTMLDivElement>(null);

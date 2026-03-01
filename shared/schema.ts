@@ -47,3 +47,34 @@ export const pushSubscriptions = mysqlTable(
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+// ─── tournament_players ───────────────────────────────────────────────────────
+// Stores one row per (tournament, player) pair.
+// player_json holds the full Player object serialised as JSON so we avoid
+// schema churn when the Player type evolves.
+// Unique constraint on (tournament_id, username) prevents duplicate registrations.
+export const tournamentPlayers = mysqlTable(
+  "tournament_players",
+  {
+    // Surrogate PK
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    // The tournament this player registered for
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+
+    // chess.com username (lower-cased) — used as the dedup key
+    username: varchar("username", { length: 100 }).notNull(),
+
+    // Full Player object as JSON (name, elo, avatar, etc.)
+    playerJson: text("player_json").notNull(),
+
+    // When the player registered
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    tournamentIdx: index("tp_tournament_id_idx").on(table.tournamentId),
+  })
+);
+
+export type TournamentPlayer = typeof tournamentPlayers.$inferSelect;
+export type NewTournamentPlayer = typeof tournamentPlayers.$inferInsert;

@@ -680,12 +680,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Audit full join → registration → director dashboard data flow
 - [x] Identify root cause: addPlayerToTournament writes to player's device localStorage; director reads from director's device localStorage — two separate storage spaces, no cross-device sync
-- [ ] Add tournament_players DB table (id, tournament_id, player_json, joined_at)
-- [ ] Add POST /api/tournament/:id/players endpoint (called by Join page on registration)
-- [ ] Add GET /api/tournament/:id/players endpoint (polled by Director dashboard)
-- [ ] Update Join.tsx handleQrJoin and handleConfirm to POST player to server after local addPlayerToTournament
-- [ ] Update Director.tsx useDirectorState to poll /api/tournament/:id/players every 5s and merge into state.players
-- [ ] Add pnpm db:push to apply schema migration
+- [x] Add tournament_players DB table (id, tournament_id, player_json, joined_at)
+- [x] Add POST /api/tournament/:id/players endpoint (called by Join page on registration)
+- [x] Add GET /api/tournament/:id/players endpoint (polled by Director dashboard)
+- [x] Update Join.tsx handleQrJoin and handleConfirm to POST player to server after local addPlayerToTournament
+- [x] Update Director.tsx useDirectorState to poll /api/tournament/:id/players every 5s and merge into state.players
+- [x] Schema migration applied via direct SQL (pnpm db:push had push_subscriptions conflict)
 
 ## Director Mobile Header — Premium Redesign
 
@@ -694,3 +694,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Move invite code chip off the header nav row on mobile (now in overflow dropdown + desktop only)
 - [x] Collapse Pause/Resume, Capacity badge, Invite code into overflow menu on mobile
 - [x] Ensure no overlapping or text truncation on screens < 390px wide
+
+## Server-Side Player Sync
+
+- [x] Add tournament_players table to schema.ts (id, tournament_id, player_json, joined_at)
+- [x] Run pnpm db:push to migrate the new table (via direct SQL)
+- [x] Add POST /api/tournament/:id/players endpoint (upsert by username)
+- [x] Add GET /api/tournament/:id/players endpoint (returns all players for a tournament)
+- [x] Add DELETE /api/tournament/:id/players/:username endpoint (director remove player)
+- [x] Update Join.tsx to POST player to server after successful registration
+- [x] Update Director.tsx to poll GET /api/tournament/:id/players every 5s during registration phase
+- [x] Merge server players into director state.players (deduplicate by username via addPlayer)

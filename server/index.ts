@@ -6,7 +6,7 @@ import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "./db.js";
-import { pushSubscriptions } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers } from "../shared/schema.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -457,6 +457,100 @@ async function startServer() {
       res.json({ ok: true, sent, failed });
     } catch (err) {
       console.error("[push] timer-warning error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Tournament Players: GET /api/tournament/:id/players ─────────────────────
+  // Returns all registered players for a tournament (polled by Director dashboard).
+  app.get("/api/tournament/:id/players", async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select()
+        .from(tournamentPlayers)
+        .where(eq(tournamentPlayers.tournamentId, id))
+        .orderBy(tournamentPlayers.joinedAt);
+      const players = rows.map((r) => JSON.parse(r.playerJson));
+      res.json({ players, count: players.length });
+    } catch (err) {
+      console.error("[players] GET error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Tournament Players: POST /api/tournament/:id/players ─────────────────────
+  // Upserts a player registration (insert or update by username).
+  // Body: { player: Player }  (the full Player object from the client)
+  app.post("/api/tournament/:id/players", async (req, res) => {
+    const { id } = req.params;
+    const { player } = req.body as { player: Record<string, unknown> };
+    if (!id || !player || typeof player.username !== "string") {
+      return res.status(400).json({ error: "Missing tournament id or player.username" });
+    }
+    const username = (player.username as string).toLowerCase().trim();
+    try {
+      const db = await getDb();
+      // Check if this player already exists for this tournament
+      const existing = await db
+        .select({ id: tournamentPlayers.id })
+        .from(tournamentPlayers)
+        .where(
+          and(
+            eq(tournamentPlayers.tournamentId, id),
+            eq(tournamentPlayers.username, username)
+          )
+        );
+      if (existing.length > 0) {
+        // Update the player JSON (ELO may have changed)
+        await db
+          .update(tournamentPlayers)
+          .set({ playerJson: JSON.stringify(player) })
+          .where(
+            and(
+              eq(tournamentPlayers.tournamentId, id),
+              eq(tournamentPlayers.username, username)
+            )
+          );
+        console.log(`[players] Updated player ${username} in tournament ${id}`);
+      } else {
+        // Insert new registration
+        await db.insert(tournamentPlayers).values({
+          id: nanoid(),
+          tournamentId: id,
+          username,
+          playerJson: JSON.stringify(player),
+        });
+        console.log(`[players] Registered player ${username} in tournament ${id}`);
+      }
+      res.json({ ok: true, username });
+    } catch (err) {
+      console.error("[players] POST error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Tournament Players: DELETE /api/tournament/:id/players/:username ──────────
+  // Removes a player registration (director removes a player).
+  app.delete("/api/tournament/:id/players/:username", async (req, res) => {
+    const { id, username } = req.params;
+    if (!id || !username) return res.status(400).json({ error: "Missing params" });
+    try {
+      const db = await getDb();
+      await db
+        .delete(tournamentPlayers)
+        .where(
+          and(
+            eq(tournamentPlayers.tournamentId, id),
+            eq(tournamentPlayers.username, username.toLowerCase().trim())
+          )
+        );
+      console.log(`[players] Removed player ${username} from tournament ${id}`);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[players] DELETE error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });

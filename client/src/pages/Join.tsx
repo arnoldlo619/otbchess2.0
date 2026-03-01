@@ -86,6 +86,22 @@ function eloTierDark(elo: number) {
   return { label: "Beginner", color: "text-white/50", bg: "bg-white/05 border border-white/10" };
 }
 
+// --- Server sync helper -------------------------------------------------------
+// Fire-and-forget: POST the player to the server so the director dashboard can
+// poll it from any device. Failures are silently swallowed so they never block
+// the local registration flow.
+async function postPlayerToServer(tournamentId: string, player: Player): Promise<void> {
+  try {
+    await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ player }),
+    });
+  } catch {
+    // Network error — local registration already succeeded, so ignore.
+  }
+}
+
 // --- Step Progress Bar --------------------------------------------------------
 function StepProgress({ step }: { step: Step }) {
   const steps: Step[] = ["code", "username", "confirm", "success"];
@@ -496,6 +512,8 @@ export default function JoinPage() {
           showCapToast(result.reason === "full" ? "full" : "duplicate");
           return;
         }
+        // Sync to server so director dashboard picks it up on any device
+        postPlayerToServer(config.id, player);
         saveRegistration({
           tournamentId: tournamentCode,
           username: prof.username,
@@ -531,6 +549,8 @@ export default function JoinPage() {
             showCapToast(result.reason === "full" ? "full" : "duplicate");
             return;
           }
+          // Sync to server so director dashboard picks it up on any device
+          postPlayerToServer(bootstrapped.id, player);
           saveRegistration({
             tournamentId: tournamentCode,
             username: prof.username,
@@ -588,6 +608,8 @@ export default function JoinPage() {
           showCapToast(result.reason === "full" ? "full" : "duplicate");
           return;
         }
+        // Sync to server so director dashboard picks it up on any device
+        postPlayerToServer(config.id, player);
       }
     }
     // Persist registration to localStorage for duplicate detection
