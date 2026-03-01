@@ -36,7 +36,7 @@ interface TournamentStartedPayload {
   players: Player[];
 }
 
-type PlayerScreen = "lobby" | "my_board" | "result_submitted";
+type PlayerScreen = "lobby" | "my_board" | "result_submitted" | "new_round_flash";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -73,18 +73,19 @@ interface LobbyProps {
   tournamentName: string;
   username: string;
   isDark: boolean;
-  onTournamentStarted: (payload: TournamentStartedPayload) => void;
   tournamentId: string;
+  playerCount: number | null;
+  onPlayerCountChange: (count: number) => void;
 }
 
 function LobbyScreen({
   tournamentName,
   username,
   isDark,
-  onTournamentStarted,
   tournamentId,
+  playerCount,
+  onPlayerCountChange,
 }: LobbyProps) {
-  const [playerCount, setPlayerCount] = useState<number | null>(null);
   const [dots, setDots] = useState(".");
 
   // Animate the waiting dots
@@ -96,39 +97,13 @@ function LobbyScreen({
     return () => clearInterval(t);
   }, []);
 
-  // Fetch initial player count
+  // Fetch initial player count on mount
   useEffect(() => {
     fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`)
       .then((r) => r.json())
-      .then((d) => setPlayerCount(d.count ?? null))
+      .then((d) => { if (d.count != null) onPlayerCountChange(d.count); })
       .catch(() => {});
-  }, [tournamentId]);
-
-  // Open SSE stream — listen for tournament_started
-  useEffect(() => {
-    const es = new EventSource(
-      `/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`
-    );
-
-    es.addEventListener("player_joined", () => {
-      setPlayerCount((c) => (c !== null ? c + 1 : 1));
-    });
-
-    es.addEventListener("tournament_started", (e: MessageEvent) => {
-      try {
-        const payload = JSON.parse(e.data) as TournamentStartedPayload;
-        onTournamentStarted(payload);
-      } catch {
-        console.error("[lobby] Failed to parse tournament_started payload");
-      }
-    });
-
-    es.onerror = () => {
-      // EventSource reconnects automatically; no manual action needed
-    };
-
-    return () => es.close();
-  }, [tournamentId, onTournamentStarted]);
+  }, [tournamentId, onPlayerCountChange]);
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-gray-900";
@@ -497,6 +472,8 @@ export default function PlayerView() {
   const [screen, setScreen] = useState<PlayerScreen>("lobby");
   const [startedPayload, setStartedPayload] =
     useState<TournamentStartedPayload | null>(null);
+  const [playerCount, setPlayerCount] = useState<number | null>(null);
+  const [newRoundFlashLabel, setNewRoundFlashLabel] = useState("");
 
   // Resolve tournament name from registry
   const tournament = tournamentId ? resolveTournament(tournamentId) : null;
@@ -515,11 +492,11 @@ export default function PlayerView() {
           s.rounds?.length > 0 &&
           s.players?.length > 0
         ) {
-          const round1 = s.rounds.find((r: { number: number }) => r.number === s.currentRound);
-          if (round1) {
+          const currentRound = s.rounds.find((r: { number: number }) => r.number === s.currentRound);
+          if (currentRound) {
             setStartedPayload({
               round: s.currentRound,
-              games: round1.games,
+              games: currentRound.games,
               players: s.players,
             });
             setScreen("my_board");
@@ -531,13 +508,49 @@ export default function PlayerView() {
       });
   }, [tournamentId]);
 
-  const handleTournamentStarted = useCallback(
-    (payload: TournamentStartedPayload) => {
-      setStartedPayload(payload);
-      setScreen("my_board");
-    },
-    []
-  );
+  // Persistent SSE connection — lives for the full player session across all screens.
+  // Handles: tournament_started, round_started, player_joined.
+  useEffect(() => {
+    if (!tournamentId) return;
+    const es = new EventSource(
+      `/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`
+    );
+
+    es.addEventListener("player_joined", () => {
+      setPlayerCount((c) => (c !== null ? c + 1 : 1));
+    });
+
+    es.addEventListener("tournament_started", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data) as TournamentStartedPayload;
+        setStartedPayload(payload);
+        setScreen("my_board");
+      } catch {
+        console.error("[player] Failed to parse tournament_started");
+      }
+    });
+
+    es.addEventListener("round_started", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data) as TournamentStartedPayload;
+        // Show a brief "New Round!" flash, then transition to the updated board.
+        setNewRoundFlashLabel(`Round ${payload.round} starting…`);
+        setScreen("new_round_flash");
+        setTimeout(() => {
+          setStartedPayload(payload);
+          setScreen("my_board");
+        }, 1800);
+      } catch {
+        console.error("[player] Failed to parse round_started");
+      }
+    });
+
+    es.onerror = () => {
+      // EventSource reconnects automatically
+    };
+
+    return () => es.close();
+  }, [tournamentId]);
 
   const handleResultSubmitted = useCallback(() => {
     setScreen("result_submitted");
@@ -556,6 +569,34 @@ export default function PlayerView() {
     );
   }
 
+  if (screen === "new_round_flash") {
+    const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
+    const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+    const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
+    return (
+      <div className={`min-h-screen ${bg} flex flex-col items-center justify-center px-6 gap-6 text-center`}>
+        {/* Animated burst */}
+        <div className="relative flex items-center justify-center">
+          <div className={`absolute w-40 h-40 rounded-full ${accentBg} animate-ping opacity-40`} />
+          <div className={`absolute w-28 h-28 rounded-full ${accentBg} animate-ping opacity-60`}
+            style={{ animationDelay: "0.2s" }} />
+          <div className={`relative w-24 h-24 rounded-full ${accentBg} flex items-center justify-center`}>
+            <Swords className={`w-12 h-12 ${accent}`} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-900"}`}>
+            New Round!
+          </h2>
+          <p className={`text-base font-semibold ${accent}`}>{newRoundFlashLabel}</p>
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
+            Finding your board assignment…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (screen === "lobby") {
     return (
       <LobbyScreen
@@ -563,7 +604,8 @@ export default function PlayerView() {
         tournamentName={tournamentName}
         username={username}
         isDark={isDark}
-        onTournamentStarted={handleTournamentStarted}
+        playerCount={playerCount}
+        onPlayerCountChange={setPlayerCount}
       />
     );
   }

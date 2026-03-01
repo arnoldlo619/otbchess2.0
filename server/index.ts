@@ -728,6 +728,33 @@ export function createApp() {
     res.json({ ok: true });
   });
 
+  // ── Tournament: POST /api/tournament/:id/round ────────────────────────────
+  // Called by the director when they generate the next round's pairings.
+  // Broadcasts a round_started SSE event to all connected player clients so
+  // their My Board screens automatically refresh to the new board assignment.
+  // Body: { round: number; games: Game[]; players: Player[] }
+  app.post("/api/tournament/:id/round", (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    const { round, games, players } = req.body as {
+      round: number;
+      games: unknown[];
+      players: unknown[];
+    };
+    if (!round || !games || !players) {
+      return res.status(400).json({ error: "Missing round, games, or players" });
+    }
+    const subs = sseSubscribers.get(id);
+    if (subs && subs.size > 0) {
+      const data = `event: round_started\ndata: ${JSON.stringify({ round, games, players })}\n\n`;
+      for (const sub of Array.from(subs)) {
+        try { sub.write(data); } catch { /* disconnected */ }
+      }
+      console.log(`[round] Broadcast round_started (Round ${round}) to ${subs.size} subscriber(s) for ${id}`);
+    }
+    res.json({ ok: true });
+  });
+
   return app;
 }
 

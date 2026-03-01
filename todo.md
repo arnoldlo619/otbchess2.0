@@ -768,3 +768,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] My Board screen: after result submitted, show confirmation + standings link
 - [x] New route: /tournament/:id/play?username=xxx (player view, mobile-first)
 - [x] Unit tests for player board lookup helper (findMyBoard)
+
+## Round Started SSE Push
+
+- [x] Server: add POST /api/tournament/:id/round endpoint — broadcasts round_started SSE event with new round pairings
+- [x] Server: round_started payload includes { round: number; games: Game[]; players: Player[] }
+- [x] Director.tsx: call POST /api/tournament/:id/round when nextRound() is invoked
+- [x] PlayerView: listen for round_started SSE event on the My Board screen
+- [x] PlayerView: on round_started, animate transition to new board assignment (brief "New Round!" flash)
+- [x] PlayerView: reset result-submitted state when new round starts
+- [x] PlayerView: show round number badge updating in real time
+- [x] Unit tests for round_started SSE handler in PlayerView

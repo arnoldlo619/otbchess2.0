@@ -1590,6 +1590,28 @@ export default function Director() {
                         generateNextRound();
                         toast.success(`Round ${nextRound} pairings generated!`);
                         broadcastRoundStart(nextRound);
+                        // Broadcast round_started SSE event to all connected player screens
+                        // so they automatically refresh to their new board assignment.
+                        setTimeout(() => {
+                          try {
+                            const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
+                            const latestState = raw ? JSON.parse(raw) : null;
+                            const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                            if (roundData && latestState?.players) {
+                              fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  round: nextRound,
+                                  games: roundData.games,
+                                  players: latestState.players,
+                                }),
+                              }).catch(() => {
+                                // Non-critical — players can still poll state on next load
+                              });
+                            }
+                          } catch { /* ignore */ }
+                        }, 150);
                       }}
                       className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
                       style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
