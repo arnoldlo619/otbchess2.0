@@ -299,12 +299,12 @@ function HeroPanel({
 
 function Label({ children, hint, isDark }: { children: React.ReactNode; hint?: string; isDark: boolean }) {
   return (
-    <div className="flex items-baseline gap-2 mb-3">
-      <label className="text-base font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
+    <div className="flex items-baseline gap-2 mb-3 lg:mb-4">
+      <label className="text-base lg:text-lg font-semibold" style={{ color: isDark ? "rgba(255,255,255,0.90)" : "#1F2937" }}>
         {children}
       </label>
       {hint && (
-        <span className="text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+        <span className="text-sm lg:text-base" style={{ color: isDark ? T.dMuted : T.lMuted }}>
           {hint}
         </span>
       )}
@@ -337,7 +337,7 @@ function TextInput({
     <div className="relative">
       {Icon && (
         <Icon
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
           style={{ color: isDark ? T.dMuted : T.lMuted }}
         />
       )}
@@ -350,8 +350,8 @@ function TextInput({
         autoFocus={autoFocus}
         className="w-full rounded-2xl border outline-none transition-all duration-200"
         style={{
-          padding: large ? "16px 18px 16px 52px" : Icon ? "14px 16px 14px 50px" : "14px 18px",
-          fontSize: large ? 20 : 16,
+          padding: large ? "18px 20px 18px 56px" : Icon ? "16px 18px 16px 52px" : "16px 20px",
+          fontSize: large ? 22 : 17,
           fontWeight: large ? 600 : 400,
           background: isDark ? T.dInput : T.lInput,
           border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
@@ -390,8 +390,8 @@ function TextArea({
       rows={3}
       className="w-full rounded-2xl border outline-none transition-all duration-200 resize-none"
       style={{
-        padding: "14px 18px",
-        fontSize: 16,
+        padding: "16px 20px",
+        fontSize: 17,
         lineHeight: "1.6",
         background: isDark ? T.dInput : T.lInput,
         border: `2px solid ${isDark ? T.dInputBorder : T.lInputBorder}`,
@@ -661,7 +661,7 @@ function QuickstartForm({
   };
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7 lg:space-y-9">
       {/* Tournament name */}
       <div>
         <Label isDark={isDark} hint="required">Tournament Name</Label>
@@ -705,7 +705,7 @@ function QuickstartForm({
 
       {/* Smart defaults summary */}
       <div
-        className="rounded-2xl border px-5 py-4 space-y-3"
+        className="rounded-2xl border px-5 lg:px-7 py-4 lg:py-6 space-y-3 lg:space-y-4"
         style={{
           background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
           border: `1.5px solid ${isDark ? "rgba(61,107,71,0.25)" : "rgba(61,107,71,0.18)"}`,
@@ -717,7 +717,7 @@ function QuickstartForm({
             Smart Defaults Applied
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 lg:gap-y-3">
           {[
             ["Format",       "Swiss System"],
             ["Rounds",       String(data.rounds)],
@@ -726,9 +726,9 @@ function QuickstartForm({
             ["Rating",       activeRating?.label ?? "chess.com"],
           ].map(([label, value]) => (
             <div key={label} className="flex items-center justify-between gap-2">
-              <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{label}</span>
+              <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{label}</span>
               <span
-                className="text-xs font-semibold"
+                className="text-xs lg:text-sm font-semibold"
                 style={{
                   color:
                     (label === "Rating" && isNonDefaultRating) ||
@@ -744,7 +744,7 @@ function QuickstartForm({
             </div>
           ))}
         </div>
-        <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+        <p className="text-xs lg:text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
           You can adjust format and time control from the Director Dashboard after creating the tournament.
         </p>
       </div>

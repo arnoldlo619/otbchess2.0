@@ -733,3 +733,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix two-column layout: sidebar and form panel must fill full viewport width with no gap
 - [x] Sidebar is fixed-width left column (lg:w-[32%] xl:w-[34%]), form panel takes flex-1
 - [x] Removed max-w-3xl mx-auto constraint from inner content wrapper — form now fills full right panel with px-16 xl:px-20 padding
+
+## Tournament Wizard — Larger Desktop Form Fields
+
+- [ ] Increase input height to lg:h-14 (56px) on desktop, keep h-11 on mobile
+- [ ] Increase label font size to lg:text-base on desktop
+- [ ] Increase input font size to lg:text-base on desktop
+- [ ] Increase vertical gap between form fields to lg:gap-6 on desktop
+- [ ] Increase section title / step heading size on desktop
