@@ -2451,6 +2451,28 @@ export default function Director() {
                   startTournament();
                   setShowStartConfirm(false);
                   toast.success("Round 1 pairings generated! Tournament is live.");
+                  // Broadcast tournament_started SSE event to all connected player lobby screens.
+                  // Read the updated state from localStorage after startTournament() runs.
+                  setTimeout(() => {
+                    try {
+                      const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
+                      const latestState = raw ? JSON.parse(raw) : null;
+                      const round1 = latestState?.rounds?.find((r: { number: number }) => r.number === 1);
+                      if (round1 && latestState?.players) {
+                        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/start`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            round: 1,
+                            games: round1.games,
+                            players: latestState.players,
+                          }),
+                        }).catch(() => {
+                          // Non-critical — players can still see their board by polling state on next load
+                        });
+                      }
+                    } catch { /* ignore */ }
+                  }, 150);
                 }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
                 style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}

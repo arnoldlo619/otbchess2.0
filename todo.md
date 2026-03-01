@@ -751,3 +751,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove vitePluginChessProxy() — chess.com/lichess proxies now handled by Express (no duplicate)
 - [x] Verified: POST /api/tournament/:id/players → 200 JSON, SSE stream delivers player_joined events
 - [x] All 528 tests passing
+
+## Player Lobby & My Board (Post-Join Mobile Experience)
+
+- [x] Server: add POST /api/tournament/:id/start endpoint — broadcasts tournament_started SSE event with Round 1 pairings
+- [x] Server: tournament_started payload includes { round: 1, games: Game[], players: Player[] }
+- [x] Director.tsx: call POST /api/tournament/:id/start when startTournament() is invoked
+- [x] Join.tsx: after success step, transition to Lobby screen (waiting for tournament to start)
+- [x] Lobby screen: animated waiting UI — pulsing chess piece, player count, tournament name
+- [x] Lobby screen: open SSE stream for /api/tournament/:id/players/stream
+- [x] Lobby screen: on tournament_started event, transition to My Board screen
+- [x] Lobby screen: if tournament already started (poll state on mount), go straight to My Board
+- [x] My Board screen: show board number, color (White/Black), opponent name/ELO/avatar
+- [x] My Board screen: result submission buttons (I Won / Draw / I Lost)
+- [x] My Board screen: submitted result calls POST /api/tournament/:id/result (new endpoint)
+- [x] My Board screen: after result submitted, show confirmation + standings link
+- [x] New route: /tournament/:id/play?username=xxx (player view, mobile-first)
+- [x] Unit tests for player board lookup helper (findMyBoard)

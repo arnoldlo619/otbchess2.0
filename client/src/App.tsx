@@ -12,6 +12,7 @@ import JoinPage from "./pages/Join";
 import Archive from "./pages/Archive";
 import ReportPage from "./pages/Report";
 import DirectorAccessPage from "./pages/DirectorAccess";
+import PlayerView from "./pages/PlayerView";
 import { InstallBanner } from "./components/InstallBanner";
 
 
@@ -21,6 +22,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/tournament/:id"} component={TournamentPage} />
       <Route path={"/tournament/:id/manage"} component={Director} />
+      <Route path={"/tournament/:id/play"} component={PlayerView} />
       <Route path={"/tournament/:id/print"} component={PrintPage} />
       <Route path={"/join/:code"} component={JoinPage} />
       <Route path={"/join"} component={JoinPage} />

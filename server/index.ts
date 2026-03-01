@@ -38,6 +38,21 @@ function broadcastPlayerJoined(tournamentId: string, player: Record<string, unkn
   console.log(`[sse] Broadcast player_joined to ${subs.size} subscriber(s) for ${tournamentId}`);
 }
 
+// Broadcast tournament_started to all SSE subscribers (directors + players watching).
+// Payload includes the full Round 1 pairings and player list so players can find their board.
+function broadcastTournamentStarted(
+  tournamentId: string,
+  payload: { round: number; games: unknown[]; players: unknown[] }
+) {
+  const subs = sseSubscribers.get(tournamentId);
+  if (!subs || subs.size === 0) return;
+  const data = `event: tournament_started\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const res of Array.from(subs)) {
+    try { res.write(data); } catch { /* client already disconnected */ }
+  }
+  console.log(`[sse] Broadcast tournament_started to ${subs.size} subscriber(s) for ${tournamentId}`);
+}
+
 // ─── Chess.com & Lichess proxy ────────────────────────────────────────────────
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
@@ -662,6 +677,55 @@ export function createApp() {
       console.error("[players] DELETE error:", err);
       res.status(500).json({ error: "Database error" });
     }
+  });
+
+  // ── Tournament: POST /api/tournament/:id/start ────────────────────────────
+  // Called by the director when they click "Start Tournament".
+  // Broadcasts a tournament_started SSE event to all connected player clients
+  // so they can transition from the Lobby waiting screen to the My Board view.
+  // Body: { round: number; games: Game[]; players: Player[] }
+  app.post("/api/tournament/:id/start", (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    const { round, games, players } = req.body as {
+      round: number;
+      games: unknown[];
+      players: unknown[];
+    };
+    if (!round || !games || !players) {
+      return res.status(400).json({ error: "Missing round, games, or players" });
+    }
+    broadcastTournamentStarted(id, { round, games, players });
+    console.log(`[start] Tournament ${id} started — Round ${round}, ${games.length} games, ${players.length} players`);
+    res.json({ ok: true });
+  });
+
+  // ── Tournament: POST /api/tournament/:id/result ────────────────────────────
+  // Called by a player when they submit their game result from the My Board screen.
+  // Body: { gameId: string; result: "1-0" | "0-1" | "½-½"; submittedBy: string }
+  // This stores the player-submitted result so the director can see it as a suggestion.
+  // The director still confirms results on their dashboard.
+  app.post("/api/tournament/:id/result", (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    const { gameId, result, submittedBy } = req.body as {
+      gameId: string;
+      result: string;
+      submittedBy: string;
+    };
+    if (!gameId || !result || !submittedBy) {
+      return res.status(400).json({ error: "Missing gameId, result, or submittedBy" });
+    }
+    // Broadcast a result_submitted event so the director dashboard can show a notification
+    const subs = sseSubscribers.get(id);
+    if (subs && subs.size > 0) {
+      const payload = `event: result_submitted\ndata: ${JSON.stringify({ gameId, result, submittedBy })}\n\n`;
+      for (const sub of Array.from(subs)) {
+        try { sub.write(payload); } catch { /* disconnected */ }
+      }
+      console.log(`[result] Player ${submittedBy} submitted result ${result} for game ${gameId} in tournament ${id}`);
+    }
+    res.json({ ok: true });
   });
 
   return app;

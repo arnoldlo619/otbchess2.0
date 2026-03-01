@@ -626,6 +626,13 @@ export default function JoinPage() {
     }
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
+    // Navigate to the player lobby so they can wait for the tournament to start
+    // and see their board assignment in real time via SSE.
+    if (profile) {
+      const resolvedId = resolveTournament(tournamentCode)?.id ?? tournamentCode;
+      navigate(`/tournament/${resolvedId}/play?username=${encodeURIComponent(profile.username)}`);
+      return;
+    }
     advanceStep("success");
   }
 
