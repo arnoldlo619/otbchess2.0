@@ -925,297 +925,415 @@ export default function Director() {
           {/* ── Home Tab ────────────────────────────────────────────────────────── */}
           {activeTab === "home" && (
             <div className="flex flex-col gap-5 w-full">
-              {/* ── Unified Hero Card: Clock + Event Info ─────────────────────── */}
-              <div className={`w-full rounded-2xl border overflow-hidden ${
-                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
-              }`}>
-                {/* Top section: Clock left, Controls right */}
-                <div className="flex flex-col sm:flex-row items-stretch">
-                  {/* ── Clock Panel ─────────────────────────────────────────── */}
-                  <div className={`flex-1 flex flex-col items-center justify-center px-8 py-10 sm:py-12 border-b sm:border-b-0 sm:border-r ${
-                    isDark ? "border-white/06" : "border-gray-100"
+
+              {/* ══════════════════════════════════════════════════════════════════
+                  REGISTRATION PHASE — Lobby view
+              ══════════════════════════════════════════════════════════════════ */}
+              {isRegistration && (
+                <>
+                  {/* ── Lobby Hero Card ──────────────────────────────────────── */}
+                  <div className={`w-full rounded-2xl border overflow-hidden ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
                   }`}>
-                    {/* Status label */}
-                    <p className={`text-xs font-bold uppercase tracking-[0.18em] mb-3 ${
-                      roundTimer.status === "running" && roundTimer.remainingSec <= 300
-                        ? "text-amber-400"
-                        : roundTimer.status === "expired"
-                        ? "text-red-400"
-                        : roundTimer.status === "running"
-                        ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-                        : isDark ? "text-white/25" : "text-gray-300"
+                    {/* Header row */}
+                    <div className={`flex items-center justify-between px-6 py-4 border-b ${
+                      isDark ? "border-white/06" : "border-gray-100"
                     }`}>
-                      {roundTimer.status === "idle" ? "Round Timer" :
-                       roundTimer.status === "running" ? (roundTimer.remainingSec <= 300 ? "⚠ Time Running Out" : "Running") :
-                       roundTimer.status === "paused" ? "Paused" : "Time's Up"}
-                    </p>
-                    {/* Large MM:SS display */}
-                    <div className={`font-mono font-black leading-none tracking-tight select-none transition-colors ${
-                      roundTimer.status === "expired"
-                        ? "text-red-400"
-                        : roundTimer.status === "running" && roundTimer.remainingSec <= 300
-                        ? "text-amber-400"
-                        : isDark ? "text-white" : "text-gray-900"
-                    }`} style={{ fontSize: "clamp(3.5rem, 10vw, 6rem)" }}>
-                      {(() => {
-                        const sec = roundTimer.status === "idle" ? roundTimer.durationSec : roundTimer.remainingSec;
-                        const m = Math.floor(sec / 60);
-                        const s = Math.floor(sec % 60);
-                        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-                      })()}
-                    </div>
-                    {/* Thin progress bar below clock */}
-                    <div className={`mt-6 w-full max-w-[200px] h-0.5 rounded-full overflow-hidden ${
-                      isDark ? "bg-white/08" : "bg-gray-100"
-                    }`}>
-                      <div
-                        className="h-full rounded-full transition-all duration-1000"
-                        style={{
-                          width: roundTimer.durationSec > 0
-                            ? `${Math.max(0, (roundTimer.remainingSec / roundTimer.durationSec) * 100)}%`
-                            : "100%",
-                          background: roundTimer.status === "expired"
-                            ? "#ef4444"
-                            : roundTimer.status === "running" && roundTimer.remainingSec <= 300
-                            ? "#f59e0b"
-                            : "#4CAF50",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* ── Controls Panel ──────────────────────────────────────── */}
-                  <div className="flex flex-col justify-center gap-5 px-8 py-8 sm:w-64 lg:w-72">
-                    {/* Minute input */}
-                    <div>
-                      <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${
-                        isDark ? "text-white/35" : "text-gray-400"
-                      }`}>Duration (min)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="180"
-                        disabled={roundTimer.status === "running"}
-                        value={Math.round(roundTimer.durationSec / 60)}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value, 10);
-                          if (!isNaN(v) && v >= 1 && v <= 180) {
-                            roundTimer.setDurationMin(v);
-                          }
-                        }}
-                        className={`w-full px-4 py-3 rounded-xl border text-2xl font-bold font-mono text-center outline-none transition-all ${
-                          roundTimer.status === "running"
-                            ? isDark ? "bg-white/04 border-white/06 text-white/25 cursor-not-allowed" : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed"
-                            : isDark
-                            ? "bg-white/06 border-white/12 text-white focus:border-[#4CAF50]/60 focus:bg-white/08"
-                            : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#3D6B47]/50 focus:bg-white"
-                        }`}
-                      />
-                    </div>
-                    {/* Start / Pause / Reset buttons */}
-                    <div className="flex items-center gap-2">
-                      {roundTimer.status !== "running" ? (
-                        <button
-                          onClick={roundTimer.start}
-                          disabled={roundTimer.status === "expired"}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.97] ${
-                            roundTimer.status === "expired"
-                              ? isDark ? "bg-white/06 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                              : "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-md shadow-[#3D6B47]/30"
-                          }`}
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                          {roundTimer.status === "paused" ? "Resume" : "Start"}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={roundTimer.pause}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.97] ${
-                            isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30" : "bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
-                          }`}
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                          Pause
-                        </button>
-                      )}
-                      <button
-                        onClick={roundTimer.reset}
-                        title="Reset timer"
-                        className={`p-3 rounded-xl border transition-all active:scale-[0.97] ${
-                          isDark ? "border-white/10 text-white/40 hover:bg-white/06 hover:text-white/70" : "border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-                        }`}
-                      >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
-                      </button>
-                    </div>
-                    {/* Near-end warning */}
-                    {roundTimer.nearEndFired && roundTimer.status === "running" && roundTimer.remainingSec <= 300 && (
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold ${
-                        isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-200"
-                      }`}>
-                        <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        5-min warning sent
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2.5 h-2.5 rounded-full ${
+                          isDark ? "bg-[#4CAF50]/60" : "bg-[#3D6B47]/50"
+                        } animate-pulse`} />
+                        <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                          Waiting for Players
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </div>
+                      {/* Player count badge */}
+                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                        isDark ? "bg-white/08 text-white/70" : "bg-gray-100 text-gray-600"
+                      }`}>
+                        <Users className="w-3.5 h-3.5" />
+                        <span>{state.players.length}{tournamentConfig?.maxPlayers ? ` / ${tournamentConfig.maxPlayers}` : ""} registered</span>
+                      </div>
+                    </div>
 
-                {/* ── Event Meta Row ───────────────────────────────────────── */}
-                <div className={`px-6 py-4 border-t flex flex-wrap gap-x-6 gap-y-2 ${
-                  isDark ? "border-white/06 bg-white/02" : "border-gray-50 bg-gray-50/50"
-                }`}>
-                  <div className="flex items-center gap-2">
-                    <Trophy className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                      Swiss · {state.totalRounds} Rounds
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
-                    <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                      {state.players.length}{tournamentConfig?.maxPlayers ? ` / ${tournamentConfig.maxPlayers}` : ""} players
-                    </span>
-                  </div>
-                  {tournamentConfig?.venue && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
-                      <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.venue}</span>
-                    </div>
-                  )}
-                  {tournamentConfig?.date && (
-                    <div className="flex items-center gap-2">
-                      <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
-                      <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.date}</span>
-                    </div>
-                  )}
-                  {tournamentConfig?.timePreset && (
-                    <div className="flex items-center gap-2">
-                      <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
-                      <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.timePreset}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* ── Registration CTA (only during registration phase) ────── */}
-                {isRegistration && (
-                  <div className={`px-6 py-5 border-t ${isDark ? "border-white/06" : "border-gray-100"}`}>
-                    <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border mb-4 ${
-                      isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
-                    }`}>
-                      <span className={`text-xs font-mono flex-1 truncate ${isDark ? "text-white/60" : "text-gray-600"}`}>{joinUrl}</span>
-                      <button
-                        onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-                        className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"}`}
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setShowQR(true)}
-                        className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"}`}
-                      >
-                        QR
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => canStart && setShowStartConfirm(true)}
-                      disabled={!canStart}
-                      className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-                        canStart
-                          ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-md shadow-[#3D6B47]/30"
-                          : isDark ? "bg-white/08 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                      }`}
-                    >
-                      <Zap className="w-4 h-4" />
-                      {canStart ? `Start Tournament → Generate Round 1` : `Need at least 2 players to start`}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* ── Round in Progress Card (active phase only) ───────────────── */}
-              {!isRegistration && (
-                <div className={`w-full rounded-2xl border p-5 ${
-                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
-                }`}>
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
-                      <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                        Round {state.currentRound} of {state.totalRounds}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                        isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                      }`}>In Progress</span>
-                    </div>
-                    <button
-                      onClick={() => setActiveTab("boards")}
-                      className={`text-xs font-semibold flex items-center gap-1 transition-colors ${
-                        isDark ? "text-[#4CAF50] hover:text-[#4CAF50]/80" : "text-[#3D6B47] hover:text-[#2d5235]"
-                      }`}
-                    >
-                      View Boards <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mb-4">
-                    {(() => {
-                      const total = state.rounds[state.currentRound - 1]?.games?.length ?? 0;
-                      const done = state.rounds[state.currentRound - 1]?.games?.filter(g => g.result !== "*").length ?? 0;
-                      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-                      return (
-                        <>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>{done} / {total} boards complete</span>
-                            <span className={`text-xs font-bold ${isDark ? "text-white/60" : "text-gray-600"}`}>{pct}%</span>
-                          </div>
-                          <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
-                            <div
-                              className="h-full rounded-full transition-all duration-700"
-                              style={{ width: `${pct}%`, background: "linear-gradient(90deg, #3D6B47, #4CAF50)" }}
-                            />
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                  {/* Top 3 standings + Generate CTA */}
-                  <div className="flex flex-col sm:flex-row gap-4 items-start">
-                    <div className="flex-1 space-y-1.5 min-w-0">
-                      {getStandings(state.players).slice(0, 3).map((p, i) => (
-                        <div key={p.id} className="flex items-center gap-2 min-w-0">
-                          <span className={`text-xs font-bold w-5 flex-shrink-0 ${
-                            i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : "text-amber-600"
-                          }`}>{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
-                          <span className={`text-sm truncate flex-1 ${isDark ? "text-white/80" : "text-gray-700"}`}>{p.name}</span>
-                          <span className={`text-sm font-bold flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>{p.points}</span>
+                    {/* Join link + QR row */}
+                    <div className={`px-6 py-4 border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
+                      <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${
+                        isDark ? "text-white/30" : "text-gray-400"
+                      }`}>Share with players</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl border min-w-0 ${
+                          isDark ? "bg-white/04 border-white/08" : "bg-gray-50 border-gray-200"
+                        }`}>
+                          <span className={`text-xs font-mono flex-1 truncate ${isDark ? "text-white/60" : "text-gray-600"}`}>{joinUrl}</span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
+                            className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-gray-200 text-gray-400 hover:text-gray-600"}`}
+                            title="Copy join link"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      ))}
-                      {getStandings(state.players).length === 0 && (
-                        <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>No results yet</p>
+                        <button
+                          onClick={() => setShowQR(true)}
+                          className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                            isDark
+                              ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50] hover:bg-[#4CAF50]/20"
+                              : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/15"
+                          }`}
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                          QR Code
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Live player list */}
+                    <div className="px-6 py-4">
+                      {state.players.length === 0 ? (
+                        <div className={`flex flex-col items-center justify-center py-10 gap-3 ${
+                          isDark ? "text-white/20" : "text-gray-300"
+                        }`}>
+                          <Users className="w-8 h-8" />
+                          <p className="text-sm">No players yet — share the QR code or join link</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {state.players.map((p, idx) => (
+                            <div
+                              key={p.id}
+                              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors group ${
+                                isDark ? "hover:bg-white/04" : "hover:bg-gray-50"
+                              }`}
+                            >
+                              {/* Rank number */}
+                              <span className={`text-xs font-mono w-5 flex-shrink-0 text-right ${
+                                isDark ? "text-white/25" : "text-gray-300"
+                              }`}>{idx + 1}</span>
+                              {/* Avatar */}
+                              <PlayerAvatar
+                                username={p.username}
+                                name={p.name}
+                                size={32}
+                                showBadge
+                                platform={p.platform}
+                                avatarUrl={p.avatarUrl}
+                                flairEmoji={p.flairEmoji}
+                              />
+                              {/* Name + username */}
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</p>
+                                {p.username && (
+                                  <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-gray-400"}`}>@{p.username}</p>
+                                )}
+                              </div>
+                              {/* ELO */}
+                              {p.elo != null && (
+                                <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg ${
+                                  isDark ? "bg-white/06 text-white/60" : "bg-gray-100 text-gray-500"
+                                }`}>{p.elo}</span>
+                              )}
+                              {/* Remove button */}
+                              <button
+                                onClick={() => { removePlayer(p.id); toast.success(`${p.name} removed`); }}
+                                className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                  isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
+                                }`}
+                                title="Remove player"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    {canGenerateNext && (
+
+                    {/* Add player + Start CTA footer */}
+                    <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${
+                      isDark ? "border-white/06" : "border-gray-100"
+                    }`}>
                       <button
-                        onClick={() => {
-                          const nextRound = state.currentRound + 1;
-                          generateNextRound();
-                          toast.success(`Round ${nextRound} pairings generated!`);
-                          broadcastRoundStart(nextRound);
-                        }}
-                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
-                        style={{ background: "#3D6B47", boxShadow: "0 4px 12px rgba(61,107,71,0.3)" }}
+                        onClick={() => setShowAddPlayer(true)}
+                        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                          isDark
+                            ? "border-white/10 text-white/60 hover:bg-white/06 hover:text-white/80"
+                            : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                        }`}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Add Player
+                      </button>
+                      <button
+                        onClick={() => canStart && setShowStartConfirm(true)}
+                        disabled={!canStart}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
+                          canStart
+                            ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-lg shadow-[#3D6B47]/25 active:scale-[0.98]"
+                            : isDark
+                            ? "bg-white/06 text-white/20 cursor-not-allowed"
+                            : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                        }`}
                       >
                         <Zap className="w-4 h-4" />
-                        Generate Round {state.currentRound + 1}
+                        {canStart
+                          ? `Start Tournament — Generate Round 1`
+                          : state.players.length === 0
+                          ? "Add players to start"
+                          : state.players.length === 1
+                          ? "Need at least 2 players"
+                          : "Need at least 2 players"}
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                </>
+              )}
+
+              {/* ══════════════════════════════════════════════════════════════════
+                  ACTIVE PHASE — Hero clock + Round status
+              ══════════════════════════════════════════════════════════════════ */}
+              {!isRegistration && (
+                <>
+                  {/* ── Unified Hero Card: Clock + Event Info ─────────────────────── */}
+                  <div className={`w-full rounded-2xl border overflow-hidden ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                  }`}>
+                    {/* Top section: Clock left, Controls right */}
+                    <div className="flex flex-col sm:flex-row items-stretch">
+                      {/* ── Clock Panel ─────────────────────────────────────────── */}
+                      <div className={`flex-1 flex flex-col items-center justify-center px-8 py-10 sm:py-12 border-b sm:border-b-0 sm:border-r ${
+                        isDark ? "border-white/06" : "border-gray-100"
+                      }`}>
+                        {/* Status label */}
+                        <p className={`text-xs font-bold uppercase tracking-[0.18em] mb-3 ${
+                          roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                            ? "text-amber-400"
+                            : roundTimer.status === "expired"
+                            ? "text-red-400"
+                            : roundTimer.status === "running"
+                            ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                            : isDark ? "text-white/25" : "text-gray-300"
+                        }`}>
+                          {roundTimer.status === "idle" ? "Round Timer" :
+                           roundTimer.status === "running" ? (roundTimer.remainingSec <= 300 ? "⚠ Time Running Out" : "Running") :
+                           roundTimer.status === "paused" ? "Paused" : "Time's Up"}
+                        </p>
+                        {/* Large MM:SS display */}
+                        <div className={`font-mono font-black leading-none tracking-tight select-none transition-colors ${
+                          roundTimer.status === "expired"
+                            ? "text-red-400"
+                            : roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                            ? "text-amber-400"
+                            : isDark ? "text-white" : "text-gray-900"
+                        }`} style={{ fontSize: "clamp(3.5rem, 10vw, 6rem)" }}>
+                          {(() => {
+                            const sec = roundTimer.status === "idle" ? roundTimer.durationSec : roundTimer.remainingSec;
+                            const m = Math.floor(sec / 60);
+                            const s = Math.floor(sec % 60);
+                            return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+                          })()}
+                        </div>
+                        {/* Thin progress bar below clock */}
+                        <div className={`mt-6 w-full max-w-[200px] h-0.5 rounded-full overflow-hidden ${
+                          isDark ? "bg-white/08" : "bg-gray-100"
+                        }`}>
+                          <div
+                            className="h-full rounded-full transition-all duration-1000"
+                            style={{
+                              width: roundTimer.durationSec > 0
+                                ? `${Math.max(0, (roundTimer.remainingSec / roundTimer.durationSec) * 100)}%`
+                                : "100%",
+                              background: roundTimer.status === "expired"
+                                ? "#ef4444"
+                                : roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                                ? "#f59e0b"
+                                : "#4CAF50",
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* ── Controls Panel ──────────────────────────────────────── */}
+                      <div className="flex flex-col justify-center gap-5 px-8 py-8 sm:w-64 lg:w-72">
+                        {/* Minute input */}
+                        <div>
+                          <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${
+                            isDark ? "text-white/35" : "text-gray-400"
+                          }`}>Duration (min)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="180"
+                            disabled={roundTimer.status === "running"}
+                            value={Math.round(roundTimer.durationSec / 60)}
+                            onChange={(e) => {
+                              const val = Math.max(1, Math.min(180, parseInt(e.target.value) || 1));
+                              roundTimer.setDurationMin(val);
+                            }}
+                            className={`w-full px-4 py-3 rounded-xl border text-2xl font-mono font-bold text-center transition-colors focus:outline-none focus:ring-2 focus:ring-[#4CAF50]/40 ${
+                              isDark
+                                ? "bg-white/06 border-white/10 text-white placeholder-white/20 disabled:opacity-40"
+                                : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-300 disabled:opacity-40"
+                            }`}
+                          />
+                        </div>
+                        {/* Control buttons */}
+                        <div className="flex gap-2">
+                          {roundTimer.status === "idle" || roundTimer.status === "expired" ? (
+                            <button
+                              onClick={roundTimer.start}
+                              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+                              style={{ background: "#3D6B47" }}
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                              Start
+                            </button>
+                          ) : roundTimer.status === "running" ? (
+                            <button
+                              onClick={roundTimer.pause}
+                              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-[0.97] ${
+                                isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                              Pause
+                            </button>
+                          ) : (
+                            <button
+                              onClick={roundTimer.start}
+                              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+                              style={{ background: "#3D6B47" }}
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                              Resume
+                            </button>
+                          )}
+                          <button
+                            onClick={roundTimer.reset}
+                            className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-[0.97] ${
+                              isDark ? "bg-white/06 text-white/50 hover:bg-white/10" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                            }`}
+                            title="Reset timer"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    {/* ── Event Meta Row ───────────────────────────────────────── */}
+                    <div className={`flex flex-wrap items-center gap-x-5 gap-y-2 px-8 py-4 border-t ${
+                      isDark ? "border-white/06" : "border-gray-100"
+                    }`}>
+                      {tournamentConfig?.name && (
+                        <div className="flex items-center gap-2">
+                          <Trophy className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                          <span className={`text-xs font-semibold truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>{tournamentConfig.name}</span>
+                        </div>
+                      )}
+                      {tournamentConfig?.venue && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                          <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.venue}</span>
+                        </div>
+                      )}
+                      {tournamentConfig?.date && (
+                        <div className="flex items-center gap-2">
+                          <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                          <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.date}</span>
+                        </div>
+                      )}
+                      {tournamentConfig?.timePreset && (
+                        <div className="flex items-center gap-2">
+                          <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                          <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.timePreset}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ── Round in Progress Card (active phase only) ───────────────── */}
+                  <div className={`w-full rounded-2xl border p-5 ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                  }`}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
+                        <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                          Round {state.currentRound} of {state.totalRounds}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                          isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        }`}>In Progress</span>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("boards")}
+                        className={`text-xs font-semibold flex items-center gap-1 transition-colors ${
+                          isDark ? "text-[#4CAF50] hover:text-[#4CAF50]/80" : "text-[#3D6B47] hover:text-[#2d5235]"
+                        }`}
+                      >
+                        View Boards <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="mb-4">
+                      {(() => {
+                        const total = state.rounds[state.currentRound - 1]?.games?.length ?? 0;
+                        const done = state.rounds[state.currentRound - 1]?.games?.filter(g => g.result !== "*").length ?? 0;
+                        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                        return (
+                          <>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>{done} / {total} boards complete</span>
+                              <span className={`text-xs font-bold ${isDark ? "text-white/60" : "text-gray-600"}`}>{pct}%</span>
+                            </div>
+                            <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
+                              <div
+                                className="h-full rounded-full transition-all duration-700"
+                                style={{ width: `${pct}%`, background: "linear-gradient(90deg, #3D6B47, #4CAF50)" }}
+                              />
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    {/* Top 3 standings + Generate CTA */}
+                    <div className="flex flex-col sm:flex-row gap-4 items-start">
+                      <div className="flex-1 space-y-1.5 min-w-0">
+                        {getStandings(state.players).slice(0, 3).map((p, i) => (
+                          <div key={p.id} className="flex items-center gap-2 min-w-0">
+                            <span className={`text-xs font-bold w-5 flex-shrink-0 ${
+                              i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : "text-amber-600"
+                            }`}>{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                            <span className={`text-sm truncate flex-1 ${isDark ? "text-white/80" : "text-gray-700"}`}>{p.name}</span>
+                            <span className={`text-sm font-bold flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>{p.points}</span>
+                          </div>
+                        ))}
+                        {getStandings(state.players).length === 0 && (
+                          <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>No results yet</p>
+                        )}
+                      </div>
+                      {canGenerateNext && (
+                        <button
+                          onClick={() => {
+                            const nextRound = state.currentRound + 1;
+                            generateNextRound();
+                            toast.success(`Round ${nextRound} pairings generated!`);
+                            broadcastRoundStart(nextRound);
+                          }}
+                          className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+                          style={{ background: "#3D6B47", boxShadow: "0 4px 12px rgba(61,107,71,0.3)" }}
+                        >
+                          <Zap className="w-4 h-4" />
+                          Generate Round {state.currentRound + 1}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           )}
-
           {/* ── Standings Tab ───────────────────────────────────────────────────── */}
           {activeTab === "standings" && (
             <div className={`rounded-2xl border p-5 ${

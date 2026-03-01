@@ -605,3 +605,12 @@
 - [x] Remove Quick Actions column from Home tab right column
 - [x] Responsive: stacks vertically on mobile, side-by-side on desktop
 - [x] RoundTimerCard component replaced by inline timer inside TournamentHeroCard
+
+## Director Home Tab — Registration Phase View
+
+- [x] Show registration-phase layout on Home tab when tournament is in lobby (isRegistration === true)
+- [x] Prominent "Start Tournament" CTA button (large, green, full-width on mobile)
+- [x] Live player list showing all registered players with name, ELO, chess.com username, avatar
+- [x] Player count badge showing X / maxPlayers (or X registered if no cap)
+- [x] Remove player button (×) on each row for the director
+- [x] Minimum players warning if count < 2 (disable Start button)
