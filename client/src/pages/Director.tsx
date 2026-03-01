@@ -834,170 +834,11 @@ export default function Director() {
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8 flex gap-8">
-        {/* ── Left Sidebar ──────────────────────────────────────────────────── */}
-        <aside className="hidden lg:flex flex-col gap-5 w-72 flex-shrink-0">
-          {/* Event Info Card */}
-          <div
-            className={`rounded-2xl border p-5 ${
-              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
-            }`}
-          >
-            <h3
-              className={`text-xs font-bold uppercase tracking-widest mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}
-            >
-              Event Info
-            </h3>
-            <div className="space-y-4">
-              {[
-                { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds}R` },
-                // Players row replaced below with CapacityBadge — see separate render
-                ...(tournamentConfig?.maxPlayers == null || tournamentConfig.maxPlayers <= 0
-                  ? [{ icon: Users, label: "Players", value: `${state.players.length} registered` }]
-                  : []),
-                ...(tournamentConfig?.venue ? [{ icon: MapPin, label: "Venue", value: tournamentConfig.venue }] : []),
-                ...(tournamentConfig?.date ? [{ icon: Clock, label: "Date", value: tournamentConfig.date }] : []),
-                ...(tournamentConfig?.timePreset ? [{ icon: Clock, label: "Time Control", value: tournamentConfig.timePreset }] : []),
-              ].map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"}`}>
-                    <Icon className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                  </div>
-                  <div>
-                    <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</p>
-                    <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{value}</p>
-                  </div>
-                </div>
-              ))}
-              {/* Capacity row — only when maxPlayers is set */}
-              {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
-                <CapacityBadge
-                  current={state.players.length}
-                  max={tournamentConfig.maxPlayers}
-                  isDark={isDark}
-                  size="md"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Round Progress */}
-          <div
-            className={`rounded-2xl border p-5 ${
-              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
-            }`}
-          >
-            <h3
-              className={`text-xs font-bold uppercase tracking-widest mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}
-            >
-              Round Progress
-            </h3>
-            <RoundProgress
-              rounds={state.rounds}
-              currentRound={state.currentRound}
-              totalRounds={state.totalRounds}
-              isDark={isDark}
-            />
-            <div className={`mt-4 pt-4 border-t ${isDark ? "border-white/08" : "border-gray-100"}`}>
-              <div className="flex justify-between text-sm">
-                <span className={isDark ? "text-white/50" : "text-gray-500"}>Round {state.currentRound}</span>
-                <span className={`font-bold ${isDark ? "text-white" : "text-gray-800"}`}>
-                  {completedGames}/{totalGames} results
-                </span>
-              </div>
-              <div className={`mt-2 h-2 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
-                <div
-                  className="h-full bg-[#3D6B47] rounded-full transition-all duration-500"
-                  style={{ width: totalGames ? `${(completedGames / totalGames) * 100}%` : "0%" }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Round Timer — only when tournament is active */}
-          {!isRegistration && (
-            <RoundTimerCard
-              timer={roundTimer}
-              roundNumber={state.currentRound}
-              isDark={isDark}
-            />
-          )}
-
-          {/* Live Standings */}
-          <div
-            className={`rounded-2xl border p-5 flex-1 ${
-              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3
-                className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-400"}`}
-              >
-                Live Standings
-              </h3>
-              <BarChart3 className={`w-4 h-4 ${isDark ? "text-white/30" : "text-gray-300"}`} />
-            </div>
-            <StandingsPanel players={state.players} isDark={isDark} />
-          </div>
-
-          {/* Quick actions */}
-          <div className="space-y-2.5">
-            <button
-              onClick={() => setShowQR(true)}
-              className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all ${
-                isDark ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
-              }`}
-            >
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
-              Show QR Code
-            </button>
-            <button
-              onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-              className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
-                isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <Copy className="w-4 h-4" /> Copy join link
-            </button>
-            <Link
-              href={`/tournament/${id ?? "otb-demo-2026"}/print`}
-              className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
-                isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <Download className="w-4 h-4" /> Pairings &amp; Print Sheet
-            </Link>
-            {/* Download Results PDF — visible once at least one round has results */}
-            {state.rounds.some((r) => r.games.some((g) => g.result !== "*")) && (
-              <button
-                onClick={() => {
-                  generateResultsPdf({
-                    tournamentName: state.tournamentName,
-                    date: tournamentConfig?.date,
-                    location: tournamentConfig?.venue,
-                    timeControl: tournamentConfig?.timePreset,
-                    totalRounds: state.totalRounds,
-                    players: state.players,
-                    rounds: state.rounds,
-                  });
-                  toast.success("Results PDF downloaded!");
-                }}
-                className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
-                  isDark
-                    ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20"
-                    : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
-                }`}
-              >
-                <Download className="w-4 h-4" />
-                Download Results PDF
-              </button>
-            )}
-          </div>
-        </aside>
-
-        {/* ── Main Panel ────────────────────────────────────────────────────── */}
-        <main className="flex-1 min-w-0 space-y-5">
-          {/* Page Title + Generate Next Round CTA */}
+      {/* ── Body ────────────────────────────────────────────────────────────── */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+        {/* ── Main Panel (full-width) ─────────────────────────────────────────── */}
+        <main className="w-full space-y-5">
+          {/* ── Page Title + Tab Bar ─────────────────────────────────────── */}
           <div className="space-y-3">
             {/* Round title row */}
             <div className="flex items-start justify-between gap-3">
@@ -1036,18 +877,24 @@ export default function Director() {
               )}
             </div>
 
-            {/* Tab bar — full width on mobile, inline on sm+ */}
+            {/* Unified 5-tab bar */}
             <div
-              className={`flex rounded-2xl p-1.5 w-full sm:w-auto ${
+              className={`flex rounded-2xl p-1 w-full overflow-x-auto ${
                 isDark ? "bg-white/08" : "bg-gray-100"
               }`}
             >
-              {(["boards", "players", "settings"] as const).map((tab) => (
+              {([
+                { id: "home", label: "Home" },
+                { id: "boards", label: "Boards" },
+                { id: "players", label: "Players" },
+                { id: "standings", label: "Standings" },
+                { id: "settings", label: "Settings" },
+              ] as const).map((tab) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`touch-target flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-semibold capitalize transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                    activeTab === tab
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                    activeTab === tab.id
                       ? isDark
                         ? "bg-[#3D6B47] text-white shadow-sm"
                         : "bg-white text-gray-900 shadow-sm"
@@ -1056,9 +903,9 @@ export default function Director() {
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  {tab === "players" && state.players.length > 0 && (
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full leading-none ${
+                  {tab.label}
+                  {tab.id === "players" && state.players.length > 0 && (
+                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       activeTab === "players"
                         ? isDark ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
                         : isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
@@ -1071,7 +918,180 @@ export default function Director() {
             </div>
           </div>
 
-          {/* ── Boards Tab ──────────────────────────────────────────────────── */}
+          {/* ── Home Tab ────────────────────────────────────────────────────────── */}
+          {activeTab === "home" && (
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              {/* Central: Event Info Card */}
+              <div className={`flex-1 rounded-2xl border p-6 ${
+                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+              }`}>
+                <h3 className={`text-xs font-bold uppercase tracking-widest mb-5 ${
+                  isDark ? "text-white/40" : "text-gray-400"
+                }`}>Event Info</h3>
+                <div className="space-y-5">
+                  {[
+                    { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds} Rounds` },
+                    ...(tournamentConfig?.maxPlayers == null || tournamentConfig.maxPlayers <= 0
+                      ? [{ icon: Users, label: "Players", value: `${state.players.length} registered` }]
+                      : []),
+                    ...(tournamentConfig?.venue ? [{ icon: MapPin, label: "Venue", value: tournamentConfig.venue }] : []),
+                    ...(tournamentConfig?.date ? [{ icon: Clock, label: "Date", value: tournamentConfig.date }] : []),
+                    ...(tournamentConfig?.timePreset ? [{ icon: Clock, label: "Time Control", value: tournamentConfig.timePreset }] : []),
+                  ].map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"
+                      }`}>
+                        <Icon className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                      </div>
+                      <div>
+                        <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</p>
+                        <p className={`text-base font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{value}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
+                    <CapacityBadge
+                      current={state.players.length}
+                      max={tournamentConfig.maxPlayers}
+                      isDark={isDark}
+                      size="md"
+                    />
+                  )}
+                </div>
+
+                {/* Start CTA — registration phase */}
+                {isRegistration && (
+                  <div className={`mt-6 pt-5 border-t ${
+                    isDark ? "border-white/08" : "border-gray-100"
+                  }`}>
+                    {/* Join URL row */}
+                    <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border mb-4 ${
+                      isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
+                    }`}>
+                      <span className={`text-xs font-mono flex-1 truncate ${
+                        isDark ? "text-white/60" : "text-gray-600"
+                      }`}>{joinUrl}</span>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
+                        className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
+                          isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"
+                        }`}
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setShowQR(true)}
+                        className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"
+                        }`}
+                      >
+                        QR
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => canStart && setShowStartConfirm(true)}
+                      disabled={!canStart}
+                      className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
+                        canStart
+                          ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-md shadow-[#3D6B47]/30"
+                          : isDark ? "bg-white/08 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <Zap className="w-4 h-4" />
+                      {canStart ? `Start Tournament → Generate Round 1` : `Need at least 2 players to start`}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right column: Quick Actions */}
+              <div className="w-full lg:w-64 flex-shrink-0 space-y-3">
+                <button
+                  onClick={() => setShowQR(true)}
+                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all ${
+                    isDark ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
+                  Show QR Code
+                </button>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
+                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
+                    isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Copy className="w-4 h-4" /> Copy join link
+                </button>
+                <button
+                  onClick={() => setActiveTab("players")}
+                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
+                    isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Users className="w-4 h-4" /> Manage Players
+                </button>
+                <Link
+                  href={`/tournament/${id ?? "otb-demo-2026"}/print`}
+                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
+                    isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Download className="w-4 h-4" /> Pairings &amp; Print Sheet
+                </Link>
+                {state.rounds.some((r) => r.games.some((g) => g.result !== "*")) && (
+                  <button
+                    onClick={() => {
+                      generateResultsPdf({
+                        tournamentName: state.tournamentName,
+                        date: tournamentConfig?.date,
+                        location: tournamentConfig?.venue,
+                        timeControl: tournamentConfig?.timePreset,
+                        totalRounds: state.totalRounds,
+                        players: state.players,
+                        rounds: state.rounds,
+                      });
+                      toast.success("Results PDF downloaded!");
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
+                      isDark
+                        ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20"
+                        : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
+                    }`}
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Results PDF
+                  </button>
+                )}
+                {/* Round Timer — only when tournament is active */}
+                {!isRegistration && (
+                  <RoundTimerCard
+                    timer={roundTimer}
+                    roundNumber={state.currentRound}
+                    isDark={isDark}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Standings Tab ───────────────────────────────────────────────────── */}
+          {activeTab === "standings" && (
+            <div className={`rounded-2xl border p-5 ${
+              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+            }`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className={`text-xs font-bold uppercase tracking-widest ${
+                  isDark ? "text-white/40" : "text-gray-400"
+                }`}>Live Standings</h3>
+                <BarChart3 className={`w-4 h-4 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+              </div>
+              <StandingsPanel players={state.players} isDark={isDark} />
+            </div>
+          )}
+
+          {/* ── Boards Tab ─────────────────────────────────────────────────────── */}
           {activeTab === "boards" && (
             <>
               {/* Registration panel — shown for newly created tournaments */}

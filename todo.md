@@ -563,3 +563,14 @@
 - [x] Button navigates to /tournament/{config.id} for the most recent active tournament
 - [x] Button is hidden when no active tournament session exists
 - [x] Added getAllRegistrations() export to registrationStore.ts
+
+## Director Dashboard Home Page Redesign
+
+- [x] Add "home" and "standings" to activeTab union type, default to "home"
+- [x] Replace old 3-tab bar (boards/players/settings) with unified 5-tab bar (Home · Boards · Players · Standings · Settings)
+- [x] Home tab: centred Event Info card + Quick Actions column to the right (lg:flex-row layout)
+- [x] Standings tab: full StandingsPanel content (moved from sidebar)
+- [x] Remove the left sidebar entirely (aside element)
+- [x] Main panel becomes full-width (max-w-5xl, no flex gap-8 with sidebar)
+- [x] Round Progress strip stays in header (already done)
+- [x] RoundTimerCard moves into Home tab right column
