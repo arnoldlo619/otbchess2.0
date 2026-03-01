@@ -794,3 +794,27 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] TournamentComplete screen: highlight the current player's row in the standings
 - [x] TournamentComplete screen: "View Full Standings" link to the public tournament page
 - [x] Unit tests for tournament_ended SSE handler and standings sorting
+
+## Auth & User Profiles
+
+- [ ] Audit existing auth scaffolding and Sign In button
+- [ ] DB schema: users table (id, email, passwordHash, displayName, chesscomUsername, lichessUsername, avatarUrl, createdAt)
+- [ ] API: POST /api/auth/register — create account, return JWT
+- [ ] API: POST /api/auth/login — verify credentials, return JWT
+- [ ] API: POST /api/auth/logout — clear session
+- [ ] API: GET /api/auth/me — return current user from JWT
+- [ ] API: PATCH /api/auth/me — update profile fields
+- [ ] AuthContext: React context providing user state, login/logout helpers
+- [ ] Sign In / Sign Up modal: tabbed UI, email + password fields, validation
+- [ ] Sign In / Sign Up modal: chess.com username field (optional, pulls ELO on save)
+- [ ] Header nav: replace Sign In button with user avatar + dropdown when signed in
+- [ ] Header nav dropdown: Profile, My Tournaments, Sign Out
+- [ ] User profile page /profile: display name, avatar, chess.com ELO, tournament history
+- [ ] Wire director tournament creation to attach userId to tournament
+- [ ] Unit tests for auth API helpers
+
+## Bug Fix: Player Stuck on Public Tournament Page
+
+- [x] Find where Join.tsx redirects after registration and fix it to go to /tournament/:id/play?username=xxx
+- [x] Fix the public tournament page to detect if the user is already registered and redirect to PlayerView
+- [x] Ensure the SSE connection is established on the PlayerView lobby (not the public page)

@@ -873,9 +873,10 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
 }
 
 // ─── Registration Waiting State ───────────────────────────────────────────────
-function RegistrationState({ tournamentName, playerCount }: { tournamentName: string; playerCount: number }) {
+function RegistrationState({ tournamentName, playerCount, tournamentId }: { tournamentName: string; playerCount: number; tournamentId: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const reg = getRegistration(tournamentId);
   return (
     <div className={`min-h-[60vh] flex items-center justify-center ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       <div className="text-center max-w-md px-6">
@@ -888,10 +889,27 @@ function RegistrationState({ tournamentName, playerCount }: { tournamentName: st
         <p className="text-muted-foreground text-sm mb-4">
           Registration is open · {playerCount} player{playerCount !== 1 ? "s" : ""} registered
         </p>
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-4 ${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
           Waiting for tournament to start
         </div>
+        {reg && (
+          <div className="mt-2">
+            <Link href={`/tournament/${tournamentId}/play?username=${encodeURIComponent(reg.username)}`}>
+              <a className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-[#3D6B47] text-white hover:bg-[#4CAF50]"
+                  : "bg-[#3D6B47] text-white hover:bg-[#2A4A32]"
+              }`}>
+                <Crown className="w-4 h-4" />
+                Go to My Board
+              </a>
+            </Link>
+            <p className={`text-xs mt-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              Registered as @{reg.username}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1004,7 +1022,7 @@ export default function TournamentPage() {
 
       {/* Registration waiting state */}
       {displayState.status === "registration" && (
-        <RegistrationState tournamentName={displayName} playerCount={displayState.players.length} />
+        <RegistrationState tournamentName={displayName} playerCount={displayState.players.length} tournamentId={tournamentId} />
       )}
 
           {/* Live / completed tournament */}

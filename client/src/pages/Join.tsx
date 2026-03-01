@@ -523,7 +523,7 @@ export default function JoinPage() {
           registeredAt: new Date().toISOString(),
         });
         setConfirming(false);
-        navigate(`/tournament/${config.id}`);
+        navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(prof.username)}`);
       } else if (embeddedMeta) {
         // embeddedMeta was registered in the bootstrap useEffect above;
         // re-resolve now that the registry is populated.
@@ -560,7 +560,7 @@ export default function JoinPage() {
             registeredAt: new Date().toISOString(),
           });
           setConfirming(false);
-          navigate(`/tournament/${bootstrapped.id}`);
+          navigate(`/tournament/${bootstrapped.id}/play?username=${encodeURIComponent(prof.username)}`);
         } else {
           setConfirming(false);
           setError("Tournament not found. Ask the director to share the QR code again.");

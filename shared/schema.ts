@@ -2,9 +2,12 @@
  * OTB Chess — Database Schema (Drizzle ORM, MySQL / TiDB Cloud)
  *
  * Tables:
+ *  - users: OTB Chess accounts (email/password auth, chess.com/lichess linking)
  *  - push_subscriptions: Persists Web Push subscriptions per tournament so
  *    the director can broadcast round-start notifications even after a server
  *    restart. Each row represents one browser subscription endpoint.
+ *  - tournament_players: One row per (tournament, player) registration.
+ *  - tournament_state: Full director state JSON blob per tournament.
  */
 
 import {
@@ -13,7 +16,50 @@ import {
   text,
   timestamp,
   index,
+  int,
 } from "drizzle-orm/mysql-core";
+
+// ─── users ────────────────────────────────────────────────────────────────────
+// One row per registered OTB Chess account.
+// Passwords are stored as bcrypt hashes (never plaintext).
+// Chess platform usernames are optional and used for ELO lookup.
+export const users = mysqlTable(
+  "users",
+  {
+    // Surrogate PK (nanoid)
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    // Login credential — must be unique
+    email: varchar("email", { length: 255 }).notNull().unique(),
+
+    // bcrypt hash of the user's password
+    passwordHash: text("password_hash").notNull(),
+
+    // How the user appears in the UI
+    displayName: varchar("display_name", { length: 100 }).notNull(),
+
+    // Optional chess platform usernames for ELO lookup
+    chesscomUsername: varchar("chesscom_username", { length: 100 }),
+    lichessUsername: varchar("lichess_username", { length: 100 }),
+
+    // Cached ELO ratings (refreshed on profile save)
+    chesscomElo: int("chesscom_elo"),
+    lichessElo: int("lichess_elo"),
+
+    // Avatar URL (chess.com avatar or custom upload)
+    avatarUrl: text("avatar_url"),
+
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    emailIdx: index("users_email_idx").on(table.email),
+  })
+);
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
 
 // ─── push_subscriptions ───────────────────────────────────────────────────────
 // Stores one row per (tournament, endpoint) pair.
