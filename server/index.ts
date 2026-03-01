@@ -87,9 +87,9 @@ async function proxyLichess(username: string): Promise<{ status: number; body: u
   return { status: 200, body: data };
 }
 
-async function startServer() {
+// ─── Build the Express app (exported for Vite dev middleware) ─────────────────
+export function createApp() {
   const app = express();
-  const server = createServer(app);
 
   app.use(express.json());
 
@@ -290,7 +290,6 @@ async function startServer() {
             sent++;
           } catch (err: unknown) {
             failed++;
-            // 410 Gone / 404 = subscription expired; mark for removal
             if (err && typeof err === "object" && "statusCode" in err) {
               const code = (err as { statusCode: number }).statusCode;
               if (code === 410 || code === 404) {
@@ -302,7 +301,6 @@ async function startServer() {
         })
       );
 
-      // Clean up expired subscriptions from the database
       if (staleIds.length > 0) {
         await Promise.all(
           staleIds.map((id) =>
@@ -666,6 +664,15 @@ async function startServer() {
     }
   });
 
+  return app;
+}
+
+// ─── Production entry point ───────────────────────────────────────────────────
+// Only runs when executed directly (not when imported by vite.config.ts).
+async function startServer() {
+  const app = createApp();
+  const server = createServer(app);
+
   // Serve static files from dist/public in production
   const staticPath =
     process.env.NODE_ENV === "production"
@@ -685,4 +692,14 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+// Only start the HTTP server when this file is executed directly (production).
+// When imported by vite.config.ts as a Vite middleware, we skip the listen call
+// so it doesn't conflict with the Vite dev server on port 3000.
+const isMain = process.argv[1] &&
+  (process.argv[1].endsWith("index.ts") ||
+   process.argv[1].endsWith("index.js") ||
+   process.argv[1].includes("dist/index"));
+
+if (isMain) {
+  startServer().catch(console.error);
+}

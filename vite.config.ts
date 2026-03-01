@@ -232,7 +232,56 @@ function vitePluginChessProxy(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginChessProxy()];
+/**
+ * Vite plugin: mounts the Express API app as Vite dev-server middleware.
+ * This ensures all /api/* routes (players, SSE stream, state, push) work
+ * during development without needing a separate Express process.
+ * In production the Express server handles these routes directly.
+ *
+ * Uses the configureServer return-function pattern so our middleware is
+ * registered AFTER Vite's internal middleware but BEFORE the HTML fallback,
+ * ensuring /api/* requests are handled by Express, not served as index.html.
+ */
+function vitePluginExpressApi(): Plugin {
+  // Pre-load the Express app synchronously at plugin creation time so it's
+  // ready before any request arrives. The dynamic import is cached by Node.
+  let apiAppPromise: Promise<import("express").Express> | null = null;
+
+  function getApiApp(): Promise<import("express").Express> {
+    if (!apiAppPromise) {
+      apiAppPromise = import("./server/index.js").then(({ createApp }) => {
+        const app = createApp();
+        console.log("[express-api] API routes ready");
+        return app;
+      });
+    }
+    return apiAppPromise;
+  }
+
+  return {
+    name: "express-api",
+    // Register DIRECTLY in configureServer (not via the return function) so our
+    // middleware is added BEFORE Vite's htmlFallbackMiddleware, which otherwise
+    // rewrites all unrecognised paths (including /api/*) to /index.html.
+    // Vite's execution order: configureServer body → htmlFallback → postHooks(return fn)
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use("/api", async (req, res, next) => {
+        try {
+          const apiApp = await getApiApp();
+          // Restore the full path so Express route matching works correctly
+          req.url = "/api" + (req.url ?? "");
+          apiApp(req as import("http").IncomingMessage, res as import("http").ServerResponse, next);
+        } catch (err) {
+          console.error("[express-api] Error:", err);
+          next(err);
+        }
+      });
+      console.log("[express-api] API middleware registered on Vite dev server");
+    },
+  };
+}
+
+const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginExpressApi()];
 
 export default defineConfig({
   plugins,

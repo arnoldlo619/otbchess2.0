@@ -741,3 +741,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Increase input font size to lg:text-base on desktop
 - [ ] Increase vertical gap between form fields to lg:gap-6 on desktop
 - [ ] Increase section title / step heading size on desktop
+
+## Fix: API Routes Not Reachable in Dev (SSE/Player Sync Broken)
+
+- [x] Root cause: Vite dev server only ran Vite, not Express — all /api/* calls returned HTML index.html
+- [x] Refactor server/index.ts: extract createApp() function that builds the Express app without starting an HTTP server
+- [x] Add vitePluginExpressApi() Vite plugin: mounts createApp() as middleware in configureServer body (before Vite's htmlFallbackMiddleware)
+- [x] Guard startServer() with isMain check so it only runs when executed directly, not when imported
+- [x] Remove vitePluginChessProxy() — chess.com/lichess proxies now handled by Express (no duplicate)
+- [x] Verified: POST /api/tournament/:id/players → 200 JSON, SSE stream delivers player_joined events
+- [x] All 528 tests passing
