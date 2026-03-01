@@ -6,7 +6,7 @@ import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "./db.js";
-import { pushSubscriptions, tournamentPlayers } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -586,6 +586,61 @@ async function startServer() {
       if (subs.size === 0) sseSubscribers.delete(id);
       console.log(`[sse] Director disconnected from tournament ${id} (${subs.size} remaining)`);
     });
+  });
+
+  // ── Tournament State: GET /api/tournament/:id/state ────────────────────────
+  // Returns the persisted director state JSON for a tournament.
+  // Returns 404 when no state has been saved yet (fresh tournament).
+  app.get("/api/tournament/:id/state", async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    // Never serve state for the demo tournament
+    if (id === "otb-demo-2026") return res.status(404).json({ error: "demo" });
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select()
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id));
+      if (rows.length === 0) return res.status(404).json({ error: "not_found" });
+      res.json({ state: JSON.parse(rows[0].stateJson), updatedAt: rows[0].updatedAt });
+    } catch (err) {
+      console.error("[state] GET error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Tournament State: PUT /api/tournament/:id/state ─────────────────────────
+  // Upserts the full director state JSON for a tournament.
+  // Body: { state: DirectorState }
+  app.put("/api/tournament/:id/state", async (req, res) => {
+    const { id } = req.params;
+    const { state } = req.body as { state: unknown };
+    if (!id || !state) return res.status(400).json({ error: "Missing tournament id or state" });
+    // Never persist the demo tournament
+    if (id === "otb-demo-2026") return res.json({ ok: true, skipped: true });
+    try {
+      const db = await getDb();
+      const stateJson = JSON.stringify(state);
+      // Check if row exists
+      const existing = await db
+        .select({ tournamentId: tournamentState.tournamentId })
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id));
+      if (existing.length > 0) {
+        await db
+          .update(tournamentState)
+          .set({ stateJson, updatedAt: new Date() })
+          .where(eq(tournamentState.tournamentId, id));
+      } else {
+        await db.insert(tournamentState).values({ tournamentId: id, stateJson });
+      }
+      console.log(`[state] Saved state for tournament ${id} (${stateJson.length} bytes)`);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[state] PUT error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
   });
 
   // ── Tournament Players: DELETE /api/tournament/:id/players/:username ──────────

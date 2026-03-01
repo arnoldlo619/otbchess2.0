@@ -78,3 +78,22 @@ export const tournamentPlayers = mysqlTable(
 
 export type TournamentPlayer = typeof tournamentPlayers.$inferSelect;
 export type NewTournamentPlayer = typeof tournamentPlayers.$inferInsert;
+
+// ─── tournament_state ─────────────────────────────────────────────────────────
+// Stores the full director state for one tournament as a JSON blob.
+// One row per tournament — tournament_id is the PK.
+// This allows the director's dashboard to recover from a page refresh or
+// device switch without losing pairings, results, or round progress.
+export const tournamentState = mysqlTable("tournament_state", {
+  // Tournament slug / ID (matches the key used in localStorage)
+  tournamentId: varchar("tournament_id", { length: 255 }).primaryKey(),
+
+  // Full DirectorState object serialised as JSON
+  stateJson: text("state_json").notNull(),
+
+  // Last time this row was written
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type TournamentStateRow = typeof tournamentState.$inferSelect;
+export type NewTournamentStateRow = typeof tournamentState.$inferInsert;

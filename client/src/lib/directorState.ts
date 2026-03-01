@@ -173,6 +173,34 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const [state, setState] = useState<DirectorState>(() => resolveInitialState(tournamentId));
   const [lastSaved, setLastSaved] = useState<string | null>(() => getSavedAt(tournamentId));
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDemo = tournamentId === "otb-demo-2026";
+
+  // Hydrate from server on first mount (recovers from page refresh / device switch)
+  useEffect(() => {
+    if (isDemo) return;
+    fetch(`/api/tournament/${tournamentId}/state`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.state) return;
+        const serverState = data.state as DirectorState;
+        // Only hydrate if the server state is newer than what's in localStorage
+        const localRaw = localStorage.getItem(storageKey(tournamentId));
+        if (localRaw) {
+          try {
+            const local: PersistedState = JSON.parse(localRaw);
+            const localTime = new Date(local.savedAt).getTime();
+            const serverTime = new Date(data.updatedAt as string).getTime();
+            if (localTime >= serverTime) return; // local is at least as fresh
+          } catch { /* fall through and use server state */ }
+        }
+        setState(serverState);
+        saveToStorage(tournamentId, serverState);
+        setLastSaved(data.updatedAt as string);
+      })
+      .catch(() => { /* network unavailable — stay with localStorage */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournamentId]);
 
   // Auto-save to localStorage whenever state changes (debounced 300ms)
   useEffect(() => {
@@ -185,6 +213,22 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
   }, [state, tournamentId]);
+
+  // Auto-save to server whenever state changes (debounced 1500ms, skip demo)
+  useEffect(() => {
+    if (isDemo) return;
+    if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+    serverSaveTimerRef.current = setTimeout(() => {
+      fetch(`/api/tournament/${tournamentId}/state`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state }),
+      }).catch(() => { /* fire-and-forget — localStorage is the fallback */ });
+    }, 1500);
+    return () => {
+      if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+    };
+  }, [state, tournamentId, isDemo]);
 
   // Re-sync from localStorage when the tab regains visibility (phone unlock, app switch)
   useVisibilitySync(() => {

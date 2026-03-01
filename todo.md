@@ -718,3 +718,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] SSE listener: on "player_joined" event, call addPlayer(player)
 - [x] SSE listener: reconnect automatically on error (EventSource built-in)
 - [x] Removed the setInterval polling useEffect from Director.tsx
+
+## Tournament State Persistence (Server-Side)
+
+- [x] Add tournament_state DB table (tournament_id PK, state_json TEXT, updated_at TIMESTAMP)
+- [x] Add GET /api/tournament/:id/state endpoint — returns full state JSON
+- [x] Add PUT /api/tournament/:id/state endpoint — upserts full state JSON
+- [x] Update useDirectorState: debounced auto-save to server on every state change (1500ms debounce)
+- [x] Hydrate from server on mount — prefer server state if newer than localStorage
+- [x] Skip server save/load for demo tournament (otb-demo-2026)
