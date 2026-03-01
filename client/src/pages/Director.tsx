@@ -59,6 +59,9 @@ import {
   MapPin,
   UserPlus,
   PlayCircle,
+  QrCode,
+  FileText,
+  Printer,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -921,71 +924,194 @@ export default function Director() {
 
           {/* ── Home Tab ────────────────────────────────────────────────────────── */}
           {activeTab === "home" && (
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
-              {/* Central: Event Info Card */}
-              <div className={`flex-1 rounded-2xl border p-6 ${
+            <div className="flex flex-col gap-5 w-full">
+              {/* ── Unified Hero Card: Clock + Event Info ─────────────────────── */}
+              <div className={`w-full rounded-2xl border overflow-hidden ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
               }`}>
-                <h3 className={`text-xs font-bold uppercase tracking-widest mb-5 ${
-                  isDark ? "text-white/40" : "text-gray-400"
-                }`}>Event Info</h3>
-                <div className="space-y-5">
-                  {[
-                    { icon: Trophy, label: "Format", value: `Swiss · ${state.totalRounds} Rounds` },
-                    ...(tournamentConfig?.maxPlayers == null || tournamentConfig.maxPlayers <= 0
-                      ? [{ icon: Users, label: "Players", value: `${state.players.length} registered` }]
-                      : []),
-                    ...(tournamentConfig?.venue ? [{ icon: MapPin, label: "Venue", value: tournamentConfig.venue }] : []),
-                    ...(tournamentConfig?.date ? [{ icon: Clock, label: "Date", value: tournamentConfig.date }] : []),
-                    ...(tournamentConfig?.timePreset ? [{ icon: Clock, label: "Time Control", value: tournamentConfig.timePreset }] : []),
-                  ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"
-                      }`}>
-                        <Icon className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                      </div>
-                      <div>
-                        <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</p>
-                        <p className={`text-base font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>{value}</p>
-                      </div>
+                {/* Top section: Clock left, Controls right */}
+                <div className="flex flex-col sm:flex-row items-stretch">
+                  {/* ── Clock Panel ─────────────────────────────────────────── */}
+                  <div className={`flex-1 flex flex-col items-center justify-center px-8 py-10 sm:py-12 border-b sm:border-b-0 sm:border-r ${
+                    isDark ? "border-white/06" : "border-gray-100"
+                  }`}>
+                    {/* Status label */}
+                    <p className={`text-xs font-bold uppercase tracking-[0.18em] mb-3 ${
+                      roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                        ? "text-amber-400"
+                        : roundTimer.status === "expired"
+                        ? "text-red-400"
+                        : roundTimer.status === "running"
+                        ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                        : isDark ? "text-white/25" : "text-gray-300"
+                    }`}>
+                      {roundTimer.status === "idle" ? "Round Timer" :
+                       roundTimer.status === "running" ? (roundTimer.remainingSec <= 300 ? "⚠ Time Running Out" : "Running") :
+                       roundTimer.status === "paused" ? "Paused" : "Time's Up"}
+                    </p>
+                    {/* Large MM:SS display */}
+                    <div className={`font-mono font-black leading-none tracking-tight select-none transition-colors ${
+                      roundTimer.status === "expired"
+                        ? "text-red-400"
+                        : roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                        ? "text-amber-400"
+                        : isDark ? "text-white" : "text-gray-900"
+                    }`} style={{ fontSize: "clamp(3.5rem, 10vw, 6rem)" }}>
+                      {(() => {
+                        const sec = roundTimer.status === "idle" ? roundTimer.durationSec : roundTimer.remainingSec;
+                        const m = Math.floor(sec / 60);
+                        const s = Math.floor(sec % 60);
+                        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+                      })()}
                     </div>
-                  ))}
-                  {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
-                    <CapacityBadge
-                      current={state.players.length}
-                      max={tournamentConfig.maxPlayers}
-                      isDark={isDark}
-                      size="md"
-                    />
+                    {/* Thin progress bar below clock */}
+                    <div className={`mt-6 w-full max-w-[200px] h-0.5 rounded-full overflow-hidden ${
+                      isDark ? "bg-white/08" : "bg-gray-100"
+                    }`}>
+                      <div
+                        className="h-full rounded-full transition-all duration-1000"
+                        style={{
+                          width: roundTimer.durationSec > 0
+                            ? `${Math.max(0, (roundTimer.remainingSec / roundTimer.durationSec) * 100)}%`
+                            : "100%",
+                          background: roundTimer.status === "expired"
+                            ? "#ef4444"
+                            : roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                            ? "#f59e0b"
+                            : "#4CAF50",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ── Controls Panel ──────────────────────────────────────── */}
+                  <div className="flex flex-col justify-center gap-5 px-8 py-8 sm:w-64 lg:w-72">
+                    {/* Minute input */}
+                    <div>
+                      <label className={`block text-xs font-semibold uppercase tracking-widest mb-2 ${
+                        isDark ? "text-white/35" : "text-gray-400"
+                      }`}>Duration (min)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="180"
+                        disabled={roundTimer.status === "running"}
+                        value={Math.round(roundTimer.durationSec / 60)}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value, 10);
+                          if (!isNaN(v) && v >= 1 && v <= 180) {
+                            roundTimer.setDurationMin(v);
+                          }
+                        }}
+                        className={`w-full px-4 py-3 rounded-xl border text-2xl font-bold font-mono text-center outline-none transition-all ${
+                          roundTimer.status === "running"
+                            ? isDark ? "bg-white/04 border-white/06 text-white/25 cursor-not-allowed" : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed"
+                            : isDark
+                            ? "bg-white/06 border-white/12 text-white focus:border-[#4CAF50]/60 focus:bg-white/08"
+                            : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#3D6B47]/50 focus:bg-white"
+                        }`}
+                      />
+                    </div>
+                    {/* Start / Pause / Reset buttons */}
+                    <div className="flex items-center gap-2">
+                      {roundTimer.status !== "running" ? (
+                        <button
+                          onClick={roundTimer.start}
+                          disabled={roundTimer.status === "expired"}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.97] ${
+                            roundTimer.status === "expired"
+                              ? isDark ? "bg-white/06 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                              : "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-md shadow-[#3D6B47]/30"
+                          }`}
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                          {roundTimer.status === "paused" ? "Resume" : "Start"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={roundTimer.pause}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all active:scale-[0.97] ${
+                            isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30" : "bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200"
+                          }`}
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                          Pause
+                        </button>
+                      )}
+                      <button
+                        onClick={roundTimer.reset}
+                        title="Reset timer"
+                        className={`p-3 rounded-xl border transition-all active:scale-[0.97] ${
+                          isDark ? "border-white/10 text-white/40 hover:bg-white/06 hover:text-white/70" : "border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                        }`}
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+                      </button>
+                    </div>
+                    {/* Near-end warning */}
+                    {roundTimer.nearEndFired && roundTimer.status === "running" && roundTimer.remainingSec <= 300 && (
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold ${
+                        isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-200"
+                      }`}>
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        5-min warning sent
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Event Meta Row ───────────────────────────────────────── */}
+                <div className={`px-6 py-4 border-t flex flex-wrap gap-x-6 gap-y-2 ${
+                  isDark ? "border-white/06 bg-white/02" : "border-gray-50 bg-gray-50/50"
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Trophy className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                    <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                      Swiss · {state.totalRounds} Rounds
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                    <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                      {state.players.length}{tournamentConfig?.maxPlayers ? ` / ${tournamentConfig.maxPlayers}` : ""} players
+                    </span>
+                  </div>
+                  {tournamentConfig?.venue && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                      <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.venue}</span>
+                    </div>
+                  )}
+                  {tournamentConfig?.date && (
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                      <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.date}</span>
+                    </div>
+                  )}
+                  {tournamentConfig?.timePreset && (
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`} />
+                      <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{tournamentConfig.timePreset}</span>
+                    </div>
                   )}
                 </div>
 
-                {/* Start CTA — registration phase */}
+                {/* ── Registration CTA (only during registration phase) ────── */}
                 {isRegistration && (
-                  <div className={`mt-6 pt-5 border-t ${
-                    isDark ? "border-white/08" : "border-gray-100"
-                  }`}>
-                    {/* Join URL row */}
+                  <div className={`px-6 py-5 border-t ${isDark ? "border-white/06" : "border-gray-100"}`}>
                     <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border mb-4 ${
                       isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
                     }`}>
-                      <span className={`text-xs font-mono flex-1 truncate ${
-                        isDark ? "text-white/60" : "text-gray-600"
-                      }`}>{joinUrl}</span>
+                      <span className={`text-xs font-mono flex-1 truncate ${isDark ? "text-white/60" : "text-gray-600"}`}>{joinUrl}</span>
                       <button
                         onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-                        className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
-                          isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"
-                        }`}
+                        className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"}`}
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => setShowQR(true)}
-                        className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                          isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"
-                        }`}
+                        className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"}`}
                       >
                         QR
                       </button>
@@ -1006,199 +1132,87 @@ export default function Director() {
                 )}
               </div>
 
-              {/* Round in Progress summary card — active phase only */}
+              {/* ── Round in Progress Card (active phase only) ───────────────── */}
               {!isRegistration && (
                 <div className={`w-full rounded-2xl border p-5 ${
                   isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
                 }`}>
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4CAF50] opacity-60" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#3D6B47]" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
+                      <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                        Round {state.currentRound} of {state.totalRounds}
                       </span>
-                      <h3 className={`text-xs font-bold uppercase tracking-widest ${
-                        isDark ? "text-white/40" : "text-gray-400"
-                      }`}>
-                        Round {state.currentRound} of {state.totalRounds} — In Progress
-                      </h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                        isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                      }`}>In Progress</span>
                     </div>
                     <button
                       onClick={() => setActiveTab("boards")}
                       className={`text-xs font-semibold flex items-center gap-1 transition-colors ${
-                        isDark ? "text-[#4CAF50] hover:text-[#6fcf73]" : "text-[#3D6B47] hover:text-[#2a4a32]"
+                        isDark ? "text-[#4CAF50] hover:text-[#4CAF50]/80" : "text-[#3D6B47] hover:text-[#2d5235]"
                       }`}
                     >
                       View Boards <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
-
-                  {/* Board completion bar */}
+                  {/* Progress bar */}
                   <div className="mb-4">
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className={isDark ? "text-white/50" : "text-gray-500"}>
-                        {completedGames} of {totalGames} boards complete
-                      </span>
-                      <span className={`font-bold ${
-                        completedGames === totalGames && totalGames > 0
-                          ? "text-[#4CAF50]"
-                          : isDark ? "text-white/70" : "text-gray-700"
-                      }`}>
-                        {totalGames > 0 ? Math.round((completedGames / totalGames) * 100) : 0}%
-                      </span>
-                    </div>
-                    <div className={`h-2 rounded-full overflow-hidden ${
-                      isDark ? "bg-white/10" : "bg-gray-100"
-                    }`}>
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: totalGames ? `${(completedGames / totalGames) * 100}%` : "0%",
-                          background: completedGames === totalGames && totalGames > 0
-                            ? "#4CAF50"
-                            : "linear-gradient(90deg, #3D6B47, #4CAF50)",
-                        }}
-                      />
-                    </div>
+                    {(() => {
+                      const total = state.rounds[state.currentRound - 1]?.games?.length ?? 0;
+                      const done = state.rounds[state.currentRound - 1]?.games?.filter(g => g.result !== "*").length ?? 0;
+                      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                      return (
+                        <>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>{done} / {total} boards complete</span>
+                            <span className={`text-xs font-bold ${isDark ? "text-white/60" : "text-gray-600"}`}>{pct}%</span>
+                          </div>
+                          <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${pct}%`, background: "linear-gradient(90deg, #3D6B47, #4CAF50)" }}
+                            />
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
-
-                  {/* Timer + top standings row */}
-                  <div className="flex items-start gap-4">
-                    {/* Timer pill */}
-                    <div className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border ${
-                      roundTimer.status === "running" && roundTimer.remainingSec <= 300
-                        ? isDark ? "border-amber-500/40 bg-amber-500/10 text-amber-400" : "border-amber-400/50 bg-amber-50 text-amber-600"
-                        : roundTimer.status === "expired"
-                        ? isDark ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-red-400/50 bg-red-50 text-red-600"
-                        : isDark ? "border-white/10 bg-white/05 text-white/50" : "border-gray-200 bg-gray-50 text-gray-500"
-                    }`}>
-                      <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="text-xs font-mono font-semibold">
-                        {roundTimer.status === "idle"
-                          ? "No timer"
-                          : roundTimer.status === "expired"
-                          ? "Time's up"
-                          : (() => {
-                              const m = Math.floor(roundTimer.remainingSec / 60);
-                              const s = Math.floor(roundTimer.remainingSec % 60);
-                              return `${m}:${s.toString().padStart(2, "0")} left`;
-                            })()}
-                      </span>
-                    </div>
-
-                    {/* Top 3 standings preview */}
-                    <div className="flex-1 space-y-1 min-w-0">
+                  {/* Top 3 standings + Generate CTA */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    <div className="flex-1 space-y-1.5 min-w-0">
                       {getStandings(state.players).slice(0, 3).map((p, i) => (
                         <div key={p.id} className="flex items-center gap-2 min-w-0">
                           <span className={`text-xs font-bold w-5 flex-shrink-0 ${
                             i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : "text-amber-600"
-                          }`}>
-                            {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
-                          </span>
-                          <span className={`text-xs truncate flex-1 ${
-                            isDark ? "text-white/80" : "text-gray-700"
-                          }`}>{p.name}</span>
-                          <span className={`text-xs font-bold flex-shrink-0 ${
-                            isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-                          }`}>{p.points}</span>
+                          }`}>{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
+                          <span className={`text-sm truncate flex-1 ${isDark ? "text-white/80" : "text-gray-700"}`}>{p.name}</span>
+                          <span className={`text-sm font-bold flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>{p.points}</span>
                         </div>
                       ))}
                       {getStandings(state.players).length === 0 && (
-                        <p className={`text-xs ${
-                          isDark ? "text-white/30" : "text-gray-400"
-                        }`}>No results yet</p>
+                        <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>No results yet</p>
                       )}
                     </div>
+                    {canGenerateNext && (
+                      <button
+                        onClick={() => {
+                          const nextRound = state.currentRound + 1;
+                          generateNextRound();
+                          toast.success(`Round ${nextRound} pairings generated!`);
+                          broadcastRoundStart(nextRound);
+                        }}
+                        className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
+                        style={{ background: "#3D6B47", boxShadow: "0 4px 12px rgba(61,107,71,0.3)" }}
+                      >
+                        <Zap className="w-4 h-4" />
+                        Generate Round {state.currentRound + 1}
+                      </button>
+                    )}
                   </div>
-
-                  {/* All done CTA */}
-                  {canGenerateNext && (
-                    <button
-                      onClick={() => {
-                        const nextRound = state.currentRound + 1;
-                        generateNextRound();
-                        toast.success(`Round ${nextRound} pairings generated!`);
-                        broadcastRoundStart(nextRound);
-                      }}
-                      className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                      style={{ background: "#3D6B47", boxShadow: "0 4px 12px rgba(61,107,71,0.3)" }}
-                    >
-                      <Zap className="w-4 h-4" />
-                      Generate Round {state.currentRound + 1}
-                    </button>
-                  )}
                 </div>
               )}
-
-              {/* Right column: Quick Actions */}
-              <div className="w-full lg:w-64 flex-shrink-0 space-y-3">
-                <button
-                  onClick={() => setShowQR(true)}
-                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all ${
-                    isDark ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
-                  }`}
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="19" y="14" width="2" height="2" rx="0.5"/><rect x="14" y="19" width="2" height="2" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/></svg>
-                  Show QR Code
-                </button>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
-                    isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Copy className="w-4 h-4" /> Copy join link
-                </button>
-                <button
-                  onClick={() => setActiveTab("players")}
-                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
-                    isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Users className="w-4 h-4" /> Manage Players
-                </button>
-                <Link
-                  href={`/tournament/${id ?? "otb-demo-2026"}/print`}
-                  className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium border transition-colors ${
-                    isDark ? "border-white/10 text-white/60 hover:bg-white/05" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Download className="w-4 h-4" /> Pairings &amp; Print Sheet
-                </Link>
-                {state.rounds.some((r) => r.games.some((g) => g.result !== "*")) && (
-                  <button
-                    onClick={() => {
-                      generateResultsPdf({
-                        tournamentName: state.tournamentName,
-                        date: tournamentConfig?.date,
-                        location: tournamentConfig?.venue,
-                        timeControl: tournamentConfig?.timePreset,
-                        totalRounds: state.totalRounds,
-                        players: state.players,
-                        rounds: state.rounds,
-                      });
-                      toast.success("Results PDF downloaded!");
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold border transition-all active:scale-[0.98] ${
-                      isDark
-                        ? "border-[#4CAF50]/30 text-[#4CAF50] bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20"
-                        : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06 hover:bg-[#3D6B47]/12"
-                    }`}
-                  >
-                    <Download className="w-4 h-4" />
-                    Download Results PDF
-                  </button>
-                )}
-                {/* Round Timer — only when tournament is active */}
-                {!isRegistration && (
-                  <RoundTimerCard
-                    timer={roundTimer}
-                    roundNumber={state.currentRound}
-                    isDark={isDark}
-                  />
-                )}
-              </div>
             </div>
           )}
 
@@ -1896,6 +1910,79 @@ export default function Director() {
           {/* ── Settings Tab ─────────────────────────────────────────────────── */}
           {activeTab === "settings" && (
             <div className="space-y-4">
+              {/* ── Quick Actions ─────────────────────────────────────────────── */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+              }`}>
+                <div className={`px-5 py-3 border-b ${
+                  isDark ? "border-white/06" : "border-gray-100"
+                }`}>
+                  <h2 className={`text-xs font-bold uppercase tracking-widest ${
+                    isDark ? "text-white/35" : "text-gray-400"
+                  }`}>Quick Actions</h2>
+                </div>
+                <div className="divide-y">
+                  {[
+                    {
+                      icon: QrCode,
+                      label: "Show QR Code",
+                      onClick: () => setShowQR(true),
+                    },
+                    {
+                      icon: Copy,
+                      label: "Copy Join Link",
+                      onClick: () => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); },
+                    },
+                    {
+                      icon: UserPlus,
+                      label: "Manage Players",
+                      onClick: () => setActiveTab("players"),
+                    },
+                    {
+                      icon: Printer,
+                      label: "Pairings & Print Sheet",
+                      onClick: () => {
+                        const currentGames = state.rounds[state.currentRound - 1]?.games ?? [];
+                        const lines = currentGames.map((g) => {
+                          const w = state.players.find((p) => p.id === g.whiteId)?.name ?? "?";
+                          const b = state.players.find((p) => p.id === g.blackId)?.name ?? "?";
+                          return `Board ${g.board}: ${w} vs ${b}`;
+                        });
+                        const win = window.open("", "_blank");
+                        if (win) {
+                          win.document.write(`<pre style="font-family:monospace;font-size:14px;padding:24px">${lines.join("\n")}</pre>`);
+                          win.print();
+                        }
+                      },
+                    },
+                    {
+                      icon: Download,
+                      label: "Download Results PDF",
+                      onClick: () => generateResultsPdf({
+                        tournamentName: state.tournamentName,
+                        location: tournamentConfig?.venue,
+                        date: tournamentConfig?.date,
+                        timeControl: tournamentConfig?.timePreset,
+                        players: state.players,
+                        rounds: state.rounds,
+                      }),
+                    },
+                  ].map(({ icon: Icon, label, onClick }) => (
+                    <button
+                      key={label}
+                      onClick={onClick}
+                      className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors ${
+                        isDark ? "hover:bg-white/04 text-white/70 hover:text-white" : "hover:bg-gray-50 text-gray-700 hover:text-gray-900"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${
+                        isDark ? "text-[#4CAF50]/70" : "text-[#3D6B47]/70"
+                      }`} />
+                      <span className="text-sm font-medium">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
               {/* Editable tournament settings panel */}
               {tournamentId !== "otb-demo-2026" ? (
                 <TournamentSettingsPanel

@@ -595,3 +595,13 @@
 - [x] On successful QR join, navigate directly to /tournament/{config.id} participant view
 - [x] Success screen Standings button now resolves to actual tournament URL (not hardcoded demo)
 - [x] Manual flow (/join without code) still uses full multi-step flow unchanged
+
+## Director Dashboard Home — Hero Redesign
+
+- [x] Build unified TournamentHeroCard: large MM:SS clock left, minute input + Start/Pause/Reset right, event meta row below
+- [x] Remove duration preset buttons from timer — replaced with single clean minute input field
+- [x] Wide Round Status card below hero (full-width, clear board completion + standings preview)
+- [x] Move Show QR, Copy Join Link, Manage Players, Pairings & Print Sheet, Download Results PDF to Settings tab Quick Actions card
+- [x] Remove Quick Actions column from Home tab right column
+- [x] Responsive: stacks vertically on mobile, side-by-side on desktop
+- [x] RoundTimerCard component replaced by inline timer inside TournamentHeroCard
