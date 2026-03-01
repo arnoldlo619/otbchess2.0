@@ -675,3 +675,22 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Join URL shown below the QR code in small monospace text
 - [x] Close button (Escape key + X button)
 - [x] Copy invite code button inside the modal
+
+## Critical Bug — Player Join Not Appearing on Director Dashboard
+
+- [x] Audit full join → registration → director dashboard data flow
+- [x] Identify root cause: addPlayerToTournament writes to player's device localStorage; director reads from director's device localStorage — two separate storage spaces, no cross-device sync
+- [ ] Add tournament_players DB table (id, tournament_id, player_json, joined_at)
+- [ ] Add POST /api/tournament/:id/players endpoint (called by Join page on registration)
+- [ ] Add GET /api/tournament/:id/players endpoint (polled by Director dashboard)
+- [ ] Update Join.tsx handleQrJoin and handleConfirm to POST player to server after local addPlayerToTournament
+- [ ] Update Director.tsx useDirectorState to poll /api/tournament/:id/players every 5s and merge into state.players
+- [ ] Add pnpm db:push to apply schema migration
+
+## Director Mobile Header — Premium Redesign
+
+- [x] Audit full Director header markup and identify all cramped elements
+- [x] Redesign mobile header: single row with status dot + QR icon + ThemeToggle + overflow menu
+- [x] Move invite code chip off the header nav row on mobile (now in overflow dropdown + desktop only)
+- [x] Collapse Pause/Resume, Capacity badge, Invite code into overflow menu on mobile
+- [x] Ensure no overlapping or text truncation on screens < 390px wide

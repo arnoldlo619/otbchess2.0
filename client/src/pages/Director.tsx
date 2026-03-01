@@ -64,6 +64,7 @@ import {
   FileText,
   Printer,
   Hash,
+  MoreVertical,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -536,6 +537,7 @@ export default function Director() {
   const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
   const [showQR, setShowQR] = useState(false);
   const [showAnnounce, setShowAnnounce] = useState(false);
+  const [showOverflow, setShowOverflow] = useState(false);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
   // For real tournaments use the stored invite code; for the demo fall back to
@@ -760,53 +762,24 @@ export default function Director() {
             </div>
           </div>
 
-          {/* Right: Status + controls */}
-          <div className="flex items-center gap-1.5">
-            {/* Invite code chip — click to copy, readable aloud to players without QR */}
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(inviteCode);
-                toast.success("Invite code copied!");
-              }}
-              title={`Invite code: ${inviteCode} — click to copy`}
-              className={`group flex items-center gap-1 px-2 py-1 rounded-lg border transition-all active:scale-95 ${
-                isDark
-                  ? "border-white/12 bg-white/06 hover:bg-white/10 text-white/70 hover:text-white"
-                  : "border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-800"
-              }`}
-            >
-              <Hash className="w-3 h-3 flex-shrink-0" />
-              <span className="font-mono text-xs font-semibold tracking-wider">{inviteCode}</span>
-              <Copy className={`w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity`} />
-            </button>
-            {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
-              <CapacityBadge
-                current={state.players.length}
-                max={tournamentConfig.maxPlayers}
-                isDark={isDark}
-                size="sm"
-              />
-            )}
+          {/* Right: controls — mobile-optimised */}
+          <div className="flex items-center gap-1">
+
+            {/* Live/Paused status dot — always visible, no text on mobile */}
             {!isRegistration && (
               <span
-                className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  state.status === "paused"
-                    ? isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600"
-                    : isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                title={state.status === "paused" ? "Paused" : "Live"}
+                className={`w-2 h-2 rounded-full flex-shrink-0 mr-0.5 ${
+                  state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
                 }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                    state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
-                  }`}
-                />
-                <span className="hidden sm:block">{state.status === "paused" ? "Paused" : "Live"}</span>
-              </span>
+              />
             )}
+
+            {/* Pause/Resume — desktop only (moved to overflow on mobile) */}
             {!isRegistration && (
               <button
                 onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); }}
-                className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
+                className={`hidden sm:flex touch-target p-2 rounded-xl transition-all active:scale-95 ${
                   isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
                 }`}
                 title={state.status === "paused" ? "Resume" : "Pause"}
@@ -814,6 +787,35 @@ export default function Director() {
                 {state.status === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
               </button>
             )}
+
+            {/* Invite code chip — desktop only */}
+            <button
+              onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success("Invite code copied!"); }}
+              title={`Invite code: ${inviteCode} — click to copy`}
+              className={`hidden sm:flex group items-center gap-1 px-2 py-1 rounded-lg border transition-all active:scale-95 ${
+                isDark
+                  ? "border-white/12 bg-white/06 hover:bg-white/10 text-white/70 hover:text-white"
+                  : "border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <Hash className="w-3 h-3 flex-shrink-0" />
+              <span className="font-mono text-xs font-semibold tracking-wider">{inviteCode}</span>
+              <Copy className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
+            </button>
+
+            {/* Capacity badge — desktop only */}
+            {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
+              <span className="hidden sm:flex">
+                <CapacityBadge
+                  current={state.players.length}
+                  max={tournamentConfig.maxPlayers}
+                  isDark={isDark}
+                  size="sm"
+                />
+              </span>
+            )}
+
+            {/* Announce / QR — always visible (primary action) */}
             <button
               onClick={() => setShowAnnounce(true)}
               className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
@@ -821,9 +823,86 @@ export default function Director() {
               }`}
               title="Show join QR code full-screen"
             >
-              <Bell className="w-4 h-4" />
+              <QrCode className="w-4 h-4" />
             </button>
+
+            {/* Theme toggle — always visible */}
             <ThemeToggle />
+
+            {/* Overflow menu — mobile only (⋯) */}
+            <div className="relative sm:hidden">
+              <button
+                onClick={() => setShowOverflow((v) => !v)}
+                className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
+                  isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
+                }`}
+                title="More options"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              {showOverflow && (
+                <>
+                  {/* Backdrop */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowOverflow(false)}
+                  />
+                  {/* Dropdown */}
+                  <div
+                    className={`absolute right-0 top-full mt-1 z-50 w-52 rounded-2xl shadow-xl border overflow-hidden ${
+                      isDark
+                        ? "bg-[oklch(0.22_0.06_145)] border-white/10"
+                        : "bg-white border-gray-100"
+                    }`}
+                  >
+                    {/* Invite code row */}
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success("Invite code copied!"); setShowOverflow(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                        isDark ? "hover:bg-white/06 text-white" : "hover:bg-gray-50 text-gray-800"
+                      }`}
+                    >
+                      <Hash className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                      <div className="min-w-0">
+                        <p className={`text-[11px] font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Invite code</p>
+                        <p className="font-mono text-sm font-bold tracking-widest truncate">{inviteCode}</p>
+                      </div>
+                      <Copy className={`w-3.5 h-3.5 ml-auto flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+                    </button>
+
+                    {/* Capacity row */}
+                    {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
+                      <div className={`flex items-center gap-3 px-4 py-3 border-t ${
+                        isDark ? "border-white/06 text-white/60" : "border-gray-50 text-gray-500"
+                      }`}>
+                        <UserPlus className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">
+                          {state.players.length} / {tournamentConfig.maxPlayers} players
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Pause / Resume row */}
+                    {!isRegistration && (
+                      <button
+                        onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); setShowOverflow(false); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 border-t text-left transition-colors ${
+                          isDark ? "border-white/06 hover:bg-white/06 text-white" : "border-gray-50 hover:bg-gray-50 text-gray-800"
+                        }`}
+                      >
+                        {state.status === "paused"
+                          ? <Play className="w-4 h-4 flex-shrink-0 text-[#4CAF50]" />
+                          : <Pause className="w-4 h-4 flex-shrink-0 text-amber-500" />}
+                        <span className="text-sm font-medium">
+                          {state.status === "paused" ? "Resume tournament" : "Pause tournament"}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
 
