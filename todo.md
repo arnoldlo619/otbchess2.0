@@ -544,3 +544,22 @@
 - [x] Remove Archive from centre desktop nav links section
 - [x] Add Archive to right-side desktop CTA group, ordered: Sign In → Archive → Theme Toggle
 - [x] Update mobile menu to show Archive below Sign In
+
+## Director Dashboard — Home Page Redesign
+
+- [ ] Add "Home" as the default/first tab in the Director Dashboard tab bar
+- [ ] Home tab: centred Event Info card as the sole focal component, with tab buttons (Boards, Players, Standings, Settings) aligned to the right
+- [ ] Unified tab bar: Home | Boards | Players | Standings | Settings (remove separate sidebar)
+- [ ] Move Round Progress out of sidebar into a subtle inline strip in the header, directly under the tournament title (shows registered player count + time control + round progress bar)
+- [ ] Live Standings becomes a tab (not a sidebar card)
+- [ ] Remove the old sidebar layout entirely when on the Home tab
+- [ ] Header nav: tournament title left, round-progress strip centre, action buttons right
+
+## Logo Nav Link & Tournament Dashboard Button
+
+- [x] Make the header logo (!! image) a clickable link to the landing page (/) in Home.tsx nav
+- [x] Detect active tournament registration from localStorage (otb_registrations key)
+- [x] Show "Tournament Dashboard" button on far right of landing page nav for registered users
+- [x] Button navigates to /tournament/{config.id} for the most recent active tournament
+- [x] Button is hidden when no active tournament session exists
+- [x] Added getAllRegistrations() export to registrationStore.ts

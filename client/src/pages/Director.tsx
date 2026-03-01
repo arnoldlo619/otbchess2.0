@@ -527,7 +527,7 @@ export default function Director() {
   });
 
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"boards" | "players" | "settings">("boards");
+  const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
   const [showQR, setShowQR] = useState(false);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
@@ -676,7 +676,8 @@ export default function Director() {
         }`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-3">
+        {/* Main nav row */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-3">
           {/* Left: back + breadcrumb */}
           <div className="flex items-center gap-2 min-w-0">
             <Link
@@ -693,36 +694,27 @@ export default function Director() {
               <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
                 <Shield className="w-4 h-4 text-[#3D6B47]" />
               </div>
-              <span
-                className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Director
-              </span>
+              <div className="min-w-0">
+                <p
+                  className={`text-sm font-bold truncate leading-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  {state.tournamentName}
+                </p>
+                <p className={`text-[11px] leading-tight ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  {isRegistration ? `${state.players.length} players registered` : `Round ${state.currentRound} of ${state.totalRounds}`}
+                  {lastSaved && (
+                    <span className={`ml-1.5 ${isDark ? "text-[#4CAF50]/50" : "text-[#3D6B47]/50"}`}>
+                      · Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* Center: Tournament name */}
-          <div className="hidden lg:block text-center">
-            <p
-              className={`text-sm font-bold truncate max-w-xs ${isDark ? "text-white" : "text-gray-900"}`}
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              {state.tournamentName}
-            </p>
-            <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
-              {isRegistration ? `Registration · ${state.players.length} players` : `Round ${state.currentRound} of ${state.totalRounds}`}
-              {lastSaved && (
-                <span className={`ml-2 ${isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/60"}`}>
-                  · Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
-            </p>
           </div>
 
           {/* Right: Status + controls */}
           <div className="flex items-center gap-1.5">
-            {/* Capacity badge — only shown when a maxPlayers cap is set */}
             {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
               <CapacityBadge
                 current={state.players.length}
@@ -731,41 +723,114 @@ export default function Director() {
                 size="sm"
               />
             )}
-            <span
-              className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full ${
-                state.status === "paused"
-                  ? isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600"
-                  : isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-              }`}
-            >
+            {!isRegistration && (
               <span
-                className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
+                className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                  state.status === "paused"
+                    ? isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-50 text-amber-600"
+                    : isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
                 }`}
-              />
-              <span className="hidden sm:block">{state.status === "paused" ? "Paused" : "Live"}</span>
-            </span>
-            <button
-              onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); }}
-              className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
-                isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
-              }`}
-              title={state.status === "paused" ? "Resume" : "Pause"}
-            >
-              {state.status === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-            </button>
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
+                  }`}
+                />
+                <span className="hidden sm:block">{state.status === "paused" ? "Paused" : "Live"}</span>
+              </span>
+            )}
+            {!isRegistration && (
+              <button
+                onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); }}
+                className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
+                  isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
+                }`}
+                title={state.status === "paused" ? "Resume" : "Pause"}
+              >
+                {state.status === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+              </button>
+            )}
             <button
               onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied — share with players!"); }}
               className={`touch-target p-2 rounded-xl transition-all active:scale-95 hidden sm:flex ${
                 isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
               }`}
-              title="Announce"
+              title="Copy join link"
             >
               <Bell className="w-4 h-4" />
             </button>
             <ThemeToggle />
           </div>
         </div>
+
+        {/* Round Progress strip — shown only after tournament starts */}
+        {!isRegistration && (
+          <div className={`border-t ${isDark ? "border-white/06" : "border-gray-100"}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-2 flex items-center gap-3">
+              {/* Round dots */}
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: state.totalRounds }, (_, i) => i + 1).map((r) => {
+                  const rd = state.rounds.find((x) => x.number === r);
+                  const done = rd?.status === "completed";
+                  const cur = r === state.currentRound;
+                  return (
+                    <div key={r} className="flex items-center gap-1">
+                      <div
+                        title={`Round ${r}`}
+                        className={`flex items-center justify-center rounded-full text-[10px] font-bold transition-all ${
+                          done
+                            ? "w-5 h-5 bg-[#3D6B47] text-white"
+                            : cur
+                            ? isDark
+                              ? "w-6 h-6 bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/60"
+                              : "w-6 h-6 bg-[#3D6B47]/12 text-[#3D6B47] border border-[#3D6B47]/40"
+                            : isDark
+                            ? "w-5 h-5 bg-white/08 text-white/25 border border-white/10"
+                            : "w-5 h-5 bg-gray-100 text-gray-300 border border-gray-200"
+                        }`}
+                      >
+                        {done ? <CheckCircle2 className="w-3 h-3" /> : r}
+                      </div>
+                      {r < state.totalRounds && (
+                        <div className={`h-px w-3 rounded-full ${done ? "bg-[#3D6B47]" : isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Results progress bar */}
+              {totalGames > 0 && (
+                <div className="flex items-center gap-2 flex-1 max-w-[160px]">
+                  <div className={`flex-1 h-1 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
+                    <div
+                      className="h-full bg-[#3D6B47] rounded-full transition-all duration-500"
+                      style={{ width: `${(completedGames / totalGames) * 100}%` }}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                    {completedGames}/{totalGames}
+                  </span>
+                </div>
+              )}
+              {/* Generate next round CTA — compact in header strip */}
+              {canGenerateNext && (
+                <button
+                  onClick={() => {
+                    const nextRound = state.currentRound + 1;
+                    generateNextRound();
+                    toast.success(`Round ${nextRound} pairings generated!`);
+                    broadcastRoundStart(nextRound);
+                  }}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1 bg-[#3D6B47] text-white text-xs font-bold rounded-lg hover:bg-[#2A4A32] transition-all active:scale-95 shadow-sm"
+                >
+                  <Zap className="w-3 h-3" />
+                  Generate R{state.currentRound + 1}
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}

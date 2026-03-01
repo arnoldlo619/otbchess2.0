@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
+import { getAllRegistrations } from "@/lib/registrationStore";
+import { resolveTournament } from "@/lib/tournamentRegistry";
 import {
   Trophy,
   Users,
@@ -120,7 +122,35 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme } = useTheme();
+
   const isDark = theme === "dark";
+
+  // Detect if the user has an active tournament registration
+  const [activeTournamentUrl, setActiveTournamentUrl] = useState<string | null>(null);
+  const [activeTournamentName, setActiveTournamentName] = useState<string | null>(null);
+
+  useEffect(() => {
+    function detectActiveTournament() {
+      try {
+        const regs = getAllRegistrations();
+        for (const reg of regs) {
+          const config = resolveTournament(reg.tournamentId);
+          if (config) {
+            setActiveTournamentUrl(`/tournament/${config.id}`);
+            setActiveTournamentName(config.name);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      setActiveTournamentUrl(null);
+      setActiveTournamentName(null);
+    }
+    detectActiveTournament();
+    window.addEventListener("storage", detectActiveTournament);
+    return () => window.removeEventListener("storage", detectActiveTournament);
+  }, []);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -145,14 +175,16 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
       }`}
     >
       <div className="container flex items-center justify-between h-[72px]">
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-1 group">
-          <img
-            src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
-            alt="OTB Chess"
-            className={`nav-logo h-14 w-auto object-contain ${isDark ? "nav-logo-dark" : ""}`}
-          />
-        </a>
+        {/* Logo — navigates to landing page */}
+        <Link href="/">
+          <a className="flex items-center gap-1 group cursor-pointer">
+            <img
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+              alt="OTB Chess — Home"
+              className={`nav-logo h-14 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
+            />
+          </a>
+        </Link>
 
         {/* Desktop Links — centre (empty if navLinks is empty) */}
         <div className="hidden md:flex items-center gap-8">
@@ -171,7 +203,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           ))}
         </div>
 
-        {/* Right-side: Sign In → Archive → Toggle */}
+        {/* Right-side: Sign In → Archive → Toggle → [Tournament Dashboard] */}
         <div className="hidden md:flex items-center gap-4">
           <button
             onClick={onCreateTournament}
@@ -193,6 +225,21 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
             </span>
           </Link>
           <ThemeToggle />
+          {activeTournamentUrl && (
+            <Link href={activeTournamentUrl}>
+              <a
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all active:scale-95 ${
+                  isDark
+                    ? "bg-[#3D6B47]/30 text-[#4CAF50] border border-[#4CAF50]/30 hover:bg-[#3D6B47]/50"
+                    : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20 hover:bg-[#3D6B47]/20"
+                }`}
+                title={activeTournamentName ?? "Your tournament"}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse flex-shrink-0" />
+                Tournament Dashboard
+              </a>
+            </Link>
+          )}
         </div>
 
         {/* Mobile: toggle + menu */}
@@ -231,14 +278,27 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           </button>
           <Link href="/tournaments">
             <span
-              className={`block w-full py-3 text-sm font-medium ${
-                isDark ? "text-white/70" : "text-[#4B5563]"
+              className={`block w-full py-3 text-sm font-medium border-b ${
+                isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
               }`}
               onClick={() => setMobileOpen(false)}
             >
               Archive
             </span>
           </Link>
+          {activeTournamentUrl && (
+            <Link href={activeTournamentUrl}>
+              <a
+                className={`flex items-center gap-2 w-full py-3 text-sm font-semibold ${
+                  isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                }`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
+                Tournament Dashboard
+              </a>
+            </Link>
+          )}
         </div>
       )}
     </nav>

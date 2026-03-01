@@ -105,6 +105,15 @@ export function clearRegistration(
 }
 
 /**
+ * Return all stored registrations, sorted newest-first.
+ */
+export function getAllRegistrations(): RegistrationEntry[] {
+  return readAll().sort(
+    (a, b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime()
+  );
+}
+
+/**
  * Remove all registrations older than `maxAgeDays` days.
  * Called on app startup to keep localStorage tidy.
  */
