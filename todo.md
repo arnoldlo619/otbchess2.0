@@ -666,3 +666,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Display invite code as a copyable chip in the Director Dashboard header
 - [x] One-click copy with toast confirmation
 - [x] Monospace font, clearly readable at a glance for read-aloud use
+
+## Director — Full-Screen Announce Modal
+
+- [x] AnnounceModal component: full-screen overlay, dark green background, large QR code, giant invite code text
+- [x] Wire to Bell button in Director header (replaces old copy-link behaviour)
+- [x] Tournament name displayed prominently at the top
+- [x] Join URL shown below the QR code in small monospace text
+- [x] Close button (Escape key + X button)
+- [x] Copy invite code button inside the modal

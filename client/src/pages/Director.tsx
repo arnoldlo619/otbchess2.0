@@ -13,6 +13,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
+import { AnnounceModal } from "@/components/AnnounceModal";
 import { Link, useParams, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -534,6 +535,7 @@ export default function Director() {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
   const [showQR, setShowQR] = useState(false);
+  const [showAnnounce, setShowAnnounce] = useState(false);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
   // For real tournaments use the stored invite code; for the demo fall back to
@@ -813,11 +815,11 @@ export default function Director() {
               </button>
             )}
             <button
-              onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied — share with players!"); }}
-              className={`touch-target p-2 rounded-xl transition-all active:scale-95 hidden sm:flex ${
+              onClick={() => setShowAnnounce(true)}
+              className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
                 isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
               }`}
-              title="Copy join link"
+              title="Show join QR code full-screen"
             >
               <Bell className="w-4 h-4" />
             </button>
@@ -2250,6 +2252,15 @@ export default function Director() {
       <QRModal
         open={showQR}
         onClose={() => setShowQR(false)}
+        tournamentName={state.tournamentName}
+        joinUrl={joinUrl}
+        code={inviteCode}
+      />
+
+      {/* ── Announce Modal (full-screen join QR for projection / read-aloud) ──── */}
+      <AnnounceModal
+        open={showAnnounce}
+        onClose={() => setShowAnnounce(false)}
         tournamentName={state.tournamentName}
         joinUrl={joinUrl}
         code={inviteCode}
