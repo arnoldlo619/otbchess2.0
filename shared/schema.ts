@@ -143,3 +143,29 @@ export const tournamentState = mysqlTable("tournament_state", {
 
 export type TournamentStateRow = typeof tournamentState.$inferSelect;
 export type NewTournamentStateRow = typeof tournamentState.$inferInsert;
+
+// ─── user_tournaments ─────────────────────────────────────────────────────────
+// Links a registered user account to a tournament they created.
+// Enables cross-device "My Tournaments" history on the profile page.
+export const userTournaments = mysqlTable(
+  "user_tournaments",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    venue: varchar("venue", { length: 255 }),
+    date: varchar("date", { length: 20 }),
+    format: varchar("format", { length: 50 }),
+    rounds: int("rounds"),
+    inviteCode: varchar("invite_code", { length: 20 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("ut_user_id_idx").on(table.userId),
+    tournamentIdx: index("ut_tournament_id_idx").on(table.tournamentId),
+  })
+);
+
+export type UserTournament = typeof userTournaments.$inferSelect;
+export type NewUserTournament = typeof userTournaments.$inferInsert;

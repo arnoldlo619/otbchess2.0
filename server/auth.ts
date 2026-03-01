@@ -17,10 +17,10 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { nanoid } from "nanoid";
+import { nanoid, nanoid as nid } from "nanoid";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db.js";
-import { users } from "../shared/schema.js";
+import { users, userTournaments } from "../shared/schema.js";
 
 const BCRYPT_ROUNDS = 12;
 const JWT_EXPIRY_DEFAULT = "7d";
@@ -272,6 +272,86 @@ export function createAuthRouter(): Router {
     } catch (err) {
       console.error("[auth] patch me error:", err);
       return res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // ── GET /api/user/tournaments ────────────────────────────────────────────────
+  // Returns all tournaments created by the authenticated user (cross-device history).
+  router.get("/user/tournaments", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select()
+        .from(userTournaments)
+        .where(eq(userTournaments.userId, payload.sub))
+        .orderBy(userTournaments.createdAt);
+      return res.json({ tournaments: rows });
+    } catch (err) {
+      console.error("[auth] get user tournaments error:", err);
+      return res.status(500).json({ error: "Failed to fetch tournaments" });
+    }
+  });
+
+  // ── POST /api/user/tournaments ───────────────────────────────────────────────
+  // Records a tournament as created by the authenticated user.
+  router.post("/user/tournaments", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+
+    const { tournamentId, name, venue, date, format, rounds, inviteCode } = req.body as {
+      tournamentId: string;
+      name: string;
+      venue?: string;
+      date?: string;
+      format?: string;
+      rounds?: number;
+      inviteCode?: string;
+    };
+
+    if (!tournamentId || !name) {
+      return res.status(400).json({ error: "tournamentId and name are required" });
+    }
+
+    try {
+      const db = await getDb();
+      // Upsert: if the same user already has this tournament, skip insert
+      const existing = await db
+        .select()
+        .from(userTournaments)
+        .where(eq(userTournaments.tournamentId, tournamentId))
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(userTournaments).values({
+          id: nid(),
+          userId: payload.sub,
+          tournamentId,
+          name,
+          venue: venue ?? null,
+          date: date ?? null,
+          format: format ?? null,
+          rounds: rounds ?? null,
+          inviteCode: inviteCode ?? null,
+        });
+      }
+
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error("[auth] post user tournaments error:", err);
+      return res.status(500).json({ error: "Failed to save tournament" });
     }
   });
 

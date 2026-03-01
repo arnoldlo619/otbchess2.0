@@ -18,6 +18,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuthContext } from "@/context/AuthContext";
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { useConfetti } from "@/hooks/useConfetti";
@@ -1610,6 +1611,7 @@ interface TournamentWizardProps {
 export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { user } = useAuthContext();
   const [mode, setMode] = useState<WizardMode>("select");
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -1687,8 +1689,26 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       timePreset: data.timePreset,
       ratingSystem: data.ratingSystem,
       createdAt: new Date().toISOString(),
+      ownerId: user?.id ? parseInt(user.id, 10) : null,
     });
     grantDirectorSession(slug);
+    // If signed in, persist to server so My Tournaments history is cross-device
+    if (user?.id) {
+      fetch(`/api/user/tournaments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          tournamentId: slug,
+          name: data.name,
+          venue: data.venue,
+          date: data.date,
+          format: data.format,
+          rounds: data.rounds,
+          inviteCode: data.inviteCode,
+        }),
+      }).catch(() => { /* non-critical — localStorage is the source of truth */ });
+    }
   }, [data]);
 
   const commitTournament = useCallback(() => {

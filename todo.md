@@ -866,3 +866,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tab switch clears errors and resets form
 - [x] Enter key submits form from any field
 - [x] Unit tests for password strength scorer and field validators
+
+## My Tournaments History
+
+- [x] Add ownerId (nullable int, FK → users.id) to TournamentConfig in shared types
+- [x] TournamentWizard: read auth context and attach ownerId when saving to registry
+- [x] Server: POST /api/user/tournaments — save tournament ownership record to DB
+- [x] Server: GET /api/user/tournaments — return all tournaments owned by the JWT user
+- [x] DB: user_tournaments table (id, userId, tournamentId, createdAt)
+- [x] Profile page: replace static placeholder with real My Tournaments list from API
+- [x] Profile page: each tournament card shows name, date, format, player count, status
+- [x] Profile page: "Manage" button links to /director/:id
+- [x] Profile page: empty state when user has no tournaments yet
+- [x] Unit tests for tournament ownership helpers

@@ -22,6 +22,8 @@ export interface TournamentConfig {
   timePreset: string;     // display label, e.g. "10+5"
   ratingSystem: "chess.com" | "lichess" | "fide" | "unrated";
   createdAt: string;
+  /** Authenticated user ID of the director who created this tournament (undefined for anonymous). */
+  ownerId?: number | null;
 }
 
 const REGISTRY_KEY = "otb-tournament-registry-v1";

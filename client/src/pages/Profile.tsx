@@ -95,9 +95,31 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  // Count tournaments from localStorage
-  const tournaments: TournamentConfig[] = listTournaments();
-  const tournamentCount = tournaments.length;
+  // Fetch tournaments from API (cross-device) when signed in; fall back to localStorage
+  const [apiTournaments, setApiTournaments] = useState<Array<{
+    id: string; tournamentId: string; name: string; venue?: string | null;
+    date?: string | null; format?: string | null; rounds?: number | null;
+    inviteCode?: string | null; createdAt: string;
+  }> | null>(null);
+  const [tournamentsLoading, setTournamentsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setTournamentsLoading(true);
+    fetch("/api/auth/user/tournaments", { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.tournaments) setApiTournaments(data.tournaments);
+      })
+      .catch(() => { /* fall back to localStorage */ })
+      .finally(() => setTournamentsLoading(false));
+  }, [user]);
+
+  const localTournaments: TournamentConfig[] = listTournaments();
+  // Merge: API tournaments take precedence; fill in any local-only ones
+  const apiIds = new Set((apiTournaments ?? []).map((t) => t.tournamentId));
+  const localOnly = localTournaments.filter((t) => !apiIds.has(t.id));
+  const tournamentCount = (apiTournaments?.length ?? 0) + localOnly.length;
 
   async function handleSave() {
     setSaving(true);
@@ -388,6 +410,9 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2 mb-4">
             <Trophy className="w-5 h-5 text-[#2d6a4f]" />
             <h2 className={`text-base font-bold ${text}`}>Your Tournaments</h2>
+            {tournamentsLoading && (
+              <Loader2 className="w-4 h-4 animate-spin text-[#2d6a4f] ml-auto" />
+            )}
           </div>
           {tournamentCount === 0 ? (
             <div className="text-center py-6">
@@ -401,7 +426,10 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {tournaments
+              {[
+                ...(apiTournaments ?? []).map((t) => ({ id: t.tournamentId, name: t.name, format: t.format ?? "Swiss" })),
+                ...localOnly.map((t: TournamentConfig) => ({ id: t.id, name: t.name, format: t.format ?? "Swiss" })),
+              ]
                 .slice(0, 5)
                 .map((t) => (
                   <a
