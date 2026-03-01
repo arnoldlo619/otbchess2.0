@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearch } from "wouter";
 import { Link } from "wouter";
+import { QRCodeSVG } from "qrcode.react";
 import {
   Trophy,
   Swords,
@@ -22,6 +23,8 @@ import {
   RotateCcw,
   Crown,
   Circle,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -73,6 +76,68 @@ export function findMyBoard(
   return { game, myColor, opponent };
 }
 
+// ─── Rejoin Link Card ────────────────────────────────────────────────────────
+
+function RejoinLinkCard({
+  rejoinUrl,
+  isDark,
+}: {
+  rejoinUrl: string;
+  isDark: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  const textMuted = isDark ? "text-white/40" : "text-gray-400";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-50";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(rejoinUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <div className={`w-full max-w-xs rounded-2xl px-5 py-4 ${cardBg} space-y-3`}>
+      <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>
+        Your Rejoin Link
+      </p>
+      <p className={`text-xs ${textMuted}`}>
+        Scan or share to jump straight back to your board.
+      </p>
+      {/* Mini QR code */}
+      <div className="flex justify-center">
+        <div className={`p-2 rounded-xl ${isDark ? "bg-white" : "bg-white border border-gray-100"}`}>
+          <QRCodeSVG
+            value={rejoinUrl}
+            size={100}
+            bgColor="#ffffff"
+            fgColor="#1a2e1e"
+            level="M"
+          />
+        </div>
+      </div>
+      {/* Copy button */}
+      <button
+        onClick={handleCopy}
+        className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+          isDark
+            ? "bg-white/08 hover:bg-white/12 text-white/70"
+            : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+        }`}
+      >
+        {copied ? (
+          <><Check className={`w-3.5 h-3.5 ${accent}`} /><span className={accent}>Copied!</span></>
+        ) : (
+          <><Copy className="w-3.5 h-3.5" />Copy link</>
+        )}
+      </button>
+    </div>
+  );
+}
+
 // ─── Lobby Screen ─────────────────────────────────────────────────────────────
 
 interface LobbyProps {
@@ -82,6 +147,7 @@ interface LobbyProps {
   tournamentId: string;
   playerCount: number | null;
   onPlayerCountChange: (count: number) => void;
+  rejoinUrl: string;
 }
 
 function LobbyScreen({
@@ -91,6 +157,7 @@ function LobbyScreen({
   tournamentId,
   playerCount,
   onPlayerCountChange,
+  rejoinUrl,
 }: LobbyProps) {
   const [dots, setDots] = useState(".");
 
@@ -187,6 +254,9 @@ function LobbyScreen({
             </div>
           ))}
         </div>
+
+        {/* Rejoin link */}
+        <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
       </div>
 
       {/* Bottom branding */}
@@ -209,6 +279,7 @@ interface MyBoardProps {
   opponent: Player | undefined;
   isDark: boolean;
   onResultSubmitted: () => void;
+  rejoinUrl: string;
 }
 
 type ResultOption = "1-0" | "0-1" | "½-½";
@@ -223,6 +294,7 @@ function MyBoardScreen({
   opponent,
   isDark,
   onResultSubmitted,
+  rejoinUrl,
 }: MyBoardProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<ResultOption | null>(null);
@@ -459,6 +531,11 @@ function MyBoardScreen({
         <p className={`text-xs text-center ${textMuted}`}>
           The director will confirm your result on their dashboard.
         </p>
+
+        {/* Rejoin link — lets players bookmark or share their personal board URL */}
+        {rejoinUrl && (
+          <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
+        )}
       </div>
     </div>
   );
@@ -486,6 +563,15 @@ export default function PlayerView() {
   // Resolve tournament name from registry
   const tournament = tournamentId ? resolveTournament(tournamentId) : null;
   const tournamentName = tournament?.name ?? "Tournament";
+
+  // Build the personal rejoin URL: /join/:inviteCode?t=<meta>&u=<username>
+  // Players can scan this to skip the registration form entirely.
+  const rejoinUrl = (() => {
+    if (!username || !tournament) return "";
+    const base = `${window.location.origin}/join/${encodeURIComponent(tournament.inviteCode)}`;
+    const params = new URLSearchParams({ u: username });
+    return `${base}?${params.toString()}`;
+  })();
 
   // On mount: check if tournament has already started (server state)
   useEffect(() => {
@@ -646,6 +732,7 @@ export default function PlayerView() {
         isDark={isDark}
         playerCount={playerCount}
         onPlayerCountChange={setPlayerCount}
+        rejoinUrl={rejoinUrl}
       />
     );
   }
@@ -684,6 +771,7 @@ export default function PlayerView() {
         opponent={boardInfo.opponent}
         isDark={isDark}
         onResultSubmitted={handleResultSubmitted}
+        rejoinUrl={rejoinUrl}
       />
     );
   }

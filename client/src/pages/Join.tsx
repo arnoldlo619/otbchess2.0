@@ -308,6 +308,12 @@ export default function JoinPage() {
   // Decode embedded tournament metadata from ?t= query param (set by Director QR)
   const embeddedMeta = decodeEmbeddedMeta(search ?? "");
 
+  // Rejoin deep link: ?u=<username> — if the player is already registered, skip
+  // the form entirely and navigate straight to their board.
+  const urlUsername = (() => {
+    try { return new URLSearchParams(search ?? "").get("u") ?? ""; } catch { return ""; }
+  })();
+
   // If the URL carries embedded metadata, bootstrap the registry on this device
   // so resolveTournament() works even without the director's localStorage.
   useEffect(() => {
@@ -331,6 +337,19 @@ export default function JoinPage() {
       ratingSystem: "chess.com",
       createdAt: new Date().toISOString(),
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-rejoin: if ?u= is present and the tournament is resolvable, skip the form
+  // and go straight to the player lobby. This runs after the bootstrap effect so
+  // the registry is populated before we try to resolve.
+  useEffect(() => {
+    if (!urlUsername || !urlCode) return;
+    const config = resolveTournament(urlCode) ??
+      (embeddedMeta ? resolveTournament(embeddedMeta.inviteCode) : null);
+    if (!config) return;
+    // Navigate immediately — no form needed
+    navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(urlUsername)}`);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

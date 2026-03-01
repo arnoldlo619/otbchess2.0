@@ -818,3 +818,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Find where Join.tsx redirects after registration and fix it to go to /tournament/:id/play?username=xxx
 - [x] Fix the public tournament page to detect if the user is already registered and redirect to PlayerView
 - [x] Ensure the SSE connection is established on the PlayerView lobby (not the public page)
+
+## Rejoin Deep Link
+
+- [x] Join page: read ?u= param on mount; if present and tournament is resolved, skip registration and navigate directly to /tournament/:id/play?username=xxx
+- [x] Join page: if ?u= player is already in the tournament player list, show a "Rejoin" confirmation screen instead of the full form
+- [x] PlayerView My Board screen: show a "Your Rejoin Link" section with a copy-link button and a small personal QR code
+- [x] PlayerView Lobby screen: also show the rejoin link so players can bookmark it while waiting
+- [x] Unit tests for the ?u= auto-rejoin logic
