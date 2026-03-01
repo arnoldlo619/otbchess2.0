@@ -1877,7 +1877,7 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
         {/* Step content */}
         <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
           <div
-            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-8 sm:py-10 pb-6 max-w-3xl mx-auto"
+            className="w-full px-5 sm:px-12 lg:px-16 xl:px-20 py-8 sm:py-10 pb-6"
             key={`${mode}-${step}`}
             style={{ animation: `stepSlideIn${direction > 0 ? "Right" : "Left"} 0.30s cubic-bezier(0.22,1,0.36,1) both` }}
           >

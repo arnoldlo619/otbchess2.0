@@ -727,3 +727,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update useDirectorState: debounced auto-save to server on every state change (1500ms debounce)
 - [x] Hydrate from server on mount — prefer server state if newer than localStorage
 - [x] Skip server save/load for demo tournament (otb-demo-2026)
+
+## Tournament Wizard Layout — Fix Sidebar Gap
+
+- [x] Fix two-column layout: sidebar and form panel must fill full viewport width with no gap
+- [x] Sidebar is fixed-width left column (lg:w-[32%] xl:w-[34%]), form panel takes flex-1
+- [x] Removed max-w-3xl mx-auto constraint from inner content wrapper — form now fills full right panel with px-16 xl:px-20 padding
