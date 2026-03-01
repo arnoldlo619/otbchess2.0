@@ -32,6 +32,7 @@ import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import {
   Crown,
   ChevronLeft,
+  ChevronRight,
   Play,
   Pause,
   Zap,
@@ -1004,6 +1005,131 @@ export default function Director() {
                   </div>
                 )}
               </div>
+
+              {/* Round in Progress summary card — active phase only */}
+              {!isRegistration && (
+                <div className={`w-full rounded-2xl border p-5 ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                }`}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4CAF50] opacity-60" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#3D6B47]" />
+                      </span>
+                      <h3 className={`text-xs font-bold uppercase tracking-widest ${
+                        isDark ? "text-white/40" : "text-gray-400"
+                      }`}>
+                        Round {state.currentRound} of {state.totalRounds} — In Progress
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab("boards")}
+                      className={`text-xs font-semibold flex items-center gap-1 transition-colors ${
+                        isDark ? "text-[#4CAF50] hover:text-[#6fcf73]" : "text-[#3D6B47] hover:text-[#2a4a32]"
+                      }`}
+                    >
+                      View Boards <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Board completion bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className={isDark ? "text-white/50" : "text-gray-500"}>
+                        {completedGames} of {totalGames} boards complete
+                      </span>
+                      <span className={`font-bold ${
+                        completedGames === totalGames && totalGames > 0
+                          ? "text-[#4CAF50]"
+                          : isDark ? "text-white/70" : "text-gray-700"
+                      }`}>
+                        {totalGames > 0 ? Math.round((completedGames / totalGames) * 100) : 0}%
+                      </span>
+                    </div>
+                    <div className={`h-2 rounded-full overflow-hidden ${
+                      isDark ? "bg-white/10" : "bg-gray-100"
+                    }`}>
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: totalGames ? `${(completedGames / totalGames) * 100}%` : "0%",
+                          background: completedGames === totalGames && totalGames > 0
+                            ? "#4CAF50"
+                            : "linear-gradient(90deg, #3D6B47, #4CAF50)",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Timer + top standings row */}
+                  <div className="flex items-start gap-4">
+                    {/* Timer pill */}
+                    <div className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                      roundTimer.status === "running" && roundTimer.remainingSec <= 300
+                        ? isDark ? "border-amber-500/40 bg-amber-500/10 text-amber-400" : "border-amber-400/50 bg-amber-50 text-amber-600"
+                        : roundTimer.status === "expired"
+                        ? isDark ? "border-red-500/40 bg-red-500/10 text-red-400" : "border-red-400/50 bg-red-50 text-red-600"
+                        : isDark ? "border-white/10 bg-white/05 text-white/50" : "border-gray-200 bg-gray-50 text-gray-500"
+                    }`}>
+                      <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span className="text-xs font-mono font-semibold">
+                        {roundTimer.status === "idle"
+                          ? "No timer"
+                          : roundTimer.status === "expired"
+                          ? "Time's up"
+                          : (() => {
+                              const m = Math.floor(roundTimer.remainingSec / 60);
+                              const s = Math.floor(roundTimer.remainingSec % 60);
+                              return `${m}:${s.toString().padStart(2, "0")} left`;
+                            })()}
+                      </span>
+                    </div>
+
+                    {/* Top 3 standings preview */}
+                    <div className="flex-1 space-y-1 min-w-0">
+                      {getStandings(state.players).slice(0, 3).map((p, i) => (
+                        <div key={p.id} className="flex items-center gap-2 min-w-0">
+                          <span className={`text-xs font-bold w-5 flex-shrink-0 ${
+                            i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : "text-amber-600"
+                          }`}>
+                            {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
+                          </span>
+                          <span className={`text-xs truncate flex-1 ${
+                            isDark ? "text-white/80" : "text-gray-700"
+                          }`}>{p.name}</span>
+                          <span className={`text-xs font-bold flex-shrink-0 ${
+                            isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                          }`}>{p.points}</span>
+                        </div>
+                      ))}
+                      {getStandings(state.players).length === 0 && (
+                        <p className={`text-xs ${
+                          isDark ? "text-white/30" : "text-gray-400"
+                        }`}>No results yet</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* All done CTA */}
+                  {canGenerateNext && (
+                    <button
+                      onClick={() => {
+                        const nextRound = state.currentRound + 1;
+                        generateNextRound();
+                        toast.success(`Round ${nextRound} pairings generated!`);
+                        broadcastRoundStart(nextRound);
+                      }}
+                      className="mt-4 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                      style={{ background: "#3D6B47", boxShadow: "0 4px 12px rgba(61,107,71,0.3)" }}
+                    >
+                      <Zap className="w-4 h-4" />
+                      Generate Round {state.currentRound + 1}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Right column: Quick Actions */}
               <div className="w-full lg:w-64 flex-shrink-0 space-y-3">

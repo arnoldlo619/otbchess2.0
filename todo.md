@@ -574,3 +574,14 @@
 - [x] Main panel becomes full-width (max-w-5xl, no flex gap-8 with sidebar)
 - [x] Round Progress strip stays in header (already done)
 - [x] RoundTimerCard moves into Home tab right column
+
+## Round in Progress Summary Card (Home Tab)
+
+- [x] Show compact RoundStatusCard on Home tab only when tournament is active (not registration phase)
+- [x] Card shows: Round N / Total, boards completed (X/Y), completion progress bar
+- [x] Card shows: time remaining from round timer (if running), or "No timer" / "Time's up"
+- [x] Card shows: top 3 standings preview (rank, name, points)
+- [x] "View Boards →" quick-action button switches to Boards tab
+- [x] Card is hidden during registration phase (isRegistration === true)
+- [x] "Generate Round N" CTA appears when all results are in (canGenerateNext)
+- [x] Unit tests for RoundStatusCard helpers — 19 tests passing (528 total)
