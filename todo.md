@@ -622,3 +622,9 @@
 - [x] Remove "Generate Round N" button from the Home tab Round Status card (line ~1316)
 - [x] Keep single "Generate Round N" CTA in the Boards tab status banner (full-width, prominent)
 - [x] Boards tab: make the status banner CTA the canonical action (inline with the "All results in" message)
+
+## Boards Tab — Auto-scroll to Generate CTA
+
+- [x] Add useRef to the Generate Next Round CTA element in the Boards tab
+- [x] Add useEffect that fires when allResultsIn flips true while activeTab === "boards"
+- [x] Smooth-scroll the CTA into view with a small delay (so the last result animation settles first)

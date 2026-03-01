@@ -610,6 +610,24 @@ export default function Director() {
     prevAllResultsIn.current = allResultsIn;
   }, [allResultsIn, isRegistration, state.currentRound, broadcastResultsPosted]);
 
+  // Auto-scroll to the Generate CTA when all results are entered on the Boards tab.
+  // A short delay lets the last result's animation settle before scrolling.
+  const generateCtaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (
+      allResultsIn &&
+      activeTab === "boards" &&
+      !isRegistration &&
+      state.currentRound > 0 &&
+      generateCtaRef.current
+    ) {
+      const timer = setTimeout(() => {
+        generateCtaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [allResultsIn, activeTab, isRegistration, state.currentRound]);
+
   // Derived: filtered + sorted player list
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
   const allCountries = Array.from(new Set(standings.map((p) => p.country)));
@@ -1385,6 +1403,7 @@ export default function Director() {
               {/* ── Single canonical Generate Next Round CTA ─────────────────── */}
               {!isRegistration && allResultsIn && canGenerateNext && (
                 <div
+                  ref={generateCtaRef}
                   className={`rounded-xl border overflow-hidden ${
                     isDark
                       ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
