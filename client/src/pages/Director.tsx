@@ -637,28 +637,42 @@ export default function Director() {
     prevAllResultsIn.current = allResultsIn;
   }, [allResultsIn, isRegistration, state.currentRound, broadcastResultsPosted]);
 
-  // ── Server player sync polling ────────────────────────────────────────────
-  // During the registration phase, poll the server every 5 seconds for new
-  // players registered from other devices (e.g. players who scanned the QR code).
-  // Players already in local state are skipped to avoid duplicates.
+  // ── Server player sync — SSE stream ────────────────────────────────────
+  // During the registration phase, open a persistent SSE connection to the
+  // server. When a player registers from any device, the server pushes a
+  // "player_joined" event and we immediately merge them into local state.
+  // EventSource reconnects automatically on network interruptions.
   useEffect(() => {
     if (!isRegistration || tournamentId === "otb-demo-2026") return;
-    const poll = async () => {
+
+    // 1. Fetch the current snapshot first so we don't miss players who joined
+    //    before this tab opened.
+    const fetchSnapshot = async () => {
       try {
         const res = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`);
         if (!res.ok) return;
         const data = await res.json() as { players: import("@/lib/tournamentData").Player[] };
-        if (!Array.isArray(data.players)) return;
-        data.players.forEach((serverPlayer) => {
-          addPlayer(serverPlayer);
-        });
-      } catch {
-        // Silent fail — polling is a best-effort enhancement
-      }
+        if (Array.isArray(data.players)) data.players.forEach(addPlayer);
+      } catch { /* silent */ }
     };
-    poll(); // immediate first fetch
-    const interval = setInterval(poll, 5000);
-    return () => clearInterval(interval);
+    fetchSnapshot();
+
+    // 2. Open the SSE stream for real-time updates.
+    const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`);
+
+    es.addEventListener("player_joined", (e: MessageEvent) => {
+      try {
+        const player = JSON.parse(e.data) as import("@/lib/tournamentData").Player;
+        addPlayer(player);
+      } catch { /* malformed event — ignore */ }
+    });
+
+    es.onerror = () => {
+      // EventSource will automatically reconnect; no manual action needed.
+      console.warn("[sse] player stream error — will reconnect automatically");
+    };
+
+    return () => es.close();
   }, [isRegistration, tournamentId, addPlayer]);
 
   // Auto-scroll to the Generate CTA when all results are entered on the Boards tab.

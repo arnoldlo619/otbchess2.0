@@ -22,6 +22,22 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 
 type PushSub = webpush.PushSubscription;
 
+// ─── SSE Subscriber Registry ─────────────────────────────────────────────────
+// Maps tournamentId → Set of active SSE response objects.
+// When a player registers, we fan-out a "player_joined" event to all connected
+// director tabs watching that tournament.
+const sseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
+
+function broadcastPlayerJoined(tournamentId: string, player: Record<string, unknown>) {
+  const subs = sseSubscribers.get(tournamentId);
+  if (!subs || subs.size === 0) return;
+  const payload = `event: player_joined\ndata: ${JSON.stringify(player)}\n\n`;
+  for (const res of Array.from(subs)) {
+    try { res.write(payload); } catch { /* client already disconnected */ }
+  }
+  console.log(`[sse] Broadcast player_joined to ${subs.size} subscriber(s) for ${tournamentId}`);
+}
+
 // ─── Chess.com & Lichess proxy ────────────────────────────────────────────────
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
@@ -525,11 +541,51 @@ async function startServer() {
         });
         console.log(`[players] Registered player ${username} in tournament ${id}`);
       }
+      // Broadcast the new/updated player to all connected SSE director clients
+      broadcastPlayerJoined(id, player);
       res.json({ ok: true, username });
     } catch (err) {
       console.error("[players] POST error:", err);
       res.status(500).json({ error: "Database error" });
     }
+  });
+
+  // ── Tournament Players: GET /api/tournament/:id/players/stream ──────────────
+  // SSE stream — director subscribes once; server pushes "player_joined" events
+  // whenever a new player registers via POST /api/tournament/:id/players.
+  // Sends a keepalive comment every 25s to prevent proxy/load-balancer timeouts.
+  app.get("/api/tournament/:id/players/stream", (req, res) => {
+    const { id } = req.params;
+    if (!id) { res.status(400).end(); return; }
+
+    // SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // disable nginx buffering
+    res.flushHeaders();
+
+    // Register this response as a subscriber
+    if (!sseSubscribers.has(id)) sseSubscribers.set(id, new Set());
+    const subs = sseSubscribers.get(id)!;
+    subs.add(res);
+    console.log(`[sse] Director subscribed to tournament ${id} (${subs.size} active)`);
+
+    // Send an initial comment so the browser knows the stream is open
+    res.write(`: connected\n\n`);
+
+    // Keepalive ping every 25 seconds
+    const keepalive = setInterval(() => {
+      try { res.write(`: keepalive\n\n`); } catch { clearInterval(keepalive); }
+    }, 25_000);
+
+    // Clean up on disconnect
+    req.on("close", () => {
+      clearInterval(keepalive);
+      subs.delete(res);
+      if (subs.size === 0) sseSubscribers.delete(id);
+      console.log(`[sse] Director disconnected from tournament ${id} (${subs.size} remaining)`);
+    });
   });
 
   // ── Tournament Players: DELETE /api/tournament/:id/players/:username ──────────

@@ -705,3 +705,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update Join.tsx to POST player to server after successful registration
 - [x] Update Director.tsx to poll GET /api/tournament/:id/players every 5s during registration phase
 - [x] Merge server players into director state.players (deduplicate by username via addPlayer)
+
+## SSE Real-Time Player Sync (Replace Polling)
+
+- [x] Add GET /api/tournament/:id/players/stream SSE endpoint on the server
+- [x] In-memory subscriber map: tournamentId → Set<Response> for fan-out
+- [x] Broadcast helper: broadcastPlayerJoined(tournamentId, player) called from POST endpoint
+- [x] SSE keepalive ping every 25s to prevent proxy timeouts
+- [x] Clean up subscriber on client disconnect (res.on("close"))
+- [x] Update Join.tsx: server POST already triggers broadcast — no client change needed
+- [x] Replace Director.tsx 5s poll useEffect with EventSource SSE listener
+- [x] SSE listener: on "player_joined" event, call addPlayer(player)
+- [x] SSE listener: reconnect automatically on error (EventSource built-in)
+- [x] Removed the setInterval polling useEffect from Director.tsx
