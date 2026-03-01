@@ -779,3 +779,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] PlayerView: reset result-submitted state when new round starts
 - [x] PlayerView: show round number badge updating in real time
 - [x] Unit tests for round_started SSE handler in PlayerView
+
+## Tournament Complete Screen
+
+- [x] Server: add POST /api/tournament/:id/end endpoint — broadcasts tournament_ended SSE event with final standings
+- [x] Server: tournament_ended payload includes { players: Player[] } sorted by points desc
+- [x] Director.tsx: call POST /api/tournament/:id/end when the tournament is ended/completed
+- [x] PlayerView: add tournament_complete screen type to PlayerScreen union
+- [x] PlayerView: listen for tournament_ended SSE event and transition to tournament_complete screen
+- [x] PlayerView: on mount, if tournament status is "completed", go straight to tournament_complete screen
+- [x] TournamentComplete screen: animated trophy/confetti hero
+- [x] TournamentComplete screen: top-3 podium (1st/2nd/3rd) with avatar, name, score
+- [x] TournamentComplete screen: full standings table (rank, name, points, W/D/L)
+- [x] TournamentComplete screen: highlight the current player's row in the standings
+- [x] TournamentComplete screen: "View Full Standings" link to the public tournament page
+- [x] Unit tests for tournament_ended SSE handler and standings sorting

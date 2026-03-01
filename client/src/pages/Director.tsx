@@ -2375,7 +2375,24 @@ export default function Director() {
                     </p>
                   </div>
                   <button
-                    onClick={() => { if (window.confirm("End tournament? This will finalize all results and lock the bracket.")) { completeTournament(); toast.success("Tournament finalized!"); } }}
+                    onClick={async () => {
+                      if (!window.confirm("End tournament? This will finalize all results and lock the bracket.")) return;
+                      completeTournament();
+                      // Broadcast tournament_ended SSE event to all connected player screens
+                      try {
+                        await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            players: standings,
+                            tournamentName: state.tournamentName,
+                          }),
+                        });
+                      } catch {
+                        console.error("[director] Failed to broadcast tournament_ended");
+                      }
+                      toast.success("Tournament finalized!");
+                    }}
                     className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                   >
                     End Tournament

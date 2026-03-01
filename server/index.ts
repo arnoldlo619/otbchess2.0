@@ -755,6 +755,32 @@ export function createApp() {
     res.json({ ok: true });
   });
 
+  // ── Tournament: POST /api/tournament/:id/end ─────────────────────────────
+  // Called by the director when they end/complete the tournament.
+  // Broadcasts a tournament_ended SSE event with the final sorted standings
+  // so all connected player screens transition to the Tournament Complete view.
+  // Body: { players: Player[]; tournamentName?: string }
+  app.post("/api/tournament/:id/end", (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    const { players, tournamentName } = req.body as {
+      players: unknown[];
+      tournamentName?: string;
+    };
+    if (!players || !Array.isArray(players)) {
+      return res.status(400).json({ error: "Missing players array" });
+    }
+    const subs = sseSubscribers.get(id);
+    if (subs && subs.size > 0) {
+      const data = `event: tournament_ended\ndata: ${JSON.stringify({ players, tournamentName: tournamentName ?? "Tournament" })}\n\n`;
+      for (const sub of Array.from(subs)) {
+        try { sub.write(data); } catch { /* disconnected */ }
+      }
+      console.log(`[sse] Broadcast tournament_ended to ${subs.size} subscriber(s) for ${id}`);
+    }
+    res.json({ ok: true });
+  });
+
   return app;
 }
 

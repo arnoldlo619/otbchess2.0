@@ -27,6 +27,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { resolveTournament } from "@/lib/tournamentRegistry";
 import type { Game, Player } from "@/lib/tournamentData";
+import { TournamentCompleteScreen } from "./TournamentCompleteScreen";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,12 @@ interface TournamentStartedPayload {
   players: Player[];
 }
 
-type PlayerScreen = "lobby" | "my_board" | "result_submitted" | "new_round_flash";
+interface TournamentEndedPayload {
+  players: Player[];
+  tournamentName: string;
+}
+
+type PlayerScreen = "lobby" | "my_board" | "result_submitted" | "new_round_flash" | "tournament_complete";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -472,6 +478,8 @@ export default function PlayerView() {
   const [screen, setScreen] = useState<PlayerScreen>("lobby");
   const [startedPayload, setStartedPayload] =
     useState<TournamentStartedPayload | null>(null);
+  const [endedPayload, setEndedPayload] =
+    useState<TournamentEndedPayload | null>(null);
   const [playerCount, setPlayerCount] = useState<number | null>(null);
   const [newRoundFlashLabel, setNewRoundFlashLabel] = useState("");
 
@@ -486,8 +494,18 @@ export default function PlayerView() {
       .then((r) => r.json())
       .then((data) => {
         const s = data?.state;
+        if (!s) return;
+        // Tournament already completed — jump straight to the complete screen
+        if (s.status === "completed" && s.players?.length > 0) {
+          setEndedPayload({
+            players: s.players,
+            tournamentName: s.tournamentName ?? "Tournament",
+          });
+          setScreen("tournament_complete");
+          return;
+        }
+        // Tournament in progress — jump to My Board
         if (
-          s &&
           (s.status === "in_progress" || s.status === "paused") &&
           s.rounds?.length > 0 &&
           s.players?.length > 0
@@ -545,6 +563,16 @@ export default function PlayerView() {
       }
     });
 
+    es.addEventListener("tournament_ended", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data) as TournamentEndedPayload;
+        setEndedPayload(payload);
+        setScreen("tournament_complete");
+      } catch {
+        console.error("[player] Failed to parse tournament_ended");
+      }
+    });
+
     es.onerror = () => {
       // EventSource reconnects automatically
     };
@@ -566,6 +594,18 @@ export default function PlayerView() {
           </Link>
         </div>
       </div>
+    );
+  }
+
+  if (screen === "tournament_complete" && endedPayload) {
+    return (
+      <TournamentCompleteScreen
+        tournamentId={tournamentId}
+        tournamentName={endedPayload.tournamentName || tournamentName}
+        username={username}
+        players={endedPayload.players}
+        isDark={isDark}
+      />
     );
   }
 
