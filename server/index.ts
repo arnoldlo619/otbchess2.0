@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -6,6 +7,7 @@ import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "./db.js";
+import { createAuthRouter } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -107,6 +109,10 @@ export function createApp() {
   const app = express();
 
   app.use(express.json());
+  app.use(cookieParser());
+
+  // ── Auth routes ─────────────────────────────────────────────────────────────
+  app.use("/api/auth", createAuthRouter());
 
   // ── Proxy: GET /api/chess/player/:username ──────────────────────────────────
   app.get("/api/chess/player/:username", async (req, res) => {

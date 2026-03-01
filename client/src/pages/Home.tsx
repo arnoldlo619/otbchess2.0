@@ -25,6 +25,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament } from "@/lib/tournamentRegistry";
+import AuthModal from "../components/AuthModal";
+import { useAuthContext } from "../context/AuthContext";
 import {
   Trophy,
   Users,
@@ -118,12 +120,20 @@ function useCountUp(
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
-function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
+function Nav({
+  onCreateTournament,
+  onSignIn,
+}: {
+  onCreateTournament: () => void;
+  onSignIn: () => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme } = useTheme();
 
   const isDark = theme === "dark";
+  const { user, logout } = useAuthContext();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Detect if the user has an active tournament registration
   const [activeTournamentUrl, setActiveTournamentUrl] = useState<string | null>(null);
@@ -203,16 +213,63 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
           ))}
         </div>
 
-        {/* Right-side: Sign In → Archive → Toggle → [Tournament Dashboard] */}
+        {/* Right-side: Sign In / Avatar → Archive → Toggle → [Tournament Dashboard] */}
         <div className="hidden md:flex items-center gap-4">
-          <button
-            onClick={onCreateTournament}
-            className={`text-sm font-medium transition-colors ${
-              isDark ? "text-white/70 hover:text-white" : "text-[#3D6B47] hover:text-[#2A4A32]"
-            }`}
-          >
-            Sign In
-          </button>
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                  isDark
+                    ? "border-white/20 text-white/80 hover:bg-white/10"
+                    : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                }`}
+              >
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  isDark ? "bg-[#3D6B47] text-white" : "bg-[#3D6B47] text-white"
+                }`}>
+                  {(user.displayName || user.email).charAt(0).toUpperCase()}
+                </span>
+                <span className="max-w-[120px] truncate">{user.displayName || user.email}</span>
+              </button>
+              {userMenuOpen && (
+                <div
+                  className={`absolute right-0 top-full mt-2 w-48 rounded-xl shadow-xl border z-50 overflow-hidden ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12"
+                  }`}
+                  onMouseLeave={() => setUserMenuOpen(false)}
+                >
+                  <Link href="/profile">
+                    <a
+                      className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors ${
+                        isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#3D6B47]/06"
+                      }`}
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Crown className="w-4 h-4" /> My Profile
+                    </a>
+                  </Link>
+                  <button
+                    onClick={() => { logout(); setUserMenuOpen(false); }}
+                    className={`flex items-center gap-2 w-full px-4 py-3 text-sm transition-colors border-t ${
+                      isDark ? "text-red-400 hover:bg-white/08 border-white/08" : "text-red-500 hover:bg-red-50 border-gray-100"
+                    }`}
+                  >
+                    <X className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onSignIn}
+              className={`text-sm font-medium transition-colors ${
+                isDark ? "text-white/70 hover:text-white" : "text-[#3D6B47] hover:text-[#2A4A32]"
+              }`}
+            >
+              Sign In
+            </button>
+          )}
           <Link href="/tournaments">
             <span
               className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
@@ -268,14 +325,37 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
               {link.label}
             </button>
           ))}
-          <button
-            onClick={() => { onCreateTournament(); setMobileOpen(false); }}
-            className={`block w-full text-left py-3 text-sm font-medium border-b ${
-              isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
-            }`}
-          >
-            Sign In
-          </button>
+          {user ? (
+            <>
+              <Link href="/profile">
+                <a
+                  className={`block w-full py-3 text-sm font-medium border-b ${
+                    isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
+                  }`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  My Profile ({user.displayName || user.email})
+                </a>
+              </Link>
+              <button
+                onClick={() => { logout(); setMobileOpen(false); }}
+                className={`block w-full text-left py-3 text-sm font-medium border-b text-red-500 ${
+                  isDark ? "border-white/08" : "border-[#F0F5EE]"
+                }`}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { onSignIn(); setMobileOpen(false); }}
+              className={`block w-full text-left py-3 text-sm font-medium border-b ${
+                isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
+              }`}
+            >
+              Sign In
+            </button>
+          )}
           <Link href="/tournaments">
             <span
               className={`block w-full py-3 text-sm font-medium border-b ${
@@ -1090,6 +1170,9 @@ function Footer() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
@@ -1103,7 +1186,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <Nav onCreateTournament={() => setWizardOpen(true)} />
+      <Nav onCreateTournament={() => setWizardOpen(true)} onSignIn={() => setAuthOpen(true)} />
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
       <HowItWorks />
@@ -1114,6 +1197,7 @@ export default function Home() {
       <CTASection onCreateTournament={() => setWizardOpen(true)} />
       <Footer />
       <TournamentWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark={isDark} />
     </div>
   );
 }

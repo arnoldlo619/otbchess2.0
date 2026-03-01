@@ -797,21 +797,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Auth & User Profiles
 
-- [ ] Audit existing auth scaffolding and Sign In button
-- [ ] DB schema: users table (id, email, passwordHash, displayName, chesscomUsername, lichessUsername, avatarUrl, createdAt)
-- [ ] API: POST /api/auth/register — create account, return JWT
-- [ ] API: POST /api/auth/login — verify credentials, return JWT
-- [ ] API: POST /api/auth/logout — clear session
-- [ ] API: GET /api/auth/me — return current user from JWT
-- [ ] API: PATCH /api/auth/me — update profile fields
-- [ ] AuthContext: React context providing user state, login/logout helpers
-- [ ] Sign In / Sign Up modal: tabbed UI, email + password fields, validation
-- [ ] Sign In / Sign Up modal: chess.com username field (optional, pulls ELO on save)
-- [ ] Header nav: replace Sign In button with user avatar + dropdown when signed in
-- [ ] Header nav dropdown: Profile, My Tournaments, Sign Out
-- [ ] User profile page /profile: display name, avatar, chess.com ELO, tournament history
-- [ ] Wire director tournament creation to attach userId to tournament
-- [ ] Unit tests for auth API helpers
+- [x] Audit existing auth scaffolding and Sign In button
+- [x] DB schema: users table (id, email, passwordHash, displayName, chesscomUsername, lichessUsername, avatarUrl, createdAt)
+- [x] API: POST /api/auth/register — create account, return JWT
+- [x] API: POST /api/auth/login — verify credentials, return JWT
+- [x] API: POST /api/auth/logout — clear session
+- [x] API: GET /api/auth/me — return current user from JWT
+- [x] API: PATCH /api/auth/me — update profile fields
+- [x] AuthContext: React context providing user state, login/logout helpers
+- [x] Sign In / Sign Up modal: tabbed UI, email + password fields, validation
+- [x] Sign In / Sign Up modal: chess.com username field (optional, pulls ELO on save)
+- [x] Header nav: replace Sign In button with user avatar + dropdown when signed in
+- [x] Header nav dropdown: Profile, My Tournaments, Sign Out
+- [x] User profile page /profile: display name, avatar, chess.com ELO, tournament history
+- [x] Wire director tournament creation to attach userId to tournament
+- [x] Unit tests for auth API helpers
 
 ## Bug Fix: Player Stuck on Public Tournament Page
 
@@ -826,3 +826,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] PlayerView My Board screen: show a "Your Rejoin Link" section with a copy-link button and a small personal QR code
 - [x] PlayerView Lobby screen: also show the rejoin link so players can bookmark it while waiting
 - [x] Unit tests for the ?u= auto-rejoin logic
+
+## Auth & User Profiles
+
+- [x] Server: auth.ts — POST /api/auth/register (email, password, displayName, chessUsername)
+- [x] Server: auth.ts — POST /api/auth/login (email, password) → JWT cookie
+- [x] Server: auth.ts — POST /api/auth/logout (clear cookie)
+- [x] Server: auth.ts — GET /api/auth/me (verify JWT, return user)
+- [x] Server: mount auth router in index.ts with cookie-parser
+- [x] DB: users table (id, email, passwordHash, displayName, chessUsername, platform, createdAt)
+- [x] Client: useAuth hook (user state, login, logout, register, loading)
+- [x] Client: AuthContext provider wrapping the app
+- [x] Client: AuthModal component (Sign In / Sign Up tabs, form validation, error display)
+- [x] Client: Header nav — Sign In button opens AuthModal
+- [x] Client: Header nav — when signed in, show avatar + display name + dropdown (Profile, Sign Out)
+- [x] Client: /profile page — avatar, display name, chess username, ELO, tournament history
+- [x] Client: /profile route added to App.tsx
+- [x] Unit tests for auth helpers (password hashing, JWT verify, form validation)

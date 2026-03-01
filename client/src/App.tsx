@@ -14,7 +14,8 @@ import ReportPage from "./pages/Report";
 import DirectorAccessPage from "./pages/DirectorAccess";
 import PlayerView from "./pages/PlayerView";
 import { InstallBanner } from "./components/InstallBanner";
-
+import { AuthProvider } from "./context/AuthContext";
+import ProfilePage from "./pages/Profile";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
       <Route path={"/tournaments"} component={Archive} />
       <Route path={"/tournament/:id/report"} component={ReportPage} />
       <Route path={"/director-access"} component={DirectorAccessPage} />
+      <Route path={"/profile"} component={ProfilePage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -44,16 +46,18 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          <InstallBanner />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider
+          defaultTheme="light"
+          switchable
+        >
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <InstallBanner />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
