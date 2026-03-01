@@ -636,3 +636,8 @@
 - [x] Fix: QR code must encode the real live tournament's invite code / slug, not a demo ID
 - [x] Fix Director.tsx inviteCode fallback — use tournamentId directly instead of "OTB2026" when config is missing
 - [x] Fix TournamentWizard.tsx — replace hardcoded https://otbchess.app with window.location.origin
+
+## Header Logo Size — Minimalist Refinement
+
+- [x] Reduce Home.tsx header logo from h-14 to h-8 for a sleek, minimal look
+- [x] Ensure Join.tsx header logo is consistent (already h-8, keep as-is)

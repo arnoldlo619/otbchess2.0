@@ -181,7 +181,7 @@ function Nav({ onCreateTournament }: { onCreateTournament: () => void }) {
             <img
               src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
               alt="OTB Chess — Home"
-              className={`nav-logo h-14 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
+              className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
             />
           </a>
         </Link>
