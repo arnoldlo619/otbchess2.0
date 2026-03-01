@@ -539,7 +539,27 @@ export default function Director() {
   // the tournament slug so /join/otb-demo-2026 is used (never the "OTB2026" demo
   // placeholder which resolves to the NYC demo tournament on the Join page).
   const inviteCode = tournamentConfig?.inviteCode ?? tournamentId;
-  const joinUrl = `${window.location.origin}/join/${inviteCode}`;
+  // Embed compact tournament metadata as ?t=<base64json> so players on other devices
+  // can bootstrap the tournament registry from the URL itself (no director localStorage needed).
+  const joinUrlBase = `${window.location.origin}/join/${inviteCode}`;
+  const joinUrl = (() => {
+    if (!tournamentConfig) return joinUrlBase;
+    try {
+      const meta = {
+        id: tournamentId,
+        name: tournamentConfig.name,
+        venue: tournamentConfig.venue || undefined,
+        format: tournamentConfig.format,
+        rounds: tournamentConfig.rounds,
+        maxPlayers: tournamentConfig.maxPlayers,
+        timePreset: tournamentConfig.timePreset,
+        inviteCode: tournamentConfig.inviteCode,
+      };
+      return `${joinUrlBase}?t=${btoa(JSON.stringify(meta))}`;
+    } catch {
+      return joinUrlBase;
+    }
+  })();
   // Use live standings from Swiss engine (includes live Buchholz tiebreaks)
   const standings = liveStandings.map((s) => s.player);
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;

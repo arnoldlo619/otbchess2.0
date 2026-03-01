@@ -20,12 +20,12 @@ import { QrScanner } from "@/components/QrScanner";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useLichessProfile } from "@/hooks/useLichessProfile";
-import { useParams, Link, useLocation } from "wouter";
+import { useParams, Link, useLocation, useSearch } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
-import { resolveTournament, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { resolveTournament, registerTournament, makeSlug, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { addPlayerToTournament } from "@/lib/directorState";
 import {
   saveRegistration,
@@ -254,11 +254,69 @@ function ShareSheet({
   );
 }
 
+// --- Compact tournament metadata embedded in QR URL as ?t=<base64json> --------
+interface EmbeddedTournamentMeta {
+  id: string;
+  name: string;
+  venue?: string;
+  format: "swiss" | "roundrobin" | "elimination";
+  rounds: number;
+  maxPlayers: number;
+  timePreset: string;
+  inviteCode: string;
+}
+
+function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
+  try {
+    const params = new URLSearchParams(search);
+    const t = params.get("t");
+    if (!t) return null;
+    const json = atob(t);
+    return JSON.parse(json) as EmbeddedTournamentMeta;
+  } catch {
+    return null;
+  }
+}
+
+export function encodeEmbeddedMeta(meta: EmbeddedTournamentMeta): string {
+  return btoa(JSON.stringify(meta));
+}
+
 // --- Main Page ----------------------------------------------------------------
 export default function JoinPage() {
   const { code: urlCode } = useParams<{ code: string }>();
+  const search = useSearch();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  // Decode embedded tournament metadata from ?t= query param (set by Director QR)
+  const embeddedMeta = decodeEmbeddedMeta(search ?? "");
+
+  // If the URL carries embedded metadata, bootstrap the registry on this device
+  // so resolveTournament() works even without the director's localStorage.
+  useEffect(() => {
+    if (!embeddedMeta) return;
+    const existing = resolveTournament(embeddedMeta.inviteCode);
+    if (existing) return; // already in registry — no-op
+    registerTournament({
+      id: embeddedMeta.id,
+      inviteCode: embeddedMeta.inviteCode,
+      directorCode: "", // not needed on player device
+      name: embeddedMeta.name,
+      venue: embeddedMeta.venue ?? "",
+      date: "",
+      description: "",
+      format: embeddedMeta.format,
+      rounds: embeddedMeta.rounds,
+      maxPlayers: embeddedMeta.maxPlayers,
+      timeBase: 10,
+      timeIncrement: 0,
+      timePreset: embeddedMeta.timePreset,
+      ratingSystem: "chess.com",
+      createdAt: new Date().toISOString(),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [step, setStep] = useState<Step>(urlCode ? "username" : "code");
   const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
@@ -312,31 +370,42 @@ export default function JoinPage() {
     setTimeout(() => contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
   }, [step]);
 
-  // Resolve the real tournament config from the registry (by invite code or slug)
-  // Falls back to DEMO_TOURNAMENT for the demo code
+  // Resolve the real tournament config from the registry (by invite code or slug).
+  // After the useEffect above runs, embeddedMeta will have been registered so
+  // resolveTournament will find it even on a fresh device.
   const resolvedConfig: TournamentConfig | null = tournamentCode
     ? resolveTournament(tournamentCode)
     : null;
   const isDemoCode = tournamentCode.toUpperCase() === "OTB2026";
-  // Display name/venue/format/timeControl for the tournament chip and success card
+
+  // Display name/venue/format/timeControl — prefer resolvedConfig, then embeddedMeta,
+  // and only fall back to DEMO_TOURNAMENT for the explicit demo code.
   const tournamentDisplay = {
-    name: resolvedConfig?.name ?? DEMO_TOURNAMENT.name,
-    venue: resolvedConfig?.venue ?? DEMO_TOURNAMENT.venue,
+    name: resolvedConfig?.name ?? embeddedMeta?.name ?? (isDemoCode ? DEMO_TOURNAMENT.name : ""),
+    venue: resolvedConfig?.venue ?? embeddedMeta?.venue ?? (isDemoCode ? DEMO_TOURNAMENT.venue : ""),
     format: resolvedConfig
       ? (resolvedConfig.format === "swiss" ? "Swiss" : resolvedConfig.format === "roundrobin" ? "Round Robin" : "Elimination")
-      : DEMO_TOURNAMENT.format,
-    timeControl: resolvedConfig?.timePreset ?? DEMO_TOURNAMENT.timeControl,
+      : embeddedMeta
+      ? (embeddedMeta.format === "swiss" ? "Swiss" : embeddedMeta.format === "roundrobin" ? "Round Robin" : "Elimination")
+      : (isDemoCode ? DEMO_TOURNAMENT.format : ""),
+    timeControl: resolvedConfig?.timePreset ?? embeddedMeta?.timePreset ?? (isDemoCode ? DEMO_TOURNAMENT.timeControl : ""),
     playerCount: DEMO_TOURNAMENT.players.length,
   };
   // Keep tournament as DEMO_TOURNAMENT for ShareSheet type compatibility
   const tournament = DEMO_TOURNAMENT;
-  const isValidCode = isDemoCode || (tournamentCode.length >= 4 && (isDemoCode || resolvedConfig !== null || tournamentCode.length >= 6));
 
-  // Derive whether the tournament has hit its player cap (for disabling the confirm button)
+  // A code is valid when it resolves to a known tournament, matches embedded metadata,
+  // or is the explicit demo code. Never allow an unresolvable code to advance.
+  const isValidCode = isDemoCode ||
+    (resolvedConfig !== null) ||
+    (embeddedMeta !== null && tournamentCode.toUpperCase() === embeddedMeta.inviteCode.toUpperCase());
+
+  // Derive whether the tournament has hit its player cap (for disabling the confirm button).
+  // Uses the correct versioned localStorage key: otb-director-state-v2-{id}
   const isTournamentFull = (() => {
     if (!resolvedConfig || isDemoCode) return false;
     try {
-      const raw = localStorage.getItem(`otb-director-${resolvedConfig.id}`);
+      const raw = localStorage.getItem(`otb-director-state-v2-${resolvedConfig.id}`);
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       const playerCount: number = parsed?.state?.players?.length ?? 0;
@@ -404,6 +473,7 @@ export default function JoinPage() {
       if (!raw) return;
       const prof = raw as UnifiedProfile;
       setUnifiedProfile(prof);
+      // Try registry first; fall back to embeddedMeta (bootstrapped from ?t= param)
       const config = resolveTournament(tournamentCode);
       if (config) {
         const player: Player = {
@@ -436,6 +506,45 @@ export default function JoinPage() {
         });
         setConfirming(false);
         navigate(`/tournament/${config.id}`);
+      } else if (embeddedMeta) {
+        // embeddedMeta was registered in the bootstrap useEffect above;
+        // re-resolve now that the registry is populated.
+        const bootstrapped = resolveTournament(embeddedMeta.inviteCode);
+        if (bootstrapped) {
+          const player: Player = {
+            id: `player-${prof.username}-${Date.now()}`,
+            name: playerName.trim() || prof.name || prof.username,
+            username: prof.username,
+            elo: prof.elo ?? prof.rapid ?? prof.blitz ?? prof.bullet ?? 1200,
+            title: prof.title as Player["title"] | undefined,
+            country: prof.country ?? "",
+            points: 0, wins: 0, draws: 0, losses: 0, buchholz: 0,
+            colorHistory: [],
+            platform: prof.platform,
+            avatarUrl: prof.platform === "chesscom" ? (prof as ChessComProfile).avatar : undefined,
+            flairEmoji: prof.platform === "lichess" ? (prof as LichessProfile).flairEmoji : undefined,
+            joinedAt: Date.now(),
+          };
+          const result = addPlayerToTournament(bootstrapped.id, player);
+          if (!result.success) {
+            setConfirming(false);
+            showCapToast(result.reason === "full" ? "full" : "duplicate");
+            return;
+          }
+          saveRegistration({
+            tournamentId: tournamentCode,
+            username: prof.username,
+            name: player.name,
+            rating: player.elo,
+            tournamentName: bootstrapped.name,
+            registeredAt: new Date().toISOString(),
+          });
+          setConfirming(false);
+          navigate(`/tournament/${bootstrapped.id}`);
+        } else {
+          setConfirming(false);
+          setError("Tournament not found. Ask the director to share the QR code again.");
+        }
       } else {
         setConfirming(false);
         setError("Tournament not found. Check the code and try again.");

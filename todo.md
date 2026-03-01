@@ -641,3 +641,22 @@
 
 - [x] Reduce Home.tsx header logo from h-14 to h-8 for a sleek, minimal look
 - [x] Ensure Join.tsx header logo is consistent (already h-8, keep as-is)
+
+## Critical Bug Fix — QR Code Join Flow (Root Cause Analysis)
+
+### Root Cause: localStorage is device-local — tournament registry not shared across devices
+
+The tournament registry (invite codes, tournament configs) is stored in the **director's device localStorage only**.
+When a player scans the QR code on their phone, they land on a **different device** with an empty registry.
+`resolveTournament(inviteCode)` returns `null` because the player's phone has never seen this tournament.
+The Join page then shows "Tournament not found" or silently falls back to demo data.
+
+### Fixes applied:
+- [x] Embed tournament metadata as ?t=<base64json> in QR URL — Join page bootstraps registry from URL on any device
+- [x] TournamentWizard: register tournament when share step is shown (not just on "Go to Tournament")
+- [x] Director.tsx: joinUrl now includes ?t= metadata param
+- [x] TournamentWizard StepShare: inviteUrl now includes ?t= metadata param
+- [x] Join.tsx: decodeEmbeddedMeta() + bootstrap useEffect registers tournament on player device
+- [x] Fix: isValidCode now requires resolvedConfig !== null OR embeddedMeta match (no more length-only check)
+- [x] Fix: isTournamentFull now reads from correct key otb-director-state-v2-{id}
+- [x] Fix: tournamentDisplay no longer falls back to DEMO_TOURNAMENT — uses embeddedMeta as intermediate fallback

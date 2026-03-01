@@ -1464,7 +1464,21 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
   const [dirCopied, setDirCopied] = useState(false);
   const [showDirCode, setShowDirCode] = useState(false);
-  const inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
+  // Build the invite URL with embedded tournament metadata as ?t=<base64json>.
+  // This allows players on other devices to resolve the tournament without needing
+  // the director's localStorage registry.
+  const embeddedMeta = {
+    id: makeSlug(data.name, data.date),
+    name: data.name,
+    venue: data.venue || undefined,
+    format: data.format,
+    rounds: data.rounds,
+    maxPlayers: data.maxPlayers,
+    timePreset: data.timePreset,
+    inviteCode: data.inviteCode,
+  };
+  const tParam = btoa(JSON.stringify(embeddedMeta));
+  const inviteUrl = `${window.location.origin}/join/${data.inviteCode}?t=${tParam}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(inviteUrl);
@@ -1652,7 +1666,10 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       ? data.name.trim().length > 0
       : true;
 
-  const commitTournament = useCallback(() => {
+  // registerTournamentNow: persists the tournament config to localStorage immediately.
+  // Called when the share step is shown so the QR code is valid before the director
+  // clicks "Go to Tournament".
+  const registerTournamentNow = useCallback(() => {
     const slug = makeSlug(data.name, data.date);
     registerTournament({
       id: slug,
@@ -1672,9 +1689,15 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       createdAt: new Date().toISOString(),
     });
     grantDirectorSession(slug);
+  }, [data]);
+
+  const commitTournament = useCallback(() => {
+    const slug = makeSlug(data.name, data.date);
+    // registerTournamentNow may have already been called; registerTournament is idempotent.
+    registerTournamentNow();
     onClose();
     navigate(`/tournament/${slug}/manage`);
-  }, [data, onClose, navigate]);
+  }, [data, onClose, navigate, registerTournamentNow]);
 
   const handleNext = useCallback(() => {
     if (mode === "select") return;
@@ -1683,17 +1706,19 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       setDirection(1);
       const next = step + 1;
       setStep(next);
-      // Fire confetti when reaching the share step
-      if (
+      // When reaching the share step, register the tournament immediately so the
+      // QR code is valid even before the director clicks "Go to Tournament".
+      const reachingShareStep =
         (mode === "quickstart" && next === 1) ||
-        (mode === "schedule" && next === SCHEDULE_STEPS.length - 1)
-      ) {
+        (mode === "schedule" && next === SCHEDULE_STEPS.length - 1);
+      if (reachingShareStep) {
+        registerTournamentNow();
         setTimeout(() => fireConfetti(130), 300);
       }
     } else {
       commitTournament();
     }
-  }, [mode, step, totalSteps, fireConfetti, commitTournament]);
+  }, [mode, step, totalSteps, fireConfetti, commitTournament, registerTournamentNow]);
 
   const handleBack = useCallback(() => {
     if (mode === "select") {
