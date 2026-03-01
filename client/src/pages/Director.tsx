@@ -23,6 +23,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { CapacityBadge } from "@/components/CapacityBadge";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
@@ -532,6 +533,23 @@ export default function Director() {
       toast.error(`⏰ Round ${state.currentRound} time is up!`);
     },
   });
+
+  const { user } = useAuthContext();
+
+  // ── Sync tournament status to server (for My Tournaments status pills) ──
+  const syncStatusToServer = useCallback((newStatus: string) => {
+    if (!user?.id || tournamentId === "otb-demo-2026") return;
+    fetch("/api/user/tournaments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        tournamentId,
+        name: state.tournamentName,
+        status: newStatus,
+      }),
+    }).catch(() => { /* non-critical */ });
+  }, [user?.id, tournamentId, state.tournamentName]);
 
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
@@ -1545,7 +1563,7 @@ export default function Director() {
 
                   {/* Start button */}
                   <button
-                    onClick={() => { if (canStart) { startTournament(); toast.success("Round 1 pairings generated!"); broadcastRoundStart(1); } }}
+                    onClick={() => { if (canStart) { startTournament(); syncStatusToServer("in_progress"); toast.success("Round 1 pairings generated!"); broadcastRoundStart(1); } }}
                     disabled={!canStart}
                     className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
                       canStart
@@ -2378,6 +2396,7 @@ export default function Director() {
                     onClick={async () => {
                       if (!window.confirm("End tournament? This will finalize all results and lock the bracket.")) return;
                       completeTournament();
+                      syncStatusToServer("completed");
                       // Broadcast tournament_ended SSE event to all connected player screens
                       try {
                         await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
@@ -2489,6 +2508,7 @@ export default function Director() {
                 onClick={() => {
                   startTournament();
                   setShowStartConfirm(false);
+                  syncStatusToServer("in_progress");
                   toast.success("Round 1 pairings generated! Tournament is live.");
                   // Broadcast tournament_started SSE event to all connected player lobby screens.
                   // Read the updated state from localStorage after startTournament() runs.

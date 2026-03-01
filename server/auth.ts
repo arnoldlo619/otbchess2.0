@@ -311,7 +311,7 @@ export function createAuthRouter(): Router {
     const payload = verifyToken(raw);
     if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
 
-    const { tournamentId, name, venue, date, format, rounds, inviteCode } = req.body as {
+    const { tournamentId, name, venue, date, format, rounds, inviteCode, status } = req.body as {
       tournamentId: string;
       name: string;
       venue?: string;
@@ -319,6 +319,7 @@ export function createAuthRouter(): Router {
       format?: string;
       rounds?: number;
       inviteCode?: string;
+      status?: string;
     };
 
     if (!tournamentId || !name) {
@@ -345,7 +346,14 @@ export function createAuthRouter(): Router {
           format: format ?? null,
           rounds: rounds ?? null,
           inviteCode: inviteCode ?? null,
+          status: status ?? "registration",
         });
+      } else if (status) {
+        // Update status if the tournament already exists
+        await db
+          .update(userTournaments)
+          .set({ status })
+          .where(eq(userTournaments.tournamentId, tournamentId));
       }
 
       return res.json({ ok: true });

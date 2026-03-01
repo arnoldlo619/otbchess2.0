@@ -159,6 +159,8 @@ export const userTournaments = mysqlTable(
     format: varchar("format", { length: 50 }),
     rounds: int("rounds"),
     inviteCode: varchar("invite_code", { length: 20 }),
+    // Tournament lifecycle status: registration | in_progress | completed | paused
+    status: varchar("status", { length: 20 }).default("registration"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({

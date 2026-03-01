@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
+import { loadTournamentState } from "../lib/directorState";
 
 interface EditState {
   displayName: string;
@@ -53,6 +54,30 @@ function StatBadge({
         {label}
       </span>
     </div>
+  );
+}
+
+/**
+ * Maps a DirectorState status string to a human-readable label and colour.
+ * Values: "registration" → Lobby (amber), "in_progress" → Active (green),
+ *         "paused" → Paused (orange), "completed" → Complete (muted gray).
+ */
+function TournamentStatusPill({ status }: { status?: string | null }) {
+  const s = status ?? "registration";
+  const config: Record<string, { label: string; bg: string; text: string }> = {
+    registration: { label: "Lobby", bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400" },
+    in_progress:  { label: "Active", bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400" },
+    paused:       { label: "Paused", bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400" },
+    completed:    { label: "Complete", bg: "bg-gray-100 dark:bg-white/10", text: "text-gray-500 dark:text-white/40" },
+  };
+  const { label, bg, text } = config[s] ?? config["registration"];
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide flex-shrink-0 ${bg} ${text}`}>
+      {s === "in_progress" && (
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
+      )}
+      {label}
+    </span>
   );
 }
 
@@ -99,7 +124,7 @@ export default function ProfilePage() {
   const [apiTournaments, setApiTournaments] = useState<Array<{
     id: string; tournamentId: string; name: string; venue?: string | null;
     date?: string | null; format?: string | null; rounds?: number | null;
-    inviteCode?: string | null; createdAt: string;
+    inviteCode?: string | null; status?: string | null; createdAt: string;
   }> | null>(null);
   const [tournamentsLoading, setTournamentsLoading] = useState(false);
 
@@ -427,8 +452,11 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-2">
               {[
-                ...(apiTournaments ?? []).map((t) => ({ id: t.tournamentId, name: t.name, format: t.format ?? "Swiss" })),
-                ...localOnly.map((t: TournamentConfig) => ({ id: t.id, name: t.name, format: t.format ?? "Swiss" })),
+                ...(apiTournaments ?? []).map((t) => ({ id: t.tournamentId, name: t.name, format: t.format ?? "Swiss", status: t.status ?? "registration" })),
+                ...localOnly.map((t: TournamentConfig) => {
+                  const localState = loadTournamentState(t.id);
+                  return { id: t.id, name: t.name, format: t.format ?? "Swiss", status: localState?.status ?? "registration" };
+                }),
               ]
                 .slice(0, 5)
                 .map((t) => (
@@ -439,13 +467,14 @@ export default function ProfilePage() {
                       isDark ? "bg-white/5 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
                     }`}
                   >
-                    <div>
-                      <p className={`text-sm font-medium ${text}`}>{t.name}</p>
-                      <p className={`text-xs ${muted}`}>
-                        {t.format ?? "Swiss"}
-                      </p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="min-w-0">
+                        <p className={`text-sm font-medium ${text} truncate`}>{t.name}</p>
+                        <p className={`text-xs ${muted}`}>{t.format ?? "Swiss"}</p>
+                      </div>
+                      <TournamentStatusPill status={t.status} />
                     </div>
-                    <ExternalLink className={`w-3.5 h-3.5 ${muted}`} />
+                    <ExternalLink className={`w-3.5 h-3.5 flex-shrink-0 ${muted} ml-2`} />
                   </a>
                 ))}
               {tournamentCount > 5 && (

@@ -879,3 +879,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Profile page: "Manage" button links to /director/:id
 - [x] Profile page: empty state when user has no tournaments yet
 - [x] Unit tests for tournament ownership helpers
+
+## My Tournaments Status Pills
+
+- [x] Add `status` field to user_tournaments DB table (lobby | active | complete)
+- [x] Persist tournament status when saving to user_tournaments on creation (defaults to "lobby")
+- [x] Server: GET /api/user/tournaments returns status field
+- [x] Profile page: render a status pill on each tournament card (Lobby / Active / Complete)
+- [x] Status pill colours: Lobby = amber, Active = green, Complete = gray/muted
+- [x] Unit tests for status pill label/colour helpers
