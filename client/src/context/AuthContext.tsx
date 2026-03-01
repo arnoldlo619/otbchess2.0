@@ -9,7 +9,7 @@ import { useAuth, AuthUser, UpdateProfileFields } from "../hooks/useAuth";
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<AuthUser>;
+  login: (email: string, password: string, remember?: boolean) => Promise<AuthUser>;
   register: (
     email: string,
     password: string,

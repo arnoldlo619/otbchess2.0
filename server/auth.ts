@@ -23,8 +23,10 @@ import { getDb } from "./db.js";
 import { users } from "../shared/schema.js";
 
 const BCRYPT_ROUNDS = 12;
-const JWT_EXPIRY = "30d";
-const COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const JWT_EXPIRY_DEFAULT = "7d";
+const JWT_EXPIRY_REMEMBER = "30d";
+const COOKIE_MAX_AGE_DEFAULT_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const COOKIE_MAX_AGE_REMEMBER_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -32,8 +34,12 @@ function getJwtSecret(): string {
   return secret;
 }
 
-function signToken(userId: string): string {
-  return jwt.sign({ sub: userId }, getJwtSecret(), { expiresIn: JWT_EXPIRY });
+function signToken(userId: string, remember = false): string {
+  return jwt.sign(
+    { sub: userId },
+    getJwtSecret(),
+    { expiresIn: remember ? JWT_EXPIRY_REMEMBER : JWT_EXPIRY_DEFAULT }
+  );
 }
 
 function verifyToken(token: string): { sub: string } | null {
@@ -125,7 +131,7 @@ export function createAuthRouter(): Router {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: COOKIE_MAX_AGE_MS,
+        maxAge: COOKIE_MAX_AGE_DEFAULT_MS,
       });
 
       return res.status(201).json({ user: safeUser(user), token });
@@ -137,7 +143,7 @@ export function createAuthRouter(): Router {
 
   // ── POST /api/auth/login ─────────────────────────────────────────────────
   router.post("/login", async (req, res) => {
-    const { email, password } = req.body as { email: string; password: string };
+    const { email, password, remember } = req.body as { email: string; password: string; remember?: boolean };
 
     if (!email || !password) {
       return res.status(400).json({ error: "email and password are required" });
@@ -161,12 +167,13 @@ export function createAuthRouter(): Router {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
-      const token = signToken(user.id);
+      const rememberMe = Boolean(remember);
+      const token = signToken(user.id, rememberMe);
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: COOKIE_MAX_AGE_MS,
+        maxAge: rememberMe ? COOKIE_MAX_AGE_REMEMBER_MS : COOKIE_MAX_AGE_DEFAULT_MS,
       });
 
       return res.json({ user: safeUser(user), token });

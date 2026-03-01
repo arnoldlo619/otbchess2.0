@@ -62,10 +62,10 @@ export function useAuth() {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, remember = false) => {
     const { user } = await apiFetch<{ user: AuthUser }>("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, remember }),
     });
     setUser(user);
     return user;

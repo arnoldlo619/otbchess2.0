@@ -843,3 +843,26 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Client: /profile page — avatar, display name, chess username, ELO, tournament history
 - [x] Client: /profile route added to App.tsx
 - [x] Unit tests for auth helpers (password hashing, JWT verify, form validation)
+
+## Google OAuth (Continue with Google)
+
+- [ ] Audit OAUTH_SERVER_URL and Manus OAuth portal flow
+- [ ] Server: GET /api/auth/google — redirect to Google OAuth via Manus OAuth portal
+- [ ] Server: GET /api/auth/google/callback — exchange code for user info, upsert user, set JWT cookie
+- [ ] AuthModal: add "Continue with Google" button above the email/password form
+- [ ] AuthModal: show a divider ("or") between Google button and email form
+- [ ] Client: handle OAuth redirect back to app and update auth state
+- [ ] Unit tests for OAuth callback user upsert logic
+
+## AuthModal UX Polish
+
+- [x] Auto-focus email field when modal opens
+- [x] Inline field-level error messages (email, password, display name)
+- [x] Password strength indicator (weak / fair / strong bar)
+- [x] Show/hide password toggle button
+- [x] Remember Me checkbox (extends JWT expiry to 30 days)
+- [x] Improved loading state (spinner inside submit button)
+- [x] Success state animation after sign-in/sign-up
+- [x] Tab switch clears errors and resets form
+- [x] Enter key submits form from any field
+- [x] Unit tests for password strength scorer and field validators
