@@ -660,3 +660,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: isValidCode now requires resolvedConfig !== null OR embeddedMeta match (no more length-only check)
 - [x] Fix: isTournamentFull now reads from correct key otb-director-state-v2-{id}
 - [x] Fix: tournamentDisplay no longer falls back to DEMO_TOURNAMENT — uses embeddedMeta as intermediate fallback
+
+## Director Header — Invite Code Chip
+
+- [x] Display invite code as a copyable chip in the Director Dashboard header
+- [x] One-click copy with toast confirmation
+- [x] Monospace font, clearly readable at a glance for read-aloud use

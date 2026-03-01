@@ -62,6 +62,7 @@ import {
   QrCode,
   FileText,
   Printer,
+  Hash,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -759,6 +760,23 @@ export default function Director() {
 
           {/* Right: Status + controls */}
           <div className="flex items-center gap-1.5">
+            {/* Invite code chip — click to copy, readable aloud to players without QR */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(inviteCode);
+                toast.success("Invite code copied!");
+              }}
+              title={`Invite code: ${inviteCode} — click to copy`}
+              className={`group flex items-center gap-1 px-2 py-1 rounded-lg border transition-all active:scale-95 ${
+                isDark
+                  ? "border-white/12 bg-white/06 hover:bg-white/10 text-white/70 hover:text-white"
+                  : "border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <Hash className="w-3 h-3 flex-shrink-0" />
+              <span className="font-mono text-xs font-semibold tracking-wider">{inviteCode}</span>
+              <Copy className={`w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity`} />
+            </button>
             {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
               <CapacityBadge
                 current={state.players.length}
