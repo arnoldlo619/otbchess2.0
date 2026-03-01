@@ -20,7 +20,7 @@ import { QrScanner } from "@/components/QrScanner";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useLichessProfile } from "@/hooks/useLichessProfile";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
@@ -262,6 +262,7 @@ export default function JoinPage() {
 
   const [step, setStep] = useState<Step>(urlCode ? "username" : "code");
   const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
+  const [playerName, setPlayerName] = useState("");
   const [username, setUsername] = useState("");
   const [platform, setPlatform] = useState<Platform>("chesscom");
 
@@ -284,6 +285,10 @@ export default function JoinPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [showScanner, setShowScanner] = useState(false);
+  const [, navigate] = useLocation();
+  // QR mode: code came from URL — show single-screen streamlined join form
+  const isQrMode = Boolean(urlCode);
+  const nameRef = useRef<HTMLInputElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -381,6 +386,65 @@ export default function JoinPage() {
     setCapToast({ type });
     setTimeout(() => setCapToast(null), 5000);
   }
+
+  // QR mode: single-button join — lookup ELO then register immediately
+  async function handleQrJoin() {
+    if (!username.trim()) { setError("Enter your chess.com username."); return; }
+    setConfirming(true);
+    setError("");
+    await active.lookup(username.trim());
+    // The useEffect below will fire once lookupStatus changes to success/error
+  }
+
+  // When QR mode lookup succeeds, auto-register and navigate to tournament
+  useEffect(() => {
+    if (!isQrMode || !confirming) return;
+    if (lookupStatus === "success") {
+      const raw = active.profile;
+      if (!raw) return;
+      const prof = raw as UnifiedProfile;
+      setUnifiedProfile(prof);
+      const config = resolveTournament(tournamentCode);
+      if (config) {
+        const player: Player = {
+          id: `player-${prof.username}-${Date.now()}`,
+          name: playerName.trim() || prof.name || prof.username,
+          username: prof.username,
+          elo: prof.elo ?? prof.rapid ?? prof.blitz ?? prof.bullet ?? 1200,
+          title: prof.title as Player["title"] | undefined,
+          country: prof.country ?? "",
+          points: 0, wins: 0, draws: 0, losses: 0, buchholz: 0,
+          colorHistory: [],
+          platform: prof.platform,
+          avatarUrl: prof.platform === "chesscom" ? (prof as ChessComProfile).avatar : undefined,
+          flairEmoji: prof.platform === "lichess" ? (prof as LichessProfile).flairEmoji : undefined,
+          joinedAt: Date.now(),
+        };
+        const result = addPlayerToTournament(config.id, player);
+        if (!result.success) {
+          setConfirming(false);
+          showCapToast(result.reason === "full" ? "full" : "duplicate");
+          return;
+        }
+        saveRegistration({
+          tournamentId: tournamentCode,
+          username: prof.username,
+          name: player.name,
+          rating: player.elo,
+          tournamentName: config.name,
+          registeredAt: new Date().toISOString(),
+        });
+        setConfirming(false);
+        navigate(`/tournament/${config.id}`);
+      } else {
+        setConfirming(false);
+        setError("Tournament not found. Check the code and try again.");
+      }
+    } else if (lookupStatus === "not_found" || lookupStatus === "error") {
+      setConfirming(false);
+      setError(lookupError || "Username not found on chess.com.");
+    }
+  }, [lookupStatus]);
 
   async function handleConfirm() {
     setConfirming(true);
@@ -672,8 +736,104 @@ export default function JoinPage() {
               </div>
             </div>
           )}
-          {/* == STEP 2 - Platform + username ========================================================= */}
-          {step === "username" && (
+          {/* == QR MODE — streamlined single-screen join ==================== */}
+          {isQrMode && step === "username" && (
+            <div key={`qr-join-${stepKey}`} className="animate-spring-in space-y-5">
+              {/* Hero */}
+              <div className="text-center pt-6 pb-2">
+                <div className="w-20 h-20 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-[#3D6B47]/30">
+                  <Crown className="w-10 h-10 text-white" strokeWidth={1.5} />
+                </div>
+                <h1 className={`text-3xl font-bold tracking-tight ${textMain}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                  {tournamentDisplay.name || "Join Tournament"}
+                </h1>
+                {tournamentDisplay.venue && (
+                  <p className={`text-sm mt-1.5 flex items-center justify-center gap-1.5 ${textMuted}`}>
+                    <MapPin className="w-3.5 h-3.5" />{tournamentDisplay.venue}
+                  </p>
+                )}
+              </div>
+
+              {/* Already registered banner */}
+              {existingReg && (
+                <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
+                  isDark ? "bg-[#3D6B47]/15 border-[#4CAF50]/25" : "bg-[#3D6B47]/06 border-[#3D6B47]/18"
+                }`}>
+                  <CheckCircle2 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                    isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                  }`} strokeWidth={1.5} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-bold ${
+                      isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                    }`}>Already registered</p>
+                    <p className={`text-xs mt-0.5 ${isDark ? "text-white/55" : "text-gray-500"}`}>
+                      <span className="font-semibold">{existingReg.name}</span> ({existingReg.rating} ELO)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { clearRegistration(existingReg.tournamentId, existingReg.username); setExistingReg(null); }}
+                      className={`mt-1.5 text-xs font-medium underline underline-offset-2 ${
+                        isDark ? "text-white/40 hover:text-white/60" : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >Not me — register again</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Form card */}
+              <div className={`mobile-card border ${card} p-6 space-y-5`}>
+                {/* Name field */}
+                <div>
+                  <label className={`mobile-section-label block mb-2 ${labelCls}`}>Your name</label>
+                  <div className="relative">
+                    <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
+                    <input
+                      ref={nameRef}
+                      type="text"
+                      value={playerName}
+                      onChange={(e) => { setPlayerName(e.target.value); setError(""); }}
+                      placeholder="e.g. Magnus Carlsen"
+                      className={`${inputBase} !pl-10 text-base`}
+                      autoComplete="name"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                {/* Chess.com username field */}
+                <div>
+                  <label className={`mobile-section-label block mb-2 ${labelCls}`}>Chess.com username</label>
+                  <div className="relative">
+                    <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none ${textMuted}`}>&#9812;</span>
+                    <input
+                      ref={usernameRef}
+                      type="text"
+                      value={username}
+                      onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                      placeholder="e.g. hikaru"
+                      className={`${inputBase} !pl-10 text-base`}
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="text"
+                    />
+                  </div>
+                  <p className={`text-xs mt-1.5 ${textMuted}`}>We'll pull your ELO for optimal pairings</p>
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* == STEP 2 - Platform + username (manual flow only) ================ */}
+          {!isQrMode && step === "username" && (
             <div key={`step2-${stepKey}`} className="animate-spring-in space-y-4">
               <div className="pt-2">
                 <h2 className={`text-xl font-bold tracking-tight ${textMain}`}
@@ -1029,7 +1189,20 @@ export default function JoinPage() {
           </button>
         )}
 
-        {step === "username" && (
+        {step === "username" && isQrMode && (
+          <button
+            onClick={handleQrJoin}
+            disabled={!username.trim() || confirming}
+            className="mobile-cta disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {confirming ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Joining…</>
+            ) : (
+              <><CheckCircle2 className="w-4 h-4" /> Join Tournament</>
+            )}
+          </button>
+        )}
+        {step === "username" && !isQrMode && (
           <button
             onClick={handleUsernameSubmit as unknown as React.MouseEventHandler}
             disabled={!username.trim() || loading}
@@ -1073,7 +1246,7 @@ export default function JoinPage() {
           <div className="space-y-2.5">
             <div className="grid grid-cols-2 gap-2.5">
               <Link
-                href="/tournament/otb-demo-2026"
+                href={`/tournament/${resolveTournament(tournamentCode)?.id ?? tournamentCode}`}
                 className="mobile-cta !rounded-2xl text-sm"
               >
                 <Trophy className="w-4 h-4" /> Standings

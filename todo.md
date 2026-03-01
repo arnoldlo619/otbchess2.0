@@ -585,3 +585,13 @@
 - [x] Card is hidden during registration phase (isRegistration === true)
 - [x] "Generate Round N" CTA appears when all results are in (canGenerateNext)
 - [x] Unit tests for RoundStatusCard helpers — 19 tests passing (528 total)
+
+## QR Code Fix & Join Page Streamline
+
+- [x] Audit QR URL generation in Director.tsx — QR encodes window.location.origin/join/{inviteCode} (correct)
+- [x] Join page route /join/:code pre-fills tournament code from URL param and skips code step
+- [x] QR mode: single-screen form with Name + Chess.com username + "Join Tournament" button
+- [x] Auto-fetch ELO from chess.com API on join submit (existing useChessComProfile hook)
+- [x] On successful QR join, navigate directly to /tournament/{config.id} participant view
+- [x] Success screen Standings button now resolves to actual tournament URL (not hardcoded demo)
+- [x] Manual flow (/join without code) still uses full multi-step flow unchanged
