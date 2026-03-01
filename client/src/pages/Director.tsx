@@ -535,8 +535,10 @@ export default function Director() {
   const [showQR, setShowQR] = useState(false);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
-  const inviteCode = tournamentConfig?.inviteCode ?? "OTB2026";
-  // Use invite code in join URL so it works with the wizard-generated QR links
+  // For real tournaments use the stored invite code; for the demo fall back to
+  // the tournament slug so /join/otb-demo-2026 is used (never the "OTB2026" demo
+  // placeholder which resolves to the NYC demo tournament on the Join page).
+  const inviteCode = tournamentConfig?.inviteCode ?? tournamentId;
   const joinUrl = `${window.location.origin}/join/${inviteCode}`;
   // Use live standings from Swiss engine (includes live Buchholz tiebreaks)
   const standings = liveStandings.map((s) => s.player);

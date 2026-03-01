@@ -1464,7 +1464,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
   const [dirCopied, setDirCopied] = useState(false);
   const [showDirCode, setShowDirCode] = useState(false);
-  const inviteUrl = `https://otbchess.app/join/${data.inviteCode}`;
+  const inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(inviteUrl);

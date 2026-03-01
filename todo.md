@@ -628,3 +628,11 @@
 - [x] Add useRef to the Generate Next Round CTA element in the Boards tab
 - [x] Add useEffect that fires when allResultsIn flips true while activeTab === "boards"
 - [x] Smooth-scroll the CTA into view with a small delay (so the last result animation settles first)
+
+## Bug Fix — QR Code Points to Wrong Tournament
+
+- [x] Audit joinUrl construction in Director.tsx and QR modal
+- [x] Audit resolveTournament / invite code lookup to ensure real tournamentId is used
+- [x] Fix: QR code must encode the real live tournament's invite code / slug, not a demo ID
+- [x] Fix Director.tsx inviteCode fallback — use tournamentId directly instead of "OTB2026" when config is missing
+- [x] Fix TournamentWizard.tsx — replace hardcoded https://otbchess.app with window.location.origin
