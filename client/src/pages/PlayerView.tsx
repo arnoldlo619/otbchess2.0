@@ -21,7 +21,6 @@ import {
   Clock,
   CheckCircle2,
   Users,
-  Loader2,
   RotateCcw,
   Crown,
   Circle,
@@ -53,7 +52,6 @@ interface TournamentEndedPayload {
   players: Player[];
   tournamentName: string;
 }
-type ResultOption = "1-0" | "½-½" | "0-1";
 type PlayerScreen =
   | "lobby"
   | "my_board"
@@ -336,6 +334,15 @@ function WaitingRoundScreen({
           </p>
         </div>
       </div>
+      <div className={`mx-4 mt-3 rounded-2xl px-5 py-4 flex items-start gap-3 ${isDark ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"}`}>
+        <span className="text-xl flex-shrink-0 mt-0.5">🏁</span>
+        <div>
+          <p className={`text-sm font-bold mb-0.5 ${isDark ? "text-amber-300" : "text-amber-800"}`}>Report your result</p>
+          <p className={`text-xs ${isDark ? "text-amber-300/70" : "text-amber-700"}`}>
+            The winner should report the score to the director at the registration table.
+          </p>
+        </div>
+      </div>
       {rank > 0 && (
         <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-5 py-4`}>
           <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-2`}>Your Standing</p>
@@ -364,16 +371,13 @@ function WaitingRoundScreen({
 // ─── My Board Screen ──────────────────────────────────────────────────────────
 function MyBoardScreen({
   tournamentId, tournamentName, username, round, totalRounds, game, myColor,
-  opponent, players, isDark, onResultSubmitted, rejoinUrl, connected,
+  opponent, players, isDark, rejoinUrl, connected,
 }: {
   tournamentId: string; tournamentName: string; username: string;
   round: number; totalRounds: number; game: Game; myColor: "white" | "black";
   opponent: Player | undefined; players: Player[]; isDark: boolean;
-  onResultSubmitted: () => void; rejoinUrl: string; connected: boolean;
+  rejoinUrl: string; connected: boolean;
 }) {
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<ResultOption | null>(null);
-  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"board" | "standings">("board");
 
   const textMain = isDark ? "text-white" : "text-gray-900";
@@ -385,35 +389,6 @@ function MyBoardScreen({
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const colorLabel = myColor === "white" ? "White ♔" : "Black ♚";
   const rank = myRank(username, players);
-
-  const submitResult = useCallback(async (result: ResultOption) => {
-    setSubmitting(true);
-    setError("");
-    try {
-      const res = await fetch(
-        `/api/tournament/${encodeURIComponent(tournamentId)}/result`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gameId: game.id, result, submittedBy: username }),
-        }
-      );
-      if (!res.ok) throw new Error("Server error");
-      setSubmitted(result);
-      onResultSubmitted();
-    } catch {
-      setError("Failed to submit result. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [tournamentId, game.id, username, onResultSubmitted]);
-
-  const resultLabel = (r: ResultOption) => {
-    if (r === "½-½") return "Draw";
-    const isWin = (r === "1-0" && myColor === "white") || (r === "0-1" && myColor === "black");
-    return isWin ? "I Won" : "I Lost";
-  };
-  const resultIcon = (r: ResultOption) => r === "½-½" ? "🤝" : resultLabel(r) === "I Won" ? "🏆" : "😔";
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
@@ -503,57 +478,22 @@ function MyBoardScreen({
 
           <div className="flex-1" />
 
-          {/* Result submission */}
+          {/* Post-game instruction */}
           <div className={`px-4 pb-safe-bottom pb-6 pt-4 border-t ${divider} space-y-3`}>
-            {submitted ? (
+            {opponent ? (
               <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-                <p className="text-2xl mb-1">{resultIcon(submitted)}</p>
-                <p className={`text-sm font-bold ${accent}`}>Result submitted — {resultLabel(submitted)}</p>
-                <p className={`text-xs ${textMuted} mt-1`}>The director will confirm shortly.</p>
+                <p className="text-2xl mb-2">🏁</p>
+                <p className={`text-sm font-bold ${accent} mb-1`}>Game finished?</p>
+                <p className={`text-sm ${textMuted}`}>
+                  The winner should report the result to the director at the registration table.
+                </p>
               </div>
             ) : (
-              <>
-                <p className={`text-xs font-bold uppercase tracking-wider text-center ${textMuted}`}>Report your result</p>
-                {error && <p className="text-xs text-red-500 text-center">{error}</p>}
-                {opponent ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["1-0", "½-½", "0-1"] as ResultOption[]).map((r) => {
-                      const isWin = (r === "1-0" && myColor === "white") || (r === "0-1" && myColor === "black");
-                      const isDraw = r === "½-½";
-                      return (
-                        <button
-                          key={r}
-                          onClick={() => submitResult(r)}
-                          disabled={submitting}
-                          className={`py-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 ${
-                            isWin
-                              ? "bg-[#3D6B47] text-white"
-                              : isDraw
-                              ? isDark
-                                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                                : "bg-blue-50 text-blue-700 border border-blue-200"
-                              : isDark
-                              ? "bg-red-500/15 text-red-400 border border-red-500/25"
-                              : "bg-red-50 text-red-600 border border-red-200"
-                          }`}
-                        >
-                          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="text-xl">{resultIcon(r)}</span>}
-                          <span>{resultLabel(r)}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-                    <p className={`text-sm font-semibold ${accent}`}>
-                      You have a bye this round — ½ point awarded automatically.
-                    </p>
-                  </div>
-                )}
-                <p className={`text-xs text-center ${textMuted}`}>
-                  The director will confirm your result on their dashboard.
+              <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
+                <p className={`text-sm font-semibold ${accent}`}>
+                  You have a bye this round — ½ point awarded automatically.
                 </p>
-              </>
+              </div>
             )}
             <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
           </div>
@@ -690,12 +630,6 @@ export default function PlayerView() {
     return () => es.close();
   }, [tournamentId]);
 
-  // After submitting a result, move to waiting_round so the player sees live
-  // standings and is automatically transitioned when the next round starts via SSE
-  const handleResultSubmitted = useCallback(() => {
-    setScreen("waiting_round");
-  }, []);
-
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!tournamentId || !username) {
     return (
@@ -797,7 +731,6 @@ export default function PlayerView() {
         opponent={boardInfo.opponent}
         players={livePlayers.length > 0 ? livePlayers : livePayload.players}
         isDark={isDark}
-        onResultSubmitted={handleResultSubmitted}
         rejoinUrl={rejoinUrl}
         connected={connected}
       />

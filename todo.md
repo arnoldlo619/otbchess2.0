@@ -1017,3 +1017,34 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Dismiss tap: clears the pending report without entering a result
 - [x] Server: DELETE /api/tournament/:id/pending-results/:gameId endpoint
 - [x] Unit tests for pending report state helpers (725 tests pass)
+
+## Remove Player Self-Reporting — Mar 2026
+
+- [ ] Remove submit-result UI from PlayerView (result buttons, submit handler, result_submitted fetch)
+- [ ] Remove pending-results in-memory store from server/index.ts
+- [ ] Remove POST /api/tournament/:id/result endpoint
+- [ ] Remove GET /api/tournament/:id/pending-results endpoint
+- [ ] Remove DELETE /api/tournament/:id/pending-results/:gameId endpoint
+- [ ] Remove result_submitted SSE broadcast from server
+- [ ] Remove Director SSE listener for result_submitted
+- [ ] Remove pendingReports state, clearPendingReport helper from Director.tsx
+- [ ] Remove confirmation badge UI from BoardCard
+- [ ] Update PlayerView waiting/post-game screen copy: "Report your result to the director at the registration table"
+- [ ] Update unit tests to remove result-submission test cases
+
+## Remove Player Self-Reporting — Completed Mar 2026
+
+- [x] Remove submitResult function and result submission UI from PlayerView MyBoardScreen
+- [x] Replace result submission section with "report to director at registration table" instruction card
+- [x] Remove handleResultSubmitted callback and ResultOption type from PlayerView
+- [x] Remove Loader2 import (no longer needed)
+- [x] Remove POST /api/tournament/:id/result endpoint from server
+- [x] Remove GET /api/tournament/:id/pending-results endpoint from server
+- [x] Remove DELETE /api/tournament/:id/pending-results/:gameId endpoint from server
+- [x] Remove PendingReport type and in-memory store from server
+- [x] Remove pendingReports state, SSE listener, catch-up fetch, and clearPendingReport from Director
+- [x] Remove PendingReportShape type and confirmation badge props from BoardCard
+- [x] Remove confirmation badge JSX from BoardCard return statement
+- [x] Remove CheckCheck icon import from Director
+- [x] Add "report result to director" instruction card to WaitingRoundScreen
+- [x] 20 new unit tests confirming no player self-reporting code remains (745 total pass)

@@ -55,28 +55,6 @@ function broadcastTournamentStarted(
   console.log(`[sse] Broadcast tournament_started to ${subs.size} subscriber(s) for ${tournamentId}`);
 }
 
-// ─── Pending Player Reports ─────────────────────────────────────────────────
-// Maps tournamentId → Map<gameId, { result, submittedBy, timestamp }>
-// Cleared when the director confirms a result (via the normal result endpoint).
-// Cleared per-game when a new round starts (stale reports are irrelevant).
-type PendingReport = { gameId: string; result: string; submittedBy: string; timestamp: number };
-const pendingReports = new Map<string, Map<string, PendingReport>>();
-
-function getPendingReports(tournamentId: string): PendingReport[] {
-  const map = pendingReports.get(tournamentId);
-  if (!map) return [];
-  return Array.from(map.values());
-}
-
-function setPendingReport(tournamentId: string, report: PendingReport) {
-  if (!pendingReports.has(tournamentId)) pendingReports.set(tournamentId, new Map());
-  pendingReports.get(tournamentId)!.set(report.gameId, report);
-}
-
-function clearPendingReport(tournamentId: string, gameId: string) {
-  pendingReports.get(tournamentId)?.delete(gameId);
-}
-
 // ─── Chess.com & Lichess proxy ────────────────────────────────────────────────
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
@@ -778,54 +756,6 @@ export function createApp() {
     }
     broadcastTournamentStarted(id, { round, games, players });
     console.log(`[start] Tournament ${id} started — Round ${round}, ${games.length} games, ${players.length} players`);
-    res.json({ ok: true });
-  });
-
-  // ── Tournament: GET /api/tournament/:id/pending-results ────────────────────────────────────
-  // Returns all pending player-reported results for a tournament.
-  // Director fetches this on connect to catch up on reports submitted while offline.
-  app.get("/api/tournament/:id/pending-results", (req, res) => {
-    const { id } = req.params;
-    if (!id) return res.status(400).json({ error: "Missing tournament id" });
-    res.json({ reports: getPendingReports(id) });
-  });
-
-  // ── Tournament: DELETE /api/tournament/:id/pending-results/:gameId ────────────────
-  // Director calls this when they confirm or dismiss a pending report.
-  app.delete("/api/tournament/:id/pending-results/:gameId", (req, res) => {
-    const { id, gameId } = req.params;
-    if (!id || !gameId) return res.status(400).json({ error: "Missing id or gameId" });
-    clearPendingReport(id, gameId);
-    res.json({ ok: true });
-  });
-
-  // ── Tournament: POST /api/tournament/:id/result ───────────────────────────────────────────────
-  // Called by a player when they submit their game result from the My Board screen.
-  // Body: { gameId: string; result: "1-0" | "0-1" | "½-½"; submittedBy: string }
-  // Stores the report in memory and broadcasts result_submitted SSE to the director.
-  app.post("/api/tournament/:id/result", (req, res) => {
-    const { id } = req.params;
-    if (!id) return res.status(400).json({ error: "Missing tournament id" });
-    const { gameId, result, submittedBy } = req.body as {
-      gameId: string;
-      result: string;
-      submittedBy: string;
-    };
-    if (!gameId || !result || !submittedBy) {
-      return res.status(400).json({ error: "Missing gameId, result, or submittedBy" });
-    }
-    // Persist in memory so director can catch up if they reconnect
-    const report: PendingReport = { gameId, result, submittedBy, timestamp: Date.now() };
-    setPendingReport(id, report);
-    // Broadcast a result_submitted event so the director dashboard shows a badge immediately
-    const subs = sseSubscribers.get(id);
-    if (subs && subs.size > 0) {
-      const payload = `event: result_submitted\ndata: ${JSON.stringify(report)}\n\n`;
-      for (const sub of Array.from(subs)) {
-        try { sub.write(payload); } catch { /* disconnected */ }
-      }
-    }
-    console.log(`[result] Player ${submittedBy} submitted result ${result} for game ${gameId} in tournament ${id}`);
     res.json({ ok: true });
   });
 
