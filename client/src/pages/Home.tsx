@@ -430,7 +430,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             className="opacity-0-init animate-fade-in-up text-lg leading-relaxed mb-10 max-w-xl mx-auto text-muted-foreground"
             style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
           >
-            Set up a rated in-person tournament in minutes. Players sign up with their chess.com username — we pull their ELO and generate optimal pairings automatically.
+            Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.
           </p>
 
           <div
@@ -729,9 +729,7 @@ function Features() {
           </p>
           <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
             style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "100ms", animationFillMode: "forwards" }}>
-            Everything your club needs.
-            <br />
-            Nothing it doesn't.
+            Take your club to the next level
           </h2>
         </div>
 
@@ -813,7 +811,7 @@ function Showcase() {
           <div className={`transition-all duration-700 delay-200 ${inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
             <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
               style={{ animationFillMode: "forwards" }}>
-              Built for Serious Players
+              Casual, Social, Competition
             </p>
             <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
               style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "120ms", animationFillMode: "forwards" }}>

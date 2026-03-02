@@ -960,3 +960,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Spectator page: tournament_complete status on tournament_ended SSE event
 - [x] localStorage storage-event fallback preserved for same-device director/spectator
 - [x] Unit tests: spectatorSSE.test.ts (20 tests — mergeLiveState, mergeStandingsUpdated, mergeRoundStarted, mergeTournamentEnded, progress pct)
+
+## Web Push Notifications — Mar 2026
+
+- [ ] Audit VAPID keys and existing push subscription infrastructure
+- [ ] Server: store push subscriptions per tournament in DB (tournament_id, player_id, subscription JSON)
+- [ ] Server: POST /api/tournament/:id/push-subscribe endpoint
+- [ ] Server: send Web Push to all subscribed players when round_started fires
+- [ ] Client: PlayerView — "Enable Notifications" prompt after player joins
+- [ ] Client: usePushSubscription hook — subscribe and POST to server
+- [ ] Service worker: handle push event and show notification with round number and board
+- [ ] Service worker: notification click → navigate to /tournament/:id/play/:username
+- [ ] Unit tests for push dispatch helpers
