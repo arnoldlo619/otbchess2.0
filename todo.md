@@ -989,3 +989,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] QR code encodes the public /tournament/:id spectator URL
 - [x] Copy-to-clipboard with visual feedback (Copied!)
 - [x] Unit tests for URL construction helper
+
+## Share Spectator Link Wizard Step — Mar 2026
+
+- [x] Audit TournamentWizard step structure and current final step
+- [x] Add spectator section to Step 4 (Share): QR code + copyable URL + open link
+- [x] Spectator URL derived from tournamentId (makeSlug) at creation time
+- [x] Distinct from player join QR: blue accent, Tv2 icon, "Live" pulse badge
+- [x] Unit tests for wizard spectator URL construction helper

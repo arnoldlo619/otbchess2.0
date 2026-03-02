@@ -53,6 +53,8 @@ import {
   EyeOff,
   Bolt,
   ChevronDown,
+  Tv2,
+  ExternalLink,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1459,6 +1461,118 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
   );
 }
 
+// ─── Spectator Share Section (embedded in Step 4) ───────────────────────────
+
+function SpectatorShareSection({ data, isDark }: { data: WizardData; isDark: boolean }) {
+  const [specCopied, setSpecCopied] = useState(false);
+  const tournamentId = makeSlug(data.name, data.date);
+  const spectatorUrl = `${window.location.origin}/tournament/${tournamentId}`;
+
+  const copySpectatorLink = () => {
+    navigator.clipboard.writeText(spectatorUrl);
+    setSpecCopied(true);
+    toast.success("Spectator link copied!");
+    setTimeout(() => setSpecCopied(false), 2000);
+  };
+
+  return (
+    <div
+      className="rounded-2xl border space-y-4 p-5"
+      style={{
+        background: isDark ? "rgba(29,78,216,0.08)" : "#EFF6FF",
+        border: `2px solid ${isDark ? "rgba(59,130,246,0.25)" : "#BFDBFE"}`,
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: isDark ? "rgba(59,130,246,0.18)" : "#DBEAFE" }}
+        >
+          <Tv2 className="w-4 h-4" style={{ color: isDark ? "#93C5FD" : "#2563EB" }} strokeWidth={1.8} />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold" style={{ color: isDark ? "#93C5FD" : "#1D4ED8" }}>
+              Spectator View
+            </span>
+            <span
+              className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold"
+              style={{ background: isDark ? "rgba(59,130,246,0.15)" : "#DBEAFE", color: isDark ? "#93C5FD" : "#1D4ED8" }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse inline-block" />
+              Live
+            </span>
+          </div>
+          <p className="text-xs mt-0.5" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#6B7280" }}>
+            Share with coaches, parents &amp; spectators — no account needed.
+          </p>
+        </div>
+      </div>
+
+      {/* Spectator URL row */}
+      <div className="flex gap-2">
+        <div
+          className="flex-1 flex items-center gap-2 rounded-xl border text-xs font-mono truncate"
+          style={{
+            padding: "11px 14px",
+            background: isDark ? "rgba(0,0,0,0.20)" : "#FFFFFF",
+            border: `1.5px solid ${isDark ? "rgba(59,130,246,0.20)" : "#BFDBFE"}`,
+            color: isDark ? "rgba(255,255,255,0.60)" : "#374151",
+          }}
+        >
+          <Tv2 className="w-3 h-3 flex-shrink-0" style={{ color: isDark ? "#93C5FD" : "#3B82F6" }} />
+          <span className="truncate">{spectatorUrl}</span>
+        </div>
+        <button
+          type="button"
+          onClick={copySpectatorLink}
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
+          style={{
+            padding: "11px 16px",
+            background: specCopied ? "#2563EB" : isDark ? "rgba(59,130,246,0.15)" : "#DBEAFE",
+            color: specCopied ? "#FFFFFF" : isDark ? "#93C5FD" : "#1D4ED8",
+          }}
+        >
+          {specCopied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
+          {specCopied ? "Copied!" : "Copy"}
+        </button>
+        <a
+          href={spectatorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
+          style={{
+            padding: "11px 16px",
+            background: isDark ? "rgba(59,130,246,0.10)" : "#EFF6FF",
+            color: isDark ? "#93C5FD" : "#2563EB",
+            border: `1.5px solid ${isDark ? "rgba(59,130,246,0.20)" : "#BFDBFE"}`,
+          }}
+          title="Open spectator view"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
+
+      {/* Mini QR code */}
+      <div className="flex justify-center">
+        <div
+          className="rounded-2xl p-3"
+          style={{ background: "#FFFFFF", border: `1.5px solid ${isDark ? "rgba(59,130,246,0.20)" : "#BFDBFE"}` }}
+        >
+          <QRCodeSVG
+            value={spectatorUrl}
+            size={120}
+            bgColor="#FFFFFF"
+            fgColor="#1D4ED8"
+            level="M"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Step 4 / Quickstart final: Share ────────────────────────────────────────
 
 function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
@@ -1592,11 +1706,14 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
       >
         <BarChart3 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
         <span>
-          Players join with their{" "}
-          <strong style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}>{data.ratingSystem}</strong>{" "}
+          Players join with their{"\ "}
+          <strong style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}>{data.ratingSystem}</strong>{"\ "}
           username. ELO is fetched automatically and pairings are generated when you start Round 1.
         </span>
       </div>
+
+      {/* ── Spectator / Watch Live section ─────────────────────────────────── */}
+      <SpectatorShareSection data={data} isDark={isDark} />
     </div>
   );
 }
