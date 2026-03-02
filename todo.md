@@ -980,3 +980,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Profile.tsx: confirmation dialog before deleting
 - [x] Profile.tsx: optimistic removal from list on success
 - [x] Unit tests for delete endpoint and UI helper
+
+## Shareable Spectator QR Code — Mar 2026
+
+- [x] Install qrcode.react package
+- [x] Build ShareModal component: QR code + copyable spectator URL + "Open in new tab" link
+- [x] Add "Share / Watch Live" button to director dashboard header
+- [x] QR code encodes the public /tournament/:id spectator URL
+- [x] Copy-to-clipboard with visual feedback (Copied!)
+- [x] Unit tests for URL construction helper

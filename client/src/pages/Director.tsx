@@ -14,6 +14,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
 import { AnnounceModal } from "@/components/AnnounceModal";
+import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { Link, useParams, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -68,6 +69,7 @@ import {
   MoreVertical,
   CheckCheck,
   MessageSquare,
+  Tv2,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -577,6 +579,9 @@ export default function Director() {
   const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
   const [showQR, setShowQR] = useState(false);
   const [showAnnounce, setShowAnnounce] = useState(false);
+  const [showSpectatorShare, setShowSpectatorShare] = useState(false);
+  // Spectator URL — public live view, no auth required
+  const spectatorUrl = `${window.location.origin}/tournament/${tournamentId}`;
   const [showOverflow, setShowOverflow] = useState(false);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
@@ -893,6 +898,16 @@ export default function Director() {
               </span>
             )}
 
+            {/* Watch Live / Spectator share — always visible */}
+            <button
+              onClick={() => setShowSpectatorShare(true)}
+              className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
+                isDark ? "hover:bg-white/08 text-[#2196F3]/70 hover:text-[#2196F3]" : "hover:bg-blue-50 text-blue-400 hover:text-blue-600"
+              }`}
+              title="Share live spectator view"
+            >
+              <Tv2 className="w-4 h-4" />
+            </button>
             {/* Announce / QR — always visible (primary action) */}
             <button
               onClick={() => setShowAnnounce(true)}
@@ -2448,6 +2463,13 @@ export default function Director() {
         </main>
       </div>
 
+      {/* ── Spectator Share Modal ─────────────────────────────────────────── */}
+      <SpectatorShareModal
+        open={showSpectatorShare}
+        onClose={() => setShowSpectatorShare(false)}
+        tournamentName={state.tournamentName}
+        spectatorUrl={spectatorUrl}
+      />
       {/* ── QR Modal ─────────────────────────────────────────────────────────── */}
       <QRModal
         open={showQR}
