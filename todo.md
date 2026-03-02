@@ -932,3 +932,31 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director: pushStandingsNow helper bypasses 1.5s debounce after every result entry
 - [x] Director: pushStandingsNow called after recordWithUndo so SSE fires immediately
 - [x] Unit tests: playerViewLiveSync.test.ts (13 tests — findMyBoard, myRank, standings merging)
+
+## Live Spectator View — Mar 2026
+
+- [ ] Audit existing /tournament/:id spectator page and SSE infrastructure
+- [ ] Spectator page: connect to standings_updated + round_started + tournament_ended SSE events
+- [ ] Spectator page: live standings table (rank, name, ELO, points, W/D/L, Buchholz)
+- [ ] Spectator page: current round boards panel (all pairings, live result badges)
+- [ ] Spectator page: round progress bar (X/N results in)
+- [ ] Spectator page: connection status badge (Live / Reconnecting)
+- [ ] Spectator page: catch-up fetch on mount via /live-state endpoint
+- [ ] Spectator page: tournament header (name, format, round, status pill)
+- [ ] Spectator page: auto-scroll / highlight when standings change
+- [ ] Spectator page: tournament_complete screen with final podium
+- [ ] Unit tests for spectator SSE state transitions
+
+## Live Spectator View — Completed Mar 2026
+
+- [x] Audit existing /tournament/:id spectator page and SSE infrastructure
+- [x] Spectator page: connect to standings_updated + round_started + tournament_ended SSE events
+- [x] Spectator page: catch-up fetch on mount via /live-state endpoint
+- [x] Spectator page: SSE connection badge (Live / Reconnecting) in green banner
+- [x] Spectator page: round progress bar (X/N boards completed) in green banner
+- [x] Spectator page: new round flash notification banner (auto-dismisses after 5s)
+- [x] Spectator page: standings and pairings auto-update on standings_updated SSE event
+- [x] Spectator page: pairings panel auto-adds new round on round_started SSE event
+- [x] Spectator page: tournament_complete status on tournament_ended SSE event
+- [x] localStorage storage-event fallback preserved for same-device director/spectator
+- [x] Unit tests: spectatorSSE.test.ts (20 tests — mergeLiveState, mergeStandingsUpdated, mergeRoundStarted, mergeTournamentEnded, progress pct)

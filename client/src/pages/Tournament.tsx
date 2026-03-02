@@ -44,8 +44,11 @@ import {
   Share2,
   ChevronRight,
   Wifi,
+  WifiOff,
   Shield,
   Printer,
+  Radio,
+  Zap,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RoundTimerDisplay } from "@/components/RoundTimerDisplay";
@@ -915,6 +918,64 @@ function RegistrationState({ tournamentName, playerCount, tournamentId }: { tour
   );
 }
 
+// ─── SSE Connection Badge ────────────────────────────────────────────────────
+function SSEConnectionBadge({ connected }: { connected: boolean }) {
+  if (connected) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/90 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">
+        <Radio className="w-3 h-3 text-emerald-300" />
+        Live
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 bg-amber-500/20 border border-amber-400/30 px-2.5 py-1 rounded-full">
+      <WifiOff className="w-3 h-3" />
+      Reconnecting
+    </span>
+  );
+}
+
+// ─── Round Progress Bar ───────────────────────────────────────────────────────
+function RoundProgressBar({ rounds, currentRound, isDark }: { rounds: Round[]; currentRound: number; isDark: boolean }) {
+  const currentRoundData = rounds.find((r) => r.number === currentRound);
+  if (!currentRoundData) return null;
+  const total = currentRoundData.games.length;
+  const done = currentRoundData.games.filter((g) => g.result !== "*").length;
+  if (total === 0) return null;
+  const pct = Math.round((done / total) * 100);
+  return (
+    <div className="container pt-2 pb-1">
+      <div className="flex items-center gap-3">
+        <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-black/10"}`}>
+          <div
+            className="h-full bg-white/70 rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className="text-xs text-white/70 font-mono flex-shrink-0">{done}/{total} boards</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── New Round Flash Banner ───────────────────────────────────────────────────
+function NewRoundFlash({ round, onDismiss }: { round: number; onDismiss: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 5000);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+  return (
+    <div className="fixed top-20 inset-x-0 z-50 flex justify-center pointer-events-none px-4">
+      <div className="pointer-events-auto flex items-center gap-3 bg-[#3D6B47] text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/20 animate-in slide-in-from-top-4 duration-300">
+        <Zap className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+        <span className="font-bold text-base">Round {round} pairings are live!</span>
+        <button onClick={onDismiss} className="ml-2 text-white/60 hover:text-white text-lg leading-none">×</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function TournamentPage() {
   const { theme } = useTheme();
@@ -927,13 +988,115 @@ export default function TournamentPage() {
     return loadTournamentState(tournamentId);
   });
 
+  // SSE connection state
+  const [sseConnected, setSseConnected] = useState(false);
+  // Flash banner state for new round notifications
+  const [newRoundFlash, setNewRoundFlash] = useState<number | null>(null);
+  const dismissFlash = useCallback(() => setNewRoundFlash(null), []);
+
+  // ── SSE: connect to server for live standings + round updates ──────────────
+  useEffect(() => {
+    // Demo tournament has no server state — skip SSE
+    if (tournamentId === "otb-demo-2026") return;
+
+    // Catch-up fetch: load the freshest state immediately on mount
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { players?: Player[]; status?: string; currentRound?: number; totalRounds?: number; tournamentName?: string; rounds?: Round[] } | null) => {
+        if (!data) return;
+        setTournamentState((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            players: (data.players as Player[]) ?? prev.players,
+            status: (data.status as DirectorState["status"]) ?? prev.status,
+            currentRound: data.currentRound ?? prev.currentRound,
+            totalRounds: data.totalRounds ?? prev.totalRounds,
+            tournamentName: data.tournamentName ?? prev.tournamentName,
+          };
+        });
+      })
+      .catch(() => { /* silent — localStorage fallback is already loaded */ });
+
+    // Open SSE stream
+    const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/stream`);
+
+    es.onopen = () => setSseConnected(true);
+    es.onerror = () => setSseConnected(false);
+
+    // standings_updated: director entered a result → update players list
+    es.addEventListener("standings_updated", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data) as {
+          players: Player[];
+          currentRound: number;
+          status: string;
+        };
+        setSseConnected(true);
+        setTournamentState((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            players: payload.players,
+            currentRound: payload.currentRound,
+            status: payload.status as DirectorState["status"],
+          };
+        });
+      } catch { /* ignore malformed */ }
+    });
+
+    // round_started: director generated next round → update rounds + players
+    es.addEventListener("round_started", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data) as {
+          round: number;
+          games: Round["games"];
+          players: Player[];
+        };
+        setSseConnected(true);
+        setNewRoundFlash(payload.round);
+        setTournamentState((prev) => {
+          if (!prev) return prev;
+          const existingRounds = prev.rounds.filter((r) => r.number !== payload.round);
+          const newRound: Round = {
+            number: payload.round,
+            status: "in_progress",
+            games: payload.games,
+          };
+          return {
+            ...prev,
+            players: payload.players,
+            currentRound: payload.round,
+            rounds: [...existingRounds, newRound].sort((a, b) => a.number - b.number),
+          };
+        });
+      } catch { /* ignore malformed */ }
+    });
+
+    // tournament_ended: director ended tournament → mark complete
+    es.addEventListener("tournament_ended", (e: MessageEvent) => {
+      try {
+        const payload = JSON.parse(e.data) as { players: Player[] };
+        setSseConnected(true);
+        setTournamentState((prev) => {
+          if (!prev) return prev;
+          return { ...prev, players: payload.players, status: "completed" };
+        });
+      } catch { /* ignore malformed */ }
+    });
+
+    return () => es.close();
+  }, [tournamentId]);
+
   // Re-sync from localStorage when the tab regains visibility (phone unlock, app switch)
+  // This is a fallback for the demo and for when SSE is not available.
   useVisibilitySync(() => {
     const fresh = loadTournamentState(tournamentId);
     if (fresh) setTournamentState(fresh);
   });
 
   // Listen for real-time updates from the Director Dashboard (storage events)
+  // This handles the case where the director and spectator are on the same device.
   useEffect(() => {
     function handleStorage(e: StorageEvent) {
       if (e.key === `otb-director-${tournamentId}` && e.newValue) {
@@ -945,15 +1108,6 @@ export default function TournamentPage() {
     }
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, [tournamentId]);
-
-  // Also poll every 5s for same-tab updates (Director is in same tab sometimes)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const fresh = loadTournamentState(tournamentId);
-      if (fresh) setTournamentState(fresh);
-    }, 5000);
-    return () => clearInterval(interval);
   }, [tournamentId]);
 
   // Get extra config (venue, date, timePreset) from registry
@@ -1008,6 +1162,10 @@ export default function TournamentPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+      {/* New round flash notification */}
+      {newRoundFlash !== null && (
+        <NewRoundFlash round={newRoundFlash} onDismiss={dismissFlash} />
+      )}
       <TournamentNav tournamentId={tournamentId} />
       <TournamentHeader
         name={displayName}
@@ -1040,6 +1198,10 @@ export default function TournamentPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* SSE connection badge — only shown for real tournaments */}
+                    {tournamentId !== "otb-demo-2026" && (
+                      <SSEConnectionBadge connected={sseConnected} />
+                    )}
                     <LiveBadge
                       currentRound={displayState.currentRound}
                       totalRounds={displayState.totalRounds}
@@ -1055,6 +1217,16 @@ export default function TournamentPage() {
                   </div>
                 </div>
               </div>
+              {/* Round progress bar — shows X/N boards completed */}
+              {displayState.status === "in_progress" && (
+                <div className="bg-[#3D6B47]">
+                  <RoundProgressBar
+                    rounds={displayState.rounds}
+                    currentRound={displayState.currentRound}
+                    isDark={isDark}
+                  />
+                </div>
+              )}
 
               {/* Round timer display — shown below banner when director has an active timer */}
               {displayState.status === "in_progress" && (
