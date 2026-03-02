@@ -997,3 +997,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Spectator URL derived from tournamentId (makeSlug) at creation time
 - [x] Distinct from player join QR: blue accent, Tv2 icon, "Live" pulse badge
 - [x] Unit tests for wizard spectator URL construction helper
+
+## Full-Screen Spectator QR Mode — Mar 2026
+
+- [x] Audit existing announce/projection screen and QR modal in Director.tsx
+- [x] Build SpectatorQRScreen component: full-screen, large QR, URL, animated Live badge
+- [x] Add "Project QR" toggle button to director dashboard header (sm+ screens)
+- [x] Escape key dismisses the full-screen overlay
+- [x] Unit tests for spectator QR screen URL and display logic

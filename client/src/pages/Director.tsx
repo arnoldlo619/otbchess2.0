@@ -15,6 +15,7 @@ import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
 import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
+import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
 import { Link, useParams, useLocation } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -580,6 +581,7 @@ export default function Director() {
   const [showQR, setShowQR] = useState(false);
   const [showAnnounce, setShowAnnounce] = useState(false);
   const [showSpectatorShare, setShowSpectatorShare] = useState(false);
+  const [showSpectatorQR, setShowSpectatorQR] = useState(false);
   // Spectator URL — public live view, no auth required
   const spectatorUrl = `${window.location.origin}/tournament/${tournamentId}`;
   const [showOverflow, setShowOverflow] = useState(false);
@@ -898,7 +900,7 @@ export default function Director() {
               </span>
             )}
 
-            {/* Watch Live / Spectator share — always visible */}
+            {/* Watch Live — share modal (small screens: icon only; md+: icon + label) */}
             <button
               onClick={() => setShowSpectatorShare(true)}
               className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
@@ -907,6 +909,19 @@ export default function Director() {
               title="Share live spectator view"
             >
               <Tv2 className="w-4 h-4" />
+            </button>
+            {/* Spectator QR — full-screen projection mode */}
+            <button
+              onClick={() => setShowSpectatorQR(true)}
+              className={`touch-target hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-blue-500/12 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                  : "bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200"
+              }`}
+              title="Show spectator QR full-screen (for projector)"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Project QR</span>
             </button>
             {/* Announce / QR — always visible (primary action) */}
             <button
@@ -2470,7 +2485,16 @@ export default function Director() {
         tournamentName={state.tournamentName}
         spectatorUrl={spectatorUrl}
       />
-      {/* ── QR Modal ─────────────────────────────────────────────────────────── */}
+
+      {/* ── Spectator QR Screen (full-screen projection mode) ────────────────── */}
+      <SpectatorQRScreen
+        open={showSpectatorQR}
+        onClose={() => setShowSpectatorQR(false)}
+        tournamentName={state.tournamentName}
+        spectatorUrl={spectatorUrl}
+      />
+
+      {/* ── QR Modal ────────────────────────────────────────────────────── */}
       <QRModal
         open={showQR}
         onClose={() => setShowQR(false)}
