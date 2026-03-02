@@ -161,17 +161,25 @@ function ByeCard({ game, players, isDark }: {
   );
 }
 
-// ─── Board Result Card ────────────────────────────────────────────────────────
+// // ─── Board Result Card ────────────────────────────────────────────────────
+type PendingReportShape = { gameId: string; result: string; submittedBy: string; timestamp: number };
+
 function BoardCard({
   game,
   players,
   onResult,
   isDark,
+  pendingReport,
+  onConfirmReport,
+  onDismissReport,
 }: {
   game: import("@/lib/tournamentData").Game;
   players: import("@/lib/tournamentData").Player[];
   onResult: (gameId: string, result: Result) => void;
   isDark: boolean;
+  pendingReport?: PendingReportShape;
+  onConfirmReport?: (gameId: string, result: string) => void;
+  onDismissReport?: (gameId: string) => void;
 }) {
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
@@ -306,6 +314,93 @@ function BoardCard({
           </span>
         </div>
       </div>
+
+      {/* ── Player-reported result confirmation badge ───────────────────── */}
+      {pendingReport && (
+        <div
+          className={`mx-4 mb-3 rounded-xl border px-3.5 py-2.5 ${
+            isDark
+              ? "bg-amber-500/10 border-amber-500/30"
+              : "bg-amber-50 border-amber-200"
+          }`}
+        >
+          {/* Header row */}
+          <div className="flex items-center gap-2 mb-2">
+            <span
+              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                isDark ? "bg-amber-400" : "bg-amber-500"
+              }`}
+              style={{ animation: "pulse 1.5s ease-in-out infinite" }}
+            />
+            <span
+              className={`text-xs font-bold uppercase tracking-wide ${
+                isDark ? "text-amber-300" : "text-amber-700"
+              }`}
+            >
+              Player reported
+            </span>
+          </div>
+          {/* Reporter + result */}
+          <p
+            className={`text-sm font-semibold mb-2.5 ${
+              isDark ? "text-white/80" : "text-gray-800"
+            }`}
+          >
+            <span
+              className={`font-bold ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              {pendingReport.submittedBy}
+            </span>{" "}
+            reported{" "}
+            <span
+              className={`font-bold px-1.5 py-0.5 rounded ${
+                pendingReport.result === "1-0"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : pendingReport.result === "0-1"
+                  ? "bg-red-100 text-red-600"
+                  : "bg-blue-100 text-blue-600"
+              }`}
+            >
+              {pendingReport.result}
+            </span>
+          </p>
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(40);
+                onConfirmReport?.(game.id, pendingReport.result);
+                onResult(game.id, pendingReport.result as Result);
+                toast.success(`Board ${game.board}: ${pendingReport.result} confirmed`);
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30"
+                  : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200"
+              }`}
+            >
+              <CheckCheck className="w-3.5 h-3.5" strokeWidth={2.5} />
+              Confirm
+            </button>
+            <button
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(20);
+                onDismissReport?.(game.id);
+                toast.info(`Board ${game.board}: player report dismissed`);
+              }}
+              className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-white/05 hover:bg-white/10 text-white/40 border border-white/10"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-500 border border-gray-200"
+              }`}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Result entry buttons */}
       <div
@@ -576,6 +671,11 @@ export default function Director() {
     }).catch(() => { /* non-critical */ });
   }, [user?.id, tournamentId, state.tournamentName]);
 
+  // ── Pending player-reported results ────────────────────────────────────────
+  // Map of gameId → { gameId, result, submittedBy, timestamp }
+  type PendingReport = { gameId: string; result: string; submittedBy: string; timestamp: number };
+  const [pendingReports, setPendingReports] = useState<Map<string, PendingReport>>(new Map());
+
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
   const [showQR, setShowQR] = useState(false);
@@ -721,6 +821,61 @@ export default function Director() {
 
     return () => es.close();
   }, [isRegistration, tournamentId, addPlayer]);
+
+  // ── Pending results: SSE listener + catch-up fetch ───────────────────────────
+  // When the director opens the dashboard (or reconnects), fetch any reports
+  // that were submitted while they were offline, then keep listening for new
+  // result_submitted SSE events on the same player stream.
+  useEffect(() => {
+    if (isRegistration || tournamentId === "otb-demo-2026") return;
+
+    // 1. Catch-up: fetch existing pending reports from the server.
+    const fetchPending = async () => {
+      try {
+        const res = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/pending-results`);
+        if (!res.ok) return;
+        const data = await res.json() as { reports: PendingReport[] };
+        if (Array.isArray(data.reports) && data.reports.length > 0) {
+          setPendingReports(prev => {
+            const next = new Map(prev);
+            data.reports.forEach(r => next.set(r.gameId, r));
+            return next;
+          });
+        }
+      } catch { /* silent */ }
+    };
+    fetchPending();
+
+    // 2. Listen for new result_submitted events on the player stream.
+    const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`);
+    es.addEventListener("result_submitted", (e: MessageEvent) => {
+      try {
+        const report = JSON.parse(e.data) as PendingReport;
+        setPendingReports(prev => {
+          const next = new Map(prev);
+          next.set(report.gameId, report);
+          return next;
+        });
+        toast.info(`Player reported: Board result submitted`, { duration: 3000 });
+      } catch { /* malformed event */ }
+    });
+    es.onerror = () => { /* auto-reconnect */ };
+    return () => es.close();
+  }, [isRegistration, tournamentId]);
+
+  // Helper: clear a pending report (after confirm or dismiss).
+  const clearPendingReport = useCallback(async (gameId: string) => {
+    setPendingReports(prev => {
+      const next = new Map(prev);
+      next.delete(gameId);
+      return next;
+    });
+    try {
+      await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/pending-results/${encodeURIComponent(gameId)}`, {
+        method: "DELETE",
+      });
+    } catch { /* non-critical */ }
+  }, [tournamentId]);
 
   // Auto-scroll to the Generate CTA when all results are entered on the Boards tab.
   // A short delay lets the last result's animation settle before scrolling.
@@ -1792,6 +1947,9 @@ export default function Director() {
                           pushStandingsNow();
                         }}
                         isDark={isDark}
+                        pendingReport={pendingReports.get(game.id)}
+                        onConfirmReport={(gameId) => clearPendingReport(gameId)}
+                        onDismissReport={(gameId) => clearPendingReport(gameId)}
                       />
                     )
                   )}

@@ -1005,3 +1005,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Project QR" toggle button to director dashboard header (sm+ screens)
 - [x] Escape key dismisses the full-screen overlay
 - [x] Unit tests for spectator QR screen URL and display logic
+
+## Director Result Confirmation Badges — Mar 2026
+
+- [x] Audit pending-results server store and result_submitted SSE event payload
+- [x] Director listens for result_submitted SSE and stores pending reports in state
+- [x] Director fetches existing pending reports on mount (catch-up after reconnect)
+- [x] BoardCard: show confirmation badge when a player report exists for that game
+- [x] Badge shows: reporter name, reported result, Confirm (✓) and Dismiss (✗) buttons
+- [x] Confirm tap: calls onResult with the reported result and clears the pending report
+- [x] Dismiss tap: clears the pending report without entering a result
+- [x] Server: DELETE /api/tournament/:id/pending-results/:gameId endpoint
+- [x] Unit tests for pending report state helpers (725 tests pass)
