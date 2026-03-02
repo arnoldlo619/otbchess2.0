@@ -972,3 +972,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Service worker: handle push event and show notification with round number and board
 - [ ] Service worker: notification click → navigate to /tournament/:id/play/:username
 - [ ] Unit tests for push dispatch helpers
+
+## Delete Tournament — Mar 2026
+
+- [x] Server: DELETE /api/auth/user/tournaments/:id endpoint (auth-gated, owner-only)
+- [x] Profile.tsx: trash icon button on each tournament card
+- [x] Profile.tsx: confirmation dialog before deleting
+- [x] Profile.tsx: optimistic removal from list on success
+- [x] Unit tests for delete endpoint and UI helper

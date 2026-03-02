@@ -363,5 +363,42 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── DELETE /api/auth/user/tournaments/:tournamentId ─────────────────────
+  // Removes a tournament from the authenticated user's list.
+  // Only the owner can delete their own tournament record.
+  router.delete("/user/tournaments/:tournamentId", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+    const { tournamentId } = req.params;
+    if (!tournamentId) return res.status(400).json({ error: "tournamentId is required" });
+    try {
+      const db = await getDb();
+      // Verify ownership before deleting
+      const existing = await db
+        .select({ id: userTournaments.id, userId: userTournaments.userId })
+        .from(userTournaments)
+        .where(eq(userTournaments.tournamentId, tournamentId))
+        .limit(1);
+      if (existing.length === 0) {
+        return res.status(404).json({ error: "Tournament not found" });
+      }
+      if (existing[0].userId !== payload.sub) {
+        return res.status(403).json({ error: "Not authorised to delete this tournament" });
+      }
+      await db
+        .delete(userTournaments)
+        .where(eq(userTournaments.tournamentId, tournamentId));
+      console.log(`[auth] Tournament ${tournamentId} deleted by user ${payload.sub}`);
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error("[auth] delete user tournament error:", err);
+      return res.status(500).json({ error: "Failed to delete tournament" });
+    }
+  });
+
   return router;
 }

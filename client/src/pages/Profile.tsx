@@ -19,6 +19,8 @@ import {
   Loader2,
   ChevronLeft,
   Shield,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
@@ -127,6 +129,28 @@ export default function ProfilePage() {
     inviteCode?: string | null; status?: string | null; createdAt: string;
   }> | null>(null);
   const [tournamentsLoading, setTournamentsLoading] = useState(false);
+  // Delete state: which tournament is pending confirmation, and which is being deleted
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDeleteTournament(tournamentId: string) {
+    setDeletingId(tournamentId);
+    setConfirmDeleteId(null);
+    try {
+      const res = await fetch(`/api/auth/user/tournaments/${encodeURIComponent(tournamentId)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        // Optimistically remove from local state
+        setApiTournaments((prev) => prev ? prev.filter((t) => t.tournamentId !== tournamentId) : prev);
+      }
+    } catch {
+      // Silent fail — list will refresh on next page load
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -452,30 +476,77 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-2">
               {[
-                ...(apiTournaments ?? []).map((t) => ({ id: t.tournamentId, name: t.name, format: t.format ?? "Swiss", status: t.status ?? "registration" })),
+                ...(apiTournaments ?? []).map((t) => ({ id: t.tournamentId, name: t.name, format: t.format ?? "Swiss", status: t.status ?? "registration", isApi: true })),
                 ...localOnly.map((t: TournamentConfig) => {
                   const localState = loadTournamentState(t.id);
-                  return { id: t.id, name: t.name, format: t.format ?? "Swiss", status: localState?.status ?? "registration" };
+                  return { id: t.id, name: t.name, format: t.format ?? "Swiss", status: localState?.status ?? "registration", isApi: false };
                 }),
               ]
                 .slice(0, 5)
                 .map((t) => (
-                  <a
-                    key={t.id}
-                    href={`/tournament/${t.id}/manage`}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
-                      isDark ? "bg-white/5 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="min-w-0">
-                        <p className={`text-sm font-medium ${text} truncate`}>{t.name}</p>
-                        <p className={`text-xs ${muted}`}>{t.format ?? "Swiss"}</p>
+                  <div key={t.id} className="relative group">
+                    {/* Confirmation overlay */}
+                    {confirmDeleteId === t.id && (
+                      <div className={`absolute inset-0 z-10 flex items-center justify-between gap-2 px-4 py-3 rounded-xl ${
+                        isDark ? "bg-red-900/60 border border-red-500/40" : "bg-red-50 border border-red-200"
+                      }`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                          <span className={`text-xs font-medium truncate ${isDark ? "text-red-300" : "text-red-700"}`}>
+                            Delete "{t.name}"?
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className={`text-xs px-2.5 py-1 rounded-lg font-medium transition ${
+                              isDark ? "bg-white/10 text-white/70 hover:bg-white/20" : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                            }`}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTournament(t.id)}
+                            className="text-xs px-2.5 py-1 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
-                      <TournamentStatusPill status={t.status} />
-                    </div>
-                    <ExternalLink className={`w-3.5 h-3.5 flex-shrink-0 ${muted} ml-2`} />
-                  </a>
+                    )}
+                    <a
+                      href={`/tournament/${t.id}/manage`}
+                      className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
+                        isDark ? "bg-white/5 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
+                      } ${confirmDeleteId === t.id ? "opacity-0 pointer-events-none" : ""}`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="min-w-0">
+                          <p className={`text-sm font-medium ${text} truncate`}>{t.name}</p>
+                          <p className={`text-xs ${muted}`}>{t.format ?? "Swiss"}</p>
+                        </div>
+                        <TournamentStatusPill status={t.status} />
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                        {t.isApi && (
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmDeleteId(t.id); }}
+                            aria-label="Delete tournament"
+                            className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                              isDark
+                                ? "text-white/30 hover:text-red-400 hover:bg-red-500/10"
+                                : "text-gray-300 hover:text-red-500 hover:bg-red-50"
+                            } ${deletingId === t.id ? "opacity-100" : ""}`}
+                          >
+                            {deletingId === t.id
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Trash2 className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                        <ExternalLink className={`w-3.5 h-3.5 ${muted}`} />
+                      </div>
+                    </a>
+                  </div>
                 ))}
               {tournamentCount > 5 && (
                 <a
