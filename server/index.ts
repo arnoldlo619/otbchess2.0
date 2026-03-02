@@ -55,6 +55,28 @@ function broadcastTournamentStarted(
   console.log(`[sse] Broadcast tournament_started to ${subs.size} subscriber(s) for ${tournamentId}`);
 }
 
+// ─── Pending Player Reports ─────────────────────────────────────────────────
+// Maps tournamentId → Map<gameId, { result, submittedBy, timestamp }>
+// Cleared when the director confirms a result (via the normal result endpoint).
+// Cleared per-game when a new round starts (stale reports are irrelevant).
+type PendingReport = { gameId: string; result: string; submittedBy: string; timestamp: number };
+const pendingReports = new Map<string, Map<string, PendingReport>>();
+
+function getPendingReports(tournamentId: string): PendingReport[] {
+  const map = pendingReports.get(tournamentId);
+  if (!map) return [];
+  return Array.from(map.values());
+}
+
+function setPendingReport(tournamentId: string, report: PendingReport) {
+  if (!pendingReports.has(tournamentId)) pendingReports.set(tournamentId, new Map());
+  pendingReports.get(tournamentId)!.set(report.gameId, report);
+}
+
+function clearPendingReport(tournamentId: string, gameId: string) {
+  pendingReports.get(tournamentId)?.delete(gameId);
+}
+
 // ─── Chess.com & Lichess proxy ────────────────────────────────────────────────
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
@@ -655,9 +677,62 @@ export function createApp() {
         await db.insert(tournamentState).values({ tournamentId: id, stateJson });
       }
       console.log(`[state] Saved state for tournament ${id} (${stateJson.length} bytes)`);
+      // Broadcast standings_updated so players see live score changes immediately
+      const parsedState = state as { players?: unknown[]; currentRound?: number; status?: string };
+      const subs = sseSubscribers.get(id);
+      if (subs && subs.size > 0) {
+        const payload = `event: standings_updated\ndata: ${JSON.stringify({
+          players: parsedState.players ?? [],
+          currentRound: parsedState.currentRound ?? 0,
+          status: parsedState.status ?? "in_progress",
+        })}\n\n`;
+        for (const sub of Array.from(subs)) {
+          try { sub.write(payload); } catch { /* disconnected */ }
+        }
+      }
       res.json({ ok: true });
     } catch (err) {
       console.error("[state] PUT error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Tournament: GET /api/tournament/:id/live-state ───────────────────────────────────────────────
+  // Returns the freshest available state for players to catch up on reconnect.
+  // Includes current round, games, players/standings, and tournament status.
+  // Unlike /state (which has a 1.5s write debounce), this is always current.
+  app.get("/api/tournament/:id/live-state", async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    if (id === "otb-demo-2026") return res.status(404).json({ error: "demo" });
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select()
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id));
+      if (rows.length === 0) return res.status(404).json({ error: "not_found" });
+      const s = JSON.parse(rows[0].stateJson) as {
+        status?: string;
+        currentRound?: number;
+        totalRounds?: number;
+        tournamentName?: string;
+        players?: unknown[];
+        rounds?: Array<{ number: number; games: unknown[] }>;
+      };
+      // Extract just the current round's games for efficiency
+      const currentRound = s.rounds?.find((r) => r.number === (s.currentRound ?? 0));
+      res.json({
+        status: s.status ?? "registration",
+        currentRound: s.currentRound ?? 0,
+        totalRounds: s.totalRounds ?? 0,
+        tournamentName: s.tournamentName ?? "",
+        players: s.players ?? [],
+        games: currentRound?.games ?? [],
+        updatedAt: rows[0].updatedAt,
+      });
+    } catch (err) {
+      console.error("[live-state] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -706,11 +781,28 @@ export function createApp() {
     res.json({ ok: true });
   });
 
-  // ── Tournament: POST /api/tournament/:id/result ────────────────────────────
+  // ── Tournament: GET /api/tournament/:id/pending-results ────────────────────────────────────
+  // Returns all pending player-reported results for a tournament.
+  // Director fetches this on connect to catch up on reports submitted while offline.
+  app.get("/api/tournament/:id/pending-results", (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    res.json({ reports: getPendingReports(id) });
+  });
+
+  // ── Tournament: DELETE /api/tournament/:id/pending-results/:gameId ────────────────
+  // Director calls this when they confirm or dismiss a pending report.
+  app.delete("/api/tournament/:id/pending-results/:gameId", (req, res) => {
+    const { id, gameId } = req.params;
+    if (!id || !gameId) return res.status(400).json({ error: "Missing id or gameId" });
+    clearPendingReport(id, gameId);
+    res.json({ ok: true });
+  });
+
+  // ── Tournament: POST /api/tournament/:id/result ───────────────────────────────────────────────
   // Called by a player when they submit their game result from the My Board screen.
   // Body: { gameId: string; result: "1-0" | "0-1" | "½-½"; submittedBy: string }
-  // This stores the player-submitted result so the director can see it as a suggestion.
-  // The director still confirms results on their dashboard.
+  // Stores the report in memory and broadcasts result_submitted SSE to the director.
   app.post("/api/tournament/:id/result", (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
@@ -722,19 +814,22 @@ export function createApp() {
     if (!gameId || !result || !submittedBy) {
       return res.status(400).json({ error: "Missing gameId, result, or submittedBy" });
     }
-    // Broadcast a result_submitted event so the director dashboard can show a notification
+    // Persist in memory so director can catch up if they reconnect
+    const report: PendingReport = { gameId, result, submittedBy, timestamp: Date.now() };
+    setPendingReport(id, report);
+    // Broadcast a result_submitted event so the director dashboard shows a badge immediately
     const subs = sseSubscribers.get(id);
     if (subs && subs.size > 0) {
-      const payload = `event: result_submitted\ndata: ${JSON.stringify({ gameId, result, submittedBy })}\n\n`;
+      const payload = `event: result_submitted\ndata: ${JSON.stringify(report)}\n\n`;
       for (const sub of Array.from(subs)) {
         try { sub.write(payload); } catch { /* disconnected */ }
       }
-      console.log(`[result] Player ${submittedBy} submitted result ${result} for game ${gameId} in tournament ${id}`);
     }
+    console.log(`[result] Player ${submittedBy} submitted result ${result} for game ${gameId} in tournament ${id}`);
     res.json({ ok: true });
   });
 
-  // ── Tournament: POST /api/tournament/:id/round ────────────────────────────
+  // ── Tournament: POST /api/tournament/:id/round ───────────────────────────────────────────────
   // Called by the director when they generate the next round's pairings.
   // Broadcasts a round_started SSE event to all connected player clients so
   // their My Board screens automatically refresh to the new board assignment.

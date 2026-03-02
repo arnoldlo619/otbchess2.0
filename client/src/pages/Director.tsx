@@ -66,6 +66,8 @@ import {
   Printer,
   Hash,
   MoreVertical,
+  CheckCheck,
+  MessageSquare,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -535,6 +537,26 @@ export default function Director() {
   });
 
   const { user } = useAuthContext();
+
+  // ── Immediately push current state to server, bypassing the 1.5s debounce ──
+  // Called after every result entry so standings_updated SSE fires right away.
+  const pushStandingsNow = useCallback(() => {
+    if (tournamentId === "otb-demo-2026") return;
+    // We read the latest state from localStorage (written by the 300ms debounce)
+    // rather than from the React state closure to avoid stale captures.
+    setTimeout(() => {
+      try {
+        const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
+        const latestState = raw ? JSON.parse(raw) : null;
+        if (!latestState?.state) return;
+        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: latestState.state }),
+        }).catch(() => { /* fire-and-forget */ });
+      } catch { /* ignore */ }
+    }, 350); // Wait for the 300ms localStorage debounce to flush
+  }, [tournamentId]);
 
   // ── Sync tournament status to server (for My Tournaments status pills) ──
   const syncStatusToServer = useCallback((newStatus: string) => {
@@ -1735,6 +1757,9 @@ export default function Director() {
                                     : "Draw"
                                 }`;
                           recordWithUndo(gameId, newResult, prevResult, label);
+                          // Push to server immediately so standings_updated SSE fires
+                          // to all player devices without waiting for the 1.5s debounce.
+                          pushStandingsNow();
                         }}
                         isDark={isDark}
                       />

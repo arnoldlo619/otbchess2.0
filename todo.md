@@ -888,3 +888,47 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Profile page: render a status pill on each tournament card (Lobby / Active / Complete)
 - [x] Status pill colours: Lobby = amber, Active = green, Complete = gray/muted
 - [x] Unit tests for status pill label/colour helpers
+
+## Director Result Confirmation Badges
+
+- [ ] Server: in-memory store for player-reported results per tournament (boardId → {result, reportedBy, timestamp})
+- [ ] Server: POST /api/tournament/:id/report-result endpoint (player submits result)
+- [ ] Server: SSE broadcast `result_reported` event to director when a player submits
+- [ ] Director: listen for `result_reported` SSE events and store pending reports in state
+- [ ] Director: BoardCard shows confirmation badge when a player has reported a result ("Alice reported: 1-0 ✓")
+- [ ] Director: one-tap confirm button on the badge applies the result via enterResult()
+- [ ] Director: badge dismissed after director confirms or manually enters a different result
+- [ ] PlayerView: wire result submission to POST /api/tournament/:id/report-result
+- [ ] Unit tests for result report store helpers and badge display logic
+
+## Real-Time Sync Overhaul (Live Tournament Experience)
+
+- [ ] Server: broadcast `standings_updated` SSE event whenever director enters/changes a result
+- [ ] Server: broadcast `round_generated` SSE event when director generates the next round
+- [ ] Server: GET /api/tournament/:id/live-state endpoint returns full live state (round, games, players/standings) for catch-up on connect
+- [ ] PlayerView: replace localStorage-only state with server-authoritative live state fetched on mount
+- [ ] PlayerView: open persistent SSE connection on mount (no account required — keyed by tournamentId + username in localStorage)
+- [ ] PlayerView: handle `tournament_started`, `round_started`, `round_generated`, `standings_updated`, `tournament_ended` SSE events
+- [ ] PlayerView: live standings tab showing all players ranked with score, W/D/L, and highlight for current player
+- [ ] PlayerView: board assignment card auto-updates when new round is generated (no manual refresh)
+- [ ] PlayerView: "Waiting for next round" state shown between rounds with live standings
+- [ ] PlayerView: smooth animated transition when new round pairings arrive
+- [ ] Director: broadcast standings_updated after every enterResult() call
+- [ ] Director: broadcast round_generated after generateNextRound() completes
+- [ ] Unit tests for SSE event handling and live state reconciliation
+
+## Real-Time Sync Overhaul — Mar 2026
+
+- [x] Audit SSE pipeline: identified dead-end result-submitted screen, missing standings_updated event, 1.5s debounce lag
+- [x] Server: add standings_updated SSE broadcast to state PUT endpoint
+- [x] Server: add GET /api/tournament/:id/live-state catch-up endpoint (no debounce lag)
+- [x] Server: add in-memory pending results store + GET /pending-results endpoint
+- [x] PlayerView: full rebuild — lobby, my_board, waiting_round, new_round_flash, tournament_complete screens
+- [x] PlayerView: SSE listener works from ALL screens (round_started, standings_updated, tournament_ended)
+- [x] PlayerView: live standings tab on My Board screen (shows rank, points, W/D/L)
+- [x] PlayerView: waiting_round screen shows live standings between rounds
+- [x] PlayerView: connection status badge (Live / Reconnecting)
+- [x] PlayerView: catch-up fetch on mount so reconnecting players see current state immediately
+- [x] Director: pushStandingsNow helper bypasses 1.5s debounce after every result entry
+- [x] Director: pushStandingsNow called after recordWithUndo so SSE fires immediately
+- [x] Unit tests: playerViewLiveSync.test.ts (13 tests — findMyBoard, myRank, standings merging)

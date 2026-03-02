@@ -1,14 +1,17 @@
 /**
  * PlayerView — /tournament/:id/play?username=xxx
  *
- * The mobile-first player experience after joining a tournament.
- * Two internal screens:
- *   1. Lobby — animated waiting screen while the tournament hasn't started yet.
- *              Opens an SSE stream and transitions to MyBoard on tournament_started.
- *   2. MyBoard — shows the player's board number, color, opponent, and result buttons.
- *               After result submission, shows a confirmation + standings link.
+ * Mobile-first participant experience. No account required.
+ * Connects via SSE and stays live for the full tournament duration.
+ *
+ * Screens / states:
+ *   lobby            — waiting for tournament to start
+ *   my_board         — active game: board, opponent, result buttons, standings tab
+ *   waiting_round    — between rounds: live standings while director generates next round
+ *   new_round_flash  — brief animated transition when a new round starts
+ *   tournament_complete — final standings
  */
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearch } from "wouter";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
@@ -18,79 +21,169 @@ import {
   Clock,
   CheckCircle2,
   Users,
-  ChevronRight,
   Loader2,
   RotateCcw,
   Crown,
   Circle,
   Copy,
   Check,
+  BarChart3,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { resolveTournament } from "@/lib/tournamentRegistry";
 import type { Game, Player } from "@/lib/tournamentData";
+import { getStandings } from "@/lib/tournamentData";
 import { TournamentCompleteScreen } from "./TournamentCompleteScreen";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface TournamentStartedPayload {
+interface LivePayload {
   round: number;
   games: Game[];
   players: Player[];
 }
-
+interface StandingsPayload {
+  players: Player[];
+  currentRound: number;
+  status: string;
+}
 interface TournamentEndedPayload {
   players: Player[];
   tournamentName: string;
 }
-
-type PlayerScreen = "lobby" | "my_board" | "result_submitted" | "new_round_flash" | "tournament_complete";
+type ResultOption = "1-0" | "½-½" | "0-1";
+type PlayerScreen =
+  | "lobby"
+  | "my_board"
+  | "waiting_round"
+  | "new_round_flash"
+  | "tournament_complete";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Find the game this player is involved in for the current round. */
 export function findMyBoard(
   username: string,
   games: Game[],
   players: Player[]
-): {
-  game: Game;
-  myColor: "white" | "black";
-  opponent: Player | undefined;
-} | null {
-  const me = players.find(
-    (p) => p.username.toLowerCase() === username.toLowerCase()
-  );
+): { game: Game; myColor: "white" | "black"; opponent: Player | undefined } | null {
+  const me = players.find((p) => p.username.toLowerCase() === username.toLowerCase());
   if (!me) return null;
-
-  const game = games.find(
-    (g) => g.whiteId === me.id || g.blackId === me.id
-  );
+  const game = games.find((g) => g.whiteId === me.id || g.blackId === me.id);
   if (!game) return null;
-
   const myColor = game.whiteId === me.id ? "white" : "black";
   const opponentId = myColor === "white" ? game.blackId : game.whiteId;
   const opponent = players.find((p) => p.id === opponentId);
-
   return { game, myColor, opponent };
 }
 
-// ─── Rejoin Link Card ────────────────────────────────────────────────────────
+function myRank(username: string, players: Player[]): number {
+  const standings = getStandings(players);
+  const idx = standings.findIndex((p) => p.username.toLowerCase() === username.toLowerCase());
+  return idx === -1 ? 0 : idx + 1;
+}
 
-function RejoinLinkCard({
-  rejoinUrl,
-  isDark,
+// ─── Connection Status Badge ──────────────────────────────────────────────────
+function ConnectionBadge({ connected, isDark }: { connected: boolean; isDark: boolean }) {
+  return (
+    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+      connected
+        ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+        : isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-500"
+    }`}>
+      {connected
+        ? <><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /><Wifi className="w-3 h-3" />Live</>
+        : <><WifiOff className="w-3 h-3" />Reconnecting</>
+      }
+    </div>
+  );
+}
+
+// ─── Live Standings Panel ─────────────────────────────────────────────────────
+function LiveStandingsPanel({
+  players, username, currentRound, totalRounds, isDark,
 }: {
-  rejoinUrl: string;
-  isDark: boolean;
+  players: Player[]; username: string; currentRound: number; totalRounds: number; isDark: boolean;
 }) {
+  const standings = getStandings(players);
+  const medals = ["🥇", "🥈", "🥉"];
+  const textMain = isDark ? "text-white" : "text-gray-900";
+  const textMuted = isDark ? "text-white/50" : "text-gray-500";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-1 mb-3">
+        <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>Live Standings</p>
+        <p className={`text-xs ${textMuted}`}>Round {currentRound} of {totalRounds}</p>
+      </div>
+      {standings.map((p, i) => {
+        const isMe = p.username.toLowerCase() === username.toLowerCase();
+        return (
+          <div
+            key={p.id}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+              isMe
+                ? isDark
+                  ? "bg-[#3D6B47]/30 border border-[#4CAF50]/40"
+                  : "bg-[#3D6B47]/08 border border-[#3D6B47]/25"
+                : i < 3
+                ? isDark ? "bg-white/04" : "bg-gray-50"
+                : ""
+            }`}
+          >
+            <span className="text-base w-7 text-center flex-shrink-0">
+              {i < 3
+                ? medals[i]
+                : <span className={`text-sm font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>{i + 1}</span>
+              }
+            </span>
+            <PlayerAvatar
+              username={p.username}
+              name={p.name || p.username}
+              platform={p.platform ?? "chesscom"}
+              avatarUrl={p.avatarUrl}
+              size={32}
+              className="flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className={`text-sm font-bold truncate ${isMe ? accent : textMain}`}>
+                  {p.name?.split(" ")[0] ?? p.username}
+                  {isMe && <span className={`ml-1 text-xs ${accent}`}>(you)</span>}
+                </span>
+                {p.title && (
+                  <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1 py-0.5 rounded flex-shrink-0">
+                    {p.title}
+                  </span>
+                )}
+              </div>
+              <span className={`text-xs ${textMuted}`}>
+                {p.wins}W {p.draws}D {p.losses}L · {p.elo} ELO
+              </span>
+            </div>
+            <span className={`text-lg font-black tabular-nums flex-shrink-0 ${isMe ? accent : textMain}`}>
+              {p.points}
+            </span>
+          </div>
+        );
+      })}
+      {standings.length === 0 && (
+        <div className={`text-center py-8 ${textMuted}`}>
+          <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">Standings will appear here once games begin.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Rejoin Link Card ─────────────────────────────────────────────────────────
+function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
   const textMuted = isDark ? "text-white/40" : "text-gray-400";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-50";
   const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
-  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
-
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(rejoinUrl);
@@ -98,79 +191,44 @@ function RejoinLinkCard({
       setTimeout(() => setCopied(false), 2000);
     } catch { /* ignore */ }
   }
-
   return (
-    <div className={`w-full max-w-xs rounded-2xl px-5 py-4 ${cardBg} space-y-3`}>
-      <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>
-        Your Rejoin Link
-      </p>
-      <p className={`text-xs ${textMuted}`}>
-        Scan or share to jump straight back to your board.
-      </p>
-      {/* Mini QR code */}
+    <div className={`w-full rounded-2xl px-5 py-4 ${cardBg} space-y-3`}>
+      <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>Your Rejoin Link</p>
+      <p className={`text-xs ${textMuted}`}>Bookmark this to jump straight back to your board.</p>
       <div className="flex justify-center">
         <div className={`p-2 rounded-xl ${isDark ? "bg-white" : "bg-white border border-gray-100"}`}>
-          <QRCodeSVG
-            value={rejoinUrl}
-            size={100}
-            bgColor="#ffffff"
-            fgColor="#1a2e1e"
-            level="M"
-          />
+          <QRCodeSVG value={rejoinUrl} size={96} bgColor="#ffffff" fgColor="#1a2e1e" level="M" />
         </div>
       </div>
-      {/* Copy button */}
       <button
         onClick={handleCopy}
         className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-          isDark
-            ? "bg-white/08 hover:bg-white/12 text-white/70"
-            : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+          isDark ? "bg-white/08 hover:bg-white/12 text-white/70" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
         }`}
       >
-        {copied ? (
-          <><Check className={`w-3.5 h-3.5 ${accent}`} /><span className={accent}>Copied!</span></>
-        ) : (
-          <><Copy className="w-3.5 h-3.5" />Copy link</>
-        )}
+        {copied
+          ? <><Check className={`w-3.5 h-3.5 ${accent}`} /><span className={accent}>Copied!</span></>
+          : <><Copy className="w-3.5 h-3.5" />Copy link</>
+        }
       </button>
     </div>
   );
 }
 
 // ─── Lobby Screen ─────────────────────────────────────────────────────────────
-
-interface LobbyProps {
-  tournamentName: string;
-  username: string;
-  isDark: boolean;
-  tournamentId: string;
-  playerCount: number | null;
-  onPlayerCountChange: (count: number) => void;
-  rejoinUrl: string;
-}
-
 function LobbyScreen({
-  tournamentName,
-  username,
-  isDark,
-  tournamentId,
-  playerCount,
-  onPlayerCountChange,
-  rejoinUrl,
-}: LobbyProps) {
+  tournamentName, username, isDark, tournamentId,
+  playerCount, onPlayerCountChange, rejoinUrl, connected,
+}: {
+  tournamentName: string; username: string; isDark: boolean; tournamentId: string;
+  playerCount: number | null; onPlayerCountChange: (n: number) => void;
+  rejoinUrl: string; connected: boolean;
+}) {
   const [dots, setDots] = useState(".");
-
-  // Animate the waiting dots
   useEffect(() => {
-    const t = setInterval(
-      () => setDots((d) => (d.length >= 3 ? "." : d + ".")),
-      600
-    );
+    const t = setInterval(() => setDots((d) => (d.length >= 3 ? "." : d + ".")), 600);
     return () => clearInterval(t);
   }, []);
-
-  // Fetch initial player count on mount
   useEffect(() => {
     fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`)
       .then((r) => r.json())
@@ -187,118 +245,136 @@ function LobbyScreen({
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
-      {/* Header */}
       <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
-        <div className="flex items-center gap-2 mb-1">
-          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>
-            OTB Chess
-          </span>
+        <div className="flex items-center justify-between mb-1">
+          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
+          <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
-        <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>
-          {tournamentName}
-        </h1>
+        <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
       </div>
-
-      {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-8">
-        {/* Animated chess piece */}
         <div className="relative flex items-center justify-center">
-          {/* Pulsing rings */}
           <div className={`absolute w-32 h-32 rounded-full ${accentBg} animate-ping opacity-30`} />
-          <div className={`absolute w-24 h-24 rounded-full ${accentBg} animate-ping opacity-50`}
-            style={{ animationDelay: "0.3s" }} />
-          {/* Chess king icon */}
+          <div className={`absolute w-24 h-24 rounded-full ${accentBg} animate-ping opacity-50`} style={{ animationDelay: "0.3s" }} />
           <div className={`relative w-20 h-20 rounded-full ${accentBg} flex items-center justify-center`}>
             <Crown className={`w-10 h-10 ${accent}`} />
           </div>
         </div>
-
-        {/* Status text */}
         <div className="text-center space-y-2">
-          <h2 className={`text-2xl font-bold ${textMain}`}>
-            Waiting for tournament to start{dots}
-          </h2>
-          <p className={`text-sm ${textMuted}`}>
-            You're registered as <span className={`font-semibold ${accent}`}>@{username}</span>
+          <h2 className={`text-2xl font-bold ${textMain}`}>Waiting for tournament to start{dots}</h2>
+          <p className={`text-base ${textMuted}`}>
+            Hi <span className={`font-bold ${accent}`}>{username}</span> — you're registered!
           </p>
+          {playerCount !== null && (
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${accentBg} mt-2`}>
+              <Users className={`w-4 h-4 ${accent}`} />
+              <span className={`text-sm font-semibold ${accent}`}>{playerCount} player{playerCount !== 1 ? "s" : ""} registered</span>
+            </div>
+          )}
         </div>
-
-        {/* Player count card */}
-        {playerCount !== null && (
-          <div className={`w-full max-w-xs rounded-2xl px-5 py-4 ${cardBg} flex items-center gap-4`}>
-            <div className={`w-10 h-10 rounded-xl ${accentBg} flex items-center justify-center flex-shrink-0`}>
-              <Users className={`w-5 h-5 ${accent}`} />
-            </div>
-            <div>
-              <p className={`text-xl font-bold ${textMain}`}>{playerCount}</p>
-              <p className={`text-xs ${textMuted}`}>
-                {playerCount === 1 ? "player registered" : "players registered"}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* What to expect */}
-        <div className={`w-full max-w-xs rounded-2xl px-5 py-4 ${cardBg} space-y-3`}>
-          <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>
-            What happens next
-          </p>
+        <div className={`w-full max-w-xs rounded-2xl ${cardBg} px-5 py-4 space-y-2`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>What to expect</p>
           {[
-            { icon: Swords, text: "Director pairs players by ELO" },
-            { icon: Clock, text: "You'll see your board & opponent here" },
-            { icon: CheckCircle2, text: "Play your game, then report the result" },
-          ].map(({ icon: Icon, text }, i) => (
-            <div key={i} className="flex items-center gap-3">
+            { icon: CheckCircle2, text: "Director will start the tournament shortly" },
+            { icon: Swords, text: "You'll be assigned a board and opponent" },
+            { icon: Trophy, text: "Play your game, then report the result" },
+          ].map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-3">
               <Icon className={`w-4 h-4 flex-shrink-0 ${accent}`} />
-              <span className={`text-sm ${textMuted}`}>{text}</span>
+              <p className={`text-sm ${textMuted}`}>{text}</p>
             </div>
           ))}
         </div>
-
-        {/* Rejoin link */}
+      </div>
+      <div className="px-6 pb-safe-bottom pb-8">
         <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
       </div>
+    </div>
+  );
+}
 
-      {/* Bottom branding */}
-      <div className={`px-5 pb-safe-bottom pb-6 text-center`}>
-        <p className={`text-xs ${textMuted}`}>Keep this screen open — it will update automatically</p>
+// ─── Waiting Between Rounds Screen ───────────────────────────────────────────
+function WaitingRoundScreen({
+  tournamentName, username, round, totalRounds, players, isDark, connected,
+}: {
+  tournamentName: string; username: string; round: number; totalRounds: number;
+  players: Player[]; isDark: boolean; connected: boolean;
+}) {
+  const [dots, setDots] = useState(".");
+  useEffect(() => {
+    const t = setInterval(() => setDots((d) => (d.length >= 3 ? "." : d + ".")), 600);
+    return () => clearInterval(t);
+  }, []);
+
+  const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
+  const textMain = isDark ? "text-white" : "text-gray-900";
+  const textMuted = isDark ? "text-white/50" : "text-gray-500";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+  const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
+  const rank = myRank(username, players);
+  const myScore = getStandings(players).find(
+    (p) => p.username.toLowerCase() === username.toLowerCase()
+  )?.points ?? 0;
+
+  return (
+    <div className={`min-h-screen ${bg} flex flex-col`}>
+      <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
+        <div className="flex items-center justify-between mb-1">
+          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
+          <ConnectionBadge connected={connected} isDark={isDark} />
+        </div>
+        <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
+      </div>
+      <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4 flex items-center gap-4`}>
+        <div className={`w-10 h-10 rounded-full ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/12"} flex items-center justify-center flex-shrink-0`}>
+          <Clock className={`w-5 h-5 ${accent}`} />
+        </div>
+        <div>
+          <p className={`text-sm font-bold ${textMain}`}>Round {round} complete{dots}</p>
+          <p className={`text-xs ${textMuted}`}>
+            Waiting for director to generate Round {round + 1} of {totalRounds}
+          </p>
+        </div>
+      </div>
+      {rank > 0 && (
+        <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-5 py-4`}>
+          <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-2`}>Your Standing</p>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`}</span>
+            <div>
+              <p className={`text-lg font-black ${textMain}`}>{myScore} pts</p>
+              <p className={`text-xs ${textMuted}`}>Rank {rank} of {players.length}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-4 py-4 flex-1 overflow-y-auto`}>
+        <LiveStandingsPanel
+          players={players}
+          username={username}
+          currentRound={round}
+          totalRounds={totalRounds}
+          isDark={isDark}
+        />
       </div>
     </div>
   );
 }
 
 // ─── My Board Screen ──────────────────────────────────────────────────────────
-
-interface MyBoardProps {
-  tournamentId: string;
-  tournamentName: string;
-  username: string;
-  round: number;
-  game: Game;
-  myColor: "white" | "black";
-  opponent: Player | undefined;
-  isDark: boolean;
-  onResultSubmitted: () => void;
-  rejoinUrl: string;
-}
-
-type ResultOption = "1-0" | "0-1" | "½-½";
-
 function MyBoardScreen({
-  tournamentId,
-  tournamentName,
-  username,
-  round,
-  game,
-  myColor,
-  opponent,
-  isDark,
-  onResultSubmitted,
-  rejoinUrl,
-}: MyBoardProps) {
+  tournamentId, tournamentName, username, round, totalRounds, game, myColor,
+  opponent, players, isDark, onResultSubmitted, rejoinUrl, connected,
+}: {
+  tournamentId: string; tournamentName: string; username: string;
+  round: number; totalRounds: number; game: Game; myColor: "white" | "black";
+  opponent: Player | undefined; players: Player[]; isDark: boolean;
+  onResultSubmitted: () => void; rejoinUrl: string; connected: boolean;
+}) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<ResultOption | null>(null);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<"board" | "standings">("board");
 
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-white/50" : "text-gray-500";
@@ -307,318 +383,260 @@ function MyBoardScreen({
   const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
   const divider = isDark ? "border-white/08" : "border-gray-100";
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
+  const colorLabel = myColor === "white" ? "White ♔" : "Black ♚";
+  const rank = myRank(username, players);
 
-  const submitResult = useCallback(
-    async (result: ResultOption) => {
-      setSubmitting(true);
-      setError("");
-      try {
-        const res = await fetch(
-          `/api/tournament/${encodeURIComponent(tournamentId)}/result`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              gameId: game.id,
-              result,
-              submittedBy: username,
-            }),
-          }
-        );
-        if (!res.ok) throw new Error("Server error");
-        setSubmitted(result);
-        onResultSubmitted();
-      } catch {
-        setError("Failed to submit result. Please try again.");
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [tournamentId, game.id, username, onResultSubmitted]
-  );
+  const submitResult = useCallback(async (result: ResultOption) => {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `/api/tournament/${encodeURIComponent(tournamentId)}/result`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gameId: game.id, result, submittedBy: username }),
+        }
+      );
+      if (!res.ok) throw new Error("Server error");
+      setSubmitted(result);
+      onResultSubmitted();
+    } catch {
+      setError("Failed to submit result. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [tournamentId, game.id, username, onResultSubmitted]);
 
   const resultLabel = (r: ResultOption) => {
-    if (r === "1-0") return myColor === "white" ? "I Won" : "I Lost";
-    if (r === "0-1") return myColor === "black" ? "I Won" : "I Lost";
-    return "Draw";
+    if (r === "½-½") return "Draw";
+    const isWin = (r === "1-0" && myColor === "white") || (r === "0-1" && myColor === "black");
+    return isWin ? "I Won" : "I Lost";
   };
-
-  const resultIcon = (r: ResultOption) => {
-    if (r === "1-0") return myColor === "white" ? "🏆" : "❌";
-    if (r === "0-1") return myColor === "black" ? "🏆" : "❌";
-    return "🤝";
-  };
-
-  const colorLabel = myColor === "white" ? "White" : "Black";
-  const colorDot = myColor === "white"
-    ? "bg-white border-2 border-gray-300"
-    : "bg-gray-900 border-2 border-gray-600";
-
-  if (submitted) {
-    return (
-      <div className={`min-h-screen ${bg} flex flex-col`}>
-        {/* Header */}
-        <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${divider}`}>
-          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
-          <h1 className={`text-lg font-bold ${textMain} truncate mt-1`}>{tournamentName}</h1>
-        </div>
-
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-6 text-center">
-          <div className={`w-20 h-20 rounded-full ${accentBg} flex items-center justify-center text-4xl`}>
-            {resultIcon(submitted)}
-          </div>
-          <div className="space-y-2">
-            <h2 className={`text-2xl font-bold ${textMain}`}>Result submitted!</h2>
-            <p className={`text-sm ${textMuted}`}>
-              The director will confirm your result on the dashboard.
-            </p>
-          </div>
-
-          <div className={`w-full max-w-xs rounded-2xl px-5 py-4 ${cardBg} text-left space-y-2`}>
-            <p className={`text-xs font-bold uppercase tracking-wider ${accent}`}>Your result</p>
-            <p className={`text-base font-semibold ${textMain}`}>
-              {resultLabel(submitted)} — {submitted}
-            </p>
-            <p className={`text-xs ${textMuted}`}>
-              Board {game.board} · Round {round} · vs {opponent?.name ?? opponent?.username ?? "Opponent"}
-            </p>
-          </div>
-
-          <Link
-            href={`/tournament/${tournamentId}`}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm ${
-              isDark
-                ? "bg-[#3D6B47] text-white"
-                : "bg-[#3D6B47] text-white"
-            }`}
-          >
-            <Trophy className="w-4 h-4" />
-            View Live Standings
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const resultIcon = (r: ResultOption) => r === "½-½" ? "🤝" : resultLabel(r) === "I Won" ? "🏆" : "😔";
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
       {/* Header */}
-      <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${divider}`}>
-        <div className="flex items-center justify-between">
+      <div className={`px-5 pt-safe-top pt-5 pb-3 border-b ${divider}`}>
+        <div className="flex items-center justify-between mb-0.5">
           <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
-          <span className={`text-xs font-bold px-2 py-1 rounded-full ${accentBg} ${accent}`}>
-            Round {round}
+          <ConnectionBadge connected={connected} isDark={isDark} />
+        </div>
+        <div className="flex items-center justify-between">
+          <h1 className={`text-base font-bold ${textMain} truncate flex-1 mr-2`}>{tournamentName}</h1>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${accentBg} ${accent} flex-shrink-0`}>
+            R{round}/{totalRounds}
           </span>
         </div>
-        <h1 className={`text-lg font-bold ${textMain} truncate mt-1`}>{tournamentName}</h1>
       </div>
 
-      {/* Board assignment hero */}
-      <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-5`}>
-        <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-1`}>Your Assignment</p>
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black ${
-            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/15 text-[#3D6B47]"
-          }`}>
-            {game.board}
-          </div>
-          <div>
-            <p className={`text-2xl font-black ${textMain}`}>Board {game.board}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className={`w-3 h-3 rounded-full ${colorDot}`} />
-              <p className={`text-sm font-semibold ${textMuted}`}>Playing as {colorLabel}</p>
+      {/* Tab bar */}
+      <div className={`flex border-b ${divider}`}>
+        {(["board", "standings"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+              activeTab === tab
+                ? `${accent} border-b-2 ${isDark ? "border-[#4CAF50]" : "border-[#3D6B47]"}`
+                : textMuted
+            }`}
+          >
+            {tab === "board" ? "My Board" : `Standings${rank > 0 ? ` (#${rank})` : ""}`}
+          </button>
+        ))}
+      </div>
+
+      {/* Board tab */}
+      {activeTab === "board" && (
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          {/* Board assignment */}
+          <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-1`}>Your Assignment</p>
+                <p className={`text-3xl font-black ${textMain}`}>Board {game.board}</p>
+                <p className={`text-sm font-semibold mt-0.5 ${accent}`}>Playing as {colorLabel}</p>
+              </div>
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${
+                myColor === "white"
+                  ? isDark ? "bg-white/90" : "bg-white border-2 border-gray-200"
+                  : isDark ? "bg-[#1a1a1a]" : "bg-gray-800"
+              }`}>
+                {myColor === "white" ? "♔" : "♚"}
+              </div>
             </div>
+          </div>
+
+          {/* Opponent card */}
+          <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
+            <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-3`}>Your Opponent</p>
+            {opponent ? (
+              <div className="flex items-center gap-4">
+                <PlayerAvatar
+                  username={opponent.username}
+                  name={opponent.name || opponent.username}
+                  platform={opponent.platform ?? "chesscom"}
+                  avatarUrl={opponent.avatarUrl}
+                  size={56}
+                  className="flex-shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
+                  <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
+                  <p className={`text-sm font-semibold mt-0.5 ${accent}`}>{opponent.elo} ELO</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className={`w-14 h-14 rounded-full ${accentBg} flex items-center justify-center`}>
+                  <Circle className={`w-6 h-6 ${accent}`} />
+                </div>
+                <div>
+                  <p className={`text-base font-bold ${textMain}`}>Bye</p>
+                  <p className={`text-sm ${textMuted}`}>You receive a half-point bye this round</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Result submission */}
+          <div className={`px-4 pb-safe-bottom pb-6 pt-4 border-t ${divider} space-y-3`}>
+            {submitted ? (
+              <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
+                <p className="text-2xl mb-1">{resultIcon(submitted)}</p>
+                <p className={`text-sm font-bold ${accent}`}>Result submitted — {resultLabel(submitted)}</p>
+                <p className={`text-xs ${textMuted} mt-1`}>The director will confirm shortly.</p>
+              </div>
+            ) : (
+              <>
+                <p className={`text-xs font-bold uppercase tracking-wider text-center ${textMuted}`}>Report your result</p>
+                {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+                {opponent ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["1-0", "½-½", "0-1"] as ResultOption[]).map((r) => {
+                      const isWin = (r === "1-0" && myColor === "white") || (r === "0-1" && myColor === "black");
+                      const isDraw = r === "½-½";
+                      return (
+                        <button
+                          key={r}
+                          onClick={() => submitResult(r)}
+                          disabled={submitting}
+                          className={`py-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 ${
+                            isWin
+                              ? "bg-[#3D6B47] text-white"
+                              : isDraw
+                              ? isDark
+                                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                                : "bg-blue-50 text-blue-700 border border-blue-200"
+                              : isDark
+                              ? "bg-red-500/15 text-red-400 border border-red-500/25"
+                              : "bg-red-50 text-red-600 border border-red-200"
+                          }`}
+                        >
+                          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="text-xl">{resultIcon(r)}</span>}
+                          <span>{resultLabel(r)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
+                    <p className={`text-sm font-semibold ${accent}`}>
+                      You have a bye this round — ½ point awarded automatically.
+                    </p>
+                  </div>
+                )}
+                <p className={`text-xs text-center ${textMuted}`}>
+                  The director will confirm your result on their dashboard.
+                </p>
+              </>
+            )}
+            <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Opponent card */}
-      <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
-        <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-3`}>Your Opponent</p>
-        {opponent ? (
-          <div className="flex items-center gap-4">
-            <PlayerAvatar
-              username={opponent.username}
-              name={opponent.name || opponent.username}
-              platform={opponent.platform ?? "chesscom"}
-              avatarUrl={opponent.avatarUrl}
-              size={56}
-              className="flex-shrink-0"
-            />
-            <div className="min-w-0">
-              <p className={`text-lg font-bold ${textMain} truncate`}>
-                {opponent.name || opponent.username}
-              </p>
-              <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
-              <p className={`text-sm font-semibold mt-0.5 ${accent}`}>
-                {opponent.elo} ELO
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className={`w-14 h-14 rounded-full ${accentBg} flex items-center justify-center`}>
-              <Circle className={`w-6 h-6 ${accent}`} />
-            </div>
-            <div>
-              <p className={`text-base font-bold ${textMain}`}>Bye</p>
-              <p className={`text-sm ${textMuted}`}>You receive a half-point bye this round</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Result submission */}
-      <div className={`px-4 pb-safe-bottom pb-6 pt-4 border-t ${divider} space-y-3`}>
-        <p className={`text-xs font-bold uppercase tracking-wider text-center ${textMuted}`}>
-          Report your result
-        </p>
-
-        {error && (
-          <p className="text-xs text-red-500 text-center">{error}</p>
-        )}
-
-        {opponent ? (
-          <div className="grid grid-cols-3 gap-2">
-            {(["1-0", "½-½", "0-1"] as ResultOption[]).map((r) => {
-              const isWin =
-                (r === "1-0" && myColor === "white") ||
-                (r === "0-1" && myColor === "black");
-              const isDraw = r === "½-½";
-              const isLoss = !isWin && !isDraw;
-              return (
-                <button
-                  key={r}
-                  onClick={() => submitResult(r)}
-                  disabled={submitting}
-                  className={`py-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 ${
-                    isWin
-                      ? isDark
-                        ? "bg-[#3D6B47] text-white"
-                        : "bg-[#3D6B47] text-white"
-                      : isDraw
-                      ? isDark
-                        ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                        : "bg-blue-50 text-blue-700 border border-blue-200"
-                      : isDark
-                      ? "bg-red-500/15 text-red-400 border border-red-500/25"
-                      : "bg-red-50 text-red-600 border border-red-200"
-                  }`}
-                >
-                  {submitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <span className="text-xl">{resultIcon(r)}</span>
-                  )}
-                  <span>{resultLabel(r)}</span>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          // Bye — no result to submit
-          <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-            <p className={`text-sm font-semibold ${accent}`}>
-              You have a bye this round — ½ point awarded automatically.
-            </p>
-          </div>
-        )}
-
-        <p className={`text-xs text-center ${textMuted}`}>
-          The director will confirm your result on their dashboard.
-        </p>
-
-        {/* Rejoin link — lets players bookmark or share their personal board URL */}
-        {rejoinUrl && (
-          <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
-        )}
-      </div>
+      {/* Standings tab */}
+      {activeTab === "standings" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <LiveStandingsPanel
+            players={players}
+            username={username}
+            currentRound={round}
+            totalRounds={totalRounds}
+            isDark={isDark}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
 // ─── Main PlayerView Page ─────────────────────────────────────────────────────
-
 export default function PlayerView() {
   const { id: tournamentId } = useParams<{ id: string }>();
   const search = useSearch();
   const params = new URLSearchParams(search);
   const username = params.get("username") ?? "";
-
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const [screen, setScreen] = useState<PlayerScreen>("lobby");
-  const [startedPayload, setStartedPayload] =
-    useState<TournamentStartedPayload | null>(null);
-  const [endedPayload, setEndedPayload] =
-    useState<TournamentEndedPayload | null>(null);
+  const [livePayload, setLivePayload] = useState<LivePayload | null>(null);
+  const [livePlayers, setLivePlayers] = useState<Player[]>([]);
+  const [liveRound, setLiveRound] = useState(0);
+  const [totalRounds, setTotalRounds] = useState(0);
+  const [endedPayload, setEndedPayload] = useState<TournamentEndedPayload | null>(null);
   const [playerCount, setPlayerCount] = useState<number | null>(null);
   const [newRoundFlashLabel, setNewRoundFlashLabel] = useState("");
+  const [connected, setConnected] = useState(false);
 
-  // Resolve tournament name from registry
-  const tournament = tournamentId ? resolveTournament(tournamentId) : null;
-  const tournamentName = tournament?.name ?? "Tournament";
+  const tournamentName =
+    resolveTournament(tournamentId ?? "")?.name ?? "Tournament";
+  const rejoinUrl =
+    tournamentId && username
+      ? `${window.location.origin}/tournament/${tournamentId}/play?username=${encodeURIComponent(username)}`
+      : "";
 
-  // Build the personal rejoin URL: /join/:inviteCode?t=<meta>&u=<username>
-  // Players can scan this to skip the registration form entirely.
-  const rejoinUrl = (() => {
-    if (!username || !tournament) return "";
-    const base = `${window.location.origin}/join/${encodeURIComponent(tournament.inviteCode)}`;
-    const params = new URLSearchParams({ u: username });
-    return `${base}?${params.toString()}`;
-  })();
-
-  // On mount: check if tournament has already started (server state)
+  // Catch-up on mount: fetch live-state so reconnecting players see current state immediately
   useEffect(() => {
-    if (!tournamentId) return;
-    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`)
-      .then((r) => r.json())
+    if (!tournamentId || tournamentId === "otb-demo-2026") return;
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        const s = data?.state;
-        if (!s) return;
-        // Tournament already completed — jump straight to the complete screen
-        if (s.status === "completed" && s.players?.length > 0) {
-          setEndedPayload({
-            players: s.players,
-            tournamentName: s.tournamentName ?? "Tournament",
-          });
+        if (!data) return;
+        const { status, currentRound, totalRounds: tr, players, games } = data as {
+          status: string; currentRound: number; totalRounds: number;
+          players: Player[]; games: Game[];
+        };
+        if (tr) setTotalRounds(tr);
+        if (players?.length) setLivePlayers(players);
+        if (status === "completed" && players?.length > 0) {
+          setEndedPayload({ players, tournamentName: data.tournamentName ?? "Tournament" });
           setScreen("tournament_complete");
           return;
         }
-        // Tournament in progress — jump to My Board
-        if (
-          (s.status === "in_progress" || s.status === "paused") &&
-          s.rounds?.length > 0 &&
-          s.players?.length > 0
-        ) {
-          const currentRound = s.rounds.find((r: { number: number }) => r.number === s.currentRound);
-          if (currentRound) {
-            setStartedPayload({
-              round: s.currentRound,
-              games: currentRound.games,
-              players: s.players,
-            });
-            setScreen("my_board");
-          }
+        if ((status === "in_progress" || status === "paused") && currentRound > 0 && games?.length > 0) {
+          setLivePayload({ round: currentRound, games, players });
+          setLiveRound(currentRound);
+          setScreen("my_board");
         }
       })
-      .catch(() => {
-        // State not found — stay on lobby
-      });
+      .catch(() => { /* stay on lobby */ });
   }, [tournamentId]);
 
-  // Persistent SSE connection — lives for the full player session across all screens.
-  // Handles: tournament_started, round_started, player_joined.
+  // Persistent SSE connection — lives for the full player session across all screens
   useEffect(() => {
     if (!tournamentId) return;
     const es = new EventSource(
       `/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`
     );
+    es.onopen = () => setConnected(true);
+    es.onerror = () => setConnected(false);
 
     es.addEventListener("player_joined", () => {
       setPlayerCount((c) => (c !== null ? c + 1 : 1));
@@ -626,27 +644,39 @@ export default function PlayerView() {
 
     es.addEventListener("tournament_started", (e: MessageEvent) => {
       try {
-        const payload = JSON.parse(e.data) as TournamentStartedPayload;
-        setStartedPayload(payload);
+        const payload = JSON.parse(e.data) as LivePayload;
+        setLivePayload(payload);
+        setLivePlayers(payload.players);
+        setLiveRound(payload.round);
         setScreen("my_board");
-      } catch {
-        console.error("[player] Failed to parse tournament_started");
-      }
+      } catch { /* ignore */ }
     });
 
+    // Fires when director generates the next round — works from ALL screens
     es.addEventListener("round_started", (e: MessageEvent) => {
       try {
-        const payload = JSON.parse(e.data) as TournamentStartedPayload;
-        // Show a brief "New Round!" flash, then transition to the updated board.
+        const payload = JSON.parse(e.data) as LivePayload;
         setNewRoundFlashLabel(`Round ${payload.round} starting…`);
         setScreen("new_round_flash");
         setTimeout(() => {
-          setStartedPayload(payload);
+          setLivePayload(payload);
+          setLivePlayers(payload.players);
+          setLiveRound(payload.round);
           setScreen("my_board");
         }, 1800);
-      } catch {
-        console.error("[player] Failed to parse round_started");
-      }
+      } catch { /* ignore */ }
+    });
+
+    // Fires whenever director enters a result (~1.5s after state save)
+    es.addEventListener("standings_updated", (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data) as StandingsPayload;
+        if (data.players?.length) {
+          setLivePlayers(data.players);
+          // Keep livePayload.players in sync so the board tab shows updated data
+          setLivePayload((prev) => prev ? { ...prev, players: data.players } : prev);
+        }
+      } catch { /* ignore */ }
     });
 
     es.addEventListener("tournament_ended", (e: MessageEvent) => {
@@ -654,35 +684,31 @@ export default function PlayerView() {
         const payload = JSON.parse(e.data) as TournamentEndedPayload;
         setEndedPayload(payload);
         setScreen("tournament_complete");
-      } catch {
-        console.error("[player] Failed to parse tournament_ended");
-      }
+      } catch { /* ignore */ }
     });
-
-    es.onerror = () => {
-      // EventSource reconnects automatically
-    };
 
     return () => es.close();
   }, [tournamentId]);
 
+  // After submitting a result, move to waiting_round so the player sees live
+  // standings and is automatically transitioned when the next round starts via SSE
   const handleResultSubmitted = useCallback(() => {
-    setScreen("result_submitted");
+    setScreen("waiting_round");
   }, []);
 
+  // ── Guard ─────────────────────────────────────────────────────────────────
   if (!tournamentId || !username) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div className="space-y-3">
           <p className="text-lg font-bold text-gray-900">Missing tournament or username.</p>
-          <Link href="/join" className="text-sm text-[#3D6B47] underline">
-            Go back to Join
-          </Link>
+          <Link href="/join" className="text-sm text-[#3D6B47] underline">Go back to Join</Link>
         </div>
       </div>
     );
   }
 
+  // ── Screens ───────────────────────────────────────────────────────────────
   if (screen === "tournament_complete" && endedPayload) {
     return (
       <TournamentCompleteScreen
@@ -701,25 +727,33 @@ export default function PlayerView() {
     const accentBg = isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08";
     return (
       <div className={`min-h-screen ${bg} flex flex-col items-center justify-center px-6 gap-6 text-center`}>
-        {/* Animated burst */}
         <div className="relative flex items-center justify-center">
           <div className={`absolute w-40 h-40 rounded-full ${accentBg} animate-ping opacity-40`} />
-          <div className={`absolute w-28 h-28 rounded-full ${accentBg} animate-ping opacity-60`}
-            style={{ animationDelay: "0.2s" }} />
+          <div className={`absolute w-28 h-28 rounded-full ${accentBg} animate-ping opacity-60`} style={{ animationDelay: "0.2s" }} />
           <div className={`relative w-24 h-24 rounded-full ${accentBg} flex items-center justify-center`}>
             <Swords className={`w-12 h-12 ${accent}`} />
           </div>
         </div>
         <div className="space-y-2">
-          <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-900"}`}>
-            New Round!
-          </h2>
+          <h2 className={`text-3xl font-black ${isDark ? "text-white" : "text-gray-900"}`}>New Round!</h2>
           <p className={`text-base font-semibold ${accent}`}>{newRoundFlashLabel}</p>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
-            Finding your board assignment…
-          </p>
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>Finding your board assignment…</p>
         </div>
       </div>
+    );
+  }
+
+  if (screen === "waiting_round") {
+    return (
+      <WaitingRoundScreen
+        tournamentName={tournamentName}
+        username={username}
+        round={liveRound}
+        totalRounds={totalRounds}
+        players={livePlayers}
+        isDark={isDark}
+        connected={connected}
+      />
     );
   }
 
@@ -733,78 +767,40 @@ export default function PlayerView() {
         playerCount={playerCount}
         onPlayerCountChange={setPlayerCount}
         rejoinUrl={rejoinUrl}
+        connected={connected}
       />
     );
   }
 
-  if (screen === "my_board" && startedPayload) {
-    const boardInfo = findMyBoard(username, startedPayload.games, startedPayload.players);
-
+  if (screen === "my_board" && livePayload) {
+    const boardInfo = findMyBoard(username, livePayload.games, livePayload.players);
     if (!boardInfo) {
-      // Player not found in pairings (shouldn't happen but handle gracefully)
+      const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
       return (
-        <div
-          className={`min-h-screen ${isDark ? "bg-[#0d1f12]" : "bg-white"} flex flex-col items-center justify-center px-6 gap-4 text-center`}
-        >
+        <div className={`min-h-screen ${bg} flex flex-col items-center justify-center px-6 gap-4 text-center`}>
           <RotateCcw className={`w-10 h-10 ${isDark ? "text-white/30" : "text-gray-300"}`} />
-          <p className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-            You're not in the pairings yet.
-          </p>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
-            Ask the director to check your registration.
-          </p>
-          <Link href={`/tournament/${tournamentId}`} className="text-sm text-[#3D6B47] underline">
-            View standings
-          </Link>
+          <p className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>You're not in the pairings yet.</p>
+          <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>Ask the director to check your registration.</p>
+          <Link href={`/tournament/${tournamentId}`} className="text-sm text-[#3D6B47] underline">View standings</Link>
         </div>
       );
     }
-
     return (
       <MyBoardScreen
         tournamentId={tournamentId}
         tournamentName={tournamentName}
         username={username}
-        round={startedPayload.round}
+        round={livePayload.round}
+        totalRounds={totalRounds}
         game={boardInfo.game}
         myColor={boardInfo.myColor}
         opponent={boardInfo.opponent}
+        players={livePlayers.length > 0 ? livePlayers : livePayload.players}
         isDark={isDark}
         onResultSubmitted={handleResultSubmitted}
         rejoinUrl={rejoinUrl}
+        connected={connected}
       />
-    );
-  }
-
-  if (screen === "result_submitted" && startedPayload) {
-    const boardInfo = findMyBoard(username, startedPayload.games, startedPayload.players);
-    return (
-      <div
-        className={`min-h-screen ${isDark ? "bg-[#0d1f12]" : "bg-white"} flex flex-col items-center justify-center px-6 gap-6 text-center`}
-      >
-        <div className="text-5xl">✅</div>
-        <div className="space-y-2">
-          <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-            Result submitted!
-          </h2>
-          <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
-            The director will confirm your result.
-          </p>
-        </div>
-        {boardInfo && (
-          <p className={`text-sm ${isDark ? "text-white/60" : "text-gray-600"}`}>
-            Board {boardInfo.game.board} · Round {startedPayload.round}
-          </p>
-        )}
-        <Link
-          href={`/tournament/${tournamentId}`}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#3D6B47] text-white font-semibold text-sm"
-        >
-          <Trophy className="w-4 h-4" />
-          View Live Standings
-          <ChevronRight className="w-4 h-4" />
-        </Link>
-      </div>
     );
   }
 
