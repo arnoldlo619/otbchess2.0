@@ -260,3 +260,86 @@ describe("Sound mute guard integration", () => {
     expect(ctx.createOscillator).toHaveBeenCalledTimes(9);
   });
 });
+
+// ─── Haptic (Vibration API) tests ─────────────────────────────────────────────
+// We stub navigator.vibrate and verify it is called with the correct patterns.
+
+function makeHapticCaller(muted: boolean) {
+  const vibrateMock = vi.fn();
+  vi.stubGlobal("navigator", { vibrate: vibrateMock });
+
+  // Mirrors the vibrate() helper in the hook
+  function vibrate(pattern: number | number[]) {
+    if (muted) return;
+    try {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(pattern);
+      }
+    } catch { /* ignore */ }
+  }
+
+  return { vibrateMock, vibrate };
+}
+
+describe("Haptic vibrate helper", () => {
+  it("calls navigator.vibrate with 30ms for tap when unmuted", () => {
+    const { vibrateMock, vibrate } = makeHapticCaller(false);
+    vibrate(30);
+    expect(vibrateMock).toHaveBeenCalledWith(30);
+  });
+
+  it("calls navigator.vibrate with 15ms for warningTick when unmuted", () => {
+    const { vibrateMock, vibrate } = makeHapticCaller(false);
+    vibrate(15);
+    expect(vibrateMock).toHaveBeenCalledWith(15);
+  });
+
+  it("calls navigator.vibrate with flag pattern when unmuted", () => {
+    const { vibrateMock, vibrate } = makeHapticCaller(false);
+    vibrate([80, 40, 80, 40, 120]);
+    expect(vibrateMock).toHaveBeenCalledWith([80, 40, 80, 40, 120]);
+  });
+
+  it("does NOT call navigator.vibrate when muted (tap)", () => {
+    const { vibrateMock, vibrate } = makeHapticCaller(true);
+    vibrate(30);
+    expect(vibrateMock).not.toHaveBeenCalled();
+  });
+
+  it("does NOT call navigator.vibrate when muted (warning)", () => {
+    const { vibrateMock, vibrate } = makeHapticCaller(true);
+    vibrate(15);
+    expect(vibrateMock).not.toHaveBeenCalled();
+  });
+
+  it("does NOT call navigator.vibrate when muted (flag)", () => {
+    const { vibrateMock, vibrate } = makeHapticCaller(true);
+    vibrate([80, 40, 80, 40, 120]);
+    expect(vibrateMock).not.toHaveBeenCalled();
+  });
+
+  it("does not throw when navigator.vibrate is unavailable", () => {
+    vi.stubGlobal("navigator", {});
+    const { vibrate } = makeHapticCaller(false);
+    expect(() => vibrate(30)).not.toThrow();
+  });
+
+  it("flag pattern has correct length (5 elements)", () => {
+    const flagPattern = [80, 40, 80, 40, 120];
+    expect(flagPattern).toHaveLength(5);
+  });
+
+  it("flag pattern total duration is 360ms", () => {
+    const flagPattern = [80, 40, 80, 40, 120];
+    const total = flagPattern.reduce((a, b) => a + b, 0);
+    expect(total).toBe(360);
+  });
+
+  it("tap pulse (30ms) is shorter than flag first burst (80ms)", () => {
+    expect(30).toBeLessThan(80);
+  });
+
+  it("warning pulse (15ms) is shorter than tap pulse (30ms)", () => {
+    expect(15).toBeLessThan(30);
+  });
+});

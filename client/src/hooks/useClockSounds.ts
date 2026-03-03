@@ -1,5 +1,6 @@
 /**
- * useClockSounds — Web Audio API sound engine for the chess clock.
+ * useClockSounds — Web Audio API sound engine + Vibration API haptics
+ * for the chess clock.
  *
  * All sounds are synthesised programmatically — no audio files needed.
  *
@@ -8,14 +9,34 @@
  *  - warning: Subtle high-pitched tick played each second when < 10s remain.
  *  - flag:    Distinct descending three-tone alarm when time runs out.
  *
+ * Haptics (Vibration API — Android Chrome; silently ignored on iOS/desktop):
+ *  - tap:     30 ms pulse — crisp, DGT-clock-like confirmation.
+ *  - warning: 15 ms pulse — lighter than tap, just a nudge.
+ *  - flag:    [80, 40, 80, 40, 120] ms pattern — urgent, unmistakable.
+ *
  * The AudioContext is created lazily on first use (required by browsers to
  * avoid the "AudioContext was not allowed to start" policy).
  *
- * Mute state is persisted in localStorage so it survives page reloads.
+ * Mute state controls BOTH sound and haptics and is persisted in
+ * localStorage so it survives page reloads.
  */
 import { useCallback, useRef, useState, useEffect } from "react";
 
 const MUTE_KEY = "otb-clock-mute-v1";
+
+// ─── Haptic helper ────────────────────────────────────────────────────────────
+
+/**
+ * Fire the Vibration API if available and not muted.
+ * Silently no-ops on browsers/devices that don't support it (iOS, desktop).
+ */
+function vibrate(pattern: number | number[]): void {
+  try {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(pattern);
+    }
+  } catch { /* ignore */ }
+}
 
 // ─── Audio helpers ────────────────────────────────────────────────────────────
 
@@ -84,7 +105,7 @@ function playWarningTick(ctx: AudioContext): void {
 
 /**
  * Play a distinct three-tone descending alarm when a player flags.
- * Three notes: C5 → A4 → F4, each 0.18s apart, with a slight reverb tail.
+ * Three notes: C5 → A4 → F4, each 0.22s apart, with a slight reverb tail.
  */
 function playFlagAlarm(ctx: AudioContext): void {
   const now = ctx.currentTime;
@@ -126,15 +147,15 @@ function playFlagAlarm(ctx: AudioContext): void {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export interface ClockSounds {
-  /** Play the tap/click sound when a player presses their half */
+  /** Play the tap/click sound + 30ms haptic when a player presses their half */
   tap: () => void;
-  /** Play the subtle warning tick (call once per second when < 10s) */
+  /** Play the subtle warning tick + 15ms haptic (call once per second when < 10s) */
   warningTick: () => void;
-  /** Play the flag alarm when a player's time reaches zero */
+  /** Play the flag alarm + urgent haptic pattern when a player's time reaches zero */
   flagAlarm: () => void;
-  /** Whether sound is currently muted */
+  /** Whether sound AND haptics are currently muted */
   muted: boolean;
-  /** Toggle mute on/off */
+  /** Toggle mute on/off (controls both sound and haptics) */
   toggleMute: () => void;
 }
 
@@ -157,6 +178,8 @@ export function useClockSounds(): ClockSounds {
 
   const tap = useCallback(() => {
     if (muted) return;
+    // Haptic: 30ms — crisp, DGT-clock-like confirmation
+    vibrate(30);
     try {
       const ctx = getOrCreateContext(ctxRef);
       playTap(ctx);
@@ -165,6 +188,8 @@ export function useClockSounds(): ClockSounds {
 
   const warningTick = useCallback(() => {
     if (muted) return;
+    // Haptic: 15ms — lighter than tap, just a nudge
+    vibrate(15);
     try {
       const ctx = getOrCreateContext(ctxRef);
       playWarningTick(ctx);
@@ -173,6 +198,8 @@ export function useClockSounds(): ClockSounds {
 
   const flagAlarm = useCallback(() => {
     if (muted) return;
+    // Haptic: urgent triple-burst pattern — unmistakable
+    vibrate([80, 40, 80, 40, 120]);
     try {
       const ctx = getOrCreateContext(ctxRef);
       playFlagAlarm(ctx);

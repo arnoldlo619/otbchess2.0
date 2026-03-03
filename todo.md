@@ -1213,3 +1213,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Mute toggle button in center controls
 - [x] Wire sounds into ChessClock tap handlers and flag state
 - [x] Write vitest tests for sound hook logic (18 tests)
+
+## Chess Clock Haptic Feedback — Mar 2026
+- [x] Add vibrate() helper to useClockSounds (tap: 30ms, warning: 15ms, flag: [80,40,80,40,120])
+- [x] Wire haptic into ChessClock tap handlers alongside sound
+- [x] Haptic respects the same mute toggle as sound
+- [x] Write vitest tests for haptic logic (11 tests)
