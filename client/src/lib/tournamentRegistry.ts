@@ -49,6 +49,11 @@ function saveRegistry(configs: TournamentConfig[]): void {
   }
 }
 
+/** Clear all tournaments from the registry (test helper). */
+export function clearRegistry(): void {
+  try { localStorage.removeItem(REGISTRY_KEY); } catch { /* ignore */ }
+}
+
 /** Save a new tournament config. Returns the saved config. */
 export function registerTournament(config: TournamentConfig): TournamentConfig {
   const registry = loadRegistry();

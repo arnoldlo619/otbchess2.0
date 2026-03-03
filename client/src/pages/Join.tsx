@@ -599,36 +599,43 @@ export default function JoinPage() {
     // Persist the player to the tournament's localStorage store so the Director
     // Dashboard picks them up immediately (via storage event listener)
     if (profile) {
-      const config = resolveTournament(tournamentCode);
+      // Resolve tournament config — try invite code first, then embeddedMeta.inviteCode
+      // (handles fresh devices where the QR ?t= payload bootstrapped the registry)
+      const config =
+        resolveTournament(tournamentCode)
+        ?? (embeddedMeta ? resolveTournament(embeddedMeta.inviteCode) : null);
+      const player: Player = {
+        id: `player-${profile.username}-${Date.now()}`,
+        name: profile.name || profile.username,
+        username: profile.username,
+        elo: profile.elo ?? profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
+        title: profile.title as Player["title"] | undefined,
+        country: profile.country ?? "",
+        points: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        buchholz: 0,
+        colorHistory: [],
+        platform: profile.platform,
+        avatarUrl: profile.platform === "chesscom" ? (profile as ChessComProfile).avatar : undefined,
+        flairEmoji: profile.platform === "lichess" ? (profile as LichessProfile).flairEmoji : undefined,
+        joinedAt: Date.now(),
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+      };
       if (config) {
-        const player: Player = {
-          id: `player-${profile.username}-${Date.now()}`,
-          name: profile.name || profile.username,
-          username: profile.username,
-          elo: profile.elo ?? profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
-          title: profile.title as Player["title"] | undefined,
-          country: profile.country ?? "",
-          points: 0,
-          wins: 0,
-          draws: 0,
-          losses: 0,
-          buchholz: 0,
-          colorHistory: [],
-          platform: profile.platform,
-          avatarUrl: profile.platform === "chesscom" ? (profile as ChessComProfile).avatar : undefined,
-          flairEmoji: profile.platform === "lichess" ? (profile as LichessProfile).flairEmoji : undefined,
-          joinedAt: Date.now(),
-          phone: phone.trim() || undefined,
-          email: email.trim() || undefined,
-        };
         const result = addPlayerToTournament(config.id, player);
         if (!result.success) {
           setConfirming(false);
           showCapToast(result.reason === "full" ? "full" : "duplicate");
           return;
         }
-        // Sync to server so director dashboard picks it up on any device
         postPlayerToServer(config.id, player);
+      } else if (embeddedMeta?.id) {
+        // Fresh device — no localStorage yet; post directly to server using the
+        // tournament ID embedded in the QR ?t= payload.
+        postPlayerToServer(embeddedMeta.id, player);
       }
     }
     // Persist registration to localStorage for duplicate detection
@@ -645,10 +652,14 @@ export default function JoinPage() {
     }
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
-    // Navigate to the player lobby so they can wait for the tournament to start
-    // and see their board assignment in real time via SSE.
+    // Navigate directly to the player game view.
+    // Priority: resolved registry id → embeddedMeta.id → raw tournamentCode
     if (profile) {
-      const resolvedId = resolveTournament(tournamentCode)?.id ?? tournamentCode;
+      const resolvedId =
+        resolveTournament(tournamentCode)?.id
+        ?? (embeddedMeta ? resolveTournament(embeddedMeta.inviteCode)?.id : undefined)
+        ?? embeddedMeta?.id
+        ?? tournamentCode;
       navigate(`/tournament/${resolvedId}/play?username=${encodeURIComponent(profile.username)}`);
       return;
     }
