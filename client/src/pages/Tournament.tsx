@@ -51,7 +51,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { RoundTimerDisplay } from "@/components/RoundTimerDisplay";
+import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -993,11 +993,25 @@ export default function TournamentPage() {
   // Flash banner state for new round notifications
   const [newRoundFlash, setNewRoundFlash] = useState<number | null>(null);
   const dismissFlash = useCallback(() => setNewRoundFlash(null), []);
+  // Live timer snapshot — updated via SSE timer_update events
+  const [timerSnapshot, setTimerSnapshot] = useState<{
+    status: "idle" | "running" | "paused" | "expired";
+    durationSec: number;
+    startWallMs: number;
+    elapsedAtPauseMs: number;
+    savedAt: number;
+  } | null>(null);
 
   // ── SSE: connect to server for live standings + round updates ──────────────
   useEffect(() => {
     // Demo tournament has no server state — skip SSE
     if (tournamentId === "otb-demo-2026") return;
+
+    // Catch-up fetch: load timer snapshot on mount
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/timer`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((snap) => { if (snap) setTimerSnapshot(snap); })
+      .catch(() => { /* silent */ });
 
     // Catch-up fetch: load the freshest state immediately on mount
     fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
@@ -1070,6 +1084,15 @@ export default function TournamentPage() {
             rounds: [...existingRounds, newRound].sort((a, b) => a.number - b.number),
           };
         });
+      } catch { /* ignore malformed */ }
+    });
+
+    // timer_update: director started/paused/reset/expired timer → update spectator display
+    es.addEventListener("timer_update", (e: MessageEvent) => {
+      try {
+        const snap = JSON.parse(e.data);
+        setSseConnected(true);
+        setTimerSnapshot(snap);
       } catch { /* ignore malformed */ }
     });
 
@@ -1228,10 +1251,10 @@ export default function TournamentPage() {
                 </div>
               )}
 
-              {/* Round timer display — shown below banner when director has an active timer */}
-              {displayState.status === "in_progress" && (
-                <div className="container pt-3">
-                  <RoundTimerDisplay tournamentId={tournamentId} />
+              {/* Round timer banner — SSE-driven, visible to all spectators on any device */}
+              {displayState.status === "in_progress" && timerSnapshot && timerSnapshot.status !== "idle" && (
+                <div className="container pt-3 pb-1">
+                  <SpectatorTimerBanner snap={timerSnapshot} />
                 </div>
               )}
 

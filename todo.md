@@ -1082,3 +1082,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Server: cleans up stale push subscriptions (410/404) after each send
 - [x] Push payload: "⏰ Time's Up — Round N" title, director instruction in body, unique tag per round
 - [x] Unit tests: calcExpiryDelayMs, shouldScheduleExpiry, buildExpiryPayload (788 total pass)
+
+## Spectator Timer Banner — Mar 2026
+
+- [x] Audit Tournament.tsx SSE setup and PlayerTimerBanner component
+- [x] Add timerSnapshot state and timer_update SSE listener to Tournament.tsx
+- [x] Add timer catch-up fetch on mount in Tournament.tsx
+- [x] Build SpectatorTimerBanner component (larger, projector-friendly, SSE-driven)
+- [x] Render SpectatorTimerBanner in the spectator page below the round progress bar
+- [x] Unit tests for spectator timer banner helpers (810 total pass)
