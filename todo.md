@@ -1204,3 +1204,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Chess Clock" button to PlayerView MyBoardScreen
 - [x] Add route /tournament/:id/clock to App.tsx
 - [x] Write vitest tests for clock logic helpers (23 tests)
+
+## Chess Clock Sound Effects — Mar 2026
+- [x] Build useClockSounds hook using Web Audio API (no external deps)
+- [x] Tap sound: short percussive click on each clock press
+- [x] Low-time warning: subtle tick sound when < 10 seconds remaining
+- [x] Flag alarm: distinct multi-tone alarm when time runs out
+- [x] Mute toggle button in center controls
+- [x] Wire sounds into ChessClock tap handlers and flag state
+- [x] Write vitest tests for sound hook logic (18 tests)

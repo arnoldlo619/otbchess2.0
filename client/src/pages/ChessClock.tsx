@@ -9,11 +9,13 @@
  * - Tap the pause icon (center) to pause both clocks.
  * - When a player's time reaches 0, their half turns red ("flagged").
  * - Settings panel lets you adjust time/increment before the game starts.
+ * - Sound effects: tap click, low-time warning tick, flag alarm (Web Audio API).
  */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearch, useLocation } from "wouter";
-import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag } from "lucide-react";
+import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, VolumeX } from "lucide-react";
 import { resolveTournament } from "@/lib/tournamentRegistry";
+import { useClockSounds } from "@/hooks/useClockSounds";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ClockState = "idle" | "p1_running" | "p2_running" | "paused" | "p1_flagged" | "p2_flagged";
@@ -50,11 +52,6 @@ export function parseTimeControl(timePreset: string, timeBase: number, timeIncre
     baseMs: timeBase * 60 * 1000,
     incrementMs: timeIncrement * 1000,
   };
-}
-
-/** Build a default config for standalone use (no tournament context) */
-function defaultConfig(): ClockConfig {
-  return { baseMs: 5 * 60 * 1000, incrementMs: 0 };
 }
 
 // ─── Settings Panel ───────────────────────────────────────────────────────────
@@ -212,7 +209,7 @@ function ClockHalf({
 
   const displayTime = formatClockMs(timeMs);
 
-  // Urgency: flash when < 10 seconds and active
+  // Urgency: pulse when < 10 seconds and active
   const isUrgent = isActive && !isFlagged && timeMs < 10_000 && timeMs > 0;
 
   return (
@@ -280,19 +277,23 @@ function ClockHalf({
 // ─── Center Controls ──────────────────────────────────────────────────────────
 function CenterControls({
   clockState,
+  muted,
   onPause,
   onResume,
   onReset,
   onSettings,
   onBack,
+  onToggleMute,
   showReset,
 }: {
   clockState: ClockState;
+  muted: boolean;
   onPause: () => void;
   onResume: () => void;
   onReset: () => void;
   onSettings: () => void;
   onBack: () => void;
+  onToggleMute: () => void;
   showReset: boolean;
 }) {
   const isRunning = clockState === "p1_running" || clockState === "p2_running";
@@ -302,7 +303,7 @@ function CenterControls({
 
   return (
     <div
-      className="absolute left-0 right-0 flex items-center justify-center gap-4 z-10"
+      className="absolute left-0 right-0 flex items-center justify-center gap-3 z-10"
       style={{ top: "50%", transform: "translateY(-50%)" }}
     >
       {/* Back button */}
@@ -314,7 +315,7 @@ function CenterControls({
         <ChevronLeft className="w-5 h-5 text-white/80" />
       </button>
 
-      {/* Pause / Resume / Reset */}
+      {/* Pause / Resume */}
       {isRunning && (
         <button
           onClick={onPause}
@@ -333,6 +334,8 @@ function CenterControls({
           <Play className="w-6 h-6 text-white fill-white" />
         </button>
       )}
+
+      {/* Reset */}
       {(isFlagged || (showReset && (isPaused || isIdle))) && (
         <button
           onClick={onReset}
@@ -353,6 +356,18 @@ function CenterControls({
           <Settings className="w-4 h-4 text-white/80" />
         </button>
       )}
+
+      {/* Mute toggle — always visible */}
+      <button
+        onClick={onToggleMute}
+        className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm"
+        aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+      >
+        {muted
+          ? <VolumeX className="w-4 h-4 text-white/50" />
+          : <Volume2 className="w-4 h-4 text-white/80" />
+        }
+      </button>
     </div>
   );
 }
@@ -383,6 +398,14 @@ export default function ChessClock() {
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+  // Sound engine
+  const sounds = useClockSounds();
+
+  // Track the last whole-second value for the active player to fire warning ticks
+  const lastWarnSecRef = useRef<number>(-1);
+  // Track whether the flag alarm has already been played for the current flag event
+  const flagAlarmFiredRef = useRef<boolean>(false);
+
   // Ref for the animation frame ticker
   const rafRef = useRef<number | null>(null);
   const lastTickRef = useRef<number>(0);
@@ -412,6 +435,19 @@ export default function ChessClock() {
     return () => { wakeLock?.release().catch(() => {}); };
   }, []);
 
+  // Play flag alarm once when state transitions to flagged
+  useEffect(() => {
+    if ((clockState === "p1_flagged" || clockState === "p2_flagged") && !flagAlarmFiredRef.current) {
+      flagAlarmFiredRef.current = true;
+      sounds.flagAlarm();
+    }
+    // Reset the flag guard when clock is reset back to idle
+    if (clockState === "idle") {
+      flagAlarmFiredRef.current = false;
+      lastWarnSecRef.current = -1;
+    }
+  }, [clockState, sounds]);
+
   // Ticker: runs only when a clock is active
   const tick = useCallback((now: number) => {
     const elapsed = lastTickRef.current ? now - lastTickRef.current : 0;
@@ -420,9 +456,19 @@ export default function ChessClock() {
     setClockState((state) => {
       if (state === "p1_running") {
         setP1TimeMs((t) => {
-          const next = t - elapsed;
+          const next = Math.max(0, t - elapsed);
+
+          // Warning tick: fire once per second when < 10s remain
+          if (next > 0 && next <= 10_000) {
+            const secRemaining = Math.ceil(next / 1000);
+            if (secRemaining !== lastWarnSecRef.current) {
+              lastWarnSecRef.current = secRemaining;
+              // Schedule outside render cycle
+              setTimeout(() => sounds.warningTick(), 0);
+            }
+          }
+
           if (next <= 0) {
-            // Flag P1 — schedule state update outside render
             setTimeout(() => setClockState("p1_flagged"), 0);
             return 0;
           }
@@ -430,7 +476,16 @@ export default function ChessClock() {
         });
       } else if (state === "p2_running") {
         setP2TimeMs((t) => {
-          const next = t - elapsed;
+          const next = Math.max(0, t - elapsed);
+
+          if (next > 0 && next <= 10_000) {
+            const secRemaining = Math.ceil(next / 1000);
+            if (secRemaining !== lastWarnSecRef.current) {
+              lastWarnSecRef.current = secRemaining;
+              setTimeout(() => sounds.warningTick(), 0);
+            }
+          }
+
           if (next <= 0) {
             setTimeout(() => setClockState("p2_flagged"), 0);
             return 0;
@@ -442,7 +497,7 @@ export default function ChessClock() {
     });
 
     rafRef.current = requestAnimationFrame(tick);
-  }, []);
+  }, [sounds]);
 
   // Start/stop the RAF loop based on clock state
   useEffect(() => {
@@ -470,37 +525,39 @@ export default function ChessClock() {
   const handleP1Tap = useCallback(() => {
     setClockState((state) => {
       if (state === "idle") {
-        // P1 taps first → start P2's clock
+        sounds.tap();
         return "p2_running";
       }
       if (state === "p1_running") {
-        // P1 ends their turn: add increment, start P2
+        sounds.tap();
         setP1TimeMs((t) => t + clockConfig.incrementMs);
         setP1Moves((m) => m + 1);
+        lastWarnSecRef.current = -1; // reset warning tracker on move
         return "p2_running";
       }
-      if (state === "paused") return "paused"; // tap while paused does nothing
+      if (state === "paused") return "paused";
       return state;
     });
-  }, [clockConfig.incrementMs]);
+  }, [clockConfig.incrementMs, sounds]);
 
   /** Player 2 (top) taps their half */
   const handleP2Tap = useCallback(() => {
     setClockState((state) => {
       if (state === "idle") {
-        // P2 taps first → start P1's clock
+        sounds.tap();
         return "p1_running";
       }
       if (state === "p2_running") {
-        // P2 ends their turn: add increment, start P1
+        sounds.tap();
         setP2TimeMs((t) => t + clockConfig.incrementMs);
         setP2Moves((m) => m + 1);
+        lastWarnSecRef.current = -1;
         return "p1_running";
       }
       if (state === "paused") return "paused";
       return state;
     });
-  }, [clockConfig.incrementMs]);
+  }, [clockConfig.incrementMs, sounds]);
 
   const handlePause = useCallback(() => {
     setClockState((state) => {
@@ -511,10 +568,7 @@ export default function ChessClock() {
 
   const handleResume = useCallback(() => {
     setClockState((state) => {
-      if (state === "paused") {
-        // Resume whichever player was last running — default to p1
-        return "p1_running";
-      }
+      if (state === "paused") return "p1_running";
       return state;
     });
   }, []);
@@ -524,6 +578,8 @@ export default function ChessClock() {
     setP2TimeMs(cfg.baseMs);
     setP1Moves(0);
     setP2Moves(0);
+    lastWarnSecRef.current = -1;
+    flagAlarmFiredRef.current = false;
     setClockState("idle");
     setShowResetConfirm(false);
   }, [clockConfig]);
@@ -590,11 +646,13 @@ export default function ChessClock() {
       {/* Center controls overlay */}
       <CenterControls
         clockState={clockState}
+        muted={sounds.muted}
         onPause={handlePause}
         onResume={handleResume}
         onReset={handleReset}
         onSettings={() => setShowSettings(true)}
         onBack={handleBack}
+        onToggleMute={sounds.toggleMute}
         showReset={clockState !== "idle"}
       />
 
