@@ -517,6 +517,22 @@ export default function Director() {
     useUndoResult(enterResult);
 
   // ── Round timer ────────────────────────────────────────────────────────
+  // ── Push timer snapshot to server so player devices receive timer_update SSE ──
+  const pushTimerSnapshot = useCallback((snap: {
+    status: "idle" | "running" | "paused" | "expired";
+    durationSec: number;
+    startWallMs: number;
+    elapsedAtPauseMs: number;
+    savedAt: number;
+  }) => {
+    if (tournamentId === "otb-demo-2026") return;
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/timer`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(snap),
+    }).catch(() => { /* fire-and-forget */ });
+  }, [tournamentId]);
+
   const roundTimer = useRoundTimer({
     roundNumber: state.currentRound,
     tournamentId,
@@ -1396,7 +1412,11 @@ export default function Director() {
                         <div className="flex gap-2">
                           {roundTimer.status === "idle" || roundTimer.status === "expired" ? (
                             <button
-                              onClick={roundTimer.start}
+                              onClick={() => {
+                                roundTimer.start();
+                                const now = Date.now();
+                                pushTimerSnapshot({ status: "running", durationSec: roundTimer.durationSec, startWallMs: now, elapsedAtPauseMs: 0, savedAt: now });
+                              }}
                               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
                               style={{ background: "#3D6B47" }}
                             >
@@ -1405,7 +1425,11 @@ export default function Director() {
                             </button>
                           ) : roundTimer.status === "running" ? (
                             <button
-                              onClick={roundTimer.pause}
+                              onClick={() => {
+                                roundTimer.pause();
+                                const now = Date.now();
+                                pushTimerSnapshot({ status: "paused", durationSec: roundTimer.durationSec, startWallMs: roundTimer.durationSec - roundTimer.remainingSec > 0 ? now - (roundTimer.elapsedSec * 1000) : now, elapsedAtPauseMs: roundTimer.elapsedSec * 1000, savedAt: now });
+                              }}
                               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-[0.97] ${
                                 isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"
                               }`}
@@ -1415,7 +1439,11 @@ export default function Director() {
                             </button>
                           ) : (
                             <button
-                              onClick={roundTimer.start}
+                              onClick={() => {
+                                roundTimer.start();
+                                const now = Date.now();
+                                pushTimerSnapshot({ status: "running", durationSec: roundTimer.durationSec, startWallMs: now, elapsedAtPauseMs: roundTimer.elapsedSec * 1000, savedAt: now });
+                              }}
                               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-[0.97]"
                               style={{ background: "#3D6B47" }}
                             >
@@ -1424,7 +1452,11 @@ export default function Director() {
                             </button>
                           )}
                           <button
-                            onClick={roundTimer.reset}
+                            onClick={() => {
+                              roundTimer.reset();
+                              const now = Date.now();
+                              pushTimerSnapshot({ status: "idle", durationSec: roundTimer.durationSec, startWallMs: 0, elapsedAtPauseMs: 0, savedAt: now });
+                            }}
                             className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-[0.97] ${
                               isDark ? "bg-white/06 text-white/50 hover:bg-white/10" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                             }`}

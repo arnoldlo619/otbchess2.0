@@ -430,14 +430,80 @@ function WaitingRoundScreen({
 }
 
 // ─── My Board Screen ──────────────────────────────────────────────────────────
+type TimerSnap = {
+  status: "idle" | "running" | "paused" | "expired";
+  durationSec: number;
+  startWallMs: number;
+  elapsedAtPauseMs: number;
+  savedAt: number;
+} | null;
+
+function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean }) {
+  const [remaining, setRemaining] = useState(0);
+
+  useEffect(() => {
+    if (!snap || snap.status === "idle") { setRemaining(0); return; }
+    if (snap.status === "paused") {
+      setRemaining(Math.max(0, snap.durationSec - Math.round(snap.elapsedAtPauseMs / 1000)));
+      return;
+    }
+    if (snap.status === "expired") { setRemaining(0); return; }
+    // running
+    const calc = () => {
+      const elapsed = Math.round((Date.now() - snap.startWallMs + snap.elapsedAtPauseMs) / 1000);
+      setRemaining(Math.max(0, snap.durationSec - elapsed));
+    };
+    calc();
+    const t = setInterval(calc, 1000);
+    return () => clearInterval(t);
+  }, [snap]);
+
+  if (!snap || snap.status === "idle") return null;
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const display = `${mins}:${secs.toString().padStart(2, "0")}`;
+  const isLow = remaining > 0 && remaining <= 60;
+  const isExpired = snap.status === "expired" || remaining === 0;
+  const isPaused = snap.status === "paused";
+
+  const bg = isExpired
+    ? isDark ? "bg-red-500/15 border border-red-500/30" : "bg-red-50 border border-red-200"
+    : isLow
+    ? isDark ? "bg-amber-500/15 border border-amber-500/30" : "bg-amber-50 border border-amber-200"
+    : isDark ? "bg-[#1a2e1e] border border-[#4CAF50]/20" : "bg-emerald-50 border border-emerald-200";
+  const textColor = isExpired
+    ? isDark ? "text-red-400" : "text-red-600"
+    : isLow
+    ? isDark ? "text-amber-400" : "text-amber-700"
+    : isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+
+  return (
+    <div className={`mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center gap-3 ${bg}`}>
+      <Clock className={`w-4 h-4 flex-shrink-0 ${textColor}`} />
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs font-bold uppercase tracking-wider ${textColor}`}>
+          {isExpired ? "Time's Up" : isPaused ? "Round Timer — Paused" : "Round Timer"}
+        </p>
+        <p className={`text-2xl font-black font-mono leading-tight ${textColor} ${isLow && !isExpired && !isPaused ? "animate-pulse" : ""}`}>
+          {isExpired ? "0:00" : display}
+        </p>
+      </div>
+      {isPaused && (
+        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500"}`}>Paused</span>
+      )}
+    </div>
+  );
+}
+
 function MyBoardScreen({
   tournamentId, tournamentName, username, round, totalRounds, game, myColor,
-  opponent, players, isDark, rejoinUrl, connected,
+  opponent, players, isDark, rejoinUrl, connected, timerSnapshot,
 }: {
   tournamentId: string; tournamentName: string; username: string;
   round: number; totalRounds: number; game: Game; myColor: "white" | "black";
   opponent: Player | undefined; players: Player[]; isDark: boolean;
-  rejoinUrl: string; connected: boolean;
+  rejoinUrl: string; connected: boolean; timerSnapshot: TimerSnap;
 }) {
   const [activeTab, setActiveTab] = useState<"board" | "standings">("board");
 
@@ -504,6 +570,9 @@ function MyBoardScreen({
               </div>
             </div>
           </div>
+
+          {/* Timer banner */}
+          <PlayerTimerBanner snap={timerSnapshot} isDark={isDark} />
 
           {/* Opponent card */}
           <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
@@ -595,6 +664,13 @@ export default function PlayerView() {
   const [playerCount, setPlayerCount] = useState<number | null>(null);
   const [newRoundFlashLabel, setNewRoundFlashLabel] = useState("");
   const [connected, setConnected] = useState(false);
+  const [timerSnapshot, setTimerSnapshot] = useState<{
+    status: "idle" | "running" | "paused" | "expired";
+    durationSec: number;
+    startWallMs: number;
+    elapsedAtPauseMs: number;
+    savedAt: number;
+  } | null>(null);
 
   const tournamentName =
     resolveTournament(tournamentId ?? "")?.name ?? "Tournament";
@@ -602,6 +678,15 @@ export default function PlayerView() {
     tournamentId && username
       ? `${window.location.origin}/tournament/${tournamentId}/play?username=${encodeURIComponent(username)}`
       : "";
+
+  // Catch-up on mount: fetch timer snapshot
+  useEffect(() => {
+    if (!tournamentId || tournamentId === "otb-demo-2026") return;
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/timer`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((snap) => { if (snap?.status) setTimerSnapshot(snap); })
+      .catch(() => {});
+  }, [tournamentId]);
 
   // Catch-up on mount: fetch live-state so reconnecting players see current state immediately
   useEffect(() => {
@@ -677,6 +762,13 @@ export default function PlayerView() {
           // Keep livePayload.players in sync so the board tab shows updated data
           setLivePayload((prev) => prev ? { ...prev, players: data.players } : prev);
         }
+      } catch { /* ignore */ }
+    });
+
+    es.addEventListener("timer_update", (e: MessageEvent) => {
+      try {
+        const snap = JSON.parse(e.data);
+        setTimerSnapshot(snap);
       } catch { /* ignore */ }
     });
 
@@ -795,6 +887,7 @@ export default function PlayerView() {
         isDark={isDark}
         rejoinUrl={rejoinUrl}
         connected={connected}
+        timerSnapshot={timerSnapshot}
       />
     );
   }

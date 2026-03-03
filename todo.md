@@ -1059,3 +1059,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Dismiss (X) button hides card for the session without blocking permission
 - [x] usePushSubscription passes tournamentId so subscription is scoped to the tournament
 - [x] Unit tests for push prompt state helpers (759 total pass)
+
+## Round Countdown Timer — Completed Mar 2026
+- [x] Audit existing useRoundTimer hook and RoundTimerCard component (already built on director side)
+- [x] Server: in-memory timer store + PUT /api/tournament/:id/timer endpoint (broadcasts timer_update SSE)
+- [x] Server: GET /api/tournament/:id/timer endpoint (catch-up on reconnect)
+- [x] Director: pushTimerSnapshot helper wired into Start / Pause / Resume / Reset button handlers
+- [x] PlayerView: timerSnapshot state + timer_update SSE listener
+- [x] PlayerView: catch-up fetch of timer snapshot on mount
+- [x] PlayerTimerBanner component: green (running) / amber (<60s) / red (expired) / gray (paused)
+- [x] PlayerTimerBanner: live countdown ticks every second using wall-clock math
+- [x] PlayerTimerBanner: pulsing animation when <60s remaining
+- [x] Unit tests for calcRemaining, formatTime, isLowTime helpers (774 total pass)

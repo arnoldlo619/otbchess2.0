@@ -30,6 +30,28 @@ type PushSub = webpush.PushSubscription;
 // director tabs watching that tournament.
 const sseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
 
+// ─── In-Memory Timer Store ────────────────────────────────────────────────────
+// Holds the latest timer snapshot per tournament so players who reconnect
+// can catch up without waiting for the next broadcast.
+interface TimerSnapshot {
+  status: "idle" | "running" | "paused" | "expired";
+  durationSec: number;
+  startWallMs: number;
+  elapsedAtPauseMs: number;
+  savedAt: number;
+}
+const timerStore = new Map<string, TimerSnapshot>();
+
+function broadcastTimerUpdate(tournamentId: string, snap: TimerSnapshot) {
+  const subs = sseSubscribers.get(tournamentId);
+  if (!subs || subs.size === 0) return;
+  const payload = `event: timer_update\ndata: ${JSON.stringify(snap)}\n\n`;
+  for (const res of Array.from(subs)) {
+    try { res.write(payload); } catch { /* disconnected */ }
+  }
+  console.log(`[sse] Broadcast timer_update (${snap.status}) to ${subs.size} subscriber(s) for ${tournamentId}`);
+}
+
 function broadcastPlayerJoined(tournamentId: string, player: Record<string, unknown>) {
   const subs = sseSubscribers.get(tournamentId);
   if (!subs || subs.size === 0) return;
@@ -713,6 +735,29 @@ export function createApp() {
       console.error("[live-state] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
+  });
+
+  // ── Timer: PUT /api/tournament/:id/timer ───────────────────────────────────────
+  // Director pushes a timer snapshot; server stores it and broadcasts via SSE.
+  app.put("/api/tournament/:id/timer", (req, res) => {
+    const { id } = req.params;
+    const snap = req.body as TimerSnapshot;
+    if (!id || !snap || typeof snap.status !== "string") {
+      return res.status(400).json({ error: "Missing id or invalid snapshot" });
+    }
+    timerStore.set(id, snap);
+    broadcastTimerUpdate(id, snap);
+    res.json({ ok: true });
+  });
+
+  // ── Timer: GET /api/tournament/:id/timer ───────────────────────────────────────
+  // Players fetch the latest timer snapshot on connect/reconnect.
+  app.get("/api/tournament/:id/timer", (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing id" });
+    const snap = timerStore.get(id);
+    if (!snap) return res.status(404).json({ error: "no_timer" });
+    res.json(snap);
   });
 
   // ── Tournament Players: DELETE /api/tournament/:id/players/:username ──────────
