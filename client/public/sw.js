@@ -10,7 +10,7 @@
  *    so the SPA still loads offline.
  */
 
-const CACHE_VERSION = "otb-chess-v2";
+const CACHE_VERSION = "otb-chess-v3";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -52,12 +52,17 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET" || !url.protocol.startsWith("http")) return;
 
   // Skip Vite dev server internals — these change on every restart and must never be cached.
-  // In production (built assets), these paths don't exist so this guard is harmless.
+  // /@fs/ serves files directly from the filesystem (node_modules/.vite/deps) and must
+  // never be cached by the SW — each Vite dep-cache rebuild produces new hashes and the
+  // old cached CJS React wrapper causes "Invalid hook call" (two React instances).
   if (
     url.pathname.startsWith("/@") ||
     url.pathname.startsWith("/node_modules/") ||
     url.pathname.startsWith("/__manus__") ||
-    url.search.includes("v=")
+    url.search.includes("v=") ||
+    url.search.includes("t=") ||
+    url.pathname.includes(".vite/deps") ||
+    url.pathname.includes("node_modules/.vite")
   ) return;
 
   // API requests: Network-First with timeout fallback
