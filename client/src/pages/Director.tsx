@@ -644,6 +644,67 @@ export default function Director() {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
+  // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
+  // When the Boards tab is active, pressing 1 / D / 0 records the result for
+  // the currently focused board card. Arrow keys cycle focus between boards.
+  const [focusedBoardIdx, setFocusedBoardIdx] = useState<number>(0);
+  const boardGames = currentRoundData?.games.filter((g) => g.whiteId !== "BYE") ?? [];
+  useEffect(() => {
+    if (activeTab !== "boards" || isRegistration || boardGames.length === 0) return;
+    const handleKey = (e: KeyboardEvent) => {
+      // Don't intercept when an input/textarea/select is focused
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const key = e.key.toLowerCase();
+      if (key === "arrowdown" || key === "arrowright") {
+        e.preventDefault();
+        setFocusedBoardIdx((i) => Math.min(i + 1, boardGames.length - 1));
+      } else if (key === "arrowup" || key === "arrowleft") {
+        e.preventDefault();
+        setFocusedBoardIdx((i) => Math.max(i - 1, 0));
+      } else if (key === "1") {
+        const game = boardGames[focusedBoardIdx];
+        if (game) {
+          const white = state.players.find((p) => p.id === game.whiteId);
+          const label = `Board ${game.board}: ${white?.name ?? "White"} wins`;
+          recordWithUndo(game.id, "1-0", game.result, label);
+          pushStandingsNow();
+          toast.success(label);
+          if (navigator.vibrate) navigator.vibrate(40);
+        }
+      } else if (key === "d") {
+        const game = boardGames[focusedBoardIdx];
+        if (game) {
+          const label = `Board ${game.board}: Draw`;
+          recordWithUndo(game.id, "½-½", game.result, label);
+          pushStandingsNow();
+          toast.success(label);
+          if (navigator.vibrate) navigator.vibrate(40);
+        }
+      } else if (key === "0") {
+        const game = boardGames[focusedBoardIdx];
+        if (game) {
+          const black = state.players.find((p) => p.id === game.blackId);
+          const label = `Board ${game.board}: ${black?.name ?? "Black"} wins`;
+          recordWithUndo(game.id, "0-1", game.result, label);
+          pushStandingsNow();
+          toast.success(label);
+          if (navigator.vibrate) navigator.vibrate(40);
+        }
+      } else if (key === "backspace" || key === "delete") {
+        const game = boardGames[focusedBoardIdx];
+        if (game && game.result !== "*") {
+          recordWithUndo(game.id, "*", game.result, `Board ${game.board}: cleared`);
+          pushStandingsNow();
+          toast.info(`Board ${game.board}: result cleared`);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isRegistration, boardGames, focusedBoardIdx, state.players, recordWithUndo, pushStandingsNow]);
+
   // ── Push notification broadcasts ────────────────────────────────────────
   const broadcastRoundStart = useCallback(async (round: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
@@ -682,6 +743,16 @@ export default function Director() {
       // Silent fail — push is a best-effort enhancement
     }
   }, [tournamentId, state.tournamentName]);
+
+  // ── Push subscriber count — fetched once on mount and after each broadcast ──
+  const [pushSubscriberCount, setPushSubscriberCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (tournamentId === "otb-demo-2026") return;
+    fetch(`/api/push/count/${encodeURIComponent(tournamentId)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d && typeof d.count === "number") setPushSubscriberCount(d.count); })
+      .catch(() => {});
+  }, [tournamentId]);
 
   // Auto-broadcast results notification when all games in the current round
   // transition from incomplete to complete. We track the previous value of
@@ -938,6 +1009,20 @@ export default function Director() {
               <QrCode className="w-3.5 h-3.5" />
               <span>Project QR</span>
             </button>
+            {/* Push subscriber count badge — desktop only */}
+            {pushSubscriberCount !== null && pushSubscriberCount > 0 && (
+              <span
+                className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                  isDark
+                    ? "bg-[#3D6B47]/30 text-[#4CAF50] border border-[#4CAF50]/20"
+                    : "bg-green-50 text-green-700 border border-green-200"
+                }`}
+                title={`${pushSubscriberCount} player${pushSubscriberCount !== 1 ? "s" : ""} subscribed to push notifications`}
+              >
+                <Bell className="w-3 h-3" />
+                <span>{pushSubscriberCount}</span>
+              </span>
+            )}
             {/* Announce / QR — always visible (primary action) */}
             <button
               onClick={() => setShowAnnounce(true)}
@@ -2360,14 +2445,14 @@ export default function Director() {
                     {
                       icon: Download,
                       label: "Download Results PDF",
-                      onClick: () => generateResultsPdf({
+                      onClick: async () => { await generateResultsPdf({
                         tournamentName: state.tournamentName,
                         location: tournamentConfig?.venue,
                         date: tournamentConfig?.date,
                         timeControl: tournamentConfig?.timePreset,
                         players: state.players,
                         rounds: state.rounds,
-                      }),
+                      }); },
                     },
                   ].map(({ icon: Icon, label, onClick }) => (
                     <button

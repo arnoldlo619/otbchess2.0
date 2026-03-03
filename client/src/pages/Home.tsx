@@ -186,14 +186,12 @@ function Nav({
     >
       <div className="container flex items-center justify-between h-[72px]">
         {/* Logo — navigates to landing page */}
-        <Link href="/">
-          <a className="flex items-center gap-1 group cursor-pointer">
-            <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
-              alt="OTB Chess — Home"
-              className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
-            />
-          </a>
+        <Link href="/" className="flex items-center gap-1 group cursor-pointer">
+          <img
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+            alt="OTB Chess — Home"
+            className={`nav-logo h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${isDark ? "nav-logo-dark" : ""}`}
+          />
         </Link>
 
         {/* Desktop Links — centre (empty if navLinks is empty) */}

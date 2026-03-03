@@ -11,7 +11,7 @@ import { useState, useRef, useCallback } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useParams, Link } from "wouter";
 import { toast } from "sonner";
-import html2canvas from "html2canvas";
+
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { loadTournamentState } from "@/lib/directorState";
@@ -86,6 +86,7 @@ async function exportCardAsPng(
   element: HTMLElement,
   filename: string
 ): Promise<void> {
+  const { default: html2canvas } = await import("html2canvas");
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
@@ -215,13 +216,14 @@ function ExportableCard({
     if (!cardRef.current) return;
     setExporting(true);
     try {
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: null,
         logging: false,
       });
-      canvas.toBlob(async (blob) => {
+      canvas.toBlob(async (blob: Blob | null) => {
         if (!blob) { toast.error("Could not generate image"); setExporting(false); return; }
         const file = new File([blob], `${perf.player.username}-stats.png`, { type: "image/png" });
         if (navigator.canShare?.({ files: [file] })) {

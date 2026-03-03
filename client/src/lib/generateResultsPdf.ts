@@ -8,11 +8,9 @@
  *   2. Final Standings    — Rank, Name, ELO, Points, W / D / L, Buchholz
  *   3. Cross-Table        — players as rows & columns; cells show result from row-player's perspective
  *
- * Dependencies: jspdf, jspdf-autotable
+ * Dependencies: jspdf, jspdf-autotable (loaded dynamically to keep initial bundle small)
  */
 
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { getStandings } from "./tournamentData";
 import type { Player, Round, Result } from "./tournamentData";
 
@@ -101,7 +99,13 @@ export interface PdfOptions {
   rounds: Round[];
 }
 
-export function generateResultsPdf(opts: PdfOptions): void {
+export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
+  // Dynamic imports keep jsPDF + autoTable out of the initial bundle
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+
   const {
     tournamentName,
     date = "",

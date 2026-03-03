@@ -898,15 +898,16 @@ function RegistrationState({ tournamentName, playerCount, tournamentId }: { tour
         </div>
         {reg && (
           <div className="mt-2">
-            <Link href={`/tournament/${tournamentId}/play?username=${encodeURIComponent(reg.username)}`}>
-              <a className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
+            <Link
+              href={`/tournament/${tournamentId}/play?username=${encodeURIComponent(reg.username)}`}
+              className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95 ${
                 isDark
                   ? "bg-[#3D6B47] text-white hover:bg-[#4CAF50]"
                   : "bg-[#3D6B47] text-white hover:bg-[#2A4A32]"
-              }`}>
-                <Crown className="w-4 h-4" />
-                Go to My Board
-              </a>
+              }`}
+            >
+              <Crown className="w-4 h-4" />
+              Go to My Board
             </Link>
             <p className={`text-xs mt-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
               Registered as @{reg.username}

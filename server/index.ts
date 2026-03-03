@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { eq, and, inArray } from "drizzle-orm";
+import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
@@ -43,6 +44,8 @@ interface TimerSnapshot {
 const timerStore = new Map<string, TimerSnapshot>();
 // Tracks pending setTimeout handles so we can cancel them on pause/reset.
 const timerExpiryTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+// Tracks pending 5-minute warning setTimeout handles.
+const timerWarningTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 // Sends a "Time's up!" Web Push to all subscribed players for a tournament.
 async function sendTimerExpiryPush(tournamentId: string) {
@@ -186,17 +189,48 @@ async function proxyLichess(username: string): Promise<{ status: number; body: u
 }
 
 // ─── Build the Express app (exported for Vite dev middleware) ─────────────────
+// ─── Rate Limiters ──────────────────────────────────────────────────────────
+// Chess.com / Lichess proxy: 20 lookups per minute per IP (generous for tournament use)
+const chessProxyLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests — please wait a moment." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
+// Push subscribe: 30 per minute per IP (players subscribe once per tournament)
+const pushSubscribeLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests — please wait a moment." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
 export function createApp() {
   const app = express();
 
-  app.use(express.json());
+  // ── Body size cap — prevents large-payload DoS on state/player endpoints ────
+  app.use(express.json({ limit: "512kb" }));
   app.use(cookieParser());
+
+  // ── Security headers ────────────────────────────────────────────────────────
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    next();
+  });
 
   // ── Auth routes ─────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
 
   // ── Proxy: GET /api/chess/player/:username ──────────────────────────────────
-  app.get("/api/chess/player/:username", async (req, res) => {
+  app.get("/api/chess/player/:username", chessProxyLimiter, async (req, res) => {
     try {
       const { status, body } = await proxyChessCom(req.params.username);
       res.status(status).json(body);
@@ -207,7 +241,7 @@ export function createApp() {
   });
 
   // ── Proxy: GET /api/lichess/player/:username ────────────────────────────────
-  app.get("/api/lichess/player/:username", async (req, res) => {
+  app.get("/api/lichess/player/:username", chessProxyLimiter, async (req, res) => {
     try {
       const { status, body } = await proxyLichess(req.params.username);
       res.status(status).json(body);
@@ -245,7 +279,7 @@ export function createApp() {
   // ── Push: POST /api/push/subscribe ────────────────────────────────────────
   // Body: { tournamentId: string, subscription: PushSubscription }
   // Upserts by endpoint — if the same endpoint re-subscribes it updates keys.
-  app.post("/api/push/subscribe", async (req, res) => {
+  app.post("/api/push/subscribe", pushSubscribeLimiter, async (req, res) => {
     const { tournamentId, subscription } = req.body as {
       tournamentId: string;
       subscription: PushSub;
@@ -810,17 +844,24 @@ export function createApp() {
     timerStore.set(id, snap);
     broadcastTimerUpdate(id, snap);
 
-    // Cancel any existing expiry timeout for this tournament.
+    // Cancel any existing expiry and warning timeouts for this tournament.
     const existing = timerExpiryTimeouts.get(id);
     if (existing) {
       clearTimeout(existing);
       timerExpiryTimeouts.delete(id);
     }
+    const existingWarning = timerWarningTimeouts.get(id);
+    if (existingWarning) {
+      clearTimeout(existingWarning);
+      timerWarningTimeouts.delete(id);
+    }
 
-    // Schedule a new expiry push when the timer is running.
+    // Schedule expiry and 5-minute warning pushes when the timer is running.
     if (snap.status === "running" && snap.startWallMs > 0 && snap.durationSec > 0) {
       const endWallMs = snap.startWallMs + snap.durationSec * 1000 - snap.elapsedAtPauseMs;
       const delayMs = endWallMs - Date.now();
+
+      // Schedule expiry push.
       if (delayMs > 0) {
         const handle = setTimeout(async () => {
           timerExpiryTimeouts.delete(id);
@@ -838,6 +879,63 @@ export function createApp() {
       } else {
         // Timer already expired (e.g. director refreshed after time ran out).
         console.log(`[timer] Timer already expired for ${id}, skipping push scheduling.`);
+      }
+
+      // Schedule 5-minute warning push (only if > 5 min remain).
+      const WARNING_MS = 5 * 60 * 1000;
+      const warningDelayMs = delayMs - WARNING_MS;
+      if (warningDelayMs > 0 && VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+        const warnHandle = setTimeout(async () => {
+          timerWarningTimeouts.delete(id);
+          try {
+            const db = await getDb();
+            const rows = await db
+              .select()
+              .from(pushSubscriptions)
+              .where(eq(pushSubscriptions.tournamentId, id));
+            if (rows.length === 0) return;
+            const stateRows = await db
+              .select()
+              .from(tournamentState)
+              .where(eq(tournamentState.tournamentId, id))
+              .limit(1);
+            const stateParsed = stateRows[0]?.stateJson
+              ? (JSON.parse(stateRows[0].stateJson) as Record<string, unknown>)
+              : null;
+            const tournamentName = (stateParsed?.tournamentName as string) ?? "Your tournament";
+            const currentRound = (stateParsed?.currentRound as number) ?? 1;
+            const payload = JSON.stringify({
+              title: `⏰ 5 Minutes Left — Round ${currentRound}`,
+              body: `${tournamentName} — Finish your game before time runs out!`,
+              icon: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/iqZHgEQGHFmYeOzw.png",
+              badge: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/sffLnKtDRYocchPn.png",
+              tag: `otb-timer-warning-${id}-${currentRound}`,
+              url: `/tournament/${id}`,
+            });
+            const staleIds: string[] = [];
+            await Promise.allSettled(
+              rows.map(async (row) => {
+                const sub: PushSub = { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } };
+                try {
+                  await webpush.sendNotification(sub, payload);
+                } catch (err: unknown) {
+                  if (err && typeof err === "object" && "statusCode" in err) {
+                    const code = (err as { statusCode: number }).statusCode;
+                    if (code === 410 || code === 404) staleIds.push(row.id);
+                  }
+                }
+              })
+            );
+            if (staleIds.length > 0) {
+              await db.delete(pushSubscriptions).where(inArray(pushSubscriptions.id, staleIds));
+            }
+            console.log(`[timer] 5-min warning push sent to ${rows.length} subscriber(s) for ${id}`);
+          } catch (err) {
+            console.error("[timer] 5-min warning push error:", err);
+          }
+        }, warningDelayMs);
+        timerWarningTimeouts.set(id, warnHandle);
+        console.log(`[timer] 5-min warning push scheduled in ${Math.round(warningDelayMs / 1000)}s for tournament ${id}`);
       }
     }
 

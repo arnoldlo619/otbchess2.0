@@ -1091,3 +1091,74 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build SpectatorTimerBanner component (larger, projector-friendly, SSE-driven)
 - [x] Render SpectatorTimerBanner in the spectator page below the round progress bar
 - [x] Unit tests for spectator timer banner helpers (810 total pass)
+
+## Pre-Launch Audit & Optimization — Mar 2026
+
+### Server-Side Fixes
+- [x] Add express.json({ limit: "512kb" }) body size cap to prevent large payload DoS
+- [x] Add rate limiting on chess.com/lichess proxy endpoints (10 req/min per IP)
+- [x] Add security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
+- [x] Add server-side 5-minute warning setTimeout in PUT /timer (parallel to expiry timeout)
+- [x] Add composite index on push_subscriptions (tournament_id, endpoint) for upsert performance
+- [x] Delete .bak file: client/src/pages/PlayerView.tsx.bak
+
+### Client Performance Fixes
+- [x] Lazy-load all page components in App.tsx with React.lazy + Suspense
+- [x] Move html2canvas and jsPDF imports to dynamic import() inside the functions that use them
+- [x] Add manualChunks in vite.config.ts to split vendor bundles (recharts, framer-motion, radix)
+- [x] Remove unused RoundTimerDisplay component (replaced by SpectatorTimerBanner)
+- [x] Remove unused Map.tsx component (never imported in any page)
+
+### Mobile UX Fixes
+- [x] Fix viewport meta: remove maximum-scale=1 (breaks pinch-zoom accessibility)
+- [x] Add push subscriber count badge to Director dashboard Bell button
+- [x] Add director keyboard shortcuts: 1/D/0 keys for score entry on focused board
+
+### Accessibility Fixes
+- [x] Add aria-label to icon-only buttons across Director, PlayerView, Tournament pages
+- [x] Add aria-live="polite" to standings tables and timer displays for screen readers
+- [x] Add focus-visible ring styles to interactive elements in index.css
+- [x] Add Fontshare preconnect link to index.html for faster Clash Display loading
+
+### Code Quality Fixes
+- [x] Wrap client-side JSON.parse calls from SSE events in try/catch
+- [x] Add SSE auto-reconnect with exponential backoff in Tournament.tsx and PlayerView.tsx
+
+### Tests
+- [x] Add tests for server-side timer warning scheduling
+- [x] Update test count after all fixes (810 tests pass)
+
+
+## Pre-Launch Audit and Optimization - Mar 2026
+
+### Server-Side Fixes
+- [x] Add express.json limit 512kb body size cap to prevent large payload DoS
+- [x] Add rate limiting on chess.com/lichess proxy endpoints (10 req/min per IP)
+- [x] Add security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
+- [x] Add server-side 5-minute warning setTimeout in PUT /timer (parallel to expiry timeout)
+- [x] Add composite index on push_subscriptions (tournament_id, endpoint) for upsert performance
+- [x] Delete .bak file: client/src/pages/PlayerView.tsx.bak
+
+### Client Performance Fixes
+- [x] Lazy-load all page components in App.tsx with React.lazy + Suspense
+- [x] Move html2canvas and jsPDF imports to dynamic import inside the functions that use them
+- [x] Add manualChunks in vite.config.ts to split vendor bundles (recharts, framer-motion, radix)
+- [x] Remove unused RoundTimerDisplay component (replaced by SpectatorTimerBanner)
+- [x] Remove unused Map.tsx component (never imported in any page)
+
+### Mobile and Accessibility Fixes
+- [x] Fix viewport meta: remove maximum-scale=1 (breaks pinch-zoom accessibility)
+- [x] Add push subscriber count badge to Director dashboard Bell button
+- [x] Add director keyboard shortcuts: 1/D/0 keys for score entry on focused board
+- [x] Add aria-label to icon-only buttons across Director, PlayerView, Tournament pages
+- [x] Add aria-live polite to standings tables and timer displays for screen readers
+- [x] Add focus-visible ring styles to interactive elements in index.css
+- [x] Add Fontshare preconnect link to index.html for faster Clash Display loading
+
+### Code Quality Fixes
+- [x] Wrap client-side JSON.parse calls from SSE events in try/catch
+- [x] Add SSE auto-reconnect with exponential backoff in Tournament.tsx and PlayerView.tsx
+
+### Tests
+- [x] Add tests for server-side timer warning scheduling
+- [x] Update test count after all fixes (810 tests pass)

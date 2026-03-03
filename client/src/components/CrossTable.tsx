@@ -6,7 +6,6 @@
  * Horizontally scrollable on small screens.
  */
 import { useRef, useCallback, useState } from "react";
-import html2canvas from "html2canvas";
 import { Download, Loader2 } from "lucide-react";
 import type { Player, Round, Result } from "@/lib/tournamentData";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -128,6 +127,7 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
     if (!tableRef.current) return;
     setExporting(true);
     try {
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(tableRef.current, {
         scale: 2,
         useCORS: true,

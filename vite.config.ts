@@ -296,13 +296,51 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+    // Pre-bundle ALL deps that import React so they all share the same CJS wrapper
+    // (chunk-MO2SMAW5.js). Without this, lazy-loaded pages that pull in framer-motion
+    // or other React-consuming libs get a second React instance → "Invalid hook call".
+    include: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "react-dom/client",
+      "framer-motion",
+      "@radix-ui/react-tooltip",
+      "lucide-react",
+      "qrcode.react",
+      "wouter",
+      "sonner",
+      "next-themes",
+    ],
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // pdf-export chunk (jsPDF + autoTable) is intentionally large but only loaded on demand
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Radix UI primitives — shared across many pages
+          if (id.includes("@radix-ui")) return "radix";
+          // Recharts — only used in chart.tsx (shadcn)
+          if (id.includes("recharts") || id.includes("d3-") || id.includes("victory")) return "charts";
+          // Framer Motion — only used in Archive.tsx
+          if (id.includes("framer-motion")) return "motion";
+          // jsPDF + html2canvas — only used on demand in Report/CrossTable
+          if (id.includes("jspdf") || id.includes("html2canvas")) return "pdf-export";
+          // QR code libraries
+          if (id.includes("qrcode") || id.includes("jsqr")) return "qr";
+          // React core
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) return "react-vendor";
+          // Wouter router
+          if (id.includes("wouter")) return "router";
+        },
+      },
+    },
   },
   server: {
     port: 3000,

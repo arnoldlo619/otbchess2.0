@@ -6,7 +6,6 @@
  * title, and ELO. Exportable as a single PNG.
  */
 import { useRef, useCallback, useState } from "react";
-import html2canvas from "html2canvas";
 import { Download, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import type { Player, Round, Result } from "@/lib/tournamentData";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -222,6 +221,7 @@ export default function RoundTimeline({ players, rounds, tournamentName, isDark 
     if (!timelineRef.current) return;
     setExporting(true);
     try {
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(timelineRef.current, {
         scale: 2,
         useCORS: true,
