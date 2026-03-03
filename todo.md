@@ -1219,3 +1219,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire haptic into ChessClock tap handlers alongside sound
 - [x] Haptic respects the same mute toggle as sound
 - [x] Write vitest tests for haptic logic (11 tests)
+
+## App Title Update — Mar 2026
+- [x] Change VITE_APP_TITLE to "Play Chess Over The Board"
