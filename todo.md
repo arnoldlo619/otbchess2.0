@@ -1071,3 +1071,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] PlayerTimerBanner: live countdown ticks every second using wall-clock math
 - [x] PlayerTimerBanner: pulsing animation when <60s remaining
 - [x] Unit tests for calcRemaining, formatTime, isLowTime helpers (774 total pass)
+
+## Timer Expiry Push Notification — Mar 2026
+
+- [x] Server: timerExpiryTimeouts Map tracks pending setTimeout handles per tournament
+- [x] Server: PUT /timer schedules setTimeout at exact endWallMs = startWallMs + durationSec*1000 - elapsedAtPauseMs
+- [x] Server: cancels pending timeout on pause, reset, or any new PUT (status != running)
+- [x] Server: on expiry, marks stored snapshot as "expired", broadcasts timer_update SSE, then sends push
+- [x] Server: sendTimerExpiryPush() fetches tournament name from DB for friendly message body
+- [x] Server: cleans up stale push subscriptions (410/404) after each send
+- [x] Push payload: "⏰ Time's Up — Round N" title, director instruction in body, unique tag per round
+- [x] Unit tests: calcExpiryDelayMs, shouldScheduleExpiry, buildExpiryPayload (788 total pass)

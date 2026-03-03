@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { createAuthRouter } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
@@ -41,6 +41,65 @@ interface TimerSnapshot {
   savedAt: number;
 }
 const timerStore = new Map<string, TimerSnapshot>();
+// Tracks pending setTimeout handles so we can cancel them on pause/reset.
+const timerExpiryTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
+// Sends a "Time's up!" Web Push to all subscribed players for a tournament.
+async function sendTimerExpiryPush(tournamentId: string) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  try {
+    const db = await getDb();
+    const rows = await db
+      .select()
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.tournamentId, tournamentId));
+    if (rows.length === 0) return;
+    // Look up the tournament name from the stored state for a friendlier message.
+    const stateRows = await db
+      .select()
+      .from(tournamentState)
+      .where(eq(tournamentState.tournamentId, tournamentId))
+      .limit(1);
+    const stateParsed = stateRows[0]?.stateJson ? JSON.parse(stateRows[0].stateJson) as Record<string, unknown> : null;
+    const tournamentName = (stateParsed?.tournamentName as string) ?? "Your tournament";
+    const currentRound = (stateParsed?.currentRound as number) ?? 1;
+    const payload = JSON.stringify({
+      title: `⏰ Time's Up — Round ${currentRound}`,
+      body: `${tournamentName} — Report your result to the director at the registration table.`,
+      icon: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/iqZHgEQGHFmYeOzw.png",
+      badge: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/sffLnKtDRYocchPn.png",
+      tag: `otb-timer-expired-${tournamentId}-${currentRound}`,
+      url: `/tournament/${tournamentId}`,
+    });
+    const staleIds: string[] = [];
+    await Promise.allSettled(
+      rows.map(async (row) => {
+        const sub: PushSub = {
+          endpoint: row.endpoint,
+          keys: { p256dh: row.p256dh, auth: row.auth },
+        };
+        try {
+          await webpush.sendNotification(sub, payload);
+        } catch (err: unknown) {
+          if (err && typeof err === "object" && "statusCode" in err) {
+            const code = (err as { statusCode: number }).statusCode;
+            if (code === 410 || code === 404) staleIds.push(row.id);
+          }
+          console.warn("[push] Timer expiry push failed:", err);
+        }
+      })
+    );
+    // Clean up stale subscriptions.
+    if (staleIds.length > 0) {
+      await db
+        .delete(pushSubscriptions)
+        .where(inArray(pushSubscriptions.id, staleIds));
+    }
+    console.log(`[push] Timer expiry push sent to ${rows.length} subscriber(s) for ${tournamentId}`);
+  } catch (err) {
+    console.error("[push] Timer expiry push error:", err);
+  }
+}
 
 function broadcastTimerUpdate(tournamentId: string, snap: TimerSnapshot) {
   const subs = sseSubscribers.get(tournamentId);
@@ -739,6 +798,9 @@ export function createApp() {
 
   // ── Timer: PUT /api/tournament/:id/timer ───────────────────────────────────────
   // Director pushes a timer snapshot; server stores it and broadcasts via SSE.
+  // When status is "running", schedules a server-side setTimeout to fire a
+  // Web Push "Time's up!" notification at the exact expiry wall-clock time.
+  // Pausing or resetting cancels any pending timeout.
   app.put("/api/tournament/:id/timer", (req, res) => {
     const { id } = req.params;
     const snap = req.body as TimerSnapshot;
@@ -747,6 +809,38 @@ export function createApp() {
     }
     timerStore.set(id, snap);
     broadcastTimerUpdate(id, snap);
+
+    // Cancel any existing expiry timeout for this tournament.
+    const existing = timerExpiryTimeouts.get(id);
+    if (existing) {
+      clearTimeout(existing);
+      timerExpiryTimeouts.delete(id);
+    }
+
+    // Schedule a new expiry push when the timer is running.
+    if (snap.status === "running" && snap.startWallMs > 0 && snap.durationSec > 0) {
+      const endWallMs = snap.startWallMs + snap.durationSec * 1000 - snap.elapsedAtPauseMs;
+      const delayMs = endWallMs - Date.now();
+      if (delayMs > 0) {
+        const handle = setTimeout(async () => {
+          timerExpiryTimeouts.delete(id);
+          // Mark the stored snapshot as expired and broadcast.
+          const current = timerStore.get(id);
+          if (current && current.status === "running") {
+            const expiredSnap: TimerSnapshot = { ...current, status: "expired" };
+            timerStore.set(id, expiredSnap);
+            broadcastTimerUpdate(id, expiredSnap);
+          }
+          await sendTimerExpiryPush(id);
+        }, delayMs);
+        timerExpiryTimeouts.set(id, handle);
+        console.log(`[timer] Expiry push scheduled in ${Math.round(delayMs / 1000)}s for tournament ${id}`);
+      } else {
+        // Timer already expired (e.g. director refreshed after time ran out).
+        console.log(`[timer] Timer already expired for ${id}, skipping push scheduling.`);
+      }
+    }
+
     res.json({ ok: true });
   });
 
