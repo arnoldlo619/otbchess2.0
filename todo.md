@@ -1222,3 +1222,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## App Title Update — Mar 2026
 - [x] Change VITE_APP_TITLE to "Play Chess Over The Board"
+
+## Default Dark Mode — Mar 2026
+- [x] Change default theme from light to dark for first-time visitors

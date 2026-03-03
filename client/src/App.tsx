@@ -68,7 +68,7 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ThemeProvider
-          defaultTheme="light"
+          defaultTheme="dark"
           switchable
         >
           <TooltipProvider>
