@@ -237,15 +237,14 @@ function Nav({
                   }`}
                   onMouseLeave={() => setUserMenuOpen(false)}
                 >
-                  <Link href="/profile">
-                    <a
-                      className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors ${
-                        isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#3D6B47]/06"
-                      }`}
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Crown className="w-4 h-4" /> My Profile
-                    </a>
+                  <Link
+                    href="/profile"
+                    className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors ${
+                      isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#3D6B47]/06"
+                    }`}
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <Crown className="w-4 h-4" /> My Profile
                   </Link>
                   <button
                     onClick={() => { logout(); setUserMenuOpen(false); }}
@@ -281,18 +280,17 @@ function Nav({
           </Link>
           <ThemeToggle />
           {activeTournamentUrl && (
-            <Link href={activeTournamentUrl}>
-              <a
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all active:scale-95 ${
-                  isDark
-                    ? "bg-[#3D6B47]/30 text-[#4CAF50] border border-[#4CAF50]/30 hover:bg-[#3D6B47]/50"
-                    : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20 hover:bg-[#3D6B47]/20"
-                }`}
-                title={activeTournamentName ?? "Your tournament"}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse flex-shrink-0" />
-                Tournament Dashboard
-              </a>
+            <Link
+              href={activeTournamentUrl}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-[#3D6B47]/30 text-[#4CAF50] border border-[#4CAF50]/30 hover:bg-[#3D6B47]/50"
+                  : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20 hover:bg-[#3D6B47]/20"
+              }`}
+              title={activeTournamentName ?? "Your tournament"}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse flex-shrink-0" />
+              Tournament Dashboard
             </Link>
           )}
         </div>
@@ -325,15 +323,14 @@ function Nav({
           ))}
           {user ? (
             <>
-              <Link href="/profile">
-                <a
-                  className={`block w-full py-3 text-sm font-medium border-b ${
-                    isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
-                  }`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  My Profile ({user.displayName || user.email})
-                </a>
+              <Link
+                href="/profile"
+                className={`block w-full py-3 text-sm font-medium border-b ${
+                  isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
+                }`}
+                onClick={() => setMobileOpen(false)}
+              >
+                My Profile ({user.displayName || user.email})
               </Link>
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
@@ -365,16 +362,15 @@ function Nav({
             </span>
           </Link>
           {activeTournamentUrl && (
-            <Link href={activeTournamentUrl}>
-              <a
-                className={`flex items-center gap-2 w-full py-3 text-sm font-semibold ${
-                  isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-                }`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
-                Tournament Dashboard
-              </a>
+            <Link
+              href={activeTournamentUrl}
+              className={`flex items-center gap-2 w-full py-3 text-sm font-semibold ${
+                isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+              }`}
+              onClick={() => setMobileOpen(false)}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
+              Tournament Dashboard
             </Link>
           )}
         </div>

@@ -1162,3 +1162,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ### Tests
 - [x] Add tests for server-side timer warning scheduling
 - [x] Update test count after all fixes (810 tests pass)
+
+## Nested Anchor Fix — Mar 2026
+- [x] Find and fix all remaining nested <a> inside <a> violations on Home page and other pages
