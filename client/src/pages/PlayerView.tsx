@@ -32,6 +32,7 @@ import {
   Bell,
   BellOff,
   X,
+  Timer,
 } from "lucide-react";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -624,6 +625,28 @@ function MyBoardScreen({
                   You have a bye this round — ½ point awarded automatically.
                 </p>
               </div>
+            )}
+            {/* Chess Clock shortcut */}
+            {opponent && (
+              <a
+                href={`/tournament/${tournamentId}/clock`}
+                className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+                  isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
+                } transition-colors`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
+                  }`}>
+                    <Timer className={`w-4 h-4 ${accent}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
+                    <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
+                  </div>
+                </div>
+                <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </a>
             )}
             <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
           </div>

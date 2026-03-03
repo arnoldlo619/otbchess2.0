@@ -1191,3 +1191,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Diagnose root cause: circular import react-vendor → qr → react-vendor causing TDZ ReferenceError ("Cannot access 'G' before initialization") in production
 - [x] Fix: merge qr chunk into react-vendor in vite.config.ts manualChunks to eliminate the circular dependency
 - [x] Verify: 830 tests pass, clean production build, no circular imports in new build
+
+## Chess Clock Feature — Mar 2026
+- [x] Build ChessClock page (/tournament/:id/clock) — full-screen two-panel design
+- [x] Pre-load time control from tournament registry (timeBase + timeIncrement)
+- [x] Two large tap zones: top (player 2, rotated) and bottom (player 1)
+- [x] Increment applied on tap (Fischer/Bronstein style)
+- [x] Visual states: idle, running (active player highlighted green), paused, flagged
+- [x] Pause on tap when both clocks running (tap anywhere to pause)
+- [x] Reset button with confirmation
+- [x] Settings panel: adjust time/increment if needed
+- [x] Add "Chess Clock" button to PlayerView MyBoardScreen
+- [x] Add route /tournament/:id/clock to App.tsx
+- [x] Write vitest tests for clock logic helpers (23 tests)
