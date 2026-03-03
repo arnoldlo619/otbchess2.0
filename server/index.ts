@@ -813,15 +813,17 @@ export function createApp() {
         players?: unknown[];
         rounds?: Array<{ number: number; games: unknown[] }>;
       };
-      // Extract just the current round's games for efficiency
-      const currentRound = s.rounds?.find((r) => r.number === (s.currentRound ?? 0));
+      // Return all rounds so fresh-device spectators get the full round history.
+      // Also include current round's games separately for backwards compatibility.
+      const currentRoundData = s.rounds?.find((r) => r.number === (s.currentRound ?? 0));
       res.json({
         status: s.status ?? "registration",
         currentRound: s.currentRound ?? 0,
         totalRounds: s.totalRounds ?? 0,
         tournamentName: s.tournamentName ?? "",
         players: s.players ?? [],
-        games: currentRound?.games ?? [],
+        games: currentRoundData?.games ?? [],
+        rounds: s.rounds ?? [],
         updatedAt: rows[0].updatedAt,
       });
     } catch (err) {

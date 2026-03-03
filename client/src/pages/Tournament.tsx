@@ -988,6 +988,11 @@ export default function TournamentPage() {
   const [tournamentState, setTournamentState] = useState<DirectorState | null>(() => {
     return loadTournamentState(tournamentId);
   });
+  // Track whether we are still waiting for the server catch-up fetch.
+  // While true (and tournamentState is null), show a loading spinner instead of demo data.
+  const [serverFetching, setServerFetching] = useState(
+    tournamentId !== "otb-demo-2026"
+  );
 
   // SSE connection state
   const [sseConnected, setSseConnected] = useState(false);
@@ -1014,24 +1019,56 @@ export default function TournamentPage() {
       .then((snap) => { if (snap) setTimerSnapshot(snap); })
       .catch(() => { /* silent */ });
 
-    // Catch-up fetch: load the freshest state immediately on mount
+    // Catch-up fetch: load the freshest state immediately on mount.
+    // CRITICAL: if tournamentState is null (fresh device, no localStorage),
+    // we must construct a full DirectorState from the server response so
+    // spectators on other devices see the real tournament, not demo data.
     fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
       .then((r) => r.ok ? r.json() : null)
-      .then((data: { players?: Player[]; status?: string; currentRound?: number; totalRounds?: number; tournamentName?: string; rounds?: Round[] } | null) => {
+      .then((data: { players?: Player[]; status?: string; currentRound?: number; totalRounds?: number; tournamentName?: string; games?: Round["games"]; rounds?: Round[] } | null) => {
+        setServerFetching(false);
         if (!data) return;
         setTournamentState((prev) => {
-          if (!prev) return prev;
+          if (prev) {
+            // Already have local state — patch server fields and merge rounds
+            const serverRounds = (data.rounds as Round[] | undefined) ?? [];
+            const mergedRounds = serverRounds.length > 0 ? serverRounds : prev.rounds;
+            return {
+              ...prev,
+              players: (data.players as Player[]) ?? prev.players,
+              status: (data.status as DirectorState["status"]) ?? prev.status,
+              currentRound: data.currentRound ?? prev.currentRound,
+              totalRounds: data.totalRounds ?? prev.totalRounds,
+              tournamentName: data.tournamentName ?? prev.tournamentName,
+              rounds: mergedRounds,
+            };
+          }
+          // No local state — build a full DirectorState from server data
+          // so spectators on fresh devices see the real tournament.
+          const serverRounds = (data.rounds as Round[] | undefined) ?? [];
+          const currentRoundNum = data.currentRound ?? 0;
+          // Fall back to constructing a single round from games if rounds not provided
+          const rounds: Round[] = serverRounds.length > 0
+            ? serverRounds
+            : currentRoundNum > 0
+              ? [{ number: currentRoundNum, status: "in_progress" as const, games: data.games ?? [] }]
+              : [];
           return {
-            ...prev,
-            players: (data.players as Player[]) ?? prev.players,
-            status: (data.status as DirectorState["status"]) ?? prev.status,
-            currentRound: data.currentRound ?? prev.currentRound,
-            totalRounds: data.totalRounds ?? prev.totalRounds,
-            tournamentName: data.tournamentName ?? prev.tournamentName,
-          };
+            tournamentId,
+            tournamentName: data.tournamentName ?? "",
+            status: (data.status as DirectorState["status"]) ?? "registration",
+            currentRound: currentRoundNum,
+            totalRounds: data.totalRounds ?? 0,
+            players: (data.players as Player[]) ?? [],
+            rounds,
+            timer: null,
+          } as unknown as DirectorState;
         });
       })
-      .catch(() => { /* silent — localStorage fallback is already loaded */ });
+      .catch(() => {
+        setServerFetching(false);
+        /* silent — localStorage fallback is already loaded if available */
+      });
 
     // Open SSE stream
     const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/stream`);
@@ -1183,6 +1220,20 @@ export default function TournamentPage() {
     );
     return match?.id;
   }, [tournamentId, displayState.players]);
+
+  // While the server fetch is in flight and we have no local state,
+  // show a minimal loading screen instead of demo data.
+  if (serverFetching && !tournamentState && tournamentId !== "otb-demo-2026") {
+    return (
+      <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+        <TournamentNav tournamentId={tournamentId} />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
+          <div className="w-10 h-10 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground font-medium">Loading tournament…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>

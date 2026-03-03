@@ -1173,3 +1173,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director "Close Tournament" redirects to /results
 - [x] Participant PlayerView auto-redirects to /results when tournament status is "completed"
 - [ ] Write vitest tests for tiebreak calculation helpers
+
+## QR Code & Join Flow Bugs — Mar 2026
+
+### Root Causes Identified:
+- [x] BUG 1: QR scanner strips full URL to just the invite code BUT discards the ?t= embedded metadata — so on a fresh device the tournament can't be resolved from localStorage
+- [x] BUG 2: QR scanner regex /\/join\/([A-Z0-9]{3,12})/i only matches /join/ paths — if the scanned URL is a full https:// URL the regex works, but the ?t= param is lost
+- [x] BUG 3: The correct fix is to make the QR scanner return the FULL URL and navigate to it directly (window.location.href = url) instead of extracting just the code
+- [x] BUG 4: Home page "Join" button goes to /join (no code) — user has to manually enter code or scan. This is fine but the scanner must handle full URLs properly
+- [x] BUG 5: Spectator QR (SpectatorQRScreen / SpectatorShareModal) encodes /tournament/:id — when spectators scan this they land on the spectator view correctly, but if they try to JOIN via this QR it won't work (different flow)
+- [x] BUG 6: The spectator URL uses the tournament slug (e.g. spring-open-2026) which is correct. But if the tournament was created on device A and the spectator opens it on device B, the Tournament page falls back to DEMO data because there's no localStorage on device B — it needs to fetch from the server
+- [x] FIX: QrScanner should navigate to full URL if it looks like a URL, not extract just the code
+- [x] FIX: Tournament spectator page should always try server live-state first, not fall back to demo
+- [x] FIX: Add server-side tournament name lookup so spectators see real data even on fresh devices

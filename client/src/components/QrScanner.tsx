@@ -2,6 +2,14 @@
  * QrScanner — lightweight camera-based QR code scanner
  * Uses jsQR to decode frames from the device camera via getUserMedia.
  * Designed for mobile-first use: requests the rear camera by default.
+ *
+ * Scan result handling:
+ *   - If the QR data is a full URL (http/https), call onScanUrl(url) so the
+ *     caller can navigate to it directly, preserving any ?t= embedded metadata.
+ *   - If the QR data looks like a bare invite code (alphanumeric, ≤12 chars),
+ *     call onScan(code) as before.
+ *   - onScanUrl is optional; if not provided, falls back to extracting the
+ *     invite code from the URL path and calling onScan.
  */
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
@@ -9,11 +17,13 @@ import { X, Camera, AlertCircle } from "lucide-react";
 
 interface QrScannerProps {
   onScan: (code: string) => void;
+  /** Called when the QR contains a full URL — navigate to it directly. */
+  onScanUrl?: (url: string) => void;
   onClose: () => void;
   isDark: boolean;
 }
 
-export function QrScanner({ onScan, onClose, isDark }: QrScannerProps) {
+export function QrScanner({ onScan, onScanUrl, onClose, isDark }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,13 +81,39 @@ export function QrScanner({ onScan, onClose, isDark }: QrScannerProps) {
         inversionAttempts: "dontInvert",
       });
       if (code?.data) {
-        // Extract tournament code from URL like /join/OTB2026 or just a raw code
         const raw = code.data.trim();
-        const match = raw.match(/\/join\/([A-Z0-9]{3,12})/i);
-        const extracted = match ? match[1].toUpperCase() : raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
-        if (extracted) {
-          streamRef.current?.getTracks().forEach((t) => t.stop());
-          onScan(extracted);
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+
+        // ── Case 1: Full URL (http:// or https://) ──────────────────────────
+        // Navigate directly to preserve ?t= embedded metadata and all query params.
+        if (/^https?:\/\//i.test(raw)) {
+          if (onScanUrl) {
+            onScanUrl(raw);
+          } else {
+            // Extract invite code from /join/<code> path as fallback
+            const joinMatch = raw.match(/\/join\/([A-Za-z0-9]{3,16})/i);
+            if (joinMatch) {
+              onScan(joinMatch[1].toUpperCase());
+            } else {
+              // Last resort: strip non-alphanumeric and use as code
+              const stripped = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+              if (stripped) onScan(stripped);
+            }
+          }
+          return;
+        }
+
+        // ── Case 2: Relative path like /join/ABC12345 ───────────────────────
+        const joinMatch = raw.match(/\/join\/([A-Za-z0-9]{3,16})/i);
+        if (joinMatch) {
+          onScan(joinMatch[1].toUpperCase());
+          return;
+        }
+
+        // ── Case 3: Bare invite code (alphanumeric, 3–16 chars) ─────────────
+        const bareCode = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (bareCode.length >= 3 && bareCode.length <= 16) {
+          onScan(bareCode);
           return;
         }
       }
@@ -86,7 +122,7 @@ export function QrScanner({ onScan, onClose, isDark }: QrScannerProps) {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [scanning, onScan]);
+  }, [scanning, onScan, onScanUrl]);
 
   const bg = isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-gray-900";
@@ -139,13 +175,13 @@ export function QrScanner({ onScan, onClose, isDark }: QrScannerProps) {
             {/* Corner brackets overlay */}
             <div className="absolute inset-0 pointer-events-none">
               {/* Top-left */}
-              <div className="absolute top-3 left-3 w-8 h-8 border-t-3 border-l-3 border-[#4CAF50] rounded-tl-lg" style={{ borderWidth: "3px 0 0 3px" }} />
+              <div className="absolute top-3 left-3 w-8 h-8 border-[#4CAF50] rounded-tl-lg" style={{ borderWidth: "3px 0 0 3px" }} />
               {/* Top-right */}
-              <div className="absolute top-3 right-3 w-8 h-8 border-t-3 border-r-3 border-[#4CAF50] rounded-tr-lg" style={{ borderWidth: "3px 3px 0 0" }} />
+              <div className="absolute top-3 right-3 w-8 h-8 border-[#4CAF50] rounded-tr-lg" style={{ borderWidth: "3px 3px 0 0" }} />
               {/* Bottom-left */}
-              <div className="absolute bottom-3 left-3 w-8 h-8 border-b-3 border-l-3 border-[#4CAF50] rounded-bl-lg" style={{ borderWidth: "0 0 3px 3px" }} />
+              <div className="absolute bottom-3 left-3 w-8 h-8 border-[#4CAF50] rounded-bl-lg" style={{ borderWidth: "0 0 3px 3px" }} />
               {/* Bottom-right */}
-              <div className="absolute bottom-3 right-3 w-8 h-8 border-b-3 border-r-3 border-[#4CAF50] rounded-br-lg" style={{ borderWidth: "0 3px 3px 0" }} />
+              <div className="absolute bottom-3 right-3 w-8 h-8 border-[#4CAF50] rounded-br-lg" style={{ borderWidth: "0 3px 3px 0" }} />
               {/* Scanning line animation */}
               <div
                 className="absolute left-4 right-4 h-0.5 bg-[#4CAF50]/70 rounded-full"
@@ -160,7 +196,7 @@ export function QrScanner({ onScan, onClose, isDark }: QrScannerProps) {
       {!error && (
         <div className="px-6 pb-safe-bottom pb-8 text-center">
           <p className="text-white/60 text-sm">
-            Point your camera at the host's QR code
+            Point your camera at the host&apos;s QR code
           </p>
           <button
             onClick={onClose}
