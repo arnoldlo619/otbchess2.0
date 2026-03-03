@@ -1048,3 +1048,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove CheckCheck icon import from Director
 - [x] Add "report result to director" instruction card to WaitingRoundScreen
 - [x] 20 new unit tests confirming no player self-reporting code remains (745 total pass)
+
+## Web Push Opt-In (Player) — Mar 2026
+
+- [x] Audit usePushSubscription hook, service worker, and server push endpoints
+- [x] PushPromptCard component: Bell icon, "Get notified when your next round starts" copy, one-tap Enable button
+- [x] Show PushPromptCard in PlayerView LobbyScreen (below tournament name)
+- [x] Show PushPromptCard in PlayerView WaitingRoundScreen (below report card)
+- [x] Hide PushPromptCard once permission is granted or denied
+- [x] Dismiss (X) button hides card for the session without blocking permission
+- [x] usePushSubscription passes tournamentId so subscription is scoped to the tournament
+- [x] Unit tests for push prompt state helpers (759 total pass)

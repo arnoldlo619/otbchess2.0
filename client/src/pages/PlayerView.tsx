@@ -29,7 +29,11 @@ import {
   BarChart3,
   Wifi,
   WifiOff,
+  Bell,
+  BellOff,
+  X,
 } from "lucide-react";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { resolveTournament } from "@/lib/tournamentRegistry";
@@ -213,6 +217,61 @@ function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: bool
   );
 }
 
+// ─── Push Prompt Card ───────────────────────────────────────────────────────────
+function PushPromptCard({
+  tournamentId, isDark,
+}: {
+  tournamentId: string; isDark: boolean;
+}) {
+  const { status, subscribe, isLoading } = usePushSubscription({ tournamentId });
+  const [dismissed, setDismissed] = useState(false);
+
+  // Don't show if already subscribed, denied, dismissed, or browser doesn't support push
+  if (dismissed || status === "subscribed" || status === "denied") return null;
+  if (typeof window !== "undefined" && !("PushManager" in window)) return null;
+
+  const cardBg = isDark
+    ? "bg-[#1a2e1e] border border-[#4CAF50]/20"
+    : "bg-emerald-50 border border-emerald-200";
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+  const textMain = isDark ? "text-white" : "text-gray-900";
+  const textMuted = isDark ? "text-white/60" : "text-gray-500";
+
+  return (
+    <div className={`mx-4 mt-3 rounded-2xl px-4 py-3.5 flex items-start gap-3 ${cardBg}`}>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+        isDark ? "bg-[#4CAF50]/15" : "bg-emerald-100"
+      }`}>
+        <Bell className={`w-4.5 h-4.5 ${accent}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-bold leading-tight ${textMain}`}>Get notified when your round starts</p>
+        <p className={`text-xs mt-0.5 ${textMuted}`}>We'll send a push alert when the director generates pairings.</p>
+        <button
+          onClick={subscribe}
+          disabled={isLoading}
+          className={`mt-2.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+            isDark
+              ? "bg-[#4CAF50] text-black hover:bg-[#5DBF61] disabled:opacity-50"
+              : "bg-[#3D6B47] text-white hover:bg-[#2d5237] disabled:opacity-50"
+          }`}
+        >
+          {isLoading ? "Enabling…" : "Enable Notifications"}
+        </button>
+      </div>
+      <button
+        onClick={() => setDismissed(true)}
+        className={`flex-shrink-0 p-1 rounded-lg transition-colors ${
+          isDark ? "text-white/30 hover:text-white/60 hover:bg-white/08" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+        }`}
+        aria-label="Dismiss"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 // ─── Lobby Screen ─────────────────────────────────────────────────────────────
 function LobbyScreen({
   tournamentName, username, isDark, tournamentId,
@@ -250,6 +309,7 @@ function LobbyScreen({
         </div>
         <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
       </div>
+      <PushPromptCard tournamentId={tournamentId} isDark={isDark} />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-8">
         <div className="relative flex items-center justify-center">
           <div className={`absolute w-32 h-32 rounded-full ${accentBg} animate-ping opacity-30`} />
@@ -293,9 +353,9 @@ function LobbyScreen({
 
 // ─── Waiting Between Rounds Screen ───────────────────────────────────────────
 function WaitingRoundScreen({
-  tournamentName, username, round, totalRounds, players, isDark, connected,
+  tournamentId, tournamentName, username, round, totalRounds, players, isDark, connected,
 }: {
-  tournamentName: string; username: string; round: number; totalRounds: number;
+  tournamentId: string; tournamentName: string; username: string; round: number; totalRounds: number;
   players: Player[]; isDark: boolean; connected: boolean;
 }) {
   const [dots, setDots] = useState(".");
@@ -343,6 +403,7 @@ function WaitingRoundScreen({
           </p>
         </div>
       </div>
+      <PushPromptCard tournamentId={tournamentId} isDark={isDark} />
       {rank > 0 && (
         <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-5 py-4`}>
           <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-2`}>Your Standing</p>
@@ -680,6 +741,7 @@ export default function PlayerView() {
   if (screen === "waiting_round") {
     return (
       <WaitingRoundScreen
+        tournamentId={tournamentId}
         tournamentName={tournamentName}
         username={username}
         round={liveRound}
