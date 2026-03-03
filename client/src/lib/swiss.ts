@@ -57,17 +57,19 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
         pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 1);
         winsMap.set(game.blackId, (winsMap.get(game.blackId) ?? 0) + 1);
         lossesMap.set(game.whiteId, (lossesMap.get(game.whiteId) ?? 0) + 1);
-      } else if (game.result === "½-½") {
-        pointsMap.set(game.whiteId, (pointsMap.get(game.whiteId) ?? 0) + 0.5);
-        pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
-        drawsMap.set(game.whiteId, (drawsMap.get(game.whiteId) ?? 0) + 1);
-        drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
       }
-      // Bye: whiteId === "BYE" means the blackId player gets ½ point (FIDE standard)
+      // Bye: whiteId === "BYE" means the blackId player gets ½ point (FIDE standard).
+      // Handle BEFORE the ½-½ branch so the bye game is not double-counted.
       if (game.whiteId === "BYE") {
         pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
         drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
         continue;
+      }
+      if (game.result === "½-½") {
+        pointsMap.set(game.whiteId, (pointsMap.get(game.whiteId) ?? 0) + 0.5);
+        pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
+        drawsMap.set(game.whiteId, (drawsMap.get(game.whiteId) ?? 0) + 1);
+        drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
       }
     }
   }

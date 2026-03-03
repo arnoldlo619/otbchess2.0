@@ -22,6 +22,7 @@ const DirectorAccessPage = lazy(() => import("./pages/DirectorAccess"));
 const PlayerView = lazy(() => import("./pages/PlayerView"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const FinalStandings = lazy(() => import("./pages/FinalStandings"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -49,6 +50,7 @@ function Router() {
         <Route path={"/tournaments"} component={Archive} />
         <Route path={"/tournament/:id/report"} component={ReportPage} />
         <Route path={"/director-access"} component={DirectorAccessPage} />
+        <Route path={"/tournament/:id/results"} component={FinalStandings} />
         <Route path={"/profile"} component={ProfilePage} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}

@@ -1165,3 +1165,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Nested Anchor Fix — Mar 2026
 - [x] Find and fix all remaining nested <a> inside <a> violations on Home page and other pages
+
+## Final Standings Page — Mar 2026
+- [ ] Audit existing standings/tiebreak logic and routing
+- [x] Build FinalStandings page with Swiss tiebreak table (Pts, Bch1, Bch, SB, Prog, W, B)
+- [x] Wire /tournament/:id/results route in App.tsx
+- [x] Director "Close Tournament" redirects to /results
+- [x] Participant PlayerView auto-redirects to /results when tournament status is "completed"
+- [ ] Write vitest tests for tiebreak calculation helpers

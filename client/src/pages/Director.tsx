@@ -2582,6 +2582,8 @@ export default function Director() {
                         console.error("[director] Failed to broadcast tournament_ended");
                       }
                       toast.success("Tournament finalized!");
+                      // Redirect director to the final standings page
+                      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
                     }}
                     className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                   >

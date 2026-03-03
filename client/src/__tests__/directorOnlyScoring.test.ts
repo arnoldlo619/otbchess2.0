@@ -26,7 +26,11 @@ describe("Director-only score entry model", () => {
   });
 
   it("PlayerView does not POST to /api/tournament/:id/result", () => {
-    expect(playerViewSrc).not.toContain("/result");
+    // Check for the specific API result-submission endpoint, not the /results navigation route
+    // PlayerView may legitimately fetch /players, /timer, /live-state — just not /result
+    expect(playerViewSrc).not.toContain('/api/tournament/:id/result');
+    expect(playerViewSrc).not.toContain('/result\'');
+    expect(playerViewSrc).not.toContain('/result`');
   });
 
   it("PlayerView does not contain result option buttons (1-0 / ½-½ / 0-1 grid)", () => {

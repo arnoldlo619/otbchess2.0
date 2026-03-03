@@ -12,7 +12,7 @@
  *   tournament_complete — final standings
  */
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useSearch } from "wouter";
+import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -652,6 +652,7 @@ export default function PlayerView() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const username = params.get("username") ?? "";
+  const [, navigate] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -777,6 +778,8 @@ export default function PlayerView() {
         const payload = JSON.parse(e.data) as TournamentEndedPayload;
         setEndedPayload(payload);
         setScreen("tournament_complete");
+        // Redirect to the shared final standings page after a brief transition
+        setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 1500);
       } catch { /* ignore */ }
     });
 
