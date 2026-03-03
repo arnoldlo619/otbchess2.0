@@ -332,10 +332,18 @@ export default defineConfig({
           if (id.includes("framer-motion")) return "motion";
           // jsPDF + html2canvas — only used on demand in Report/CrossTable
           if (id.includes("jspdf") || id.includes("html2canvas")) return "pdf-export";
-          // QR code libraries
-          if (id.includes("qrcode") || id.includes("jsqr")) return "qr";
-          // React core
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) return "react-vendor";
+          // React core + QR libraries bundled together to prevent circular dependency.
+          // qrcode.react depends on React, so Rollup places the __esModule interop
+          // helper (g/P0) in whichever chunk is processed first — creating a
+          // react-vendor → qr → react-vendor cycle that causes a TDZ ReferenceError
+          // in production ("Cannot access 'G' before initialization").
+          // Merging qr into react-vendor eliminates the cycle entirely.
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("qrcode") ||
+            id.includes("jsqr")
+          ) return "react-vendor";
           // Wouter router
           if (id.includes("wouter")) return "router";
         },

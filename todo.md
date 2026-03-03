@@ -1186,3 +1186,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] FIX: QrScanner should navigate to full URL if it looks like a URL, not extract just the code
 - [x] FIX: Tournament spectator page should always try server live-state first, not fall back to demo
 - [x] FIX: Add server-side tournament name lookup so spectators see real data even on fresh devices
+
+## Production Blank Page Fix — Mar 2026
+- [x] Diagnose root cause: circular import react-vendor → qr → react-vendor causing TDZ ReferenceError ("Cannot access 'G' before initialization") in production
+- [x] Fix: merge qr chunk into react-vendor in vite.config.ts manualChunks to eliminate the circular dependency
+- [x] Verify: 830 tests pass, clean production build, no circular imports in new build
