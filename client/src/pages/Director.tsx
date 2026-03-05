@@ -755,7 +755,7 @@ export default function Director() {
   }, [user?.id, tournamentId, state.tournamentName]);
 
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"home" | "boards" | "players" | "standings" | "settings">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "players" | "standings" | "settings">("home");
   const [showQR, setShowQR] = useState(false);
   const [showAnnounce, setShowAnnounce] = useState(false);
   const [showSpectatorShare, setShowSpectatorShare] = useState(false);
@@ -813,7 +813,7 @@ export default function Director() {
   const [focusedBoardIdx, setFocusedBoardIdx] = useState<number>(0);
   const boardGames = currentRoundData?.games.filter((g) => g.whiteId !== "BYE") ?? [];
   useEffect(() => {
-    if (activeTab !== "boards" || isRegistration || boardGames.length === 0) return;
+    if (activeTab !== "home" || isRegistration || boardGames.length === 0) return;
     const handleKey = (e: KeyboardEvent) => {
       // Don't intercept when an input/textarea/select is focused
       const tag = (e.target as HTMLElement).tagName;
@@ -866,7 +866,7 @@ export default function Director() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, isRegistration, boardGames, focusedBoardIdx, state.players, recordWithUndo, pushStandingsNow]);
+  }, [activeTab, isRegistration, boardGames, focusedBoardIdx, state.players, recordWithUndo, pushStandingsNow]); // keyboard shortcuts always active on home tab
 
   // ── Push notification broadcasts ────────────────────────────────────────
   const broadcastRoundStart = useCallback(async (round: number) => {
@@ -977,7 +977,7 @@ export default function Director() {
   useEffect(() => {
     if (
       allResultsIn &&
-      activeTab === "boards" &&
+      activeTab === "home" &&
       !isRegistration &&
       state.currentRound > 0 &&
       generateCtaRef.current
@@ -1345,7 +1345,6 @@ export default function Director() {
             >
               {([
                 { id: "home", label: "Home" },
-                { id: "boards", label: "Boards" },
                 { id: "players", label: "Players" },
                 { id: "standings", label: "Standings" },
                 { id: "settings", label: "Settings" },
@@ -1739,7 +1738,7 @@ export default function Director() {
                         }`}>In Progress</span>
                       </div>
                       <button
-                        onClick={() => setActiveTab("boards")}
+                        onClick={() => setActiveTab("home")}
                         className={`text-xs font-semibold flex items-center gap-1 transition-colors ${
                           isDark ? "text-[#4CAF50] hover:text-[#4CAF50]/80" : "text-[#3D6B47] hover:text-[#2d5235]"
                         }`}
@@ -1788,6 +1787,230 @@ export default function Director() {
                       {/* generate button lives in Boards tab */}
                     </div>
                   </div>
+
+                  {/* ══════════════════════════════════════════════════════════════════
+                      BOARD CARDS — Result entry (merged from Boards tab)
+                  ══════════════════════════════════════════════════════════════════ */}
+
+                  {/* Generate Next Round CTA */}
+                  {allResultsIn && canGenerateNext && (
+                    <div
+                      ref={generateCtaRef}
+                      className={`rounded-xl border overflow-hidden ${
+                        isDark
+                          ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
+                          : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
+                      }`}
+                    >
+                      <div className={`flex items-center gap-3 px-4 py-3 border-b ${
+                        isDark ? "border-[#4CAF50]/15" : "border-[#3D6B47]/10"
+                      }`}>
+                        <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${
+                          isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                        }`} />
+                        <p className={`text-sm font-medium ${
+                          isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                        }`}>
+                          All {totalGames} result{totalGames !== 1 ? "s" : ""} for Round {state.currentRound} recorded — ready for Round {state.currentRound + 1}
+                        </p>
+                      </div>
+                      <div className="px-4 py-3">
+                        <button
+                          onClick={() => {
+                            const nextRound = state.currentRound + 1;
+                            generateNextRound();
+                            toast.success(`Round ${nextRound} pairings generated!`);
+                            broadcastRoundStart(nextRound);
+                            setTimeout(() => {
+                              try {
+                                const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
+                                const latestState = raw ? JSON.parse(raw) : null;
+                                const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                                if (roundData && latestState?.players) {
+                                  fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      round: nextRound,
+                                      games: roundData.games,
+                                      players: latestState.players,
+                                    }),
+                                  }).catch(() => {});
+                                }
+                              } catch { /* ignore */ }
+                            }, 150);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                          style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
+                        >
+                          <Zap className="w-4 h-4" />
+                          Generate Round {state.currentRound + 1} — Swiss Pairings
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tournament complete banner */}
+                  {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (
+                    <div className={`rounded-xl border p-4 space-y-3 ${
+                      isDark
+                        ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
+                        : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
+                          <Trophy className={`w-4.5 h-4.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                        </div>
+                        <div>
+                          <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                            Tournament Complete!
+                          </p>
+                          <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                            All {state.totalRounds} rounds finished · Final standings ready
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Link href={`/tournament/${tournamentId}`}>
+                          <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
+                            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
+                          }`}>
+                            <BarChart3 className="w-4 h-4" /> View Results
+                          </button>
+                        </Link>
+                        <Link href={`/tournament/${tournamentId}/report`}>
+                          <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
+                            isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
+                          }`}>
+                            <Trophy className="w-4 h-4" /> Player Reports
+                          </button>
+                        </Link>
+                        <Link href={`/tournament/${tournamentId}/print`}>
+                          <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
+                            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                          }`}>
+                            <Download className="w-4 h-4" /> Print / Export
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pending results hint */}
+                  {!allResultsIn && (
+                    <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                      isDark
+                        ? "bg-white/04 border-white/08 text-white/50"
+                        : "bg-gray-50 border-gray-100 text-gray-500"
+                    }`}>
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <p className="text-sm">Enter results for all boards to unlock next round pairing generation.</p>
+                    </div>
+                  )}
+
+                  {/* ── Board cards grid ─────────────────────────────────────────── */}
+                  <div>
+                    <h2 className={`text-xs font-bold uppercase tracking-widest mb-3 ${
+                      isDark ? "text-white/30" : "text-gray-400"
+                    }`}>Round {state.currentRound} Boards</h2>
+                    {currentRoundData ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {currentRoundData.games.map((game) =>
+                          game.whiteId === "BYE" ? (
+                            <ByeCard
+                              key={game.id}
+                              game={game}
+                              players={state.players}
+                              isDark={isDark}
+                            />
+                          ) : (
+                            <BoardCard
+                              key={game.id}
+                              game={game}
+                              players={state.players}
+                              onUndo={undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
+                              onResult={(gameId, newResult) => {
+                                const prevResult = game.result;
+                                const white = state.players.find((p) => p.id === game.whiteId);
+                                const black = state.players.find((p) => p.id === game.blackId);
+                                const label =
+                                  newResult === "*"
+                                    ? `Board ${game.board}: cleared`
+                                    : `Board ${game.board}: ${
+                                        newResult === "1-0"
+                                          ? `${white?.name ?? "White"} wins`
+                                          : newResult === "0-1"
+                                          ? `${black?.name ?? "Black"} wins`
+                                          : "Draw"
+                                      }`;
+                                recordWithUndo(gameId, newResult, prevResult, label);
+                                pushStandingsNow();
+                              }}
+                              isDark={isDark}
+                            />
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <div className={`flex flex-col items-center justify-center py-16 rounded-xl border ${
+                        isDark ? "border-white/08 text-white/30" : "border-gray-100 text-gray-300"
+                      }`}>
+                        <Circle className="w-10 h-10 mb-3" />
+                        <p className="text-sm font-medium">No round data yet</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Completed rounds accordion ───────────────────────────────── */}
+                  {state.rounds.filter((r) => r.number < state.currentRound).length > 0 && (
+                    <div>
+                      <h2 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                        Completed Rounds
+                      </h2>
+                      <div className="space-y-2">
+                        {state.rounds
+                          .filter((r) => r.number < state.currentRound)
+                          .reverse()
+                          .map((round) => (
+                            <div
+                              key={round.number}
+                              className={`rounded-xl border px-4 py-3 ${
+                                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/06" : "bg-white border-gray-100"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`text-xs font-bold ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                                  Round {round.number}
+                                </span>
+                                <span className="flex items-center gap-1 text-xs text-[#3D6B47] font-medium">
+                                  <CheckCircle2 className="w-3 h-3" /> Complete
+                                </span>
+                              </div>
+                              <div className="space-y-1.5">
+                                {round.games.map((g) => {
+                                  const w = state.players.find((p) => p.id === g.whiteId);
+                                  const b = state.players.find((p) => p.id === g.blackId);
+                                  return (
+                                    <div key={g.id} className="flex items-center gap-2 min-w-0">
+                                      <span className={`flex-1 truncate text-xs font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                                        {w?.name.split(" ")[0]}
+                                      </span>
+                                      <span className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-xs ${resultBadgeClass(g.result, isDark)}`}>
+                                        {g.result}
+                                      </span>
+                                      <span className={`flex-1 truncate text-xs font-medium text-right ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                                        {b?.name.split(" ")[0]}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -1805,321 +2028,6 @@ export default function Director() {
               </div>
               <StandingsPanel players={state.players} isDark={isDark} />
             </div>
-          )}
-
-          {/* ── Boards Tab ─────────────────────────────────────────────────────── */}
-          {activeTab === "boards" && (
-            <>
-              {/* Registration panel — shown for newly created tournaments */}
-              {isRegistration && (
-                <div className={`rounded-2xl border p-6 space-y-5 ${isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-gray-100"}`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
-                      <Users className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                    </div>
-                    <div>
-                      <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Registration Open</h3>
-                      <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>Share the join link so players can register</p>
-                    </div>
-                  </div>
-
-                  {/* Join URL */}
-                  <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"}`}>
-                    <span className={`text-xs font-mono flex-1 truncate ${isDark ? "text-white/60" : "text-gray-600"}`}>{joinUrl}</span>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(joinUrl); toast.success("Join link copied!"); }}
-                      className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"}`}
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setShowQR(true)}
-                      className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"}`}
-                    >
-                      QR
-                    </button>
-                  </div>
-
-                  {/* Registered players */}
-                  {state.players.length > 0 ? (
-                    <div className="space-y-2">
-                      <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-white/30" : "text-gray-400"}`}>{state.players.length} Player{state.players.length !== 1 ? "s" : ""} Registered</p>
-                      <div className="space-y-1.5">
-                        {state.players.map((p) => (
-                          <div key={p.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg group ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
-                            <PlayerAvatar username={p.username} name={p.name} size={28} showBadge platform={p.platform} avatarUrl={p.avatarUrl} flairEmoji={p.flairEmoji} />
-                            <span className={`text-sm font-semibold flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</span>
-                            {p.title && <span className="text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">{p.title}</span>}
-                            <span className={`text-xs tabular-nums ${isDark ? "text-white/40" : "text-gray-400"}`}>{p.elo}</span>
-                            <button
-                              onClick={() => { removePlayer(p.id); toast.success(`${p.name} removed`); }}
-                              className={`opacity-0 group-hover:opacity-100 focus:opacity-100 ml-1 p-1 rounded-md transition-all ${isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-gray-300 hover:text-red-500 hover:bg-red-50"}`}
-                              title="Remove player"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={`text-center py-6 rounded-xl border border-dashed ${isDark ? "border-white/10 text-white/30" : "border-gray-200 text-gray-400"}`}>
-                      <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">No players yet — share the join link above</p>
-                    </div>
-                  )}
-
-                  {/* Start button */}
-                  <button
-                    onClick={() => { if (canStart) { startTournament(); syncStatusToServer("in_progress"); toast.success("Round 1 pairings generated!"); broadcastRoundStart(1); } }}
-                    disabled={!canStart}
-                    className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
-                      canStart
-                        ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-md"
-                        : isDark ? "bg-white/08 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                    }`}
-                  >
-                    <Zap className="w-4 h-4" />
-                    {canStart ? `Start Tournament → Generate Round 1` : `Need at least 2 players to start`}
-                  </button>
-                </div>
-              )}
-
-              {/* ── Single canonical Generate Next Round CTA ─────────────────── */}
-              {!isRegistration && allResultsIn && canGenerateNext && (
-                <div
-                  ref={generateCtaRef}
-                  className={`rounded-xl border overflow-hidden ${
-                    isDark
-                      ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
-                      : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
-                  }`}
-                >
-                  {/* Info row */}
-                  <div className={`flex items-center gap-3 px-4 py-3 border-b ${
-                    isDark ? "border-[#4CAF50]/15" : "border-[#3D6B47]/10"
-                  }`}>
-                    <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${
-                      isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-                    }`} />
-                    <p className={`text-sm font-medium ${
-                      isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-                    }`}>
-                      All {totalGames} result{totalGames !== 1 ? "s" : ""} for Round {state.currentRound} recorded — ready for Round {state.currentRound + 1}
-                    </p>
-                  </div>
-                  {/* CTA row */}
-                  <div className="px-4 py-3">
-                    <button
-                      onClick={() => {
-                        const nextRound = state.currentRound + 1;
-                        generateNextRound();
-                        toast.success(`Round ${nextRound} pairings generated!`);
-                        broadcastRoundStart(nextRound);
-                        // Broadcast round_started SSE event to all connected player screens
-                        // so they automatically refresh to their new board assignment.
-                        setTimeout(() => {
-                          try {
-                            const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
-                            const latestState = raw ? JSON.parse(raw) : null;
-                            const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                            if (roundData && latestState?.players) {
-                              fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  round: nextRound,
-                                  games: roundData.games,
-                                  players: latestState.players,
-                                }),
-                              }).catch(() => {
-                                // Non-critical — players can still poll state on next load
-                              });
-                            }
-                          } catch { /* ignore */ }
-                        }, 150);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                      style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
-                    >
-                      <Zap className="w-4 h-4" />
-                      Generate Round {state.currentRound + 1} — Swiss Pairings
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (
-                <div
-                  className={`rounded-xl border p-4 space-y-3 ${
-                    isDark
-                      ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
-                      : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
-                      <Trophy className={`w-4.5 h-4.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                    </div>
-                    <div>
-                      <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                        Tournament Complete!
-                      </p>
-                      <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                        All {state.totalRounds} rounds finished · Final standings ready
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Link href={`/tournament/${tournamentId}`}>
-                      <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
-                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-                      }`}>
-                        <BarChart3 className="w-4 h-4" /> View Results
-                      </button>
-                    </Link>
-                    <Link href={`/tournament/${tournamentId}/report`}>
-                      <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
-                        isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
-                      }`}>
-                        <Trophy className="w-4 h-4" /> Player Reports
-                      </button>
-                    </Link>
-                    <Link href={`/tournament/${tournamentId}/print`}>
-                      <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
-                        isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                      }`}>
-                        <Download className="w-4 h-4" /> Print / Export
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              {!allResultsIn && (
-                <div
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
-                    isDark
-                      ? "bg-white/04 border-white/08 text-white/50"
-                      : "bg-gray-50 border-gray-100 text-gray-500"
-                  }`}
-                >
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <p className="text-sm">
-                    Enter results for all boards to unlock next round pairing generation.
-                  </p>
-                </div>
-              )}
-
-              {/* Board cards grid — only shown after tournament starts */}
-              {!isRegistration && currentRoundData ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {currentRoundData.games.map((game) =>
-                    game.whiteId === "BYE" ? (
-                      <ByeCard
-                        key={game.id}
-                        game={game}
-                        players={state.players}
-                        isDark={isDark}
-                      />
-                    ) : (
-                      <BoardCard
-                        key={game.id}
-                        game={game}
-                        players={state.players}
-                        onUndo={undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
-                        onResult={(gameId, newResult) => {
-                          const prevResult = game.result;
-                          const white = state.players.find((p) => p.id === game.whiteId);
-                          const black = state.players.find((p) => p.id === game.blackId);
-                          const label =
-                            newResult === "*"
-                              ? `Board ${game.board}: cleared`
-                              : `Board ${game.board}: ${
-                                  newResult === "1-0"
-                                    ? `${white?.name ?? "White"} wins`
-                                    : newResult === "0-1"
-                                    ? `${black?.name ?? "Black"} wins`
-                                    : "Draw"
-                                }`;
-                          recordWithUndo(gameId, newResult, prevResult, label);
-                          // Push to server immediately so standings_updated SSE fires
-                          // to all player devices without waiting for the 1.5s debounce.
-                          pushStandingsNow();
-                        }}
-                        isDark={isDark}
-                      />
-                    )
-                  )}
-                </div>
-              ) : (
-                <div
-                  className={`flex flex-col items-center justify-center py-16 rounded-xl border ${
-                    isDark ? "border-white/08 text-white/30" : "border-gray-100 text-gray-300"
-                  }`}
-                >
-                  <Circle className="w-10 h-10 mb-3" />
-                  <p className="text-sm font-medium">No round data yet</p>
-                </div>
-              )}
-
-              {/* Previous rounds summary */}
-              {state.rounds.filter((r) => r.number < state.currentRound).length > 0 && (
-                <div>
-                  <h2
-                    className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/30" : "text-gray-400"}`}
-                  >
-                    Completed Rounds
-                  </h2>
-                  <div className="space-y-2">
-                    {state.rounds
-                      .filter((r) => r.number < state.currentRound)
-                      .reverse()
-                      .map((round) => (
-                        <div
-                          key={round.number}
-                          className={`rounded-xl border px-4 py-3 ${
-                            isDark ? "bg-[oklch(0.22_0.06_145)] border-white/06" : "bg-white border-gray-100"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span
-                              className={`text-xs font-bold ${isDark ? "text-white/50" : "text-gray-500"}`}
-                            >
-                              Round {round.number}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-[#3D6B47] font-medium">
-                              <CheckCircle2 className="w-3 h-3" /> Complete
-                            </span>
-                          </div>
-                          <div className="space-y-1.5">
-                            {round.games.map((g) => {
-                              const w = state.players.find((p) => p.id === g.whiteId);
-                              const b = state.players.find((p) => p.id === g.blackId);
-                              return (
-                                <div key={g.id} className="flex items-center gap-2 min-w-0">
-                                  <span className={`flex-1 truncate text-xs font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>
-                                    {w?.name.split(" ")[0]}
-                                  </span>
-                                  <span
-                                    className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-xs ${resultBadgeClass(g.result, isDark)}`}
-                                  >
-                                    {g.result}
-                                  </span>
-                                  <span className={`flex-1 truncate text-xs font-medium text-right ${isDark ? "text-white/70" : "text-gray-700"}`}>
-                                    {b?.name.split(" ")[0]}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-            </>
           )}
 
           {/* ── Players Tab ─────────────────────────────────────────────────── */}

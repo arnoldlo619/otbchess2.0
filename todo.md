@@ -1406,3 +1406,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Board Card Undo Button
 
 - [x] Add undo icon button to board card (visible when result is set, wired to existing undo handler)
+
+## Director Dashboard: Consolidated Home+Boards Tab
+
+- [x] Audit Home tab content (stats, round controls, QR, announcements)
+- [x] Audit Boards tab content (board cards, result entry, generate next round)
+- [x] Design merged Home tab: overview stats row → board cards with result entry → round action bar
+- [x] Remove separate Boards tab from tab bar
+- [x] Ensure Generate Next Round / Advance Round CTA is prominent in merged view
+- [x] Verify TypeScript clean and all tests pass (990 tests)
