@@ -1442,3 +1442,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## CapacityBadge Full Component Removal
 
 - [x] Delete the entire CapacityBadge md variant div (the whole component) and remove all usages
+
+## Director Dashboard Header Simplification
+
+- [x] Left side: OTB!! logo only (remove Standings button, player count, timestamp)
+- [x] Right side: theme toggle + QR projection buttons only (remove all other controls)

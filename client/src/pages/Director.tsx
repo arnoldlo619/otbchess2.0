@@ -1060,99 +1060,32 @@ export default function Director() {
       >
         {/* Main nav row */}
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-3">
-          {/* Left: logo + back + breadcrumb */}
-          <div className="flex items-center gap-2 min-w-0">
+          {/* Left: logo only */}
+          <div className="flex items-center">
             <NavLogo />
-            <div className={`w-px h-5 flex-shrink-0 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-            <Link
-              href={`/tournament/${id ?? "otb-demo-2026"}`}
-              className={`touch-target -ml-1 flex items-center gap-1.5 text-sm font-medium transition-colors active:scale-95 ${
-                isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700"
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:block">Standings</span>
-            </Link>
-            <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
-            <div className="flex items-center gap-2 min-w-0">
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
-                <Shield className="w-4 h-4 text-[#3D6B47]" />
-              </div>
-              <div className="min-w-0">
-                <p
-                  className={`text-sm font-bold truncate leading-tight ${isDark ? "text-white" : "text-gray-900"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  {state.tournamentName}
-                </p>
-                <p className={`text-[11px] leading-tight ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                  {isRegistration ? `${state.players.length} players registered` : `Round ${state.currentRound} of ${state.totalRounds}`}
-                  {lastSaved && (
-                    <span className={`ml-1.5 ${isDark ? "text-[#4CAF50]/50" : "text-[#3D6B47]/50"}`}>
-                      · Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
           </div>
 
-          {/* Right: controls — mobile-optimised */}
+          {/* Right: theme toggle + both QR buttons */}
           <div className="flex items-center gap-1">
 
-            {/* Live/Paused status dot — always visible, no text on mobile */}
-            {!isRegistration && (
-              <span
-                title={state.status === "paused" ? "Paused" : "Live"}
-                className={`w-2 h-2 rounded-full flex-shrink-0 mr-0.5 ${
-                  state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
-                }`}
-              />
-            )}
-
-            {/* Pause/Resume — desktop only (moved to overflow on mobile) */}
-            {!isRegistration && (
-              <button
-                onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); }}
-                className={`hidden sm:flex touch-target p-2 rounded-xl transition-all active:scale-95 ${
-                  isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
-                }`}
-                title={state.status === "paused" ? "Resume" : "Pause"}
-              >
-                {state.status === "paused" ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-              </button>
-            )}
-
-            {/* Invite code chip — desktop only */}
+            {/* Join QR — full-screen projection mode */}
             <button
-              onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success("Invite code copied!"); }}
-              title={`Invite code: ${inviteCode} — click to copy`}
-              className={`hidden sm:flex group items-center gap-1 px-2 py-1 rounded-lg border transition-all active:scale-95 ${
+              onClick={() => setShowAnnounce(true)}
+              className={`touch-target flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
                 isDark
-                  ? "border-white/12 bg-white/06 hover:bg-white/10 text-white/70 hover:text-white"
-                  : "border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-800"
+                  ? "bg-[#4CAF50]/12 hover:bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/20"
+                  : "bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
               }`}
+              title="Show join QR code full-screen"
             >
-              <Hash className="w-3 h-3 flex-shrink-0" />
-              <span className="font-mono text-xs font-semibold tracking-wider">{inviteCode}</span>
-              <Copy className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
+              <QrCode className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Join QR</span>
             </button>
 
-
-            {/* Watch Live — share modal (small screens: icon only; md+: icon + label) */}
-            <button
-              onClick={() => setShowSpectatorShare(true)}
-              className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
-                isDark ? "hover:bg-white/08 text-[#2196F3]/70 hover:text-[#2196F3]" : "hover:bg-blue-50 text-blue-400 hover:text-blue-600"
-              }`}
-              title="Share live spectator view"
-            >
-              <Tv2 className="w-4 h-4" />
-            </button>
             {/* Spectator QR — full-screen projection mode */}
             <button
               onClick={() => setShowSpectatorQR(true)}
-              className={`touch-target hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+              className={`touch-target flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
                 isDark
                   ? "bg-blue-500/12 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20"
                   : "bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200"
@@ -1160,109 +1093,11 @@ export default function Director() {
               title="Show spectator QR full-screen (for projector)"
             >
               <QrCode className="w-3.5 h-3.5" />
-              <span>Project QR</span>
-            </button>
-            {/* Push subscriber count badge — desktop only */}
-            {pushSubscriberCount !== null && pushSubscriberCount > 0 && (
-              <span
-                className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  isDark
-                    ? "bg-[#3D6B47]/30 text-[#4CAF50] border border-[#4CAF50]/20"
-                    : "bg-green-50 text-green-700 border border-green-200"
-                }`}
-                title={`${pushSubscriberCount} player${pushSubscriberCount !== 1 ? "s" : ""} subscribed to push notifications`}
-              >
-                <Bell className="w-3 h-3" />
-                <span>{pushSubscriberCount}</span>
-              </span>
-            )}
-            {/* Announce / QR — always visible (primary action) */}
-            <button
-              onClick={() => setShowAnnounce(true)}
-              className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
-                isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
-              }`}
-              title="Show join QR code full-screen"
-            >
-              <QrCode className="w-4 h-4" />
+              <span className="hidden sm:inline">Project QR</span>
             </button>
 
-            {/* Theme toggle — always visible */}
+            {/* Theme toggle */}
             <ThemeToggle />
-
-            {/* Overflow menu — mobile only (⋯) */}
-            <div className="relative sm:hidden">
-              <button
-                onClick={() => setShowOverflow((v) => !v)}
-                className={`touch-target p-2 rounded-xl transition-all active:scale-95 ${
-                  isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
-                }`}
-                title="More options"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {showOverflow && (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowOverflow(false)}
-                  />
-                  {/* Dropdown */}
-                  <div
-                    className={`absolute right-0 top-full mt-1 z-50 w-52 rounded-2xl shadow-xl border overflow-hidden ${
-                      isDark
-                        ? "bg-[oklch(0.22_0.06_145)] border-white/10"
-                        : "bg-white border-gray-100"
-                    }`}
-                  >
-                    {/* Invite code row */}
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(inviteCode); toast.success("Invite code copied!"); setShowOverflow(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                        isDark ? "hover:bg-white/06 text-white" : "hover:bg-gray-50 text-gray-800"
-                      }`}
-                    >
-                      <Hash className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                      <div className="min-w-0">
-                        <p className={`text-[11px] font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Invite code</p>
-                        <p className="font-mono text-sm font-bold tracking-widest truncate">{inviteCode}</p>
-                      </div>
-                      <Copy className={`w-3.5 h-3.5 ml-auto flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-300"}`} />
-                    </button>
-
-                    {/* Capacity row */}
-                    {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
-                      <div className={`flex items-center gap-3 px-4 py-3 border-t ${
-                        isDark ? "border-white/06 text-white/60" : "border-gray-50 text-gray-500"
-                      }`}>
-                        <UserPlus className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">
-                          {state.players.length} / {tournamentConfig.maxPlayers} players
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Pause / Resume row */}
-                    {!isRegistration && (
-                      <button
-                        onClick={() => { togglePause(); toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused"); setShowOverflow(false); }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 border-t text-left transition-colors ${
-                          isDark ? "border-white/06 hover:bg-white/06 text-white" : "border-gray-50 hover:bg-gray-50 text-gray-800"
-                        }`}
-                      >
-                        {state.status === "paused"
-                          ? <Play className="w-4 h-4 flex-shrink-0 text-[#4CAF50]" />
-                          : <Pause className="w-4 h-4 flex-shrink-0 text-amber-500" />}
-                        <span className="text-sm font-medium">
-                          {state.status === "paused" ? "Resume tournament" : "Pause tournament"}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
 
           </div>
         </div>
