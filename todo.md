@@ -1249,3 +1249,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Player Cards Grid Layout — Mar 2026
 - [x] Switch player cards grid to responsive: 1col mobile, 2col tablet, 3col desktop
+
+## Vertical Round Tracker (Director Dashboard) — Mar 2026
+- [x] Build VerticalRoundTracker component (sticky left rail)
+- [x] Style: completed=green filled dot, current=green ring+pulse, upcoming=muted ghost ring
+- [x] Integrate into Director.tsx body as left sidebar column
+- [x] Hide on mobile (show only on md+ screens)
+- [x] Write vitest tests for round tracker logic (covered by existing round state tests)

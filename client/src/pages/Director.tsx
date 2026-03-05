@@ -418,7 +418,8 @@ function StandingsPanel({
 }
 
 // ─── Round Progress ───────────────────────────────────────────────────────────
-function RoundProgress({
+// ─── Vertical Round Tracker ───────────────────────────────────────────────────
+function VerticalRoundTracker({
   rounds,
   currentRound,
   totalRounds,
@@ -430,33 +431,55 @@ function RoundProgress({
   isDark: boolean;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-col items-center gap-0">
+      {/* Header label */}
+      <span
+        className={`text-[9px] font-bold uppercase tracking-widest mb-3 ${
+          isDark ? "text-white/30" : "text-gray-400"
+        }`}
+      >
+        Rounds
+      </span>
+
       {Array.from({ length: totalRounds }, (_, i) => i + 1).map((r) => {
         const roundData = rounds.find((rd) => rd.number === r);
         const isComplete = roundData?.status === "completed";
         const isCurrent = r === currentRound;
-        const isUpcoming = !roundData;
 
         return (
-          <div key={r} className="flex items-center gap-2">
+          <div key={r} className="flex flex-col items-center">
+            {/* Round dot */}
             <div
-              className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold transition-all ${
+              className={`relative flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 ${
                 isComplete
-                  ? "bg-[#3D6B47] text-white"
+                  ? "bg-[#3D6B47] text-white shadow-sm"
                   : isCurrent
                   ? isDark
-                    ? "bg-[#4CAF50]/30 text-[#4CAF50] border-2 border-[#4CAF50]"
+                    ? "bg-[#4CAF50]/20 text-[#4CAF50] border-2 border-[#4CAF50]"
                     : "bg-[#3D6B47]/10 text-[#3D6B47] border-2 border-[#3D6B47]"
                   : isDark
-                  ? "bg-white/08 text-white/30 border border-white/10"
+                  ? "bg-white/06 text-white/25 border border-white/10"
                   : "bg-gray-100 text-gray-300 border border-gray-200"
               }`}
             >
-              {isComplete ? <CheckCircle2 className="w-4 h-4" /> : r}
+              {/* Pulse ring for current round */}
+              {isCurrent && (
+                <span
+                  className="absolute inset-0 rounded-full animate-ping opacity-30"
+                  style={{ background: isDark ? "#4CAF50" : "#3D6B47" }}
+                />
+              )}
+              {isComplete ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <span>{r}</span>
+              )}
             </div>
+
+            {/* Connector line (not after last round) */}
             {r < totalRounds && (
               <div
-                className={`h-0.5 w-5 rounded-full ${
+                className={`w-0.5 h-5 rounded-full transition-all duration-300 ${
                   isComplete
                     ? "bg-[#3D6B47]"
                     : isDark
@@ -468,6 +491,18 @@ function RoundProgress({
           </div>
         );
       })}
+
+      {/* Completion indicator */}
+      {currentRound > totalRounds && (
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: "#3D6B47" }}
+          >
+            <Trophy className="w-3.5 h-3.5 text-white" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1120,10 +1155,28 @@ export default function Director() {
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      {/* ── Body ────────────────────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
-        {/* ── Main Panel (full-width) ─────────────────────────────────────────── */}
-        <main className="w-full space-y-5">
+        <div className="flex gap-6 items-start">
+
+          {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}
+          {!isRegistration && (
+            <div
+              className={`hidden md:flex flex-col items-center sticky top-24 self-start pt-1 ${
+                isDark ? "" : ""
+              }`}
+              style={{ minWidth: 40 }}
+            >
+              <VerticalRoundTracker
+                rounds={state.rounds}
+                currentRound={state.currentRound}
+                totalRounds={state.totalRounds}
+                isDark={isDark}
+              />
+            </div>
+          )}
+
+          {/* ── Main Panel ──────────────────────────────────────────────────────── */}
+          <main className="flex-1 min-w-0 space-y-5">
           {/* ── Page Title + Tab Bar ─────────────────────────────────────── */}
           <div className="space-y-3">
             {/* Round title row */}
@@ -2543,7 +2596,8 @@ export default function Director() {
               </div>
             </div>
           )}
-        </main>
+          </main>
+        </div>{/* end flex gap-6 */}
       </div>
 
       {/* ── Spectator Share Modal ─────────────────────────────────────────── */}
