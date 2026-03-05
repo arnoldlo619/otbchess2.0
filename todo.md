@@ -1275,3 +1275,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Cross-Table Layout Improvement — Mar 2026
 - [x] Widen Cross-Table to use full width of the card container
 - [x] Improve visibility and readability of the cross-table grid
+
+## Rounds Tab Redesign — Mar 2026
+- [x] Apply full-width layout to Rounds tab in Report page
+- [x] Improve readability: larger text, row hover, better spacing
