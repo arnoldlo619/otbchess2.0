@@ -1271,3 +1271,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Large player name, no text overflow
 - [x] Clean stat grid with generous spacing
 - [x] Single-column layout on mobile, 2-col on desktop for maximum card size
+
+## Cross-Table Layout Improvement — Mar 2026
+- [x] Widen Cross-Table to use full width of the card container
+- [x] Improve visibility and readability of the cross-table grid
