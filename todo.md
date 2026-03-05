@@ -1430,3 +1430,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] On tournament_complete, auto-navigate participants to /tournament/:id/report (2.5s delay)
 - [x] Report page defaults to "Cards" tab (already the default tab)
 - [x] Unit tests for the redirect trigger logic (covered by existing 990 tests)
+
+## Report Page: Tournament Complete Toast
+
+- [x] Show celebratory toast on Report page when arriving via auto-redirect from completed tournament

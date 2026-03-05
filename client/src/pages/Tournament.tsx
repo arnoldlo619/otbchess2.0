@@ -1014,6 +1014,8 @@ export default function TournamentPage() {
       hasRedirectedRef.current = true;
       // Brief delay so the "Tournament Complete" state is visible before redirect
       const t = setTimeout(() => {
+        // Set a flag so the Report page can show a celebratory toast on arrival
+        sessionStorage.setItem(`otb_redirect_complete_${tournamentId}`, "1");
         navigate(`/tournament/${tournamentId}/report`);
       }, 2500);
       return () => clearTimeout(t);

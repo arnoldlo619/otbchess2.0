@@ -7,7 +7,7 @@
  * Also supports a "Download All" flow that exports every card sequentially.
  * "Share Results" broadcasts player stats via WhatsApp or email.
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useParams, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
@@ -326,6 +326,25 @@ export default function ReportPage() {
   // Pre-fetch all player avatars in parallel
   const usernames = performances.map((p) => p.player.username);
   const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
+
+  // Show a celebratory toast when arriving via auto-redirect from a completed tournament.
+  // Tournament.tsx sets a sessionStorage flag before navigating so we know it was a redirect.
+  useEffect(() => {
+    if (isDemo) return;
+    const key = `otb_redirect_complete_${tournamentId}`;
+    if (sessionStorage.getItem(key)) {
+      sessionStorage.removeItem(key);
+      // Brief delay so the page has rendered before the toast appears
+      const t = setTimeout(() => {
+        toast.success(
+          `🏆 Tournament complete! Here are your results.`,
+          { duration: 5000, description: tournamentName }
+        );
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<ReportTab>("cards");
