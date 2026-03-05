@@ -1316,3 +1316,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add /clubs and /clubs/:id routes to App.tsx
 - [x] Add "My Clubs" link to Profile page
 - [x] Unit tests for clubRegistry helpers (19 tests)
+
+## Create Club Wizard
+
+- [x] CreateClubWizard component — full-screen overlay, 5 steps
+- [x] Step 1: Club name + tagline (live slug preview)
+- [x] Step 2: Category selection (large visual cards)
+- [x] Step 3: Location (city/country picker)
+- [x] Step 4: Description + accent colour picker
+- [x] Step 5: Share — success screen with club link + copy button
+- [x] Wire "Create Club" button in MyClubs to open wizard
+- [x] On completion, navigate to new club profile page
+- [x] Unit tests for wizard validation helpers (22 tests)
