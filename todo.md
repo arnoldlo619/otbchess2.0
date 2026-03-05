@@ -1370,3 +1370,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Owner/Director announcement composer (textarea + post button)
 - [x] Unit tests for clubFeedRegistry helpers (18 tests)
 - [x] Add "Clubs" button to header nav bar (navigates to /clubs)
+
+## My Clubs Card Expansion
+
+- [x] Expand club cards on MyClubs page — taller banner (h-36), larger avatar (w-16 h-16), banner image support, fuller layout

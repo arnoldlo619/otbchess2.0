@@ -88,46 +88,61 @@ function ClubCard({
   return (
     <Link href={`/clubs/${club.id}`}>
       <div
-        className={`group rounded-3xl border ${cardBorder} ${card} overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${compact ? "p-4" : "p-5"}`}
+        className={`group rounded-3xl border ${cardBorder} ${card} overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
       >
-        {/* Banner strip */}
+        {/* Banner — full-width, tall enough to show custom images properly */}
         <div
-          className="h-16 rounded-2xl mb-4 relative overflow-hidden"
+          className="h-36 relative overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${club.accentColor}cc 0%, ${club.accentColor}44 100%)`,
+            background: club.bannerUrl
+              ? undefined
+              : `linear-gradient(135deg, ${club.accentColor}dd 0%, ${club.accentColor}55 100%)`,
           }}
         >
-          <div className="absolute inset-0 chess-board-bg opacity-10" />
-          {/* Club avatar */}
+          {club.bannerUrl ? (
+            <img
+              src={club.bannerUrl}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 chess-board-bg opacity-15" />
+          )}
+          {/* Dark scrim for text legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        </div>
+
+        {/* Avatar — overlaps banner bottom edge */}
+        <div className="px-5">
           <div
-            className="absolute bottom-0 left-4 translate-y-1/2 w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-md border-2 border-white/10"
+            className="-mt-8 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-lg border-2 border-white/20 overflow-hidden"
             style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
           >
             {club.avatarUrl ? (
-              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover rounded-xl" />
+              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
             ) : (
               <span>{flag}</span>
             )}
           </div>
         </div>
 
-        {/* Content — offset for avatar overlap */}
-        <div className="mt-7">
+        {/* Content */}
+        <div className="px-5 pt-3 pb-5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <h3
-                className={`text-base font-bold leading-tight truncate ${textMain}`}
+                className={`text-lg font-bold leading-tight truncate ${textMain}`}
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
                 {club.name}
               </h3>
-              <div className={`flex items-center gap-1.5 mt-1 text-xs ${textMuted}`}>
+              <div className={`flex items-center gap-1.5 mt-0.5 text-xs ${textMuted}`}>
                 <MapPin className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate">{club.location}</span>
               </div>
             </div>
             <span
-              className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold ${
+              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold mt-0.5 ${
                 isDark ? "bg-white/8 text-white/50" : "bg-gray-100 text-gray-500"
               }`}
             >
@@ -136,22 +151,24 @@ function ClubCard({
             </span>
           </div>
 
-          <p className={`text-xs mt-2.5 leading-relaxed line-clamp-2 ${textMuted}`}>
+          <p className={`text-sm mt-2.5 leading-relaxed line-clamp-2 ${textMuted}`}>
             {club.tagline}
           </p>
 
           {/* Stats */}
-          <div className={`flex items-center gap-4 mt-3 pt-3 border-t ${isDark ? "border-white/6" : "border-gray-100"}`}>
-            <span className={`flex items-center gap-1.5 text-xs font-medium ${textMuted}`}>
+          <div className={`flex items-center gap-5 mt-4 pt-3.5 border-t ${isDark ? "border-white/6" : "border-gray-100"}`}>
+            <span className={`flex items-center gap-1.5 text-xs font-semibold ${textMuted}`}>
               <Users className="w-3.5 h-3.5" />
               {club.memberCount.toLocaleString()}
             </span>
-            <span className={`flex items-center gap-1.5 text-xs font-medium ${textMuted}`}>
+            <span className={`flex items-center gap-1.5 text-xs font-semibold ${textMuted}`}>
               <Trophy className="w-3.5 h-3.5" />
               {club.tournamentCount}
             </span>
             {club.announcement && (
-              <span className={`flex items-center gap-1 text-[10px] font-semibold ml-auto ${isDark ? "text-amber-400" : "text-amber-600"}`}>
+              <span className={`flex items-center gap-1 text-[10px] font-bold ml-auto ${
+                isDark ? "text-amber-400" : "text-amber-600"
+              }`}>
                 <Zap className="w-3 h-3" />
                 Active
               </span>
