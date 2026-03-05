@@ -1224,6 +1224,34 @@ export default function Director() {
               {/* generate button lives in Boards tab — nothing here */}
             </div>
 
+            {/* Tournament name subtitle */}
+            <div className="flex items-center justify-between gap-3 px-1 -mt-1 mb-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
+                  <Shield className={`w-3.5 h-3.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                </div>
+                <p
+                  className={`text-sm font-bold truncate ${isDark ? "text-white/90" : "text-gray-800"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  {state.tournamentName}
+                </p>
+              </div>
+              <span className={`flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                isRegistration
+                  ? isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                  : state.status === "paused"
+                  ? isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                  : isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
+              }`}>
+                {isRegistration
+                  ? "Registration"
+                  : state.status === "paused"
+                  ? "Paused"
+                  : `Round ${state.currentRound} of ${state.totalRounds}`}
+              </span>
+            </div>
+
             {/* Unified 5-tab bar */}
             <div
               className={`flex rounded-2xl p-1 w-full overflow-x-auto ${

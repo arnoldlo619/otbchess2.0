@@ -1447,3 +1447,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Left side: OTB!! logo only (remove Standings button, player count, timestamp)
 - [x] Right side: theme toggle + QR projection buttons only (remove all other controls)
+
+## Director Tab Bar Tournament Name Subtitle
+
+- [x] Add tournament name + round status subtitle above the Director dashboard tab bar
