@@ -28,7 +28,6 @@ import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
 import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
 import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
-import { CapacityBadge } from "@/components/CapacityBadge";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { RoundTimerCard } from "@/components/RoundTimerCard";
@@ -1139,16 +1138,6 @@ export default function Director() {
               <Copy className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
             </button>
 
-            {/* Capacity badge — desktop only */}
-            {tournamentConfig?.maxPlayers != null && tournamentConfig.maxPlayers > 0 && (
-              <span className="hidden sm:flex">
-                <CapacityBadge
-                  current={state.players.length}
-                  max={tournamentConfig.maxPlayers}
-                  isDark={isDark}
-                />
-              </span>
-            )}
 
             {/* Watch Live — share modal (small screens: icon only; md+: icon + label) */}
             <button

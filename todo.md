@@ -1438,3 +1438,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## CapacityBadge Compact Chip Removal
 
 - [x] Remove the compact "sm" size CapacityBadge chip (lines 71-98 in CapacityBadge.tsx)
+
+## CapacityBadge Full Component Removal
+
+- [x] Delete the entire CapacityBadge md variant div (the whole component) and remove all usages
