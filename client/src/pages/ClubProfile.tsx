@@ -52,6 +52,8 @@ import {
   MoreHorizontal,
   Share2,
   X,
+  PlusCircle,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -567,10 +569,34 @@ export default function ClubProfile() {
             </div>
           </div>
         )}
-
-        {/* ── Tournaments tab ──────────────────────────────────────────────── */}
+        {/* ── Tournaments tab ────────────────────────────────────────────────── */}
         {activeTab === "tournaments" && (
           <div className="space-y-4 animate-in fade-in duration-200">
+
+            {/* ── Owner-only Host Tournament CTA ────────────────────────────── */}
+            {isOwner ? (
+              <button
+                onClick={() => navigate("/")}
+                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#3D6B47]/40 text-sm font-semibold transition-all hover:border-[#3D6B47] hover:bg-[#3D6B47]/8 group"
+              >
+                <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}`} />
+                <span className={isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}>
+                  Host a Tournament for {club.name}
+                </span>
+              </button>
+            ) : user && joined ? (
+              /* Member / Director — locked, informational only */
+              <div
+                className={`w-full flex items-center gap-3 py-3 px-5 rounded-2xl border ${cardBorder} ${isDark ? "bg-white/2" : "bg-gray-50"} cursor-not-allowed`}
+                title="Only the club owner can create tournaments"
+              >
+                <Lock className={`w-4 h-4 flex-shrink-0 ${textMuted}`} />
+                <span className={`text-sm ${textMuted}`}>
+                  Only the club owner can host tournaments here.
+                </span>
+              </div>
+            ) : null}
+
             {/* Upcoming / Active */}
             {upcomingTournaments.length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
@@ -578,8 +604,7 @@ export default function ClubProfile() {
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
                     Upcoming & Active
                   </h2>
-                </div>
-                <div className="divide-y divide-white/5">
+                </div>                <div className="divide-y divide-white/5">
                   {upcomingTournaments.map((t) => (
                     <TournamentRow key={t.tournamentId} tournament={t} isDark={isDark} textMuted={textMuted} />
                   ))}
@@ -606,7 +631,16 @@ export default function ClubProfile() {
             {tournaments.length === 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
                 <Trophy className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
-                <p className={`text-sm font-medium ${textMuted}`}>No tournaments yet</p>
+                <p className={`text-sm font-semibold ${textMain} mb-1`}>No tournaments yet</p>
+                {isOwner ? (
+                  <p className={`text-xs ${textMuted}`}>
+                    Use the button above to host your first tournament.
+                  </p>
+                ) : (
+                  <p className={`text-xs ${textMuted}`}>
+                    The club owner hasn't hosted any tournaments yet.
+                  </p>
+                )}
               </div>
             )}
           </div>

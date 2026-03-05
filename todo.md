@@ -1344,3 +1344,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Render custom banner image in ClubProfile hero (replacing gradient when set)
 - [x] Remove button to revert to gradient
 - [x] Unit tests for banner validation helpers (11 tests)
+
+## Club Owner-Only Tournament Creation
+
+- [x] Add "Host Tournament" CTA button to ClubProfile Tournaments tab (owner-only, hidden for non-owners)
+- [x] Show locked/disabled state with tooltip for directors and members who are not the owner
+- [x] Wire CTA to navigate to tournament creation
+- [x] Unit tests for ownership guard logic (9 tests)
