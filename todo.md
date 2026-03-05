@@ -1384,3 +1384,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add syncClubTournamentCount helper to clubRegistry (counts linked tournaments from tournamentRegistry)
 - [x] Call sync on wizard completion in ClubProfile and refresh club state
 - [x] Unit tests for syncClubTournamentCount (8 tests)
+
+## Feed Auto-Event on Tournament Creation
+
+- [x] Call recordTournamentCreated in ClubProfile wizard onClose handler
+- [x] Refresh feed state after posting the event

@@ -40,6 +40,7 @@ import {
   deleteFeedEvent,
   recordMemberJoin,
   recordMemberLeave,
+  recordTournamentCreated,
   type FeedEvent,
 } from "@/lib/clubFeedRegistry";
 import {
@@ -1004,15 +1005,26 @@ export default function ClubProfile() {
       {/* ── Tournament Wizard (owner-only, pre-linked to this club) ──────────── */}
       <TournamentWizard
         open={showWizard}
-        onClose={() => {
+        onClose={(createdTournamentId?: string, createdTournamentName?: string) => {
           setShowWizard(false);
           if (club) {
             // Refresh live tournament list
-            setLiveTournaments(listTournamentsByClub(club.id));
+            const updated = listTournamentsByClub(club.id);
+            setLiveTournaments(updated);
             // Sync the denormalised tournamentCount stat and refresh club state
             syncClubTournamentCount(club.id);
             const refreshed = getClub(club.id);
             if (refreshed) setClub(refreshed);
+            // Post a feed event if a new tournament was actually created
+            if (createdTournamentId && createdTournamentName) {
+              recordTournamentCreated(
+                club.id,
+                user?.displayName ?? club.ownerName,
+                createdTournamentName,
+                createdTournamentId
+              );
+              setFeedEvents(listFeedEvents(club.id));
+            }
           }
         }}
         initialClubId={club.id}

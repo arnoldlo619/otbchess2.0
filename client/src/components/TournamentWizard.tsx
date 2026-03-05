@@ -1744,7 +1744,8 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
 
 interface TournamentWizardProps {
   open: boolean;
-  onClose: () => void;
+  /** Called when the wizard closes. If a tournament was created, the id and name are passed. */
+  onClose: (createdTournamentId?: string, createdTournamentName?: string) => void;
   /** Pre-select a club when opening the wizard from a club profile page. */
   initialClubId?: string | null;
   initialClubName?: string | null;
@@ -1865,7 +1866,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     const slug = makeSlug(data.name, data.date);
     // registerTournamentNow may have already been called; registerTournament is idempotent.
     registerTournamentNow();
-    onClose();
+    // Pass the tournament id and name back so callers (e.g. ClubProfile) can post feed events.
+    onClose(slug, data.name);
     navigate(`/tournament/${slug}/manage`);
   }, [data, onClose, navigate, registerTournamentNow]);
 
