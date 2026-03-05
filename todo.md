@@ -1264,3 +1264,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Large readable typography — no text overflow
 - [x] Clean 2x2 stat grid with large numerals and minimal labels
 - [x] Reduce grid to 2-column max for larger card display
+
+## Player Card Redesign v3 — Mar 2026
+- [x] Full-width tall portrait cards (no cramped square)
+- [x] Header zone with avatar background blur + large avatar
+- [x] Large player name, no text overflow
+- [x] Clean stat grid with generous spacing
+- [x] Single-column layout on mobile, 2-col on desktop for maximum card size

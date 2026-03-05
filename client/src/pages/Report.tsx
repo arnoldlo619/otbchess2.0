@@ -521,7 +521,7 @@ export default function ReportPage() {
         </div>
 
         {/* Card grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {filtered.map((perf) => (
             <div key={perf.player.id}>
               {/* Hidden export-quality card (captured by html2canvas) */}
