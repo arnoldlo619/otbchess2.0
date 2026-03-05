@@ -17,6 +17,7 @@ import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
 import { Link, useParams, useLocation } from "wouter";
+import { NavLogo } from "@/components/NavLogo";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -898,8 +899,10 @@ export default function Director() {
       >
         {/* Main nav row */}
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-3">
-          {/* Left: back + breadcrumb */}
+          {/* Left: logo + back + breadcrumb */}
           <div className="flex items-center gap-2 min-w-0">
+            <NavLogo />
+            <div className={`w-px h-5 flex-shrink-0 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
             <Link
               href={`/tournament/${id ?? "otb-demo-2026"}`}
               className={`touch-target -ml-1 flex items-center gap-1.5 text-sm font-medium transition-colors active:scale-95 ${

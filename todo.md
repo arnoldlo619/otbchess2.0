@@ -1232,3 +1232,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Chess Clock Logo — Mar 2026
 - [x] Add OTB!! NavLogo to the chess clock center controls bar
+
+## Director Dashboard Logo — Mar 2026
+- [x] Add OTB!! NavLogo to Director Dashboard header, left of breadcrumb
