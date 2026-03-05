@@ -1374,3 +1374,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## My Clubs Card Expansion
 
 - [x] Expand club cards on MyClubs page — taller banner (h-36), larger avatar (w-16 h-16), banner image support, fuller layout
+
+## Club Profile Start Tournament Button
+
+- [x] Add owner-only "Start Tournament" button to ClubProfile hero area (opens wizard pre-linked to club)

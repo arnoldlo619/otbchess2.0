@@ -573,8 +573,17 @@ export default function ClubProfile() {
               <StatPill icon={<Zap className="w-4 h-4" />} value={upcomingTournaments.length} label="Upcoming" isDark={isDark} />
             </div>
 
-            {/* Join / Leave CTA */}
-            <div className="mt-5 flex items-center gap-3">
+            {/* Join / Leave CTA + Owner Start Tournament */}
+            <div className="mt-5 flex items-center gap-3 flex-wrap">
+              {isOwner && (
+                <button
+                  onClick={() => setShowWizard(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#3D6B47] text-white hover:bg-[#2d5236] active:scale-95 transition-all shadow-md shadow-[#3D6B47]/30"
+                >
+                  <Trophy className="w-4 h-4" />
+                  Start Tournament
+                </button>
+              )}
               {!user ? (
                 <button
                   onClick={() => toast("Sign in to join clubs")}
