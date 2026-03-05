@@ -1434,3 +1434,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Report Page: Tournament Complete Toast
 
 - [x] Show celebratory toast on Report page when arriving via auto-redirect from completed tournament
+
+## CapacityBadge Compact Chip Removal
+
+- [x] Remove the compact "sm" size CapacityBadge chip (lines 71-98 in CapacityBadge.tsx)

@@ -6,8 +6,7 @@
  *   amber  — 75 – 99 % full
  *   red    — 100 % full (shows "Full" label)
  *
- * Two size variants:
- *   "sm"  — compact inline chip for the header bar
+ * Single size variant:
  *   "md"  — wider card for the sidebar Event Info panel
  */
 
@@ -33,15 +32,15 @@ interface CapacityBadgeProps {
   current: number;
   max: number;
   isDark?: boolean;
-  /** "sm" = compact header chip, "md" = sidebar card row */
-  size?: "sm" | "md";
+  /** "md" = sidebar card row */
+  size?: "md";
 }
 
 export function CapacityBadge({
   current,
   max,
   isDark = false,
-  size = "sm",
+  size = "md",
 }: CapacityBadgeProps) {
   const state = getCapacityState(current, max);
   const pct = getCapacityPct(current, max);
@@ -67,36 +66,6 @@ export function CapacityBadge({
       icon: isDark ? "text-red-400" : "text-red-500",
     },
   }[state];
-
-  if (size === "sm") {
-    /* ── Compact header chip ─────────────────────────────────────────────── */
-    return (
-      <div
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold ${colours.bg} ${colours.text}`}
-        title={`${current} of ${max} player slots filled`}
-      >
-        <Users className={`w-3.5 h-3.5 flex-shrink-0 ${colours.icon}`} />
-        <span>
-          {current}
-          <span className={`opacity-60`}>/{max}</span>
-        </span>
-        {state === "full" && (
-          <span className="ml-0.5 font-bold uppercase tracking-wide text-[10px]">
-            Full
-          </span>
-        )}
-        {/* Mini fill bar */}
-        <div
-          className={`w-10 h-1 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-black/08"}`}
-        >
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${colours.bar}`}
-            style={{ width: `${pct * 100}%` }}
-          />
-        </div>
-      </div>
-    );
-  }
 
   /* ── Sidebar "md" variant ────────────────────────────────────────────────── */
   return (

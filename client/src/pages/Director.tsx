@@ -1146,7 +1146,6 @@ export default function Director() {
                   current={state.players.length}
                   max={tournamentConfig.maxPlayers}
                   isDark={isDark}
-                  size="sm"
                 />
               </span>
             )}
