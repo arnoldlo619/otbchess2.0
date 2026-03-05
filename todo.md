@@ -1336,3 +1336,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add club settings panel to ClubProfile page (owner/director ⋯ menu → bottom sheet modal)
 - [x] Persist avatar as base64 data URL in clubRegistry localStorage via updateClub
 - [x] Unit tests for validateImageFile and cropAndResizeImage helpers (11 tests)
+
+## Club Banner Upload
+
+- [x] ClubBannerUpload component — drag-and-drop or click, 16:5 wide crop, JPEG/PNG/WebP, max 8 MB, base64 output
+- [x] Add banner upload section to Club Settings panel (below avatar section)
+- [x] Render custom banner image in ClubProfile hero (replacing gradient when set)
+- [x] Remove button to revert to gradient
+- [x] Unit tests for banner validation helpers (11 tests)

@@ -29,6 +29,7 @@ import {
   type ClubTournament,
 } from "@/lib/clubRegistry";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
+import { ClubBannerUpload } from "@/components/ClubBannerUpload";
 import {
   Users,
   Trophy,
@@ -173,7 +174,8 @@ export default function ClubProfile() {
   const [joining, setJoining] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
-  const [savingAvatar, setSavingAvatar] = useState(false);
+  const [pendingBanner, setPendingBanner] = useState<string | null | undefined>(undefined);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   // Seed and load
   useEffect(() => {
@@ -301,15 +303,29 @@ export default function ClubProfile() {
 
       {/* ── Hero banner ────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden">
-        {/* Banner gradient */}
-        <div
-          className="h-44 sm:h-56 w-full"
-          style={{
-            background: `linear-gradient(135deg, ${club.accentColor}cc 0%, ${club.accentColor}44 50%, ${isDark ? "#0d1a0f" : "#F0F5EE"} 100%)`,
-          }}
-        >
-          {/* Subtle chess board texture overlay */}
-          <div className="absolute inset-0 chess-board-bg opacity-10" />
+        {/* Banner: custom image or gradient */}
+        <div className="h-44 sm:h-56 w-full relative">
+          {club.bannerUrl ? (
+            <img
+              src={club.bannerUrl}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div
+              className="w-full h-full"
+              style={{
+                background: `linear-gradient(135deg, ${club.accentColor}cc 0%, ${club.accentColor}44 50%, ${isDark ? "#0d1a0f" : "#F0F5EE"} 100%)`,
+              }}
+            >
+              {/* Subtle chess board texture overlay */}
+              <div className="absolute inset-0 chess-board-bg opacity-10" />
+            </div>
+          )}
+          {/* Dark scrim over custom banner for text legibility */}
+          {club.bannerUrl && (
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
+          )}
         </div>
 
         {/* Club identity card — overlaps banner */}
@@ -625,7 +641,7 @@ export default function ClubProfile() {
             </div>
 
             {/* Avatar section */}
-            <div className={`rounded-2xl border ${cardBorder} p-5 mb-4 ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
+            <div className={`rounded-2xl border ${cardBorder} p-5 mb-3 ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
               <p className={`text-xs font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
                 Club Avatar
               </p>
@@ -652,32 +668,59 @@ export default function ClubProfile() {
               </div>
             </div>
 
+            {/* Banner section */}
+            <div className={`rounded-2xl border ${cardBorder} p-5 mb-4 ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                Hero Banner
+              </p>
+              <ClubBannerUpload
+                value={pendingBanner !== undefined ? pendingBanner : club.bannerUrl}
+                onChange={(url) => setPendingBanner(url)}
+                accentColor={club.accentColor}
+                isDark={isDark}
+              />
+              {pendingBanner !== undefined && pendingBanner !== club.bannerUrl && (
+                <p className={`text-xs mt-2 font-medium ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                  {pendingBanner ? "New banner ready to save" : "Banner will be removed"}
+                </p>
+              )}
+            </div>
+
             {/* Save / Cancel */}
             <div className="flex gap-2">
               <button
-                onClick={() => setShowSettings(false)}
+                onClick={() => { setShowSettings(false); setPendingAvatar(undefined); setPendingBanner(undefined); }}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
                 Cancel
               </button>
               <button
-                disabled={savingAvatar || pendingAvatar === undefined || pendingAvatar === club.avatarUrl}
+                disabled={
+                  savingSettings ||
+                  (pendingAvatar === undefined || pendingAvatar === club.avatarUrl) &&
+                  (pendingBanner === undefined || pendingBanner === club.bannerUrl)
+                }
                 onClick={async () => {
-                  if (pendingAvatar === undefined) return;
-                  setSavingAvatar(true);
+                  setSavingSettings(true);
                   await new Promise((r) => setTimeout(r, 300));
-                  const updated = updateClub(club.id, { avatarUrl: pendingAvatar });
-                  if (updated) {
-                    setClub(updated);
-                    toast.success("Avatar updated!");
+                  const patch: Record<string, unknown> = {};
+                  if (pendingAvatar !== undefined && pendingAvatar !== club.avatarUrl) patch.avatarUrl = pendingAvatar;
+                  if (pendingBanner !== undefined && pendingBanner !== club.bannerUrl) patch.bannerUrl = pendingBanner;
+                  if (Object.keys(patch).length > 0) {
+                    const updated = updateClub(club.id, patch);
+                    if (updated) {
+                      setClub(updated);
+                      toast.success("Club updated!");
+                    }
                   }
-                  setSavingAvatar(false);
+                  setSavingSettings(false);
                   setShowSettings(false);
                   setPendingAvatar(undefined);
+                  setPendingBanner(undefined);
                 }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors disabled:opacity-40"
               >
-                {savingAvatar ? (
+                {savingSettings ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                     Saving…
