@@ -33,6 +33,15 @@ import { ClubBannerUpload } from "@/components/ClubBannerUpload";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { listTournamentsByClub, type TournamentConfig } from "@/lib/tournamentRegistry";
 import {
+  listFeedEvents,
+  seedFeedIfEmpty,
+  postAnnouncement,
+  deleteFeedEvent,
+  recordMemberJoin,
+  recordMemberLeave,
+  type FeedEvent,
+} from "@/lib/clubFeedRegistry";
+import {
   Users,
   Trophy,
   Calendar,
@@ -56,6 +65,8 @@ import {
   X,
   PlusCircle,
   Lock,
+  Rss,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -161,6 +172,128 @@ function StatPill({
   );
 }
 
+// ── Feed helpers ─────────────────────────────────────────────────────────────
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
+
+const FEED_EVENT_CONFIG: Record<
+  import("@/lib/clubFeedRegistry").FeedEventType,
+  { icon: React.ReactNode; accent: string; darkAccent: string }
+> = {
+  member_join: {
+    icon: <UserPlus className="w-4 h-4" />,
+    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
+  },
+  member_leave: {
+    icon: <UserMinus className="w-4 h-4" />,
+    accent: "text-gray-500 bg-gray-100",
+    darkAccent: "text-white/40 bg-white/8",
+  },
+  tournament_created: {
+    icon: <Trophy className="w-4 h-4" />,
+    accent: "text-amber-600 bg-amber-50",
+    darkAccent: "text-amber-400 bg-amber-500/15",
+  },
+  tournament_completed: {
+    icon: <CheckCircle2 className="w-4 h-4" />,
+    accent: "text-blue-600 bg-blue-50",
+    darkAccent: "text-blue-400 bg-blue-500/15",
+  },
+  announcement: {
+    icon: <Megaphone className="w-4 h-4" />,
+    accent: "text-amber-600 bg-amber-50",
+    darkAccent: "text-amber-400 bg-amber-500/15",
+  },
+  club_founded: {
+    icon: <Star className="w-4 h-4" />,
+    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
+  },
+};
+
+function FeedEventCard({
+  event,
+  isDark,
+  textMain,
+  textMuted,
+  canDelete,
+  onDelete,
+}: {
+  event: import("@/lib/clubFeedRegistry").FeedEvent;
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  canDelete: boolean;
+  onDelete: (id: string) => void;
+}) {
+  const cfg = FEED_EVENT_CONFIG[event.type];
+  const accentCls = isDark ? cfg.darkAccent : cfg.accent;
+
+  return (
+    <div className="flex items-start gap-3 px-5 py-4 group">
+      {/* Icon */}
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>
+        {cfg.icon}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium ${textMain} leading-snug`}>
+          {event.description}
+        </p>
+        {event.detail && (
+          <p className={`text-sm mt-1 leading-relaxed ${
+            event.type === "announcement"
+              ? isDark ? "text-white/70" : "text-gray-600"
+              : textMuted
+          }`}>
+            {event.detail}
+          </p>
+        )}
+        <div className="flex items-center gap-3 mt-1.5">
+          <span className={`text-xs ${textMuted}`}>{relativeTime(event.createdAt)}</span>
+          {event.linkHref && (
+            <a
+              href={event.linkHref}
+              className={`text-xs font-semibold transition-colors ${
+                isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#3D6B47] hover:text-[#2d5236]"
+              }`}
+            >
+              {event.linkLabel ?? "View"} &rarr;
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Delete button (owner/director only) */}
+      {canDelete && (
+        <button
+          onClick={() => onDelete(event.id)}
+          className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
+            isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+          }`}
+          title="Remove from feed"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ClubProfile() {
@@ -174,7 +307,7 @@ export default function ClubProfile() {
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "members" | "tournaments">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "members" | "tournaments" | "feed">("about");
   const [joining, setJoining] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
@@ -182,6 +315,9 @@ export default function ClubProfile() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [liveTournaments, setLiveTournaments] = useState<TournamentConfig[]>([]);
+  const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
+  const [announcementDraft, setAnnouncementDraft] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
 
   // Seed and load
   useEffect(() => {
@@ -191,10 +327,24 @@ export default function ClubProfile() {
     const found = getClub(id) ?? getClubBySlug(id);
     if (!found) return;
     setClub(found);
-    setMembers(getClubMembers(found.id));
+    const clubMembers = getClubMembers(found.id);
+    setMembers(clubMembers);
     setTournaments(getClubTournaments(found.id));
     setLiveTournaments(listTournamentsByClub(found.id));
     if (user) setJoined(isMember(found.id, user.id));
+    // Seed and load feed
+    seedFeedIfEmpty(
+      found.id,
+      found.name,
+      found.ownerName,
+      found.foundedAt,
+      clubMembers.map((m) => ({
+        displayName: m.displayName,
+        joinedAt: m.joinedAt,
+        avatarUrl: m.avatarUrl,
+      }))
+    );
+    setFeedEvents(listFeedEvents(found.id));
   }, [params.id, user]);
 
   if (!club) {
@@ -229,8 +379,10 @@ export default function ClubProfile() {
       lichessUsername: user.lichessUsername,
       avatarUrl: user.avatarUrl,
     });
+    recordMemberJoin(club.id, user.displayName, user.avatarUrl ?? null);
     setJoined(true);
     setMembers(getClubMembers(club.id));
+    setFeedEvents(listFeedEvents(club.id));
     setClub((prev) => prev ? { ...prev, memberCount: prev.memberCount + 1 } : prev);
     setJoining(false);
     toast.success(`You joined ${club.name}!`);
@@ -241,11 +393,30 @@ export default function ClubProfile() {
     setJoining(true);
     await new Promise((r) => setTimeout(r, 300));
     leaveClub(club.id, user.id);
+    recordMemberLeave(club.id, user.displayName);
     setJoined(false);
     setMembers(getClubMembers(club.id));
+    setFeedEvents(listFeedEvents(club.id));
     setClub((prev) => prev ? { ...prev, memberCount: Math.max(0, prev.memberCount - 1) } : prev);
     setJoining(false);
     toast("Left " + club.name);
+  };
+
+  const handlePostAnnouncement = async () => {
+    if (!user || !announcementDraft.trim() || !club) return;
+    setPostingAnnouncement(true);
+    await new Promise((r) => setTimeout(r, 300));
+    postAnnouncement(club.id, user.displayName, announcementDraft.trim(), user.avatarUrl ?? null);
+    setFeedEvents(listFeedEvents(club.id));
+    setAnnouncementDraft("");
+    setPostingAnnouncement(false);
+    toast.success("Announcement posted!");
+  };
+
+  const handleDeleteFeedEvent = (eventId: string) => {
+    if (!club) return;
+    deleteFeedEvent(club.id, eventId);
+    setFeedEvents(listFeedEvents(club.id));
   };
 
   const handleShare = () => {
@@ -475,7 +646,7 @@ export default function ClubProfile() {
       {/* ── Tab navigation ──────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
         <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-white/5" : "bg-black/5"}`}>
-          {(["about", "members", "tournaments"] as const).map((tab) => (
+          {(["about", "feed", "members", "tournaments"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -489,9 +660,14 @@ export default function ClubProfile() {
                   {club.memberCount}
                 </span>
               )}
+              {tab === "feed" && feedEvents.length > 0 && (
+                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
+                  {feedEvents.length}
+                </span>
+              )}
               {tab === "tournaments" && (
                 <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
-                  {tournaments.length}
+                  {tournaments.length + liveTournaments.length}
                 </span>
               )}
             </button>
@@ -584,6 +760,83 @@ export default function ClubProfile() {
             </div>
           </div>
         )}
+        {/* ── Feed tab ──────────────────────────────────────────────────────── */}
+        {activeTab === "feed" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+
+            {/* ── Announcement composer (owner/director only) ────────────────── */}
+            {(isOwner || isDirector) && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
+                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                  }`}>
+                    {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      value={announcementDraft}
+                      onChange={(e) => setAnnouncementDraft(e.target.value)}
+                      placeholder="Post an announcement to the club…"
+                      rows={3}
+                      maxLength={500}
+                      className={`w-full rounded-2xl px-4 py-3 text-sm resize-none outline-none border transition-colors ${
+                        isDark
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/40"
+                          : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]/40"
+                      }`}
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`text-xs ${textMuted}`}>{announcementDraft.length}/500</span>
+                      <button
+                        onClick={handlePostAnnouncement}
+                        disabled={!announcementDraft.trim() || postingAnnouncement}
+                        className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 ${
+                          isDark
+                            ? "bg-[#4CAF50] text-black hover:bg-[#66BB6A] disabled:hover:bg-[#4CAF50]"
+                            : "bg-[#3D6B47] text-white hover:bg-[#2d5236] disabled:hover:bg-[#3D6B47]"
+                        }`}
+                      >
+                        {postingAnnouncement ? "Posting…" : "Post"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Feed event list ────────────────────────────────────────────── */}
+            {feedEvents.length === 0 ? (
+              <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
+                <Rss className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
+                <p className={`text-sm font-semibold ${textMain} mb-1`}>No activity yet</p>
+                <p className={`text-xs ${textMuted}`}>Club events will appear here.</p>
+              </div>
+            ) : (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-5 py-4 border-b ${divider}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    Activity
+                  </h2>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {feedEvents.map((event) => (
+                    <FeedEventCard
+                      key={event.id}
+                      event={event}
+                      isDark={isDark}
+                      textMain={textMain}
+                      textMuted={textMuted}
+                      canDelete={isOwner || isDirector}
+                      onDelete={handleDeleteFeedEvent}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Tournaments tab ────────────────────────────────────────────────── */}
         {activeTab === "tournaments" && (
           <div className="space-y-4 animate-in fade-in duration-200">

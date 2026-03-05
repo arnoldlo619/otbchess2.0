@@ -1359,3 +1359,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] When owner clicks "Host a Tournament" from ClubProfile, pre-select that club in the wizard
 - [x] ClubProfile Tournaments tab reads live linked tournaments from tournamentRegistry
 - [x] Unit tests for tournament-club linking helpers (12 tests)
+
+## Club Feed Tab
+
+- [x] FeedEvent types (member_join, tournament_created, tournament_completed, announcement)
+- [x] clubFeedRegistry lib — localStorage CRUD (addEvent, listEvents, postAnnouncement, deleteEvent)
+- [x] Seed historical feed events from existing club data (members, tournaments)
+- [x] Feed tab added to ClubProfile tab bar (between Members and Tournaments)
+- [x] Feed event cards — icon, actor, description, relative timestamp
+- [x] Owner/Director announcement composer (textarea + post button)
+- [x] Unit tests for clubFeedRegistry helpers (18 tests)
+- [x] Add "Clubs" button to header nav bar (navigates to /clubs)

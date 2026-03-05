@@ -278,6 +278,17 @@ function Nav({
               Archive
             </span>
           </Link>
+          <Link href="/clubs">
+            <span
+              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                isDark
+                  ? "text-white/60 hover:text-white"
+                  : "text-[#4B5563] hover:text-[#3D6B47]"
+              }`}
+            >
+              Clubs
+            </span>
+          </Link>
           <ThemeToggle />
           {activeTournamentUrl && (
             <Link
@@ -359,6 +370,16 @@ function Nav({
               onClick={() => setMobileOpen(false)}
             >
               Archive
+            </span>
+          </Link>
+          <Link href="/clubs">
+            <span
+              className={`block w-full py-3 text-sm font-medium border-b ${
+                isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
+              }`}
+              onClick={() => setMobileOpen(false)}
+            >
+              Clubs
             </span>
           </Link>
           {activeTournamentUrl && (
