@@ -1,43 +1,42 @@
 /**
- * OTB Chess — Player Stats Card (Redesigned)
+ * OTB Chess — Player Stats Card v3 (Premium Minimalist)
  *
- * Clean, minimalist, premium design aligned with the platform's design system.
- * - Dark card with subtle green-tinted gradient — no busy multi-colour gradients
- * - Large typography, generous spacing, clear visual hierarchy
- * - Exportable as 1080×1080 PNG via html2canvas
+ * Design principles:
+ * - Single restrained dark palette — deep forest green, no avatar-tinted gradients
+ * - Portrait 3:4 aspect ratio for more breathing room
+ * - Large Clash Display typography throughout
+ * - Clear 3-zone layout: identity → stats → record
+ * - Exportable as 1080×1440 PNG via html2canvas
  */
 import { forwardRef, useState } from "react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 
-// ─── Badge accent colours ─────────────────────────────────────────────────────
-// Each badge gets a single accent colour used for the rank pill and badge chip.
-const BADGE_ACCENT: Record<string, { bg: string; text: string; ring: string }> = {
-  champion:      { bg: "bg-amber-400/20",   text: "text-amber-300",   ring: "ring-amber-400/40" },
-  runner_up:     { bg: "bg-slate-400/20",   text: "text-slate-300",   ring: "ring-slate-400/40" },
-  third_place:   { bg: "bg-orange-400/20",  text: "text-orange-300",  ring: "ring-orange-400/40" },
-  perfect_score: { bg: "bg-emerald-400/20", text: "text-emerald-300", ring: "ring-emerald-400/40" },
-  giant_killer:  { bg: "bg-violet-400/20",  text: "text-violet-300",  ring: "ring-violet-400/40" },
-  iron_wall:     { bg: "bg-blue-400/20",    text: "text-blue-300",    ring: "ring-blue-400/40" },
-  comeback:      { bg: "bg-rose-400/20",    text: "text-rose-300",    ring: "ring-rose-400/40" },
-  consistent:    { bg: "bg-teal-400/20",    text: "text-teal-300",    ring: "ring-teal-400/40" },
-  participant:   { bg: "bg-white/10",       text: "text-white/50",    ring: "ring-white/20" },
+// ─── Badge config ─────────────────────────────────────────────────────────────
+const BADGE_CONFIG: Record<string, { label: string; color: string; textColor: string }> = {
+  champion:      { label: "Champion",     color: "rgba(245,158,11,0.18)",  textColor: "#F59E0B" },
+  runner_up:     { label: "Runner-Up",    color: "rgba(148,163,184,0.18)", textColor: "#94A3B8" },
+  third_place:   { label: "Third Place",  color: "rgba(234,88,12,0.18)",   textColor: "#EA580C" },
+  perfect_score: { label: "Perfect",      color: "rgba(52,211,153,0.18)",  textColor: "#34D399" },
+  giant_killer:  { label: "Giant Killer", color: "rgba(139,92,246,0.18)",  textColor: "#8B5CF6" },
+  iron_wall:     { label: "Iron Wall",    color: "rgba(59,130,246,0.18)",  textColor: "#3B82F6" },
+  comeback:      { label: "Comeback",     color: "rgba(244,63,94,0.18)",   textColor: "#F43F5E" },
+  consistent:    { label: "Consistent",   color: "rgba(20,184,166,0.18)",  textColor: "#14B8A6" },
+  participant:   { label: "Participant",  color: "rgba(255,255,255,0.08)", textColor: "rgba(255,255,255,0.45)" },
 };
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
-function PlayerAvatar({
+function CardAvatar({
   name,
   username,
   avatarUrl,
   avatarStatus,
-  badge,
   size,
 }: {
   name: string;
   username: string;
   avatarUrl: string | null | undefined;
   avatarStatus: "loading" | "loaded";
-  badge: string;
   size: number;
 }) {
   const [imgError, setImgError] = useState(false);
@@ -48,17 +47,21 @@ function PlayerAvatar({
     .slice(0, 2)
     .toUpperCase();
 
-  const accent = BADGE_ACCENT[badge] ?? BADGE_ACCENT.participant;
   const showPhoto = avatarStatus === "loaded" && avatarUrl && !imgError;
   const showShimmer = avatarStatus === "loading";
 
   return (
     <div
-      className={`relative flex-shrink-0 rounded-2xl overflow-hidden ring-2 ${accent.ring}`}
-      style={{ width: size, height: size }}
+      className="relative flex-shrink-0 rounded-2xl overflow-hidden"
+      style={{
+        width: size,
+        height: size,
+        background: "rgba(255,255,255,0.06)",
+        boxShadow: "0 0 0 1.5px rgba(255,255,255,0.10)",
+      }}
     >
       {showShimmer ? (
-        <div className="w-full h-full bg-white/10 animate-pulse" />
+        <div className="w-full h-full animate-pulse" style={{ background: "rgba(255,255,255,0.08)" }} />
       ) : showPhoto ? (
         <img
           src={avatarUrl!}
@@ -68,81 +71,18 @@ function PlayerAvatar({
           onError={() => setImgError(true)}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-white/08">
+        <div className="w-full h-full flex items-center justify-center">
           <span
-            className="font-black text-white/80"
+            className="font-black text-white/70"
             style={{
               fontFamily: "'Clash Display', sans-serif",
-              fontSize: Math.round(size * 0.36),
+              fontSize: Math.round(size * 0.38),
             }}
           >
             {initials}
           </span>
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── Stat Block ───────────────────────────────────────────────────────────────
-function StatBlock({
-  label,
-  value,
-  sub,
-  highlight,
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span
-        className={`text-2xl font-black leading-none tabular-nums ${
-          highlight ? "text-[#4CAF50]" : "text-white"
-        }`}
-        style={{ fontFamily: "'Clash Display', sans-serif" }}
-      >
-        {value}
-      </span>
-      {sub && (
-        <span className="text-[9px] font-semibold text-white/40 tabular-nums">{sub}</span>
-      )}
-      <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 mt-0.5">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-// ─── W/D/L Bar ───────────────────────────────────────────────────────────────
-function RecordBar({ wins, draws, losses }: { wins: number; draws: number; losses: number }) {
-  const total = wins + draws + losses;
-  if (total === 0) return null;
-  const wPct = (wins / total) * 100;
-  const dPct = (draws / total) * 100;
-  const lPct = (losses / total) * 100;
-  return (
-    <div className="w-full space-y-2">
-      {/* Bar */}
-      <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
-        {wins > 0 && (
-          <div className="bg-emerald-400 rounded-full" style={{ width: `${wPct}%` }} />
-        )}
-        {draws > 0 && (
-          <div className="bg-white/30 rounded-full" style={{ width: `${dPct}%` }} />
-        )}
-        {losses > 0 && (
-          <div className="bg-red-400/70 rounded-full" style={{ width: `${lPct}%` }} />
-        )}
-      </div>
-      {/* Labels */}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-emerald-400">{wins}W</span>
-        <span className="text-[10px] font-bold text-white/30">{draws}D</span>
-        <span className="text-[10px] font-bold text-red-400/70">{losses}L</span>
-      </div>
     </div>
   );
 }
@@ -186,183 +126,450 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       longestStreak,
     } = perf;
 
-    const accent = BADGE_ACCENT[badge] ?? BADGE_ACCENT.participant;
+    const badgeCfg = BADGE_CONFIG[badge] ?? BADGE_CONFIG.participant;
     const flag = FLAG_EMOJI[player.country] ?? "";
     const ordinal =
       rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`;
     const ratingSign = ratingChange >= 0 ? "+" : "";
-    const avatarSize = forExport ? 80 : 64;
+
+    // Sizes: export = 1080×1440, display = responsive portrait
+    const exportW = 1080;
+    const exportH = 1440;
+    const avatarSize = forExport ? 100 : 72;
+
+    // W/D/L bar
+    const total = wins + draws + losses;
+    const wPct = total > 0 ? (wins / total) * 100 : 0;
+    const dPct = total > 0 ? (draws / total) * 100 : 0;
+    const lPct = total > 0 ? (losses / total) * 100 : 0;
 
     return (
       <div
         ref={ref}
         data-stats-card
         className={`relative overflow-hidden select-none ${
-          forExport
-            ? "w-[540px] h-[540px] rounded-[32px]"
-            : "w-full aspect-square max-w-[480px] rounded-3xl"
+          forExport ? "rounded-[48px]" : "w-full rounded-3xl"
         }`}
-        style={{ fontFamily: "'Inter', sans-serif" }}
+        style={{
+          fontFamily: "'Inter', sans-serif",
+          ...(forExport
+            ? { width: exportW, height: exportH }
+            : { aspectRatio: "3/4" }),
+        }}
       >
-        {/* ── Background: deep dark with subtle green tint ── */}
+        {/* ── Background ── */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(145deg, oklch(0.18 0.04 145) 0%, oklch(0.14 0.06 145) 60%, oklch(0.12 0.08 145) 100%)",
+              "linear-gradient(160deg, oklch(0.20 0.055 148) 0%, oklch(0.15 0.07 148) 55%, oklch(0.11 0.09 148) 100%)",
           }}
         />
 
-        {/* ── Subtle chess-square texture ── */}
+        {/* ── Subtle dot-grid texture ── */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: `repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%)`,
-            backgroundSize: "48px 48px",
+            backgroundImage:
+              "radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+            opacity: 0.6,
           }}
         />
 
-        {/* ── Radial glow behind avatar area ── */}
+        {/* ── Top-right glow ── */}
         <div
-          className="absolute top-0 left-0 w-48 h-48 rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "oklch(0.65 0.18 145)" }}
+          className="absolute pointer-events-none"
+          style={{
+            top: "-20%",
+            right: "-15%",
+            width: "60%",
+            height: "60%",
+            background: "radial-gradient(circle, oklch(0.55 0.18 148) 0%, transparent 70%)",
+            opacity: 0.12,
+            borderRadius: "50%",
+          }}
         />
 
         {/* ── Content ── */}
-        <div className="relative z-10 h-full flex flex-col p-6 gap-4">
+        <div
+          className="relative z-10 h-full flex flex-col"
+          style={{ padding: forExport ? 72 : 28 }}
+        >
 
-          {/* ── Top bar: brand + tournament ── */}
-          <div className="flex items-start justify-between">
-            {/* OTB brand mark */}
-            <div className="flex items-center gap-1.5">
+          {/* ── Zone 1: Header ── */}
+          <div className="flex items-start justify-between mb-auto" style={{ marginBottom: forExport ? 56 : 20 }}>
+            {/* Brand */}
+            <div className="flex items-center gap-2">
               <div
-                className="w-6 h-6 rounded-md flex items-center justify-center"
-                style={{ background: "oklch(0.45 0.15 145)" }}
+                style={{
+                  width: forExport ? 36 : 22,
+                  height: forExport ? 36 : 22,
+                  borderRadius: forExport ? 8 : 6,
+                  background: "oklch(0.48 0.16 148)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                {/* Chess king icon */}
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white">
+                <svg
+                  viewBox="0 0 24 24"
+                  style={{ width: forExport ? 20 : 13, height: forExport ? 20 : 13, fill: "white" }}
+                >
                   <path d="M11 2h2v2h2v2h-2v2h2l1 2H8l1-2h2V6H9V4h2V2zm-4 9h10l1 9H6l1-9z" />
                 </svg>
               </div>
               <span
-                className="text-[10px] font-black text-white/50 tracking-wider uppercase"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: forExport ? 18 : 10,
+                  fontWeight: 800,
+                  color: "rgba(255,255,255,0.45)",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
               >
-                OTB Chess
+                OTBchess.app
               </span>
             </div>
-            {/* Tournament info */}
-            <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-0.5">
+
+            {/* Tournament name */}
+            <div style={{ textAlign: "right", maxWidth: forExport ? 380 : 140 }}>
+              <p
+                style={{
+                  fontSize: forExport ? 14 : 8,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.25)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: 2,
+                }}
+              >
                 Final Report
               </p>
-              <p className="text-[10px] font-semibold text-white/60 truncate max-w-[140px]">
+              <p
+                style={{
+                  fontSize: forExport ? 18 : 10,
+                  fontWeight: 600,
+                  color: "rgba(255,255,255,0.55)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {tournamentName}
               </p>
               {tournamentDate && (
-                <p className="text-[9px] text-white/30 mt-0.5">{tournamentDate}</p>
+                <p
+                  style={{
+                    fontSize: forExport ? 14 : 8,
+                    color: "rgba(255,255,255,0.25)",
+                    marginTop: 2,
+                  }}
+                >
+                  {tournamentDate}
+                </p>
               )}
             </div>
           </div>
 
-          {/* ── Player identity ── */}
-          <div className="flex items-center gap-4">
-            <PlayerAvatar
+          {/* ── Zone 2: Player identity ── */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: forExport ? 32 : 16,
+              marginBottom: forExport ? 52 : 20,
+            }}
+          >
+            <CardAvatar
               name={player.name}
               username={player.username}
               avatarUrl={avatarUrl}
               avatarStatus={avatarStatus}
-              badge={badge}
               size={avatarSize}
             />
-            <div className="flex-1 min-w-0">
-              {/* Name */}
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                {player.title && (
-                  <span
-                    className="text-[10px] font-black px-1.5 py-0.5 rounded"
-                    style={{
-                      background: "oklch(0.45 0.15 145)",
-                      color: "white",
-                    }}
-                  >
-                    {player.title}
-                  </span>
-                )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Title chip */}
+              {player.title && (
                 <span
-                  className="text-xl font-black text-white leading-tight truncate"
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                  style={{
+                    display: "inline-block",
+                    fontSize: forExport ? 14 : 9,
+                    fontWeight: 900,
+                    padding: forExport ? "4px 10px" : "2px 6px",
+                    borderRadius: forExport ? 6 : 4,
+                    background: "oklch(0.48 0.16 148)",
+                    color: "white",
+                    marginBottom: forExport ? 10 : 5,
+                    fontFamily: "'Clash Display', sans-serif",
+                  }}
                 >
-                  {flag} {player.name}
+                  {player.title}
                 </span>
-              </div>
-              {/* Username + ELO */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-white/40 font-medium">
-                  @{player.username}
-                </span>
-                <span className="text-[10px] text-white/20">·</span>
-                <span className="text-[10px] font-bold text-white/50">
-                  {player.elo} ELO
-                </span>
-              </div>
+              )}
+              {/* Player name */}
+              <p
+                style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontSize: forExport ? 52 : 22,
+                  fontWeight: 800,
+                  color: "white",
+                  lineHeight: 1.05,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  marginBottom: forExport ? 10 : 4,
+                }}
+              >
+                {flag} {player.name}
+              </p>
+              {/* Username · ELO */}
+              <p
+                style={{
+                  fontSize: forExport ? 18 : 10,
+                  color: "rgba(255,255,255,0.38)",
+                  fontWeight: 500,
+                  marginBottom: forExport ? 16 : 8,
+                }}
+              >
+                @{player.username} · {player.elo} ELO
+              </p>
               {/* Badge pill */}
-              <div className="mt-2">
-                <span
-                  className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-full ${accent.bg} ${accent.text}`}
-                >
-                  {badgeLabel}
-                </span>
-              </div>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  fontSize: forExport ? 16 : 10,
+                  fontWeight: 700,
+                  padding: forExport ? "6px 16px" : "3px 10px",
+                  borderRadius: 999,
+                  background: badgeCfg.color,
+                  color: badgeCfg.textColor,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {badgeLabel || badgeCfg.label}
+              </span>
             </div>
           </div>
 
           {/* ── Divider ── */}
-          <div className="h-px bg-white/08" />
+          <div
+            style={{
+              height: 1,
+              background: "rgba(255,255,255,0.08)",
+              marginBottom: forExport ? 52 : 20,
+            }}
+          />
 
-          {/* ── Key stats row ── */}
-          <div className="grid grid-cols-4 gap-2">
-            <StatBlock
-              label="Rank"
-              value={ordinal}
-              sub={`of ${totalPlayers}`}
-              highlight
-            />
-            <StatBlock label="Score" value={points} sub="pts" />
-            <StatBlock
-              label="Perf."
-              value={performanceRating}
-              sub={`${ratingSign}${ratingChange}`}
-            />
-            <StatBlock label="Streak" value={`${longestStreak}W`} sub="best" />
+          {/* ── Zone 3: Stats grid (2×2) ── */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: forExport ? 32 : 12,
+              marginBottom: forExport ? 52 : 20,
+            }}
+          >
+            {[
+              { label: "Rank", value: ordinal, sub: `of ${totalPlayers}`, accent: true },
+              { label: "Score", value: String(points), sub: "pts", accent: false },
+              { label: "Performance", value: String(performanceRating), sub: `${ratingSign}${ratingChange} ELO`, accent: false },
+              { label: "Best Streak", value: `${longestStreak}W`, sub: "consecutive", accent: false },
+            ].map(({ label, value, sub, accent }) => (
+              <div
+                key={label}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  borderRadius: forExport ? 24 : 12,
+                  padding: forExport ? "28px 24px" : "12px 14px",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: forExport ? 14 : 8,
+                    fontWeight: 700,
+                    color: "rgba(255,255,255,0.30)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    marginBottom: forExport ? 8 : 3,
+                  }}
+                >
+                  {label}
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'Clash Display', sans-serif",
+                    fontSize: forExport ? 64 : 28,
+                    fontWeight: 800,
+                    color: accent ? "oklch(0.75 0.18 148)" : "white",
+                    lineHeight: 1,
+                    marginBottom: forExport ? 6 : 2,
+                  }}
+                >
+                  {value}
+                </p>
+                <p
+                  style={{
+                    fontSize: forExport ? 14 : 8,
+                    color: "rgba(255,255,255,0.30)",
+                    fontWeight: 500,
+                  }}
+                >
+                  {sub}
+                </p>
+              </div>
+            ))}
           </div>
 
-          {/* ── Divider ── */}
-          <div className="h-px bg-white/08" />
+          {/* ── Zone 4: W/D/L bar ── */}
+          {total > 0 && (
+            <div style={{ marginBottom: forExport ? 52 : 20 }}>
+              {/* Bar */}
+              <div
+                style={{
+                  display: "flex",
+                  height: forExport ? 10 : 5,
+                  borderRadius: 999,
+                  overflow: "hidden",
+                  gap: 2,
+                  marginBottom: forExport ? 14 : 6,
+                }}
+              >
+                {wins > 0 && (
+                  <div
+                    style={{
+                      width: `${wPct}%`,
+                      background: "#4CAF50",
+                      borderRadius: 999,
+                    }}
+                  />
+                )}
+                {draws > 0 && (
+                  <div
+                    style={{
+                      width: `${dPct}%`,
+                      background: "rgba(255,255,255,0.25)",
+                      borderRadius: 999,
+                    }}
+                  />
+                )}
+                {losses > 0 && (
+                  <div
+                    style={{
+                      width: `${lPct}%`,
+                      background: "rgba(239,68,68,0.6)",
+                      borderRadius: 999,
+                    }}
+                  />
+                )}
+              </div>
+              {/* Labels */}
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span
+                  style={{
+                    fontSize: forExport ? 16 : 10,
+                    fontWeight: 700,
+                    color: "#4CAF50",
+                  }}
+                >
+                  {wins}W
+                </span>
+                <span
+                  style={{
+                    fontSize: forExport ? 16 : 10,
+                    fontWeight: 700,
+                    color: "rgba(255,255,255,0.30)",
+                  }}
+                >
+                  {draws}D
+                </span>
+                <span
+                  style={{
+                    fontSize: forExport ? 16 : 10,
+                    fontWeight: 700,
+                    color: "rgba(239,68,68,0.6)",
+                  }}
+                >
+                  {losses}L
+                </span>
+              </div>
+            </div>
+          )}
 
-          {/* ── W/D/L bar ── */}
-          <RecordBar wins={wins} draws={draws} losses={losses} />
-
-          {/* ── Footer: best win + buchholz ── */}
-          <div className="mt-auto flex items-end justify-between gap-3">
+          {/* ── Zone 5: Footer chips ── */}
+          <div
+            style={{
+              marginTop: "auto",
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              gap: forExport ? 24 : 10,
+            }}
+          >
             {bestWin ? (
-              <div className="flex-1 min-w-0">
-                <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-0.5">
+              <div>
+                <p
+                  style={{
+                    fontSize: forExport ? 12 : 7,
+                    fontWeight: 700,
+                    color: "rgba(255,255,255,0.22)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    marginBottom: forExport ? 6 : 2,
+                  }}
+                >
                   Best Win
                 </p>
-                <p className="text-[11px] font-bold text-white/70 truncate">
+                <p
+                  style={{
+                    fontSize: forExport ? 20 : 11,
+                    fontWeight: 700,
+                    color: "rgba(255,255,255,0.65)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: forExport ? 320 : 120,
+                  }}
+                >
                   {bestWin.opponent.name}
                 </p>
-                <p className="text-[9px] text-white/35">{bestWin.opponent.elo} ELO</p>
+                <p
+                  style={{
+                    fontSize: forExport ? 14 : 8,
+                    color: "rgba(255,255,255,0.30)",
+                  }}
+                >
+                  {bestWin.opponent.elo} ELO
+                </p>
               </div>
             ) : (
               <div />
             )}
-            <div className="text-right flex-shrink-0">
-              <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-0.5">
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <p
+                style={{
+                  fontSize: forExport ? 12 : 7,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.22)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  marginBottom: forExport ? 6 : 2,
+                }}
+              >
                 Buchholz
               </p>
-              <p className="text-[11px] font-bold text-white/60">{buchholz.toFixed(1)}</p>
+              <p
+                style={{
+                  fontSize: forExport ? 20 : 11,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.55)",
+                }}
+              >
+                {buchholz.toFixed(1)}
+              </p>
             </div>
           </div>
         </div>

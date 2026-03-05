@@ -1256,3 +1256,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Integrate into Director.tsx body as left sidebar column
 - [x] Hide on mobile (show only on md+ screens)
 - [x] Write vitest tests for round tracker logic (covered by existing round state tests)
+
+## Player Card Redesign v2 — Mar 2026
+- [x] Remove avatar-tinted random colour gradients from PlayerStatsCard
+- [x] Single restrained dark card palette (deep dark green, no multi-colour chaos)
+- [x] Larger card size with generous padding and breathing room
+- [x] Large readable typography — no text overflow
+- [x] Clean 2x2 stat grid with large numerals and minimal labels
+- [x] Reduce grid to 2-column max for larger card display
