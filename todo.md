@@ -1451,3 +1451,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Director Tab Bar Tournament Name Subtitle
 
 - [x] Add tournament name + round status subtitle above the Director dashboard tab bar
+
+## Director Settings Tab: Pause/Resume Control
+
+- [x] Add pause/resume toggle card to the Settings tab (visible only during active tournament, not registration)

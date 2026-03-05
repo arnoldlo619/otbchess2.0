@@ -2361,6 +2361,57 @@ export default function Director() {
           {/* ── Settings Tab ─────────────────────────────────────────────────── */}
           {activeTab === "settings" && (
             <div className="space-y-4">
+              {/* ── Tournament State ─────────────────────────────────────────── */}
+              {!isRegistration && (
+                <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"}`}>
+                  <div className={`px-5 py-3 border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
+                    <h2 className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/35" : "text-gray-400"}`}>Tournament State</h2>
+                  </div>
+                  <div className="px-5 py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        state.status === "paused"
+                          ? isDark ? "bg-amber-500/15" : "bg-amber-50"
+                          : isDark ? "bg-[#4CAF50]/15" : "bg-green-50"
+                      }`}>
+                        {state.status === "paused"
+                          ? <Pause className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                          : <Play className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />}
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+                          {state.status === "paused" ? "Tournament Paused" : "Tournament Live"}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                          {state.status === "paused"
+                            ? "Players are waiting — resume when ready"
+                            : `Round ${state.currentRound} of ${state.totalRounds} in progress`}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        togglePause();
+                        toast.info(state.status === "paused" ? "Tournament resumed" : "Tournament paused");
+                      }}
+                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                        state.status === "paused"
+                          ? isDark
+                            ? "bg-[#4CAF50]/15 hover:bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/20"
+                            : "bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
+                          : isDark
+                          ? "bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/20"
+                          : "bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200"
+                      }`}
+                    >
+                      {state.status === "paused"
+                        ? <><Play className="w-4 h-4" /><span>Resume</span></>
+                        : <><Pause className="w-4 h-4" /><span>Pause</span></>}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* ── Quick Actions ─────────────────────────────────────────────── */}
               <div className={`rounded-2xl border overflow-hidden ${
                 isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
