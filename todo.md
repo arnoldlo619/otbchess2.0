@@ -1415,3 +1415,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove separate Boards tab from tab bar
 - [x] Ensure Generate Next Round / Advance Round CTA is prominent in merged view
 - [x] Verify TypeScript clean and all tests pass (990 tests)
+
+## Sticky "All Results In" Banner
+
+- [x] Sticky banner at top of Director Home tab when all results recorded and canGenerateNext is true
+- [x] Banner contains: checkmark icon, message, and "Generate Round N" action button
+- [x] Banner slides in with animation, dismisses after generating next round
+- [x] Banner hidden when tournament is complete (no next round to generate)

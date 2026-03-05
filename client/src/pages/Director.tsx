@@ -1281,6 +1281,70 @@ export default function Director() {
 
       </header>
 
+      {/* ── Sticky "All Results In" Banner ─────────────────────────────────── */}
+      {!isRegistration && allResultsIn && canGenerateNext && (
+        <div
+          className={`sticky top-14 z-30 border-b transition-all duration-300 ${
+            isDark
+              ? "bg-[#1a3d22]/95 backdrop-blur-md border-[#4CAF50]/25"
+              : "bg-[#f0f9f1]/95 backdrop-blur-md border-[#3D6B47]/20"
+          }`}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                isDark ? "bg-[#4CAF50]/25" : "bg-[#3D6B47]/15"
+              }`}>
+                <CheckCircle2 className={`w-3.5 h-3.5 ${
+                  isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                }`} />
+              </span>
+              <p className={`text-sm font-semibold truncate ${
+                isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+              }`}>
+                All {totalGames} result{totalGames !== 1 ? "s" : ""} in &mdash; Round {state.currentRound} complete
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                const nextRound = state.currentRound + 1;
+                generateNextRound();
+                toast.success(`Round ${nextRound} pairings generated!`);
+                broadcastRoundStart(nextRound);
+                setTimeout(() => {
+                  try {
+                    const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
+                    const latestState = raw ? JSON.parse(raw) : null;
+                    const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                    if (roundData && latestState?.players) {
+                      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          round: nextRound,
+                          games: roundData.games,
+                          players: latestState.players,
+                        }),
+                      }).catch(() => {});
+                    }
+                  } catch { /* ignore */ }
+                }, 150);
+              }}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-[#4CAF50] text-white hover:bg-[#3d9e42] shadow-[0_2px_10px_rgba(76,175,80,0.35)]"
+                  : "bg-[#3D6B47] text-white hover:bg-[#2d5235] shadow-[0_2px_10px_rgba(61,107,71,0.25)]"
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Generate Round {state.currentRound + 1}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Body ────────────────────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
         <div className="flex gap-6 items-start">
