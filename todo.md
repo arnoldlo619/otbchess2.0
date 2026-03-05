@@ -1279,3 +1279,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Rounds Tab Redesign — Mar 2026
 - [x] Apply full-width layout to Rounds tab in Report page
 - [x] Improve readability: larger text, row hover, better spacing
+
+## Cross-Table Sticky Column — Mar 2026
+- [x] Make player name column sticky (left: 0) in CrossTable for horizontal scroll

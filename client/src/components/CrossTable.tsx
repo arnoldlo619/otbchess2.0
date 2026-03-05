@@ -210,8 +210,8 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
           <table className="w-full border-collapse" style={{ minWidth: `${Math.max(480, players.length * 44 + 280)}px` }}>
             <thead>
               <tr>
-                {/* Player column header */}
-                <th className={`text-left pb-3 pr-4 text-xs font-semibold uppercase tracking-wider ${textMuted} w-[220px]`}>
+                {/* Player column header — sticky */}
+                <th className={`text-left pb-3 pr-4 text-xs font-semibold uppercase tracking-wider ${textMuted} w-[220px] sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Player
                 </th>
                 {/* Column numbers */}
@@ -239,8 +239,8 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
                   key={player.id}
                   className={`group transition-colors ${rowHover}`}
                 >
-                  {/* Rank + Player name */}
-                  <td className={`pr-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-gray-100"}`}>
+                  {/* Rank + Player name — sticky */}
+                  <td className={`pr-4 py-1.5 border-b ${isDark ? "border-white/04" : "border-gray-100"} sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)] group-hover:bg-[oklch(0.24_0.06_145)]" : "bg-white group-hover:bg-gray-50/70"}`}>
                     <div className="flex items-center gap-2.5">
                       {/* Rank number */}
                       <span
