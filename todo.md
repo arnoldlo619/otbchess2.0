@@ -1300,3 +1300,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove unused Camera and QrCode icon imports
 - [x] Verify URL-based QR join flow (isQrMode) still works
 - [x] TypeScript clean (0 errors), 882 tests passing
+
+## PWA Branding
+
+- [x] Update manifest.json name to "Play Chess Over The Board"
+- [x] Update manifest.json short_name to "Play Chess OTB"

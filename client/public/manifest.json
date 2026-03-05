@@ -1,6 +1,6 @@
 {
-  "name": "OTB Chess — Over The Board",
-  "short_name": "OTB Chess",
+  "name": "Play Chess Over The Board",
+  "short_name": "Play Chess OTB",
   "description": "Organize in-person chess tournaments in minutes. Built for chess clubs, powered by chess.com ELO data.",
   "start_url": "/",
   "display": "standalone",
