@@ -1389,3 +1389,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Call recordTournamentCreated in ClubProfile wizard onClose handler
 - [x] Refresh feed state after posting the event
+
+## Director Page VerticalRoundTracker Resize
+
+- [x] Make VerticalRoundTracker left rail bigger/longer and vertically centered with the main dashboard panel

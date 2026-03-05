@@ -431,10 +431,15 @@ function VerticalRoundTracker({
   isDark: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-0">
+    <div
+      className={`flex flex-col items-center gap-0 rounded-2xl px-3 py-4 ${
+        isDark ? "bg-white/05 border border-white/08" : "bg-gray-50 border border-gray-200"
+      }`}
+      style={{ minWidth: 56 }}
+    >
       {/* Header label */}
       <span
-        className={`text-[9px] font-bold uppercase tracking-widest mb-3 ${
+        className={`text-[9px] font-bold uppercase tracking-widest mb-4 ${
           isDark ? "text-white/30" : "text-gray-400"
         }`}
       >
@@ -448,18 +453,18 @@ function VerticalRoundTracker({
 
         return (
           <div key={r} className="flex flex-col items-center">
-            {/* Round dot */}
+            {/* Round dot — larger: w-10 h-10 */}
             <div
-              className={`relative flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 ${
+              className={`relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold transition-all duration-300 ${
                 isComplete
-                  ? "bg-[#3D6B47] text-white shadow-sm"
+                  ? "bg-[#3D6B47] text-white shadow-md"
                   : isCurrent
                   ? isDark
                     ? "bg-[#4CAF50]/20 text-[#4CAF50] border-2 border-[#4CAF50]"
                     : "bg-[#3D6B47]/10 text-[#3D6B47] border-2 border-[#3D6B47]"
                   : isDark
                   ? "bg-white/06 text-white/25 border border-white/10"
-                  : "bg-gray-100 text-gray-300 border border-gray-200"
+                  : "bg-white text-gray-300 border border-gray-200"
               }`}
             >
               {/* Pulse ring for current round */}
@@ -470,16 +475,16 @@ function VerticalRoundTracker({
                 />
               )}
               {isComplete ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-4 h-4" />
               ) : (
                 <span>{r}</span>
               )}
             </div>
 
-            {/* Connector line (not after last round) */}
+            {/* Connector line — taller: h-7 */}
             {r < totalRounds && (
               <div
-                className={`w-0.5 h-5 rounded-full transition-all duration-300 ${
+                className={`w-0.5 h-7 rounded-full transition-all duration-300 ${
                   isComplete
                     ? "bg-[#3D6B47]"
                     : isDark
@@ -494,12 +499,12 @@ function VerticalRoundTracker({
 
       {/* Completion indicator */}
       {currentRound > totalRounds && (
-        <div className="mt-3 flex flex-col items-center gap-1">
+        <div className="mt-4 flex flex-col items-center gap-1">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center"
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-md"
             style={{ background: "#3D6B47" }}
           >
-            <Trophy className="w-3.5 h-3.5 text-white" />
+            <Trophy className="w-4 h-4 text-white" />
           </div>
         </div>
       )}
@@ -1161,10 +1166,8 @@ export default function Director() {
           {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}
           {!isRegistration && (
             <div
-              className={`hidden md:flex flex-col items-center sticky top-24 self-start pt-1 ${
-                isDark ? "" : ""
-              }`}
-              style={{ minWidth: 40 }}
+              className="hidden md:flex flex-col items-center sticky top-24 self-start"
+              style={{ minWidth: 64 }}
             >
               <VerticalRoundTracker
                 rounds={state.rounds}
