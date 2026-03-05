@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, VolumeX } from "lucide-react";
+import { NavLogo } from "@/components/NavLogo";
 import { resolveTournament } from "@/lib/tournamentRegistry";
 import { useClockSounds } from "@/hooks/useClockSounds";
 
@@ -314,6 +315,11 @@ function CenterControls({
       >
         <ChevronLeft className="w-5 h-5 text-white/80" />
       </button>
+
+      {/* OTB!! logo — centred brand mark */}
+      <div className="px-1 opacity-90">
+        <NavLogo linked={false} className="h-6" />
+      </div>
 
       {/* Pause / Resume */}
       {isRunning && (

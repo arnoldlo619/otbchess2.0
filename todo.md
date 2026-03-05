@@ -1229,3 +1229,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Logo Consistency Audit — Mar 2026
 - [x] Audit all page headers for OTB!! logo usage
 - [x] Standardise logo across all inconsistent headers
+
+## Chess Clock Logo — Mar 2026
+- [x] Add OTB!! NavLogo to the chess clock center controls bar
