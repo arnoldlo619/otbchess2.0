@@ -512,6 +512,98 @@ function VerticalRoundTracker({
   );
 }
 
+// ─── Horizontal Round Tracker (mobile only) ─────────────────────────────────
+function HorizontalRoundTracker({
+  rounds,
+  currentRound,
+  totalRounds,
+  isDark,
+}: {
+  rounds: ReturnType<typeof useDirectorState>["state"]["rounds"];
+  currentRound: number;
+  totalRounds: number;
+  isDark: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-0 rounded-2xl px-4 py-3 overflow-x-auto ${
+        isDark ? "bg-white/05 border border-white/08" : "bg-gray-50 border border-gray-200"
+      }`}
+    >
+      {/* Label */}
+      <span
+        className={`text-[9px] font-bold uppercase tracking-widest mr-3 shrink-0 ${
+          isDark ? "text-white/30" : "text-gray-400"
+        }`}
+      >
+        Rounds
+      </span>
+
+      {Array.from({ length: totalRounds }, (_, i) => i + 1).map((r) => {
+        const roundData = rounds.find((rd) => rd.number === r);
+        const isComplete = roundData?.status === "completed";
+        const isCurrent = r === currentRound;
+
+        return (
+          <div key={r} className="flex items-center">
+            {/* Round dot */}
+            <div
+              className={`relative flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold shrink-0 transition-all duration-300 ${
+                isComplete
+                  ? "bg-[#3D6B47] text-white shadow-md"
+                  : isCurrent
+                  ? isDark
+                    ? "bg-[#4CAF50]/20 text-[#4CAF50] border-2 border-[#4CAF50]"
+                    : "bg-[#3D6B47]/10 text-[#3D6B47] border-2 border-[#3D6B47]"
+                  : isDark
+                  ? "bg-white/06 text-white/25 border border-white/10"
+                  : "bg-white text-gray-300 border border-gray-200"
+              }`}
+            >
+              {isCurrent && (
+                <span
+                  className="absolute inset-0 rounded-full animate-ping opacity-30"
+                  style={{ background: isDark ? "#4CAF50" : "#3D6B47" }}
+                />
+              )}
+              {isComplete ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <span>{r}</span>
+              )}
+            </div>
+
+            {/* Horizontal connector (not after last round) */}
+            {r < totalRounds && (
+              <div
+                className={`h-0.5 w-5 shrink-0 rounded-full transition-all duration-300 ${
+                  isComplete
+                    ? "bg-[#3D6B47]"
+                    : isDark
+                    ? "bg-white/10"
+                    : "bg-gray-200"
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+
+      {/* Trophy when all rounds done */}
+      {currentRound > totalRounds && (
+        <div className="ml-2 flex items-center shrink-0">
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center shadow-md"
+            style={{ background: "#3D6B47" }}
+          >
+            <Trophy className="w-3.5 h-3.5 text-white" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function Director() {
   const { theme } = useTheme();
@@ -1180,7 +1272,19 @@ export default function Director() {
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
           <main className="flex-1 min-w-0 space-y-5">
-          {/* ── Page Title + Tab Bar ─────────────────────────────────────── */}
+                {/* ── Mobile Horizontal Round Tracker (md:hidden) ──────────────────── */}
+          {!isRegistration && (
+            <div className="md:hidden">
+              <HorizontalRoundTracker
+                rounds={state.rounds}
+                currentRound={state.currentRound}
+                totalRounds={state.totalRounds}
+                isDark={isDark}
+              />
+            </div>
+          )}
+
+          {/* ── Page Title + Tab Bar ───────────────────────────────── */}
           <div className="space-y-3">
             {/* Round title row */}
             <div className="flex items-start justify-between gap-3">

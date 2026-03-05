@@ -1393,3 +1393,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Director Page VerticalRoundTracker Resize
 
 - [x] Make VerticalRoundTracker left rail bigger/longer and vertically centered with the main dashboard panel
+
+## Mobile Horizontal Round Tracker
+
+- [x] Build HorizontalRoundTracker component for mobile Director dashboard
+- [x] Show above tab bar on mobile (md:hidden), hide on desktop
