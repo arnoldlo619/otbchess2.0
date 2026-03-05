@@ -22,11 +22,13 @@ import {
   leaveClub,
   isMember,
   getMembership,
+  updateClub,
   seedClubsIfEmpty,
   type Club,
   type ClubMember,
   type ClubTournament,
 } from "@/lib/clubRegistry";
+import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import {
   Users,
   Trophy,
@@ -48,6 +50,7 @@ import {
   Megaphone,
   MoreHorizontal,
   Share2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -168,6 +171,9 @@ export default function ClubProfile() {
   const [joined, setJoined] = useState(false);
   const [activeTab, setActiveTab] = useState<"about" | "members" | "tournaments">("about");
   const [joining, setJoining] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
+  const [savingAvatar, setSavingAvatar] = useState(false);
 
   // Seed and load
   useEffect(() => {
@@ -283,7 +289,8 @@ export default function ClubProfile() {
             {(isOwner || isDirector) && (
               <button
                 className={`p-2 rounded-xl transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
-                onClick={() => toast("Club settings coming soon")}
+                onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
+                aria-label="Club settings"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -589,6 +596,98 @@ export default function ClubProfile() {
           </div>
         )}
       </div>
+
+      {/* ── Club Settings Panel (owner/director only) ──────────────────────── */}
+      {showSettings && club && (isOwner || isDirector) && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            className={`w-full max-w-sm rounded-3xl border ${cardBorder} ${card} p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <h2
+                className={`text-base font-bold ${textMain}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Club Settings
+              </h2>
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Avatar section */}
+            <div className={`rounded-2xl border ${cardBorder} p-5 mb-4 ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                Club Avatar
+              </p>
+              <div className="flex items-center gap-5">
+                <ClubAvatarUpload
+                  value={pendingAvatar !== undefined ? pendingAvatar : club.avatarUrl}
+                  onChange={(url) => setPendingAvatar(url)}
+                  accentColor={club.accentColor}
+                  clubName={club.name}
+                  isDark={isDark}
+                  size={80}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-semibold ${textMain}`}>{club.name}</p>
+                  <p className={`text-xs mt-0.5 ${textMuted}`}>
+                    {club.avatarUrl ? "Custom avatar set" : "Using initials placeholder"}
+                  </p>
+                  {pendingAvatar !== undefined && pendingAvatar !== club.avatarUrl && (
+                    <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                      New avatar ready to save
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Save / Cancel */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={savingAvatar || pendingAvatar === undefined || pendingAvatar === club.avatarUrl}
+                onClick={async () => {
+                  if (pendingAvatar === undefined) return;
+                  setSavingAvatar(true);
+                  await new Promise((r) => setTimeout(r, 300));
+                  const updated = updateClub(club.id, { avatarUrl: pendingAvatar });
+                  if (updated) {
+                    setClub(updated);
+                    toast.success("Avatar updated!");
+                  }
+                  setSavingAvatar(false);
+                  setShowSettings(false);
+                  setPendingAvatar(undefined);
+                }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors disabled:opacity-40"
+              >
+                {savingAvatar ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    Saving…
+                  </span>
+                ) : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

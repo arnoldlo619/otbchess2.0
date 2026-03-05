@@ -1328,3 +1328,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire "Create Club" button in MyClubs to open wizard
 - [x] On completion, navigate to new club profile page
 - [x] Unit tests for wizard validation helpers (22 tests)
+
+## Club Avatar Upload
+
+- [x] ClubAvatarUpload component — drag-and-drop or click, file validation, canvas crop/resize to 256×256, base64 preview
+- [x] Add avatar upload to CreateClubWizard Step 1 (above name field, previews initials in real time)
+- [x] Add club settings panel to ClubProfile page (owner/director ⋯ menu → bottom sheet modal)
+- [x] Persist avatar as base64 data URL in clubRegistry localStorage via updateClub
+- [x] Unit tests for validateImageFile and cropAndResizeImage helpers (11 tests)

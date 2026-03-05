@@ -22,6 +22,7 @@ import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { createClub, type ClubCategory } from "@/lib/clubRegistry";
+import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { toast } from "sonner";
 import {
   X,
@@ -56,6 +57,8 @@ interface WizardData {
   website: string;
   discord: string;
   isPublic: boolean;
+  /** Base64 data URL for the club avatar (null = use initials) */
+  avatarUrl: string | null;
 }
 
 const DEFAULT_DATA: WizardData = {
@@ -69,6 +72,7 @@ const DEFAULT_DATA: WizardData = {
   website: "",
   discord: "",
   isPublic: true,
+  avatarUrl: null,
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -285,7 +289,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
           country: data.country,
           description: data.description.trim(),
           accentColor: data.accentColor,
-          avatarUrl: null,
+          avatarUrl: data.avatarUrl,
           bannerUrl: null,
           ownerId: user.id,
           ownerName: user.displayName,
@@ -568,6 +572,17 @@ function Step1Identity({
 
   return (
     <div className="space-y-5">
+      {/* Avatar upload */}
+      <div className="flex justify-center pb-2">
+        <ClubAvatarUpload
+          value={data.avatarUrl}
+          onChange={(url) => patch({ avatarUrl: url })}
+          accentColor={data.accentColor}
+          clubName={data.name}
+          isDark={isDark}
+          size={96}
+        />
+      </div>
       <div>
         <label className={`block text-sm font-semibold mb-2 ${labelCls}`}>
           Club Name <span className="text-red-400">*</span>
