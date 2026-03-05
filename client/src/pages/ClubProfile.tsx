@@ -30,6 +30,8 @@ import {
 } from "@/lib/clubRegistry";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload } from "@/components/ClubBannerUpload";
+import { TournamentWizard } from "@/components/TournamentWizard";
+import { listTournamentsByClub, type TournamentConfig } from "@/lib/tournamentRegistry";
 import {
   Users,
   Trophy,
@@ -178,6 +180,8 @@ export default function ClubProfile() {
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
   const [pendingBanner, setPendingBanner] = useState<string | null | undefined>(undefined);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+  const [liveTournaments, setLiveTournaments] = useState<TournamentConfig[]>([]);
 
   // Seed and load
   useEffect(() => {
@@ -189,6 +193,7 @@ export default function ClubProfile() {
     setClub(found);
     setMembers(getClubMembers(found.id));
     setTournaments(getClubTournaments(found.id));
+    setLiveTournaments(listTournamentsByClub(found.id));
     if (user) setJoined(isMember(found.id, user.id));
   }, [params.id, user]);
 
@@ -257,6 +262,16 @@ export default function ClubProfile() {
   const categoryLabel = CATEGORY_LABELS[club.category] ?? "Chess Club";
   const completedTournaments = tournaments.filter((t) => t.status === "completed");
   const upcomingTournaments = tournaments.filter((t) => t.status === "upcoming" || t.status === "active");
+  // Live tournaments created via the wizard and linked to this club
+  const liveUpcoming = liveTournaments.filter((t) => {
+    const d = new Date(t.date || Date.now());
+    return d >= new Date(new Date().toDateString());
+  });
+  const livePast = liveTournaments.filter((t) => {
+    const d = new Date(t.date || Date.now());
+    return d < new Date(new Date().toDateString());
+  });
+  const hasAnyTournaments = tournaments.length > 0 || liveTournaments.length > 0;
 
   // ── Colour palette ──────────────────────────────────────────────────────────
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]";
@@ -576,7 +591,7 @@ export default function ClubProfile() {
             {/* ── Owner-only Host Tournament CTA ────────────────────────────── */}
             {isOwner ? (
               <button
-                onClick={() => navigate("/")}
+                onClick={() => setShowWizard(true)}
                 className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#3D6B47]/40 text-sm font-semibold transition-all hover:border-[#3D6B47] hover:bg-[#3D6B47]/8 group"
               >
                 <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}`} />
@@ -597,14 +612,15 @@ export default function ClubProfile() {
               </div>
             ) : null}
 
-            {/* Upcoming / Active */}
+            {/* Upcoming & Active — seed data */}
             {upcomingTournaments.length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
                     Upcoming & Active
                   </h2>
-                </div>                <div className="divide-y divide-white/5">
+                </div>
+                <div className="divide-y divide-white/5">
                   {upcomingTournaments.map((t) => (
                     <TournamentRow key={t.tournamentId} tournament={t} isDark={isDark} textMuted={textMuted} />
                   ))}
@@ -612,7 +628,46 @@ export default function ClubProfile() {
               </div>
             )}
 
-            {/* Past tournaments */}
+            {/* Live upcoming tournaments created via wizard */}
+            {liveUpcoming.length > 0 && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    Upcoming
+                  </h2>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-500/15 text-green-600">
+                    Live
+                  </span>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {liveUpcoming.map((t) => (
+                    <a
+                      key={t.id}
+                      href={`/tournament/${t.id}`}
+                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-green-500/15" : "bg-green-50"}`}>
+                        <Zap className="w-4 h-4 text-green-500" strokeWidth={1.8} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${textMain}`}>{t.name}</p>
+                        <p className={`text-xs truncate ${textMuted}`}>
+                          {t.venue || "Venue TBD"} &middot; {t.date ? new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date TBD"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}>
+                          {t.format === "swiss" ? "Swiss" : t.format === "roundrobin" ? "Round Robin" : "Elimination"}
+                        </span>
+                        <span className={`text-xs ${textMuted}`}>{t.rounds}R</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Past tournaments — seed data */}
             {completedTournaments.length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
@@ -628,7 +683,43 @@ export default function ClubProfile() {
               </div>
             )}
 
-            {tournaments.length === 0 && (
+            {/* Live past tournaments created via wizard */}
+            {livePast.length > 0 && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`px-5 py-4 border-b ${divider}`}>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    Past Tournaments
+                  </h2>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {livePast.map((t) => (
+                    <a
+                      key={t.id}
+                      href={`/tournament/${t.id}`}
+                      className={`flex items-center gap-4 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                        <CheckCircle2 className={`w-4 h-4 ${textMuted}`} strokeWidth={1.8} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${textMain}`}>{t.name}</p>
+                        <p className={`text-xs truncate ${textMuted}`}>
+                          {t.venue || "Venue TBD"} &middot; {t.date ? new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date TBD"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}>
+                          {t.format === "swiss" ? "Swiss" : t.format === "roundrobin" ? "Round Robin" : "Elimination"}
+                        </span>
+                        <span className={`text-xs ${textMuted}`}>{t.rounds}R</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!hasAnyTournaments && (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
                 <Trophy className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
                 <p className={`text-sm font-semibold ${textMain} mb-1`}>No tournaments yet</p>
@@ -646,6 +737,18 @@ export default function ClubProfile() {
           </div>
         )}
       </div>
+
+      {/* ── Tournament Wizard (owner-only, pre-linked to this club) ──────────── */}
+      <TournamentWizard
+        open={showWizard}
+        onClose={() => {
+          setShowWizard(false);
+          // Refresh live tournaments after wizard closes
+          if (club) setLiveTournaments(listTournamentsByClub(club.id));
+        }}
+        initialClubId={club.id}
+        initialClubName={club.name}
+      />
 
       {/* ── Club Settings Panel (owner/director only) ──────────────────────── */}
       {showSettings && club && (isOwner || isDirector) && (

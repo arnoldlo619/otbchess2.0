@@ -24,6 +24,10 @@ export interface TournamentConfig {
   createdAt: string;
   /** Authenticated user ID of the director who created this tournament (undefined for anonymous). */
   ownerId?: number | null;
+  /** Optional club this tournament is linked to. */
+  clubId?: string | null;
+  /** Display name of the linked club (denormalised for fast rendering). */
+  clubName?: string | null;
 }
 
 const REGISTRY_KEY = "otb-tournament-registry-v1";
@@ -104,6 +108,13 @@ export function resolveByDirectorCode(code: string): TournamentConfig | null {
 /** List all tournaments in creation order (newest first). */
 export function listTournaments(): TournamentConfig[] {
   return [...loadRegistry()].reverse();
+}
+
+/** List all tournaments linked to a specific club (newest first). */
+export function listTournamentsByClub(clubId: string): TournamentConfig[] {
+  return [...loadRegistry()]
+    .filter((c) => c.clubId === clubId)
+    .reverse();
 }
 
 /**

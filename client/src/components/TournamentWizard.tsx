@@ -76,6 +76,10 @@ interface WizardData {
   inviteCode: string;
   /** Private director access code shown only to the tournament creator. */
   directorCode: string;
+  /** Optional club this tournament is linked to. */
+  clubId: string | null;
+  /** Display name of the linked club. */
+  clubName: string | null;
 }
 
 function todayIso(): string {
@@ -100,6 +104,8 @@ const DEFAULT_DATA: WizardData = {
   ratingSystem: "chess.com",
   inviteCode: "",
   directorCode: "",
+  clubId: null,
+  clubName: null,
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -1613,6 +1619,22 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
 
   return (
     <div className="space-y-6">
+      {/* Club badge — shown when tournament is linked to a club */}
+      {data.clubId && data.clubName && (
+        <div
+          className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
+          style={{ background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE", border: `1.5px solid ${isDark ? "rgba(61,107,71,0.30)" : "#C6D9C9"}` }}
+        >
+          <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
+          <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>
+            Linked to club:
+          </span>
+          <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+            {data.clubName}
+          </span>
+        </div>
+      )}
+
       {/* Summary strip */}
       <div
         className="grid grid-cols-3 gap-4 rounded-2xl border p-5"
@@ -1723,9 +1745,12 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
 interface TournamentWizardProps {
   open: boolean;
   onClose: () => void;
+  /** Pre-select a club when opening the wizard from a club profile page. */
+  initialClubId?: string | null;
+  initialClubName?: string | null;
 }
 
-export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
+export function TournamentWizard({ open, onClose, initialClubId, initialClubName }: TournamentWizardProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user } = useAuthContext();
@@ -1748,7 +1773,13 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       setMode("select");
       setStep(0);
       setDirection(1);
-      setData({ ...DEFAULT_DATA, inviteCode: nanoid(8).toUpperCase(), directorCode: generateDirectorCode() });
+      setData({
+        ...DEFAULT_DATA,
+        inviteCode: nanoid(8).toUpperCase(),
+        directorCode: generateDirectorCode(),
+        clubId: initialClubId ?? null,
+        clubName: initialClubName ?? null,
+      });
       // Prevent background scroll on iOS/Android while wizard is open
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
@@ -1807,6 +1838,8 @@ export function TournamentWizard({ open, onClose }: TournamentWizardProps) {
       ratingSystem: data.ratingSystem,
       createdAt: new Date().toISOString(),
       ownerId: user?.id ? parseInt(user.id, 10) : null,
+      clubId: data.clubId ?? null,
+      clubName: data.clubName ?? null,
     });
     grantDirectorSession(slug);
     // If signed in, persist to server so My Tournaments history is cross-device

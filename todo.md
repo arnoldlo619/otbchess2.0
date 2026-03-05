@@ -1351,3 +1351,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show locked/disabled state with tooltip for directors and members who are not the owner
 - [x] Wire CTA to navigate to tournament creation
 - [x] Unit tests for ownership guard logic (9 tests)
+
+## Tournament–Club Linking
+
+- [x] Add optional clubId field to tournament data shape in tournamentRegistry
+- [x] Add "Link to Club" selector in TournamentWizard (owner's clubs dropdown, optional)
+- [x] When owner clicks "Host a Tournament" from ClubProfile, pre-select that club in the wizard
+- [x] ClubProfile Tournaments tab reads live linked tournaments from tournamentRegistry
+- [x] Unit tests for tournament-club linking helpers (12 tests)
