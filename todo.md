@@ -1246,3 +1246,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove visual noise (overlapping text, busy gradients, small illegible stats)
 - [x] Clear hierarchy: avatar + name + rank badge at top, key stats below, W/D/L bar at bottom
 - [x] Hover-to-download preserved, smooth hover animation
+
+## Player Cards Grid Layout — Mar 2026
+- [x] Switch player cards grid to responsive: 1col mobile, 2col tablet, 3col desktop
