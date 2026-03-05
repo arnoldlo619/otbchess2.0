@@ -558,6 +558,25 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* My Clubs link card */}
+        <a
+          href="/clubs"
+          className={`flex items-center justify-between rounded-3xl border p-5 transition-all hover:shadow-md group ${card}`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+              isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/10"
+            }`}>
+              <User className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+            </div>
+            <div>
+              <p className={`text-sm font-semibold ${text}`}>My Clubs</p>
+              <p className={`text-xs ${muted}`}>Manage your chess communities</p>
+            </div>
+          </div>
+          <ExternalLink className={`w-4 h-4 ${muted} group-hover:text-[#2d6a4f] transition`} />
+        </a>
+
         {/* Danger zone */}
         <div className={`rounded-3xl border p-6 ${card}`}>
           <h2 className={`text-base font-bold mb-3 ${text}`}>Account</h2>

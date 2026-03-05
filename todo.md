@@ -1305,3 +1305,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Update manifest.json name to "Play Chess Over The Board"
 - [x] Update manifest.json short_name to "Play Chess OTB"
+
+## Club Profile Pages & My Clubs
+
+- [x] Club data types (Club, ClubMember, ClubTournament)
+- [x] clubRegistry lib — localStorage CRUD (createClub, getClub, joinClub, leaveClub, listMyClubs, listAllClubs)
+- [x] Seed mock clubs for demo/preview purposes
+- [x] ClubProfile page (/clubs/:id) — hero banner, stats, about, members, tournament history
+- [x] MyClubs page (/clubs) — grid of joined clubs + discovery section
+- [x] Add /clubs and /clubs/:id routes to App.tsx
+- [x] Add "My Clubs" link to Profile page
+- [x] Unit tests for clubRegistry helpers (19 tests)
