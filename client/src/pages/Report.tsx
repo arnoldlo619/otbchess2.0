@@ -10,6 +10,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useParams, Link } from "wouter";
+import { NavLogo } from "@/components/NavLogo";
 import { toast } from "sonner";
 
 import { useTheme } from "@/contexts/ThemeContext";
@@ -418,6 +419,8 @@ export default function ReportPage() {
                 <ChevronLeft className="w-5 h-5" />
               </button>
             </Link>
+            <NavLogo />
+            <div className={`w-px h-5 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
             <div>
               <p
                 className={`text-sm font-black leading-none ${isDark ? "text-white" : "text-gray-900"}`}

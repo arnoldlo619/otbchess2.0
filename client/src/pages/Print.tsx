@@ -12,6 +12,7 @@
 import { useState, useMemo } from "react";
 import { Link, useParams } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { NavLogo } from "@/components/NavLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   DEMO_TOURNAMENT,
@@ -573,17 +574,7 @@ export default function PrintPage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
             {/* Left: breadcrumb */}
             <div className="flex items-center gap-2.5">
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-7 h-7 bg-[#3D6B47] rounded-md flex items-center justify-center">
-                  <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-                </div>
-                <span
-                  className={`font-semibold text-sm hidden sm:block ${isDark ? "text-white/80" : "text-gray-600"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  OTB Chess
-                </span>
-              </Link>
+              <NavLogo />
               <span className={`text-sm ${isDark ? "text-white/20" : "text-gray-300"}`}>/</span>
               <Link
                 href="/tournament/otb-demo-2026"

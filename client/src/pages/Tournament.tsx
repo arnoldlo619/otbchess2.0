@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useParams } from "wouter";
+import { NavLogo } from "@/components/NavLogo";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import {
@@ -147,14 +148,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:block">Back</span>
           </Link>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 bg-[#3D6B47] rounded-lg flex items-center justify-center flex-shrink-0">
-              <Crown className="w-4 h-4 text-white" strokeWidth={2} />
-            </div>
-            <span className="text-base font-bold text-foreground hidden sm:block truncate max-w-[160px]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              OTB Chess
-            </span>
-          </div>
+          <NavLogo />
         </div>
 
         <div className="flex items-center gap-1.5">

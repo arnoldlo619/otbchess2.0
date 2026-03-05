@@ -14,6 +14,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
+import { NavLogo } from "@/components/NavLogo";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Trophy,
@@ -305,7 +306,7 @@ function LobbyScreen({
     <div className={`min-h-screen ${bg} flex flex-col`}>
       <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
         <div className="flex items-center justify-between mb-1">
-          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
+          <NavLogo linked={false} />
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
         <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
@@ -379,7 +380,7 @@ function WaitingRoundScreen({
     <div className={`min-h-screen ${bg} flex flex-col`}>
       <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
         <div className="flex items-center justify-between mb-1">
-          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
+          <NavLogo linked={false} />
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
         <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
@@ -523,7 +524,7 @@ function MyBoardScreen({
       {/* Header */}
       <div className={`px-5 pt-safe-top pt-5 pb-3 border-b ${divider}`}>
         <div className="flex items-center justify-between mb-0.5">
-          <span className={`text-xs font-bold uppercase tracking-widest ${accent}`}>OTB Chess</span>
+          <NavLogo linked={false} />
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
         <div className="flex items-center justify-between">

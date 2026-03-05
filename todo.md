@@ -1225,3 +1225,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Default Dark Mode — Mar 2026
 - [x] Change default theme from light to dark for first-time visitors
+
+## Logo Consistency Audit — Mar 2026
+- [x] Audit all page headers for OTB!! logo usage
+- [x] Standardise logo across all inconsistent headers

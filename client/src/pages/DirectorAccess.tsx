@@ -9,6 +9,7 @@
  */
 import { useState, useRef, useEffect } from "react";
 import { useLocation, Link } from "wouter";
+import { NavLogo } from "@/components/NavLogo";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -129,14 +130,7 @@ export default function DirectorAccessPage() {
       <header className={`flex items-center justify-between px-4 pt-4 pb-3 border-b ${
         isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-gray-100 bg-[#F7FAF8]"
       }`}>
-        <Link href="/">
-          <span
-            className={`text-lg font-black tracking-tight cursor-pointer ${isDark ? "text-white" : "text-gray-900"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            OTB!!
-          </span>
-        </Link>
+        <NavLogo />
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link href="/join">

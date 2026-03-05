@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NavLogo } from "@/components/NavLogo";
 import { Crown, ChevronLeft, Search } from "lucide-react";
 
 export default function NotFound() {
@@ -23,17 +24,7 @@ export default function NotFound() {
         }`}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 bg-[#3D6B47] rounded-md flex items-center justify-center">
-              <Crown className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-            </div>
-            <span
-              className={`font-semibold text-sm ${isDark ? "text-white/80" : "text-gray-700"}`}
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              OTB Chess
-            </span>
-          </a>
+          <NavLogo />
           <ThemeToggle />
         </div>
       </header>

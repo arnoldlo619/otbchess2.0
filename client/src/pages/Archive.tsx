@@ -30,6 +30,7 @@ import {
   Download,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { NavLogo } from "@/components/NavLogo";
 import {
   ARCHIVE_TOURNAMENTS,
   ARCHIVE_STATS,
@@ -647,17 +648,7 @@ export default function Archive() {
               </button>
             </Link>
             <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-[#3D6B47] flex items-center justify-center">
-                <Trophy className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span
-                className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                Tournament Archive
-              </span>
-            </div>
+            <NavLogo />
           </div>
 
           <Link href="/">
