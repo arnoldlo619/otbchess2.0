@@ -112,10 +112,10 @@ function ClubCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         </div>
 
-        {/* Avatar — overlaps banner bottom edge */}
-        <div className="px-5">
+        {/* Avatar — overlaps banner bottom edge, raised above banner via z-index */}
+        <div className="px-5 relative z-10">
           <div
-            className="-mt-8 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-lg border-2 border-white/20 overflow-hidden"
+            className="-mt-8 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shadow-xl border-2 border-white/30 overflow-hidden"
             style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
           >
             {club.avatarUrl ? (
