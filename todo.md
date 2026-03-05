@@ -1282,3 +1282,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Cross-Table Sticky Column — Mar 2026
 - [x] Make player name column sticky (left: 0) in CrossTable for horizontal scroll
+
+## Cross-Table Sticky Header Row — Mar 2026
+- [x] Make column header row sticky (top: 0) in CrossTable for vertical scroll

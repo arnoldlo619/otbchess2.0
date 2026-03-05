@@ -208,27 +208,27 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
       <div className="overflow-x-auto" ref={tableRef}>
         <div className={`p-4 ${bg}`}>
           <table className="w-full border-collapse" style={{ minWidth: `${Math.max(480, players.length * 44 + 280)}px` }}>
-            <thead>
-              <tr>
-                {/* Player column header — sticky */}
-                <th className={`text-left pb-3 pr-4 text-xs font-semibold uppercase tracking-wider ${textMuted} w-[220px] sticky left-0 z-10 ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
+            <thead className="sticky top-0 z-20">
+              <tr className={`${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
+                {/* Player column header — sticky left + top */}
+                <th className={`text-left pb-3 pr-4 text-xs font-semibold uppercase tracking-wider ${textMuted} w-[220px] sticky left-0 z-30 ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Player
                 </th>
                 {/* Column numbers */}
                 {players.map((_, j) => (
                   <th
                     key={j}
-                    className={`pb-3 text-center text-xs font-bold w-11 ${isDark ? "text-white/35" : "text-gray-400"}`}
+                    className={`pb-3 text-center text-xs font-bold w-11 ${isDark ? "text-white/35" : "text-gray-400"} ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}
                   >
                     {j + 1}
                   </th>
                 ))}
                 {/* Score */}
-                <th className={`pb-3 pl-4 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap`}>
+                <th className={`pb-3 pl-4 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Score
                 </th>
                 {/* Buchholz */}
-                <th className={`pb-3 pl-3 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap`}>
+                <th className={`pb-3 pl-3 text-xs font-semibold uppercase tracking-wider ${textMuted} text-right whitespace-nowrap ${isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"}`}>
                   Buch.
                 </th>
               </tr>
