@@ -1285,3 +1285,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Cross-Table Sticky Header Row — Mar 2026
 - [x] Make column header row sticky (top: 0) in CrossTable for vertical scroll
+
+## Join Page QR Scanner Removal — Mar 2026
+- [ ] Remove in-app QR scanner component from Join page
+- [ ] Streamline join flow to tournament code input as primary method
+- [ ] Verify tournament code join works end-to-end
+- [ ] Clean up unused QR scanner imports/dependencies
+
+## Join Page Simplification
+
+- [x] Remove in-app QR scanner component (QrScanner) from Join page
+- [x] Remove "Scan QR Code" button and "or enter manually" divider
+- [x] Update subtitle to "Enter the code from your host"
+- [x] Remove unused Camera and QrCode icon imports
+- [x] Verify URL-based QR join flow (isQrMode) still works
+- [x] TypeScript clean (0 errors), 882 tests passing
