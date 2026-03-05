@@ -71,6 +71,7 @@ import {
   MoreVertical,
   MessageSquare,
   Tv2,
+  Undo2,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -166,11 +167,13 @@ function BoardCard({
   game,
   players,
   onResult,
+  onUndo,
   isDark,
 }: {
   game: import("@/lib/tournamentData").Game;
   players: import("@/lib/tournamentData").Player[];
   onResult: (gameId: string, result: Result) => void;
+  onUndo?: () => void;
   isDark: boolean;
 }) {
   const white = players.find((p) => p.id === game.whiteId)!;
@@ -348,21 +351,41 @@ function BoardCard({
           );
         })}
         {isComplete && (
-          <button
-            onClick={() => {
-              if (navigator.vibrate) navigator.vibrate(20);
-              onResult(game.id, "*");
-              toast.info(`Board ${game.board}: result cleared`);
-            }}
-            className={`flex-shrink-0 w-11 py-3 text-sm rounded-xl border transition-all duration-150 active:scale-95 ${
-              isDark
-                ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
-                : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
-            }`}
-            title="Clear result"
-          >
-            ✕
-          </button>
+          <>
+            {/* Undo last result */}
+            {onUndo && (
+              <button
+                onClick={() => {
+                  if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
+                  onUndo();
+                }}
+                className={`flex-shrink-0 w-11 py-3 flex items-center justify-center rounded-xl border transition-all duration-150 active:scale-95 ${
+                  isDark
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                    : "bg-amber-50 border-amber-200 text-amber-500 hover:bg-amber-100"
+                }`}
+                title="Undo last result"
+              >
+                <Undo2 className="w-4 h-4" />
+              </button>
+            )}
+            {/* Clear result */}
+            <button
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(20);
+                onResult(game.id, "*");
+                toast.info(`Board ${game.board}: result cleared`);
+              }}
+              className={`flex-shrink-0 w-11 py-3 text-sm rounded-xl border transition-all duration-150 active:scale-95 ${
+                isDark
+                  ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
+                  : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
+              }`}
+              title="Clear result"
+            >
+              ✕
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -2005,6 +2028,7 @@ export default function Director() {
                         key={game.id}
                         game={game}
                         players={state.players}
+                        onUndo={undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
                         onResult={(gameId, newResult) => {
                           const prevResult = game.result;
                           const white = state.players.find((p) => p.id === game.whiteId);

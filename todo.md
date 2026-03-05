@@ -1402,3 +1402,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Boards Tab Result Button UX
 
 - [x] Replace "1-0 / ½-½ / 0-1" labels with white player name, "Draw", black player name
+
+## Board Card Undo Button
+
+- [x] Add undo icon button to board card (visible when result is set, wired to existing undo handler)
