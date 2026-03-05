@@ -1117,59 +1117,6 @@ export default function Director() {
           </div>
         </div>
 
-        {/* Round Progress strip — shown only after tournament starts */}
-        {!isRegistration && (
-          <div className={`border-t ${isDark ? "border-white/06" : "border-gray-100"}`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-2 flex items-center gap-3">
-              {/* Round dots */}
-              <div className="flex items-center gap-1.5">
-                {Array.from({ length: state.totalRounds }, (_, i) => i + 1).map((r) => {
-                  const rd = state.rounds.find((x) => x.number === r);
-                  const done = rd?.status === "completed";
-                  const cur = r === state.currentRound;
-                  return (
-                    <div key={r} className="flex items-center gap-1">
-                      <div
-                        title={`Round ${r}`}
-                        className={`flex items-center justify-center rounded-full text-[10px] font-bold transition-all ${
-                          done
-                            ? "w-5 h-5 bg-[#3D6B47] text-white"
-                            : cur
-                            ? isDark
-                              ? "w-6 h-6 bg-[#4CAF50]/25 text-[#4CAF50] border border-[#4CAF50]/60"
-                              : "w-6 h-6 bg-[#3D6B47]/12 text-[#3D6B47] border border-[#3D6B47]/40"
-                            : isDark
-                            ? "w-5 h-5 bg-white/08 text-white/25 border border-white/10"
-                            : "w-5 h-5 bg-gray-100 text-gray-300 border border-gray-200"
-                        }`}
-                      >
-                        {done ? <CheckCircle2 className="w-3 h-3" /> : r}
-                      </div>
-                      {r < state.totalRounds && (
-                        <div className={`h-px w-3 rounded-full ${done ? "bg-[#3D6B47]" : isDark ? "bg-white/10" : "bg-gray-200"}`} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Results progress bar */}
-              {totalGames > 0 && (
-                <div className="flex items-center gap-2 flex-1 max-w-[160px]">
-                  <div className={`flex-1 h-1 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
-                    <div
-                      className="h-full bg-[#3D6B47] rounded-full transition-all duration-500"
-                      style={{ width: `${(completedGames / totalGames) * 100}%` }}
-                    />
-                  </div>
-                  <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-                    {completedGames}/{totalGames}
-                  </span>
-                </div>
-              )}
-              {/* progress bar only — generate button lives in Boards tab */}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}

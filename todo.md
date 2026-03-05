@@ -1235,3 +1235,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Director Dashboard Logo — Mar 2026
 - [x] Add OTB!! NavLogo to Director Dashboard header, left of breadcrumb
+
+## Vertical Round Tracker — Mar 2026
+- [ ] Remove horizontal circle round-counter bar from Director Dashboard header
+- [ ] Build vertical round tracker component (left sidebar, below event info)
+- [ ] Style: compact pill/dot column, completed=green filled, current=green ring pulse, upcoming=muted
+
+## Player Card Redesign — Mar 2026
+- [x] Redesign player cards in Report page — clean, minimal, premium
+- [x] Remove visual noise (overlapping text, busy gradients, small illegible stats)
+- [x] Clear hierarchy: avatar + name + rank badge at top, key stats below, W/D/L bar at bottom
+- [x] Hover-to-download preserved, smooth hover animation
