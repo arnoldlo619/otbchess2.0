@@ -1398,3 +1398,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Build HorizontalRoundTracker component for mobile Director dashboard
 - [x] Show above tab bar on mobile (md:hidden), hide on desktop
+
+## Boards Tab Result Button UX
+
+- [x] Replace "1-0 / ½-½ / 0-1" labels with white player name, "Draw", black player name

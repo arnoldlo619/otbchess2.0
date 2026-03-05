@@ -307,36 +307,43 @@ function BoardCard({
         </div>
       </div>
 
-      {/* Result entry buttons */}
+      {/* Result entry buttons — show player names instead of chess notation */}
       <div
         className={`px-4 pb-4 pt-1 flex gap-2 ${isComplete ? "opacity-60" : ""}`}
       >
-        {RESULT_OPTIONS.map((opt) => {
+        {/* White wins */}
+        {([
+          { value: "1-0"  as Result, label: white?.name?.split(" ")[0] ?? "White", color: "emerald" },
+          { value: "½-½" as Result, label: "Draw",                              color: "blue"    },
+          { value: "0-1"  as Result, label: black?.name?.split(" ")[0] ?? "Black", color: "red"     },
+        ] as const).map((opt) => {
           const isSelected = game.result === opt.value;
           return (
             <button
               key={opt.value}
               onClick={() => {
-                // Haptic feedback — short pulse on record, double-pulse on re-select
-                if (navigator.vibrate) {
-                  navigator.vibrate(isSelected ? [30, 20, 30] : 40);
-                }
+                if (navigator.vibrate) navigator.vibrate(isSelected ? [30, 20, 30] : 40);
                 onResult(game.id, opt.value);
-                toast.success(`Board ${game.board}: ${opt.label} recorded`);
+                const resultLabel =
+                  opt.value === "1-0" ? `${white?.name ?? "White"} wins`
+                  : opt.value === "0-1" ? `${black?.name ?? "Black"} wins`
+                  : "Draw";
+                toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
-              className={`flex-1 py-3 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-95 ${
+              className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-xl border transition-all duration-150 active:scale-95 truncate ${
                 isSelected
-                  ? opt.value === "1-0"
+                  ? opt.color === "emerald"
                     ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-[1.03]"
-                    : opt.value === "0-1"
+                    : opt.color === "red"
                     ? "bg-red-500 border-red-500 text-white shadow-md shadow-red-500/30 scale-[1.03]"
                     : "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/30 scale-[1.03]"
                   : isDark
                   ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
                   : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               }`}
+              title={opt.value === "1-0" ? `${white?.name} wins` : opt.value === "0-1" ? `${black?.name} wins` : "Draw"}
             >
-              {opt.short}
+              {opt.label}
             </button>
           );
         })}
