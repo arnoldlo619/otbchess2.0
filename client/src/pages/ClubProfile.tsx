@@ -23,6 +23,7 @@ import {
   isMember,
   getMembership,
   updateClub,
+  syncClubTournamentCount,
   seedClubsIfEmpty,
   type Club,
   type ClubMember,
@@ -1005,8 +1006,14 @@ export default function ClubProfile() {
         open={showWizard}
         onClose={() => {
           setShowWizard(false);
-          // Refresh live tournaments after wizard closes
-          if (club) setLiveTournaments(listTournamentsByClub(club.id));
+          if (club) {
+            // Refresh live tournament list
+            setLiveTournaments(listTournamentsByClub(club.id));
+            // Sync the denormalised tournamentCount stat and refresh club state
+            syncClubTournamentCount(club.id);
+            const refreshed = getClub(club.id);
+            if (refreshed) setClub(refreshed);
+          }
         }}
         initialClubId={club.id}
         initialClubName={club.name}

@@ -288,6 +288,29 @@ export function updateClub(id: string, patch: Partial<Omit<Club, "id" | "slug" |
   return updated;
 }
 
+/**
+ * Re-counts all tournaments linked to a club from the tournament registry
+ * and updates the club's denormalised `tournamentCount` field.
+ *
+ * Call this after any tournament is created, deleted, or unlinked.
+ * Returns the updated count, or null if the club was not found.
+ */
+export function syncClubTournamentCount(clubId: string): number | null {
+  // Lazy import to avoid a circular dependency at module load time.
+  // Both registries are localStorage-based so this is always synchronous.
+  let count = 0;
+  try {
+    const raw = localStorage.getItem("otb-tournaments-v1");
+    if (raw) {
+      const tournaments: Array<{ clubId?: string }> = JSON.parse(raw);
+      count = tournaments.filter((t) => t.clubId === clubId).length;
+    }
+  } catch { /* ignore parse errors */ }
+
+  const updated = updateClub(clubId, { tournamentCount: count });
+  return updated ? count : null;
+}
+
 /** Clear all club data (test helper). */
 export function clearClubRegistry(): void {
   try {

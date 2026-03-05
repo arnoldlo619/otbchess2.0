@@ -1378,3 +1378,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Club Profile Start Tournament Button
 
 - [x] Add owner-only "Start Tournament" button to ClubProfile hero area (opens wizard pre-linked to club)
+
+## Club Tournament Count Sync
+
+- [x] Add syncClubTournamentCount helper to clubRegistry (counts linked tournaments from tournamentRegistry)
+- [x] Call sync on wizard completion in ClubProfile and refresh club state
+- [x] Unit tests for syncClubTournamentCount (8 tests)
