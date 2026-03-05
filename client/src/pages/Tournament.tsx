@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
@@ -1001,6 +1001,24 @@ export default function TournamentPage() {
     elapsedAtPauseMs: number;
     savedAt: number;
   } | null>(null);
+
+  // ── Auto-redirect to report page when tournament ends ──────────────────────
+  const [, navigate] = useLocation();
+  const hasRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (
+      !hasRedirectedRef.current &&
+      tournamentState?.status === "completed" &&
+      tournamentId !== "otb-demo-2026"
+    ) {
+      hasRedirectedRef.current = true;
+      // Brief delay so the "Tournament Complete" state is visible before redirect
+      const t = setTimeout(() => {
+        navigate(`/tournament/${tournamentId}/report`);
+      }, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [tournamentState?.status, tournamentId, navigate]);
 
   // ── SSE: connect to server for live standings + round updates ──────────────
   useEffect(() => {

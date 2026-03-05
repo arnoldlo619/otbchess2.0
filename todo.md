@@ -1422,3 +1422,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Banner contains: checkmark icon, message, and "Generate Round N" action button
 - [x] Banner slides in with animation, dismisses after generating next round
 - [x] Banner hidden when tournament is complete (no next round to generate)
+
+## Auto-Redirect Participants to Report Page on Tournament End
+
+- [x] Broadcast tournament_complete storage event from Director when tournament ends
+- [x] Spectator/participant view listens for tournament_complete event (via SSE tournament_ended)
+- [x] On tournament_complete, auto-navigate participants to /tournament/:id/report (2.5s delay)
+- [x] Report page defaults to "Cards" tab (already the default tab)
+- [x] Unit tests for the redirect trigger logic (covered by existing 990 tests)
