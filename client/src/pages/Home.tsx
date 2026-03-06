@@ -267,17 +267,6 @@ function Nav({
               Sign In
             </button>
           )}
-          <Link href="/tournaments">
-            <span
-              className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
-                isDark
-                  ? "text-white/60 hover:text-white"
-                  : "text-[#4B5563] hover:text-[#3D6B47]"
-              }`}
-            >
-              Archive
-            </span>
-          </Link>
           <Link href="/clubs">
             <span
               className={`text-sm font-medium transition-colors duration-200 cursor-pointer ${
@@ -362,16 +351,6 @@ function Nav({
               Sign In
             </button>
           )}
-          <Link href="/tournaments">
-            <span
-              className={`block w-full py-3 text-sm font-medium border-b ${
-                isDark ? "text-white/70 border-white/08" : "text-[#4B5563] border-[#F0F5EE]"
-              }`}
-              onClick={() => setMobileOpen(false)}
-            >
-              Archive
-            </span>
-          </Link>
           <Link href="/clubs">
             <span
               className={`block w-full py-3 text-sm font-medium border-b ${
@@ -1118,7 +1097,6 @@ function Footer() {
     Product: [
       { label: "Features", href: "/#features" },
       { label: "How It Works", href: "/#how-it-works" },
-      { label: "Archive", href: "/tournaments" },
       { label: "Demo", href: "/tournament/otb-demo-2026" },
     ],
     Community: [

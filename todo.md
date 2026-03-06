@@ -1476,3 +1476,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Pass chosen accent to both visible card and hidden export card
 - [x] Live preview updates instantly as user clicks swatches
 - [x] Write unit tests for accent palette helpers (32 new tests, 1042 total)
+
+## Archive: Admin Password Protection
+
+- [x] Store VITE_ARCHIVE_ADMIN_PASSWORD secret (value: 619220!)
+- [x] Create useArchiveAuth hook: checks sessionStorage for unlock token, exposes unlock/lock functions
+- [x] Create ArchivePasswordModal component: full-screen overlay with password input, shake animation on wrong password
+- [x] Wrap Archive page with auth guard — show modal if not unlocked
+- [x] Remove Archive link from desktop nav in Home.tsx
+- [x] Remove Archive link from mobile nav in Home.tsx
+- [x] Remove Archive link from Footer in Home.tsx
+- [x] Remove Archive link from NotFound.tsx
+- [x] Write unit tests for useArchiveAuth logic (13 new tests, 1055 total)

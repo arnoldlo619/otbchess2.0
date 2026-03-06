@@ -6,6 +6,8 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
+import { useArchiveAuth } from "@/hooks/useArchiveAuth";
+import ArchivePasswordModal from "@/components/ArchivePasswordModal";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -567,6 +569,13 @@ function StatCard({
 export default function Archive() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  // ── Admin password gate ──────────────────────────────────────────────────
+  const { isUnlocked, attempt } = useArchiveAuth();
+  if (!isUnlocked) {
+    return <ArchivePasswordModal onAttempt={attempt} />;
+  }
+  // ────────────────────────────────────────────────────────────────────────
 
   const [search, setSearch] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("All");
