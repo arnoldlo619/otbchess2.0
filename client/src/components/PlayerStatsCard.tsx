@@ -1,7 +1,15 @@
 /**
- * OTB Chess — Player Stats Card v4 (Premium Portrait)
+ * OTB Chess — Player Stats Card v5 (Accent-Customisable Portrait)
  *
- * Inspired by ProfileCard design pattern:
+ * v5 changes:
+ * - New `accentColor` prop (hex string) replaces all hardcoded green accent
+ *   values so the card can be personalised before export/share.
+ * - Accent is applied to: rank ordinal, score stat, W bar, title chip,
+ *   brand logo background, and the header glow when no badge glow exists.
+ * - Defaults to the badge's own textColor so the card looks great out of
+ *   the box without any user interaction.
+ *
+ * Original features:
  * - Full-width tall card with blurred avatar header zone
  * - Large avatar overlapping header/body boundary
  * - Large readable name — no overflow
@@ -9,21 +17,67 @@
  * - Animated stat counters on mount
  * - Exportable as PNG via html2canvas
  */
-import { forwardRef, useState, useEffect, useRef } from "react";
+import { forwardRef, useState, useEffect } from "react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
 
-// ─── Badge config ─────────────────────────────────────────────────────────────
-const BADGE_CONFIG: Record<string, { color: string; textColor: string; glow: string }> = {
-  champion:      { color: "rgba(245,158,11,0.20)",  textColor: "#F59E0B", glow: "rgba(245,158,11,0.15)" },
-  runner_up:     { color: "rgba(148,163,184,0.20)", textColor: "#94A3B8", glow: "rgba(148,163,184,0.10)" },
-  third_place:   { color: "rgba(234,88,12,0.20)",   textColor: "#EA580C", glow: "rgba(234,88,12,0.12)" },
-  perfect_score: { color: "rgba(52,211,153,0.20)",  textColor: "#34D399", glow: "rgba(52,211,153,0.12)" },
-  giant_killer:  { color: "rgba(139,92,246,0.20)",  textColor: "#A78BFA", glow: "rgba(139,92,246,0.12)" },
-  iron_wall:     { color: "rgba(59,130,246,0.20)",  textColor: "#60A5FA", glow: "rgba(59,130,246,0.12)" },
-  comeback:      { color: "rgba(244,63,94,0.20)",   textColor: "#FB7185", glow: "rgba(244,63,94,0.12)" },
-  consistent:    { color: "rgba(20,184,166,0.20)",  textColor: "#2DD4BF", glow: "rgba(20,184,166,0.12)" },
-  participant:   { color: "rgba(255,255,255,0.08)", textColor: "rgba(255,255,255,0.45)", glow: "transparent" },
+// ─── Accent palette ───────────────────────────────────────────────────────────
+/** Curated palette exposed to the Report page color picker. */
+export interface AccentSwatch {
+  id: string;
+  label: string;
+  hex: string;
+  /** Subtle glow used in the header gradient */
+  glow: string;
+}
+
+export const ACCENT_PALETTE: AccentSwatch[] = [
+  { id: "green",  label: "Forest",  hex: "#4CAF50", glow: "rgba(76,175,80,0.18)"   },
+  { id: "gold",   label: "Gold",    hex: "#F59E0B", glow: "rgba(245,158,11,0.18)"  },
+  { id: "purple", label: "Royal",   hex: "#A78BFA", glow: "rgba(167,139,250,0.18)" },
+  { id: "blue",   label: "Ocean",   hex: "#60A5FA", glow: "rgba(96,165,250,0.18)"  },
+  { id: "rose",   label: "Rose",    hex: "#FB7185", glow: "rgba(251,113,133,0.18)" },
+  { id: "teal",   label: "Teal",    hex: "#2DD4BF", glow: "rgba(45,212,191,0.18)"  },
+  { id: "orange", label: "Ember",   hex: "#FB923C", glow: "rgba(251,146,60,0.18)"  },
+  { id: "silver", label: "Silver",  hex: "#94A3B8", glow: "rgba(148,163,184,0.14)" },
+];
+
+/** Default accent for a given badge — matches the badge's textColor. */
+export function defaultAccentForBadge(badge: string): string {
+  const map: Record<string, string> = {
+    champion:      "#F59E0B",
+    runner_up:     "#94A3B8",
+    third_place:   "#EA580C",
+    perfect_score: "#34D399",
+    giant_killer:  "#A78BFA",
+    iron_wall:     "#60A5FA",
+    comeback:      "#FB7185",
+    consistent:    "#2DD4BF",
+    participant:   "#4CAF50",
+  };
+  return map[badge] ?? "#4CAF50";
+}
+
+/** Convert a hex colour to an rgba glow string at a given opacity. */
+export function hexToGlow(hex: string, alpha = 0.18): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return `rgba(76,175,80,${alpha})`;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ─── Badge config (for badge pill only — accent is now separate) ──────────────
+const BADGE_CONFIG: Record<string, { color: string; textColor: string }> = {
+  champion:      { color: "rgba(245,158,11,0.20)",  textColor: "#F59E0B" },
+  runner_up:     { color: "rgba(148,163,184,0.20)", textColor: "#94A3B8" },
+  third_place:   { color: "rgba(234,88,12,0.20)",   textColor: "#EA580C" },
+  perfect_score: { color: "rgba(52,211,153,0.20)",  textColor: "#34D399" },
+  giant_killer:  { color: "rgba(139,92,246,0.20)",  textColor: "#A78BFA" },
+  iron_wall:     { color: "rgba(59,130,246,0.20)",  textColor: "#60A5FA" },
+  comeback:      { color: "rgba(244,63,94,0.20)",   textColor: "#FB7185" },
+  consistent:    { color: "rgba(20,184,166,0.20)",  textColor: "#2DD4BF" },
+  participant:   { color: "rgba(255,255,255,0.08)", textColor: "rgba(255,255,255,0.45)" },
 };
 
 // ─── Animated counter ─────────────────────────────────────────────────────────
@@ -36,7 +90,6 @@ function useAnimatedValue(target: number, duration = 900, delay = 0) {
       if (now < start) { raf = requestAnimationFrame(animate); return; }
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(eased * target));
       if (progress < 1) raf = requestAnimationFrame(animate);
@@ -53,6 +106,7 @@ function StatBlock({
   value,
   sub,
   accent,
+  accentColor,
   animDelay,
   forExport,
 }: {
@@ -60,11 +114,12 @@ function StatBlock({
   value: number | string;
   sub?: string;
   accent?: boolean;
+  accentColor?: string;
   animDelay?: number;
   forExport?: boolean;
 }) {
   const numericTarget = typeof value === "number" ? value : parseFloat(String(value)) || 0;
-  const animated = useAnimatedValue(forExport ? numericTarget : numericTarget, 900, animDelay ?? 0);
+  const animated = useAnimatedValue(numericTarget, 900, animDelay ?? 0);
   const display = typeof value === "string" && isNaN(parseFloat(value))
     ? value
     : typeof value === "number"
@@ -90,7 +145,7 @@ function StatBlock({
           fontSize: forExport ? 56 : 26,
           fontWeight: 800,
           lineHeight: 1,
-          color: accent ? "oklch(0.78 0.18 148)" : "white",
+          color: accent && accentColor ? accentColor : "white",
         }}
       >
         {display}
@@ -129,6 +184,8 @@ export interface PlayerStatsCardProps {
   avatarUrl?: string | null;
   avatarStatus?: "loading" | "loaded";
   forExport?: boolean;
+  /** Hex accent color — defaults to the badge's own color */
+  accentColor?: string;
 }
 
 const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
@@ -140,6 +197,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       avatarUrl,
       avatarStatus = "loaded",
       forExport = false,
+      accentColor: accentColorProp,
     },
     ref
   ) => {
@@ -162,6 +220,11 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
 
     const [imgError, setImgError] = useState(false);
     const badgeCfg = BADGE_CONFIG[badge] ?? BADGE_CONFIG.participant;
+
+    // Resolve the effective accent color
+    const accentColor = accentColorProp ?? defaultAccentForBadge(badge);
+    const accentGlow = hexToGlow(accentColor, 0.18);
+
     const flag = FLAG_EMOJI[player.country] ?? "";
     const ordinal = rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`;
     const ratingSign = ratingChange >= 0 ? "+" : "";
@@ -211,9 +274,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
             position: "relative",
             height: headerH,
             overflow: "hidden",
-            background: badgeCfg.glow !== "transparent"
-              ? `radial-gradient(ellipse at 50% 0%, ${badgeCfg.glow} 0%, transparent 70%)`
-              : "rgba(255,255,255,0.02)",
+            background: `radial-gradient(ellipse at 50% 0%, ${accentGlow} 0%, transparent 70%)`,
           }}
         >
           {/* Blurred avatar as background */}
@@ -252,7 +313,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   width: forExport ? 34 : 20,
                   height: forExport ? 34 : 20,
                   borderRadius: forExport ? 8 : 5,
-                  background: "oklch(0.48 0.16 148)",
+                  background: accentColor,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -368,8 +429,8 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                 overflow: "hidden",
                 flexShrink: 0,
                 background: "rgba(255,255,255,0.07)",
-                border: "3px solid rgba(255,255,255,0.12)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+                border: `3px solid ${accentColor}50`,
+                boxShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}20`,
               }}
             >
               {showPhoto ? (
@@ -415,7 +476,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                     fontWeight: 900,
                     padding: forExport ? "3px 10px" : "2px 6px",
                     borderRadius: 4,
-                    background: "oklch(0.48 0.16 148)",
+                    background: accentColor,
                     color: "white",
                     marginBottom: forExport ? 8 : 4,
                     fontFamily: "'Clash Display', sans-serif",
@@ -469,7 +530,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   fontSize: forExport ? 72 : 36,
                   fontWeight: 900,
                   lineHeight: 1,
-                  color: "oklch(0.78 0.18 148)",
+                  color: accentColor,
                 }}
               >
                 {ordinal}
@@ -500,7 +561,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               marginBottom: forExport ? 32 : 16,
             }}
           >
-            <StatBlock label="Score" value={points} sub="pts" animDelay={0} forExport={forExport} />
+            <StatBlock label="Score" value={points} sub="pts" accent accentColor={accentColor} animDelay={0} forExport={forExport} />
             <StatBlock label="Performance" value={performanceRating} sub={`${ratingSign}${ratingChange}`} animDelay={100} forExport={forExport} />
             <StatBlock label="Streak" value={`${longestStreak}W`} sub="best run" animDelay={200} forExport={forExport} />
           </div>
@@ -518,12 +579,12 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   marginBottom: forExport ? 12 : 6,
                 }}
               >
-                {wins > 0 && <div style={{ width: `${wPct}%`, background: "#4CAF50", borderRadius: 999 }} />}
+                {wins > 0 && <div style={{ width: `${wPct}%`, background: accentColor, borderRadius: 999 }} />}
                 {draws > 0 && <div style={{ width: `${dPct}%`, background: "rgba(255,255,255,0.22)", borderRadius: 999 }} />}
                 {losses > 0 && <div style={{ width: `${lPct}%`, background: "rgba(239,68,68,0.55)", borderRadius: 999 }} />}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: forExport ? 16 : 10, fontWeight: 700, color: "#4CAF50" }}>{wins}W</span>
+                <span style={{ fontSize: forExport ? 16 : 10, fontWeight: 700, color: accentColor }}>{wins}W</span>
                 <span style={{ fontSize: forExport ? 16 : 10, fontWeight: 700, color: "rgba(255,255,255,0.28)" }}>{draws}D</span>
                 <span style={{ fontSize: forExport ? 16 : 10, fontWeight: 700, color: "rgba(239,68,68,0.55)" }}>{losses}L</span>
               </div>

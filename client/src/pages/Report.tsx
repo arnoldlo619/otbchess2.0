@@ -2,15 +2,10 @@
  * OTB Chess — Tournament Performance Report Page
  * Route: /tournament/:id/report
  *
- * Displays post-tournament performance cards for every player.
- * Each card can be downloaded as a 1080×1080 PNG for social media sharing.
- * Also supports a "Download All" flow that exports every card sequentially.
- * "Share Results" broadcasts player stats via WhatsApp or email.
- *
- * v5: Added a persistent native-share button below each player card so
- * participants can share their performance from any device (mobile or desktop)
- * without needing to hover. Uses Web Share API with a PNG image attachment;
- * falls back to clipboard copy if the API is unavailable.
+ * v6: Added per-card accent color picker (8-swatch palette) below each
+ * player card. Choosing a swatch instantly updates the visible card and
+ * the hidden export-quality card so the exported PNG reflects the chosen
+ * color. Accent state is stored in a Map keyed by player id.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
@@ -24,7 +19,11 @@ import { loadTournamentState } from "@/lib/directorState";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import { computeAllPerformances, type PlayerPerformance } from "@/lib/performanceStats";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
-import PlayerStatsCard from "@/components/PlayerStatsCard";
+import PlayerStatsCard, {
+  ACCENT_PALETTE,
+  defaultAccentForBadge,
+  type AccentSwatch,
+} from "@/components/PlayerStatsCard";
 import CrossTable from "@/components/CrossTable";
 import RoundTimeline from "@/components/RoundTimeline";
 import { ShareResultsModal, useShareModal } from "@/components/ShareResultsModal";
@@ -44,6 +43,7 @@ import {
   LayoutGrid,
   MessageCircle,
   CheckCheck,
+  Palette,
 } from "lucide-react";
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -201,15 +201,77 @@ function SummaryBanner({
   );
 }
 
-// ─── Native Share Button ──────────────────────────────────────────────────────
+// ─── Accent Color Picker ──────────────────────────────────────────────────────
 /**
- * Persistent share button shown below every player card.
- * On tap it renders the hidden export-quality card to a PNG, then:
- *   1. Uses navigator.share() with the image file if available (mobile-native).
- *   2. Falls back to copying the image to the clipboard.
- *   3. Falls back to copying a plain-text summary if clipboard images aren't
- *      supported.
+ * A row of 8 color swatches that lets the player pick an accent color for
+ * their card. The active swatch shows a white ring. Clicking a swatch calls
+ * onChange with the new hex value.
  */
+function AccentColorPicker({
+  value,
+  onChange,
+  isDark,
+}: {
+  value: string;
+  onChange: (hex: string) => void;
+  isDark: boolean;
+}) {
+  return (
+    <div
+      className={`mt-2 rounded-2xl border px-3 py-2.5 ${
+        isDark
+          ? "bg-white/05 border-white/10"
+          : "bg-gray-50 border-gray-200"
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <Palette className={`w-3 h-3 flex-shrink-0 ${isDark ? "text-white/40" : "text-gray-400"}`} />
+        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          Card Accent
+        </span>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {ACCENT_PALETTE.map((swatch: AccentSwatch) => {
+          const isActive = value.toLowerCase() === swatch.hex.toLowerCase();
+          return (
+            <button
+              key={swatch.id}
+              onClick={() => onChange(swatch.hex)}
+              title={swatch.label}
+              aria-label={`${swatch.label} accent color${isActive ? " (selected)" : ""}`}
+              className="relative flex-shrink-0 transition-transform duration-150 hover:scale-110 active:scale-95"
+              style={{ width: 24, height: 24 }}
+            >
+              {/* Outer ring when active */}
+              {isActive && (
+                <span
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    boxShadow: `0 0 0 2px ${isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.7)"}`,
+                    borderRadius: "50%",
+                  }}
+                />
+              )}
+              <span
+                className="block rounded-full w-full h-full"
+                style={{
+                  background: swatch.hex,
+                  boxShadow: isActive
+                    ? `0 0 8px ${swatch.hex}80`
+                    : "0 1px 3px rgba(0,0,0,0.3)",
+                  transform: isActive ? "scale(0.82)" : "scale(1)",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Native Share Button ──────────────────────────────────────────────────────
 function NativeShareButton({
   perf,
   tournamentName,
@@ -218,7 +280,6 @@ function NativeShareButton({
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
-  /** Ref to the hidden export-quality PlayerStatsCard element */
   exportRef: React.RefObject<HTMLDivElement | null>;
   isDark: boolean;
 }) {
@@ -234,12 +295,10 @@ function NativeShareButton({
     try {
       const el = exportRef.current;
 
-      // ── Try image share ──────────────────────────────────────────────────
       if (el) {
         const blob = await renderCardToBlob(el);
         const file = new File([blob], `${perf.player.username}-otbchess.png`, { type: "image/png" });
 
-        // Path 1: native share with image file
         if (navigator.canShare?.({ files: [file] })) {
           await navigator.share({
             files: [file],
@@ -251,7 +310,6 @@ function NativeShareButton({
           return;
         }
 
-        // Path 2: native share without file (text + url only)
         if (typeof navigator.share === "function") {
           await navigator.share({
             title: `${perf.player.name} — ${tournamentName}`,
@@ -263,7 +321,6 @@ function NativeShareButton({
           return;
         }
 
-        // Path 3: clipboard image
         try {
           await navigator.clipboard.write([
             new ClipboardItem({ "image/png": blob }),
@@ -275,11 +332,10 @@ function NativeShareButton({
           setTimeout(() => setState("idle"), 2500);
           return;
         } catch {
-          // clipboard image not supported — fall through to text copy
+          // fall through to text copy
         }
       }
 
-      // Path 4: plain-text clipboard fallback
       await navigator.clipboard.writeText(shareText);
       toast.success("Stats copied to clipboard!", {
         description: "Paste into any message or post.",
@@ -287,7 +343,6 @@ function NativeShareButton({
       setState("done");
       setTimeout(() => setState("idle"), 2500);
     } catch (err) {
-      // User cancelled share or an unexpected error occurred
       const cancelled =
         err instanceof Error &&
         (err.name === "AbortError" || err.message.includes("cancel"));
@@ -304,7 +359,7 @@ function NativeShareButton({
       disabled={state === "loading"}
       aria-label={`Share ${perf.player.name}'s performance card`}
       className={`
-        mt-3 w-full flex items-center justify-center gap-2
+        w-full flex items-center justify-center gap-2
         px-4 py-2.5 rounded-2xl text-sm font-semibold
         transition-all duration-200 select-none
         disabled:opacity-60 disabled:cursor-not-allowed
@@ -341,6 +396,8 @@ function ExportableCard({
   avatarStatus,
   onShareSingle,
   exportRef,
+  accentColor,
+  onAccentChange,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
@@ -349,8 +406,9 @@ function ExportableCard({
   avatarUrl?: string | null;
   avatarStatus?: "loading" | "loaded";
   onShareSingle: (perf: PlayerPerformance) => void;
-  /** Ref to the hidden export-quality card — passed down to NativeShareButton */
   exportRef: React.RefObject<HTMLDivElement | null>;
+  accentColor: string;
+  onAccentChange: (hex: string) => void;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -396,7 +454,7 @@ function ExportableCard({
 
   return (
     <div className="group relative">
-      {/* The card itself */}
+      {/* The visible card */}
       <PlayerStatsCard
         ref={cardRef}
         perf={perf}
@@ -405,9 +463,10 @@ function ExportableCard({
         avatarUrl={avatarUrl}
         avatarStatus={avatarStatus}
         forExport={false}
+        accentColor={accentColor}
       />
 
-      {/* Overlay controls — appear on hover (desktop power-user shortcut) */}
+      {/* Overlay controls — appear on hover (desktop shortcut) */}
       <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
         <button
           onClick={handleExport}
@@ -438,10 +497,10 @@ function ExportableCard({
         </button>
       </div>
 
-      {/* ── Player label + persistent share button ── */}
+      {/* ── Below-card controls: name label + color picker + share button ── */}
       <div className="mt-2">
         {/* Name / rank row */}
-        <div className="text-center mb-1">
+        <div className="text-center mb-2">
           <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>
             {perf.player.name}
           </p>
@@ -450,13 +509,22 @@ function ExportableCard({
           </p>
         </div>
 
-        {/* Native share button — always visible, works on mobile */}
-        <NativeShareButton
-          perf={perf}
-          tournamentName={tournamentName}
-          exportRef={exportRef}
+        {/* Accent color picker */}
+        <AccentColorPicker
+          value={accentColor}
+          onChange={onAccentChange}
           isDark={isDark}
         />
+
+        {/* Native share button */}
+        <div className="mt-2">
+          <NativeShareButton
+            perf={perf}
+            tournamentName={tournamentName}
+            exportRef={exportRef}
+            isDark={isDark}
+          />
+        </div>
       </div>
     </div>
   );
@@ -485,6 +553,25 @@ export default function ReportPage() {
   const usernames = performances.map((p) => p.player.username);
   const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
 
+  // Per-player accent color state — keyed by player id
+  const [accentColors, setAccentColors] = useState<Map<string, string>>(() => {
+    const m = new Map<string, string>();
+    // Initialised lazily in the render loop below; this just seeds the Map
+    return m;
+  });
+
+  function getAccent(perf: PlayerPerformance): string {
+    return accentColors.get(perf.player.id) ?? defaultAccentForBadge(perf.badge);
+  }
+
+  function setAccent(playerId: string, hex: string) {
+    setAccentColors((prev) => {
+      const next = new Map(prev);
+      next.set(playerId, hex);
+      return next;
+    });
+  }
+
   // Map of hidden export-quality card refs, keyed by player id
   const exportRefs = useRef<Map<string, React.RefObject<HTMLDivElement | null>>>(new Map());
   function getExportRef(playerId: string): React.RefObject<HTMLDivElement | null> {
@@ -494,14 +581,12 @@ export default function ReportPage() {
     return exportRefs.current.get(playerId)!;
   }
 
-  // Show a celebratory toast when arriving via auto-redirect from a completed tournament.
-  // Tournament.tsx sets a sessionStorage flag before navigating so we know it was a redirect.
+  // Celebratory toast on auto-redirect from completed tournament
   useEffect(() => {
     if (isDemo) return;
     const key = `otb_redirect_complete_${tournamentId}`;
     if (sessionStorage.getItem(key)) {
       sessionStorage.removeItem(key);
-      // Brief delay so the page has rendered before the toast appears
       const t = setTimeout(() => {
         toast.success(
           `🏆 Tournament complete! Here are your results.`,
@@ -548,7 +633,6 @@ export default function ReportPage() {
 
   // Share modal
   const shareModal = useShareModal();
-  // Build a shareable report URL from current window location
   const reportUrl =
     typeof window !== "undefined"
       ? window.location.href
@@ -623,7 +707,6 @@ export default function ReportPage() {
           <div className="flex items-center gap-2">
             {activeTab === "cards" && (
               <>
-                {/* Share Results button */}
                 <button
                   onClick={shareModal.openBroadcast}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
@@ -636,7 +719,6 @@ export default function ReportPage() {
                   <span className="hidden sm:inline">Share Results</span>
                 </button>
 
-                {/* Download All button */}
                 <button
                   onClick={handleDownloadAll}
                   disabled={downloadingAll}
@@ -674,123 +756,127 @@ export default function ReportPage() {
         />
 
         {/* ── Tab: Player Cards ── */}
-        {activeTab === "cards" && (<div>
-        {/* Search */}
-        <div className="mb-5">
-          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
-            isDark
-              ? "bg-white/06 border-white/10 text-white"
-              : "bg-white border-gray-200 text-gray-900"
-          }`}>
-            <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/40" : "text-gray-400"}`} />
-            <input
-              type="text"
-              placeholder="Search players…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
-            />
-          </div>
-        </div>
-
-        {/* Section heading */}
-        <div className="flex items-center justify-between mb-4">
-          <h3
-            className={`text-base font-black ${isDark ? "text-white" : "text-gray-900"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            Player Cards
-          </h3>
-          <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-            Tap Share to post · {filtered.length} players
-          </span>
-        </div>
-
-        {/* Card grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filtered.map((perf) => {
-            const exportRef = getExportRef(perf.player.id);
-            return (
-              <div key={perf.player.id}>
-                {/* Hidden export-quality card (captured by html2canvas) */}
-                <div className="sr-only absolute -left-[9999px] top-0 pointer-events-none">
-                  <PlayerStatsCard
-                    ref={(el) => {
-                      // Populate both the legacy cardRefs map and the per-card exportRef
-                      if (el) {
-                        cardRefs.current.set(perf.player.id, el);
-                        exportRef.current = el;
-                      } else {
-                        cardRefs.current.delete(perf.player.id);
-                        exportRef.current = null;
-                      }
-                    }}
-                    perf={perf}
-                    tournamentName={tournamentName}
-                    tournamentDate={tournamentDate}
-                    avatarUrl={avatars.get(perf.player.username.toLowerCase())}
-                    avatarStatus="loaded"
-                    forExport
-                  />
-                </div>
-                {/* Visible responsive card */}
-                <ExportableCard
-                  perf={perf}
-                  tournamentName={tournamentName}
-                  tournamentDate={tournamentDate}
-                  isDark={isDark}
-                  avatarUrl={avatars.get(perf.player.username.toLowerCase())}
-                  avatarStatus={avatarsLoaded ? "loaded" : "loading"}
-                  onShareSingle={shareModal.openSingle}
-                  exportRef={exportRef}
+        {activeTab === "cards" && (
+          <div>
+            {/* Search */}
+            <div className="mb-5">
+              <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
+                isDark
+                  ? "bg-white/06 border-white/10 text-white"
+                  : "bg-white border-gray-200 text-gray-900"
+              }`}>
+                <Search className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-white/40" : "text-gray-400"}`} />
+                <input
+                  type="text"
+                  placeholder="Search players…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
                 />
               </div>
-            );
-          })}
-        </div>
-
-        {/* Podium highlight */}
-        {performances.length >= 3 && (
-          <div className="mt-10">
-            <h3
-              className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-gray-900"}`}
-              style={{ fontFamily: "'Clash Display', sans-serif" }}
-            >
-              🏆 Podium
-            </h3>
-            <div className="grid grid-cols-3 gap-3 items-end">
-              {/* 2nd */}
-              <div className="flex flex-col items-center mt-6">
-                <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
-                  <div className="text-2xl mb-1">🥈</div>
-                  <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[1].player.name}</p>
-                  <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>{performances[1].points}pts</p>
-                </div>
-                <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
-              </div>
-              {/* 1st */}
-              <div className="flex flex-col items-center">
-                <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#3D6B47]/05 border-[#3D6B47]/30 shadow-md"}`}>
-                  <div className="text-2xl mb-1">🏆</div>
-                  <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[0].player.name}</p>
-                  <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"} font-semibold`}>{performances[0].points}pts</p>
-                </div>
-                <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"}`} />
-              </div>
-              {/* 3rd */}
-              <div className="flex flex-col items-center mt-8">
-                <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
-                  <div className="text-2xl mb-1">🥉</div>
-                  <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[2].player.name}</p>
-                  <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>{performances[2].points}pts</p>
-                </div>
-                <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
-              </div>
             </div>
+
+            {/* Section heading */}
+            <div className="flex items-center justify-between mb-4">
+              <h3
+                className={`text-base font-black ${isDark ? "text-white" : "text-gray-900"}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Player Cards
+              </h3>
+              <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                Pick a color · Tap Share · {filtered.length} players
+              </span>
+            </div>
+
+            {/* Card grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {filtered.map((perf) => {
+                const exportRef = getExportRef(perf.player.id);
+                const accent = getAccent(perf);
+                return (
+                  <div key={perf.player.id}>
+                    {/* Hidden export-quality card (captured by html2canvas) */}
+                    <div className="sr-only absolute -left-[9999px] top-0 pointer-events-none">
+                      <PlayerStatsCard
+                        ref={(el) => {
+                          if (el) {
+                            cardRefs.current.set(perf.player.id, el);
+                            exportRef.current = el;
+                          } else {
+                            cardRefs.current.delete(perf.player.id);
+                            exportRef.current = null;
+                          }
+                        }}
+                        perf={perf}
+                        tournamentName={tournamentName}
+                        tournamentDate={tournamentDate}
+                        avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                        avatarStatus="loaded"
+                        forExport
+                        accentColor={accent}
+                      />
+                    </div>
+                    {/* Visible responsive card */}
+                    <ExportableCard
+                      perf={perf}
+                      tournamentName={tournamentName}
+                      tournamentDate={tournamentDate}
+                      isDark={isDark}
+                      avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                      avatarStatus={avatarsLoaded ? "loaded" : "loading"}
+                      onShareSingle={shareModal.openSingle}
+                      exportRef={exportRef}
+                      accentColor={accent}
+                      onAccentChange={(hex) => setAccent(perf.player.id, hex)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Podium highlight */}
+            {performances.length >= 3 && (
+              <div className="mt-10">
+                <h3
+                  className={`text-base font-black mb-4 ${isDark ? "text-white" : "text-gray-900"}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                >
+                  🏆 Podium
+                </h3>
+                <div className="grid grid-cols-3 gap-3 items-end">
+                  {/* 2nd */}
+                  <div className="flex flex-col items-center mt-6">
+                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
+                      <div className="text-2xl mb-1">🥈</div>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[1].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>{performances[1].points}pts</p>
+                    </div>
+                    <div className={`w-full h-8 rounded-b-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
+                  </div>
+                  {/* 1st */}
+                  <div className="flex flex-col items-center">
+                    <div className={`w-full rounded-2xl p-3 text-center border-2 ${isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/40" : "bg-[#3D6B47]/05 border-[#3D6B47]/30 shadow-md"}`}>
+                      <div className="text-2xl mb-1">🏆</div>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[0].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"} font-semibold`}>{performances[0].points}pts</p>
+                    </div>
+                    <div className={`w-full h-12 rounded-b-xl ${isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/08"}`} />
+                  </div>
+                  {/* 3rd */}
+                  <div className="flex flex-col items-center mt-8">
+                    <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
+                      <div className="text-2xl mb-1">🥉</div>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{performances[2].player.name}</p>
+                      <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>{performances[2].points}pts</p>
+                    </div>
+                    <div className={`w-full h-5 rounded-b-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
-
-        </div>)} {/* end cards tab */}
 
         {/* ── Tab: Cross-Table ── */}
         {activeTab === "crosstable" && (

@@ -1465,3 +1465,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Falls back to plain-text clipboard copy as final fallback
 - [x] Button shows loading spinner, then green checkmark on success
 - [x] 20 new tests for share text generation (1010 total passing)
+
+## Report Page: Card Accent Color Customization
+
+- [x] Add accentColor prop to PlayerStatsCard (hex string, defaults to badge color)
+- [x] Replace hardcoded green accent in PlayerStatsCard with dynamic accentColor
+- [x] Define ACCENT_PALETTE: 8 curated colors (green, gold, purple, blue, rose, teal, orange, silver)
+- [x] Add AccentColorPicker component below each card in ExportableCard
+- [x] Persist chosen accent per player in component state (Map keyed by player id)
+- [x] Pass chosen accent to both visible card and hidden export card
+- [x] Live preview updates instantly as user clicks swatches
+- [x] Write unit tests for accent palette helpers (32 new tests, 1042 total)
