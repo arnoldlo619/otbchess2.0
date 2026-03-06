@@ -6,6 +6,11 @@
  * Each card can be downloaded as a 1080×1080 PNG for social media sharing.
  * Also supports a "Download All" flow that exports every card sequentially.
  * "Share Results" broadcasts player stats via WhatsApp or email.
+ *
+ * v5: Added a persistent native-share button below each player card so
+ * participants can share their performance from any device (mobile or desktop)
+ * without needing to hover. Uses Web Share API with a PNG image attachment;
+ * falls back to clipboard copy if the API is unavailable.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
@@ -38,6 +43,7 @@ import {
   ListOrdered,
   LayoutGrid,
   MessageCircle,
+  CheckCheck,
 } from "lucide-react";
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -98,6 +104,23 @@ async function exportCardAsPng(
   link.download = filename;
   link.href = canvas.toDataURL("image/png");
   link.click();
+}
+
+/** Render a card element to a Blob (PNG). */
+async function renderCardToBlob(element: HTMLElement): Promise<Blob> {
+  const { default: html2canvas } = await import("html2canvas");
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: null,
+    logging: false,
+  });
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("toBlob returned null"));
+    }, "image/png");
+  });
 }
 
 // ─── Summary Banner ───────────────────────────────────────────────────────────
@@ -178,6 +201,136 @@ function SummaryBanner({
   );
 }
 
+// ─── Native Share Button ──────────────────────────────────────────────────────
+/**
+ * Persistent share button shown below every player card.
+ * On tap it renders the hidden export-quality card to a PNG, then:
+ *   1. Uses navigator.share() with the image file if available (mobile-native).
+ *   2. Falls back to copying the image to the clipboard.
+ *   3. Falls back to copying a plain-text summary if clipboard images aren't
+ *      supported.
+ */
+function NativeShareButton({
+  perf,
+  tournamentName,
+  exportRef,
+  isDark,
+}: {
+  perf: PlayerPerformance;
+  tournamentName: string;
+  /** Ref to the hidden export-quality PlayerStatsCard element */
+  exportRef: React.RefObject<HTMLDivElement | null>;
+  isDark: boolean;
+}) {
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+
+  const rankLabel = perf.rank === 1 ? "1st" : perf.rank === 2 ? "2nd" : perf.rank === 3 ? "3rd" : `${perf.rank}th`;
+  const shareText = `I finished ${rankLabel} at ${tournamentName}! 🏆 ${perf.points} pts · Perf ${perf.performanceRating} · ${perf.wins}W ${perf.draws}D ${perf.losses}L #OTBChess`;
+
+  const handleShare = useCallback(async () => {
+    if (state === "loading") return;
+    setState("loading");
+
+    try {
+      const el = exportRef.current;
+
+      // ── Try image share ──────────────────────────────────────────────────
+      if (el) {
+        const blob = await renderCardToBlob(el);
+        const file = new File([blob], `${perf.player.username}-otbchess.png`, { type: "image/png" });
+
+        // Path 1: native share with image file
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `${perf.player.name} — ${tournamentName}`,
+            text: shareText,
+          });
+          setState("done");
+          setTimeout(() => setState("idle"), 2500);
+          return;
+        }
+
+        // Path 2: native share without file (text + url only)
+        if (typeof navigator.share === "function") {
+          await navigator.share({
+            title: `${perf.player.name} — ${tournamentName}`,
+            text: shareText,
+            url: window.location.href,
+          });
+          setState("done");
+          setTimeout(() => setState("idle"), 2500);
+          return;
+        }
+
+        // Path 3: clipboard image
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob }),
+          ]);
+          toast.success("Card image copied to clipboard!", {
+            description: "Paste it into WhatsApp, iMessage, or any app.",
+          });
+          setState("done");
+          setTimeout(() => setState("idle"), 2500);
+          return;
+        } catch {
+          // clipboard image not supported — fall through to text copy
+        }
+      }
+
+      // Path 4: plain-text clipboard fallback
+      await navigator.clipboard.writeText(shareText);
+      toast.success("Stats copied to clipboard!", {
+        description: "Paste into any message or post.",
+      });
+      setState("done");
+      setTimeout(() => setState("idle"), 2500);
+    } catch (err) {
+      // User cancelled share or an unexpected error occurred
+      const cancelled =
+        err instanceof Error &&
+        (err.name === "AbortError" || err.message.includes("cancel"));
+      if (!cancelled) {
+        toast.error("Share failed — try the Download button instead.");
+      }
+      setState("idle");
+    }
+  }, [state, perf, tournamentName, shareText, exportRef]);
+
+  return (
+    <button
+      onClick={handleShare}
+      disabled={state === "loading"}
+      aria-label={`Share ${perf.player.name}'s performance card`}
+      className={`
+        mt-3 w-full flex items-center justify-center gap-2
+        px-4 py-2.5 rounded-2xl text-sm font-semibold
+        transition-all duration-200 select-none
+        disabled:opacity-60 disabled:cursor-not-allowed
+        ${
+          state === "done"
+            ? isDark
+              ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30"
+              : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
+            : isDark
+            ? "bg-white/08 text-white/80 hover:bg-white/14 border border-white/10 hover:border-white/20 active:scale-[0.98]"
+            : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 active:scale-[0.98]"
+        }
+      `}
+    >
+      {state === "loading" ? (
+        <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+      ) : state === "done" ? (
+        <CheckCheck className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <Share2 className="w-4 h-4 flex-shrink-0" />
+      )}
+      {state === "done" ? "Shared!" : "Share My Performance"}
+    </button>
+  );
+}
+
 // ─── Card Wrapper with export controls ───────────────────────────────────────
 function ExportableCard({
   perf,
@@ -187,6 +340,7 @@ function ExportableCard({
   avatarUrl,
   avatarStatus,
   onShareSingle,
+  exportRef,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
@@ -195,6 +349,8 @@ function ExportableCard({
   avatarUrl?: string | null;
   avatarStatus?: "loading" | "loaded";
   onShareSingle: (perf: PlayerPerformance) => void;
+  /** Ref to the hidden export-quality card — passed down to NativeShareButton */
+  exportRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -217,32 +373,23 @@ function ExportableCard({
     if (!cardRef.current) return;
     setExporting(true);
     try {
-      const { default: html2canvas } = await import("html2canvas");
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-      });
-      canvas.toBlob(async (blob: Blob | null) => {
-        if (!blob) { toast.error("Could not generate image"); setExporting(false); return; }
-        const file = new File([blob], `${perf.player.username}-stats.png`, { type: "image/png" });
-        if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: `${perf.player.name} — ${tournamentName}`,
-            text: `Check out my performance at ${tournamentName}! 🏆 #OTBChess`,
-          });
-        } else {
-          await navigator.clipboard.write([
-            new ClipboardItem({ "image/png": blob }),
-          ]);
-          toast.success("Card copied to clipboard!");
-        }
-        setExporting(false);
-      }, "image/png");
+      const blob = await renderCardToBlob(cardRef.current);
+      const file = new File([blob], `${perf.player.username}-stats.png`, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `${perf.player.name} — ${tournamentName}`,
+          text: `Check out my performance at ${tournamentName}! 🏆 #OTBChess`,
+        });
+      } else {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        toast.success("Card copied to clipboard!");
+      }
     } catch {
       toast.error("Share failed — try downloading instead");
+    } finally {
       setExporting(false);
     }
   }, [perf, tournamentName]);
@@ -260,7 +407,7 @@ function ExportableCard({
         forExport={false}
       />
 
-      {/* Overlay controls — appear on hover */}
+      {/* Overlay controls — appear on hover (desktop power-user shortcut) */}
       <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
         <button
           onClick={handleExport}
@@ -291,14 +438,25 @@ function ExportableCard({
         </button>
       </div>
 
-      {/* Player name label below card */}
-      <div className="mt-2 text-center">
-        <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>
-          {perf.player.name}
-        </p>
-        <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>
-          #{perf.rank} · {perf.points}pts
-        </p>
+      {/* ── Player label + persistent share button ── */}
+      <div className="mt-2">
+        {/* Name / rank row */}
+        <div className="text-center mb-1">
+          <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>
+            {perf.player.name}
+          </p>
+          <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            #{perf.rank} · {perf.points}pts
+          </p>
+        </div>
+
+        {/* Native share button — always visible, works on mobile */}
+        <NativeShareButton
+          perf={perf}
+          tournamentName={tournamentName}
+          exportRef={exportRef}
+          isDark={isDark}
+        />
       </div>
     </div>
   );
@@ -326,6 +484,15 @@ export default function ReportPage() {
   // Pre-fetch all player avatars in parallel
   const usernames = performances.map((p) => p.player.username);
   const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
+
+  // Map of hidden export-quality card refs, keyed by player id
+  const exportRefs = useRef<Map<string, React.RefObject<HTMLDivElement | null>>>(new Map());
+  function getExportRef(playerId: string): React.RefObject<HTMLDivElement | null> {
+    if (!exportRefs.current.has(playerId)) {
+      exportRefs.current.set(playerId, { current: null });
+    }
+    return exportRefs.current.get(playerId)!;
+  }
 
   // Show a celebratory toast when arriving via auto-redirect from a completed tournament.
   // Tournament.tsx sets a sessionStorage flag before navigating so we know it was a redirect.
@@ -535,41 +702,51 @@ export default function ReportPage() {
             Player Cards
           </h3>
           <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-            Hover to download · {filtered.length} players
+            Tap Share to post · {filtered.length} players
           </span>
         </div>
 
         {/* Card grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filtered.map((perf) => (
-            <div key={perf.player.id}>
-              {/* Hidden export-quality card (captured by html2canvas) */}
-              <div className="sr-only absolute -left-[9999px] top-0 pointer-events-none">
-                <PlayerStatsCard
-                  ref={(el) => {
-                    if (el) cardRefs.current.set(perf.player.id, el);
-                    else cardRefs.current.delete(perf.player.id);
-                  }}
+          {filtered.map((perf) => {
+            const exportRef = getExportRef(perf.player.id);
+            return (
+              <div key={perf.player.id}>
+                {/* Hidden export-quality card (captured by html2canvas) */}
+                <div className="sr-only absolute -left-[9999px] top-0 pointer-events-none">
+                  <PlayerStatsCard
+                    ref={(el) => {
+                      // Populate both the legacy cardRefs map and the per-card exportRef
+                      if (el) {
+                        cardRefs.current.set(perf.player.id, el);
+                        exportRef.current = el;
+                      } else {
+                        cardRefs.current.delete(perf.player.id);
+                        exportRef.current = null;
+                      }
+                    }}
+                    perf={perf}
+                    tournamentName={tournamentName}
+                    tournamentDate={tournamentDate}
+                    avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                    avatarStatus="loaded"
+                    forExport
+                  />
+                </div>
+                {/* Visible responsive card */}
+                <ExportableCard
                   perf={perf}
                   tournamentName={tournamentName}
                   tournamentDate={tournamentDate}
+                  isDark={isDark}
                   avatarUrl={avatars.get(perf.player.username.toLowerCase())}
-                  avatarStatus="loaded"
-                  forExport
+                  avatarStatus={avatarsLoaded ? "loaded" : "loading"}
+                  onShareSingle={shareModal.openSingle}
+                  exportRef={exportRef}
                 />
               </div>
-              {/* Visible responsive card */}
-              <ExportableCard
-                perf={perf}
-                tournamentName={tournamentName}
-                tournamentDate={tournamentDate}
-                isDark={isDark}
-                avatarUrl={avatars.get(perf.player.username.toLowerCase())}
-                avatarStatus={avatarsLoaded ? "loaded" : "loading"}
-                onShareSingle={shareModal.openSingle}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Podium highlight */}
@@ -581,7 +758,7 @@ export default function ReportPage() {
             >
               🏆 Podium
             </h3>
-            <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
+            <div className="grid grid-cols-3 gap-3 items-end">
               {/* 2nd */}
               <div className="flex flex-col items-center mt-6">
                 <div className={`w-full rounded-2xl p-3 text-center ${isDark ? "bg-white/08 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>

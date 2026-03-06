@@ -1455,3 +1455,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Director Settings Tab: Pause/Resume Control
 
 - [x] Add pause/resume toggle card to the Settings tab (visible only during active tournament, not registration)
+
+## Report Page: Native Share Button
+
+- [x] Add persistent NativeShareButton below each player card on the Report page
+- [x] Uses Web Share API with PNG image file on mobile (navigator.canShare)
+- [x] Falls back to text-only share if file sharing not supported
+- [x] Falls back to clipboard image copy if Web Share unavailable
+- [x] Falls back to plain-text clipboard copy as final fallback
+- [x] Button shows loading spinner, then green checkmark on success
+- [x] 20 new tests for share text generation (1010 total passing)
