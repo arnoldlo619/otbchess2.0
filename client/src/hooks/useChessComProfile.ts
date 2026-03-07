@@ -39,9 +39,14 @@ const cache = new Map<string, ChessComProfile>();
 
 // ─── Country code → flag emoji ────────────────────────────────────────────────
 function countryCodeToFlag(code: string): string {
-  // chess.com returns a URL like https://www.chess.com/member/flags/US.png
-  // We extract the 2-letter code from the URL or use the code directly
-  const match = code.match(/\/([A-Z]{2})\.png$/i) || code.match(/^([A-Z]{2})$/i);
+  // chess.com returns country as either:
+  //   - A URL like https://api.chess.com/pub/country/US  (no extension)
+  //   - A flag PNG URL like https://www.chess.com/member/flags/US.png
+  //   - A bare 2-letter code like "US"
+  const match =
+    code.match(/\/([A-Z]{2})\.png$/i) ||
+    code.match(/\/country\/([A-Z]{2})$/i) ||
+    code.match(/^([A-Z]{2})$/i);
   if (!match) return "";
   const letters = match[1].toUpperCase();
   // Regional indicator symbols: A = 0x1F1E6, so offset from 'A' (65)

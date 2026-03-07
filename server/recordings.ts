@@ -431,8 +431,10 @@ export function createRecordingsRouter(): Router {
     }
   });
 
-  // ── GET /api/games/:id — get processed game data ──────────────────────────
-  router.get("/games/:id", async (req, res) => {
+  // ── GET /api/games/:id — get processed game data ──────────────────────────────────
+  // When mounted at /api/games, the router path is /:id (not /games/:id)
+  // When mounted at /api/recordings, this path is unreachable (intentional)
+  router.get("/:id", async (req, res) => {
     try {
       const db = await getDb();
       const [game] = await db
@@ -447,8 +449,8 @@ export function createRecordingsRouter(): Router {
     }
   });
 
-  // ── GET /api/games/:id/analysis — get full move-by-move analysis ──────────
-  router.get("/games/:id/analysis", async (req, res) => {
+  // ── GET /api/games/:id/analysis — get full move-by-move analysis ────────────────────
+  router.get("/:id/analysis", async (req, res) => {
     try {
       const db = await getDb();
       const [game] = await db
@@ -557,8 +559,8 @@ export function createRecordingsRouter(): Router {
     }
   });
 
-  // ── POST /api/games/:id/corrections — submit move corrections ────────────
-  router.post("/games/:id/corrections", async (req, res) => {
+  // ── POST /api/games/:id/corrections — submit move corrections ────────────────────
+  router.post("/:id/corrections", async (req, res) => {
     const { corrections } = req.body as {
       corrections: Array<{
         moveNumber: number;

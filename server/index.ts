@@ -230,12 +230,10 @@ export function createApp() {
   // ── Auth routes ─────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
 
-  // ── Game Recorder routes ───────────────────────────────────────────────────
-  app.use("/api/recordings", createRecordingsRouter());
-  // Also mount game routes under /api/games (they share the same router)
-  app.use("/api", createRecordingsRouter());
-
   // ── Proxy: GET /api/chess/player/:username ──────────────────────────────────
+  // IMPORTANT: These must be registered BEFORE the recordings router, which
+  // applies requireAuth to all routes and would otherwise intercept these
+  // public proxy endpoints.
   app.get("/api/chess/player/:username", chessProxyLimiter, async (req, res) => {
     try {
       const { status, body } = await proxyChessCom(req.params.username);
@@ -256,6 +254,14 @@ export function createApp() {
       res.status(502).json({ error: "Could not reach lichess.org" });
     }
   });
+
+  // ── Game Recorder routes ───────────────────────────────────────────────────
+  // Mount at /api/recordings for session routes and /api/games for game routes.
+  // Using two explicit mounts instead of a broad /api mount prevents the
+  // requireAuth middleware inside the router from intercepting unrelated routes
+  // like /api/chess/* and /api/lichess/*.
+  app.use("/api/recordings", createRecordingsRouter());
+  app.use("/api/games", createRecordingsRouter());
 
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.
