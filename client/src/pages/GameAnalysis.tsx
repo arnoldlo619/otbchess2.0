@@ -71,6 +71,8 @@ interface PlayerSummary {
   bestMoves: number;
   goodMoves: number;
   accuracy: number;
+  accuracyLabel?: string;
+  bestMoveStreak?: number;
 }
 
 interface KeyMoment {
@@ -355,6 +357,22 @@ function SummaryPanel({
         >
           Accuracy
         </h3>
+        {/* Opening badge — shown above the accuracy grid */}
+        {(game.openingName || game.openingEco) && (
+          <div
+            className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-lg text-xs ${
+              isDark ? "bg-white/5 text-white/70" : "bg-gray-50 text-gray-600"
+            }`}
+          >
+            <span className="text-[10px] font-bold tracking-wider text-[#3D6B47] shrink-0">
+              {game.openingEco ?? "ECO"}
+            </span>
+            <span className="truncate">
+              {game.openingName ?? "Unknown Opening"}
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           {/* White */}
           <div className="text-center space-y-2">
@@ -371,6 +389,13 @@ function SummaryPanel({
             <div className="text-3xl font-bold text-[#3D6B47]">
               {summary.white.accuracy}%
             </div>
+            {summary.white.accuracyLabel && (
+              <div className={`text-[10px] font-semibold uppercase tracking-wider ${
+                isDark ? "text-white/30" : "text-gray-400"
+              }`}>
+                {summary.white.accuracyLabel}
+              </div>
+            )}
             <div className="space-y-1">
               <StatRow
                 label="Best"
@@ -400,6 +425,13 @@ function SummaryPanel({
                 colors={colors}
                 isDark={isDark}
               />
+              {(summary.white.bestMoveStreak ?? 0) > 2 && (
+                <div className={`text-[10px] pt-1 ${
+                  isDark ? "text-emerald-400/70" : "text-emerald-600"
+                }`}>
+                  {summary.white.bestMoveStreak}-move streak
+                </div>
+              )}
             </div>
           </div>
           {/* Black */}
@@ -417,6 +449,13 @@ function SummaryPanel({
             <div className="text-3xl font-bold text-[#3D6B47]">
               {summary.black.accuracy}%
             </div>
+            {summary.black.accuracyLabel && (
+              <div className={`text-[10px] font-semibold uppercase tracking-wider ${
+                isDark ? "text-white/30" : "text-gray-400"
+              }`}>
+                {summary.black.accuracyLabel}
+              </div>
+            )}
             <div className="space-y-1">
               <StatRow
                 label="Best"
@@ -446,6 +485,13 @@ function SummaryPanel({
                 colors={colors}
                 isDark={isDark}
               />
+              {(summary.black.bestMoveStreak ?? 0) > 2 && (
+                <div className={`text-[10px] pt-1 ${
+                  isDark ? "text-emerald-400/70" : "text-emerald-600"
+                }`}>
+                  {summary.black.bestMoveStreak}-move streak
+                </div>
+              )}
             </div>
           </div>
         </div>

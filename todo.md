@@ -1537,3 +1537,30 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Record Game" ("Analyze") entry point to main navigation (desktop + mobile)
 - [x] Add "My Games" section (via /record page, fetches user's recording sessions)
 - [x] Link from tournament matchup pages (future enhancement)
+
+## Sprint 1 Gap-Closing Features
+
+### Timestamp Schema Migration
+- [x] Add `timestamp_ms` (INT nullable) to `move_analyses` table
+- [x] Add `timestamp_confidence` (FLOAT nullable) to `move_analyses` table
+- [x] Add `frame_key` (TEXT nullable) to `move_analyses` table
+- [x] Add `is_public` (BOOLEAN default false) to `processed_games` table
+- [x] Add `share_token` (VARCHAR 20 unique nullable) to `processed_games` table
+- [x] Add `white_accuracy` (FLOAT nullable) to `processed_games` table
+- [x] Add `black_accuracy` (FLOAT nullable) to `processed_games` table
+- [x] Update shared/schema.ts Drizzle types to match new columns
+
+### ECO Opening Detection
+- [x] Build self-contained ECO opening detection utility (server/openingDetection.ts, ~500 openings inline)
+- [x] Wire opening detection into POST /api/recordings/:id/pgn handler
+- [x] Display opening ECO badge + name on GameAnalysis page (Accuracy panel, above accuracy grid)
+- [ ] Display opening name on game card in My Games list (GameRecorder page)
+
+### OTB Accuracy Rating (Lichess win-probability formula)
+- [x] Create server/accuracyCalc.ts with winProbability(cp) and moveAccuracy(wpBefore, wpAfter) functions
+- [x] Replace simplified accuracy calculation in GET /api/games/:id/analysis with win-probability formula
+- [x] Store computed accuracy on processed_games (white_accuracy, black_accuracy) after analysis completes
+- [x] Display OTB Accuracy Rating with label (Brilliant/Excellent/Good/Decent/Inaccurate/Poor/Blunder-heavy)
+- [x] Display best-move streak on GameAnalysis page (shown when streak > 2)
+- [ ] Display accuracy on game card in GameRecorder My Games list
+- [x] Write 44 tests for win-probability formula, accuracy labels, streak, and ECO detection (1130 total)

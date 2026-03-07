@@ -24,6 +24,8 @@ import {
   moveAnalyses,
   correctionEntries,
 } from "../shared/schema.js";
+import { detectOpening, formatOpeningName } from "./openingDetection.js";
+import { computePlayerAccuracy, computeBestMoveStreak, accuracyLabel } from "./accuracyCalc.js";
 
 // Chess-API.com Stockfish REST endpoint
 const CHESS_API_URL = "https://chess-api.com/v1";
@@ -208,15 +210,35 @@ export function createRecordingsRouter(): Router {
       const moveMatches = pgn.match(/\d+\./g);
       const totalMoves = moveMatches ? moveMatches.length : 0;
 
-      // Try to detect opening from PGN (basic — first few moves)
+      // Detect opening using ECO lookup table
       let openingName: string | null = null;
       let openingEco: string | null = null;
 
-      // Check for PGN headers
+      // First check PGN headers (authoritative if present)
       const ecoMatch = pgn.match(/\[ECO\s+"([^"]+)"\]/);
       const openingMatch = pgn.match(/\[Opening\s+"([^"]+)"\]/);
       if (ecoMatch) openingEco = ecoMatch[1];
       if (openingMatch) openingName = openingMatch[1];
+
+      // If not in headers, detect from moves using ECO table
+      if (!openingName || !openingEco) {
+        try {
+          const { Chess: ChessForOpening } = await import("chess.js");
+          const chessForOpening = new ChessForOpening();
+          const pgnForOpening = pgn.replace(/\[.*?\]\s*/g, "").trim();
+          chessForOpening.loadPgn(pgnForOpening);
+          const movesForOpening = chessForOpening.history();
+          const detected = detectOpening(movesForOpening);
+          if (detected) {
+            if (!openingEco) openingEco = detected.eco;
+            if (!openingName) openingName = detected.variation
+              ? `${detected.name}: ${detected.variation}`
+              : detected.name;
+          }
+        } catch {
+          // Opening detection is non-critical — ignore errors
+        }
+      }
 
       const gameId = nanoid();
       await db.insert(processedGames).values({
@@ -361,6 +383,31 @@ export function createRecordingsRouter(): Router {
             await new Promise((r) => setTimeout(r, 200));
           }
 
+          // Compute OTB Accuracy Rating using win-probability formula
+          const allMoveAnalyses = await db
+            .select()
+            .from(moveAnalyses)
+            .where(eq(moveAnalyses.gameId, game.id))
+            .orderBy(moveAnalyses.moveNumber);
+
+          const whiteMoves = allMoveAnalyses.filter((m) => m.color === "w");
+          const blackMoves = allMoveAnalyses.filter((m) => m.color === "b");
+
+          const whiteAccuracy = computePlayerAccuracy(
+            whiteMoves.map((m) => m.eval),
+            "w"
+          );
+          const blackAccuracy = computePlayerAccuracy(
+            blackMoves.map((m) => m.eval),
+            "b"
+          );
+
+          // Store computed accuracy on the game record
+          await db
+            .update(processedGames)
+            .set({ whiteAccuracy, blackAccuracy })
+            .where(eq(processedGames.id, game.id));
+
           // Update session status to complete
           await db
             .update(recordingSessions)
@@ -368,7 +415,7 @@ export function createRecordingsRouter(): Router {
             .where(eq(recordingSessions.id, req.params.id));
 
           console.log(
-            `[recordings] Analysis complete for game ${game.id} (${history.length} moves)`
+            `[recordings] Analysis complete for game ${game.id} (${history.length} moves) — White: ${whiteAccuracy}%, Black: ${blackAccuracy}%`
           );
         } catch (err) {
           console.error("[recordings] Background analysis error:", err);
@@ -425,6 +472,20 @@ export function createRecordingsRouter(): Router {
         cls: string
       ) => arr.filter((a) => a.classification === cls).length;
 
+      // Compute OTB Accuracy Rating using win-probability formula
+      const whiteAccuracy = game.whiteAccuracy ??
+        computePlayerAccuracy(whiteAnalyses.map((a) => a.eval), "w");
+      const blackAccuracy = game.blackAccuracy ??
+        computePlayerAccuracy(blackAnalyses.map((a) => a.eval), "b");
+
+      // Compute best-move streaks
+      const whiteBestStreak = computeBestMoveStreak(
+        whiteAnalyses.map((a) => a.classification)
+      );
+      const blackBestStreak = computeBestMoveStreak(
+        blackAnalyses.map((a) => a.classification)
+      );
+
       const summary = {
         totalMoves: analyses.length,
         white: {
@@ -433,8 +494,9 @@ export function createRecordingsRouter(): Router {
           blunders: countByClass(whiteAnalyses, "blunder"),
           bestMoves: countByClass(whiteAnalyses, "best"),
           goodMoves: countByClass(whiteAnalyses, "good"),
-          avgCpLoss: 0,
-          accuracy: 0,
+          accuracy: whiteAccuracy,
+          accuracyLabel: accuracyLabel(whiteAccuracy),
+          bestMoveStreak: whiteBestStreak,
         },
         black: {
           inaccuracies: countByClass(blackAnalyses, "inaccuracy"),
@@ -442,26 +504,11 @@ export function createRecordingsRouter(): Router {
           blunders: countByClass(blackAnalyses, "blunder"),
           bestMoves: countByClass(blackAnalyses, "best"),
           goodMoves: countByClass(blackAnalyses, "good"),
-          avgCpLoss: 0,
-          accuracy: 0,
+          accuracy: blackAccuracy,
+          accuracyLabel: accuracyLabel(blackAccuracy),
+          bestMoveStreak: blackBestStreak,
         },
       };
-
-      // Calculate accuracy (simplified: % of best+good moves)
-      if (whiteAnalyses.length > 0) {
-        summary.white.accuracy = Math.round(
-          ((summary.white.bestMoves + summary.white.goodMoves) /
-            whiteAnalyses.length) *
-            100
-        );
-      }
-      if (blackAnalyses.length > 0) {
-        summary.black.accuracy = Math.round(
-          ((summary.black.bestMoves + summary.black.goodMoves) /
-            blackAnalyses.length) *
-            100
-        );
-      }
 
       // Find key moments (biggest eval swings)
       const keyMoments: Array<{

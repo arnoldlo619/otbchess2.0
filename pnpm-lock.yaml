@@ -103,6 +103,9 @@ importers:
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
+      chess-opening-book-reader:
+        specifier: ^0.1.0
+        version: 0.1.0
       chess.js:
         specifier: ^1.4.0
         version: 1.4.0
@@ -2337,6 +2340,13 @@ packages:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
     engines: {node: '>= 16'}
 
+  chess-opening-book-reader@0.1.0:
+    resolution: {integrity: sha512-/ls5O++ntm8VVoRUAKDr1VutGHAfLo2IPRayhi5PeHYcTegIzxX1zLUMeEr/vP057DzOluz0mdM9Uz2GHOnjCA==}
+    deprecated: 0.1.0 doesn't handle large opening books well
+
+  chess.js@0.13.4:
+    resolution: {integrity: sha512-li8pyEtvfw6V7xvVr5aUh8OuICfviWNT3YXPh56/wNZ8yEdqdAaWcWargK6xTmqsWKKH5c1bvdJ7lh5vqNv2wg==}
+
   chess.js@1.4.0:
     resolution: {integrity: sha512-BBJgrrtKQOzFLonR0l+k64A98NLemPwNsCskwb+29bRwobUa4iTm51E1kwGPbWXAcfdDa18nad6vpPPKPWarqw==}
 
@@ -2912,6 +2922,10 @@ packages:
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
+  events@3.3.0:
+    resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
+    engines: {node: '>=0.8.x'}
+
   expect-type@1.2.2:
     resolution: {integrity: sha512-JhFGDVJ7tmDJItKhYgJCGLOWjuK9vPxiXoUFLwLDc99NlmklilbiQJwoctZtt13+xMw91MCk/REan6MWHqDjyA==}
     engines: {node: '>=12.0.0'}
@@ -3174,6 +3188,10 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc
+
+  int64-buffer@1.0.0:
+    resolution: {integrity: sha512-yD4sihjB6Puqlk7hL3Cz0/0C6dtueUcf70mUbgioNQacgi4+pkoC9t0TkRetHvm+zvajyb7WaJZ6Bq4Xax3nTQ==}
+    engines: {node: '>= 4.5.0'}
 
   internmap@1.0.1:
     resolution: {integrity: sha512-lDB5YccMydFBtasVtxnZ3MRBHuaoE8GKsppq+EchKL2U4nK/DmEpPHNH8MZe5HkMtpSiTSOZwfN0tzYjO/lJEw==}
@@ -6521,6 +6539,14 @@ snapshots:
 
   check-error@2.1.1: {}
 
+  chess-opening-book-reader@0.1.0:
+    dependencies:
+      chess.js: 0.13.4
+      events: 3.3.0
+      int64-buffer: 1.0.0
+
+  chess.js@0.13.4: {}
+
   chess.js@1.4.0: {}
 
   chevrotain-allstar@0.3.1(chevrotain@11.0.3):
@@ -7066,6 +7092,8 @@ snapshots:
 
   eventemitter3@4.0.7: {}
 
+  events@3.3.0: {}
+
   expect-type@1.2.2: {}
 
   express-rate-limit@8.2.1(express@4.21.2):
@@ -7449,6 +7477,8 @@ snapshots:
     dependencies:
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
+
+  int64-buffer@1.0.0: {}
 
   internmap@1.0.1: {}
 

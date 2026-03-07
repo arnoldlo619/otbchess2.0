@@ -17,6 +17,8 @@ import {
   timestamp,
   index,
   int,
+  float,
+  tinyint,
 } from "drizzle-orm/mysql-core";
 
 // ─── users ────────────────────────────────────────────────────────────────────
@@ -214,6 +216,11 @@ export const processedGames = mysqlTable(
     result: varchar("result", { length: 10 }),
     event: varchar("event", { length: 255 }),
     date: varchar("date", { length: 20 }),
+    // Sharing & accuracy (populated after analysis completes)
+    isPublic: tinyint("is_public").default(0).notNull(),
+    shareToken: varchar("share_token", { length: 20 }),
+    whiteAccuracy: float("white_accuracy"),
+    blackAccuracy: float("black_accuracy"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
@@ -242,6 +249,10 @@ export const moveAnalyses = mysqlTable(
     classification: varchar("classification", { length: 20 }),
     winChance: int("win_chance"),
     continuation: text("continuation"),
+    // Video timestamp data (null for manual PGN games)
+    timestampMs: int("timestamp_ms"),
+    timestampConfidence: float("timestamp_confidence"),
+    frameKey: text("frame_key"),
   },
   (table) => ({
     gameIdx: index("ma_game_id_idx").on(table.gameId),
