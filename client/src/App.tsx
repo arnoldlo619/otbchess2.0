@@ -26,6 +26,8 @@ const FinalStandings = lazy(() => import("./pages/FinalStandings"));
 const ChessClock = lazy(() => import("./pages/ChessClock"));
 const MyClubs = lazy(() => import("./pages/MyClubs"));
 const ClubProfile = lazy(() => import("./pages/ClubProfile"));
+const GameRecorder = lazy(() => import("./pages/GameRecorder"));
+const GameAnalysis = lazy(() => import("./pages/GameAnalysis"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -59,8 +61,9 @@ function Router() {
         <Route path={"/profile"} component={ProfilePage} />
         <Route path={"/clubs"} component={MyClubs} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
+        <Route path={"/record"} component={GameRecorder} />
+        <Route path={"/game/:gameId/analysis"} component={GameAnalysis} />
         <Route path={"/404"} component={NotFound} />
-        {/* Final fallback route */}
         <Route component={NotFound} />
       </Switch>
     </Suspense>

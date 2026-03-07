@@ -171,3 +171,104 @@ export const userTournaments = mysqlTable(
 
 export type UserTournament = typeof userTournaments.$inferSelect;
 export type NewUserTournament = typeof userTournaments.$inferInsert;
+
+// ─── recording_sessions ─────────────────────────────────────────────────────
+// One row per OTB game recording attempt.
+// Tracks the lifecycle from camera capture through engine analysis.
+export const recordingSessions = mysqlTable(
+  "recording_sessions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    tournamentId: varchar("tournament_id", { length: 255 }),
+    // ready | recording | uploading | processing | needs_correction | analyzing | complete | failed
+    status: varchar("status", { length: 30 }).notNull().default("ready"),
+    videoKey: text("video_key"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("rs_user_id_idx").on(table.userId),
+    statusIdx: index("rs_status_idx").on(table.status),
+  })
+);
+
+export type RecordingSession = typeof recordingSessions.$inferSelect;
+export type NewRecordingSession = typeof recordingSessions.$inferInsert;
+
+// ─── processed_games ────────────────────────────────────────────────────────
+// Stores the reconstructed game data from a recording session.
+export const processedGames = mysqlTable(
+  "processed_games",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    sessionId: varchar("session_id", { length: 36 }).notNull(),
+    pgn: text("pgn").notNull(),
+    // JSON array of { moveNumber, timestamp } for video sync
+    moveTimestamps: text("move_timestamps"),
+    openingName: varchar("opening_name", { length: 255 }),
+    openingEco: varchar("opening_eco", { length: 10 }),
+    totalMoves: int("total_moves").default(0),
+    whitePlayer: varchar("white_player", { length: 100 }),
+    blackPlayer: varchar("black_player", { length: 100 }),
+    result: varchar("result", { length: 10 }),
+    event: varchar("event", { length: 255 }),
+    date: varchar("date", { length: 20 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    sessionIdx: index("pg_session_id_idx").on(table.sessionId),
+  })
+);
+
+export type ProcessedGame = typeof processedGames.$inferSelect;
+export type NewProcessedGame = typeof processedGames.$inferInsert;
+
+// ─── move_analyses ──────────────────────────────────────────────────────────
+// Per-move engine analysis results from Stockfish.
+export const moveAnalyses = mysqlTable(
+  "move_analyses",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    gameId: varchar("game_id", { length: 36 }).notNull(),
+    moveNumber: int("move_number").notNull(),
+    color: varchar("color", { length: 5 }).notNull(), // 'w' or 'b'
+    san: varchar("san", { length: 20 }).notNull(),
+    fen: text("fen").notNull(),
+    // Centipawn evaluation (positive = white advantage)
+    eval: int("eval"),
+    bestMove: varchar("best_move", { length: 20 }),
+    // best | good | inaccuracy | mistake | blunder
+    classification: varchar("classification", { length: 20 }),
+    winChance: int("win_chance"),
+    continuation: text("continuation"),
+  },
+  (table) => ({
+    gameIdx: index("ma_game_id_idx").on(table.gameId),
+  })
+);
+
+export type MoveAnalysis = typeof moveAnalyses.$inferSelect;
+export type NewMoveAnalysis = typeof moveAnalyses.$inferInsert;
+
+// ─── correction_entries ─────────────────────────────────────────────────────
+// Tracks AI uncertainty points and user corrections during game reconstruction.
+export const correctionEntries = mysqlTable(
+  "correction_entries",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    gameId: varchar("game_id", { length: 36 }).notNull(),
+    moveNumber: int("move_number").notNull(),
+    // JSON array of candidate SAN moves
+    candidateMoves: text("candidate_moves"),
+    chosenMove: varchar("chosen_move", { length: 20 }),
+    confidence: int("confidence"),
+    skipped: int("skipped").default(0),
+  },
+  (table) => ({
+    gameIdx: index("ce_game_id_idx").on(table.gameId),
+  })
+);
+
+export type CorrectionEntry = typeof correctionEntries.$inferSelect;
+export type NewCorrectionEntry = typeof correctionEntries.$inferInsert;

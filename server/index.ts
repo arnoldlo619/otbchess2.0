@@ -10,6 +10,7 @@ import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
+import { createRecordingsRouter } from "./recordings.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -228,6 +229,11 @@ export function createApp() {
 
   // ── Auth routes ─────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
+
+  // ── Game Recorder routes ───────────────────────────────────────────────────
+  app.use("/api/recordings", createRecordingsRouter());
+  // Also mount game routes under /api/games (they share the same router)
+  app.use("/api", createRecordingsRouter());
 
   // ── Proxy: GET /api/chess/player/:username ──────────────────────────────────
   app.get("/api/chess/player/:username", chessProxyLimiter, async (req, res) => {

@@ -1488,3 +1488,52 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove Archive link from Footer in Home.tsx
 - [x] Remove Archive link from NotFound.tsx
 - [x] Write unit tests for useArchiveAuth logic (13 new tests, 1055 total)
+
+## OTB Game Recorder + Post-Game Analysis
+
+### Phase A: Data Model + API
+- [x] Add recording_sessions table (id, userId, tournamentId, status, videoKey, createdAt, updatedAt)
+- [x] Add processed_games table (id, sessionId, pgn, moveTimestamps, openingName, openingEco, totalMoves, whitePlayer, blackPlayer, result)
+- [x] Add move_analyses table (id, gameId, moveNumber, color, san, fen, eval, bestMove, classification, winChance, continuation)
+- [x] Add correction_entries table (id, gameId, moveNumber, candidateMoves, chosenMove, confidence, skipped)
+- [x] Create API routes: POST/GET /api/recordings, POST /api/recordings/:id/pgn, GET /api/games/:id/analysis
+- [x] Push database schema changes
+
+### Phase B: Recording UI
+- [x] Create /record entry page with guided setup flow
+- [x] Build CameraPreview component placeholder (Coming Soon)
+- [x] Build RecordingControls component placeholder (Coming Soon)
+- [x] Build upload/processing status screen
+
+### Phase C: Manual PGN Entry + Game Creation
+- [x] Build PGN input form with chess.js validation
+- [x] Create game from manual PGN entry
+- [x] Link games to recording sessions
+
+### Phase D: Engine Analysis Integration
+- [x] Integrate Chess-API.com Stockfish REST API
+- [x] Analyze each position and store evaluations
+- [x] Classify moves (best, good, inaccuracy, mistake, blunder)
+- [x] Calculate accuracy percentages and game summary stats
+
+### Phase E: Analysis UI
+- [x] Build AnalysisBoard component (react-chessboard with ChessOTB theme)
+- [x] Build EvalBar component (horizontal mobile, vertical desktop)
+- [x] Build MoveList component (clickable, color-coded, auto-scroll)
+- [x] Build EngineSummary panel (accuracy, mistakes, opening, key moments)
+- [x] Build /game/:gameId/analysis page layout (mobile stack, desktop two-column)
+
+### Phase F: Video Sync
+- [ ] Implement timestamp mapping between moves and video
+- [ ] Build bidirectional sync (video→board, board→video)
+- [ ] Custom video player with ChessOTB design system
+
+### Phase G: Correction Flow
+- [ ] Build CorrectionCard component (board + video frame + candidate moves)
+- [ ] Batch correction flow with progress indicator
+- [ ] Skip/accept AI guess functionality
+
+### Phase H: Navigation + Entry Points
+- [x] Add "Record Game" ("Analyze") entry point to main navigation (desktop + mobile)
+- [x] Add "My Games" section (via /record page, fetches user's recording sessions)
+- [x] Link from tournament matchup pages (future enhancement)
