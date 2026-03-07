@@ -1564,3 +1564,28 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Display best-move streak on GameAnalysis page (shown when streak > 2)
 - [ ] Display accuracy on game card in GameRecorder My Games list
 - [x] Write 44 tests for win-probability formula, accuracy labels, streak, and ECO detection (1130 total)
+
+## Game Highlight Generator
+
+- [ ] Install node-canvas and chess-image-generator on server
+- [ ] Create server/highlightGenerator.ts: findCriticalMoment(), renderHighlightPNG()
+- [ ] Render 1080x1080 PNG: dark background, board position, eval bar, classification badge, player names, move annotation, ChessOTB.club branding
+- [ ] Add GET /api/games/:id/highlight endpoint (generates on demand, caches in S3)
+- [ ] Add "Share Highlight" button to GameAnalysis page (uses Web Share API with PNG)
+- [ ] Add "Download Highlight" button to GameAnalysis page
+- [ ] Show critical moment move highlighted in move list when highlight is generated
+- [ ] Write tests for findCriticalMoment logic
+
+## Game Highlight Generator
+
+- [x] Create GameHighlightCard component (540x540 dark-themed card with board, eval bar, classification badge, player names, opening badge, branding)
+- [x] Use react-chessboard with options API for board rendering inside card
+- [x] Add criticalMoment useMemo to GameAnalysis — finds move with largest eval swing
+- [x] Add handleShareHighlight — html2canvas render → native share with image file → text-only share → download fallback
+- [x] Add handleDownloadHighlight — html2canvas render → PNG download
+- [x] Add Game Highlight section to GameAnalysis right panel (below SummaryPanel)
+- [x] Live preview thumbnail (scaled 0.37x) visible in the panel before sharing
+- [x] Hidden full-resolution export card rendered off-screen at position fixed left -9999px
+- [x] Share button: spinner while generating, green checkmark on success, 3s reset
+- [x] Download button alongside share button
+- [x] TypeScript clean, 1151 tests passing (+21 new)

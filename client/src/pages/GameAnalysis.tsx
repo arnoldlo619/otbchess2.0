@@ -8,7 +8,7 @@
  *   - Engine summary panel (accuracy, mistakes, key moments)
  *   - Move navigation (keyboard arrows, click, buttons)
  */
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, createRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
@@ -27,7 +27,11 @@ import {
   Zap,
   Award,
   ArrowLeft,
+  Share2,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
+import { GameHighlightCard } from "@/components/GameHighlightCard";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
@@ -642,6 +646,8 @@ export default function GameAnalysis() {
   const [error, setError] = useState<string | null>(null);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 = starting position
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
+  const [highlightStatus, setHighlightStatus] = useState<"idle" | "generating" | "done">("idle");
+  const highlightCardRef = useRef<HTMLDivElement>(null);
 
   const gameId = matched ? params?.gameId : null;
 
@@ -744,6 +750,99 @@ export default function GameAnalysis() {
     },
     [data]
   );
+
+  // ── Critical moment (biggest eval swing) ───────────────────────────────────
+  const criticalMoment = useMemo(() => {
+    if (!data || data.analyses.length === 0) return null;
+    let maxSwing = 0;
+    let best: (typeof data.analyses)[0] | null = null;
+    for (let i = 1; i < data.analyses.length; i++) {
+      const prev = data.analyses[i - 1];
+      const curr = data.analyses[i];
+      if (prev.eval === null || curr.eval === null) continue;
+      const swing = Math.abs(curr.eval - prev.eval);
+      if (swing > maxSwing) {
+        maxSwing = swing;
+        best = curr;
+      }
+    }
+    return best ? { analysis: best, swing: maxSwing } : null;
+  }, [data]);
+
+  // ── Share / Download highlight ─────────────────────────────────────────────
+  const handleShareHighlight = useCallback(async () => {
+    if (!highlightCardRef.current || !data) return;
+    setHighlightStatus("generating");
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(highlightCardRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null,
+        logging: false,
+      });
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas toBlob failed"))), "image/png");
+      });
+
+      const white = data.game.whitePlayer || "White";
+      const black = data.game.blackPlayer || "Black";
+      const cls = criticalMoment?.analysis.classification ?? "move";
+      const mv = criticalMoment
+        ? `${criticalMoment.analysis.moveNumber}${criticalMoment.analysis.color === "w" ? "." : "..."} ${criticalMoment.analysis.san}`
+        : "";
+      const shareText = `${white} vs ${black} — ${cls} on ${mv} #ChessOTB #ChessOTBclub`;
+      const file = new File([blob], "chess-highlight.png", { type: "image/png" });
+
+      // Try native share with image file
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Chess Game Highlight", text: shareText });
+      } else if (navigator.share) {
+        await navigator.share({ title: "Chess Game Highlight", text: shareText, url: window.location.href });
+      } else {
+        // Fallback: trigger download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `chess-highlight-${data.game.id?.slice(0, 8) ?? "game"}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      setHighlightStatus("done");
+      setTimeout(() => setHighlightStatus("idle"), 3000);
+    } catch (err) {
+      console.error("Highlight generation failed:", err);
+      setHighlightStatus("idle");
+    }
+  }, [data, criticalMoment]);
+
+  const handleDownloadHighlight = useCallback(async () => {
+    if (!highlightCardRef.current || !data) return;
+    setHighlightStatus("generating");
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(highlightCardRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null,
+        logging: false,
+      });
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `chess-highlight-${data.game.id?.slice(0, 8) ?? "game"}.png`;
+      a.click();
+      setHighlightStatus("done");
+      setTimeout(() => setHighlightStatus("idle"), 3000);
+    } catch (err) {
+      console.error("Highlight download failed:", err);
+      setHighlightStatus("idle");
+    }
+  }, [data]);
 
   // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
@@ -1015,9 +1114,164 @@ export default function GameAnalysis() {
                 onSelectMoment={handleSelectMoment}
               />
             )}
+
+            {/* ── Game Highlight Generator ─────────────────────────────── */}
+            {criticalMoment && data.analyses.length > 0 && (
+              <div
+                className={`rounded-2xl border p-4 space-y-3 ${
+                  isDark
+                    ? "bg-[#0f1f12] border-white/10"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-[#3D6B47]" />
+                  <span
+                    className={`text-sm font-semibold ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Game Highlight
+                  </span>
+                  <span
+                    className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      isDark
+                        ? "bg-white/10 text-white/50"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    Move {criticalMoment.analysis.moveNumber}
+                    {criticalMoment.analysis.color === "w" ? "." : "..."}{" "}
+                    {criticalMoment.analysis.san}
+                  </span>
+                </div>
+
+                <p
+                  className={`text-xs leading-relaxed ${
+                    isDark ? "text-white/50" : "text-gray-500"
+                  }`}
+                >
+                  The biggest swing of the game —{" "}
+                  <span className="font-medium capitalize">
+                    {criticalMoment.analysis.classification}
+                  </span>{" "}
+                  with a{" "}
+                  {(criticalMoment.swing / 100).toFixed(1)} cp eval shift.
+                  Share it as a 1080×1080 PNG.
+                </p>
+
+                {/* Preview thumbnail */}
+                <div
+                  className={`rounded-xl overflow-hidden border ${
+                    isDark ? "border-white/10" : "border-gray-200"
+                  }`}
+                  style={{ maxHeight: 200, overflow: "hidden" }}
+                >
+                  <div style={{ transform: "scale(0.37)", transformOrigin: "top left", width: "270%", pointerEvents: "none" }}>
+                    <GameHighlightCard
+                      fen={criticalMoment.analysis.fen ?? "start"}
+                      moveNumber={criticalMoment.analysis.moveNumber}
+                      moveColor={criticalMoment.analysis.color}
+                      san={criticalMoment.analysis.san}
+                      classification={criticalMoment.analysis.classification ?? "good"}
+                      evalCp={criticalMoment.analysis.eval ?? 0}
+                      evalSwing={criticalMoment.swing}
+                      whitePlayer={data.game.whitePlayer ?? "White"}
+                      blackPlayer={data.game.blackPlayer ?? "Black"}
+                      result={data.game.result}
+                      openingName={data.game.openingName}
+                      openingEco={data.game.openingEco}
+                      whiteAccuracy={data.summary?.white?.accuracy ?? null}
+                      blackAccuracy={data.summary?.black?.accuracy ?? null}
+                      boardOrientation={boardOrientation}
+                    />
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleShareHighlight}
+                    disabled={highlightStatus === "generating"}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      highlightStatus === "done"
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : highlightStatus === "generating"
+                          ? isDark
+                            ? "bg-white/5 text-white/30 cursor-not-allowed"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-[#3D6B47] hover:bg-[#4a7d55] text-white"
+                    }`}
+                  >
+                    {highlightStatus === "generating" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : highlightStatus === "done" ? (
+                      <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                      <Share2 className="w-4 h-4" />
+                    )}
+                    {highlightStatus === "generating"
+                      ? "Generating…"
+                      : highlightStatus === "done"
+                        ? "Shared!"
+                        : "Share Highlight"}
+                  </button>
+                  <button
+                    onClick={handleDownloadHighlight}
+                    disabled={highlightStatus === "generating"}
+                    className={`px-3 py-2.5 rounded-xl transition-all ${
+                      highlightStatus === "generating"
+                        ? isDark
+                          ? "text-white/20 cursor-not-allowed"
+                          : "text-gray-300 cursor-not-allowed"
+                        : isDark
+                          ? "text-white/50 hover:bg-white/10 hover:text-white"
+                          : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                    title="Download PNG"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
+
+      {/* ── Hidden full-resolution export card (off-screen) ──────────────── */}
+      {criticalMoment && (
+        <div
+          style={{
+            position: "fixed",
+            left: "-9999px",
+            top: 0,
+            width: 540,
+            height: 540,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
+        >
+          <GameHighlightCard
+            ref={highlightCardRef}
+            fen={criticalMoment.analysis.fen ?? "start"}
+            moveNumber={criticalMoment.analysis.moveNumber}
+            moveColor={criticalMoment.analysis.color}
+            san={criticalMoment.analysis.san}
+            classification={criticalMoment.analysis.classification ?? "good"}
+            evalCp={criticalMoment.analysis.eval ?? 0}
+            evalSwing={criticalMoment.swing}
+            whitePlayer={data.game.whitePlayer ?? "White"}
+            blackPlayer={data.game.blackPlayer ?? "Black"}
+            result={data.game.result}
+            openingName={data.game.openingName}
+            openingEco={data.game.openingEco}
+            whiteAccuracy={data.summary?.white?.accuracy ?? null}
+            blackAccuracy={data.summary?.black?.accuracy ?? null}
+            boardOrientation={boardOrientation}
+          />
+        </div>
+      )}
     </div>
   );
 }
