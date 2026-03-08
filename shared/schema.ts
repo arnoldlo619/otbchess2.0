@@ -307,3 +307,41 @@ export const videoChunks = mysqlTable(
 
 export type VideoChunk = typeof videoChunks.$inferSelect;
 export type NewVideoChunk = typeof videoChunks.$inferInsert;
+
+// ─── cv_jobs ──────────────────────────────────────────────────────────────────────────────
+// One row per computer-vision processing job.
+// A job is created when a video is finalized and consumed by the CV worker.
+// Status lifecycle: pending → running → complete | failed
+export const cvJobs = mysqlTable(
+  "cv_jobs",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    sessionId: varchar("session_id", { length: 36 }).notNull(),
+    // pending | running | complete | failed
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    // Path to the concatenated video file
+    videoPath: text("video_path").notNull(),
+    // Number of frames sampled from the video
+    framesProcessed: int("frames_processed").default(0),
+    // Total frames in the video (estimated)
+    totalFrames: int("total_frames").default(0),
+    // Reconstructed PGN (populated on success)
+    reconstructedPgn: text("reconstructed_pgn"),
+    // JSON array of { moveNumber, timestampMs, confidence } objects
+    moveTimeline: text("move_timeline"),
+    // Error message if status is 'failed'
+    errorMessage: text("error_message"),
+    // Number of retry attempts
+    attempts: int("attempts").default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    startedAt: timestamp("started_at"),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => ({
+    sessionIdx: index("cj_session_id_idx").on(table.sessionId),
+    statusIdx: index("cj_status_idx").on(table.status),
+  })
+);
+
+export type CvJob = typeof cvJobs.$inferSelect;
+export type NewCvJob = typeof cvJobs.$inferInsert;

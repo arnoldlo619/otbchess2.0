@@ -30,6 +30,7 @@ import {
 } from "../shared/schema.js";
 import { detectOpening, formatOpeningName } from "./openingDetection.js";
 import { computePlayerAccuracy, computeBestMoveStreak, accuracyLabel } from "./accuracyCalc.js";
+import { enqueueCvJob } from "./cvJobQueue.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -684,12 +685,26 @@ export function createRecordingsRouter(): Router {
             .update(recordingSessions)
             .set({
               videoKey: outputPath,
-              status: "queued",
+              status: "processing",
               updatedAt: new Date(),
             })
             .where(eq(recordingSessions.id, req.params.id));
 
           console.log(`[recordings] Concatenated ${existingChunks.length} chunks → ${outputPath}`);
+
+          // Enqueue CV job to automatically reconstruct PGN from video
+          try {
+            await enqueueCvJob(req.params.id, outputPath);
+            console.log(`[recordings] CV job enqueued for session ${req.params.id}`);
+          } catch (queueErr) {
+            console.error(`[recordings] Failed to enqueue CV job:`, queueErr);
+            // Fall back to queued so user can enter PGN manually
+            await db
+              .update(recordingSessions)
+              .set({ status: "queued", updatedAt: new Date() })
+              .where(eq(recordingSessions.id, req.params.id))
+              .catch(() => {});
+          }
 
           // Clean up individual chunk files
           for (const chunk of existingChunks) {

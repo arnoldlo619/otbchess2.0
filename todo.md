@@ -1733,3 +1733,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add GET /api/recordings/:id/video endpoint to stream the final video
 - [x] Wire VideoRecorder processing screen to show video-specific status messages
 - [x] Write tests for chunk upload and finalize logic (44 tests)
+
+## Phase 2: CV Job Queue (Video → PGN Auto-Reconstruction)
+
+- [x] Add cv_jobs table to schema (id, sessionId, videoPath, status, attempts, reconstructedPgn, moveTimeline, framesProcessed, totalFrames, errorMessage, startedAt, completedAt)
+- [x] Create cv_jobs table in database via direct SQL
+- [x] Install onnxruntime Python package for server-side inference
+- [x] Write server/cv_worker.py: frame sampling, ONNX board detection, FEN reconstruction, PGN generation
+- [x] Write server/cvJobQueue.ts: job queue infrastructure (enqueue, poll, run, retry)
+- [x] Wire POST /api/recordings/:id/finalize to call enqueueCvJob after successful concatenation
+- [x] Export startCvJobQueue from server/index.ts and call at startup (prod and dev)
+- [x] Write tests for CV job queue utilities (81 tests, 1535 total passing)

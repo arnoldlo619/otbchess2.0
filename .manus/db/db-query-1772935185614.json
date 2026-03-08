@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `cv_jobs` (\n  `id` varchar(36) NOT NULL,\n  `session_id` varchar(36) NOT NULL,\n  `status` varchar(20) NOT NULL DEFAULT 'pending',\n  `video_path` text NOT NULL,\n  `frames_processed` int DEFAULT 0,\n  `total_frames` int DEFAULT 0,\n  `reconstructed_pgn` text,\n  `move_timeline` text,\n  `error_message` text,\n  `attempts` int DEFAULT 0,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `started_at` timestamp NULL,\n  `completed_at` timestamp NULL,\n  PRIMARY KEY (`id`),\n  KEY `cj_session_id_idx` (`session_id`),\n  KEY `cj_status_idx` (`status`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute CREATE TABLE IF NOT EXISTS `cv_jobs` (\n  `id` varchar(36) NOT NULL,\n  `session_id` varchar(36) NOT NULL,\n  `status` varchar(20) NOT NULL DEFAULT 'pending',\n  `video_path` text NOT NULL,\n  `frames_processed` int DEFAULT 0,\n  `total_frames` int DEFAULT 0,\n  `reconstructed_pgn` text,\n  `move_timeline` text,\n  `error_message` text,\n  `attempts` int DEFAULT 0,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `started_at` timestamp NULL,\n  `completed_at` timestamp NULL,\n  PRIMARY KEY (`id`),\n  KEY `cj_session_id_idx` (`session_id`),\n  KEY `cj_status_idx` (`status`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 819
+}

@@ -249,8 +249,10 @@ function vitePluginExpressApi(): Plugin {
 
   function getApiApp(): Promise<import("express").Express> {
     if (!apiAppPromise) {
-      apiAppPromise = import("./server/index.js").then(({ createApp }) => {
+      apiAppPromise = import("./server/index.js").then(({ createApp, startCvJobQueue }) => {
         const app = createApp();
+        // Start the CV job queue in dev mode too
+        if (startCvJobQueue) startCvJobQueue();
         console.log("[express-api] API routes ready");
         return app;
       });

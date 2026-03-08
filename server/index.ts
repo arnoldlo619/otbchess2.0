@@ -11,6 +11,8 @@ import { getDb } from "./db.js";
 import { createAuthRouter } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
+import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
+export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1071,6 +1073,9 @@ export function createApp() {
 async function startServer() {
   const app = createApp();
   const server = createServer(app);
+
+  // Start the CV job queue background worker
+  _startCvJobQueue();
 
   // Serve static files from dist/public in production
   const staticPath =
