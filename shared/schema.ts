@@ -331,6 +331,8 @@ export const cvJobs = mysqlTable(
     moveTimeline: text("move_timeline"),
     // Error message if status is 'failed'
     errorMessage: text("error_message"),
+    // Optional path to a JSON file containing the client-side FEN timeline seed
+    fenTimelineFile: text("fen_timeline_file"),
     // Number of retry attempts
     attempts: int("attempts").default(0),
     createdAt: timestamp("created_at").defaultNow().notNull(),

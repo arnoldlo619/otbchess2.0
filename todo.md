@@ -1744,3 +1744,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire POST /api/recordings/:id/finalize to call enqueueCvJob after successful concatenation
 - [x] Export startCvJobQueue from server/index.ts and call at startup (prod and dev)
 - [x] Write tests for CV job queue utilities (81 tests, 1535 total passing)
+
+## Phase 3: Live CV Feedback During Recording
+
+- [x] Live board overlay on recording screen: corner detection grid, confidence badge, move detection pulse
+- [x] Live FEN status bar: current position display, move counter, detection confidence badge
+- [x] fenTimeline accumulation during recording (only records when position changes)
+- [x] Confidence upgrade logic (replaces last entry if same position seen with higher confidence)
+- [x] Minimum confidence threshold filtering (0.4 default)
+- [x] POST fenTimeline payload on finalize to seed server-side PGN reconstruction
+- [x] Server finalize endpoint: accepts fenTimeline, writes to temp JSON file
+- [x] enqueueCvJob: accepts optional fenTimelineFile path, stores in cv_jobs.fen_timeline_file
+- [x] Add fenTimelineFile column to cv_jobs schema and database
+- [x] cv_worker.py: load_client_fen_timeline() reads and validates the JSON seed file
+- [x] cv_worker.py: merge_fen_timelines() merges client and server timelines with 3s window
+- [x] cv_worker.py: falls back to client-only timeline if server sampling finds nothing
+- [x] cv_worker.py: seedUsed flag in output JSON
+- [x] Write tests for Phase 3 utilities (50 tests, 1585 total passing)

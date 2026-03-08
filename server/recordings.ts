@@ -585,11 +585,12 @@ export function createRecordingsRouter(): Router {
   // 4. Stores the final video path as videoKey on the session.
   // 5. Cleans up individual chunk files.
   router.post("/:id/finalize", async (req, res) => {
-    const { chunkCount, durationMs, whitePlayer, blackPlayer } = req.body as {
+    const { chunkCount, durationMs, whitePlayer, blackPlayer, fenTimeline } = req.body as {
       chunkCount?: number;
       durationMs?: number;
       whitePlayer?: string;
       blackPlayer?: string;
+      fenTimeline?: Array<{ timestampMs: number; fen: string; confidence: number; pieceCount: number }>;
     };
 
     try {
@@ -692,9 +693,22 @@ export function createRecordingsRouter(): Router {
 
           console.log(`[recordings] Concatenated ${existingChunks.length} chunks → ${outputPath}`);
 
+          // Write fenTimeline seed to a temp file if provided
+          let fenTimelineFile: string | undefined;
+          if (fenTimeline && Array.isArray(fenTimeline) && fenTimeline.length > 0) {
+            try {
+              fenTimelineFile = path.join(UPLOADS_DIR, `${req.params.id}-fen-timeline.json`);
+              fs.writeFileSync(fenTimelineFile, JSON.stringify(fenTimeline), "utf8");
+              console.log(`[recordings] Saved client FEN timeline (${fenTimeline.length} entries) to ${fenTimelineFile}`);
+            } catch (writeErr) {
+              console.warn(`[recordings] Could not write FEN timeline file:`, writeErr);
+              fenTimelineFile = undefined;
+            }
+          }
+
           // Enqueue CV job to automatically reconstruct PGN from video
           try {
-            await enqueueCvJob(req.params.id, outputPath);
+            await enqueueCvJob(req.params.id, outputPath, fenTimelineFile);
             console.log(`[recordings] CV job enqueued for session ${req.params.id}`);
           } catch (queueErr) {
             console.error(`[recordings] Failed to enqueue CV job:`, queueErr);

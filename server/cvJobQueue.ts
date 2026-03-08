@@ -47,7 +47,7 @@ let pollInterval: ReturnType<typeof setInterval> | null = null;
  * Enqueue a CV job for a recording session.
  * Creates a cv_jobs row and triggers the queue runner.
  */
-export async function enqueueCvJob(sessionId: string, videoPath: string): Promise<string> {
+export async function enqueueCvJob(sessionId: string, videoPath: string, fenTimelineFile?: string): Promise<string> {
   const db = await getDb();
   const jobId = nanoid();
 
@@ -57,6 +57,7 @@ export async function enqueueCvJob(sessionId: string, videoPath: string): Promis
     videoPath,
     status: "pending",
     attempts: 0,
+    fenTimelineFile: fenTimelineFile ?? null,
   });
 
   console.log(`[cv-queue] Enqueued job ${jobId} for session ${sessionId}`);
@@ -116,7 +117,7 @@ async function processNextJob(): Promise<void> {
   isProcessing = true;
 
   try {
-    await runCvJob(job.id, job.sessionId, job.videoPath, job.attempts ?? 0);
+    await runCvJob(job.id, job.sessionId, job.videoPath, job.fenTimelineFile ?? null, job.attempts ?? 0);
   } catch (err) {
     console.error(`[cv-queue] Unhandled error processing job ${job.id}:`, err);
   } finally {
@@ -128,6 +129,7 @@ async function runCvJob(
   jobId: string,
   sessionId: string,
   videoPath: string,
+  fenTimelineFile: string | null,
   attempts: number
 ): Promise<void> {
   const db = await getDb();
@@ -148,7 +150,7 @@ async function runCvJob(
   // ── Spawn Python CV worker ────────────────────────────────────────────────
   let cvResult: CvWorkerResult;
   try {
-    cvResult = await spawnCvWorker(videoPath);
+    cvResult = await spawnCvWorker(videoPath, fenTimelineFile ?? undefined);
   } catch (spawnErr) {
     const errMsg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
     console.error(`[cv-queue] CV worker spawn error for job ${jobId}:`, errMsg);
@@ -315,9 +317,12 @@ interface CvWorkerResult {
   warnings: string[];
 }
 
-function spawnCvWorker(videoPath: string): Promise<CvWorkerResult> {
+function spawnCvWorker(videoPath: string, fenTimelineFile?: string): Promise<CvWorkerResult> {
   return new Promise((resolve, reject) => {
     const args = [CV_WORKER_SCRIPT, videoPath, "--fps-sample", "0.5", "--confidence", "0.45"];
+    if (fenTimelineFile) {
+      args.push("--fen-timeline-file", fenTimelineFile);
+    }
 
     console.log(`[cv-queue] Spawning: ${PYTHON_BIN} ${args.join(" ")}`);
 

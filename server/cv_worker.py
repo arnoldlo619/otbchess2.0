@@ -15,7 +15,7 @@ Pipeline:
   8. Output JSON to stdout for the Node.js caller.
 
 Usage:
-  python3 cv_worker.py <video_path> [--fps-sample 0.5] [--confidence 0.45]
+  python3 cv_worker.py <video_path> [--fps-sample 0.5] [--confidence 0.45] [--fen-timeline-file path.json]
 
 Output (stdout):
   JSON object with keys:
@@ -25,6 +25,7 @@ Output (stdout):
     totalFrames  — estimated total frames in video
     error        — error message (null on success)
     warnings     — list of warning strings
+    seedUsed     — true if client fenTimeline seed was used
 """
 
 import sys
@@ -440,7 +441,82 @@ def detect_move_from_fens(prev_fen, curr_fen, board_state):
 
 # ─── Main Pipeline ────────────────────────────────────────────────────────────
 
-def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45):
+def load_client_fen_timeline(timeline_file):
+    """
+    Load a client-side FEN timeline from a JSON file.
+
+    Returns a list of (timestamp_ms, fen, confidence) tuples sorted by timestamp,
+    or an empty list if the file cannot be read or is invalid.
+    """
+    if not timeline_file:
+        return []
+    try:
+        p = Path(timeline_file)
+        if not p.exists():
+            return []
+        with open(p) as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            return []
+        entries = []
+        for item in data:
+            ts = item.get("timestampMs")
+            fen = item.get("fen")
+            conf = item.get("confidence", 0.5)
+            if ts is not None and fen and isinstance(fen, str) and len(fen) > 10:
+                entries.append((int(ts), fen, float(conf)))
+        # Sort by timestamp
+        entries.sort(key=lambda x: x[0])
+        return entries
+    except Exception:
+        return []
+
+
+def merge_fen_timelines(client_timeline, server_timeline):
+    """
+    Merge the client-side FEN timeline with the server-side frame-sampled timeline.
+
+    Strategy:
+    - For each server-sampled FEN, check if there is a client entry within ±3 seconds.
+    - If a client entry exists and its confidence is higher, prefer the client FEN.
+    - Insert client-only entries (timestamps not covered by server sampling) to fill gaps.
+    - Return the merged timeline sorted by timestamp.
+    """
+    if not client_timeline:
+        return server_timeline
+    if not server_timeline:
+        return client_timeline
+
+    WINDOW_MS = 3000  # 3-second matching window
+
+    merged = list(server_timeline)  # start with server entries
+
+    # For each server entry, try to upgrade confidence using a nearby client entry
+    client_by_ts = {ts: (ts, fen, conf) for ts, fen, conf in client_timeline}
+    client_timestamps = sorted(client_by_ts.keys())
+
+    for i, (s_ts, s_fen, s_conf) in enumerate(merged):
+        # Find nearest client timestamp
+        nearest_client_ts = min(client_timestamps, key=lambda ct: abs(ct - s_ts), default=None)
+        if nearest_client_ts is not None and abs(nearest_client_ts - s_ts) <= WINDOW_MS:
+            c_ts, c_fen, c_conf = client_by_ts[nearest_client_ts]
+            # Use client FEN if it has higher confidence
+            if c_conf > s_conf:
+                merged[i] = (s_ts, c_fen, max(s_conf, c_conf))
+
+    # Add client-only entries that fall in gaps between server samples
+    server_timestamps = sorted(e[0] for e in merged)
+    for c_ts, c_fen, c_conf in client_timeline:
+        # Check if this client entry is covered by any server entry
+        covered = any(abs(c_ts - s_ts) <= WINDOW_MS for s_ts in server_timestamps)
+        if not covered:
+            merged.append((c_ts, c_fen, c_conf))
+
+    merged.sort(key=lambda x: x[0])
+    return merged
+
+
+def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_fen_timeline=None):
     """
     Main CV pipeline. Processes a video file and returns a result dict.
 
@@ -448,14 +524,17 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45):
         video_path: Path to the video file.
         fps_sample: Frames per second to sample (0.5 = one frame every 2 seconds).
         confidence_threshold: Minimum piece detection confidence.
+        client_fen_timeline: Optional list of (timestamp_ms, fen, confidence) tuples
+            from the client-side CV worker, used to seed/improve reconstruction.
 
     Returns:
-        dict with keys: pgn, moveTimeline, framesProcessed, totalFrames, error, warnings
+        dict with keys: pgn, moveTimeline, framesProcessed, totalFrames, error, warnings, seedUsed
     """
     global PIECE_CONF_THRESHOLD
     PIECE_CONF_THRESHOLD = confidence_threshold
 
     warnings = []
+    seed_used = False
     result = {
         "pgn": "",
         "moveTimeline": [],
@@ -463,6 +542,7 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45):
         "totalFrames": 0,
         "error": None,
         "warnings": warnings,
+        "seedUsed": False,
     }
 
     # ── Load models ──────────────────────────────────────────────────────────
@@ -527,9 +607,28 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45):
     cap.release()
     result["framesProcessed"] = frames_processed
 
+    # ── Merge with client FEN timeline seed ────────────────────────────────
+    if client_fen_timeline and len(client_fen_timeline) > 0:
+        original_len = len(fen_timeline)
+        fen_timeline = merge_fen_timelines(client_fen_timeline, fen_timeline)
+        if len(fen_timeline) > original_len or any(
+            c_fen != s_fen
+            for (c_ts, c_fen, _c), (s_ts, s_fen, _s) in zip(client_fen_timeline[:5], fen_timeline[:5])
+            if abs(c_ts - s_ts) < 3000
+        ):
+            seed_used = True
+            result["seedUsed"] = True
+            warnings.append(f"Client FEN timeline merged: {len(client_fen_timeline)} client entries + {original_len} server entries = {len(fen_timeline)} total")
+
     if not fen_timeline:
-        result["error"] = "No board positions detected in video. Ensure the board is clearly visible."
-        return result
+        # If server sampling found nothing but we have a client timeline, use it directly
+        if client_fen_timeline and len(client_fen_timeline) >= 3:
+            fen_timeline = client_fen_timeline
+            result["seedUsed"] = True
+            warnings.append("Server frame sampling found no positions; using client FEN timeline exclusively")
+        else:
+            result["error"] = "No board positions detected in video. Ensure the board is clearly visible."
+            return result
 
     # ── Move detection from FEN timeline ────────────────────────────────────
     if not CHESS_AVAILABLE:
@@ -619,6 +718,7 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45):
     result["pgn"] = pgn_str
     result["moveTimeline"] = move_timeline
     result["warnings"] = warnings
+    result["seedUsed"] = seed_used
 
     return result
 
@@ -632,13 +732,19 @@ def main():
                         help="Frames per second to sample (default: 0.5 = every 2s)")
     parser.add_argument("--confidence", type=float, default=0.45,
                         help="Minimum piece detection confidence (default: 0.45)")
+    parser.add_argument("--fen-timeline-file", type=str, default=None,
+                        help="Path to a JSON file containing the client-side FEN timeline seed")
     args = parser.parse_args()
+
+    # Load optional client FEN timeline seed
+    client_fen_timeline = load_client_fen_timeline(args.fen_timeline_file)
 
     try:
         result = process_video(
             video_path=args.video_path,
             fps_sample=args.fps_sample,
             confidence_threshold=args.confidence,
+            client_fen_timeline=client_fen_timeline if client_fen_timeline else None,
         )
     except Exception as e:
         result = {

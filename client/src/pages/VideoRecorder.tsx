@@ -8,6 +8,7 @@
  *   2. orientation  — landscape lock prompt
  *   3. framing      — live preview + OpenCV.js board detection overlay
  *   4. recording    — active recording with MediaRecorder + wake lock
+ *                     Phase 3: live CV overlay, move detection pulse, FEN status bar
  *   5. processing   — upload complete, polling for analysis
  *
  * Query params:
@@ -41,6 +42,7 @@ import {
   Grid3x3,
   ArrowLeft,
   Wifi,
+  Zap,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -58,8 +60,20 @@ interface RecordingSession {
   status: string;
 }
 
+/** A single entry in the client-side FEN timeline sent to the server on finalize */
+export interface FenTimelineEntry {
+  /** Elapsed milliseconds from recording start when this FEN was detected */
+  timestampMs: number;
+  /** Full FEN string of the detected position */
+  fen: string;
+  /** Detection confidence 0–1 */
+  confidence: number;
+  /** Number of pieces detected in this frame */
+  pieceCount: number;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function formatElapsed(ms: number): string {
+export function formatElapsed(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
@@ -74,6 +88,49 @@ function isLandscape(): boolean {
     return screenOrientation.type.startsWith("landscape");
   }
   return window.innerWidth > window.innerHeight;
+}
+
+/**
+ * Compare two FEN position parts and return true if they differ by at least
+ * one piece (i.e., a move was made).
+ */
+export function fenPositionsAreDifferent(fenA: string | null, fenB: string | null): boolean {
+  if (!fenA || !fenB) return false;
+  const posA = fenA.split(" ")[0];
+  const posB = fenB.split(" ")[0];
+  return posA !== posB;
+}
+
+/**
+ * Count the number of squares that differ between two FEN position strings.
+ * Returns 0 if positions are identical, up to 64 for completely different boards.
+ */
+export function countFenDifferences(fenA: string, fenB: string): number {
+  const expandRank = (rank: string): string[] => {
+    const squares: string[] = [];
+    for (const ch of rank) {
+      if (/\d/.test(ch)) {
+        squares.push(...Array(parseInt(ch)).fill(""));
+      } else {
+        squares.push(ch);
+      }
+    }
+    return squares;
+  };
+
+  const boardA = fenA.split(" ")[0].split("/").flatMap(expandRank);
+  const boardB = fenB.split(" ")[0].split("/").flatMap(expandRank);
+  if (boardA.length !== 64 || boardB.length !== 64) return 64;
+  return boardA.filter((sq, i) => sq !== boardB[i]).length;
+}
+
+/**
+ * Determine if a FEN transition looks like a legal single move
+ * (2–4 squares changed: normal move = 2, capture = 2, castling = 4, en passant = 3).
+ */
+export function looksLikeAMove(fenA: string, fenB: string): boolean {
+  const diffs = countFenDifferences(fenA, fenB);
+  return diffs >= 2 && diffs <= 4;
 }
 
 // ── Indicator Component ───────────────────────────────────────────────────────
@@ -146,6 +203,100 @@ function ProcessingStepBar({ currentStep }: { currentStep: number }) {
   );
 }
 
+// ── Live CV Status Bar (recording screen) ─────────────────────────────────────
+interface LiveCvStatusBarProps {
+  moveCount: number;
+  pieceCount: number;
+  confidence: number;
+  boardDetected: boolean;
+  movePulse: boolean;
+  fenTimelineLength: number;
+}
+
+function LiveCvStatusBar({
+  moveCount,
+  pieceCount,
+  confidence,
+  boardDetected,
+  movePulse,
+  fenTimelineLength,
+}: LiveCvStatusBarProps) {
+  return (
+    <div className="rounded-2xl bg-black/70 backdrop-blur-md border border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <div className={`w-2 h-2 rounded-full transition-all duration-200 ${
+            boardDetected ? "bg-[#4CAF50] animate-pulse" : "bg-red-400"
+          }`} />
+          <span className={`text-xs font-bold uppercase tracking-wider ${
+            boardDetected ? "text-[#4CAF50]" : "text-red-400"
+          }`}>
+            {boardDetected ? "Board Tracking" : "Board Lost"}
+          </span>
+        </div>
+
+        {/* Move detection pulse badge */}
+        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full transition-all duration-300 ${
+          movePulse
+            ? "bg-[#4CAF50]/30 border border-[#4CAF50]/60"
+            : "bg-white/06 border border-white/10"
+        }`}>
+          <Zap className={`w-3 h-3 transition-colors duration-200 ${movePulse ? "text-[#4CAF50]" : "text-white/30"}`} />
+          <span className={`text-xs font-bold tabular-nums transition-colors duration-200 ${
+            movePulse ? "text-[#4CAF50]" : "text-white/40"
+          }`}>
+            {moveCount} move{moveCount !== 1 ? "s" : ""}
+          </span>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="flex items-center gap-4">
+        <div className="flex-1">
+          <p className="text-xs text-white/30 mb-1">Pieces</p>
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#4CAF50] transition-all duration-500"
+                style={{ width: `${Math.min(100, (pieceCount / 32) * 100)}%` }}
+              />
+            </div>
+            <span className="text-xs font-bold text-white/60 tabular-nums w-8 text-right">
+              {pieceCount}/32
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <p className="text-xs text-white/30 mb-1">Confidence</p>
+          <div className="flex items-center gap-1.5">
+            <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.round(confidence * 100)}%`,
+                  backgroundColor: confidence >= 0.75 ? "#4CAF50" : confidence >= 0.5 ? "#F59E0B" : "#EF4444",
+                }}
+              />
+            </div>
+            <span className="text-xs font-bold text-white/60 tabular-nums w-8 text-right">
+              {Math.round(confidence * 100)}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* FEN timeline count */}
+      {fenTimelineLength > 0 && (
+        <div className="mt-2 pt-2 border-t border-white/06 flex items-center justify-between">
+          <span className="text-xs text-white/25">Positions logged</span>
+          <span className="text-xs font-bold text-white/40 tabular-nums">{fenTimelineLength}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function VideoRecorder() {
   const { theme } = useTheme();
@@ -186,6 +337,18 @@ export default function VideoRecorder() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [boardHealth, setBoardHealth] = useState(true);
 
+  // ── Phase 3: Live CV feedback state ──────────────────────────────────────
+  /** Number of moves detected during this recording */
+  const [liveMovesDetected, setLiveMovesDetected] = useState(0);
+  /** True for 1.5 seconds after a move is detected — drives the pulse animation */
+  const [movePulse, setMovePulse] = useState(false);
+  /** Live confidence during recording */
+  const [recordingConfidence, setRecordingConfidence] = useState(0);
+  /** Live piece count during recording */
+  const [recordingPieceCount, setRecordingPieceCount] = useState(0);
+  /** Number of FEN timeline entries accumulated so far */
+  const [fenTimelineLength, setFenTimelineLength] = useState(0);
+
   // ── Processing state ──────────────────────────────────────────────────────
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [processingStep, setProcessingStep] = useState(0);
@@ -205,6 +368,11 @@ export default function VideoRecorder() {
   const chunksRef = useRef<Blob[]>([]);
   const workerRef = useRef<Worker | null>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Phase 3 refs — not state to avoid re-renders on every frame
+  const fenTimelineRef = useRef<FenTimelineEntry[]>([]);
+  const lastFenRef = useRef<string | null>(null);
+  const movePulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-gray-950";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-900";
@@ -251,6 +419,7 @@ export default function VideoRecorder() {
           lightingOk?: boolean;
           confidence?: number;
           corners?: Array<{x:number;y:number}> | null;
+          fen?: string | null;
           fallback?: boolean;
         };
 
@@ -433,13 +602,72 @@ export default function VideoRecorder() {
     };
   }, [screen, opencvReady, runDetection]);
 
-  // ── Also run detection during recording for health dot (1fps) ────────────
+  // ── Phase 3: Run detection during recording (2fps) + accumulate FEN timeline ──
   useEffect(() => {
-    if (screen === "recording") {
-      detectionIntervalRef.current = setInterval(runDetection, 1000);
+    if (screen !== "recording") return;
+
+    // Re-attach worker message handler for recording-screen CV feedback
+    if (workerRef.current) {
+      workerRef.current.onmessage = (e) => {
+        const msg = e.data as {
+          type: string;
+          boardDetected?: boolean;
+          confidence?: number;
+          fen?: string | null;
+          corners?: Array<{x:number;y:number}> | null;
+        };
+
+        if (msg.type !== "result") return;
+
+        const fen = msg.fen ?? null;
+        const confidence = msg.confidence ?? 0;
+        const boardDetected = msg.boardDetected ?? false;
+
+        setBoardHealth(boardDetected);
+        setRecordingConfidence(confidence);
+
+        if (fen) {
+          // Count pieces
+          const pos = fen.split(" ")[0];
+          const pieces = pos.replace(/[^pnbrqkPNBRQK]/g, "").length;
+          setRecordingPieceCount(pieces);
+
+          // ── FEN timeline accumulation ─────────────────────────────────
+          const now = Date.now() - startTimeRef.current;
+          const prevFen = lastFenRef.current;
+
+          // Always log the first FEN, then only log when position changes
+          const isFirstEntry = fenTimelineRef.current.length === 0;
+          const positionChanged = prevFen ? fenPositionsAreDifferent(prevFen, fen) : false;
+
+          if (isFirstEntry || positionChanged) {
+            const entry: FenTimelineEntry = {
+              timestampMs: now,
+              fen,
+              confidence,
+              pieceCount: pieces,
+            };
+            fenTimelineRef.current.push(entry);
+            setFenTimelineLength(fenTimelineRef.current.length);
+
+            // ── Move detection pulse ──────────────────────────────────
+            if (!isFirstEntry && prevFen && looksLikeAMove(prevFen, fen)) {
+              setLiveMovesDetected((c) => c + 1);
+              setMovePulse(true);
+              if (movePulseTimeoutRef.current) clearTimeout(movePulseTimeoutRef.current);
+              movePulseTimeoutRef.current = setTimeout(() => setMovePulse(false), 1500);
+            }
+
+            lastFenRef.current = fen;
+          }
+        }
+      };
     }
+
+    detectionIntervalRef.current = setInterval(runDetection, 500); // 2fps during recording
     return () => {
       if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+      if (movePulseTimeoutRef.current) clearTimeout(movePulseTimeoutRef.current);
     };
   }, [screen, runDetection]);
 
@@ -523,6 +751,15 @@ export default function VideoRecorder() {
   const startRecording = useCallback(async () => {
     if (!streamRef.current) return;
 
+    // Reset Phase 3 state
+    fenTimelineRef.current = [];
+    lastFenRef.current = null;
+    setLiveMovesDetected(0);
+    setMovePulse(false);
+    setFenTimelineLength(0);
+    setRecordingConfidence(0);
+    setRecordingPieceCount(0);
+
     // Create session on server
     const sid = await createSession();
     if (!sid) {
@@ -596,8 +833,10 @@ export default function VideoRecorder() {
     // Stop camera stream
     streamRef.current?.getTracks().forEach((t) => t.stop());
 
-    // Finalize on server
+    // Finalize on server — include the FEN timeline for server-side reconstruction seeding
     const sid = sessionIdRef.current;
+    const fenTimeline = fenTimelineRef.current;
+
     try {
       await fetch(`/api/recordings/${sid}/finalize`, {
         method: "POST",
@@ -608,6 +847,8 @@ export default function VideoRecorder() {
           durationMs: elapsed,
           whitePlayer: whitePlayer || null,
           blackPlayer: blackPlayer || null,
+          // Phase 3: send client-detected FEN timeline to seed server reconstruction
+          fenTimeline: fenTimeline.length > 0 ? fenTimeline : undefined,
         }),
       });
     } catch (err) {
@@ -686,6 +927,7 @@ export default function VideoRecorder() {
       if (elapsedIntervalRef.current) clearInterval(elapsedIntervalRef.current);
       if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (movePulseTimeoutRef.current) clearTimeout(movePulseTimeoutRef.current);
     };
   }, []);
 
@@ -1054,7 +1296,7 @@ export default function VideoRecorder() {
   if (screen === "recording") {
     return (
       <div className="fixed inset-0 bg-[#050f07] flex flex-col">
-        {/* Small live thumbnail */}
+        {/* Small live thumbnail — top-right corner */}
         <video
           ref={videoRef}
           className="absolute top-0 right-0 w-28 h-20 object-cover opacity-60 rounded-bl-2xl"
@@ -1069,7 +1311,7 @@ export default function VideoRecorder() {
         {/* Main content */}
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
           {/* Recording indicator */}
-          <div className="flex items-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-6">
             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
             <span className="text-red-400 text-sm font-bold uppercase tracking-widest">Recording</span>
           </div>
@@ -1078,30 +1320,64 @@ export default function VideoRecorder() {
           <div className="text-7xl font-black text-white tabular-nums mb-2 tracking-tight">
             {formatElapsed(elapsed)}
           </div>
-          <p className="text-white/30 text-sm mb-10">
+          <p className="text-white/30 text-sm mb-6">
             {chunkCount} segment{chunkCount !== 1 ? "s" : ""} saved
           </p>
 
-          {/* Board health dot */}
-          <div className="flex items-center gap-2 mb-12">
-            <div className={`w-2.5 h-2.5 rounded-full ${boardHealth ? "bg-[#4CAF50] animate-pulse" : "bg-red-400"}`} />
-            <span className={`text-xs font-medium ${boardHealth ? "text-[#4CAF50]" : "text-red-400"}`}>
-              {boardHealth ? "Board visible" : "Board not detected"}
-            </span>
+          {/* ── Phase 3: Move detection pulse ─────────────────────────── */}
+          <div className={`relative mb-6 px-6 py-3 rounded-2xl transition-all duration-300 ${
+            movePulse
+              ? "bg-[#4CAF50]/20 border border-[#4CAF50]/50 scale-105"
+              : "bg-white/04 border border-white/08 scale-100"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                movePulse ? "bg-[#4CAF50]/30" : "bg-white/06"
+              }`}>
+                <Zap className={`w-5 h-5 transition-colors duration-200 ${movePulse ? "text-[#4CAF50]" : "text-white/30"}`} />
+              </div>
+              <div className="text-left">
+                <p className={`text-2xl font-black tabular-nums transition-colors duration-200 ${
+                  movePulse ? "text-[#4CAF50]" : "text-white"
+                }`}>
+                  {liveMovesDetected}
+                </p>
+                <p className="text-xs text-white/40">
+                  {liveMovesDetected === 1 ? "move detected" : "moves detected"}
+                </p>
+              </div>
+            </div>
+
+            {/* Ripple animation on move detection */}
+            {movePulse && (
+              <div className="absolute inset-0 rounded-2xl border-2 border-[#4CAF50]/40 animate-ping pointer-events-none" />
+            )}
           </div>
 
           {/* Upload status */}
           {uploadError ? (
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4">
               <AlertCircle className="w-4 h-4 text-amber-400" />
               <span className="text-xs text-amber-400">{uploadError}</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4">
               <Wifi className="w-4 h-4 text-[#4CAF50]/60" />
               <span className="text-xs text-white/30">Uploading in background</span>
             </div>
           )}
+        </div>
+
+        {/* ── Phase 3: Live CV Status Bar ──────────────────────────────── */}
+        <div className="px-6 mb-4">
+          <LiveCvStatusBar
+            moveCount={liveMovesDetected}
+            pieceCount={recordingPieceCount}
+            confidence={recordingConfidence}
+            boardDetected={boardHealth}
+            movePulse={movePulse}
+            fenTimelineLength={fenTimelineLength}
+          />
         </div>
 
         {/* Stop button */}
