@@ -1711,3 +1711,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Empty state: "No games yet" with CTA to record first game
 - [x] Loading skeleton for game cards
 - [x] Write tests for My Games list utilities
+
+## PGN Export with Stockfish Evaluations
+
+- [x] Create exportPgn utility (client/src/lib/exportPgn.ts) with buildAnnotatedPgn function
+- [x] Support standard PGN headers (Event, Site, Date, White, Black, Result, ECO, Opening, Annotator)
+- [x] Inline eval comments: { [%eval 0.23] } format (Lichess/Chess.com compatible)
+- [x] Move classification NAG symbols (!, !?, ?, ??) appended after SAN
+- [x] Best-move arrows: { [%cal Ge2e4] } for non-best moves
+- [x] Add Download PGN button to GameAnalysis page header
+- [x] Show download feedback (brief "Downloaded!" state)
+- [x] Write tests for exportPgn utility (89 tests)

@@ -32,6 +32,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { GameHighlightCard } from "@/components/GameHighlightCard";
+import { buildAnnotatedPgn, downloadPgn } from "@/lib/exportPgn";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
@@ -647,6 +648,7 @@ export default function GameAnalysis() {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 = starting position
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
   const [highlightStatus, setHighlightStatus] = useState<"idle" | "generating" | "done">("idle");
+  const [pgnDownloadStatus, setPgnDownloadStatus] = useState<"idle" | "done">("idle");
   const highlightCardRef = useRef<HTMLDivElement>(null);
 
   const gameId = matched ? params?.gameId : null;
@@ -819,6 +821,15 @@ export default function GameAnalysis() {
     }
   }, [data, criticalMoment]);
 
+  // ── Download annotated PGN ───────────────────────────────────────────────
+  const handleDownloadPgn = useCallback(() => {
+    if (!data) return;
+    const pgn = buildAnnotatedPgn(data.game, data.analyses);
+    downloadPgn(pgn, data.game);
+    setPgnDownloadStatus("done");
+    setTimeout(() => setPgnDownloadStatus("idle"), 2500);
+  }, [data]);
+
   const handleDownloadHighlight = useCallback(async () => {
     if (!highlightCardRef.current || !data) return;
     setHighlightStatus("generating");
@@ -945,6 +956,27 @@ export default function GameAnalysis() {
                 {analysisProgress}%
               </span>
             </div>
+          )}
+          {/* Download PGN button */}
+          {!isAnalyzing && data.analyses.length > 0 && (
+            <button
+              onClick={handleDownloadPgn}
+              title="Download annotated PGN"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                pgnDownloadStatus === "done"
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : isDark
+                    ? "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+              }`}
+            >
+              {pgnDownloadStatus === "done" ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              {pgnDownloadStatus === "done" ? "Downloaded!" : "PGN"}
+            </button>
           )}
         </div>
       </header>
