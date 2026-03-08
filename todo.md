@@ -1885,3 +1885,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] CLASS DIVERSITY BREAKTHROUGH: 9/12 classes detected (up from 1-2 in v1-v3)
 - [x] Updated 51 benchmark tests to v4 results (1,894 total tests pass)
 - [x] Save checkpoint
+
+## Fine-tune on ChessReD2K Real Photos (v5)
+
+- [x] Streamed 103 real ChessReD images (game G000) from 24GB ZIP at 14 MB/s
+- [x] Converted to YOLO format with bounding box annotations (82 train, 21 val)
+- [x] Generated 1,800 synthetic overhead images from ChessReD positions
+- [x] Merged real (82 train) + synthetic (1,800 train) datasets
+- [x] Trained YOLO11n for 15 epochs (mAP@50=0.986, precision=0.984, recall=0.943)
+- [x] All 12 piece classes achieve mAP@50 >= 0.967 individually
+- [x] Exported to ONNX and deployed to cv-models/
+- [x] Real video validation: 30 avg detections, 7/12 classes, max 48 detections
+- [x] Updated 48 benchmark tests to v5 results (1,891 total tests pass)
+- [x] Save checkpoint
