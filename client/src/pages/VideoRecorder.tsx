@@ -349,12 +349,18 @@ export default function VideoRecorder() {
   /** Number of FEN timeline entries accumulated so far */
   const [fenTimelineLength, setFenTimelineLength] = useState(0);
 
-  // ── Processing state ──────────────────────────────────────────────────────
+  // ── Processing state ─────────────────────────────────────────────────────────────────────────────────────
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [processingStep, setProcessingStep] = useState(0);
   const [gameId, setGameId] = useState<string | null>(null);
+  const [cvProgress, setCvProgress] = useState<{
+    pct: number;
+    framesProcessed: number;
+    totalFrames: number;
+    jobFound: boolean;
+  } | null>(null);
 
-  // ── Refs ──────────────────────────────────────────────────────────────────
+  // ── Refs ─────────────────────────────────────────────────────────────────────────────────────
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -858,8 +864,7 @@ export default function VideoRecorder() {
     setScreen("processing");
     setProcessingStep(1); // "Uploading to server"
   }, [elapsed, whitePlayer, blackPlayer]);
-
-  // ── Poll processing status ────────────────────────────────────────────────
+  // ── Poll processing status ────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (screen !== "processing" || !sessionIdRef.current) return;
 
@@ -874,6 +879,7 @@ export default function VideoRecorder() {
       failed: 4,
     };
 
+    // Session status poll (every 5s)
     pollIntervalRef.current = setInterval(async () => {
       try {
         const sid = sessionIdRef.current;
@@ -882,12 +888,13 @@ export default function VideoRecorder() {
           credentials: "include",
         });
         if (!res.ok) return;
-        const data = await res.json() as { status: string; gameId?: string };
-        const step = STATUS_TO_STEP[data.status] ?? 0;
+        const data = await res.json() as { session?: { status: string }; game?: { id: string } | null };
+        const status = data.session?.status ?? "";
+        const step = STATUS_TO_STEP[status] ?? 0;
         setProcessingStep(step);
 
-        if (data.status === "ready" && data.gameId) {
-          setGameId(data.gameId);
+        if (status === "ready" && data.game?.id) {
+          setGameId(data.game.id);
           clearInterval(pollIntervalRef.current!);
         }
       } catch {
@@ -895,12 +902,44 @@ export default function VideoRecorder() {
       }
     }, 5000);
 
+    // CV job progress poll (every 2s) — shows real frame percentage
+    const cvPollRef = setInterval(async () => {
+      try {
+        const sid = sessionIdRef.current;
+        if (!sid) return;
+        const res = await fetch(`/api/recordings/${sid}/cv-job`, {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const data = await res.json() as {
+          jobFound: boolean;
+          pct: number;
+          framesProcessed: number;
+          totalFrames: number;
+          status: string;
+        };
+        setCvProgress({
+          pct: data.pct,
+          framesProcessed: data.framesProcessed,
+          totalFrames: data.totalFrames,
+          jobFound: data.jobFound,
+        });
+        // Stop cv-job polling once the job is done
+        if (data.jobFound && (data.status === "complete" || data.status === "failed")) {
+          clearInterval(cvPollRef);
+        }
+      } catch {
+        // Best-effort
+      }
+    }, 2000);
+
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      clearInterval(cvPollRef);
     };
   }, [screen]);
 
-  // ── Permission check ──────────────────────────────────────────────────────
+  // ── Permission check ────────────────────────────────────────────────────────────────────────────
   const requestPermission = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -1434,9 +1473,32 @@ export default function VideoRecorder() {
           </p>
 
           {/* Progress steps */}
-          <div className="w-full max-w-xs mb-10">
+          <div className="w-full max-w-xs mb-6">
             <ProcessingStepBar currentStep={processingStep} />
           </div>
+
+          {/* CV frame analysis progress */}
+          {cvProgress && cvProgress.jobFound && !isReady && (
+            <div className="w-full max-w-xs mb-8">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-white/50 font-medium">Board analysis</span>
+                <span className="text-xs text-[#4CAF50] font-mono font-bold">
+                  {cvProgress.pct}%
+                  {cvProgress.totalFrames > 0 && (
+                    <span className="text-white/30 font-normal ml-1">
+                      ({cvProgress.framesProcessed}/{cvProgress.totalFrames} frames)
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-white/08 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#4CAF50] rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${cvProgress.pct}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           {isReady ? (

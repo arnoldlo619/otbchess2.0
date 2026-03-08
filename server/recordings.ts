@@ -27,6 +27,7 @@ import {
   moveAnalyses,
   correctionEntries,
   videoChunks,
+  cvJobs,
 } from "../shared/schema.js";
 import { detectOpening, formatOpeningName } from "./openingDetection.js";
 import { computePlayerAccuracy, computeBestMoveStreak, accuracyLabel } from "./accuracyCalc.js";
@@ -739,6 +740,77 @@ export function createRecordingsRouter(): Router {
     } catch (err) {
       console.error("[recordings] finalize error:", err);
       res.status(500).json({ error: "Failed to finalize recording" });
+    }
+  });
+
+  // ── GET /api/recordings/:id/cv-job — real-time CV job progress ────────────
+  // Returns framesProcessed, totalFrames, pct (0-100), and job status so the
+  // processing screen can show a real percentage instead of a static spinner.
+  router.get("/:id/cv-job", requireAuth, async (req, res) => {
+    try {
+      const db = await getDb();
+
+      // Verify the session exists
+      const [session] = await db
+        .select({ id: recordingSessions.id, status: recordingSessions.status })
+        .from(recordingSessions)
+        .where(eq(recordingSessions.id, req.params.id));
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      // Fetch the most recent CV job for this session
+      const [job] = await db
+        .select({
+          id: cvJobs.id,
+          status: cvJobs.status,
+          framesProcessed: cvJobs.framesProcessed,
+          totalFrames: cvJobs.totalFrames,
+          errorMessage: cvJobs.errorMessage,
+          startedAt: cvJobs.startedAt,
+          completedAt: cvJobs.completedAt,
+        })
+        .from(cvJobs)
+        .where(eq(cvJobs.sessionId, req.params.id))
+        .orderBy(desc(cvJobs.createdAt))
+        .limit(1);
+
+      if (!job) {
+        // No CV job yet — session may still be uploading / concatenating
+        return res.json({
+          jobFound: false,
+          sessionStatus: session.status,
+          framesProcessed: 0,
+          totalFrames: 0,
+          pct: 0,
+          status: session.status,
+        });
+      }
+
+      const framesProcessed = job.framesProcessed ?? 0;
+      const totalFrames = job.totalFrames ?? 0;
+      const pct =
+        totalFrames > 0
+          ? Math.min(100, Math.round((framesProcessed / totalFrames) * 100))
+          : job.status === "complete"
+            ? 100
+            : job.status === "running"
+              ? 5 // show at least 5% so the bar is visible from the start
+              : 0;
+
+      res.json({
+        jobFound: true,
+        sessionStatus: session.status,
+        jobId: job.id,
+        status: job.status,
+        framesProcessed,
+        totalFrames,
+        pct,
+        errorMessage: job.errorMessage ?? null,
+        startedAt: job.startedAt ?? null,
+        completedAt: job.completedAt ?? null,
+      });
+    } catch (err) {
+      console.error("[recordings] cv-job progress error:", err);
+      res.status(500).json({ error: "Failed to get CV job progress" });
     }
   });
 

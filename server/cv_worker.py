@@ -516,7 +516,8 @@ def merge_fen_timelines(client_timeline, server_timeline):
     return merged
 
 
-def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_fen_timeline=None):
+def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_fen_timeline=None,
+                  job_id=None, db_kwargs=None):
     """
     Main CV pipeline. Processes a video file and returns a result dict.
 
@@ -526,6 +527,8 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
         confidence_threshold: Minimum piece detection confidence.
         client_fen_timeline: Optional list of (timestamp_ms, fen, confidence) tuples
             from the client-side CV worker, used to seed/improve reconstruction.
+        job_id: Optional cv_jobs row ID for incremental progress writes.
+        db_kwargs: Optional PyMySQL connection kwargs for progress writes.
 
     Returns:
         dict with keys: pgn, moveTimeline, framesProcessed, totalFrames, error, warnings, seedUsed
@@ -602,10 +605,18 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
             except Exception as e:
                 warnings.append(f"Frame {frame_idx} error: {str(e)[:100]}")
 
+            # Write incremental progress every 10 sampled frames (best-effort)
+            if job_id and db_kwargs and frames_processed % 10 == 0:
+                _write_progress(job_id, db_kwargs, frames_processed, total_frames)
+
         frame_idx += 1
 
     cap.release()
     result["framesProcessed"] = frames_processed
+
+    # Final progress write so the endpoint always shows 100% on complete
+    if job_id and db_kwargs:
+        _write_progress(job_id, db_kwargs, frames_processed, total_frames)
 
     # ── Merge with client FEN timeline seed ────────────────────────────────
     if client_fen_timeline and len(client_fen_timeline) > 0:
@@ -725,6 +736,34 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
 
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 
+def _parse_db_url(url: str):
+    """Parse a mysql://user:pass@host:port/db?... URL into connection kwargs."""
+    import re
+    m = re.match(r"mysql://([^:]+):([^@]+)@([^:]+):(\d+)/([^?]+)", url)
+    if not m:
+        return None
+    user, pw, host, port, db = m.groups()
+    return dict(host=host, port=int(port), user=user, password=pw, database=db,
+                ssl={"ca": None}, ssl_verify_cert=False)
+
+
+def _write_progress(job_id: str, db_kwargs: dict, frames_processed: int, total_frames: int):
+    """Write incremental frame progress to the cv_jobs table."""
+    try:
+        import pymysql
+        conn = pymysql.connect(**db_kwargs, connect_timeout=5)
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE cv_jobs SET frames_processed=%s, total_frames=%s WHERE id=%s",
+                (frames_processed, total_frames, job_id),
+            )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        # Non-fatal — progress writes are best-effort
+        sys.stderr.write(f"[cv-worker] progress write failed: {e}\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="OTB Chess CV Worker")
     parser.add_argument("video_path", help="Path to the video file to process")
@@ -734,10 +773,21 @@ def main():
                         help="Minimum piece detection confidence (default: 0.45)")
     parser.add_argument("--fen-timeline-file", type=str, default=None,
                         help="Path to a JSON file containing the client-side FEN timeline seed")
+    parser.add_argument("--job-id", type=str, default=None,
+                        help="cv_jobs row ID for incremental progress writes")
     args = parser.parse_args()
 
     # Load optional client FEN timeline seed
     client_fen_timeline = load_client_fen_timeline(args.fen_timeline_file)
+
+    # Set up incremental progress writing if job-id is provided
+    job_id = args.job_id
+    db_kwargs = None
+    if job_id:
+        db_url = os.environ.get("DATABASE_URL", "")
+        db_kwargs = _parse_db_url(db_url)
+        if not db_kwargs:
+            sys.stderr.write("[cv-worker] Could not parse DATABASE_URL for progress writes\n")
 
     try:
         result = process_video(
@@ -745,6 +795,8 @@ def main():
             fps_sample=args.fps_sample,
             confidence_threshold=args.confidence,
             client_fen_timeline=client_fen_timeline if client_fen_timeline else None,
+            job_id=job_id,
+            db_kwargs=db_kwargs,
         )
     except Exception as e:
         result = {

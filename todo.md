@@ -1771,3 +1771,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Responsive layout: video panel in right panel above move list
 - [x] Update AnalysisResponse type to include session.videoKey and game.moveTimestamps
 - [x] Write tests for video sync utilities (seekToMove, clipTimings, formatVideoTime) — 50 tests
+
+## CV Job Progress Endpoint
+
+- [x] Add GET /api/recordings/:id/cv-job endpoint returning framesProcessed, totalFrames, status, pct
+- [x] Update cv_worker.py to write framesProcessed to DB every 10 frames via PyMySQL
+- [x] Pass --job-id arg from cvJobQueue.ts to Python worker
+- [x] Add cvProgress state and secondary cv-job poll (every 2s) in VideoRecorder processing screen
+- [x] Animated green progress bar with frame count label ("45/900 frames")
+- [x] Stop cv-job polling when status reaches complete or failed
+- [x] Write tests for computePct, buildCvJobResponse, STATUS_TO_STEP, poll stop condition (43 tests, 1678 total)
