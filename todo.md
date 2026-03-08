@@ -1632,3 +1632,45 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Payload: "Your game analysis is ready" with link to /game/:id/analysis
 - [x] Client: notification click navigates to analysis page
 - [x] Write 55 tests for video recorder utilities (1229 total passing)
+
+## CV Pipeline — Phase 2 (Real Board Detection + YOLOv8)
+
+### OpenCV.js Board Detection (Web Worker)
+- [x] Load OpenCV.js 4.x from CDN in a dedicated Web Worker (no main thread blocking)
+- [x] Implement real Canny edge detection on each video frame
+- [x] Implement Hough line transform to detect board grid lines
+- [x] Implement quadrilateral fitting to find the 4 board corners
+- [x] Compute homography matrix to normalize board to top-down view
+- [x] Return confidence score (0-1) and corner coordinates to main thread
+- [x] Three indicators driven by real CV: Board Detected, All Corners Visible, Lighting OK
+- [x] Lighting check: compute mean luminance of frame, flag if < 40 or > 220
+
+### YOLOv8 Board Segmentation (ONNX Runtime Web)
+- [x] Source yamero999/ultimate-v2-chess-onnx (2.09MB, Apache 2.0) — board segmentation model
+- [x] Upload model to CDN via manus-upload-file --webdev
+- [x] Load onnxruntime-web via CDN in the Web Worker
+- [x] Run board segmentation inference to locate board boundary
+- [x] Extract 4 corner coordinates from segmentation mask via contour detection
+- [x] Confidence threshold: boardDetected when confidence > 0.5
+- [x] Return corners + confidence to main thread
+- [x] Piece classification deferred to Phase 2B (no suitable small ONNX model available)
+
+### Integration into VideoRecorder
+- [x] Replace simulated detection with real Web Worker messages (workerRef, overlayCanvasRef)
+- [x] Send ImageData frames to worker at 5fps via postMessage (zero-copy transferable buffer)
+- [x] Show board corner overlay (green quadrilateral + corner dots) on overlayCanvasRef
+- [x] Update framing indicators in real-time from CV results
+- [x] Show CV engine status label ("Initialising CV engine", "Loading ONNX model", "CV ready", "ONNX active")
+- [x] Graceful fallback: if Worker fails, setOpencvReady(true) and proceed
+
+### Testing
+- [x] 48 unit tests for CV pipeline utilities (1277 total passing)
+- [x] Corner scaling tests (4 cases)
+- [x] Quadrilateral validation tests (5 cases)
+- [x] Quadrilateral area tests (3 cases)
+- [x] Framing status tests (4 cases)
+- [x] Worker message protocol tests (9 cases)
+- [x] Lighting analysis tests (7 cases)
+- [x] Confidence calculation tests (5 cases)
+- [x] Recording timer format tests (6 cases)
+- [x] MIME type selection tests (5 cases)

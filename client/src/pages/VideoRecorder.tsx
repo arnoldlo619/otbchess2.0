@@ -173,6 +173,8 @@ export default function VideoRecorder() {
     confidence: 0,
   });
   const [opencvReady, setOpencvReady] = useState(false);
+  const [cvStatus, setCvStatus] = useState<string>("Initialising CV engine…");
+  const [detectedCorners, setDetectedCorners] = useState<Array<{x:number;y:number}> | null>(null);
   const [showTips, setShowTips] = useState(false);
 
   // ── Recording state ───────────────────────────────────────────────────────
@@ -199,6 +201,8 @@ export default function VideoRecorder() {
   const sessionIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(0);
   const chunksRef = useRef<Blob[]>([]);
+  const workerRef = useRef<Worker | null>(null);
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-gray-950";
   const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-900";
@@ -227,44 +231,71 @@ export default function VideoRecorder() {
     }
   }, [landscape, screen]);
 
-  // ── Load OpenCV.js lazily via CDN ─────────────────────────────────────────
+  // ── Spawn CV Web Worker ───────────────────────────────────────────────────
   useEffect(() => {
     if (screen !== "framing") return;
-    if (opencvReady) return;
+    if (workerRef.current) return; // already spawned
 
-    // Check if already loaded
-    if ((window as unknown as Record<string, unknown>).cv) {
+    try {
+      const worker = new Worker("/chess-cv-worker.js");
+      workerRef.current = worker;
+
+      worker.onmessage = (e) => {
+        const msg = e.data as {
+          type: string;
+          message?: string;
+          boardDetected?: boolean;
+          cornersVisible?: boolean;
+          lightingOk?: boolean;
+          confidence?: number;
+          corners?: Array<{x:number;y:number}> | null;
+          fallback?: boolean;
+        };
+
+        if (msg.type === "status") {
+          setCvStatus(msg.message ?? "Loading…");
+        } else if (msg.type === "ready") {
+          setOpencvReady(true);
+          setCvStatus("CV ready");
+        } else if (msg.type === "result") {
+          setFraming({
+            boardDetected: msg.boardDetected ?? false,
+            cornersVisible: msg.cornersVisible ?? false,
+            lightingOk: msg.lightingOk ?? false,
+            confidence: msg.confidence ?? 0,
+          });
+          setBoardHealth(msg.boardDetected ?? false);
+          setDetectedCorners(msg.corners ?? null);
+
+          // Draw detected board outline on overlay canvas
+          if (msg.corners && msg.corners.length === 4 && overlayCanvasRef.current) {
+            drawBoardOverlay(msg.corners, overlayCanvasRef.current);
+          } else if (overlayCanvasRef.current) {
+            clearOverlay(overlayCanvasRef.current);
+          }
+        } else if (msg.type === "error") {
+          setCvStatus("CV error — using fallback");
+          setOpencvReady(true); // proceed with fallback
+        }
+      };
+
+      worker.onerror = () => {
+        setCvStatus("Worker failed — using fallback");
+        setOpencvReady(true);
+      };
+
+      worker.postMessage({ type: "init" });
+    } catch {
+      // Web Workers not supported — proceed without CV
       setOpencvReady(true);
-      return;
+      setCvStatus("CV unavailable");
     }
 
-    const script = document.createElement("script");
-    script.src = "https://docs.opencv.org/4.8.0/opencv.js";
-    script.async = true;
-    script.onload = () => {
-      // OpenCV.js sets window.cv when ready
-      const checkReady = setInterval(() => {
-        const cv = (window as unknown as Record<string, unknown>).cv;
-        if (cv && typeof (cv as Record<string, unknown>).Mat === "function") {
-          clearInterval(checkReady);
-          setOpencvReady(true);
-        }
-      }, 100);
-      // Timeout after 10s — fall back to heuristic detection
-      setTimeout(() => {
-        clearInterval(checkReady);
-        setOpencvReady(true); // proceed anyway with fallback
-      }, 10000);
-    };
-    script.onerror = () => {
-      setOpencvReady(true); // proceed with fallback detection
-    };
-    document.head.appendChild(script);
-
     return () => {
-      // Don't remove script — keep it cached for next time
+      workerRef.current?.terminate();
+      workerRef.current = null;
     };
-  }, [screen, opencvReady]);
+  }, [screen]);
 
   // ── Start camera stream ───────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
@@ -298,109 +329,77 @@ export default function VideoRecorder() {
     };
   }, [screen, startCamera]);
 
-  // ── Board detection (OpenCV.js or heuristic fallback) ────────────────────
+  // ── Send frame to CV worker ───────────────────────────────────────────────
   const runDetection = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2) return;
+    if (!workerRef.current) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Downsample to 640×360 for performance before sending to worker
+    const W = 640;
+    const H = Math.round((video.videoHeight / video.videoWidth) * W) || 360;
+    canvas.width = W;
+    canvas.height = H;
+    ctx.drawImage(video, 0, 0, W, H);
 
-    const cv = (window as unknown as Record<string, unknown>).cv as Record<string, unknown> | undefined;
+    const imageData = ctx.getImageData(0, 0, W, H);
 
-    if (cv && typeof cv.Mat === "function") {
-      // OpenCV.js path
-      try {
-        const src = (cv.imread as (el: HTMLCanvasElement) => unknown)(canvas);
-        const gray = new (cv.Mat as new () => unknown)();
-        const edges = new (cv.Mat as new () => unknown)();
-
-        (cv.cvtColor as (src: unknown, dst: unknown, code: unknown) => void)(
-          src, gray, (cv.COLOR_RGBA2GRAY as unknown)
-        );
-        (cv.Canny as (src: unknown, dst: unknown, t1: number, t2: number) => void)(
-          gray, edges, 50, 150
-        );
-
-        // Count edge pixels as a proxy for board detection
-        const edgeData = (edges as { data: Uint8Array }).data;
-        let edgeCount = 0;
-        for (let i = 0; i < edgeData.length; i++) {
-          if (edgeData[i] > 0) edgeCount++;
-        }
-        const edgeDensity = edgeCount / (canvas.width * canvas.height);
-
-        // Heuristic: a chess board has many straight lines → high edge density
-        const boardDetected = edgeDensity > 0.04;
-        const confidence = Math.min(edgeDensity / 0.12, 1);
-
-        // Lighting check: average brightness
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let brightness = 0;
-        for (let i = 0; i < imageData.data.length; i += 4) {
-          brightness += (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-        }
-        brightness /= (imageData.data.length / 4);
-        const lightingOk = brightness > 60 && brightness < 220;
-
-        setFraming({
-          boardDetected,
-          cornersVisible: confidence > 0.6,
-          lightingOk,
-          confidence,
-        });
-        setBoardHealth(boardDetected);
-
-        (src as { delete: () => void }).delete();
-        (gray as { delete: () => void }).delete();
-        (edges as { delete: () => void }).delete();
-      } catch {
-        // Fall through to heuristic
-        runHeuristicDetection(ctx, canvas);
-      }
-    } else {
-      // Heuristic fallback (no OpenCV)
-      runHeuristicDetection(ctx, canvas);
-    }
+    // Transfer imageData to worker (zero-copy via transferable)
+    workerRef.current.postMessage(
+      { type: "detect", imageData, width: W, height: H },
+      [imageData.data.buffer]
+    );
   }, []);
 
-  function runHeuristicDetection(
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement
+  // ── Overlay drawing helpers ───────────────────────────────────────────────
+  function drawBoardOverlay(
+    corners: Array<{x: number; y: number}>,
+    overlayCanvas: HTMLCanvasElement
   ) {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
+    const video = videoRef.current;
+    if (!video) return;
+    overlayCanvas.width = video.clientWidth;
+    overlayCanvas.height = video.clientHeight;
 
-    // Brightness
-    let brightness = 0;
-    let edgeCount = 0;
-    for (let i = 0; i < data.length; i += 16) {
-      const r = data[i], g = data[i + 1], b = data[i + 2];
-      brightness += (r + g + b) / 3;
-      // Simple edge: high contrast between adjacent pixels
-      if (i + 20 < data.length) {
-        const diff = Math.abs(r - data[i + 16]) + Math.abs(g - data[i + 17]) + Math.abs(b - data[i + 18]);
-        if (diff > 60) edgeCount++;
-      }
-    }
-    brightness /= (data.length / 16);
-    const edgeDensity = edgeCount / (data.length / 16);
-    const boardDetected = edgeDensity > 0.15;
-    const confidence = Math.min(edgeDensity / 0.4, 1);
-    const lightingOk = brightness > 60 && brightness < 220;
+    const ctx = overlayCanvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-    setFraming({
-      boardDetected,
-      cornersVisible: confidence > 0.5,
-      lightingOk,
-      confidence,
+    // Scale corners from video native resolution to display size
+    const scaleX = video.clientWidth / (video.videoWidth || 640);
+    const scaleY = video.clientHeight / (video.videoHeight || 480);
+
+    const scaled = corners.map(c => ({ x: c.x * scaleX, y: c.y * scaleY }));
+
+    // Draw filled quad with low opacity
+    ctx.beginPath();
+    ctx.moveTo(scaled[0].x, scaled[0].y);
+    for (let i = 1; i < scaled.length; i++) ctx.lineTo(scaled[i].x, scaled[i].y);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(76, 175, 80, 0.08)";
+    ctx.fill();
+
+    // Draw border
+    ctx.strokeStyle = "rgba(76, 175, 80, 0.85)";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Draw corner dots
+    scaled.forEach(c => {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#4CAF50";
+      ctx.fill();
     });
-    setBoardHealth(boardDetected);
+  }
+
+  function clearOverlay(overlayCanvas: HTMLCanvasElement) {
+    const ctx = overlayCanvas.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
   }
 
   // ── Start/stop detection loop ─────────────────────────────────────────────
@@ -409,23 +408,27 @@ export default function VideoRecorder() {
       detectionIntervalRef.current = setInterval(runDetection, 200); // 5fps
     }
     return () => {
-      if (detectionIntervalRef.current) {
-        clearInterval(detectionIntervalRef.current);
-      }
+      if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
     };
   }, [screen, opencvReady, runDetection]);
 
-  // ── Also run detection during recording for health dot ───────────────────
+  // ── Also run detection during recording for health dot (1fps) ────────────
   useEffect(() => {
     if (screen === "recording") {
-      detectionIntervalRef.current = setInterval(runDetection, 1000); // 1fps during recording
+      detectionIntervalRef.current = setInterval(runDetection, 1000);
     }
     return () => {
-      if (detectionIntervalRef.current) {
-        clearInterval(detectionIntervalRef.current);
-      }
+      if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
     };
   }, [screen, runDetection]);
+
+  // ── Terminate worker on unmount ───────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    };
+  }, []);
 
   // ── Create recording session on server ───────────────────────────────────
   const createSession = useCallback(async (): Promise<string | null> => {
@@ -820,8 +823,15 @@ export default function VideoRecorder() {
           autoPlay
         />
 
-        {/* Hidden canvas for detection */}
+        {/* Hidden canvas for frame capture */}
         <canvas ref={canvasRef} className="hidden" />
+
+        {/* Overlay canvas — draws detected board quadrilateral */}
+        <canvas
+          ref={overlayCanvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ zIndex: 5 }}
+        />
 
         {/* Board target overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -936,7 +946,13 @@ export default function VideoRecorder() {
               {!opencvReady && (
                 <div className="flex items-center gap-1.5">
                   <Loader2 className="w-3 h-3 text-amber-400 animate-spin" />
-                  <span className="text-xs text-amber-400">Loading CV…</span>
+                  <span className="text-xs text-amber-400">{cvStatus}</span>
+                </div>
+              )}
+              {opencvReady && detectedCorners && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
+                  <span className="text-xs text-[#4CAF50]">ONNX active</span>
                 </div>
               )}
             </div>
