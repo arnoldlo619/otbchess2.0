@@ -34,6 +34,7 @@ import {
   BellOff,
   X,
   Timer,
+  Video,
 } from "lucide-react";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -644,6 +645,30 @@ function MyBoardScreen({
                   <div>
                     <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
                     <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
+                  </div>
+                </div>
+                <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </a>
+            )}
+            {/* Video Record shortcut */}
+            {opponent && (
+              <a
+                href={`/record/camera?tournamentId=${tournamentId}&boardNumber=${game.board ?? ""}&white=${encodeURIComponent(username)}&black=${encodeURIComponent(opponent.username ?? opponent.name ?? "")}`}
+                className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+                  isDark
+                    ? "bg-[#1a1a2e] hover:bg-[#22223a] border border-[#4CAF50]/20"
+                    : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
+                } transition-colors`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    isDark ? "bg-[#4CAF50]/15" : "bg-indigo-100"
+                  }`}>
+                    <Video className={`w-4 h-4 ${isDark ? accent : "text-indigo-600"}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
+                    <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish</p>
                   </div>
                 </div>
                 <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>

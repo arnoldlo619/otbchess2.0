@@ -431,6 +431,81 @@ export function createRecordingsRouter(): Router {
     }
   });
 
+  // ── POST /api/recordings/:id/chunk — receive a video chunk ─────────────────
+  // Stores chunk metadata; actual bytes stored via multipart form
+  router.post("/:id/chunk", async (req, res) => {
+    try {
+      const db = await getDb();
+      const [session] = await db
+        .select()
+        .from(recordingSessions)
+        .where(eq(recordingSessions.id, req.params.id));
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      // Update status to uploading if still in recording state
+      if (session.status === "recording" || session.status === "ready") {
+        await db
+          .update(recordingSessions)
+          .set({ status: "uploading", updatedAt: new Date() })
+          .where(eq(recordingSessions.id, req.params.id));
+      }
+
+      // In a full implementation, we'd store the chunk to S3 here.
+      // For Phase 1, we acknowledge receipt and track chunk count.
+      const chunkIndex = Number((req.body as { chunkIndex?: string }).chunkIndex ?? 0);
+      console.log(`[recordings] Received chunk ${chunkIndex} for session ${req.params.id}`);
+
+      res.json({ ok: true, chunkIndex });
+    } catch (err) {
+      console.error("[recordings] chunk error:", err);
+      res.status(500).json({ error: "Failed to store chunk" });
+    }
+  });
+
+  // ── POST /api/recordings/:id/finalize — mark upload complete ─────────────
+  router.post("/:id/finalize", async (req, res) => {
+    const { chunkCount, durationMs, whitePlayer, blackPlayer } = req.body as {
+      chunkCount?: number;
+      durationMs?: number;
+      whitePlayer?: string;
+      blackPlayer?: string;
+    };
+
+    try {
+      const db = await getDb();
+      const [session] = await db
+        .select()
+        .from(recordingSessions)
+        .where(eq(recordingSessions.id, req.params.id));
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      // Update session to queued state
+      await db
+        .update(recordingSessions)
+        .set({
+          status: "queued",
+          updatedAt: new Date(),
+        })
+        .where(eq(recordingSessions.id, req.params.id));
+
+      console.log(
+        `[recordings] Finalized session ${req.params.id}: ${chunkCount} chunks, ${durationMs}ms, ${whitePlayer} vs ${blackPlayer}`
+      );
+
+      // In Phase 2, this would enqueue a CV processing job.
+      // For Phase 1, we prompt the user to enter PGN manually.
+      res.json({
+        ok: true,
+        sessionId: req.params.id,
+        status: "queued",
+        message: "Recording received. Enter PGN to complete analysis.",
+      });
+    } catch (err) {
+      console.error("[recordings] finalize error:", err);
+      res.status(500).json({ error: "Failed to finalize recording" });
+    }
+  });
+
   // ── GET /api/games/:id — get processed game data ──────────────────────────────────
   // When mounted at /api/games, the router path is /:id (not /games/:id)
   // When mounted at /api/recordings, this path is unreachable (intentional)

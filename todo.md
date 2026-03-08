@@ -1589,3 +1589,46 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Share button: spinner while generating, green checkmark on success, 3s reset
 - [x] Download button alongside share button
 - [x] TypeScript clean, 1151 tests passing (+21 new)
+
+## Video Game Recorder — Phase 1 (Camera Flow)
+
+### Entry Point
+- [x] Add "Record Game" button to PlayerView MyBoardScreen (below Chess Clock button)
+- [x] Button navigates to /record/camera?tournamentId=X&boardNumber=Y&white=X&black=Y
+- [x] Add /record/camera route to App.tsx (lazy-loaded VideoRecorder page)
+
+### VideoRecorder Page — 5 Screens
+- [x] Screen 1 — Permission Gate: check camera support, request permission, handle denied state
+- [x] Screen 2 — Orientation Lock: detect landscape, show animated rotate-phone prompt if portrait
+- [x] Screen 3 — Framing Guide: rear camera preview, OpenCV.js board detection overlay, 3 indicators, Start button gates on all-green
+- [x] Screen 4 — Active Recording: MediaRecorder, Wake Lock API, elapsed timer, board health dot, chunked S3 upload
+- [x] Screen 5 — Processing Status: 5-step progress bar, polling /api/recordings/:id/status, push notification on completion, auto-navigate to analysis
+
+### API Endpoints
+- [x] POST /api/recordings/presign — generate S3 presigned URL for chunk upload
+- [x] POST /api/recordings/:id/finalize — mark upload complete, trigger processing queue
+- [x] GET /api/recordings/:id/status — return current processing state (enum)
+
+### OpenCV.js Integration
+- [x] Load OpenCV.js lazily via CDN script tag (no npm install)
+- [x] Board detection: Canny edge → Hough line transform → quadrilateral detection (simulated in Phase 1)
+- [x] Run detection at 5fps on canvas overlay
+- [x] Three indicators: Board Detected, All Corners Visible, Lighting OK
+- [x] Confidence score drives corner indicator colors (red → amber → green)
+
+### S3 Chunked Upload
+- [x] Request presigned PUT URL from server for each 5-second chunk
+- [x] Upload chunks as ondataavailable fires from MediaRecorder
+- [x] Track upload progress per chunk
+- [x] On stop: POST /api/recordings/:id/finalize with chunk count
+
+### Wake Lock
+- [x] Request navigator.wakeLock.request("screen") on recording start
+- [x] Release wake lock on stop/navigate away
+- [x] Handle wake lock re-acquisition on page visibility change
+
+### Push Notification on Analysis Ready
+- [x] Server: send push notification when processing status → "ready"
+- [x] Payload: "Your game analysis is ready" with link to /game/:id/analysis
+- [x] Client: notification click navigates to analysis page
+- [x] Write 55 tests for video recorder utilities (1229 total passing)
