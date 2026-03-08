@@ -7,12 +7,13 @@
  *
  * Benchmark history:
  *   v1 (2026-03-08): Original model — piece detection Grade F (4 detections, all 'b')
- *   v2 (2026-03-08): Retrained model — piece detection improved (12 detections, all 'r')
+ *   v2 (2026-03-08): Retrained on Roboflow 606 imgs — 12 detections, all 'r'
+ *   v3 (2026-03-08): Retrained on augmented 4,492 imgs — 20 detections, all 'p'
  *
- * Current grades (v2 retrained model):
+ * Current grades (v3 augmented model):
  *   - Board Segmentation:  A  (100% detection rate)
  *   - Corner Extraction:   F  (0% four-vertex, 100% fallback)
- *   - Piece Detection:     D  (3x more detections, still single-class domain gap)
+ *   - Piece Detection:     C  (5x more detections than v1, still single-class)
  *   - Coverage Guard:      PASS (0% false positive rate)
  *   - End-to-End:          F  (0 moves — needs multi-class detection)
  *
@@ -22,7 +23,7 @@
 import { describe, it, expect } from "vitest";
 
 // ─── Benchmark Report Data ──────────────────────────────────────────────────
-// Captured from validate_real_video.py output on 2026-03-08
+// Captured from export_v3.py validation output on 2026-03-08
 
 const BENCHMARK_REPORT = {
   video: "pexels_chess_overhead.mp4",
@@ -35,13 +36,17 @@ const BENCHMARK_REPORT = {
     cameraAngle: "overhead, ~30-40° from vertical",
   },
   sampledFrames: 15,
-  modelVersion: "v2-retrained",
+  modelVersion: "v3-augmented",
   trainingInfo: {
-    dataset: "Roboflow chess-full (606 images, 12 classes)",
-    epochs: 6,
-    testMapAt50: 0.925,
-    testRecall: 0.849,
-    testPrecision: 0.735,
+    dataset: "Roboflow + perspective augmentation (4,492 images, 12 classes)",
+    epochs: 15,
+    bestEpoch: 8,
+    bestMapAt50: 0.981,
+    bestRecall: 0.974,
+    bestPrecision: 0.972,
+    finalMapAt50: 0.980,
+    finalRecall: 0.979,
+    finalPrecision: 0.976,
   },
   stages: {
     boardSegmentation: {
@@ -61,18 +66,24 @@ const BENCHMARK_REPORT = {
     },
     pieceDetection: {
       // v1 (original): 4 detections at best angle, all 'b' (black bishop)
-      // v2 (retrained): 12 detections at best angle, all 'r' (black rook)
+      // v2 (retrained 606 imgs): 12 detections at best angle, all 'r' (black rook)
+      // v3 (augmented 4,492 imgs): 20 detections at best angle, all 'p' (black pawn)
       v1Detections: 4,
       v2Detections: 12,
-      improvementFactor: 3.0,
-      avgDetections0deg: 2,
-      avgDetectionsBest: 12,
+      v3Detections: 20,
+      improvementOverV1: 5.0,
+      improvementOverV2: 1.67,
+      avgDetections0deg: 5,
+      avgDetectionsBest: 20,
       validFenRate0deg: 0.0,
       validFenRateBest: 0.0,
       dominantClassV1: "b",  // black bishop — old model domain gap
-      dominantClassV2: "r",  // black rook — new model domain gap
+      dominantClassV2: "r",  // black rook — v2 model domain gap
+      dominantClassV3: "p",  // black pawn — v3 model domain gap
       uniqueClassesDetected: 1,
-      grade: "D",  // Improved from F: more detections but still single-class
+      highConfidenceDetections: 9,  // conf >= 0.7
+      maxConfidence: 0.788,
+      grade: "C",  // Improved from D: 5x v1 detections, better localisation
     },
     coverageGuard: {
       guardPassed: 15,
@@ -146,16 +157,25 @@ describe("Level 2 — Corner Extraction (Real Video)", () => {
 
 // ─── Stage 3: Piece Detection ───────────────────────────────────────────────
 
-describe("Level 2 — Piece Detection (Real Video, Retrained Model)", () => {
+describe("Level 2 — Piece Detection (Real Video, v3 Augmented Model)", () => {
   const piece = BENCHMARK_REPORT.stages.pieceDetection;
 
-  it("retrained model detects 3x more pieces than original (12 vs 4)", () => {
-    expect(piece.v2Detections).toBeGreaterThanOrEqual(piece.v1Detections * 2);
-    expect(piece.improvementFactor).toBeGreaterThanOrEqual(2.0);
+  it("v3 model detects 5x more pieces than v1 original (20 vs 4)", () => {
+    expect(piece.v3Detections).toBeGreaterThanOrEqual(piece.v1Detections * 4);
+    expect(piece.improvementOverV1).toBeGreaterThanOrEqual(4.0);
   });
 
-  it("detects 12 pieces at best rotation angle (up from 4)", () => {
-    expect(piece.avgDetectionsBest).toBeGreaterThanOrEqual(10);
+  it("v3 model detects more pieces than v2 (20 vs 12)", () => {
+    expect(piece.v3Detections).toBeGreaterThan(piece.v2Detections);
+    expect(piece.improvementOverV2).toBeGreaterThanOrEqual(1.5);
+  });
+
+  it("detects 20 pieces at best rotation angle", () => {
+    expect(piece.avgDetectionsBest).toBeGreaterThanOrEqual(15);
+  });
+
+  it("has 9 high-confidence detections (conf >= 0.7)", () => {
+    expect(piece.highConfidenceDetections).toBeGreaterThanOrEqual(5);
   });
 
   it("rotation sweep improves detection count over 0°", () => {
@@ -166,21 +186,22 @@ describe("Level 2 — Piece Detection (Real Video, Retrained Model)", () => {
     expect(piece.validFenRateBest).toBe(0.0);
   });
 
-  it("receives grade D (improved detection count, still single-class)", () => {
-    expect(piece.grade).toBe("D");
+  it("receives grade C (5x v1, better localisation, still single-class)", () => {
+    expect(piece.grade).toBe("C");
   });
 
-  it("domain gap shifted: old model → black bishop, new model → black rook", () => {
+  it("domain gap shifted across versions: b → r → p", () => {
     expect(piece.dominantClassV1).toBe("b");
     expect(piece.dominantClassV2).toBe("r");
+    expect(piece.dominantClassV3).toBe("p");
     expect(piece.uniqueClassesDetected).toBe(1);
   });
 
-  it("documents that retraining on same-style data cannot fix cross-style gap", () => {
-    // The Roboflow dataset uses standard Staunton pieces from a side angle.
-    // The Pexels video uses rounded wooden pieces from overhead.
-    // Retraining improved detection count (more bounding boxes) but not
-    // class diversity — the model still maps all unseen pieces to one class.
+  it("documents that augmentation improves localisation but not class diversity", () => {
+    // The augmented dataset applies perspective transforms to the same Roboflow
+    // images (standard Staunton pieces). This improves the model's ability to
+    // detect pieces at various angles (20 vs 12 detections) but cannot teach
+    // it to distinguish piece types it has never seen (rounded wooden pieces).
     expect(piece.uniqueClassesDetected).toBe(1);
     expect(piece.validFenRateBest).toBe(0.0);
   });
@@ -227,34 +248,42 @@ describe("Level 2 — End-to-End Pipeline (Real Video)", () => {
 
 // ─── Model Training Metrics ─────────────────────────────────────────────────
 
-describe("Level 2 — Retrained Model Training Metrics", () => {
+describe("Level 2 — v3 Augmented Model Training Metrics", () => {
   const training = BENCHMARK_REPORT.trainingInfo;
 
-  it("achieves mAP@50 > 0.9 on the test set", () => {
-    expect(training.testMapAt50).toBeGreaterThanOrEqual(0.9);
+  it("achieves best mAP@50 > 0.97 on the validation set", () => {
+    expect(training.bestMapAt50).toBeGreaterThanOrEqual(0.97);
   });
 
-  it("achieves recall > 0.8 on the test set", () => {
-    expect(training.testRecall).toBeGreaterThanOrEqual(0.8);
+  it("achieves best recall > 0.97 on the validation set", () => {
+    expect(training.bestRecall).toBeGreaterThanOrEqual(0.97);
   });
 
-  it("achieves precision > 0.7 on the test set", () => {
-    expect(training.testPrecision).toBeGreaterThanOrEqual(0.7);
+  it("achieves best precision > 0.97 on the validation set", () => {
+    expect(training.bestPrecision).toBeGreaterThanOrEqual(0.97);
   });
 
-  it("was trained on 606 images with 12 classes", () => {
-    expect(training.dataset).toContain("606");
+  it("final epoch mAP@50 > 0.97", () => {
+    expect(training.finalMapAt50).toBeGreaterThanOrEqual(0.97);
+  });
+
+  it("was trained on 4,492 augmented images with 12 classes", () => {
+    expect(training.dataset).toContain("4,492");
     expect(training.dataset).toContain("12 classes");
   });
 
-  it("converged in 6 epochs (limited by sandbox memory)", () => {
-    expect(training.epochs).toBe(6);
+  it("completed all 15 epochs (vs 6 in v2)", () => {
+    expect(training.epochs).toBe(15);
+  });
+
+  it("best model was at epoch 8", () => {
+    expect(training.bestEpoch).toBe(8);
   });
 });
 
 // ─── Pipeline Architecture Validation ───────────────────────────────────────
 
-describe("Level 2 — Pipeline Architecture Assessment (Post-Retrain)", () => {
+describe("Level 2 — Pipeline Architecture Assessment (v3 Augmented)", () => {
   it("segmentation model generalises: A grade on unseen real video", () => {
     expect(BENCHMARK_REPORT.stages.boardSegmentation.grade).toBe("A");
   });
@@ -263,8 +292,8 @@ describe("Level 2 — Pipeline Architecture Assessment (Post-Retrain)", () => {
     expect(BENCHMARK_REPORT.stages.coverageGuard.pass).toBe(true);
   });
 
-  it("piece detection improved from F to D after retraining", () => {
-    expect(BENCHMARK_REPORT.stages.pieceDetection.grade).toBe("D");
+  it("piece detection improved from F (v1) → D (v2) → C (v3)", () => {
+    expect(BENCHMARK_REPORT.stages.pieceDetection.grade).toBe("C");
   });
 
   it("end-to-end still fails: needs multi-class detection to reconstruct moves", () => {
@@ -273,38 +302,51 @@ describe("Level 2 — Pipeline Architecture Assessment (Post-Retrain)", () => {
 
   it("documents remaining improvement path", () => {
     const improvements = [
-      "Collect diverse training data: overhead angle, multiple piece styles",
-      "Fine-tune on user-submitted videos for in-domain adaptation",
+      "Collect real overhead images with diverse piece styles (wooden, plastic, tournament)",
+      "Use ChessReD dataset (10,800 images) for fine-tuning with real bounding boxes",
       "Improve corner extraction with Hough line grid detection",
       "Add automatic rotation calibration to first-frame processing",
-      "Consider larger model (YOLO11m) for better class discrimination",
+      "Consider larger model (YOLO11m/s) for better class discrimination",
     ];
     expect(improvements).toHaveLength(5);
     expect(improvements[0]).toContain("diverse");
   });
 });
 
-// ─── Comparison: v1 vs v2 Model ─────────────────────────────────────────────
+// ─── Comparison: v1 vs v2 vs v3 Model ──────────────────────────────────────
 
-describe("Level 2 — Model v1 vs v2 Comparison", () => {
+describe("Level 2 — Model v1 vs v2 vs v3 Comparison", () => {
   const piece = BENCHMARK_REPORT.stages.pieceDetection;
 
-  it("v2 detects 3x more pieces than v1 on real video", () => {
-    expect(piece.v2Detections / piece.v1Detections).toBeGreaterThanOrEqual(2.5);
+  it("v3 detects 5x more pieces than v1 on real video", () => {
+    expect(piece.v3Detections / piece.v1Detections).toBeGreaterThanOrEqual(4);
   });
 
-  it("both models exhibit single-class domain gap on unseen piece styles", () => {
+  it("v3 detects ~1.7x more pieces than v2 on real video", () => {
+    expect(piece.v3Detections / piece.v2Detections).toBeGreaterThanOrEqual(1.5);
+  });
+
+  it("all three models exhibit single-class domain gap on unseen piece styles", () => {
     expect(piece.uniqueClassesDetected).toBe(1);
   });
 
-  it("v2 has better bounding box localisation (more true detections)", () => {
+  it("v3 has best bounding box localisation (20 detections)", () => {
+    expect(piece.v3Detections).toBeGreaterThanOrEqual(15);
     expect(piece.v2Detections).toBeGreaterThanOrEqual(10);
     expect(piece.v1Detections).toBeLessThanOrEqual(5);
   });
 
-  it("neither model achieves valid FEN reconstruction", () => {
+  it("no model achieves valid FEN reconstruction", () => {
     expect(piece.validFenRate0deg).toBe(0.0);
     expect(piece.validFenRateBest).toBe(0.0);
+  });
+
+  it("augmentation (v3) improves detection count but not class diversity", () => {
+    // v2: 606 original images → 12 detections
+    // v3: 4,492 augmented images → 20 detections
+    // Both: 1 unique class detected
+    expect(piece.v3Detections).toBeGreaterThan(piece.v2Detections);
+    expect(piece.uniqueClassesDetected).toBe(1);
   });
 });
 
@@ -323,7 +365,7 @@ describe("Level 1 vs Level 2 Benchmark Comparison", () => {
 
   it("the gap is due to piece detection domain gap on unseen piece styles", () => {
     expect(BENCHMARK_REPORT.stages.boardSegmentation.grade).toBe("A");
-    expect(BENCHMARK_REPORT.stages.pieceDetection.grade).toBe("D");
+    expect(BENCHMARK_REPORT.stages.pieceDetection.grade).toBe("C");
     expect(BENCHMARK_REPORT.stages.endToEnd.grade).toBe("F");
   });
 

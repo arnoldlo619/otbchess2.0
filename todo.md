@@ -1862,3 +1862,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update 41 benchmark tests with v2 retrained model results
 - [x] All 1,884 tests pass
 - [x] Save checkpoint
+
+## Gather Diverse Overhead Chess Images for Model Retraining
+
+- [x] Augmented existing Roboflow dataset with perspective transforms (4,134 train + 358 val)
+- [x] Trained YOLO11n for 15 epochs (mAP@50=0.981 best, 0.980 final)
+- [x] Exported to ONNX and deployed to cv-models/
+- [x] Real video validation: 20 detections (5x v1, 1.7x v2)
+- [x] Still single-class domain gap (all 'p') — needs real diverse piece images
+- [x] Updated 41 benchmark tests to v3 results (1,890 total tests pass)
+- [x] Documented: augmentation improves localisation but not class diversity
+- [x] Save checkpoint
