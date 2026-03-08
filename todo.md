@@ -1898,3 +1898,22 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Real video validation: 30 avg detections, 7/12 classes, max 48 detections
 - [x] Updated 48 benchmark tests to v5 results (1,891 total tests pass)
 - [x] Save checkpoint
+
+## Hough-Line Grid Detection for Corner Extraction
+
+- [x] Audit current extract_corners function in cv_worker.py
+- [x] Implement detect_board_rotation_angle() using HoughLines on warped board
+- [x] Map dominant line angle to rotation correction (deviation from nearest 0°/90°)
+- [x] Implement auto_align_board() — applies rotation correction, returns (aligned, angle)
+- [x] Integrate auto_align_board() into process_video() between warp_board and run_piece_detection
+- [x] Validate on real OTB video: 47× improvement (0.15 → 4.7 avg detections/frame)
+- [x] Write 25 vitest tests for auto-alignment helpers (boardAutoAlign.test.ts)
+- [x] All 1,916 tests pass
+- [x] Save checkpoint
+- [ ] Implement hough_grid_corners() using HoughLinesP on warped board (proper corner detection)
+- [ ] Cluster lines into horizontal/vertical families (angle tolerance ±15°)
+- [ ] Find outermost lines in each family to derive board corners
+- [ ] Implement fallback chain: hough → minAreaRect → bounding rect
+- [ ] Implement square_map() to assign detections to 64 board squares
+- [ ] Implement detections_to_fen() to convert square map to FEN string
+- [ ] Validate on real OTB video — measure four-vertex rate improvement

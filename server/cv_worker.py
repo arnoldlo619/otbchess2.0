@@ -193,6 +193,77 @@ def warp_board(frame_bgr, corners):
     return warped
 
 
+# ─── Board Auto-Alignment (Hough-line rotation correction) ──────────────────
+
+def detect_board_rotation_angle(warped_bgr):
+    """
+    Detect the dominant rotation angle of the chessboard in a warped image.
+
+    The minAreaRect warp preserves the board's physical rotation, so a board
+    placed at 45° on the table will appear rotated 45° in the warped image.
+    Hough lines detect the dominant line angle, which corresponds to the
+    board's grid orientation.
+
+    Returns the rotation angle in degrees (0–90), or None if detection fails.
+    """
+    gray = cv2.cvtColor(warped_bgr, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    edges = cv2.Canny(blurred, 30, 90)
+
+    lines = cv2.HoughLines(edges, rho=1, theta=np.pi / 360, threshold=60)
+    if lines is None or len(lines) < 4:
+        return None
+
+    # Collect angles in degrees [0, 180)
+    angles = np.array([np.degrees(line[0][1]) for line in lines])
+
+    # Build a histogram to find the dominant angle
+    hist, bin_edges = np.histogram(angles, bins=180, range=(0, 180))
+    peak_idx = int(np.argmax(hist))
+    peak_angle = float(bin_edges[peak_idx])
+
+    # Convert to a rotation correction:
+    # - Lines near 0° or 180° are near-horizontal → board is axis-aligned → no rotation
+    # - Lines near 45° → board is rotated 45° → rotate back by 45°
+    # - Lines near 90° → near-vertical → board is axis-aligned → no rotation
+    # The correction is the deviation of the dominant angle from the nearest 0° or 90°
+    if peak_angle <= 45:
+        correction = peak_angle          # rotate CCW by this amount
+    elif peak_angle <= 135:
+        correction = peak_angle - 90     # deviation from 90°
+    else:
+        correction = peak_angle - 180    # deviation from 180°
+
+    return correction
+
+
+def auto_align_board(warped_bgr):
+    """
+    Automatically align a warped board image so that the grid lines are
+    axis-aligned (horizontal and vertical).
+
+    Uses Hough lines to detect the dominant rotation angle, then applies
+    a rotation correction. Falls back to the original image if detection fails.
+
+    Returns (aligned_bgr, rotation_angle_applied).
+    """
+    angle = detect_board_rotation_angle(warped_bgr)
+    if angle is None or abs(angle) < 2.0:
+        # No significant rotation detected — return as-is
+        return warped_bgr, 0.0
+
+    h, w = warped_bgr.shape[:2]
+    cx, cy = w // 2, h // 2
+    M = cv2.getRotationMatrix2D((cx, cy), -angle, 1.0)
+    aligned = cv2.warpAffine(warped_bgr, M, (w, h),
+                              flags=cv2.INTER_LINEAR,
+                              borderMode=cv2.BORDER_CONSTANT,
+                              borderValue=(0, 0, 0))
+    return aligned, angle
+
+
 # ─── Piece Detection ──────────────────────────────────────────────────────────
 
 def run_piece_detection(piece_session, board_bgr):
@@ -797,6 +868,8 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                     else:
                         # Stage 2: Warp board and detect pieces
                         warped = warp_board(frame, corners)
+                        # Stage 2b: Auto-align board using Hough-line rotation detection
+                        warped, _rot_angle = auto_align_board(warped)
                         detections = run_piece_detection(piece_session, warped)
 
                         # Turn is NOT derived from timeline length (which drifts
