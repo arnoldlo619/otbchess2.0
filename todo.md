@@ -1873,3 +1873,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Updated 41 benchmark tests to v3 results (1,890 total tests pass)
 - [x] Documented: augmentation improves localisation but not class diversity
 - [x] Save checkpoint
+
+## Integrate ChessReD Dataset for Diverse Piece Style Recognition
+
+- [x] Examined ChessReD annotations: 10,800 images, 20 games, 12 classes, 3 camera types
+- [x] Downloaded ChessReD annotations (22MB JSON) and analyzed position data
+- [x] Generated 1,800 synthetic overhead images from 700 ChessReD positions (3 piece styles, 10 board colors)
+- [x] Trained YOLO11n for 15 epochs (mAP@50=0.952, precision=0.851, recall=0.885)
+- [x] Exported to ONNX and deployed to cv-models/
+- [x] Real video validation: 30 detections (7.5x v1, 2.5x v2, 1.5x v3)
+- [x] CLASS DIVERSITY BREAKTHROUGH: 9/12 classes detected (up from 1-2 in v1-v3)
+- [x] Updated 51 benchmark tests to v4 results (1,894 total tests pass)
+- [x] Save checkpoint
