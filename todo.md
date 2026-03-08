@@ -1674,3 +1674,31 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Confidence calculation tests (5 cases)
 - [x] Recording timer format tests (6 cases)
 - [x] MIME type selection tests (5 cases)
+
+## CV Pipeline — Phase 2B (Piece Classification)
+
+### YOLOv8n Piece Classification (ONNX Runtime Web)
+- [x] Source yamero999/chess-piece-detection-yolo11n best_mobile.onnx (10.5MB, Apache 2.0)
+- [x] Inspect ONNX model: input [1,3,416,416], output [1,16,3549] (12 piece classes)
+- [x] Upload piece classification model to CDN via manus-upload-file --webdev
+- [x] Add Stage 2 piece classification to chess-cv-worker.js
+- [x] Load piece model after board segmentation model is ready
+- [x] Run piece detection on normalized board view (416x416)
+- [x] Apply NMS (IoU threshold 0.45) to filter overlapping detections
+- [x] Map YOLO class indices 0-11 to FEN piece symbols (P,N,B,R,Q,K / p,n,b,r,q,k)
+- [x] Reconstruct FEN position string from 8x8 piece array
+- [x] Return FEN + piece count to main thread
+- [x] Display live FEN and piece count on framing screen (piece count indicator)
+- [x] Write 42 tests for piece classification utilities (1319 total passing)
+
+### Tests (42 new, 1319 total)
+- [x] FEN generation from board array (4 cases)
+- [x] FEN validation (6 cases)
+- [x] Piece counting (4 cases)
+- [x] Class index to FEN symbol mapping (4 cases)
+- [x] NMS algorithm (5 cases)
+- [x] IoU computation (3 cases)
+- [x] Pixel to square mapping (4 cases)
+- [x] Square index to algebraic notation (5 cases)
+- [x] Confidence normalization (4 cases)
+- [x] Starting position detection (3 cases)

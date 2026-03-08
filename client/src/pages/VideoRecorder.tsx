@@ -176,6 +176,8 @@ export default function VideoRecorder() {
   const [cvStatus, setCvStatus] = useState<string>("Initialising CV engine…");
   const [detectedCorners, setDetectedCorners] = useState<Array<{x:number;y:number}> | null>(null);
   const [showTips, setShowTips] = useState(false);
+  const [liveFen, setLiveFen] = useState<string | null>(null);
+  const [pieceCount, setPieceCount] = useState<number>(0);
 
   // ── Recording state ───────────────────────────────────────────────────────
   const [recording, setRecording] = useState(false);
@@ -258,18 +260,37 @@ export default function VideoRecorder() {
           setOpencvReady(true);
           setCvStatus("CV ready");
         } else if (msg.type === "result") {
+          const result = msg as {
+            type: string;
+            boardDetected?: boolean;
+            cornersVisible?: boolean;
+            lightingOk?: boolean;
+            confidence?: number;
+            corners?: Array<{x:number;y:number}> | null;
+            fen?: string | null;
+            fallback?: boolean;
+          };
           setFraming({
-            boardDetected: msg.boardDetected ?? false,
-            cornersVisible: msg.cornersVisible ?? false,
-            lightingOk: msg.lightingOk ?? false,
-            confidence: msg.confidence ?? 0,
+            boardDetected: result.boardDetected ?? false,
+            cornersVisible: result.cornersVisible ?? false,
+            lightingOk: result.lightingOk ?? false,
+            confidence: result.confidence ?? 0,
           });
-          setBoardHealth(msg.boardDetected ?? false);
-          setDetectedCorners(msg.corners ?? null);
+          setBoardHealth(result.boardDetected ?? false);
+          setDetectedCorners(result.corners ?? null);
+
+          // Update live FEN from piece classification
+          if (result.fen) {
+            setLiveFen(result.fen);
+            // Count pieces from FEN position part
+            const pos = result.fen.split(" ")[0];
+            const pieces = pos.replace(/[^pnbrqkPNBRQK]/g, "").length;
+            setPieceCount(pieces);
+          }
 
           // Draw detected board outline on overlay canvas
-          if (msg.corners && msg.corners.length === 4 && overlayCanvasRef.current) {
-            drawBoardOverlay(msg.corners, overlayCanvasRef.current);
+          if (result.corners && result.corners.length === 4 && overlayCanvasRef.current) {
+            drawBoardOverlay(result.corners, overlayCanvasRef.current);
           } else if (overlayCanvasRef.current) {
             clearOverlay(overlayCanvasRef.current);
           }
@@ -975,6 +996,20 @@ export default function VideoRecorder() {
             <p className="text-xs text-white/30 mt-1 text-right">
               {Math.round(framing.confidence * 100)}% confidence
             </p>
+
+            {/* Live piece classification status */}
+            {liveFen && framing.boardDetected && (
+              <div className="mt-3 pt-3 border-t border-white/08">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-white/40">Pieces detected</p>
+                  <div className="flex items-center gap-1.5">
+                    <Grid3x3 className="w-3 h-3 text-[#4CAF50]" />
+                    <span className="text-xs font-bold text-[#4CAF50]">{pieceCount} / 32</span>
+                  </div>
+                </div>
+                <p className="text-xs text-white/25 mt-1 font-mono truncate">{liveFen.split(" ")[0]}</p>
+              </div>
+            )}
           </div>
 
           {/* Start button */}
