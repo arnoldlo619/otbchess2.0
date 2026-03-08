@@ -276,9 +276,11 @@ def compute_iou(a, b):
 
 # ─── FEN Reconstruction ───────────────────────────────────────────────────────
 
-def reconstruct_fen(detections, turn="w"):
+def reconstruct_fen(detections):
     """
     Map piece detections to board squares and build a FEN position string.
+    The turn field is always set to 'w' as a placeholder — the actual turn
+    is tracked by the chess.Board state in the move detection pipeline.
     Returns FEN string or None if invalid.
     """
     if not detections:
@@ -319,7 +321,8 @@ def reconstruct_fen(detections, turn="w"):
     if "K" not in fen_pos or "k" not in fen_pos:
         return None
 
-    return f"{fen_pos} {turn} - - 0 1"
+    # Always use 'w' as placeholder — actual turn is tracked by chess.Board
+    return f"{fen_pos} w - - 0 1"
 
 
 # ─── FEN Validation ─────────────────────────────────────────────────────────
@@ -481,12 +484,54 @@ def count_piece_differences(fen_a, fen_b):
 
 # ─── Move Detection ───────────────────────────────────────────────────────────
 
+def _try_legal_moves(board_state, target_pos):
+    """
+    Try every legal move from board_state and return the one whose resulting
+    position best matches target_pos (the position part of the detected FEN).
+
+    Returns (san, confidence) or (None, 0.0).
+    """
+    best_move = None
+    best_similarity = 0.0
+
+    for legal_move in board_state.legal_moves:
+        test_board = board_state.copy()
+        test_board.push(legal_move)
+        test_pos = fen_position_part(test_board.fen())
+
+        if test_pos == target_pos:
+            # Exact position match
+            return board_state.san(legal_move), 1.0
+
+        # Partial similarity (character-level on position string)
+        matches = sum(a == b for a, b in zip(test_pos, target_pos))
+        similarity = matches / max(len(test_pos), len(target_pos))
+
+        if similarity > best_similarity:
+            best_similarity = similarity
+            best_move = legal_move
+
+    if best_move and best_similarity >= 0.90:
+        return board_state.san(best_move), best_similarity
+
+    return None, 0.0
+
+
 def detect_move_from_fens(prev_fen, curr_fen, board_state):
     """
     Given two consecutive FEN positions and the current chess.Board state,
     try to find the legal move that transitions from prev_fen to curr_fen.
 
+    The turn is derived from board_state.turn (not from the FEN string),
+    which prevents turn drift when frames are skipped.
+
+    If no legal move matches from the current side, a fallback attempts
+    to detect TWO consecutive moves (the missed move + the visible move)
+    to recover from a single skipped frame.
+
     Returns (move_san, confidence) or (None, 0.0).
+    Also may return a list of two SANs if a double-move recovery succeeds:
+    Returns (san_or_list, confidence).
     """
     if not CHESS_AVAILABLE:
         return None, 0.0
@@ -494,49 +539,47 @@ def detect_move_from_fens(prev_fen, curr_fen, board_state):
     if not prev_fen or not curr_fen:
         return None, 0.0
 
-    # Check if position actually changed
-    if fen_position_part(prev_fen) == fen_position_part(curr_fen):
+    # Compare only position parts — the turn field in the FEN is always 'w'
+    # (placeholder), so we must ignore it during comparison.
+    curr_pos = fen_position_part(curr_fen)
+    prev_pos = fen_position_part(prev_fen)
+
+    if prev_pos == curr_pos:
         return None, 0.0
 
     # Count differences — a single move changes 2-4 squares
     diffs = count_piece_differences(prev_fen, curr_fen)
-    if diffs == 0 or diffs > 6:
+    if diffs == 0:
         return None, 0.0
 
-    # Try each legal move from the current board state
-    # and find which one produces the closest FEN to curr_fen
-    best_move = None
-    best_similarity = 0.0
+    # ── Primary: try legal moves from the current board state ────────────
+    # board_state.turn is the authoritative turn tracker.
+    if diffs <= 6:
+        try:
+            san, conf = _try_legal_moves(board_state, curr_pos)
+            if san:
+                return san, conf
+        except Exception:
+            pass
 
-    try:
-        for legal_move in board_state.legal_moves:
-            test_board = board_state.copy()
-            test_board.push(legal_move)
-            test_fen = test_board.fen()
+    # ── Fallback: missed-frame recovery ──────────────────────────────────
+    # If the primary search fails and diffs > 2, we may have missed a frame.
+    # Try every legal move for the current side, then for each resulting
+    # board state, try every legal move for the *next* side. If the
+    # double-move result matches curr_pos, return both SANs.
+    if diffs > 2 and diffs <= 10:
+        try:
+            for move1 in board_state.legal_moves:
+                board_after_1 = board_state.copy()
+                board_after_1.push(move1)
 
-            # Compare position parts
-            test_pos = fen_position_part(test_fen)
-            curr_pos = fen_position_part(curr_fen)
-
-            if test_pos == curr_pos:
-                # Exact match
-                san = board_state.san(legal_move)
-                return san, 1.0
-
-            # Partial similarity
-            matches = sum(a == b for a, b in zip(test_pos, curr_pos))
-            similarity = matches / max(len(test_pos), len(curr_pos))
-
-            if similarity > best_similarity:
-                best_similarity = similarity
-                best_move = legal_move
-
-        if best_move and best_similarity >= 0.90:
-            san = board_state.san(best_move)
-            return san, best_similarity
-
-    except Exception:
-        pass
+                san2, conf2 = _try_legal_moves(board_after_1, curr_pos)
+                if san2 and conf2 >= 0.92:
+                    san1 = board_state.san(move1)
+                    # Return both moves as a list
+                    return [san1, san2], conf2 * 0.85  # discount for uncertainty
+        except Exception:
+            pass
 
     return None, 0.0
 
@@ -710,9 +753,11 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                         warped = warp_board(frame, corners)
                         detections = run_piece_detection(piece_session, warped)
 
-                        # Determine turn from timeline
-                        turn = "w" if len(fen_timeline) % 2 == 0 else "b"
-                        fen = reconstruct_fen(detections, turn)
+                        # Turn is NOT derived from timeline length (which drifts
+                        # when frames are skipped). Instead, reconstruct_fen always
+                        # uses 'w' as a placeholder, and the actual turn is tracked
+                        # by chess.Board in detect_move_from_fens.
+                        fen = reconstruct_fen(detections)
 
                         if fen and validate_fen_piece_count(fen):
                             fen_timeline.append((timestamp_ms, fen, seg_confidence))
@@ -784,25 +829,39 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
             prev_fen = curr_fen
             continue
 
-        san, move_confidence = detect_move_from_fens(prev_fen, curr_fen, board)
+        san_result, move_confidence = detect_move_from_fens(prev_fen, curr_fen, board)
 
-        if san:
-            try:
-                move = board.parse_san(san)
-                board.push(move)
-                move_san_list.append(san)
-                move_timeline.append({
-                    "moveNumber": move_number,
-                    "timestampMs": timestamp_ms,
-                    "confidence": round(move_confidence * confidence, 3),
-                })
-                move_number += 1
+        if san_result:
+            # san_result is either a single SAN string or a list of two SANs
+            # (missed-frame recovery: the missed move + the visible move).
+            san_list = san_result if isinstance(san_result, list) else [san_result]
+
+            all_ok = True
+            for san in san_list:
+                try:
+                    move = board.parse_san(san)
+                    board.push(move)
+                    move_san_list.append(san)
+                    move_timeline.append({
+                        "moveNumber": move_number,
+                        "timestampMs": timestamp_ms,
+                        "confidence": round(move_confidence * confidence, 3),
+                    })
+                    move_number += 1
+                except Exception as e:
+                    warnings.append(f"Move parse error at t={timestamp_ms}ms: {san} — {e}")
+                    all_ok = False
+                    break
+
+            if all_ok:
                 prev_fen = curr_fen
-            except Exception as e:
-                warnings.append(f"Move parse error at t={timestamp_ms}ms: {san} — {e}")
-                # Don't update prev_fen — keep trying from the last valid position
+            if len(san_list) > 1:
+                warnings.append(
+                    f"Missed-frame recovery at t={timestamp_ms}ms: "
+                    f"detected {len(san_list)} moves ({', '.join(san_list)})"
+                )
         else:
-            # No move detected — update prev_fen if position changed significantly
+            # No move detected — update prev_fen if position changed minimally
             diffs = count_piece_differences(prev_fen, curr_fen)
             if diffs <= 2:
                 prev_fen = curr_fen  # Minor noise, accept as same position

@@ -1791,3 +1791,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write 14 Python unit tests for validate_fen_piece_count (all pass)
 - [x] Write 39 JS tests for sanity check constants and logic (1714 total passing)
 - [x] Save checkpoint
+
+## Step 2: Fix Turn Tracking in cv_worker.py (COMPLETE)
+
+- [x] Remove turn parameter from reconstruct_fen (always use placeholder "w")
+- [x] Derive correct turn from board_state.turn in detect_move_from_fens
+- [x] Extract _try_legal_moves helper for position-only comparison
+- [x] Add missed-frame recovery: try two consecutive moves when single-move detection fails
+- [x] Update process_video move loop to handle list-of-SANs return type
+- [x] Write 13 Python tests for turn tracking fix (all pass)
+- [x] Write 28 JS tests for turn tracking logic (1,742 total passing)
+- [x] Save checkpoint
