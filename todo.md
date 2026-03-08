@@ -1835,3 +1835,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Stop polling automatically when all games reach terminal status (complete/failed)
 - [x] Write 21 tests for auto-refresh logic (hasInProgressGames, polling intervals, status transitions)
 - [x] Save checkpoint
+
+## Real OTB Video Integration for Level 2 Benchmark
+
+- [x] Find and download a real OTB chess video (Pexels #6058636, overhead angle)
+- [x] Run cv_worker.py full pipeline against the real video
+- [x] Analyze ONNX model accuracy per stage (segmentation A, corners F, pieces F)
+- [x] Fix extract_corners to use minAreaRect instead of boundingRect for rotated boards
+- [x] Test rotation sweep to find optimal alignment angle for piece detection
+- [x] Validate coverage guard does not falsely reject real boards (PASS, 0% false positive)
+- [x] Update real_video_benchmark.py with 5-stage graded benchmark suite
+- [x] Document domain gap finding: YOLO model trained on specific piece style
+- [x] Write 31 vitest tests codifying Level 2 benchmark results (realVideoBenchmark.test.ts)
+- [x] Write comprehensive analysis report (real_video_analysis.md)
+- [x] Save checkpoint

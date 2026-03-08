@@ -150,15 +150,13 @@ def extract_corners(mask, orig_w, orig_h):
         pts = [(int(p[0][0] * scale_x), int(p[0][1] * scale_y)) for p in approx]
         return sort_corners(pts), min(0.95, coverage * 2)
     elif len(approx) > 4:
-        rect = cv2.boundingRect(board_contour)
-        x, y, w, h = rect
-        pts = [
-            (int(x * scale_x), int(y * scale_y)),
-            (int((x + w) * scale_x), int(y * scale_y)),
-            (int((x + w) * scale_x), int((y + h) * scale_y)),
-            (int(x * scale_x), int((y + h) * scale_y)),
-        ]
-        return pts, coverage * 0.6
+        # Use minAreaRect for a tighter rotated rectangle that follows the
+        # actual board orientation — much better than axis-aligned boundingRect
+        # for boards that are rotated relative to the camera.
+        min_rect = cv2.minAreaRect(board_contour)
+        box = cv2.boxPoints(min_rect)
+        pts = [(int(p[0] * scale_x), int(p[1] * scale_y)) for p in box]
+        return sort_corners(pts), coverage * 0.8
 
     return None, coverage
 
