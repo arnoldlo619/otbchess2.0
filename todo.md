@@ -1849,3 +1849,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write 31 vitest tests codifying Level 2 benchmark results (realVideoBenchmark.test.ts)
 - [x] Write comprehensive analysis report (real_video_analysis.md)
 - [x] Save checkpoint
+
+## Retrain YOLO Piece Detection Model
+
+- [x] Audit current ONNX model architecture (YOLO11n, 416x416, 12 classes, 10MB)
+- [x] Find diverse chess piece detection datasets (Roboflow chess-full on Kaggle)
+- [x] Download and prepare training data in YOLO format (606 images, 12 classes remapped)
+- [x] Install ultralytics and configure YOLO11n training (batch=4, CPU, AdamW)
+- [x] Train model on dataset with augmentation (6 epochs, mAP@50=0.94 on val)
+- [x] Export retrained model to ONNX (416x416, 10MB, test mAP@50=0.925)
+- [x] Run Level 2 benchmark: piece detection improved from 4→12 detections (3x)
+- [x] Update 41 benchmark tests with v2 retrained model results
+- [x] All 1,884 tests pass
+- [x] Save checkpoint
