@@ -15,7 +15,7 @@
 
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { requireAuth } from "./auth.js";
 import {
@@ -82,6 +82,48 @@ export function createRecordingsRouter(): Router {
   // Helper to get userId from req
   const getUserId = (req: import("express").Request): string =>
     (req as import("express").Request & { userId: string }).userId;
+
+  // ── GET /api/games (list) — user's analyzed games ──────────────────────────
+  // This route is only reachable when the router is mounted at /api/games.
+  // Returns processed_games joined with session status, ordered by most recent.
+  router.get("/", async (req, res) => {
+    const userId = getUserId(req);
+    try {
+      const db = await getDb();
+
+      // Fetch all recording sessions for this user
+      const sessions = await db
+        .select()
+        .from(recordingSessions)
+        .where(eq(recordingSessions.userId, userId))
+        .orderBy(desc(recordingSessions.createdAt));
+
+      if (sessions.length === 0) {
+        return res.json([]);
+      }
+
+      const sessionIds = sessions.map((s) => s.id);
+
+      // Fetch all processed games for those sessions
+      const games = await db
+        .select()
+        .from(processedGames)
+        .where(inArray(processedGames.sessionId, sessionIds))
+        .orderBy(desc(processedGames.createdAt));
+
+      // Attach session status to each game
+      const sessionMap = new Map(sessions.map((s) => [s.id, s]));
+      const result = games.map((g) => ({
+        ...g,
+        sessionStatus: sessionMap.get(g.sessionId)?.status ?? "unknown",
+      }));
+
+      res.json(result);
+    } catch (err) {
+      console.error("[recordings] list games error:", err);
+      res.status(500).json({ error: "Failed to list games" });
+    }
+  });
 
   // ── POST /api/recordings — create a new recording session ─────────────────
   router.post("/", async (req, res) => {

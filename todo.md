@@ -1702,3 +1702,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Square index to algebraic notation (5 cases)
 - [x] Confidence normalization (4 cases)
 - [x] Starting position detection (3 cases)
+
+## My Games List (/record page)
+
+- [x] Add GET /api/games endpoint (returns user's processed_games with session data)
+- [x] Build GameCard component (opening badge, date, result, white/black accuracy, link to analysis)
+- [x] Add My Games section to GameRecorder page (below PGN entry form)
+- [x] Empty state: "No games yet" with CTA to record first game
+- [x] Loading skeleton for game cards
+- [x] Write tests for My Games list utilities
