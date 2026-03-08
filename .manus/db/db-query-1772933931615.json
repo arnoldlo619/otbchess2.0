@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `video_chunks` (\n  `id` varchar(36) NOT NULL,\n  `session_id` varchar(36) NOT NULL,\n  `chunk_index` int NOT NULL,\n  `file_path` text NOT NULL,\n  `size_bytes` int DEFAULT 0,\n  `mime_type` varchar(50) DEFAULT 'video/webm',\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  INDEX `vc_session_id_idx` (`session_id`),\n  INDEX `vc_session_chunk_idx` (`session_id`, `chunk_index`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute CREATE TABLE IF NOT EXISTS `video_chunks` (\n  `id` varchar(36) NOT NULL,\n  `session_id` varchar(36) NOT NULL,\n  `chunk_index` int NOT NULL,\n  `file_path` text NOT NULL,\n  `size_bytes` int DEFAULT 0,\n  `mime_type` varchar(50) DEFAULT 'video/webm',\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  INDEX `vc_session_id_idx` (`session_id`),\n  INDEX `vc_session_chunk_idx` (`session_id`, `chunk_index`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 171
+}

@@ -8,6 +8,9 @@
  *  PATCH  /api/recordings/:id           — update session status
  *  POST   /api/recordings/:id/pgn       — submit manually entered PGN
  *  POST   /api/recordings/:id/analyze   — trigger engine analysis on submitted PGN
+ *  POST   /api/recordings/:id/chunk     — upload a video chunk (multipart/form-data)
+ *  POST   /api/recordings/:id/finalize  — concatenate chunks into final video
+ *  GET    /api/recordings/:id/video     — stream the final video file
  *  GET    /api/games/:id                — get processed game data
  *  GET    /api/games/:id/analysis       — get full move-by-move analysis
  *  POST   /api/games/:id/corrections    — submit move corrections
@@ -15,7 +18,7 @@
 
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, asc } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { requireAuth } from "./auth.js";
 import {
@@ -23,9 +26,49 @@ import {
   processedGames,
   moveAnalyses,
   correctionEntries,
+  videoChunks,
 } from "../shared/schema.js";
 import { detectOpening, formatOpeningName } from "./openingDetection.js";
 import { computePlayerAccuracy, computeBestMoveStreak, accuracyLabel } from "./accuracyCalc.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { execFile } from "child_process";
+import { promisify } from "util";
+
+const execFileAsync = promisify(execFile);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ── Upload directory for video chunks ────────────────────────────────────────
+const UPLOADS_DIR = path.resolve(__dirname, "../uploads/video-chunks");
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// ── Multer storage: saves each chunk as <sessionId>-chunk-<index>.<ext> ──────
+const chunkStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const sessionId = (req.params as { id: string }).id;
+    const chunkIndex = (req.body as { chunkIndex?: string }).chunkIndex ?? "0";
+    const ext = file.mimetype.includes("mp4") ? "mp4" : "webm";
+    cb(null, `${sessionId}-chunk-${String(chunkIndex).padStart(5, "0")}.${ext}`);
+  },
+});
+
+const uploadChunk = multer({
+  storage: chunkStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB per chunk
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only video files are accepted"));
+    }
+  },
+}).single("chunk");
 
 // Chess-API.com Stockfish REST endpoint
 const CHESS_API_URL = "https://chess-api.com/v1";
@@ -474,37 +517,72 @@ export function createRecordingsRouter(): Router {
   });
 
   // ── POST /api/recordings/:id/chunk — receive a video chunk ─────────────────
-  // Stores chunk metadata; actual bytes stored via multipart form
-  router.post("/:id/chunk", async (req, res) => {
-    try {
-      const db = await getDb();
-      const [session] = await db
-        .select()
-        .from(recordingSessions)
-        .where(eq(recordingSessions.id, req.params.id));
-      if (!session) return res.status(404).json({ error: "Session not found" });
-
-      // Update status to uploading if still in recording state
-      if (session.status === "recording" || session.status === "ready") {
-        await db
-          .update(recordingSessions)
-          .set({ status: "uploading", updatedAt: new Date() })
-          .where(eq(recordingSessions.id, req.params.id));
+  // Accepts multipart/form-data with a "chunk" file field.
+  // Saves the bytes to disk and records the chunk in the video_chunks table.
+  router.post("/:id/chunk", (req, res) => {
+    // Run multer middleware first to parse the multipart body
+    uploadChunk(req, res, async (multerErr) => {
+      if (multerErr) {
+        console.error("[recordings] multer error:", multerErr);
+        return res.status(400).json({ error: multerErr.message ?? "Upload error" });
       }
 
-      // In a full implementation, we'd store the chunk to S3 here.
-      // For Phase 1, we acknowledge receipt and track chunk count.
-      const chunkIndex = Number((req.body as { chunkIndex?: string }).chunkIndex ?? 0);
-      console.log(`[recordings] Received chunk ${chunkIndex} for session ${req.params.id}`);
+      try {
+        const db = await getDb();
+        const [session] = await db
+          .select()
+          .from(recordingSessions)
+          .where(eq(recordingSessions.id, req.params.id));
+        if (!session) {
+          // Clean up the uploaded file if session not found
+          if (req.file) fs.unlink(req.file.path, () => {});
+          return res.status(404).json({ error: "Session not found" });
+        }
 
-      res.json({ ok: true, chunkIndex });
-    } catch (err) {
-      console.error("[recordings] chunk error:", err);
-      res.status(500).json({ error: "Failed to store chunk" });
-    }
+        // Update status to uploading if still in recording/ready state
+        if (session.status === "recording" || session.status === "ready") {
+          await db
+            .update(recordingSessions)
+            .set({ status: "uploading", updatedAt: new Date() })
+            .where(eq(recordingSessions.id, req.params.id));
+        }
+
+        const chunkIndex = Number((req.body as { chunkIndex?: string }).chunkIndex ?? 0);
+
+        if (req.file) {
+          // Record the chunk in the database
+          await db.insert(videoChunks).values({
+            id: nanoid(),
+            sessionId: req.params.id,
+            chunkIndex,
+            filePath: req.file.path,
+            sizeBytes: req.file.size,
+            mimeType: req.file.mimetype,
+          });
+          console.log(
+            `[recordings] Stored chunk ${chunkIndex} for session ${req.params.id} — ${req.file.size} bytes → ${req.file.path}`
+          );
+        } else {
+          // No file attached — still acknowledge (client may retry)
+          console.warn(`[recordings] Chunk ${chunkIndex} for session ${req.params.id} had no file attached`);
+        }
+
+        res.json({ ok: true, chunkIndex, stored: !!req.file });
+      } catch (err) {
+        console.error("[recordings] chunk error:", err);
+        // Clean up file on DB error
+        if (req.file) fs.unlink(req.file.path, () => {});
+        res.status(500).json({ error: "Failed to store chunk" });
+      }
+    });
   });
 
-  // ── POST /api/recordings/:id/finalize — mark upload complete ─────────────
+    // ── POST /api/recordings/:id/finalize — concatenate chunks into final video ───
+  // 1. Fetches all stored chunks for the session, ordered by chunkIndex.
+  // 2. Writes an ffmpeg concat list file.
+  // 3. Runs ffmpeg to merge chunks into a single .webm file.
+  // 4. Stores the final video path as videoKey on the session.
+  // 5. Cleans up individual chunk files.
   router.post("/:id/finalize", async (req, res) => {
     const { chunkCount, durationMs, whitePlayer, blackPlayer } = req.body as {
       chunkCount?: number;
@@ -521,30 +599,168 @@ export function createRecordingsRouter(): Router {
         .where(eq(recordingSessions.id, req.params.id));
       if (!session) return res.status(404).json({ error: "Session not found" });
 
-      // Update session to queued state
-      await db
-        .update(recordingSessions)
-        .set({
-          status: "queued",
-          updatedAt: new Date(),
-        })
-        .where(eq(recordingSessions.id, req.params.id));
+      // Fetch all chunks for this session, ordered by chunkIndex
+      const chunks = await db
+        .select()
+        .from(videoChunks)
+        .where(eq(videoChunks.sessionId, req.params.id))
+        .orderBy(asc(videoChunks.chunkIndex));
 
       console.log(
-        `[recordings] Finalized session ${req.params.id}: ${chunkCount} chunks, ${durationMs}ms, ${whitePlayer} vs ${blackPlayer}`
+        `[recordings] Finalizing session ${req.params.id}: ${chunks.length} DB chunks, ${chunkCount} reported, ${durationMs}ms`
       );
 
-      // In Phase 2, this would enqueue a CV processing job.
-      // For Phase 1, we prompt the user to enter PGN manually.
+      // Mark session as processing while we concatenate
+      await db
+        .update(recordingSessions)
+        .set({ status: "processing", updatedAt: new Date() })
+        .where(eq(recordingSessions.id, req.params.id));
+
+      // Respond immediately so the client can start polling
       res.json({
         ok: true,
         sessionId: req.params.id,
-        status: "queued",
-        message: "Recording received. Enter PGN to complete analysis.",
+        status: "processing",
+        chunkCount: chunks.length,
+        message: "Video processing started.",
       });
+
+      // ── Background: concatenate chunks with ffmpeg ───────────────────────────
+      (async () => {
+        try {
+          if (chunks.length === 0) {
+            // No chunks uploaded — mark as queued for manual PGN entry
+            await db
+              .update(recordingSessions)
+              .set({ status: "queued", updatedAt: new Date() })
+              .where(eq(recordingSessions.id, req.params.id));
+            return;
+          }
+
+          // Verify all chunk files exist on disk
+          const existingChunks = chunks.filter((c) => {
+            try { return fs.existsSync(c.filePath); } catch { return false; }
+          });
+
+          if (existingChunks.length === 0) {
+            console.error(`[recordings] No chunk files found on disk for session ${req.params.id}`);
+            await db
+              .update(recordingSessions)
+              .set({ status: "queued", updatedAt: new Date() })
+              .where(eq(recordingSessions.id, req.params.id));
+            return;
+          }
+
+          const outputPath = path.join(UPLOADS_DIR, `${req.params.id}-final.webm`);
+
+          if (existingChunks.length === 1) {
+            // Single chunk — just rename/copy it
+            fs.copyFileSync(existingChunks[0].filePath, outputPath);
+          } else {
+            // Multiple chunks — use ffmpeg concat demuxer
+            const concatListPath = path.join(UPLOADS_DIR, `${req.params.id}-concat.txt`);
+            const concatContent = existingChunks
+              .map((c) => `file '${c.filePath.replace(/'/g, "'\\''")}' `)
+              .join("\n");
+            fs.writeFileSync(concatListPath, concatContent, "utf8");
+
+            try {
+              await execFileAsync("ffmpeg", [
+                "-y",                    // overwrite output
+                "-f", "concat",          // use concat demuxer
+                "-safe", "0",            // allow absolute paths
+                "-i", concatListPath,    // input list
+                "-c", "copy",            // stream copy (no re-encode)
+                outputPath,
+              ]);
+            } finally {
+              // Always clean up the concat list
+              fs.unlink(concatListPath, () => {});
+            }
+          }
+
+          // Store the final video path as videoKey
+          await db
+            .update(recordingSessions)
+            .set({
+              videoKey: outputPath,
+              status: "queued",
+              updatedAt: new Date(),
+            })
+            .where(eq(recordingSessions.id, req.params.id));
+
+          console.log(`[recordings] Concatenated ${existingChunks.length} chunks → ${outputPath}`);
+
+          // Clean up individual chunk files
+          for (const chunk of existingChunks) {
+            fs.unlink(chunk.filePath, (err) => {
+              if (err) console.warn(`[recordings] Could not delete chunk file ${chunk.filePath}:`, err.message);
+            });
+          }
+        } catch (ffmpegErr) {
+          console.error("[recordings] ffmpeg concatenation error:", ffmpegErr);
+          // Fall back to queued state so user can still enter PGN manually
+          await db
+            .update(recordingSessions)
+            .set({ status: "queued", updatedAt: new Date() })
+            .where(eq(recordingSessions.id, req.params.id))
+            .catch(() => {});
+        }
+      })();
     } catch (err) {
       console.error("[recordings] finalize error:", err);
       res.status(500).json({ error: "Failed to finalize recording" });
+    }
+  });
+
+  // ── GET /api/recordings/:id/video — stream the final video file ────────────
+  // Returns the concatenated video for the session. Supports Range requests
+  // for seek-ahead in the analysis page video player.
+  router.get("/:id/video", requireAuth, async (req, res) => {
+    try {
+      const db = await getDb();
+      const [session] = await db
+        .select()
+        .from(recordingSessions)
+        .where(eq(recordingSessions.id, req.params.id));
+      if (!session) return res.status(404).json({ error: "Session not found" });
+      if (!session.videoKey) return res.status(404).json({ error: "No video available" });
+
+      const videoPath = session.videoKey;
+      if (!fs.existsSync(videoPath)) {
+        return res.status(404).json({ error: "Video file not found" });
+      }
+
+      const stat = fs.statSync(videoPath);
+      const fileSize = stat.size;
+      const rangeHeader = req.headers.range;
+
+      if (rangeHeader) {
+        // Handle Range request for seeking
+        const parts = rangeHeader.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunkSize = end - start + 1;
+
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunkSize,
+          "Content-Type": "video/webm",
+        });
+        fs.createReadStream(videoPath, { start, end }).pipe(res);
+      } else {
+        // Full file response
+        res.writeHead(200, {
+          "Content-Length": fileSize,
+          "Content-Type": "video/webm",
+          "Accept-Ranges": "bytes",
+        });
+        fs.createReadStream(videoPath).pipe(res);
+      }
+    } catch (err) {
+      console.error("[recordings] video stream error:", err);
+      res.status(500).json({ error: "Failed to stream video" });
     }
   });
 

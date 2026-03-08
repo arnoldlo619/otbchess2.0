@@ -625,8 +625,10 @@ export default function VideoRecorder() {
     const STATUS_TO_STEP: Record<string, number> = {
       recording: 0,
       uploading: 1,
+      processing: 1, // concatenating chunks — still in the "uploading" visual step
       queued: 2,
       analyzing: 3,
+      complete: 4,
       ready: 4,
       failed: 4,
     };

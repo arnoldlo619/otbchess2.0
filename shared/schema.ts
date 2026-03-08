@@ -283,3 +283,27 @@ export const correctionEntries = mysqlTable(
 
 export type CorrectionEntry = typeof correctionEntries.$inferSelect;
 export type NewCorrectionEntry = typeof correctionEntries.$inferInsert;
+
+// ─── video_chunks ────────────────────────────────────────────────────────────
+// Tracks individual video chunks uploaded during a recording session.
+// Each chunk is a 5-second WebM blob saved to the local filesystem.
+// On finalize, chunks are concatenated by ffmpeg into a single video file.
+export const videoChunks = mysqlTable(
+  "video_chunks",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    sessionId: varchar("session_id", { length: 36 }).notNull(),
+    chunkIndex: int("chunk_index").notNull(),
+    filePath: text("file_path").notNull(),
+    sizeBytes: int("size_bytes").default(0),
+    mimeType: varchar("mime_type", { length: 50 }).default("video/webm"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    sessionIdx: index("vc_session_id_idx").on(table.sessionId),
+    sessionChunkIdx: index("vc_session_chunk_idx").on(table.sessionId, table.chunkIndex),
+  })
+);
+
+export type VideoChunk = typeof videoChunks.$inferSelect;
+export type NewVideoChunk = typeof videoChunks.$inferInsert;

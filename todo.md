@@ -1722,3 +1722,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Download PGN button to GameAnalysis page header
 - [x] Show download feedback (brief "Downloaded!" state)
 - [x] Write tests for exportPgn utility (89 tests)
+
+## Phase 1: Persistent Video Storage
+
+- [x] Install multer for multipart/form-data chunk uploads
+- [x] Add video_chunks table to schema (sessionId, chunkIndex, filePath, sizeBytes, createdAt)
+- [x] Run db:push / direct SQL to migrate the new table
+- [x] Rewrite POST /api/recordings/:id/chunk to save bytes to disk via multer
+- [x] Rewrite POST /api/recordings/:id/finalize to concatenate chunks with ffmpeg and store videoKey
+- [x] Add GET /api/recordings/:id/video endpoint to stream the final video
+- [x] Wire VideoRecorder processing screen to show video-specific status messages
+- [x] Write tests for chunk upload and finalize logic (44 tests)
