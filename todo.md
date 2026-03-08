@@ -1802,3 +1802,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write 13 Python tests for turn tracking fix (all pass)
 - [x] Write 28 JS tests for turn tracking logic (1,742 total passing)
 - [x] Save checkpoint
+
+## Step 3: Surface CV Failure in Processing Screen (COMPLETE)
+
+- [x] Update GET /api/recordings/:id to include cvJob error info (status, errorMessage, attempts)
+- [x] Add cvJobError state to VideoRecorder processing screen
+- [x] Detect CV job failure from session poll response
+- [x] Build failure card UI: red XCircle icon, "Analysis Failed" title, error detail card with attempts count
+- [x] Show amber retry indicator when failed but retries not exhausted (attempts < 3)
+- [x] Add "Enter PGN Manually" CTA button linking to /record?sessionId=xxx
+- [x] Hide progress steps and CV progress bar when failed
+- [x] Write 53 tests for failure state derivation and UI state mapping (1,791 total passing)
+- [x] Save checkpoint

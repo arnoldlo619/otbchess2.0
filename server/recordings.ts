@@ -226,7 +226,32 @@ export function createRecordingsRouter(): Router {
         .select()
         .from(processedGames)
         .where(eq(processedGames.sessionId, session.id));
-      res.json({ session, game: games[0] ?? null });
+
+      // Fetch latest CV job for this session (if any) to surface errors
+      let cvJobInfo: {
+        status: string;
+        errorMessage: string | null;
+        attempts: number | null;
+      } | null = null;
+      try {
+        const cvJobRows = await db
+          .select({
+            status: cvJobs.status,
+            errorMessage: cvJobs.errorMessage,
+            attempts: cvJobs.attempts,
+          })
+          .from(cvJobs)
+          .where(eq(cvJobs.sessionId, session.id))
+          .orderBy(desc(cvJobs.createdAt))
+          .limit(1);
+        if (cvJobRows.length > 0) {
+          cvJobInfo = cvJobRows[0];
+        }
+      } catch {
+        // Non-critical — don't fail the whole request if cv_jobs query fails
+      }
+
+      res.json({ session, game: games[0] ?? null, cvJob: cvJobInfo });
     } catch (err) {
       console.error("[recordings] get error:", err);
       res.status(500).json({ error: "Failed to get recording session" });

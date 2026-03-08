@@ -359,6 +359,12 @@ export default function VideoRecorder() {
     totalFrames: number;
     jobFound: boolean;
   } | null>(null);
+  const [cvJobError, setCvJobError] = useState<{
+    failed: boolean;
+    errorMessage: string | null;
+    attempts: number;
+    retriesExhausted: boolean;
+  } | null>(null);
 
   // ── Refs ─────────────────────────────────────────────────────────────────────────────────────
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -888,10 +894,28 @@ export default function VideoRecorder() {
           credentials: "include",
         });
         if (!res.ok) return;
-        const data = await res.json() as { session?: { status: string }; game?: { id: string } | null };
+        const data = await res.json() as {
+          session?: { status: string };
+          game?: { id: string } | null;
+          cvJob?: { status: string; errorMessage: string | null; attempts: number | null } | null;
+        };
         const status = data.session?.status ?? "";
         const step = STATUS_TO_STEP[status] ?? 0;
         setProcessingStep(step);
+
+        // Detect CV job failure
+        if (data.cvJob && data.cvJob.status === "failed") {
+          const attempts = data.cvJob.attempts ?? 1;
+          setCvJobError({
+            failed: true,
+            errorMessage: data.cvJob.errorMessage,
+            attempts,
+            retriesExhausted: attempts >= 3,
+          });
+        } else if (data.cvJob && data.cvJob.status !== "failed") {
+          // Clear error if a retry is in progress
+          setCvJobError(null);
+        }
 
         if (status === "ready" && data.game?.id) {
           setGameId(data.game.id);
@@ -1441,6 +1465,32 @@ export default function VideoRecorder() {
   // ─────────────────────────────────────────────────────────────────────────
   if (screen === "processing") {
     const isReady = processingStep >= 4 && gameId;
+    const isFailed = cvJobError?.failed && cvJobError.retriesExhausted;
+
+    // Determine icon, title, and subtitle based on state
+    let icon: React.ReactNode;
+    let title: string;
+    let subtitle: string;
+
+    if (isReady) {
+      icon = <CheckCircle2 className="w-10 h-10 text-[#4CAF50]" />;
+      title = "Analysis Ready!";
+      subtitle = "Your game has been analysed with Stockfish. Tap below to review.";
+    } else if (isFailed) {
+      icon = <XCircle className="w-10 h-10 text-red-400" />;
+      title = "Analysis Failed";
+      subtitle = "The automatic board detection couldn't reconstruct this game. You can enter the PGN manually instead.";
+    } else {
+      icon = <Loader2 className="w-10 h-10 text-white/40 animate-spin" />;
+      title = "Processing Game\u2026";
+      subtitle = "This takes 1\u20133 minutes. You can leave this screen \u2014 we'll notify you when it's done.";
+    }
+
+    const iconBg = isReady
+      ? "bg-[#4CAF50]/20 border border-[#4CAF50]/40"
+      : isFailed
+        ? "bg-red-500/15 border border-red-500/30"
+        : "bg-white/06 border border-white/10";
 
     return (
       <div className={`min-h-screen ${bg} flex flex-col`}>
@@ -1451,34 +1501,22 @@ export default function VideoRecorder() {
 
         <div className="flex-1 flex flex-col items-center justify-center px-8">
           {/* Icon */}
-          <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 ${
-            isReady
-              ? "bg-[#4CAF50]/20 border border-[#4CAF50]/40"
-              : "bg-white/06 border border-white/10"
-          }`}>
-            {isReady ? (
-              <CheckCircle2 className="w-10 h-10 text-[#4CAF50]" />
-            ) : (
-              <Loader2 className="w-10 h-10 text-white/40 animate-spin" />
-            )}
+          <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 ${iconBg}`}>
+            {icon}
           </div>
 
-          <h1 className="text-2xl font-black text-white mb-2">
-            {isReady ? "Analysis Ready!" : "Processing Game…"}
-          </h1>
-          <p className="text-white/50 text-sm text-center mb-10 leading-relaxed">
-            {isReady
-              ? "Your game has been analysed with Stockfish. Tap below to review."
-              : "This takes 1–3 minutes. You can leave this screen — we'll notify you when it's done."}
-          </p>
+          <h1 className="text-2xl font-black text-white mb-2">{title}</h1>
+          <p className="text-white/50 text-sm text-center mb-10 leading-relaxed">{subtitle}</p>
 
-          {/* Progress steps */}
-          <div className="w-full max-w-xs mb-6">
-            <ProcessingStepBar currentStep={processingStep} />
-          </div>
+          {/* Progress steps — hidden when failed */}
+          {!isFailed && (
+            <div className="w-full max-w-xs mb-6">
+              <ProcessingStepBar currentStep={processingStep} />
+            </div>
+          )}
 
-          {/* CV frame analysis progress */}
-          {cvProgress && cvProgress.jobFound && !isReady && (
+          {/* CV frame analysis progress — shown only while actively processing */}
+          {cvProgress && cvProgress.jobFound && !isReady && !isFailed && (
             <div className="w-full max-w-xs mb-8">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-white/50 font-medium">Board analysis</span>
@@ -1500,6 +1538,35 @@ export default function VideoRecorder() {
             </div>
           )}
 
+          {/* Failure error detail card */}
+          {isFailed && cvJobError.errorMessage && (
+            <div className="w-full max-w-xs mb-8 rounded-2xl bg-red-500/08 border border-red-500/20 px-5 py-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-red-300 mb-1">Error details</p>
+                  <p className="text-xs text-white/40 leading-relaxed">{cvJobError.errorMessage}</p>
+                  <p className="text-xs text-white/25 mt-2">Attempts: {cvJobError.attempts}/3</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Non-exhausted failure — retrying indicator */}
+          {cvJobError?.failed && !cvJobError.retriesExhausted && (
+            <div className="w-full max-w-xs mb-6 rounded-2xl bg-amber-500/08 border border-amber-500/20 px-5 py-3">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-amber-300">Attempt {cvJobError.attempts}/3 failed — retrying automatically</p>
+                  {cvJobError.errorMessage && (
+                    <p className="text-xs text-white/30 mt-1">{cvJobError.errorMessage}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           {isReady ? (
             <button
@@ -1509,6 +1576,26 @@ export default function VideoRecorder() {
               View Analysis
               <ChevronRight className="w-5 h-5" />
             </button>
+          ) : isFailed ? (
+            <div className="w-full max-w-xs space-y-3">
+              <button
+                onClick={() => {
+                  // Navigate to /record with sessionId so PGN entry can link to the existing session
+                  const sid = sessionIdRef.current;
+                  navigate(sid ? `/record?sessionId=${sid}` : "/record");
+                }}
+                className="w-full py-4 rounded-2xl bg-white/10 text-white font-bold text-base active:scale-95 transition-transform flex items-center justify-center gap-2"
+              >
+                Enter PGN Manually
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => navigate("/")}
+                className="w-full py-3 rounded-2xl bg-white/04 text-white/40 font-medium text-sm"
+              >
+                Go home
+              </button>
+            </div>
           ) : (
             <div className="w-full max-w-xs space-y-3">
               <button
@@ -1518,7 +1605,10 @@ export default function VideoRecorder() {
                 Go home — I'll come back later
               </button>
               <button
-                onClick={() => navigate("/record")}
+                onClick={() => {
+                  const sid = sessionIdRef.current;
+                  navigate(sid ? `/record?sessionId=${sid}` : "/record");
+                }}
                 className="w-full py-3 rounded-2xl bg-white/04 text-white/30 font-medium text-sm"
               >
                 Enter PGN manually instead
