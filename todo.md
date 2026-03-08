@@ -1761,3 +1761,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] cv_worker.py: falls back to client-only timeline if server sampling finds nothing
 - [x] cv_worker.py: seedUsed flag in output JSON
 - [x] Write tests for Phase 3 utilities (50 tests, 1585 total passing)
+
+## Phase 4: Video Playback Sync on Analysis Page
+
+- [x] Build GameVideoPlayer component (video element, play/pause, seek bar, time display)
+- [x] Seek to moveTimestamps[moveIndex] when user navigates between moves
+- [x] Watch Move button: plays a 3-second clip around the selected move then pauses
+- [x] Show video panel only when session.videoKey is present
+- [x] Responsive layout: video panel in right panel above move list
+- [x] Update AnalysisResponse type to include session.videoKey and game.moveTimestamps
+- [x] Write tests for video sync utilities (seekToMove, clipTimings, formatVideoTime) — 50 tests

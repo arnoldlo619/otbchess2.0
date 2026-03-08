@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { GameHighlightCard } from "@/components/GameHighlightCard";
 import { buildAnnotatedPgn, downloadPgn } from "@/lib/exportPgn";
+import { GameVideoPlayer, type MoveTimestamp } from "@/components/GameVideoPlayer";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
@@ -61,6 +62,8 @@ interface GameData {
   totalMoves: number | null;
   openingName: string | null;
   openingEco: string | null;
+  // JSON string of MoveTimestamp[] — populated when game came from a video recording
+  moveTimestamps: string | null;
 }
 
 interface AnalysisSummary {
@@ -90,7 +93,7 @@ interface KeyMoment {
 
 interface AnalysisResponse {
   game: GameData;
-  session: { status: string } | null;
+  session: { status: string; videoKey?: string | null } | null;
   analyses: MoveAnalysis[];
   summary: AnalysisSummary;
   keyMoments: KeyMoment[];
@@ -901,6 +904,18 @@ export default function GameAnalysis() {
   }
 
   const isAnalyzing = data.session?.status === "analyzing";
+
+  // ── Video sync derived values ───────────────────────────────────────────────
+  const videoKey = data.session?.videoKey ?? null;
+  const parsedMoveTimestamps: MoveTimestamp[] = (() => {
+    if (!data.game.moveTimestamps) return [];
+    try {
+      return JSON.parse(data.game.moveTimestamps) as MoveTimestamp[];
+    } catch {
+      return [];
+    }
+  })();
+
   const analysisProgress =
     data.game.totalMoves && data.game.totalMoves > 0
       ? Math.round((data.analyses.length / (data.game.totalMoves * 2)) * 100)
@@ -1128,6 +1143,17 @@ export default function GameAnalysis() {
 
           {/* Right: Move list + Summary */}
           <div className="lg:w-[360px] space-y-4">
+            {/* Video player — only shown when this game came from a video recording */}
+            {videoKey && data.game.sessionId && (
+              <GameVideoPlayer
+                sessionId={data.game.sessionId}
+                moveTimestamps={parsedMoveTimestamps}
+                currentMoveIndex={currentMoveIndex}
+                totalMoves={data.analyses.length}
+                isDark={isDark}
+              />
+            )}
+
             {/* Move list */}
             <MoveList
               analyses={data.analyses}
