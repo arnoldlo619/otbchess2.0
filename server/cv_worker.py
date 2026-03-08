@@ -517,6 +517,47 @@ def _try_legal_moves(board_state, target_pos):
     return None, 0.0
 
 
+def _try_resync_board(board_state, target_pos, max_depth=3):
+    """
+    BFS up to max_depth moves deep to find a legal move sequence that
+    transforms the current board position into target_pos.
+
+    Returns a list of SAN strings if found, or None.
+    Uses iterative deepening to prefer shorter paths.
+    """
+    if not CHESS_AVAILABLE:
+        return None
+
+    from collections import deque
+
+    # Each queue entry: (board_copy, move_list)
+    initial = board_state.copy()
+    queue = deque([(initial, [])])
+    visited = {fen_position_part(initial.fen())}
+
+    while queue:
+        current_board, path = queue.popleft()
+
+        if len(path) >= max_depth:
+            continue
+
+        for move in current_board.legal_moves:
+            test_board = current_board.copy()
+            san = test_board.san(move)
+            test_board.push(move)
+            test_pos = fen_position_part(test_board.fen())
+
+            if test_pos == target_pos:
+                return path + [san]
+
+            # Only continue BFS if we haven't visited this position
+            if test_pos not in visited and len(path) + 1 < max_depth:
+                visited.add(test_pos)
+                queue.append((test_board, path + [san]))
+
+    return None
+
+
 def detect_move_from_fens(prev_fen, curr_fen, board_state):
     """
     Given two consecutive FEN positions and the current chess.Board state,
@@ -566,9 +607,11 @@ def detect_move_from_fens(prev_fen, curr_fen, board_state):
     # If the primary search fails and diffs > 2, we may have missed a frame.
     # Try every legal move for the current side, then for each resulting
     # board state, try every legal move for the *next* side. If the
-    # double-move result matches curr_pos, return both SANs.
+    # double-move result matches curr_pos, collect ALL candidate pairs
+    # and pick the one with the highest confidence score.
     if diffs > 2 and diffs <= 10:
         try:
+            candidates = []  # list of (san1, san2, confidence)
             for move1 in board_state.legal_moves:
                 board_after_1 = board_state.copy()
                 board_after_1.push(move1)
@@ -576,8 +619,13 @@ def detect_move_from_fens(prev_fen, curr_fen, board_state):
                 san2, conf2 = _try_legal_moves(board_after_1, curr_pos)
                 if san2 and conf2 >= 0.92:
                     san1 = board_state.san(move1)
-                    # Return both moves as a list
-                    return [san1, san2], conf2 * 0.85  # discount for uncertainty
+                    candidates.append((san1, san2, conf2))
+
+            if candidates:
+                # Sort by confidence descending, pick the best pair
+                candidates.sort(key=lambda x: x[2], reverse=True)
+                best = candidates[0]
+                return [best[0], best[1]], best[2] * 0.85  # discount for uncertainty
         except Exception:
             pass
 
@@ -861,10 +909,48 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                     f"detected {len(san_list)} moves ({', '.join(san_list)})"
                 )
         else:
-            # No move detected — update prev_fen if position changed minimally
+            # No move detected — we must still advance prev_fen to prevent
+            # cascading failures. If prev_fen stays frozen at the last
+            # successful detection, all future frames will have growing diffs
+            # against the stale position, making recovery impossible.
             diffs = count_piece_differences(prev_fen, curr_fen)
             if diffs <= 2:
                 prev_fen = curr_fen  # Minor noise, accept as same position
+            elif diffs <= 10:
+                # Significant change but we couldn't identify the move.
+                # Try a BFS of up to 3 moves deep to find a path from the
+                # current board state to the observed position.
+                curr_pos = fen_position_part(curr_fen)
+                resync_moves = _try_resync_board(board, curr_pos, max_depth=3)
+                if resync_moves:
+                    for san in resync_moves:
+                        try:
+                            move = board.parse_san(san)
+                            board.push(move)
+                            move_san_list.append(san)
+                            move_timeline.append({
+                                "moveNumber": move_number,
+                                "timestampMs": timestamp_ms,
+                                "confidence": round(confidence * 0.7, 3),
+                            })
+                            move_number += 1
+                        except Exception as e:
+                            warnings.append(f"Resync parse error: {san} — {e}")
+                            break
+                    prev_fen = curr_fen
+                    warnings.append(
+                        f"Board resync at t={timestamp_ms}ms: found {len(resync_moves)} "
+                        f"bridging moves ({', '.join(resync_moves)}) via BFS"
+                    )
+                else:
+                    # Could not resync — advance prev_fen anyway to avoid
+                    # cascading failures, but mark the gap.
+                    prev_fen = curr_fen
+                    warnings.append(
+                        f"Unrecognized position change at t={timestamp_ms}ms "
+                        f"({diffs} square diffs) — advancing without resync"
+                    )
+            # If diffs > 10, the frame is likely corrupted — keep prev_fen stable
 
     if not move_san_list:
         result["error"] = "Could not reconstruct any moves from the video. The board may be partially obscured or the recording quality may be too low."

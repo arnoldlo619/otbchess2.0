@@ -1814,3 +1814,24 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Hide progress steps and CV progress bar when failed
 - [x] Write 53 tests for failure state derivation and UI state mapping (1,791 total passing)
 - [x] Save checkpoint
+
+## End-to-End CV Integration Test
+
+- [x] Audit cv_worker.py input/output contract and ONNX model input shapes
+- [x] Build synthetic video generator (renders chessboard frames for a known 10-move game)
+- [x] Run cv_worker.py against synthetic video and capture reconstructed PGN
+- [x] Compare reconstructed PGN to ground truth and compute accuracy metrics
+- [x] Build reusable benchmark script (generate_test_video.py + run_benchmark.py)
+- [x] Write vitest tests for accuracy metric computation helpers (31 tests)
+- [x] Level 1 benchmark: 100% accuracy on all 6 scenarios (perfect, 10% skip, 20% skip, noise, merge)
+- [x] Level 2 benchmark: synthetic video correctly rejected by coverage guard (0.95 > 0.85 threshold)
+- [x] Documented: Level 2 requires real-world video; synthetic flat boards trigger false positive guard
+
+## Auto-Refresh for In-Progress Games
+
+- [x] Add hasInProgressGames() helper to detect analyzing/uploading/processing games
+- [x] Add silentRefresh() that updates game list without showing loading skeleton
+- [x] Auto-poll every 10 seconds when hasInProgressGames is true
+- [x] Stop polling automatically when all games reach terminal status (complete/failed)
+- [x] Write 21 tests for auto-refresh logic (hasInProgressGames, polling intervals, status transitions)
+- [x] Save checkpoint

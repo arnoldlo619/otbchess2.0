@@ -320,6 +320,13 @@ function GameCard({
 }
 
 // ── My Games Section ─────────────────────────────────────────────────────────
+/** Check if any games in the list are still processing/analyzing */
+function hasInProgressGames(games: MyGame[]): boolean {
+  return games.some(
+    (g) => g.sessionStatus === "analyzing" || g.sessionStatus === "uploading" || g.sessionStatus === "processing"
+  );
+}
+
 function MyGamesSection({
   isDark,
   onNavigate,
@@ -351,9 +358,30 @@ function MyGamesSection({
     }
   }, [user]);
 
+  // Silent refresh that doesn't show loading skeleton (for auto-poll)
+  const silentRefresh = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/games");
+      if (!res.ok) return;
+      const data = await res.json();
+      setGames(Array.isArray(data) ? data : []);
+    } catch {
+      // Silent — don't show error on auto-refresh
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
+
+  // Auto-refresh every 10 seconds when there are in-progress games
+  useEffect(() => {
+    if (!hasInProgressGames(games)) return;
+
+    const interval = setInterval(silentRefresh, 10_000);
+    return () => clearInterval(interval);
+  }, [games, silentRefresh]);
 
   // If not signed in, don't render the section
   if (!user) return null;
