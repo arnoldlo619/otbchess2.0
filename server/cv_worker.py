@@ -322,6 +322,108 @@ def reconstruct_fen(detections, turn="w"):
     return f"{fen_pos} {turn} - - 0 1"
 
 
+# ─── FEN Validation ─────────────────────────────────────────────────────────
+
+# Valid piece count ranges for a legal chess position
+_PIECE_LIMITS = {
+    # (white_piece, black_piece, min_total, max_total)
+    'K': (1, 1, 1, 1),   # Exactly 1 white king
+    'k': (1, 1, 1, 1),   # Exactly 1 black king
+    'Q': (0, 0, 0, 9),   # 0–9 queens (1 + up to 8 promoted)
+    'q': (0, 0, 0, 9),
+    'R': (0, 0, 0, 10),  # 0–10 rooks
+    'r': (0, 0, 0, 10),
+    'B': (0, 0, 0, 10),  # 0–10 bishops
+    'b': (0, 0, 0, 10),
+    'N': (0, 0, 0, 10),  # 0–10 knights
+    'n': (0, 0, 0, 10),
+    'P': (0, 0, 0, 8),   # 0–8 pawns
+    'p': (0, 0, 0, 8),
+}
+
+# Maximum total pieces on the board (32 at start, can only decrease)
+_MAX_TOTAL_PIECES = 32
+_MIN_TOTAL_PIECES = 2   # At minimum, both kings
+
+# Maximum pawns per side (8 at start)
+_MAX_PAWNS_PER_SIDE = 8
+
+
+def validate_fen_piece_count(fen):
+    """
+    Validate that a FEN position string represents a plausible chess position.
+
+    Checks:
+      - Exactly 1 white king (K) and 1 black king (k)
+      - Total pieces between 2 and 32
+      - No more than 8 pawns per side
+      - No piece type exceeds its theoretical maximum
+      - FEN position part has exactly 8 ranks
+
+    Returns True if valid, False if the FEN should be discarded.
+    """
+    if not fen or not isinstance(fen, str):
+        return False
+
+    pos = fen.split(" ")[0]
+    ranks = pos.split("/")
+    if len(ranks) != 8:
+        return False
+
+    # Count all pieces
+    counts = {}
+    total = 0
+    for rank in ranks:
+        for ch in rank:
+            if ch.isalpha():
+                counts[ch] = counts.get(ch, 0) + 1
+                total += 1
+            elif ch.isdigit():
+                pass  # empty squares
+            else:
+                return False  # unexpected character
+
+    # Must have exactly 1 king per side
+    if counts.get('K', 0) != 1:
+        return False
+    if counts.get('k', 0) != 1:
+        return False
+
+    # Total piece count must be in valid range
+    if not (_MIN_TOTAL_PIECES <= total <= _MAX_TOTAL_PIECES):
+        return False
+
+    # Pawn limits
+    if counts.get('P', 0) > _MAX_PAWNS_PER_SIDE:
+        return False
+    if counts.get('p', 0) > _MAX_PAWNS_PER_SIDE:
+        return False
+
+    # Per-piece-type upper bounds
+    for piece, (_, _, _, max_count) in _PIECE_LIMITS.items():
+        if counts.get(piece, 0) > max_count:
+            return False
+
+    # Each rank must expand to exactly 8 squares
+    for rank in ranks:
+        squares = 0
+        for ch in rank:
+            if ch.isdigit():
+                squares += int(ch)
+            elif ch.isalpha():
+                squares += 1
+        if squares != 8:
+            return False
+
+    return True
+
+
+# Maximum board coverage fraction above which we distrust the segmentation model.
+# The model was observed to return >0.77 coverage on plain green frames (no board).
+# A real board should cover 30–70% of the frame at typical recording angles.
+_MAX_TRUSTED_COVERAGE = 0.85
+
+
 # ─── FEN Comparison ───────────────────────────────────────────────────────────
 
 def fen_position_part(fen):
@@ -464,7 +566,11 @@ def load_client_fen_timeline(timeline_file):
             fen = item.get("fen")
             conf = item.get("confidence", 0.5)
             if ts is not None and fen and isinstance(fen, str) and len(fen) > 10:
-                entries.append((int(ts), fen, float(conf)))
+                # Apply the same piece-count sanity check to client-side FENs.
+                # The client CV worker runs on mobile hardware and may produce
+                # invalid positions under poor lighting or partial occlusion.
+                if validate_fen_piece_count(fen):
+                    entries.append((int(ts), fen, float(conf)))
         # Sort by timestamp
         entries.sort(key=lambda x: x[0])
         return entries
@@ -591,16 +697,30 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                 corners, seg_confidence = extract_corners(mask, w, h)
 
                 if corners and len(corners) == 4 and seg_confidence > 0.3:
-                    # Stage 2: Warp board and detect pieces
-                    warped = warp_board(frame, corners)
-                    detections = run_piece_detection(piece_session, warped)
+                    # Guard: reject frames where the segmentation model is
+                    # overconfident (coverage > 0.85 often means a false positive
+                    # on non-board backgrounds — observed at 0.77 on plain green).
+                    if seg_confidence > _MAX_TRUSTED_COVERAGE:
+                        warnings.append(
+                            f"Frame {frame_idx}: skipped (seg coverage {seg_confidence:.2f} "
+                            f"> {_MAX_TRUSTED_COVERAGE} — likely false positive)"
+                        )
+                    else:
+                        # Stage 2: Warp board and detect pieces
+                        warped = warp_board(frame, corners)
+                        detections = run_piece_detection(piece_session, warped)
 
-                    # Determine turn from timeline
-                    turn = "w" if len(fen_timeline) % 2 == 0 else "b"
-                    fen = reconstruct_fen(detections, turn)
+                        # Determine turn from timeline
+                        turn = "w" if len(fen_timeline) % 2 == 0 else "b"
+                        fen = reconstruct_fen(detections, turn)
 
-                    if fen:
-                        fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                        if fen and validate_fen_piece_count(fen):
+                            fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                        elif fen:
+                            warnings.append(
+                                f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
+                                f"({fen.split()[0][:30]})"
+                            )
 
             except Exception as e:
                 warnings.append(f"Frame {frame_idx} error: {str(e)[:100]}")

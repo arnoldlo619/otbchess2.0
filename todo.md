@@ -1781,3 +1781,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Animated green progress bar with frame count label ("45/900 frames")
 - [x] Stop cv-job polling when status reaches complete or failed
 - [x] Write tests for computePct, buildCvJobResponse, STATUS_TO_STEP, poll stop condition (43 tests, 1678 total)
+
+## Step 1: Piece Count Sanity Check (cv_worker.py)
+
+- [x] Write validate_fen_piece_count(fen) with full chess piece constraints
+- [x] Add board coverage guard: reject frames where seg model coverage > 0.85 (overconfident)
+- [x] Integrate validation into frame sampling loop (discard invalid FENs, log warning)
+- [x] Add validation to client FEN timeline loading (filter invalid client entries)
+- [x] Write 14 Python unit tests for validate_fen_piece_count (all pass)
+- [x] Write 39 JS tests for sanity check constants and logic (1714 total passing)
+- [x] Save checkpoint
