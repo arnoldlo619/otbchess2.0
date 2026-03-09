@@ -31,3 +31,18 @@
   - Exact FEN rate: 26.0%
   - Per-square accuracy: 96.44%
 - **Status**: Active (deployed 2026-03-09)
+
+## v8 Model (chess_pieces_v8.onnx) — CURRENT
+
+- **Architecture**: YOLO11n (Ultralytics), fine-tuned from v7 weights
+- **Training date**: 2026-03-09
+- **Dataset**: Mixed — 500 synthetic + 71 real-world ChessCam OTB frames (571 train / 62 val)
+- **Augmentation**: ±30° rotation, perspective, HSV, mosaic, mixup
+- **Epochs**: 30 (best at epoch 23)
+- **Val mAP50**: 0.9425 (on harder mixed val set)
+- **Val mAP50-95**: 0.8272 (on harder mixed val set)
+- **Benchmark (synthetic val, 100 images)**:
+  - Exact FEN rate: **28.0%** (+2 pp vs v7)
+  - Per-square accuracy: **97.00%** (+0.56 pp vs v7)
+- **Status**: Active (deployed 2026-03-09)
+- **Notes**: The mAP metrics appear lower than v7 because the validation set now includes real-world frames which are harder. The FEN rate and per-square accuracy on the same synthetic test set improved, confirming real-world generalization.
