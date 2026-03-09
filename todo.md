@@ -1972,3 +1972,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write 34 vitest tests for FenScrubber logic (fenScrubber.test.ts)
 - [x] All 2,017 tests pass
 - [x] Save checkpoint
+
+## Pre-trained HF Model Deployment (Mar 9 2026)
+
+- [x] Search for pre-trained chess piece YOLO models (Roboflow, HuggingFace, GitHub)
+- [x] Found yamero999/chess-piece-detection-yolo11n — exact architecture match (YOLO11n, 416x416, 12 classes)
+- [x] Downloaded and exported to ONNX (chess_pieces_hf.onnx)
+- [x] Updated cv_worker.py to use HF model with correct class name mapping
+- [ ] Test on real OTB video footage to validate improvement over synthetic-trained models
