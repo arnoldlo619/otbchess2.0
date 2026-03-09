@@ -55,11 +55,7 @@ except ImportError:
 
 SCRIPT_DIR = Path(__file__).parent
 BOARD_SEG_MODEL = SCRIPT_DIR / "cv-models" / "chess-board-seg.onnx"
-<<<<<<< Updated upstream
 PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess_pieces_v7.onnx"
-=======
-PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess_pieces_v10.onnx"
->>>>>>> Stashed changes
 
 BOARD_SEG_SIZE  = 256   # Board segmentation model input size
 PIECE_SIZE      = 416   # Piece detection model input size
