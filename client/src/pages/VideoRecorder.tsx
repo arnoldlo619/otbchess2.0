@@ -358,6 +358,8 @@ export default function VideoRecorder() {
     framesProcessed: number;
     totalFrames: number;
     jobFound: boolean;
+    lastFen: string | null;
+    stablePositions: number;
   } | null>(null);
   const [cvJobError, setCvJobError] = useState<{
     failed: boolean;
@@ -941,12 +943,16 @@ export default function VideoRecorder() {
           framesProcessed: number;
           totalFrames: number;
           status: string;
+          lastFen: string | null;
+          stablePositions: number;
         };
         setCvProgress({
           pct: data.pct,
           framesProcessed: data.framesProcessed,
           totalFrames: data.totalFrames,
           jobFound: data.jobFound,
+          lastFen: data.lastFen ?? null,
+          stablePositions: data.stablePositions ?? 0,
         });
         // Stop cv-job polling once the job is done
         if (data.jobFound && (data.status === "complete" || data.status === "failed")) {
@@ -1517,7 +1523,7 @@ export default function VideoRecorder() {
 
           {/* CV frame analysis progress — shown only while actively processing */}
           {cvProgress && cvProgress.jobFound && !isReady && !isFailed && (
-            <div className="w-full max-w-xs mb-8">
+            <div className="w-full max-w-xs mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-white/50 font-medium">Board analysis</span>
                 <span className="text-xs text-[#4CAF50] font-mono font-bold">
@@ -1533,6 +1539,28 @@ export default function VideoRecorder() {
                 <div
                   className="h-full bg-[#4CAF50] rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${cvProgress.pct}%` }}
+                />
+              </div>
+              {/* Stable positions counter */}
+              {cvProgress.stablePositions > 0 && (
+                <p className="text-xs text-white/30 mt-2 text-center">
+                  {cvProgress.stablePositions} position{cvProgress.stablePositions !== 1 ? 's' : ''} detected
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Live FEN board preview — shown when a position has been detected */}
+          {cvProgress && cvProgress.jobFound && !isReady && !isFailed && cvProgress.lastFen && (
+            <div className="w-full max-w-xs mb-8">
+              <p className="text-xs text-white/30 text-center mb-3">Last detected position</p>
+              <div className="rounded-2xl overflow-hidden border border-white/08 shadow-xl">
+                <img
+                  src={`https://fen2image.chessvision.ai/${encodeURIComponent(cvProgress.lastFen.split(' ')[0])}.png?size=240`}
+                  alt="Last detected board position"
+                  className="w-full aspect-square object-cover"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </div>
             </div>

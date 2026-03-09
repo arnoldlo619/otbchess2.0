@@ -1921,5 +1921,32 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] All 1,957 tests pass
 - [x] Save checkpoint
 - [ ] Improve corner detection for highly rotated boards (>30°)
-- [ ] Tune NMS thresholds to reduce false positives
-- [ ] Implement per-square deduplication in the move detection pipeline
+
+## YOLO Model Rotation Augmentation Training
+
+- [x] Audit current training pipeline, dataset, and model configuration
+- [x] Build rotation augmentation pipeline for training images and labels (augment_rotation.py)
+- [x] Generate augmented dataset: 9,410 train images (±30° and ±45° rotation augmentation)
+- [x] Retrain YOLO v6 on augmented dataset (15 epochs, fine-tuned from v5 weights)
+- [x] Epoch 9 best: mAP50=0.977, mAP50-95=0.808 (vs v5: 0.986/0.702)
+- [ ] Training complete (epoch 10/15 in progress)
+- [ ] Export v6 best.pt to ONNX (export_v6.py ready)
+- [ ] Deploy chess_pieces_v6.onnx to server/cv-models/
+- [ ] Update PIECE_MODEL_PATH in cv_worker.py to v6
+- [ ] Validate on real video — measure detection improvement on rotated boards
+- [ ] Write vitest tests for v6 benchmark results
+- [ ] Save final checkpoint
+
+## Pipeline Improvements (Mar 9 2026)
+
+- [x] Tune NMS confidence threshold (0.35 → 0.45) to reduce false positives
+- [x] Add per-square NMS deduplication in square_map() (keep highest-confidence per square)
+- [x] Implement _filter_stable_fens() — reject single-frame noise, require 2+ consecutive frames
+- [x] Improve merge_fen_timelines() — add client-priority mode when server has <3 stable FENs
+- [x] Add last_fen and stable_positions columns to cv_jobs schema (SQL migration applied)
+- [x] Update _write_progress() to write lastFen and stablePositions every 10 frames
+- [x] Update cv-job endpoint to return lastFen and stablePositions
+- [x] Add live FEN board preview to processing screen (chessvision.ai image)
+- [x] Add stable positions counter to processing screen
+- [x] Write 26 vitest tests for pipeline improvements (pipelineImprovements.test.ts)
+- [x] All 1,983 tests pass

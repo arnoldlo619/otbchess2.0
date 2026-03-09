@@ -792,6 +792,8 @@ export function createRecordingsRouter(): Router {
           errorMessage: cvJobs.errorMessage,
           startedAt: cvJobs.startedAt,
           completedAt: cvJobs.completedAt,
+          lastFen: cvJobs.lastFen,
+          stablePositions: cvJobs.stablePositions,
         })
         .from(cvJobs)
         .where(eq(cvJobs.sessionId, req.params.id))
@@ -832,6 +834,8 @@ export function createRecordingsRouter(): Router {
         errorMessage: job.errorMessage ?? null,
         startedAt: job.startedAt ?? null,
         completedAt: job.completedAt ?? null,
+        lastFen: job.lastFen ?? null,
+        stablePositions: job.stablePositions ?? 0,
       });
     } catch (err) {
       console.error("[recordings] cv-job progress error:", err);

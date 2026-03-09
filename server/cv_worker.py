@@ -59,8 +59,14 @@ PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess-pieces.onnx"
 
 BOARD_SEG_SIZE  = 256   # Board segmentation model input size
 PIECE_SIZE      = 416   # Piece detection model input size
-PIECE_CONF_THRESHOLD = 0.45
-NMS_IOU_THRESHOLD    = 0.45
+PIECE_CONF_THRESHOLD = 0.40   # Lowered from 0.45 — catches more pieces at moderate confidence
+NMS_IOU_THRESHOLD    = 0.35   # Tightened from 0.45 — suppresses more duplicate detections
+NMS_CROSS_CLASS_IOU  = 0.50   # Cross-class NMS: two different pieces on same square → keep higher-conf
+
+# Minimum number of consecutive frames a FEN must appear (or be similar to)
+# before it is accepted into the move-detection timeline.  Filters single-frame
+# noise spikes that would otherwise pollute the FEN sequence.
+FEN_STABILITY_FRAMES = 2
 
 # Class names in YOLO model output order (12 classes)
 # white pieces first, then black pieces
@@ -507,7 +513,9 @@ def run_piece_detection(piece_session, board_bgr):
                 "confidence": best_score,
             })
 
-    return apply_nms(detections, NMS_IOU_THRESHOLD)
+    # Intra-class NMS first, then cross-class deduplication
+    detections = apply_nms(detections, NMS_IOU_THRESHOLD)
+    return apply_cross_class_nms(detections, NMS_CROSS_CLASS_IOU)
 
 
 def apply_nms(detections, iou_threshold):
@@ -527,6 +535,35 @@ def apply_nms(detections, iou_threshold):
             if j in suppressed:
                 continue
             if compute_iou(a, b) > iou_threshold:
+                suppressed.add(j)
+
+    return kept
+
+
+def apply_cross_class_nms(detections, iou_threshold):
+    """
+    Cross-class NMS: if two detections of *different* piece types overlap
+    significantly (IoU > threshold), keep only the higher-confidence one.
+
+    This handles the case where the model detects both 'B' and 'R' on the
+    same square — a common false-positive pattern on ambiguous piece shapes.
+    """
+    if not detections:
+        return []
+
+    detections = sorted(detections, key=lambda d: d["confidence"], reverse=True)
+    kept = []
+    suppressed = set()
+
+    for i, a in enumerate(detections):
+        if i in suppressed:
+            continue
+        kept.append(a)
+        for j, b in enumerate(detections[i + 1:], start=i + 1):
+            if j in suppressed:
+                continue
+            # Only apply cross-class suppression when pieces differ
+            if a["piece"] != b["piece"] and compute_iou(a, b) > iou_threshold:
                 suppressed.add(j)
 
     return kept
@@ -1073,6 +1110,54 @@ def detect_move_from_fens(prev_fen, curr_fen, board_state):
 
 # ─── Main Pipeline ────────────────────────────────────────────────────────────
 
+def _filter_stable_fens(raw_timeline, min_stable_frames=2):
+    """
+    Filter a raw FEN timeline to keep only positions that appear in at least
+    `min_stable_frames` consecutive sampled frames (using fens_are_similar).
+
+    A "run" is a maximal sequence of consecutive entries where each entry is
+    similar to the previous one.  If the run length >= min_stable_frames, the
+    entry with the highest confidence from that run is kept.
+
+    This removes single-frame noise spikes while preserving genuine position
+    changes (which produce a new run).
+
+    Args:
+        raw_timeline: list of (timestamp_ms, fen, confidence) tuples
+        min_stable_frames: minimum run length to accept
+
+    Returns:
+        Filtered list of (timestamp_ms, fen, confidence) tuples.
+    """
+    if not raw_timeline:
+        return []
+
+    if min_stable_frames <= 1:
+        return raw_timeline  # No filtering requested
+
+    # Group consecutive similar FENs into runs
+    runs = []           # list of lists of (ts, fen, conf)
+    current_run = [raw_timeline[0]]
+
+    for entry in raw_timeline[1:]:
+        if fens_are_similar(entry[1], current_run[-1][1], threshold=0.88):
+            current_run.append(entry)
+        else:
+            runs.append(current_run)
+            current_run = [entry]
+    runs.append(current_run)
+
+    # For each run that meets the stability threshold, keep the highest-
+    # confidence entry.  For runs that are too short (noise spikes), discard.
+    stable = []
+    for run in runs:
+        if len(run) >= min_stable_frames:
+            best = max(run, key=lambda e: e[2])  # highest confidence
+            stable.append(best)
+
+    return stable
+
+
 def load_client_fen_timeline(timeline_file):
     """
     Load a client-side FEN timeline from a JSON file.
@@ -1116,6 +1201,8 @@ def merge_fen_timelines(client_timeline, server_timeline):
     - For each server-sampled FEN, check if there is a client entry within ±3 seconds.
     - If a client entry exists and its confidence is higher, prefer the client FEN.
     - Insert client-only entries (timestamps not covered by server sampling) to fill gaps.
+    - If the server timeline is sparse (< 5 stable entries), give client entries priority
+      by boosting their confidence weight in the merge.
     - Return the merged timeline sorted by timestamp.
     """
     if not client_timeline:
@@ -1124,6 +1211,9 @@ def merge_fen_timelines(client_timeline, server_timeline):
         return client_timeline
 
     WINDOW_MS = 3000  # 3-second matching window
+
+    # Determine if server is sparse — if so, client entries get priority
+    server_is_sparse = len(server_timeline) < 5
 
     merged = list(server_timeline)  # start with server entries
 
@@ -1136,8 +1226,8 @@ def merge_fen_timelines(client_timeline, server_timeline):
         nearest_client_ts = min(client_timestamps, key=lambda ct: abs(ct - s_ts), default=None)
         if nearest_client_ts is not None and abs(nearest_client_ts - s_ts) <= WINDOW_MS:
             c_ts, c_fen, c_conf = client_by_ts[nearest_client_ts]
-            # Use client FEN if it has higher confidence
-            if c_conf > s_conf:
+            # Use client FEN if it has higher confidence, or if server is sparse
+            if c_conf > s_conf or server_is_sparse:
                 merged[i] = (s_ts, c_fen, max(s_conf, c_conf))
 
     # Add client-only entries that fall in gaps between server samples
@@ -1207,7 +1297,9 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
     sample_interval = max(1, int(video_fps / fps_sample))
 
     # ── Frame sampling loop ──────────────────────────────────────────────────
-    fen_timeline = []   # List of (timestamp_ms, fen, confidence)
+    # raw_fen_timeline holds every accepted FEN before stability filtering.
+    # Each entry: (timestamp_ms, fen, confidence)
+    raw_fen_timeline = []
     frame_idx = 0
     frames_processed = 0
 
@@ -1248,7 +1340,7 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                         fen = reconstruct_fen(detections)
 
                         if fen and validate_fen_piece_count(fen):
-                            fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                            raw_fen_timeline.append((timestamp_ms, fen, seg_confidence))
                         elif fen:
                             warnings.append(
                                 f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
@@ -1260,12 +1352,29 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
 
             # Write incremental progress every 10 sampled frames (best-effort)
             if job_id and db_kwargs and frames_processed % 10 == 0:
-                _write_progress(job_id, db_kwargs, frames_processed, total_frames)
+                # Pass the last detected FEN and stable position count for live UI preview
+                last_raw_fen = raw_fen_timeline[-1][1] if raw_fen_timeline else None
+                _write_progress(
+                    job_id, db_kwargs, frames_processed, total_frames,
+                    last_fen=last_raw_fen,
+                    stable_positions=len(raw_fen_timeline),
+                )
 
         frame_idx += 1
 
     cap.release()
     result["framesProcessed"] = frames_processed
+
+    # ── FEN stability filtering ───────────────────────────────────────────────
+    # A FEN is accepted into the final timeline only if it appears (or a very
+    # similar FEN appears) in at least FEN_STABILITY_FRAMES consecutive sampled
+    # frames.  This eliminates single-frame noise spikes caused by motion blur,
+    # partial occlusion, or transient detection errors.
+    fen_timeline = _filter_stable_fens(raw_fen_timeline, FEN_STABILITY_FRAMES)
+    if len(raw_fen_timeline) > 0:
+        warnings.append(
+            f"FEN stability filter: {len(raw_fen_timeline)} raw → {len(fen_timeline)} stable entries"
+        )
 
     # Final progress write so the endpoint always shows 100% on complete
     if job_id and db_kwargs:
@@ -1452,16 +1561,24 @@ def _parse_db_url(url: str):
                 ssl={"ca": None}, ssl_verify_cert=False)
 
 
-def _write_progress(job_id: str, db_kwargs: dict, frames_processed: int, total_frames: int):
+def _write_progress(job_id: str, db_kwargs: dict, frames_processed: int, total_frames: int,
+                    last_fen: str = None, stable_positions: int = None):
     """Write incremental frame progress to the cv_jobs table."""
     try:
         import pymysql
         conn = pymysql.connect(**db_kwargs, connect_timeout=5)
         with conn.cursor() as cur:
-            cur.execute(
-                "UPDATE cv_jobs SET frames_processed=%s, total_frames=%s WHERE id=%s",
-                (frames_processed, total_frames, job_id),
-            )
+            if last_fen is not None and stable_positions is not None:
+                cur.execute(
+                    "UPDATE cv_jobs SET frames_processed=%s, total_frames=%s, "
+                    "last_fen=%s, stable_positions=%s WHERE id=%s",
+                    (frames_processed, total_frames, last_fen, stable_positions, job_id),
+                )
+            else:
+                cur.execute(
+                    "UPDATE cv_jobs SET frames_processed=%s, total_frames=%s WHERE id=%s",
+                    (frames_processed, total_frames, job_id),
+                )
         conn.commit()
         conn.close()
     except Exception as e:
