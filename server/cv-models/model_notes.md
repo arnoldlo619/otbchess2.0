@@ -46,3 +46,19 @@
   - Per-square accuracy: **97.00%** (+0.56 pp vs v7)
 - **Status**: Active (deployed 2026-03-09)
 - **Notes**: The mAP metrics appear lower than v7 because the validation set now includes real-world frames which are harder. The FEN rate and per-square accuracy on the same synthetic test set improved, confirming real-world generalization.
+
+## v8c Model (chess_pieces_v8c.onnx) — CURRENT
+
+- **Architecture**: YOLO11n (Ultralytics), fine-tuned from v7 weights
+- **Training date**: 2026-03-09
+- **Dataset**: Mixed — 2,000 synthetic + 74 real-world cleaned ChessCam OTB frames (2,074 train / 208 val)
+- **Label cleaning**: Automated — strict per-cell deduplication, min-depth filter (0.015), box clamping
+- **Real-world source**: 3 ChessCam OTB game videos (rnmIfr03utw, DGe5FjzC3wc, SZd0a3-_Zqw)
+- **Epochs**: 30 (best at epoch 24 by fitness)
+- **Val mAP50**: 0.9801 (peak epoch 5), stable ~0.978 thereafter
+- **Val mAP50-95**: ~0.988
+- **Benchmark (synthetic val, 100 images)**:
+  - Exact FEN rate: **26.0%** (same as v7)
+  - Per-square accuracy: **97.03%** (+0.59 pp vs v7)
+- **Status**: Active (deployed 2026-03-09)
+- **Notes**: Cleaned real-world labels did not introduce new ghost detections. FEN ceiling remains at 26% due to structural ghost-detection problem in synthetic data (bounding boxes extending across cell boundaries). Per-square accuracy improvement confirms better piece-type classification. Next step: retrain with tighter synthetic annotations (0.85× cell size).
