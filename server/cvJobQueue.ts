@@ -283,6 +283,7 @@ async function runCvJob(
     sessionId,
     pgn: cvResult.pgn,
     moveTimestamps: JSON.stringify(cvResult.moveTimeline),
+    fenTimeline: cvResult.fenTimeline ? JSON.stringify(cvResult.fenTimeline) : null,
     openingName,
     openingEco,
     totalMoves,
@@ -311,6 +312,7 @@ async function runCvJob(
 interface CvWorkerResult {
   pgn: string;
   moveTimeline: Array<{ moveNumber: number; timestampMs: number; confidence: number }>;
+  fenTimeline?: Array<{ timestampMs: number; fen: string; confidence: number }>;
   framesProcessed: number;
   totalFrames: number;
   error: string | null;

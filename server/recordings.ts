@@ -1009,12 +1009,23 @@ export function createRecordingsRouter(): Router {
         .from(recordingSessions)
         .where(eq(recordingSessions.id, game.sessionId));
 
+      // Parse fenTimeline from JSON string
+      let fenTimeline: Array<{ timestampMs: number; fen: string; confidence: number }> = [];
+      if (game.fenTimeline) {
+        try {
+          fenTimeline = JSON.parse(game.fenTimeline);
+        } catch {
+          fenTimeline = [];
+        }
+      }
+
       res.json({
         game,
         session: session ?? null,
         analyses,
         summary,
         keyMoments: topMoments,
+        fenTimeline,
       });
     } catch (err) {
       console.error("[recordings] get analysis error:", err);

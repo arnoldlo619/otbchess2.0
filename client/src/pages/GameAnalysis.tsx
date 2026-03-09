@@ -34,6 +34,7 @@ import {
 import { GameHighlightCard } from "@/components/GameHighlightCard";
 import { buildAnnotatedPgn, downloadPgn } from "@/lib/exportPgn";
 import { GameVideoPlayer, type MoveTimestamp } from "@/components/GameVideoPlayer";
+import { FenScrubber, type FenEntry } from "@/components/FenScrubber";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
@@ -97,6 +98,7 @@ interface AnalysisResponse {
   analyses: MoveAnalysis[];
   summary: AnalysisSummary;
   keyMoments: KeyMoment[];
+  fenTimeline: FenEntry[];
 }
 
 // ── Classification colors ───────────────────────────────────────────────────
@@ -652,6 +654,7 @@ export default function GameAnalysis() {
   const [boardOrientation, setBoardOrientation] = useState<"white" | "black">("white");
   const [highlightStatus, setHighlightStatus] = useState<"idle" | "generating" | "done">("idle");
   const [pgnDownloadStatus, setPgnDownloadStatus] = useState<"idle" | "done">("idle");
+  const [selectedFenEntry, setSelectedFenEntry] = useState<FenEntry | null>(null);
   const highlightCardRef = useRef<HTMLDivElement>(null);
 
   const gameId = matched ? params?.gameId : null;
@@ -691,18 +694,25 @@ export default function GameAnalysis() {
   }, [gameId]);
 
   // ── Compute FEN for current move ────────────────────────────────────────
+  // When a FEN entry is selected from the scrubber, show that detected position.
+  // Otherwise show the PGN-derived FEN from the Stockfish analysis.
   const currentFen = useMemo(() => {
+    if (selectedFenEntry) {
+      // FEN scrubber mode — show the raw detected position
+      return selectedFenEntry.fen;
+    }
     if (!data || currentMoveIndex < 0) {
       return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     }
     const analysis = data.analyses[currentMoveIndex];
     return analysis?.fen ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  }, [data, currentMoveIndex]);
+  }, [data, currentMoveIndex, selectedFenEntry]);
 
   const currentEval = useMemo(() => {
+    if (selectedFenEntry) return 0; // No eval for raw detected positions
     if (!data || currentMoveIndex < 0) return 0;
     return data.analyses[currentMoveIndex]?.eval ?? 0;
-  }, [data, currentMoveIndex]);
+  }, [data, currentMoveIndex, selectedFenEntry]);
 
   // ── Keyboard navigation ─────────────────────────────────────────────────
   const goFirst = useCallback(() => setCurrentMoveIndex(-1), []);
@@ -923,6 +933,9 @@ export default function GameAnalysis() {
         ? 100
         : 0;
 
+  // FEN timeline from CV pipeline (may be empty for manually-entered games)
+  const fenTimeline = data.fenTimeline ?? [];
+
   return (
     <div
       className={`min-h-screen ${
@@ -1005,6 +1018,33 @@ export default function GameAnalysis() {
             <div className="lg:hidden">
               <EvalBar evalCp={currentEval} isDark={isDark} orientation="horizontal" />
             </div>
+
+            {/* FEN scrubber mode banner */}
+            {selectedFenEntry && (
+              <div
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs border ${
+                  isDark
+                    ? "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-[#7ab88a]"
+                    : "bg-[#3D6B47]/8 border-[#3D6B47]/20 text-[#2d5235]"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-[#3D6B47] animate-pulse flex-shrink-0" />
+                <span className="font-medium">Detected position</span>
+                <span className={isDark ? "text-white/40" : "text-gray-400"}>
+                  — CV snapshot, not from PGN
+                </span>
+                <button
+                  onClick={() => setSelectedFenEntry(null)}
+                  className={`ml-auto text-[10px] px-2 py-0.5 rounded font-medium transition-colors ${
+                    isDark
+                      ? "bg-white/10 hover:bg-white/20 text-white/60"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-600"
+                  }`}
+                >
+                  Back to PGN
+                </button>
+              </div>
+            )}
 
             {/* Board area */}
             <div className="flex gap-3">
@@ -1150,6 +1190,20 @@ export default function GameAnalysis() {
                 moveTimestamps={parsedMoveTimestamps}
                 currentMoveIndex={currentMoveIndex}
                 totalMoves={data.analyses.length}
+                isDark={isDark}
+              />
+            )}
+
+            {/* FEN timeline scrubber — only shown when CV pipeline produced detected positions */}
+            {fenTimeline.length > 0 && (
+              <FenScrubber
+                fenTimeline={fenTimeline}
+                onSelectFen={(entry) => {
+                  setSelectedFenEntry(entry);
+                  // When returning to PGN mode, restore board to current move
+                  if (!entry) setCurrentMoveIndex((i) => i);
+                }}
+                selectedEntry={selectedFenEntry}
                 isDark={isDark}
               />
             )}

@@ -208,6 +208,8 @@ export const processedGames = mysqlTable(
     pgn: text("pgn").notNull(),
     // JSON array of { moveNumber, timestamp } for video sync
     moveTimestamps: text("move_timestamps"),
+    // JSON array of { timestampMs, fen, confidence } from CV pipeline
+    fenTimeline: text("fen_timeline"),
     openingName: varchar("opening_name", { length: 255 }),
     openingEco: varchar("opening_eco", { length: 10 }),
     totalMoves: int("total_moves").default(0),

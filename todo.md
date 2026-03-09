@@ -1950,3 +1950,25 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add stable positions counter to processing screen
 - [x] Write 26 vitest tests for pipeline improvements (pipelineImprovements.test.ts)
 - [x] All 1,983 tests pass
+
+## FEN Timeline Replay Scrubber (Mar 9 2026)
+
+- [x] Audit analysis replay UI and FEN timeline data structures
+- [x] Add fenTimeline column to processedGames schema (SQL migration applied)
+- [x] Update cv_worker.py to output fenTimeline in result dict
+- [x] Update CvWorkerResult type and cvJobQueue.ts to persist fenTimeline
+- [x] Update analysis endpoint to parse and return fenTimeline
+- [x] Build FenScrubber component (FenScrubber.tsx) with:
+  - [x] Horizontal scrollable timeline of detected positions (colour-coded confidence dots)
+  - [x] Timestamp labels (every ~8th dot + selected)
+  - [x] Progress track bar
+  - [x] Prev/Next navigation buttons
+  - [x] Keyboard arrow navigation + Escape to return to PGN mode
+  - [x] Selected position info bar (timestamp + confidence + FEN preview)
+- [x] Wire FenScrubber into GameAnalysis.tsx (shown only when fenTimeline.length > 0)
+- [x] Add "Detected position" banner above board in FEN scrubber mode
+- [x] "Back to PGN" button to exit scrubber mode
+- [x] Update currentFen useMemo to use selectedFenEntry when in scrubber mode
+- [x] Write 34 vitest tests for FenScrubber logic (fenScrubber.test.ts)
+- [x] All 2,017 tests pass
+- [x] Save checkpoint

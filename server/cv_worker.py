@@ -1544,6 +1544,12 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
     result["moveTimeline"] = move_timeline
     result["warnings"] = warnings
     result["seedUsed"] = seed_used
+    # Export the stable FEN timeline for replay scrubber
+    # Each entry: {timestampMs, fen, confidence}
+    result["fenTimeline"] = [
+        {"timestampMs": int(ts), "fen": fen, "confidence": round(conf, 3)}
+        for ts, fen, conf in fen_timeline
+    ]
 
     return result
 
