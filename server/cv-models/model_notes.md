@@ -17,3 +17,17 @@
 - Board Segmentation: A (100% detection on real video)
 - Piece Detection: F (domain gap — trained on specific piece style)
 - Coverage Guard: PASS (0% false positive on real boards)
+
+## v7 Model (chess_pieces_v7.onnx)
+
+- **Architecture**: YOLO11n (Ultralytics)
+- **Training date**: 2026-03-09
+- **Dataset**: 2000 synthetic overhead images + 200 val (merged_v7)
+- **Augmentation**: ±45° rotation, perspective, HSV, mosaic
+- **Epochs**: 20 (best at epoch 19)
+- **Val mAP50**: 0.9949
+- **Val mAP50-95**: 0.9058 (vs v6: 0.808 — +12% improvement)
+- **Benchmark (synthetic val, 100 images)**:
+  - Exact FEN rate: 26.0%
+  - Per-square accuracy: 96.44%
+- **Status**: Active (deployed 2026-03-09)
