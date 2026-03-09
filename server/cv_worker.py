@@ -55,7 +55,7 @@ except ImportError:
 
 SCRIPT_DIR = Path(__file__).parent
 BOARD_SEG_MODEL = SCRIPT_DIR / "cv-models" / "chess-board-seg.onnx"
-PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess_pieces_hf.onnx"
+PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess_pieces_v7.onnx"
 
 BOARD_SEG_SIZE  = 256   # Board segmentation model input size
 PIECE_SIZE      = 416   # Piece detection model input size
@@ -69,7 +69,7 @@ NMS_CROSS_CLASS_IOU  = 0.50   # Cross-class NMS: two different pieces on same sq
 FEN_STABILITY_FRAMES = 2
 
 # Class names in YOLO model output order (12 classes)
-# HF model (yamero999/chess-piece-detection-yolo11n) — trained on real chess photos
+# v7 model (chess-pieces-v7, YOLO11n) — custom trained, epoch 19/20, mAP50=99.49%
 CLASS_NAMES = [
     'P', 'N', 'B', 'R', 'Q', 'K',   # white: pawn, knight, bishop, rook, queen, king
     'p', 'n', 'b', 'r', 'q', 'k',   # black: pawn, knight, bishop, rook, queen, king
