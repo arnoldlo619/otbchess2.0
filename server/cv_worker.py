@@ -55,7 +55,11 @@ except ImportError:
 
 SCRIPT_DIR = Path(__file__).parent
 BOARD_SEG_MODEL = SCRIPT_DIR / "cv-models" / "chess-board-seg.onnx"
+<<<<<<< Updated upstream
 PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess_pieces_v7.onnx"
+=======
+PIECE_MODEL     = SCRIPT_DIR / "cv-models" / "chess_pieces_v10.onnx"
+>>>>>>> Stashed changes
 
 BOARD_SEG_SIZE  = 256   # Board segmentation model input size
 PIECE_SIZE      = 416   # Piece detection model input size
@@ -69,10 +73,10 @@ NMS_CROSS_CLASS_IOU  = 0.50   # Cross-class NMS: two different pieces on same sq
 FEN_STABILITY_FRAMES = 2
 
 # Class names in YOLO model output order (12 classes)
-# white pieces first, then black pieces
+# v10 model uses alphabetical order: B K N P Q R b k n p q r
 CLASS_NAMES = [
-    'P', 'N', 'B', 'R', 'Q', 'K',   # white: pawn, knight, bishop, rook, queen, king
-    'p', 'n', 'b', 'r', 'q', 'k',   # black: pawn, knight, bishop, rook, queen, king
+    'B', 'K', 'N', 'P', 'Q', 'R',   # white: bishop, king, knight, pawn, queen, rook
+    'b', 'k', 'n', 'p', 'q', 'r',   # black: bishop, king, knight, pawn, queen, rook
 ]
 
 # ─── Model Loading ────────────────────────────────────────────────────────────
