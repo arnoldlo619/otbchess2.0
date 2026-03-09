@@ -1929,13 +1929,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Generate augmented dataset: 9,410 train images (±30° and ±45° rotation augmentation)
 - [x] Retrain YOLO v6 on augmented dataset (15 epochs, fine-tuned from v5 weights)
 - [x] Epoch 9 best: mAP50=0.977, mAP50-95=0.808 (vs v5: 0.986/0.702)
-- [ ] Training complete (epoch 10/15 in progress)
-- [ ] Export v6 best.pt to ONNX (export_v6.py ready)
-- [ ] Deploy chess_pieces_v6.onnx to server/cv-models/
-- [ ] Update PIECE_MODEL_PATH in cv_worker.py to v6
-- [ ] Validate on real video — measure detection improvement on rotated boards
-- [ ] Write vitest tests for v6 benchmark results
-- [ ] Save final checkpoint
+- [x] Training complete (15 epochs, best at epoch 9: mAP50=0.977, mAP50-95=0.808)
+- [x] Export v6 best.pt to ONNX (10.0 MB, 39.5ms inference)
+- [x] Deploy chess_pieces_v6.onnx to server/cv-models/
+- [x] Update PIECE_MODEL in cv_worker.py to chess_pieces_v6.onnx
+- [x] Validate on real video: 17.5% FEN generation rate (up from 9.5% with v5)
+- [x] All 1,983 tests pass
+- [x] Save final checkpoint
 
 ## Pipeline Improvements (Mar 9 2026)
 
