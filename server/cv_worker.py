@@ -119,9 +119,107 @@ def run_board_segmentation(board_seg_session, frame_bgr):
     return mask.astype(np.float32)
 
 
+def _hough_quad_corners(binary, orig_w, orig_h):
+    """
+    Attempt to find the 4 corners of the board quadrilateral using Hough lines
+    on the contour edge image.
+
+    Strategy
+    --------
+    1. Detect Hough lines on the contour boundary.
+    2. Cluster lines into two orientation families: near-horizontal and
+       near-vertical (within ±45° of each axis).
+    3. Within each family, find the two extreme (outermost) lines.
+    4. Compute the 4 intersection points of those 4 lines → board corners.
+
+    Returns a list of 4 (x, y) tuples in original image coordinates, or None.
+    """
+    # Edge image from the binary mask boundary
+    edges = cv2.Canny(binary, 50, 150)
+    lines = cv2.HoughLines(edges, rho=1, theta=np.pi / 360, threshold=40)
+    if lines is None or len(lines) < 4:
+        return None
+
+    scale_x = orig_w / BOARD_SEG_SIZE
+    scale_y = orig_h / BOARD_SEG_SIZE
+    sz = BOARD_SEG_SIZE
+
+    def line_endpoints(rho, theta):
+        """Convert (rho, theta) to two far-apart points on the line."""
+        a, b = math.cos(theta), math.sin(theta)
+        x0, y0 = a * rho, b * rho
+        return (x0 + 1000 * (-b), y0 + 1000 * a), (x0 - 1000 * (-b), y0 - 1000 * a)
+
+    def intersect(r1, t1, r2, t2):
+        """Compute intersection of two Hough lines."""
+        A = np.array([[math.cos(t1), math.sin(t1)],
+                      [math.cos(t2), math.sin(t2)]])
+        b = np.array([r1, r2])
+        det = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]
+        if abs(det) < 1e-6:
+            return None
+        x = (A[1, 1] * b[0] - A[0, 1] * b[1]) / det
+        y = (A[0, 0] * b[1] - A[1, 0] * b[0]) / det
+        return (x, y)
+
+    # Separate lines into near-horizontal and near-vertical families
+    # theta=0 → vertical line, theta=π/2 → horizontal line
+    horiz, vert = [], []
+    for line in lines:
+        rho, theta = float(line[0][0]), float(line[0][1])
+        deg = math.degrees(theta)
+        if 45 <= deg <= 135:       # near-horizontal
+            horiz.append((rho, theta))
+        else:                       # near-vertical (0–45° or 135–180°)
+            vert.append((rho, theta))
+
+    if len(horiz) < 2 or len(vert) < 2:
+        return None
+
+    # For each family, find the two outermost lines by their rho value
+    # (rho = signed distance from origin, so min/max gives opposite edges)
+    horiz.sort(key=lambda l: l[0])
+    vert.sort(key=lambda l: l[0])
+
+    h_top    = horiz[0]   # smallest rho → top edge
+    h_bottom = horiz[-1]  # largest rho  → bottom edge
+    v_left   = vert[0]    # smallest rho → left edge
+    v_right  = vert[-1]   # largest rho  → right edge
+
+    # Compute the 4 corner intersections
+    tl = intersect(h_top[0], h_top[1], v_left[0], v_left[1])
+    tr = intersect(h_top[0], h_top[1], v_right[0], v_right[1])
+    br = intersect(h_bottom[0], h_bottom[1], v_right[0], v_right[1])
+    bl = intersect(h_bottom[0], h_bottom[1], v_left[0], v_left[1])
+
+    if any(p is None for p in [tl, tr, br, bl]):
+        return None
+
+    # Sanity check: all corners must be within a reasonable distance of the mask
+    margin = sz * 0.3
+    for x, y in [tl, tr, br, bl]:
+        if not (-margin <= x <= sz + margin and -margin <= y <= sz + margin):
+            return None
+
+    # Scale to original image coordinates
+    pts = [
+        (int(tl[0] * scale_x), int(tl[1] * scale_y)),
+        (int(tr[0] * scale_x), int(tr[1] * scale_y)),
+        (int(br[0] * scale_x), int(br[1] * scale_y)),
+        (int(bl[0] * scale_x), int(bl[1] * scale_y)),
+    ]
+    return pts
+
+
 def extract_corners(mask, orig_w, orig_h):
     """
-    Extract 4 board corners from the segmentation mask using OpenCV contours.
+    Extract 4 board corners from the segmentation mask.
+
+    Fallback chain (best to worst):
+      1. Adaptive approxPolyDP: try increasing epsilon until exactly 4 vertices
+      2. Hough-line intersection of outermost boundary lines
+      3. minAreaRect of the largest contour (rotated bounding box)
+
     Returns list of 4 (x, y) tuples in [tl, tr, br, bl] order, or None.
     """
     binary = (mask > 0.5).astype(np.uint8) * 255
@@ -140,23 +238,41 @@ def extract_corners(mask, orig_w, orig_h):
 
     # Largest contour = board
     board_contour = max(contours, key=cv2.contourArea)
-    epsilon = 0.02 * cv2.arcLength(board_contour, True)
-    approx = cv2.approxPolyDP(board_contour, epsilon, True)
+    arc_len = cv2.arcLength(board_contour, True)
 
     scale_x = orig_w / BOARD_SEG_SIZE
     scale_y = orig_h / BOARD_SEG_SIZE
 
-    if len(approx) == 4:
-        pts = [(int(p[0][0] * scale_x), int(p[0][1] * scale_y)) for p in approx]
-        return sort_corners(pts), min(0.95, coverage * 2)
-    elif len(approx) > 4:
-        # Use minAreaRect for a tighter rotated rectangle that follows the
-        # actual board orientation — much better than axis-aligned boundingRect
-        # for boards that are rotated relative to the camera.
+    # ── Tier 1: Adaptive approxPolyDP ────────────────────────────────────────
+    # Try progressively larger epsilon values to force exactly 4 vertices.
+    # This handles boards with slightly irregular contours (e.g. pieces
+    # protruding from the edges) that produce 5–8 vertex approximations.
+    best_approx = None
+    best_conf = 0.0
+    for eps_factor in [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15, 0.20]:
+        eps = eps_factor * arc_len
+        approx = cv2.approxPolyDP(board_contour, eps, True)
+        n = len(approx)
+        if n == 4:
+            pts = [(int(p[0][0] * scale_x), int(p[0][1] * scale_y)) for p in approx]
+            conf = min(0.95, coverage * 2) * (1.0 - eps_factor * 2)
+            return sort_corners(pts), max(conf, 0.50)
+        elif n > 4 and best_approx is None:
+            # Keep the first over-approximation as fallback
+            best_approx = approx
+            best_conf = coverage * 0.8
+
+    # ── Tier 2: Hough-line quad corner detection ──────────────────────────────
+    hough_pts = _hough_quad_corners(binary, orig_w, orig_h)
+    if hough_pts is not None:
+        return sort_corners(hough_pts), min(0.90, coverage * 1.8)
+
+    # ── Tier 3: minAreaRect fallback ──────────────────────────────────────────
+    if best_approx is not None:
         min_rect = cv2.minAreaRect(board_contour)
         box = cv2.boxPoints(min_rect)
         pts = [(int(p[0] * scale_x), int(p[1] * scale_y)) for p in box]
-        return sort_corners(pts), coverage * 0.8
+        return sort_corners(pts), best_conf
 
     return None, coverage
 
@@ -197,14 +313,15 @@ def warp_board(frame_bgr, corners):
 
 def detect_board_rotation_angle(warped_bgr):
     """
-    Detect the dominant rotation angle of the chessboard in a warped image.
+    Detect the dominant rotation angle of the chessboard grid in a warped image.
 
-    The minAreaRect warp preserves the board's physical rotation, so a board
-    placed at 45° on the table will appear rotated 45° in the warped image.
-    Hough lines detect the dominant line angle, which corresponds to the
-    board's grid orientation.
+    Uses standard HoughLines on CLAHE-enhanced Canny edges.  The dominant line
+    angle (by vote count) reveals the grid orientation.  The result is mapped
+    to a rotation correction in the range [-45, 45] degrees.
 
-    Returns the rotation angle in degrees (0–90), or None if detection fails.
+    Returns the rotation correction angle in degrees, or None if detection
+    fails.  A positive value means the grid is rotated clockwise by that many
+    degrees and should be counter-rotated.
     """
     gray = cv2.cvtColor(warped_bgr, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
@@ -224,11 +341,9 @@ def detect_board_rotation_angle(warped_bgr):
     peak_idx = int(np.argmax(hist))
     peak_angle = float(bin_edges[peak_idx])
 
-    # Convert to a rotation correction:
-    # - Lines near 0° or 180° are near-horizontal → board is axis-aligned → no rotation
-    # - Lines near 45° → board is rotated 45° → rotate back by 45°
-    # - Lines near 90° → near-vertical → board is axis-aligned → no rotation
-    # The correction is the deviation of the dominant angle from the nearest 0° or 90°
+    # Convert to a rotation correction in [-45, 45]:
+    # Grid lines should be at 0° (horizontal) or 90° (vertical).
+    # The correction is the deviation from the nearest multiple of 90°.
     if peak_angle <= 45:
         correction = peak_angle          # rotate CCW by this amount
     elif peak_angle <= 135:
@@ -245,7 +360,10 @@ def auto_align_board(warped_bgr):
     axis-aligned (horizontal and vertical).
 
     Uses Hough lines to detect the dominant rotation angle, then applies
-    a rotation correction. Falls back to the original image if detection fails.
+    a rotation transform and crops the centre to PIECE_SIZE×PIECE_SIZE.
+    This may clip corners of the board, but the centre region (where most
+    pieces are) will have an axis-aligned grid that the YOLO piece detector
+    can recognise.
 
     Returns (aligned_bgr, rotation_angle_applied).
     """
@@ -255,13 +373,102 @@ def auto_align_board(warped_bgr):
         return warped_bgr, 0.0
 
     h, w = warped_bgr.shape[:2]
-    cx, cy = w // 2, h // 2
+    cx, cy = w / 2.0, h / 2.0
+
+    # Rotate the image around its centre.  Use a larger canvas to avoid
+    # clipping, then crop the centre PIECE_SIZE×PIECE_SIZE region.
     M = cv2.getRotationMatrix2D((cx, cy), -angle, 1.0)
-    aligned = cv2.warpAffine(warped_bgr, M, (w, h),
+
+    # Expand canvas to hold the full rotated image
+    cos_a = abs(M[0, 0])
+    sin_a = abs(M[0, 1])
+    new_w = int(h * sin_a + w * cos_a)
+    new_h = int(h * cos_a + w * sin_a)
+
+    # Adjust translation so the rotated image is centred on the new canvas
+    M[0, 2] += (new_w - w) / 2.0
+    M[1, 2] += (new_h - h) / 2.0
+
+    rotated = cv2.warpAffine(warped_bgr, M, (new_w, new_h),
                               flags=cv2.INTER_LINEAR,
                               borderMode=cv2.BORDER_CONSTANT,
                               borderValue=(0, 0, 0))
-    return aligned, angle
+
+    # Crop the centre PIECE_SIZE×PIECE_SIZE region
+    rcx, rcy = new_w // 2, new_h // 2
+    x1 = max(0, rcx - PIECE_SIZE // 2)
+    y1 = max(0, rcy - PIECE_SIZE // 2)
+    x2 = min(new_w, x1 + PIECE_SIZE)
+    y2 = min(new_h, y1 + PIECE_SIZE)
+
+    cropped = rotated[y1:y2, x1:x2]
+
+    # Ensure output is exactly PIECE_SIZE×PIECE_SIZE
+    if cropped.shape[0] != PIECE_SIZE or cropped.shape[1] != PIECE_SIZE:
+        cropped = cv2.resize(cropped, (PIECE_SIZE, PIECE_SIZE))
+
+    return cropped, angle
+
+
+def _rotate_corners(corners, angle_deg, frame_w, frame_h):
+    """
+    Rotate the 4 source corners around their centroid by angle_deg degrees.
+
+    This is used to "un-rotate" the board before the perspective warp, so that
+    the warp maps the board's playing grid (not its outer frame) to an
+    axis-aligned square.
+
+    Parameters
+    ----------
+    corners : list of (x, y) tuples  [tl, tr, br, bl]
+    angle_deg : float  rotation angle in degrees (positive = CCW)
+    frame_w, frame_h : int  frame dimensions (for clamping)
+
+    Returns
+    -------
+    list of (x, y) tuples  [tl, tr, br, bl]  rotated corners
+    """
+    cx = sum(p[0] for p in corners) / 4.0
+    cy = sum(p[1] for p in corners) / 4.0
+    rad = math.radians(angle_deg)
+    cos_a = math.cos(rad)
+    sin_a = math.sin(rad)
+
+    rotated = []
+    for x, y in corners:
+        dx, dy = x - cx, y - cy
+        rx = cx + dx * cos_a - dy * sin_a
+        ry = cy + dx * sin_a + dy * cos_a
+        # Clamp to frame boundaries
+        rx = max(0, min(frame_w - 1, rx))
+        ry = max(0, min(frame_h - 1, ry))
+        rotated.append((int(round(rx)), int(round(ry))))
+
+    return rotated
+
+
+def warp_board_aligned(frame_bgr, corners):
+    """
+    Two-pass board warp that produces an axis-aligned grid.
+
+    Pass 1: Warp with detected corners → check grid rotation via Hough lines.
+    Pass 2: If grid is rotated, rotate source corners and re-warp.
+
+    Returns (warped_bgr, rotation_angle_applied).
+    """
+    # Pass 1: initial warp
+    warped = warp_board(frame_bgr, corners)
+    angle = detect_board_rotation_angle(warped)
+
+    if angle is None or abs(angle) < 2.0:
+        return warped, 0.0
+
+    # Pass 2: rotate source corners by -angle (undo the grid rotation)
+    h, w = frame_bgr.shape[:2]
+    rotated_corners = _rotate_corners(corners, -angle, w, h)
+    re_warped = warp_board(frame_bgr, rotated_corners)
+
+    return re_warped, angle
 
 
 # ─── Piece Detection ──────────────────────────────────────────────────────────
@@ -345,53 +552,215 @@ def compute_iou(a, b):
 
 # ─── FEN Reconstruction ───────────────────────────────────────────────────────
 
-def reconstruct_fen(detections):
+# Per-side maximum piece counts (theoretical maxima for a legal position)
+_MAX_PIECES_PER_SIDE = {
+    'K': 1, 'Q': 9, 'R': 10, 'B': 10, 'N': 10, 'P': 8,
+    'k': 1, 'q': 9, 'r': 10, 'b': 10, 'n': 10, 'p': 8,
+}
+
+# Fraction of a square's width/height used as an edge margin.
+# Detections whose centre falls within this margin of the board edge are
+# more likely to be noise from the warp boundary than real pieces.
+_EDGE_MARGIN_FRAC = 0.04   # 4% of PIECE_SIZE ≈ 17px on a 416px board
+
+
+def square_map(detections, board_size=None, grid_angle=0.0):
     """
-    Map piece detections to board squares and build a FEN position string.
-    The turn field is always set to 'w' as a placeholder — the actual turn
-    is tracked by the chess.Board state in the move detection pipeline.
-    Returns FEN string or None if invalid.
+    Map a list of YOLO piece detections to a 8×8 grid of (piece, confidence)
+    entries.
+
+    Algorithm
+    ---------
+    1. Clip detections whose centre is within the edge margin (likely noise).
+    2. If grid_angle != 0, rotate each detection's centre by -grid_angle
+       around the image centre so the grid becomes axis-aligned in the
+       rotated coordinate space.
+    3. For each of the 64 squares, collect all detections whose (rotated)
+       centre falls inside that square's bounding box.
+    4. Within each square keep only the detection with the highest confidence
+       (per-square NMS).
+    5. Apply per-piece-type count caps: if a piece type appears more times
+       than its legal maximum, remove the lowest-confidence instances.
+
+    Parameters
+    ----------
+    detections : list[dict]
+        Each dict has keys: cx, cy, w, h, piece, confidence.
+        Coordinates are in pixels relative to the board image (0..board_size).
+    board_size : int, optional
+        Side length of the square board image in pixels.  Defaults to
+        PIECE_SIZE (416).
+    grid_angle : float, optional
+        Rotation angle of the grid in degrees (as returned by
+        detect_board_rotation_angle).  When non-zero, detection centres
+        are counter-rotated before grid assignment so that a rotated
+        board can be mapped without image rotation.  Defaults to 0.
+
+    Returns
+    -------
+    board : list[list[tuple[str, float] | None]]
+        8×8 grid.  board[row][col] is (piece_char, confidence) or None.
+        Row 0 is the top of the image (rank 8 in standard orientation).
+    """
+    if board_size is None:
+        board_size = PIECE_SIZE
+
+    sq = board_size / 8.0                    # square side in pixels
+    margin = board_size * _EDGE_MARGIN_FRAC  # edge margin in pixels
+
+    # Step 1 — clip edge detections
+    valid = [
+        d for d in detections
+        if margin <= d["cx"] <= board_size - margin
+        and margin <= d["cy"] <= board_size - margin
+    ]
+
+    # Step 2 — if grid is rotated, counter-rotate detection centres
+    # so the grid becomes axis-aligned in the rotated coordinate space.
+    if abs(grid_angle) >= 2.0:
+        centre = board_size / 2.0
+        rad = math.radians(-grid_angle)  # counter-rotate
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+
+        rotated_valid = []
+        for d in valid:
+            dx = d["cx"] - centre
+            dy = d["cy"] - centre
+            rx = centre + dx * cos_a - dy * sin_a
+            ry = centre + dx * sin_a + dy * cos_a
+            rotated_valid.append({**d, "_rx": rx, "_ry": ry})
+        valid = rotated_valid
+
+        # After rotation, the board occupies a smaller inscribed square.
+        # Compute the effective board bounds in rotated space.
+        abs_cos = abs(cos_a)
+        abs_sin = abs(sin_a)
+        # The inscribed square side length after rotation
+        if abs_cos + abs_sin > 0:
+            effective_size = board_size / (abs_cos + abs_sin)
+        else:
+            effective_size = board_size
+        offset = (board_size - effective_size) / 2.0
+        eff_sq = effective_size / 8.0
+    else:
+        for d in valid:
+            d["_rx"] = d["cx"]
+            d["_ry"] = d["cy"]
+        offset = 0.0
+        eff_sq = sq
+        effective_size = board_size
+
+    # Step 3 & 4 — per-square best detection
+    board = [[None] * 8 for _ in range(8)]
+    for det in valid:
+        rx = det["_rx"] - offset
+        ry = det["_ry"] - offset
+        if rx < 0 or ry < 0 or rx >= effective_size or ry >= effective_size:
+            continue
+        col = min(7, int(rx / eff_sq))
+        row = min(7, int(ry / eff_sq))
+        existing = board[row][col]
+        if existing is None or det["confidence"] > existing[1]:
+            board[row][col] = (det["piece"], det["confidence"])
+
+    # Step 5 — per-piece-type count caps
+    # Collect all placed pieces sorted by confidence descending
+    placed = []  # (row, col, piece, confidence)
+    for r in range(8):
+        for c in range(8):
+            if board[r][c] is not None:
+                piece, conf = board[r][c]
+                placed.append((r, c, piece, conf))
+
+    # Count occurrences per piece type
+    type_counts = {}
+    for _, _, piece, _ in placed:
+        type_counts[piece] = type_counts.get(piece, 0) + 1
+
+    # For any over-represented piece type, remove lowest-confidence instances
+    for piece_type, max_count in _MAX_PIECES_PER_SIDE.items():
+        count = type_counts.get(piece_type, 0)
+        if count > max_count:
+            # Find all squares with this piece type, sorted by confidence asc
+            instances = [
+                (r, c, conf)
+                for r, c, p, conf in placed
+                if p == piece_type
+            ]
+            instances.sort(key=lambda x: x[2])  # lowest confidence first
+            # Remove the excess lowest-confidence instances
+            to_remove = count - max_count
+            for r, c, _ in instances[:to_remove]:
+                board[r][c] = None
+
+    return board
+
+
+def detections_to_fen(detections, board_size=None, grid_angle=0.0):
+    """
+    Convert raw YOLO piece detections to a FEN position string.
+
+    This is the main entry point for FEN generation.  It calls square_map()
+    to build the 8×8 grid, then encodes it as a FEN position string.
+
+    The turn field is always 'w' as a placeholder — the actual turn is
+    tracked by the chess.Board state in the move detection pipeline.
+
+    Parameters
+    ----------
+    detections : list[dict]
+        Raw YOLO detections with cx, cy, w, h, piece, confidence.
+    board_size : int, optional
+        Side length of the board image in pixels.
+    grid_angle : float, optional
+        Grid rotation angle in degrees (from detect_board_rotation_angle).
+
+    Returns a FEN string, or None if the position is invalid (e.g. missing
+    kings after all filtering).
     """
     if not detections:
         return None
 
-    square_size = PIECE_SIZE / 8
-    board = [[""] * 8 for _ in range(8)]
-    square_conf = [[0.0] * 8 for _ in range(8)]
-
-    for det in detections:
-        col = int(det["cx"] / square_size)
-        row = int(det["cy"] / square_size)
-        if not (0 <= col <= 7 and 0 <= row <= 7):
-            continue
-        if det["confidence"] > square_conf[row][col]:
-            board[row][col] = det["piece"]
-            square_conf[row][col] = det["confidence"]
+    board = square_map(detections, board_size=board_size, grid_angle=grid_angle)
 
     ranks = []
     for row in range(8):
         rank = ""
         empty = 0
         for col in range(8):
-            if board[row][col] == "":
+            cell = board[row][col]
+            if cell is None:
                 empty += 1
             else:
                 if empty > 0:
                     rank += str(empty)
                     empty = 0
-                rank += board[row][col]
+                rank += cell[0]  # piece character
         if empty > 0:
             rank += str(empty)
         ranks.append(rank)
 
     fen_pos = "/".join(ranks)
 
-    # Must have both kings
-    if "K" not in fen_pos or "k" not in fen_pos:
+    # Count total pieces — if we have fewer than 2, the detection is too sparse
+    total_pieces = sum(1 for c in fen_pos if c.isalpha())
+    if total_pieces < 2:
         return None
 
     # Always use 'w' as placeholder — actual turn is tracked by chess.Board
     return f"{fen_pos} w - - 0 1"
+
+
+def reconstruct_fen(detections, grid_angle=0.0):
+    """
+    Backward-compatible wrapper around detections_to_fen().
+
+    All callers in the pipeline use reconstruct_fen(); this wrapper ensures
+    they automatically benefit from the improved square_map() logic without
+    requiring any call-site changes.
+    """
+    return detections_to_fen(detections, grid_angle=grid_angle)
 
 
 # ─── FEN Validation ─────────────────────────────────────────────────────────
@@ -455,10 +824,11 @@ def validate_fen_piece_count(fen):
             else:
                 return False  # unexpected character
 
-    # Must have exactly 1 king per side
-    if counts.get('K', 0) != 1:
+    # Kings: allow 0 or 1 per side (partial detections may miss kings
+    # when the board is clipped by rotation correction)
+    if counts.get('K', 0) > 1:
         return False
-    if counts.get('k', 0) != 1:
+    if counts.get('k', 0) > 1:
         return False
 
     # Total piece count must be in valid range
@@ -868,9 +1238,8 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                     else:
                         # Stage 2: Warp board and detect pieces
                         warped = warp_board(frame, corners)
-                        # Stage 2b: Auto-align board using Hough-line rotation detection
-                        warped, _rot_angle = auto_align_board(warped)
-                        detections = run_piece_detection(piece_session, warped)
+                        aligned, _rot_angle = auto_align_board(warped)
+                        detections = run_piece_detection(piece_session, aligned)
 
                         # Turn is NOT derived from timeline length (which drifts
                         # when frames are skipped). Instead, reconstruct_fen always

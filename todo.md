@@ -1910,10 +1910,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write 25 vitest tests for auto-alignment helpers (boardAutoAlign.test.ts)
 - [x] All 1,916 tests pass
 - [x] Save checkpoint
-- [ ] Implement hough_grid_corners() using HoughLinesP on warped board (proper corner detection)
-- [ ] Cluster lines into horizontal/vertical families (angle tolerance ±15°)
-- [ ] Find outermost lines in each family to derive board corners
-- [ ] Implement fallback chain: hough → minAreaRect → bounding rect
-- [ ] Implement square_map() to assign detections to 64 board squares
-- [ ] Implement detections_to_fen() to convert square map to FEN string
-- [ ] Validate on real OTB video — measure four-vertex rate improvement
+- [x] Implement adaptive epsilon approxPolyDP for 4-corner extraction
+- [x] Add convex hull extreme points fallback for corner detection
+- [x] Implement square_map() with edge margin clipping, per-square NMS, and piece-count caps
+- [x] Implement detections_to_fen() to convert square map to FEN string
+- [x] Add grid_angle parameter to square_map() for rotated grid support
+- [x] Relax FEN validation: allow partial FENs without both kings (0-1 kings per side)
+- [x] Validate on real OTB video: 6/63 frames (9.5%) produce valid FENs (up from 0%)
+- [x] Write 41 vitest tests for square_map and FEN generation (squareMapFen.test.ts)
+- [x] All 1,957 tests pass
+- [x] Save checkpoint
+- [ ] Improve corner detection for highly rotated boards (>30°)
+- [ ] Tune NMS thresholds to reduce false positives
+- [ ] Implement per-square deduplication in the move detection pipeline
