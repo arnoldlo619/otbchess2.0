@@ -1,5 +1,5 @@
 # Checkpoint: v7 Model Deployment Complete
-**Date**: 2026-03-09 (re-verified 2026-03-10)
+**Date**: 2026-03-09 (re-verified 2026-03-10, playbook run #3 2026-03-10)
 **Status**: COMPLETE ✓
 
 ## Training Results
@@ -41,6 +41,23 @@
 | chess_pieces_v7.onnx file exists (9.99 MB) | PASS |
 | chess-board-seg.onnx file exists (2.09 MB) | PASS |
 | onnxruntime available | PASS |
+| ONNX model loads successfully | PASS |
+| Model input shape (1x3x416x416) | PASS |
+| Model output shape (1x16x3549) | PASS |
+| Inference smoke test (blank frame) | PASS |
+| cv_worker PIECE_MODEL = v7 | PASS |
+| cv_worker.load_models() integration | PASS |
+| CLASS_NAMES (12 chess pieces) | PASS |
+| Model output class count (12 classes) | PASS |
+
+**Result: 11/11 PASSED — ALL CLEAR ✓**
+
+## Full Pipeline Test Results (2026-03-10 — Playbook Run #3)
+| Test | Status |
+|------|--------|
+| chess_pieces_v7.onnx file exists (9.99 MB) | PASS |
+| chess-board-seg.onnx file exists (2.09 MB) | PASS |
+| onnxruntime available (v1.24.3) | PASS |
 | ONNX model loads successfully | PASS |
 | Model input shape (1x3x416x416) | PASS |
 | Model output shape (1x16x3549) | PASS |
