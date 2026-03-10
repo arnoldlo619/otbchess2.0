@@ -1,5 +1,5 @@
 # Checkpoint: v7 Model Deployment Complete
-**Date**: 2026-03-09
+**Date**: 2026-03-09 (re-verified 2026-03-10)
 **Status**: COMPLETE ✓
 
 ## Training Results
@@ -18,16 +18,16 @@
 - **cv_worker.py**: `PIECE_MODEL = chess_pieces_v7.onnx` ✓
 - **Export settings**: ONNX opset 11, imgsz 416, simplified, batch 1, float32
 
-## Full Pipeline Test Results (2026-03-09T19:36:13Z)
+## Full Pipeline Test Results (2026-03-10T20:10:56Z)
 | Test | Status |
 |------|--------|
-| chess_pieces_v7.onnx file exists | PASS |
-| chess-board-seg.onnx file exists | PASS |
+| chess_pieces_v7.onnx file exists (9.99 MB) | PASS |
+| chess-board-seg.onnx file exists (2.09 MB) | PASS |
 | onnxruntime available (v1.24.3) | PASS |
 | ONNX model loads successfully | PASS |
 | Model input shape (1x3x416x416) | PASS |
 | Model output shape (1x16x3549) | PASS |
-| Inference smoke test (blank frame, 38ms) | PASS |
+| Inference smoke test (blank frame, 37ms) | PASS |
 | cv_worker PIECE_MODEL = v7 | PASS |
 | cv_worker.load_models() integration | PASS |
 | CLASS_NAMES (12 chess pieces) | PASS |
