@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type Screen = "permission" | "orientation" | "framing" | "corners" | "recording" | "processing";
+type Screen = "permission" | "orientation" | "framing" | "corners" | "corners-reselect" | "recording" | "processing";
 
 interface FramingStatus {
   boardDetected: boolean;
@@ -528,11 +528,11 @@ export default function VideoRecorder() {
   }, []);
 
   useEffect(() => {
-    if (screen === "framing" || screen === "corners" || screen === "recording") {
+    if (screen === "framing" || screen === "corners" || screen === "corners-reselect" || screen === "recording") {
       startCamera();
     }
     return () => {
-      if (screen !== "recording" && screen !== "corners") {
+      if (screen !== "recording" && screen !== "corners" && screen !== "corners-reselect") {
         streamRef.current?.getTracks().forEach((t) => t.stop());
       }
     };
@@ -1564,6 +1564,217 @@ export default function VideoRecorder() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // ── SCREEN 3.6: Re-select Corners (during recording) ─────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  if (screen === "corners-reselect") {
+    const cornersComplete = manualCorners.length === 4;
+    const nextCornerLabel = cornersComplete ? "Done" : CORNER_LABELS[manualCorners.length];
+
+    const handleCornerTap = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+      if (cornersComplete) return;
+      const video = videoRef.current;
+      if (!video) return;
+
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      let clientX: number, clientY: number;
+
+      if ("touches" in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      const displayX = clientX - rect.left;
+      const displayY = clientY - rect.top;
+      const scaleX = (video.videoWidth || 1920) / rect.width;
+      const scaleY = (video.videoHeight || 1080) / rect.height;
+      const videoX = Math.round(displayX * scaleX);
+      const videoY = Math.round(displayY * scaleY);
+
+      setManualCorners((prev) => [...prev, { x: videoX, y: videoY }]);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col">
+        {/* Recording indicator banner */}
+        <div className="absolute top-0 left-0 right-0 z-30 bg-red-500/90 backdrop-blur-sm px-4 py-2 flex items-center justify-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          <span className="text-white text-xs font-bold uppercase tracking-wider">Recording in progress — {formatElapsed(elapsed)}</span>
+        </div>
+
+        {/* Live camera feed with tap handler */}
+        <div
+          className="relative flex-1 mt-8"
+          onClick={handleCornerTap}
+          onTouchStart={(e) => {
+            if (!cornersComplete) {
+              e.preventDefault();
+              handleCornerTap(e);
+            }
+          }}
+        >
+          <video
+            ref={videoRef}
+            className="absolute inset-0 w-full h-full object-cover"
+            playsInline
+            muted
+            autoPlay
+          />
+
+          <canvas ref={canvasRef} className="hidden" />
+
+          {/* Draw placed corners as dots + lines */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 10 }}>
+            {manualCorners.map((corner, i) => {
+              const video = videoRef.current;
+              if (!video) return null;
+              const rect = video.getBoundingClientRect();
+              const displayX = (corner.x / (video.videoWidth || 1920)) * rect.width;
+              const displayY = (corner.y / (video.videoHeight || 1080)) * rect.height;
+
+              return (
+                <g key={i}>
+                  {i > 0 && (() => {
+                    const prev = manualCorners[i - 1];
+                    const prevX = (prev.x / (video.videoWidth || 1920)) * rect.width;
+                    const prevY = (prev.y / (video.videoHeight || 1080)) * rect.height;
+                    return (
+                      <line
+                        x1={prevX} y1={prevY} x2={displayX} y2={displayY}
+                        stroke="#4CAF50" strokeWidth="2" strokeDasharray="6,4" opacity="0.8"
+                      />
+                    );
+                  })()}
+                  {i === 3 && (() => {
+                    const first = manualCorners[0];
+                    const firstX = (first.x / (video.videoWidth || 1920)) * rect.width;
+                    const firstY = (first.y / (video.videoHeight || 1080)) * rect.height;
+                    return (
+                      <line
+                        x1={displayX} y1={displayY} x2={firstX} y2={firstY}
+                        stroke="#4CAF50" strokeWidth="2" strokeDasharray="6,4" opacity="0.8"
+                      />
+                    );
+                  })()}
+                  <circle cx={displayX} cy={displayY} r="10" fill="#4CAF50" opacity="0.9" />
+                  <circle cx={displayX} cy={displayY} r="4" fill="white" />
+                  <text
+                    x={displayX} y={displayY - 16}
+                    textAnchor="middle" fill="white" fontSize="11" fontWeight="bold"
+                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}
+                  >
+                    {CORNER_LABELS[i]}
+                  </text>
+                </g>
+              );
+            })}
+
+            {cornersComplete && (() => {
+              const video = videoRef.current;
+              if (!video) return null;
+              const rect = video.getBoundingClientRect();
+              const points = manualCorners.map(c => {
+                const dx = (c.x / (video.videoWidth || 1920)) * rect.width;
+                const dy = (c.y / (video.videoHeight || 1080)) * rect.height;
+                return `${dx},${dy}`;
+              }).join(" ");
+              return <polygon points={points} fill="rgba(76,175,80,0.12)" stroke="#4CAF50" strokeWidth="2.5" />;
+            })()}
+          </svg>
+
+          {/* Instruction overlay */}
+          {!cornersComplete && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <div className="bg-black/75 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10">
+                <p className="text-white text-sm font-bold text-center">
+                  Tap the <span className="text-[#4CAF50]">{nextCornerLabel}</span> corner of the board
+                </p>
+                <p className="text-white/40 text-xs text-center mt-1">
+                  Corner {manualCorners.length + 1} of 4
+                </p>
+              </div>
+            </div>
+          )}
+
+          {cornersComplete && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <div className="bg-[#4CAF50]/20 backdrop-blur-md rounded-2xl px-5 py-3 border border-[#4CAF50]/40">
+                <p className="text-[#4CAF50] text-sm font-bold text-center">
+                  New corners confirmed
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom controls */}
+        <div className="relative z-20 bg-gradient-to-t from-black/95 to-black/60 px-5 pt-4 pb-safe-bottom pb-6">
+          <div className="flex items-center gap-3 mb-4">
+            {/* Corner progress dots */}
+            <div className="flex gap-2">
+              {CORNER_LABELS.map((label, i) => (
+                <div
+                  key={label}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    i < manualCorners.length
+                      ? "bg-[#4CAF50] text-white"
+                      : i === manualCorners.length
+                      ? "bg-[#4CAF50]/20 border-2 border-[#4CAF50] text-[#4CAF50]"
+                      : "bg-white/08 text-white/30 border border-white/15"
+                  }`}
+                >
+                  {i < manualCorners.length ? "\u2713" : i + 1}
+                </div>
+              ))}
+            </div>
+
+            {/* Undo button */}
+            {manualCorners.length > 0 && (
+              <button
+                onClick={() => setManualCorners((prev) => prev.slice(0, -1))}
+                className="ml-auto px-3 py-1.5 rounded-lg bg-white/08 text-white/60 text-xs font-medium active:scale-95 transition-transform"
+              >
+                Undo
+              </button>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                // Cancel — restore previous corners and return to recording
+                setManualCorners([]);
+                setScreen("recording");
+              }}
+              className="flex-1 py-4 rounded-2xl bg-white/08 text-white/60 font-bold text-base active:scale-95 transition-transform"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={() => {
+                // Confirm new corners and return to recording
+                setScreen("recording");
+              }}
+              disabled={!cornersComplete}
+              className={`flex-[2] py-4 rounded-2xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 ${
+                cornersComplete
+                  ? "bg-[#4CAF50] text-white active:scale-95"
+                  : "bg-white/08 text-white/30 cursor-not-allowed"
+              }`}
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              {cornersComplete ? "Confirm & Resume" : `Select ${4 - manualCorners.length} more corner${4 - manualCorners.length !== 1 ? "s" : ""}`}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // ── SCREEN 4: Active Recording ────────────────────────────────────────────
   // ─────────────────────────────────────────────────────────────────────────
   if (screen === "recording") {
@@ -1653,8 +1864,21 @@ export default function VideoRecorder() {
           />
         </div>
 
-        {/* Stop button */}
-        <div className="px-8 pb-safe-bottom pb-10">
+        {/* Bottom buttons */}
+        <div className="px-8 pb-safe-bottom pb-10 space-y-3">
+          {/* Re-select Corners button */}
+          <button
+            onClick={() => {
+              setManualCorners([]);
+              setScreen("corners-reselect");
+            }}
+            className="w-full py-3 rounded-2xl bg-white/08 border border-white/10 text-white/60 font-semibold text-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
+          >
+            <Grid3x3 className="w-4 h-4" />
+            Re-select Board Corners
+          </button>
+
+          {/* Stop button */}
           <button
             onClick={stopRecording}
             className="w-full py-5 rounded-3xl bg-red-500 text-white font-black text-lg active:scale-95 transition-transform flex items-center justify-center gap-3"

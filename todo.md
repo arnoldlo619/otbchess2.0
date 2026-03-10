@@ -1996,3 +1996,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add pawn rank validation (no pawns on rank 1 or rank 8)
 - [x] Write vitest tests for the heuristics logic (14 tests passing)
 - [x] Benchmark improvement on synthetic and real video data
+
+## Re-Select Corners During Recording (Mar 10 2026)
+
+- [x] Add "Re-select Corners" button on the recording screen
+- [x] Transition from recording screen back to corners screen without stopping recording
+- [x] Preserve recording state (MediaRecorder, elapsed time) while re-selecting corners
+- [x] Update manualCorners state when user confirms new corners
