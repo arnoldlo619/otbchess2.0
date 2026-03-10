@@ -35,6 +35,23 @@
 
 **Result: 11/11 PASSED — ALL CLEAR ✓**
 
+## Full Pipeline Test Results (2026-03-10 — Re-verified via playbook run)
+| Test | Status |
+|------|--------|
+| chess_pieces_v7.onnx file exists (9.99 MB) | PASS |
+| chess-board-seg.onnx file exists (2.09 MB) | PASS |
+| onnxruntime available | PASS |
+| ONNX model loads successfully | PASS |
+| Model input shape (1x3x416x416) | PASS |
+| Model output shape (1x16x3549) | PASS |
+| Inference smoke test (blank frame) | PASS |
+| cv_worker PIECE_MODEL = v7 | PASS |
+| cv_worker.load_models() integration | PASS |
+| CLASS_NAMES (12 chess pieces) | PASS |
+| Model output class count (12 classes) | PASS |
+
+**Result: 11/11 PASSED — ALL CLEAR ✓**
+
 ## Benchmark (Synthetic Val, 100 images)
 - Exact FEN rate: 26.0%
 - Per-square accuracy: 96.44%
