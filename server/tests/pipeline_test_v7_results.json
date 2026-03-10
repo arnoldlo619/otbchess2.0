@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-09T22:37:18Z",
+  "timestamp": "2026-03-09T23:07:41Z",
   "model": "chess_pieces_v7.onnx",
   "passed": 11,
   "warned": 0,
@@ -23,43 +23,43 @@
       "name": "3. onnxruntime available",
       "status": "PASS",
       "detail": "onnxruntime 1.24.3",
-      "elapsed_ms": 254.3
+      "elapsed_ms": 256.8
     },
     {
       "name": "4. ONNX model loads successfully",
       "status": "PASS",
       "detail": "Loaded OK \u2014 inputs: ['images'], outputs: ['output0']",
-      "elapsed_ms": 83.1
+      "elapsed_ms": 90.8
     },
     {
       "name": "5. Model input shape (1x3x416x416)",
       "status": "PASS",
       "detail": "Input shape: [1, 3, 416, 416] \u2014 correct (1x3x416x416)",
-      "elapsed_ms": 51.3
+      "elapsed_ms": 60.0
     },
     {
       "name": "6. Model output shape validation",
       "status": "PASS",
       "detail": "Output shape: (1, 16, 3549) \u2014 (12 classes, 3549 anchors)",
-      "elapsed_ms": 104.2
+      "elapsed_ms": 143.4
     },
     {
       "name": "7. Inference smoke test (blank frame)",
       "status": "PASS",
-      "detail": "Inference completed in 28ms, output shape: (1, 16, 3549)",
-      "elapsed_ms": 86.9
+      "detail": "Inference completed in 43ms, output shape: (1, 16, 3549)",
+      "elapsed_ms": 110.1
     },
     {
       "name": "8. cv_worker PIECE_MODEL = v7",
       "status": "PASS",
       "detail": "PIECE_MODEL = cv-models/chess_pieces_v7.onnx \u2713",
-      "elapsed_ms": 0.4
+      "elapsed_ms": 0.5
     },
     {
       "name": "9. cv_worker.load_models() integration",
       "status": "PASS",
       "detail": "load_models() OK \u2014 board_seg and piece_det sessions created",
-      "elapsed_ms": 125.9
+      "elapsed_ms": 389.7
     },
     {
       "name": "10. CLASS_NAMES (12 chess pieces)",
@@ -71,7 +71,7 @@
       "name": "11. Model output class count",
       "status": "PASS",
       "detail": "12 chess piece classes detected in output (channels=16)",
-      "elapsed_ms": 86.1
+      "elapsed_ms": 105.1
     }
   ]
 }
