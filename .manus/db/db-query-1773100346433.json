@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'cv_jobs' AND COLUMN_NAME = 'corners_file'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'cv_jobs' AND COLUMN_NAME = 'corners_file'",
+  "rows": [
+    {
+      "COLUMN_NAME": "corners_file"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\ncorners_file\n",
+  "stderr": "",
+  "execution_time_ms": 367
+}

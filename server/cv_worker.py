@@ -29,6 +29,7 @@ Output (stdout):
 """
 
 import sys
+import os
 import json
 import argparse
 import math
@@ -1243,7 +1244,7 @@ def merge_fen_timelines(client_timeline, server_timeline):
 
 
 def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_fen_timeline=None,
-                  job_id=None, db_kwargs=None):
+                  job_id=None, db_kwargs=None, manual_corners=None):
     """
     Main CV pipeline. Processes a video file and returns a result dict.
 
@@ -1276,7 +1277,22 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
 
     # ── Load models ──────────────────────────────────────────────────────────
     try:
-        board_seg_session, piece_session = load_models()
+        if manual_corners:
+            # When manual corners are provided, we only need the piece detection model
+            board_seg_session = None
+            if not ORT_AVAILABLE:
+                raise RuntimeError("onnxruntime not installed")
+            if not PIECE_MODEL.exists():
+                raise FileNotFoundError(f"Piece model not found: {PIECE_MODEL}")
+            opts = ort.SessionOptions()
+            opts.intra_op_num_threads = 2
+            opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            piece_session = ort.InferenceSession(
+                str(PIECE_MODEL), sess_options=opts, providers=["CPUExecutionProvider"]
+            )
+            warnings.append(f"Manual corners provided: {manual_corners} — skipping board segmentation")
+        else:
+            board_seg_session, piece_session = load_models()
     except Exception as e:
         result["error"] = f"Failed to load CV models: {e}"
         return result
@@ -1313,39 +1329,60 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
             frames_processed += 1
 
             try:
-                # Stage 1: Board segmentation
                 h, w = frame.shape[:2]
-                mask = run_board_segmentation(board_seg_session, frame)
-                corners, seg_confidence = extract_corners(mask, w, h)
 
-                if corners and len(corners) == 4 and seg_confidence > 0.3:
-                    # Guard: reject frames where the segmentation model is
-                    # overconfident (coverage > 0.85 often means a false positive
-                    # on non-board backgrounds — observed at 0.77 on plain green).
-                    if seg_confidence > _MAX_TRUSTED_COVERAGE:
+                if manual_corners:
+                    # ── Manual corners mode: skip board segmentation entirely ──
+                    # Scale corners from the original video resolution to current frame
+                    corners = [
+                        (int(c[0]), int(c[1])) for c in manual_corners
+                    ]
+                    seg_confidence = 1.0  # Manual corners are always trusted
+
+                    # Stage 2: Warp board and detect pieces
+                    warped = warp_board(frame, corners)
+                    aligned, _rot_angle = auto_align_board(warped)
+                    detections = run_piece_detection(piece_session, aligned)
+
+                    fen = reconstruct_fen(detections)
+
+                    if fen and validate_fen_piece_count(fen):
+                        raw_fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                    elif fen:
                         warnings.append(
-                            f"Frame {frame_idx}: skipped (seg coverage {seg_confidence:.2f} "
-                            f"> {_MAX_TRUSTED_COVERAGE} — likely false positive)"
+                            f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
+                            f"({fen.split()[0][:30]})"
                         )
-                    else:
-                        # Stage 2: Warp board and detect pieces
-                        warped = warp_board(frame, corners)
-                        aligned, _rot_angle = auto_align_board(warped)
-                        detections = run_piece_detection(piece_session, aligned)
+                else:
+                    # ── Auto-detection mode: run board segmentation ──
+                    # Stage 1: Board segmentation
+                    mask = run_board_segmentation(board_seg_session, frame)
+                    corners, seg_confidence = extract_corners(mask, w, h)
 
-                        # Turn is NOT derived from timeline length (which drifts
-                        # when frames are skipped). Instead, reconstruct_fen always
-                        # uses 'w' as a placeholder, and the actual turn is tracked
-                        # by chess.Board in detect_move_from_fens.
-                        fen = reconstruct_fen(detections)
-
-                        if fen and validate_fen_piece_count(fen):
-                            raw_fen_timeline.append((timestamp_ms, fen, seg_confidence))
-                        elif fen:
+                    if corners and len(corners) == 4 and seg_confidence > 0.3:
+                        # Guard: reject frames where the segmentation model is
+                        # overconfident (coverage > 0.85 often means a false positive
+                        # on non-board backgrounds — observed at 0.77 on plain green).
+                        if seg_confidence > _MAX_TRUSTED_COVERAGE:
                             warnings.append(
-                                f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
-                                f"({fen.split()[0][:30]})"
+                                f"Frame {frame_idx}: skipped (seg coverage {seg_confidence:.2f} "
+                                f"> {_MAX_TRUSTED_COVERAGE} — likely false positive)"
                             )
+                        else:
+                            # Stage 2: Warp board and detect pieces
+                            warped = warp_board(frame, corners)
+                            aligned, _rot_angle = auto_align_board(warped)
+                            detections = run_piece_detection(piece_session, aligned)
+
+                            fen = reconstruct_fen(detections)
+
+                            if fen and validate_fen_piece_count(fen):
+                                raw_fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                            elif fen:
+                                warnings.append(
+                                    f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
+                                    f"({fen.split()[0][:30]})"
+                                )
 
             except Exception as e:
                 warnings.append(f"Frame {frame_idx} error: {str(e)[:100]}")
@@ -1603,6 +1640,8 @@ def main():
                         help="Path to a JSON file containing the client-side FEN timeline seed")
     parser.add_argument("--job-id", type=str, default=None,
                         help="cv_jobs row ID for incremental progress writes")
+    parser.add_argument("--corners-file", type=str, default=None,
+                        help="Path to a JSON file containing manual board corners [[x,y],[x,y],[x,y],[x,y]] in [tl,tr,br,bl] order")
     args = parser.parse_args()
 
     # Load optional client FEN timeline seed
@@ -1617,6 +1656,21 @@ def main():
         if not db_kwargs:
             sys.stderr.write("[cv-worker] Could not parse DATABASE_URL for progress writes\n")
 
+    # Load optional manual board corners
+    manual_corners = None
+    if args.corners_file:
+        try:
+            with open(args.corners_file, 'r') as f:
+                corners_data = json.load(f)
+            # Expect [[x,y],[x,y],[x,y],[x,y]] in [tl,tr,br,bl] order
+            if isinstance(corners_data, list) and len(corners_data) == 4:
+                manual_corners = [(c[0], c[1]) for c in corners_data]
+                sys.stderr.write(f"[cv-worker] Manual corners loaded: {manual_corners}\n")
+            else:
+                sys.stderr.write(f"[cv-worker] Invalid corners format in {args.corners_file}\n")
+        except Exception as e:
+            sys.stderr.write(f"[cv-worker] Could not load corners file: {e}\n")
+
     try:
         result = process_video(
             video_path=args.video_path,
@@ -1625,6 +1679,7 @@ def main():
             client_fen_timeline=client_fen_timeline if client_fen_timeline else None,
             job_id=job_id,
             db_kwargs=db_kwargs,
+            manual_corners=manual_corners,
         )
     except Exception as e:
         result = {

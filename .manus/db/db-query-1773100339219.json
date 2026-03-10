@@ -1,0 +1,146 @@
+{
+  "query": "DESCRIBE cv_jobs",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute DESCRIBE cv_jobs",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "varchar(36)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "session_id",
+      "Type": "varchar(36)",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "pending",
+      "Extra": ""
+    },
+    {
+      "Field": "video_path",
+      "Type": "text",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "frames_processed",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "total_frames",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "reconstructed_pgn",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "move_timeline",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "error_message",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "attempts",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "started_at",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "completed_at",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fen_timeline_file",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "last_fen",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stable_positions",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "corners_file",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(36)\tNO\tPRI\tNULL\t\nsession_id\tvarchar(36)\tNO\tMUL\tNULL\t\nstatus\tvarchar(20)\tNO\tMUL\tpending\t\nvideo_path\ttext\tNO\t\tNULL\t\nframes_processed\tint\tYES\t\t0\t\ntotal_frames\tint\tYES\t\t0\t\nreconstructed_pgn\ttext\tYES\t\tNULL\t\nmove_timeline\ttext\tYES\t\tNULL\t\nerror_message\ttext\tYES\t\tNULL\t\nattempts\tint\tYES\t\t0\t\ncreated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nstarted_at\ttimestamp\tYES\t\tNULL\t\ncompleted_at\ttimestamp\tYES\t\tNULL\t\nfen_timeline_file\ttext\tYES\t\tNULL\t\nlast_fen\ttext\tYES\t\tNULL\t\nstable_positions\tint\tYES\t\t0\t\ncorners_file\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 425
+}

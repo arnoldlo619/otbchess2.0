@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM cv_jobs LIKE 'corners_file';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute SHOW COLUMNS FROM cv_jobs LIKE 'corners_file';",
+  "rows": [
+    {
+      "Field": "corners_file",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\ncorners_file\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 381
+}

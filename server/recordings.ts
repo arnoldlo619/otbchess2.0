@@ -611,12 +611,13 @@ export function createRecordingsRouter(): Router {
   // 4. Stores the final video path as videoKey on the session.
   // 5. Cleans up individual chunk files.
   router.post("/:id/finalize", async (req, res) => {
-    const { chunkCount, durationMs, whitePlayer, blackPlayer, fenTimeline } = req.body as {
+    const { chunkCount, durationMs, whitePlayer, blackPlayer, fenTimeline, boardCorners } = req.body as {
       chunkCount?: number;
       durationMs?: number;
       whitePlayer?: string;
       blackPlayer?: string;
       fenTimeline?: Array<{ timestampMs: number; fen: string; confidence: number; pieceCount: number }>;
+      boardCorners?: Array<{ x: number; y: number }>;
     };
 
     try {
@@ -732,9 +733,23 @@ export function createRecordingsRouter(): Router {
             }
           }
 
+          // Write manual board corners to a temp file if provided
+          let cornersFile: string | undefined;
+          if (boardCorners && Array.isArray(boardCorners) && boardCorners.length === 4) {
+            try {
+              cornersFile = path.join(UPLOADS_DIR, `${req.params.id}-corners.json`);
+              const cornersArray = boardCorners.map(c => [c.x, c.y]);
+              fs.writeFileSync(cornersFile, JSON.stringify(cornersArray), "utf8");
+              console.log(`[recordings] Saved manual board corners to ${cornersFile}`);
+            } catch (writeErr) {
+              console.warn(`[recordings] Could not write corners file:`, writeErr);
+              cornersFile = undefined;
+            }
+          }
+
           // Enqueue CV job to automatically reconstruct PGN from video
           try {
-            await enqueueCvJob(req.params.id, outputPath, fenTimelineFile);
+            await enqueueCvJob(req.params.id, outputPath, fenTimelineFile, cornersFile);
             console.log(`[recordings] CV job enqueued for session ${req.params.id}`);
           } catch (queueErr) {
             console.error(`[recordings] Failed to enqueue CV job:`, queueErr);

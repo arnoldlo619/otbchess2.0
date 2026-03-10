@@ -335,6 +335,8 @@ export const cvJobs = mysqlTable(
     errorMessage: text("error_message"),
     // Optional path to a JSON file containing the client-side FEN timeline seed
     fenTimelineFile: text("fen_timeline_file"),
+    // Optional path to a JSON file containing manual board corners [[x,y],[x,y],[x,y],[x,y]]
+    cornersFile: text("corners_file"),
     // Last stable FEN detected during processing (for live board preview in UI)
     lastFen: text("last_fen"),
     // Number of stable board positions detected so far

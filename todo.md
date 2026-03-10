@@ -1979,4 +1979,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Found yamero999/chess-piece-detection-yolo11n — exact architecture match (YOLO11n, 416x416, 12 classes)
 - [x] Downloaded and exported to ONNX (chess_pieces_hf.onnx)
 - [x] Updated cv_worker.py to use HF model with correct class name mapping
-- [ ] Test on real OTB video footage to validate improvement over synthetic-trained models
+- [x] Test on real OTB video footage to validate improvement over synthetic-trained models
+
+## Manual Corner Selection for CV Pipeline (Mar 9 2026)
+
+- [x] Frontend: Corner selection UI component (user taps 4 board corners on first frame)
+- [x] Backend: Update cv_worker.py to accept manual corners and skip board segmentation
+- [x] API: Connect frontend to backend - pass corners through upload/process flow
+- [x] Test full pipeline with real video frames using manual corners

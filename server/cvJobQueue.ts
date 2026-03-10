@@ -47,7 +47,7 @@ let pollInterval: ReturnType<typeof setInterval> | null = null;
  * Enqueue a CV job for a recording session.
  * Creates a cv_jobs row and triggers the queue runner.
  */
-export async function enqueueCvJob(sessionId: string, videoPath: string, fenTimelineFile?: string): Promise<string> {
+export async function enqueueCvJob(sessionId: string, videoPath: string, fenTimelineFile?: string, cornersFile?: string): Promise<string> {
   const db = await getDb();
   const jobId = nanoid();
 
@@ -58,6 +58,7 @@ export async function enqueueCvJob(sessionId: string, videoPath: string, fenTime
     status: "pending",
     attempts: 0,
     fenTimelineFile: fenTimelineFile ?? null,
+    cornersFile: cornersFile ?? null,
   });
 
   console.log(`[cv-queue] Enqueued job ${jobId} for session ${sessionId}`);
@@ -117,7 +118,7 @@ async function processNextJob(): Promise<void> {
   isProcessing = true;
 
   try {
-    await runCvJob(job.id, job.sessionId, job.videoPath, job.fenTimelineFile ?? null, job.attempts ?? 0);
+    await runCvJob(job.id, job.sessionId, job.videoPath, job.fenTimelineFile ?? null, job.attempts ?? 0, (job as Record<string, unknown>).cornersFile as string | null ?? null);
   } catch (err) {
     console.error(`[cv-queue] Unhandled error processing job ${job.id}:`, err);
   } finally {
@@ -130,7 +131,8 @@ async function runCvJob(
   sessionId: string,
   videoPath: string,
   fenTimelineFile: string | null,
-  attempts: number
+  attempts: number,
+  cornersFile: string | null = null
 ): Promise<void> {
   const db = await getDb();
 
@@ -150,7 +152,7 @@ async function runCvJob(
   // ── Spawn Python CV worker ────────────────────────────────────────────────
   let cvResult: CvWorkerResult;
   try {
-    cvResult = await spawnCvWorker(videoPath, fenTimelineFile ?? undefined, jobId);
+    cvResult = await spawnCvWorker(videoPath, fenTimelineFile ?? undefined, jobId, cornersFile ?? undefined);
   } catch (spawnErr) {
     const errMsg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
     console.error(`[cv-queue] CV worker spawn error for job ${jobId}:`, errMsg);
@@ -319,7 +321,7 @@ interface CvWorkerResult {
   warnings: string[];
 }
 
-function spawnCvWorker(videoPath: string, fenTimelineFile?: string, jobId?: string): Promise<CvWorkerResult> {
+function spawnCvWorker(videoPath: string, fenTimelineFile?: string, jobId?: string, cornersFile?: string): Promise<CvWorkerResult> {
   return new Promise((resolve, reject) => {
     const args = [CV_WORKER_SCRIPT, videoPath, "--fps-sample", "0.5", "--confidence", "0.45"];
     if (fenTimelineFile) {
@@ -327,6 +329,9 @@ function spawnCvWorker(videoPath: string, fenTimelineFile?: string, jobId?: stri
     }
     if (jobId) {
       args.push("--job-id", jobId);
+    }
+    if (cornersFile) {
+      args.push("--corners-file", cornersFile);
     }
 
     console.log(`[cv-queue] Spawning: ${PYTHON_BIN} ${args.join(" ")}`);
