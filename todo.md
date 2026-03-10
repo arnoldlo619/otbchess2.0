@@ -2012,3 +2012,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Ensure temporal smoothing does NOT override high-confidence detections (captures, moves)
 - [x] Write vitest tests for temporal smoothing logic (8 tests passing)
 - [x] Benchmark FEN rate improvement on synthetic val data
+
+## Corner Preview Overlay on Recording Screen (Mar 10 2026)
+
+- [x] SVG overlay on recording screen showing green quadrilateral over board corners
+- [x] Overlay scales corners from original video resolution to display resolution
+- [x] Subtle pulsing animation to indicate active corner selection
+- [x] Corner dots at each of the 4 selected points

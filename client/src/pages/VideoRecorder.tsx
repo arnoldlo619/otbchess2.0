@@ -1780,14 +1780,58 @@ export default function VideoRecorder() {
   if (screen === "recording") {
     return (
       <div className="fixed inset-0 bg-[#050f07] flex flex-col">
-        {/* Small live thumbnail — top-right corner */}
-        <video
-          ref={videoRef}
-          className="absolute top-0 right-0 w-28 h-20 object-cover opacity-60 rounded-bl-2xl"
-          playsInline
-          muted
-          autoPlay
-        />
+        {/* Small live thumbnail — top-right corner, with corner overlay */}
+        <div className="absolute top-0 right-0 w-28 h-20 rounded-bl-2xl overflow-hidden">
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover opacity-60"
+            playsInline
+            muted
+            autoPlay
+          />
+          {/* Corner selection overlay — green quadrilateral */}
+          {manualCorners.length === 4 && videoRef.current && (() => {
+            const nativeW = videoRef.current.videoWidth || 1920;
+            const nativeH = videoRef.current.videoHeight || 1080;
+            // Thumbnail display size (w-28 h-20 = 112×80px)
+            const dispW = 112;
+            const dispH = 80;
+            const scaled = manualCorners.map(c => ({
+              x: (c.x / nativeW) * dispW,
+              y: (c.y / nativeH) * dispH,
+            }));
+            const points = scaled.map(p => `${p.x},${p.y}`).join(' ');
+            return (
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox={`0 0 ${dispW} ${dispH}`}
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Board quadrilateral fill */}
+                <polygon
+                  points={points}
+                  fill="rgba(76,175,80,0.15)"
+                  stroke="#4CAF50"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  className="animate-pulse"
+                />
+                {/* Corner dots */}
+                {scaled.map((p, i) => (
+                  <circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r="2.5"
+                    fill="#4CAF50"
+                    stroke="white"
+                    strokeWidth="0.8"
+                  />
+                ))}
+              </svg>
+            );
+          })()}
+        </div>
 
         {/* Hidden canvas for detection */}
         <canvas ref={canvasRef} className="hidden" />
