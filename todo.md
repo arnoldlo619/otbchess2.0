@@ -2003,3 +2003,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Transition from recording screen back to corners screen without stopping recording
 - [x] Preserve recording state (MediaRecorder, elapsed time) while re-selecting corners
 - [x] Update manualCorners state when user confirms new corners
+
+## Temporal Smoothing for CV Pipeline (Mar 10 2026)
+
+- [x] Parse previous FEN into an 8x8 board grid (prior board state)
+- [x] In postprocess_board: for each square where model confidence < threshold, use prior piece if it matches a top-3 alternative
+- [x] Tune the confidence threshold for temporal override (start at 0.60)
+- [x] Ensure temporal smoothing does NOT override high-confidence detections (captures, moves)
+- [x] Write vitest tests for temporal smoothing logic (8 tests passing)
+- [x] Benchmark FEN rate improvement on synthetic val data

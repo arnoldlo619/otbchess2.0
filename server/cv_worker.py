@@ -744,7 +744,7 @@ def square_map(detections, board_size=None, grid_angle=0.0):
     return board
 
 
-def detections_to_fen(detections, board_size=None, grid_angle=0.0):
+def detections_to_fen(detections, board_size=None, grid_angle=0.0, prior_fen=None):
     """
     Convert raw YOLO piece detections to a FEN position string.
 
@@ -762,6 +762,10 @@ def detections_to_fen(detections, board_size=None, grid_angle=0.0):
         Side length of the board image in pixels.
     grid_angle : float, optional
         Grid rotation angle in degrees (from detect_board_rotation_angle).
+    prior_fen : str, optional
+        FEN string from the previous successfully processed frame.  When
+        provided, temporal smoothing is applied to resolve low-confidence
+        ambiguities using the prior board state as a prior.
 
     Returns a FEN string, or None if the position is invalid (e.g. missing
     kings after all filtering).
@@ -773,6 +777,10 @@ def detections_to_fen(detections, board_size=None, grid_angle=0.0):
 
     # Apply post-processing heuristics to correct impossible positions
     board = postprocess_board(board)
+
+    # Apply temporal smoothing using the prior frame's FEN
+    if prior_fen:
+        board = temporal_smooth_board(board, prior_fen)
 
     ranks = []
     for row in range(8):
@@ -802,15 +810,24 @@ def detections_to_fen(detections, board_size=None, grid_angle=0.0):
     return f"{fen_pos} w - - 0 1"
 
 
-def reconstruct_fen(detections, grid_angle=0.0):
+def reconstruct_fen(detections, grid_angle=0.0, prior_fen=None):
     """
     Backward-compatible wrapper around detections_to_fen().
 
     All callers in the pipeline use reconstruct_fen(); this wrapper ensures
     they automatically benefit from the improved square_map() logic without
     requiring any call-site changes.
+
+    Parameters
+    ----------
+    detections : list[dict]
+        Raw YOLO detections.
+    grid_angle : float, optional
+        Grid rotation angle in degrees.
+    prior_fen : str, optional
+        FEN from the previous frame for temporal smoothing.
     """
-    return detections_to_fen(detections, grid_angle=grid_angle)
+    return detections_to_fen(detections, grid_angle=grid_angle, prior_fen=prior_fen)
 
 
 # ─── Post-Processing Heuristics ──────────────────────────────────────────────
@@ -1129,6 +1146,140 @@ def validate_fen_piece_count(fen):
 # The model was observed to return >0.77 coverage on plain green frames (no board).
 # A real board should cover 30–70% of the frame at typical recording angles.
 _MAX_TRUSTED_COVERAGE = 0.85
+
+# Temporal smoothing: confidence threshold below which we consider using the prior
+# frame's piece as a tiebreaker.  Detections above this threshold are never overridden.
+_TEMPORAL_CONF_THRESHOLD = 0.60
+
+# Maximum square differences between current and prior FEN before we stop trusting
+# the prior (i.e. the board has changed significantly — a move was made).
+_TEMPORAL_MAX_DIFF = 3
+
+
+def fen_to_board_grid(fen):
+    """
+    Parse a FEN position string into an 8×8 list-of-lists of piece characters.
+    Empty squares are represented as empty string ''.
+    Returns None if the FEN is invalid.
+    """
+    if not fen:
+        return None
+    pos = fen.split()[0]
+    ranks = pos.split('/')
+    if len(ranks) != 8:
+        return None
+    grid = []
+    for rank in ranks:
+        row = []
+        for ch in rank:
+            if ch.isdigit():
+                row.extend([''] * int(ch))
+            else:
+                row.append(ch)
+        if len(row) != 8:
+            return None
+        grid.append(row)
+    return grid
+
+
+def temporal_smooth_board(board, prior_fen):
+    """
+    Apply temporal smoothing to the current board using the previous frame's FEN.
+
+    For each square where the current detection confidence is below
+    _TEMPORAL_CONF_THRESHOLD, check if the prior FEN had a piece on that square
+    that appears in the current detection's top-3 alternatives.  If so, use the
+    prior piece — because "the piece was there last frame and the model is
+    uncertain now" is strong evidence the piece hasn't moved.
+
+    Safeguards:
+      - Only applies when confidence < _TEMPORAL_CONF_THRESHOLD
+      - Only uses the prior if the prior piece is in the current top-3 alternatives
+        (never blindly overrides with an unsupported piece type)
+      - Does NOT hallucinate pieces: if the prior square was empty, no piece is added
+      - Skips entirely if the prior FEN differs by more than _TEMPORAL_MAX_DIFF squares
+        (board has changed — a move was made, so the prior is stale)
+
+    Parameters
+    ----------
+    board : list[list]
+        8×8 grid from square_map() / postprocess_board().  Each cell is either
+        None or a tuple of (piece_char, confidence, alternatives_list).
+    prior_fen : str or None
+        FEN string from the previous successfully processed frame.
+
+    Returns the (possibly modified) board in-place.
+    """
+    if not prior_fen or not board:
+        return board
+
+    prior_grid = fen_to_board_grid(prior_fen)
+    if prior_grid is None:
+        return board
+
+    # Build current FEN to measure how different it is from the prior
+    # (lightweight: just encode the board grid without calling reconstruct_fen)
+    curr_ranks = []
+    for row in range(8):
+        rank = ""
+        empty = 0
+        for col in range(8):
+            cell = board[row][col]
+            if cell is None:
+                empty += 1
+            else:
+                if empty > 0:
+                    rank += str(empty)
+                    empty = 0
+                rank += cell[0]
+        if empty > 0:
+            rank += str(empty)
+        curr_ranks.append(rank)
+    curr_pos = "/".join(curr_ranks)
+    curr_fen_approx = curr_pos + " w - - 0 1"
+
+    diff = count_piece_differences(prior_fen, curr_fen_approx)
+    if diff > _TEMPORAL_MAX_DIFF:
+        # Board has changed significantly — prior is stale, skip smoothing
+        return board
+
+    smoothed = 0
+    for row in range(8):
+        for col in range(8):
+            cell = board[row][col]
+            prior_piece = prior_grid[row][col]  # '' means empty in prior
+
+            if cell is None:
+                # Current detection: empty square
+                # Do NOT add a piece from the prior (no hallucination)
+                continue
+
+            piece, conf, alts = cell
+
+            if conf >= _TEMPORAL_CONF_THRESHOLD:
+                # High-confidence detection — never override
+                continue
+
+            if not prior_piece:
+                # Prior square was empty — don't override current detection
+                continue
+
+            if prior_piece == piece:
+                # Already agree — nothing to do
+                continue
+
+            # Check if the prior piece appears in the current top-3 alternatives
+            alt_pieces = [a["piece"] for a in alts]
+            if prior_piece in alt_pieces:
+                # Use the prior piece with the alternative's confidence
+                alt_conf = next(
+                    (a["confidence"] for a in alts if a["piece"] == prior_piece),
+                    conf * 0.9  # fallback: slightly below current confidence
+                )
+                board[row][col] = (prior_piece, alt_conf, alts)
+                smoothed += 1
+
+    return board
 
 
 # ─── FEN Comparison ───────────────────────────────────────────────────────────
@@ -1546,6 +1697,11 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
     frame_idx = 0
     frames_processed = 0
 
+    # Temporal smoothing: track the last successfully accepted FEN as a prior
+    # for the next frame's detection.  Reset to None when a move is detected
+    # (handled implicitly by _TEMPORAL_MAX_DIFF guard in temporal_smooth_board).
+    prior_fen_for_smoothing = None
+
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -1571,10 +1727,11 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                     aligned, _rot_angle = auto_align_board(warped)
                     detections = run_piece_detection(piece_session, aligned)
 
-                    fen = reconstruct_fen(detections)
+                    fen = reconstruct_fen(detections, prior_fen=prior_fen_for_smoothing)
 
                     if fen and validate_fen_piece_count(fen):
                         raw_fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                        prior_fen_for_smoothing = fen  # update prior for next frame
                     elif fen:
                         warnings.append(
                             f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
@@ -1601,10 +1758,11 @@ def process_video(video_path, fps_sample=0.5, confidence_threshold=0.45, client_
                             aligned, _rot_angle = auto_align_board(warped)
                             detections = run_piece_detection(piece_session, aligned)
 
-                            fen = reconstruct_fen(detections)
+                            fen = reconstruct_fen(detections, prior_fen=prior_fen_for_smoothing)
 
                             if fen and validate_fen_piece_count(fen):
                                 raw_fen_timeline.append((timestamp_ms, fen, seg_confidence))
+                                prior_fen_for_smoothing = fen  # update prior for next frame
                             elif fen:
                                 warnings.append(
                                     f"Frame {frame_idx}: FEN discarded by piece-count sanity check "
