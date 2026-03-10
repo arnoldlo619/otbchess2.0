@@ -1987,3 +1987,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Backend: Update cv_worker.py to accept manual corners and skip board segmentation
 - [x] API: Connect frontend to backend - pass corners through upload/process flow
 - [x] Test full pipeline with real video frames using manual corners
+
+## Post-Processing Heuristics for CV Pipeline (Mar 10 2026)
+
+- [x] Implement piece count validation (max 16 per side, max 8 pawns, exactly 1 king)
+- [x] Implement confidence-based correction (flip lowest-confidence detection when counts are impossible)
+- [x] Enforce promotion constraints (extra queens/rooks/bishops/knights only if pawns < 8)
+- [x] Add pawn rank validation (no pawns on rank 1 or rank 8)
+- [x] Write vitest tests for the heuristics logic (14 tests passing)
+- [x] Benchmark improvement on synthetic and real video data

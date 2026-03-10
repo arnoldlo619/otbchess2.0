@@ -508,10 +508,19 @@ def run_piece_detection(piece_session, board_bgr):
         best_score = float(class_scores[best_class])
 
         if best_score >= PIECE_CONF_THRESHOLD:
+            # Preserve top-3 class alternatives for post-processing reclassification
+            sorted_indices = np.argsort(class_scores)[::-1]  # descending
+            alternatives = []
+            for idx in sorted_indices[1:4]:  # 2nd, 3rd, 4th best
+                alt_score = float(class_scores[idx])
+                if alt_score > 0.05:  # only keep meaningful alternatives
+                    alternatives.append({"piece": CLASS_NAMES[idx], "confidence": alt_score})
+
             detections.append({
                 "cx": cx, "cy": cy, "w": w, "h": h,
                 "piece": CLASS_NAMES[best_class],
                 "confidence": best_score,
+                "alternatives": alternatives,
             })
 
     # Intra-class NMS first, then cross-class deduplication
@@ -700,7 +709,7 @@ def square_map(detections, board_size=None, grid_angle=0.0):
         row = min(7, int(ry / eff_sq))
         existing = board[row][col]
         if existing is None or det["confidence"] > existing[1]:
-            board[row][col] = (det["piece"], det["confidence"])
+            board[row][col] = (det["piece"], det["confidence"], det.get("alternatives", []))
 
     # Step 5 — per-piece-type count caps
     # Collect all placed pieces sorted by confidence descending
@@ -708,7 +717,7 @@ def square_map(detections, board_size=None, grid_angle=0.0):
     for r in range(8):
         for c in range(8):
             if board[r][c] is not None:
-                piece, conf = board[r][c]
+                piece, conf = board[r][c][0], board[r][c][1]
                 placed.append((r, c, piece, conf))
 
     # Count occurrences per piece type
@@ -762,6 +771,9 @@ def detections_to_fen(detections, board_size=None, grid_angle=0.0):
 
     board = square_map(detections, board_size=board_size, grid_angle=grid_angle)
 
+    # Apply post-processing heuristics to correct impossible positions
+    board = postprocess_board(board)
+
     ranks = []
     for row in range(8):
         rank = ""
@@ -799,6 +811,221 @@ def reconstruct_fen(detections, grid_angle=0.0):
     requiring any call-site changes.
     """
     return detections_to_fen(detections, grid_angle=grid_angle)
+
+
+# ─── Post-Processing Heuristics ──────────────────────────────────────────────
+
+# Starting piece counts for a standard chess game (used for promotion budget)
+_STARTING_COUNTS = {
+    'K': 1, 'Q': 1, 'R': 2, 'B': 2, 'N': 2, 'P': 8,
+    'k': 1, 'q': 1, 'r': 2, 'b': 2, 'n': 2, 'p': 8,
+}
+
+# Color-flip mapping: maps a piece to its opposite-color equivalent
+_COLOR_FLIP = {
+    'K': 'k', 'Q': 'q', 'R': 'r', 'B': 'b', 'N': 'n', 'P': 'p',
+    'k': 'K', 'q': 'Q', 'r': 'R', 'b': 'B', 'n': 'N', 'p': 'P',
+}
+
+# Same-color piece type alternatives for reclassification
+# Ordered by visual similarity (most likely confusion partners)
+_RECLASS_CANDIDATES = {
+    'P': ['B', 'N', 'R'],  'p': ['b', 'n', 'r'],
+    'N': ['B', 'P', 'R'],  'n': ['b', 'p', 'r'],
+    'B': ['N', 'Q', 'P'],  'b': ['n', 'q', 'p'],
+    'R': ['Q', 'N', 'P'],  'r': ['q', 'n', 'p'],
+    'Q': ['R', 'B', 'K'],  'q': ['r', 'b', 'k'],
+    'K': ['Q'],             'k': ['q'],
+}
+
+
+def _count_pieces(board):
+    """Count all pieces on the board by type. Returns dict {piece_char: count}."""
+    counts = {}
+    for r in range(8):
+        for c in range(8):
+            if board[r][c] is not None:
+                p = board[r][c][0]
+                counts[p] = counts.get(p, 0) + 1
+    return counts
+
+
+def _is_white(piece):
+    """Return True if the piece character is white (uppercase)."""
+    return piece.isupper()
+
+
+def _side_total(counts, white=True):
+    """Count total pieces for one side."""
+    return sum(v for k, v in counts.items() if k.isupper() == white)
+
+
+def postprocess_board(board):
+    """
+    Apply chess-rule-based heuristics to correct impossible piece positions.
+
+    The board is an 8×8 grid where each cell is either None or a tuple of
+    (piece_char, confidence, alternatives_list).  This function modifies the
+    board in-place and returns it.
+
+    Heuristics applied (in order):
+      1. Pawn rank correction — pawns on rank 1 or 8 are reclassified
+      2. Piece count caps — enforce max counts per piece type
+      3. Promotion budget — extra officers must be balanced by missing pawns
+      4. Color flip correction — if swapping color makes counts more plausible
+      5. Side total cap — max 16 pieces per side
+    """
+    if not board:
+        return board
+
+    # ── Heuristic 1: Pawn rank correction ────────────────────────────────────
+    # Pawns cannot exist on rank 1 (row 7) or rank 8 (row 0).
+    # If detected there, reclassify using alternatives or remove.
+    for col in range(8):
+        for row in [0, 7]:  # rank 8 (row 0) and rank 1 (row 7)
+            cell = board[row][col]
+            if cell is None:
+                continue
+            piece, conf, alts = cell
+            if piece in ('P', 'p'):
+                # Try to reclassify from alternatives (non-pawn, same color)
+                reclassified = False
+                for alt in alts:
+                    alt_piece = alt["piece"]
+                    if alt_piece not in ('P', 'p') and _is_white(alt_piece) == _is_white(piece):
+                        board[row][col] = (alt_piece, alt["confidence"], alts)
+                        reclassified = True
+                        break
+                if not reclassified:
+                    # Default: promote to queen of same color
+                    promoted = 'Q' if _is_white(piece) else 'q'
+                    board[row][col] = (promoted, conf * 0.5, alts)
+
+    # ── Heuristic 2: Excess piece count correction ───────────────────────────
+    # For each piece type, if count exceeds the maximum, try to reclassify
+    # the lowest-confidence excess pieces instead of just removing them.
+    counts = _count_pieces(board)
+
+    for piece_type, max_count in _MAX_PIECES_PER_SIDE.items():
+        count = counts.get(piece_type, 0)
+        if count <= max_count:
+            continue
+
+        # Collect all instances of this piece type, sorted by confidence ascending
+        instances = []
+        for r in range(8):
+            for c in range(8):
+                if board[r][c] is not None and board[r][c][0] == piece_type:
+                    instances.append((r, c, board[r][c][1], board[r][c][2]))
+        instances.sort(key=lambda x: x[2])  # lowest confidence first
+
+        excess = count - max_count
+        for r, c, conf, alts in instances[:excess]:
+            # Try reclassification from alternatives
+            reclassified = False
+            for alt in alts:
+                alt_piece = alt["piece"]
+                alt_count = counts.get(alt_piece, 0)
+                alt_max = _MAX_PIECES_PER_SIDE.get(alt_piece, 10)
+                # Only reclassify if the alternative piece type isn't also over-limit
+                if alt_count < alt_max:
+                    board[r][c] = (alt_piece, alt["confidence"], alts)
+                    counts[piece_type] = counts.get(piece_type, 0) - 1
+                    counts[alt_piece] = counts.get(alt_piece, 0) + 1
+                    reclassified = True
+                    break
+            if not reclassified:
+                # No valid alternative — remove the detection
+                board[r][c] = None
+                counts[piece_type] = counts.get(piece_type, 0) - 1
+
+    # ── Heuristic 3: Promotion budget enforcement ────────────────────────────
+    # For each side, the number of "extra" officers (beyond starting counts)
+    # cannot exceed the number of "missing" pawns (8 - current_pawns).
+    # Extra officers = max(0, current_count - starting_count) for Q, R, B, N.
+    for white in [True, False]:
+        pawn = 'P' if white else 'p'
+        officers = ['Q', 'R', 'B', 'N'] if white else ['q', 'r', 'b', 'n']
+
+        current_pawns = counts.get(pawn, 0)
+        missing_pawns = max(0, 8 - current_pawns)  # promotion budget
+
+        extra_officers = 0
+        for off in officers:
+            starting = _STARTING_COUNTS[off]
+            current = counts.get(off, 0)
+            extra_officers += max(0, current - starting)
+
+        if extra_officers > missing_pawns:
+            # Too many officers for the number of missing pawns.
+            # Remove the lowest-confidence excess officers.
+            excess = extra_officers - missing_pawns
+            officer_instances = []
+            for r in range(8):
+                for c in range(8):
+                    if board[r][c] is not None:
+                        p, conf, alts = board[r][c]
+                        if p in officers and counts.get(p, 0) > _STARTING_COUNTS[p]:
+                            officer_instances.append((r, c, p, conf, alts))
+            officer_instances.sort(key=lambda x: x[3])  # lowest confidence first
+
+            for r, c, p, conf, alts in officer_instances[:excess]:
+                # Try reclassifying to pawn if pawn count allows
+                if counts.get(pawn, 0) < 8:
+                    # Check if pawn is valid on this rank
+                    rank_row = r
+                    if rank_row != 0 and rank_row != 7:  # pawns can't be on rank 1 or 8
+                        board[r][c] = (pawn, conf * 0.5, alts)
+                        counts[p] = counts.get(p, 0) - 1
+                        counts[pawn] = counts.get(pawn, 0) + 1
+                        continue
+                # Otherwise remove
+                board[r][c] = None
+                counts[p] = counts.get(p, 0) - 1
+
+    # ── Heuristic 4: Color flip correction ───────────────────────────────────
+    # If one side has too many pieces (>16) and the other has too few,
+    # flip the lowest-confidence pieces from the over-represented side.
+    counts = _count_pieces(board)  # refresh counts
+    white_total = _side_total(counts, white=True)
+    black_total = _side_total(counts, white=False)
+
+    for white_side, total in [(True, white_total), (False, black_total)]:
+        if total > 16:
+            excess = total - 16
+            # Collect all pieces of this side, sorted by confidence ascending
+            side_pieces = []
+            for r in range(8):
+                for c in range(8):
+                    if board[r][c] is not None:
+                        p, conf, alts = board[r][c]
+                        if _is_white(p) == white_side:
+                            side_pieces.append((r, c, p, conf, alts))
+            side_pieces.sort(key=lambda x: x[3])  # lowest confidence first
+
+            for r, c, p, conf, alts in side_pieces[:excess]:
+                flipped = _COLOR_FLIP[p]
+                flipped_count = counts.get(flipped, 0)
+                flipped_max = _MAX_PIECES_PER_SIDE.get(flipped, 10)
+                other_total = _side_total(counts, white=not white_side)
+
+                # Check if flipping is valid: other side has room, and
+                # the flipped piece type isn't already at max
+                if other_total < 16 and flipped_count < flipped_max:
+                    # Check pawn rank constraint for flipped piece
+                    if flipped in ('P', 'p') and r in (0, 7):
+                        # Can't flip to pawn on rank 1/8, just remove
+                        board[r][c] = None
+                    else:
+                        board[r][c] = (flipped, conf * 0.7, alts)
+                        counts[p] = counts.get(p, 0) - 1
+                        counts[flipped] = counts.get(flipped, 0) + 1
+                else:
+                    # Can't flip — just remove
+                    board[r][c] = None
+                    counts[p] = counts.get(p, 0) - 1
+
+    return board
 
 
 # ─── FEN Validation ─────────────────────────────────────────────────────────
