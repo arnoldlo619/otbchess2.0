@@ -43,7 +43,12 @@ import {
   Star,
   Shield,
   Globe,
+  Home as HomeIcon,
+  Building2,
+  Video,
+  LogIn,
 } from "lucide-react";
+import { AnimeNavBar } from "@/components/ui/anime-navbar";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -406,7 +411,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const isDark = theme === "dark";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-16 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+    <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
@@ -1185,6 +1190,8 @@ export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { user, logout } = useAuthContext();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
@@ -1196,9 +1203,71 @@ export default function Home() {
     }
   }, []);
 
+  // AnimeNavBar items
+  const navItems = [
+    { name: "Home", url: "/", icon: HomeIcon },
+    { name: "Clubs", url: "/clubs", icon: Building2 },
+    { name: "Analyze", url: "/record", icon: Video },
+    ...(!user ? [{ name: "Sign In", url: "#", icon: LogIn, onClick: () => setAuthOpen(true) }] : []),
+  ];
+
+  const logoEl = (
+    <Link href="/" className="flex items-center">
+      <img
+        src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
+        alt="OTB Chess"
+        className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+      />
+    </Link>
+  );
+
+  const rightSlotEl = (
+    <div className="flex items-center gap-3">
+      <ThemeToggle />
+      {user && (
+        <div className="relative">
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border border-white/20 text-white/80 hover:bg-white/10 bg-black/40 backdrop-blur-md"
+          >
+            <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-[#3D6B47] text-white">
+              {(user.displayName || user.email).charAt(0).toUpperCase()}
+            </span>
+            <span className="max-w-[100px] truncate">{user.displayName || user.email}</span>
+          </button>
+          {userMenuOpen && (
+            <div
+              className="absolute right-0 top-full mt-2 w-48 rounded-xl shadow-xl border z-50 overflow-hidden bg-[oklch(0.22_0.06_145)] border-white/10"
+              onMouseLeave={() => setUserMenuOpen(false)}
+            >
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/08 transition-colors"
+                onClick={() => setUserMenuOpen(false)}
+              >
+                <Crown className="w-4 h-4" /> My Profile
+              </Link>
+              <button
+                onClick={() => { logout(); setUserMenuOpen(false); }}
+                className="flex items-center gap-2 w-full px-4 py-3 text-sm text-red-400 hover:bg-white/08 border-t border-white/08 transition-colors"
+              >
+                <X className="w-4 h-4" /> Sign Out
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen">
-      <Nav onCreateTournament={() => setWizardOpen(true)} onSignIn={() => setAuthOpen(true)} />
+      <AnimeNavBar
+        items={navItems}
+        defaultActive="Home"
+        logo={logoEl}
+        rightSlot={rightSlotEl}
+      />
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
       <HowItWorks />

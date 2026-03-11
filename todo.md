@@ -2019,3 +2019,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Overlay scales corners from original video resolution to display resolution
 - [x] Subtle pulsing animation to indicate active corner selection
 - [x] Corner dots at each of the 4 selected points
+
+## Animated AnimeNavBar Landing Page (Mar 10 2026)
+
+- [x] Install framer-motion dependency (already installed)
+- [x] Create AnimeNavBar component adapted for OTB Chess (green theme, chess nav items)
+- [x] Add shine keyframe to global CSS
+- [x] Replace landing page header nav with AnimeNavBar
+- [x] Ensure logo is preserved in the nav (left of pill on desktop)

@@ -765,6 +765,13 @@
   .status-dot-offline { background: oklch(0.75 0 0); }
 }
 
+/* ── AnimeNavBar shine sweep animation ─────────────────────────────────────── */
+@keyframes shine {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
 /* ── Avatar shimmer skeleton animation ─────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
