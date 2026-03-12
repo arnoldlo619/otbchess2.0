@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -16,10 +16,98 @@ interface AnimeNavBarProps {
   items: NavItem[]
   className?: string
   defaultActive?: string
-  /** Optional logo element rendered to the left of the pill */
   logo?: React.ReactNode
-  /** Optional right-side element (e.g. theme toggle, user avatar) */
   rightSlot?: React.ReactNode
+}
+
+// Mascot face rendered as a standalone floating element
+function MascotFace({ isHovered }: { isHovered: boolean }) {
+  return (
+    <div className="relative w-10 h-10">
+      {/* White circle face */}
+      <motion.div
+        className="absolute inset-0 bg-white rounded-full shadow-lg"
+        animate={
+          isHovered
+            ? { scale: [1, 1.12, 1], rotate: [0, -6, 6, 0], transition: { duration: 0.5 } }
+            : { y: [0, -3, 0], transition: { duration: 2, repeat: Infinity, ease: "easeInOut" } }
+        }
+      >
+        {/* Left eye */}
+        <motion.div
+          className="absolute w-1.5 h-1.5 bg-gray-900 rounded-full"
+          animate={isHovered ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } } : {}}
+          style={{ left: "26%", top: "36%" }}
+        />
+        {/* Right eye */}
+        <motion.div
+          className="absolute w-1.5 h-1.5 bg-gray-900 rounded-full"
+          animate={isHovered ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } } : {}}
+          style={{ right: "26%", top: "36%" }}
+        />
+        {/* Left cheek */}
+        <motion.div
+          className="absolute w-2 h-1.5 bg-[#4CAF50]/50 rounded-full"
+          animate={{ opacity: isHovered ? 0.9 : 0.55 }}
+          style={{ left: "10%", top: "57%" }}
+        />
+        {/* Right cheek */}
+        <motion.div
+          className="absolute w-2 h-1.5 bg-[#4CAF50]/50 rounded-full"
+          animate={{ opacity: isHovered ? 0.9 : 0.55 }}
+          style={{ right: "10%", top: "57%" }}
+        />
+        {/* Smile */}
+        <motion.div
+          className="absolute border-b-2 border-gray-900 rounded-full"
+          animate={isHovered ? { scaleY: 1.6, y: -1 } : { scaleY: 1, y: 0 }}
+          style={{ left: "30%", right: "30%", top: "58%", height: "6px" }}
+        />
+        {/* Sparkles on hover */}
+        <AnimatePresence>
+          {isHovered && (
+            <>
+              <motion.span
+                initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+                animate={{ opacity: 1, scale: 1, x: 6, y: -6 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="absolute -top-1 -right-1 text-[10px] pointer-events-none"
+              >✨</motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+                animate={{ opacity: 1, scale: 1, x: -6, y: -8 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ delay: 0.08 }}
+                className="absolute -top-2 left-0 text-[10px] pointer-events-none"
+              >✨</motion.span>
+            </>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Downward-pointing triangle tail */}
+      <motion.div
+        className="absolute left-1/2 -translate-x-1/2"
+        style={{ bottom: "-7px" }}
+        animate={
+          isHovered
+            ? { y: [0, -4, 0], transition: { duration: 0.3, repeat: Infinity, repeatType: "reverse" } }
+            : { y: [0, 2, 0], transition: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 } }
+        }
+      >
+        {/* CSS triangle via borders */}
+        <div
+          style={{
+            width: 0,
+            height: 0,
+            borderLeft: "7px solid transparent",
+            borderRight: "7px solid transparent",
+            borderTop: "8px solid white",
+          }}
+        />
+      </motion.div>
+    </div>
+  )
 }
 
 export function AnimeNavBar({
@@ -32,257 +120,246 @@ export function AnimeNavBar({
   const [mounted, setMounted] = useState(false)
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
-  const [isMobile, setIsMobile] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Track the pixel offset of each nav item so we can position the mascot above it
+  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({})
+  const pillRef = useRef<HTMLDivElement | null>(null)
+  const [mascotLeft, setMascotLeft] = useState<number | null>(null)
 
   useEffect(() => {
     setMounted(true)
+    const handleScroll = () => setScrolled(window.scrollY > 60)
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Recalculate mascot position whenever active tab or scroll state changes
+  const recalcMascot = () => {
+    if (!scrolled) { setMascotLeft(null); return }
+    const el = itemRefs.current[activeTab]
+    const pill = pillRef.current
+    if (!el || !pill) return
+    const elRect = el.getBoundingClientRect()
+    const pillRect = pill.getBoundingClientRect()
+    setMascotLeft(elRect.left - pillRect.left + elRect.width / 2)
+  }
+
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768)
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    recalcMascot()
+    // Also recalc after a short delay to handle framer-motion layout settle
+    const t = setTimeout(recalcMascot, 80)
+    return () => clearTimeout(t)
+  }, [activeTab, scrolled, mounted])
 
   if (!mounted) return null
 
   return (
-    <div className={cn("fixed top-0 left-0 right-0 z-[9999]", className)}>
-      <div className="flex justify-center items-center pt-5 px-4 gap-4">
-        {/* Logo — left of pill on desktop */}
-        {logo && (
+    // The outer wrapper must NOT clip overflow so the mascot can float above
+    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
+      <AnimatePresence mode="wait">
+        {/* ── EXPANDED state ──────────────────────────────────────────────────── */}
+        {!scrolled ? (
           <motion.div
-            className="hidden md:flex items-center"
-            initial={{ opacity: 0, y: -10 }}
+            key="expanded"
+            initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
+            exit={{ opacity: 0, y: -16, transition: { duration: 0.18 } }}
+            transition={{ type: "spring", stiffness: 280, damping: 24 }}
+            className="w-full px-6 pt-4 pb-2 overflow-visible"
           >
-            {logo}
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              {/* Logo */}
+              {logo && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.08 }}>
+                  {logo}
+                </motion.div>
+              )}
+
+              {/* Nav links — full-width, no pill background */}
+              <div className="flex items-center gap-0.5">
+                {items.map((item) => {
+                  const isActive = activeTab === item.name
+                  const isHovered = hoveredTab === item.name
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.url}
+                      onClick={(e) => {
+                        if (item.onClick) { e.preventDefault(); item.onClick(e) }
+                        setActiveTab(item.name)
+                      }}
+                      onMouseEnter={() => setHoveredTab(item.name)}
+                      onMouseLeave={() => setHoveredTab(null)}
+                      className={cn(
+                        "relative cursor-pointer text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 select-none",
+                        isActive ? "text-white" : "text-white/55 hover:text-white"
+                      )}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="expanded-pill"
+                          className="absolute inset-0 rounded-full bg-white/10 border border-white/20"
+                          transition={{ type: "spring", stiffness: 320, damping: 30 }}
+                        />
+                      )}
+                      <AnimatePresence>
+                        {isHovered && !isActive && (
+                          <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="absolute inset-0 rounded-full bg-white/[0.06]"
+                          />
+                        )}
+                      </AnimatePresence>
+                      <span className="relative z-10">{item.name}</span>
+                    </a>
+                  )
+                })}
+              </div>
+
+              {/* Right slot */}
+              {rightSlot && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }}>
+                  {rightSlot}
+                </motion.div>
+              )}
+            </div>
           </motion.div>
-        )}
-
-        {/* Floating pill nav */}
-        <motion.div
-          className="flex items-center gap-1 bg-black/60 border border-white/10 backdrop-blur-xl py-1.5 px-1.5 rounded-full shadow-2xl relative"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        >
-          {items.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.name
-            const isHovered = hoveredTab === item.name
-
-            return (
-              <a
-                key={item.name}
-                href={item.url}
-                onClick={(e) => {
-                  if (item.onClick) {
-                    e.preventDefault()
-                    item.onClick(e)
-                  }
-                  setActiveTab(item.name)
-                }}
-                onMouseEnter={() => setHoveredTab(item.name)}
-                onMouseLeave={() => setHoveredTab(null)}
-                className={cn(
-                  "relative cursor-pointer text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-300 select-none",
-                  "text-white/60 hover:text-white",
-                  isActive && "text-white"
-                )}
-              >
-                {/* Active glow layers */}
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full -z-10 overflow-hidden"
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: [0.3, 0.55, 0.3],
-                      scale: [1, 1.03, 1],
-                    }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <div className="absolute inset-0 bg-[#4CAF50]/30 rounded-full blur-md" />
-                    <div className="absolute inset-[-4px] bg-[#4CAF50]/20 rounded-full blur-xl" />
-                    <div className="absolute inset-[-8px] bg-[#4CAF50]/15 rounded-full blur-2xl" />
-                    <div className="absolute inset-[-12px] bg-[#4CAF50]/05 rounded-full blur-3xl" />
-                    <div
-                      className="absolute inset-0 bg-gradient-to-r from-[#4CAF50]/0 via-[#4CAF50]/25 to-[#4CAF50]/0"
-                      style={{ animation: "shine 3s ease-in-out infinite" }}
-                    />
-                  </motion.div>
-                )}
-
-                {/* Active solid pill background */}
-                {isActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full -z-10 bg-[#3D6B47]/40 border border-[#4CAF50]/30"
-                    layoutId="active-pill"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-
-                {/* Desktop: text label */}
-                <motion.span
-                  className="hidden md:inline relative z-10"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
+        ) : (
+          /* ── COMPACT state (scrolled) ───────────────────────────────────────── */
+          <motion.div
+            key="compact"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16, transition: { duration: 0.18 } }}
+            transition={{ type: "spring", stiffness: 280, damping: 24 }}
+            // paddingTop = mascot height (40px) + tail (8px) + gap (12px) = 60px
+            className="flex justify-center px-4 overflow-visible"
+            style={{ paddingTop: "60px" }}
+          >
+            <div className="flex items-center gap-3 overflow-visible">
+              {/* Logo pill */}
+              {logo && (
+                <motion.div
+                  className="hidden md:flex items-center px-3 py-2 rounded-full bg-black/60 border border-white/10 backdrop-blur-xl shadow-xl"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 >
-                  {item.name}
-                </motion.span>
+                  {logo}
+                </motion.div>
+              )}
 
-                {/* Mobile: icon only */}
-                <motion.span
-                  className="md:hidden relative z-10"
-                  whileHover={{ scale: 1.2 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Icon size={18} strokeWidth={2.5} />
-                </motion.span>
-
-                {/* Hover background for non-active items */}
+              {/* Nav pill — overflow:visible so mascot isn't clipped */}
+              <div className="relative overflow-visible">
+                {/* Mascot floats ABOVE the pill, absolutely positioned relative to this wrapper */}
                 <AnimatePresence>
-                  {isHovered && !isActive && (
+                  {mascotLeft !== null && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className="absolute inset-0 bg-white/08 rounded-full -z-10"
-                    />
+                      key={activeTab}
+                      initial={{ opacity: 0, y: 8, scale: 0.85 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.85 }}
+                      transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                      className="absolute pointer-events-none z-10"
+                      style={{
+                        // Position: center of active tab, above the pill (pill top - mascot height - tail - gap)
+                        left: mascotLeft,
+                        transform: "translateX(-50%)",
+                        bottom: "calc(100% + 4px)",
+                      }}
+                    >
+                      <MascotFace isHovered={hoveredTab !== null} />
+                    </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Animated mascot above active tab */}
-                {isActive && (
-                  <motion.div
-                    layoutId="anime-mascot"
-                    className="absolute -top-14 left-1/2 -translate-x-1/2 pointer-events-none"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
-                    <div className="relative w-12 h-12">
-                      {/* Face */}
-                      <motion.div
-                        className="absolute w-10 h-10 bg-white rounded-full left-1/2 -translate-x-1/2"
-                        animate={
-                          hoveredTab
-                            ? {
-                                scale: [1, 1.1, 1],
-                                rotate: [0, -5, 5, 0],
-                                transition: { duration: 0.5, ease: "easeInOut" },
-                              }
-                            : {
-                                y: [0, -3, 0],
-                                transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                              }
-                        }
+                {/* The actual pill */}
+                <motion.div
+                  ref={pillRef}
+                  className="flex items-center gap-1 bg-black/60 border border-white/10 backdrop-blur-xl py-1.5 px-1.5 rounded-full shadow-2xl overflow-visible"
+                >
+                  {items.map((item) => {
+                    const Icon = item.icon
+                    const isActive = activeTab === item.name
+                    const isHovered = hoveredTab === item.name
+
+                    return (
+                      <a
+                        key={item.name}
+                        ref={(el) => { itemRefs.current[item.name] = el }}
+                        href={item.url}
+                        onClick={(e) => {
+                          if (item.onClick) { e.preventDefault(); item.onClick(e) }
+                          setActiveTab(item.name)
+                        }}
+                        onMouseEnter={() => setHoveredTab(item.name)}
+                        onMouseLeave={() => setHoveredTab(null)}
+                        className={cn(
+                          "relative cursor-pointer text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-200 select-none",
+                          isActive ? "text-white" : "text-white/55 hover:text-white"
+                        )}
                       >
-                        {/* Left eye */}
-                        <motion.div
-                          className="absolute w-2 h-2 bg-[#1a1a1a] rounded-full"
-                          animate={
-                            hoveredTab
-                              ? { scaleY: [1, 0.15, 1], transition: { duration: 0.2, times: [0, 0.5, 1] } }
-                              : {}
-                          }
-                          style={{ left: "25%", top: "38%" }}
-                        />
-                        {/* Right eye */}
-                        <motion.div
-                          className="absolute w-2 h-2 bg-[#1a1a1a] rounded-full"
-                          animate={
-                            hoveredTab
-                              ? { scaleY: [1, 0.15, 1], transition: { duration: 0.2, times: [0, 0.5, 1] } }
-                              : {}
-                          }
-                          style={{ right: "25%", top: "38%" }}
-                        />
-                        {/* Left cheek */}
-                        <motion.div
-                          className="absolute w-2 h-1.5 bg-[#4CAF50]/60 rounded-full"
-                          animate={{ opacity: hoveredTab ? 0.9 : 0.6 }}
-                          style={{ left: "12%", top: "56%" }}
-                        />
-                        {/* Right cheek */}
-                        <motion.div
-                          className="absolute w-2 h-1.5 bg-[#4CAF50]/60 rounded-full"
-                          animate={{ opacity: hoveredTab ? 0.9 : 0.6 }}
-                          style={{ right: "12%", top: "56%" }}
-                        />
-                        {/* Mouth */}
-                        <motion.div
-                          className="absolute w-4 h-2 border-b-2 border-[#1a1a1a] rounded-full"
-                          animate={
-                            hoveredTab ? { scaleY: 1.5, y: -1 } : { scaleY: 1, y: 0 }
-                          }
-                          style={{ left: "30%", top: "58%" }}
-                        />
-                        {/* Sparkles on hover */}
+                        {/* Active glow layers */}
+                        {isActive && (
+                          <motion.div
+                            className="absolute inset-0 rounded-full -z-10"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: [0.4, 0.65, 0.4], scale: [1, 1.04, 1] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            <div className="absolute inset-0 bg-[#4CAF50]/30 rounded-full blur-md" />
+                            <div className="absolute inset-[-6px] bg-[#4CAF50]/18 rounded-full blur-xl" />
+                            <div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-[#4CAF50]/25 to-transparent rounded-full"
+                              style={{ animation: "shine 3s ease-in-out infinite" }}
+                            />
+                          </motion.div>
+                        )}
+
+                        {/* Active solid pill */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="compact-pill"
+                            className="absolute inset-0 rounded-full -z-10 bg-[#3D6B47]/40 border border-[#4CAF50]/30"
+                            transition={{ type: "spring", stiffness: 320, damping: 30 }}
+                          />
+                        )}
+
+                        {/* Hover bg */}
                         <AnimatePresence>
-                          {hoveredTab && (
-                            <>
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0 }}
-                                className="absolute -top-1 -right-1 text-xs"
-                              >
-                                ✨
-                              </motion.div>
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="absolute -top-2 left-0 text-xs"
-                              >
-                                ✨
-                              </motion.div>
-                            </>
+                          {isHovered && !isActive && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.85 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.85 }}
+                              className="absolute inset-0 bg-white/[0.07] rounded-full -z-10"
+                            />
                           )}
                         </AnimatePresence>
-                      </motion.div>
 
-                      {/* Diamond tail / pointer */}
-                      <motion.div
-                        className="absolute -bottom-1 left-1/2 w-4 h-4 -translate-x-1/2"
-                        animate={
-                          hoveredTab
-                            ? {
-                                y: [0, -4, 0],
-                                transition: { duration: 0.3, repeat: Infinity, repeatType: "reverse" },
-                              }
-                            : {
-                                y: [0, 2, 0],
-                                transition: { duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
-                              }
-                        }
-                      >
-                        <div className="w-full h-full bg-white rotate-45 transform origin-center" />
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                )}
-              </a>
-            )
-          })}
-        </motion.div>
+                        {/* Label (desktop) / Icon (mobile) */}
+                        <span className="hidden md:inline relative z-10">{item.name}</span>
+                        <span className="md:hidden relative z-10">
+                          <Icon size={18} strokeWidth={2.5} />
+                        </span>
+                      </a>
+                    )
+                  })}
+                </motion.div>
+              </div>
 
-        {/* Right slot — theme toggle, user avatar, etc. */}
-        {rightSlot && (
-          <motion.div
-            className="hidden md:flex items-center"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.15 }}
-          >
-            {rightSlot}
+              {/* Right slot */}
+              {rightSlot && (
+                <motion.div
+                  className="hidden md:flex items-center px-3 py-2 rounded-full bg-black/60 border border-white/10 backdrop-blur-xl shadow-xl"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                >
+                  {rightSlot}
+                </motion.div>
+              )}
+            </div>
           </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   )
 }

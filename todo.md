@@ -2027,3 +2027,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add shine keyframe to global CSS
 - [x] Replace landing page header nav with AnimeNavBar
 - [x] Ensure logo is preserved in the nav (left of pill on desktop)
+
+## AnimeNavBar Scroll Behavior & Mascot Fix (Mar 10 2026)
+
+- [ ] Fix mascot face clipping at top of viewport (increase top padding / overflow visible)
+- [ ] Expanded state at top: full-width transparent bar with large logo + nav links
+- [ ] Compact state on scroll: floating pill compresses, background gets darker/blurred
+- [ ] Smooth framer-motion transition between expanded and compact states
