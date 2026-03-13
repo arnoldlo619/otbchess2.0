@@ -10,6 +10,8 @@ interface NavItem {
   url: string
   icon: LucideIcon
   onClick?: (e: React.MouseEvent) => void
+  /** Optional section ID to watch with IntersectionObserver for scroll-aware active state */
+  sectionId?: string
 }
 
 interface AnimeNavBarProps {
@@ -18,6 +20,8 @@ interface AnimeNavBarProps {
   defaultActive?: string
   logo?: React.ReactNode
   rightSlot?: React.ReactNode
+  /** Called whenever the active tab changes (via click or IntersectionObserver) */
+  onActiveChange?: (name: string) => void
 }
 
 // Mascot face rendered as a standalone floating element
@@ -116,11 +120,14 @@ export function AnimeNavBar({
   defaultActive,
   logo,
   rightSlot,
+  onActiveChange,
 }: AnimeNavBarProps) {
   const [mounted, setMounted] = useState(false)
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
   const [scrolled, setScrolled] = useState(false)
+  // Track whether the user has manually clicked a tab (suppress IntersectionObserver briefly)
+  const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Track the pixel offset of each nav item so we can position the mascot above it
   const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({})
@@ -131,8 +138,35 @@ export function AnimeNavBar({
     setMounted(true)
     const handleScroll = () => setScrolled(window.scrollY > 60)
     window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+
+    // IntersectionObserver: auto-switch active tab as sections scroll into view
+    const sectionItems = items.filter((i) => i.sectionId)
+    if (sectionItems.length === 0) {
+      return () => window.removeEventListener("scroll", handleScroll)
+    }
+
+    const observers: IntersectionObserver[] = []
+    sectionItems.forEach((item) => {
+      const el = document.getElementById(item.sectionId!)
+      if (!el) return
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && !manualOverrideRef.current) {
+            setActiveTab(item.name)
+            onActiveChange?.(item.name)
+          }
+        },
+        { threshold: 0.35 }
+      )
+      obs.observe(el)
+      observers.push(obs)
+    })
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      observers.forEach((o) => o.disconnect())
+    }
+  }, [items])
 
   // Recalculate mascot position whenever active tab or scroll state changes
   const recalcMascot = () => {
@@ -186,9 +220,12 @@ export function AnimeNavBar({
                       key={item.name}
                       href={item.url}
                       onClick={(e) => {
-                        if (item.onClick) { e.preventDefault(); item.onClick(e) }
-                        setActiveTab(item.name)
-                      }}
+                          if (item.onClick) { e.preventDefault(); item.onClick(e) }
+                          // Manual click: set active and suppress IntersectionObserver for 1.5s
+                          setActiveTab(item.name)
+                          if (manualOverrideRef.current) clearTimeout(manualOverrideRef.current)
+                          manualOverrideRef.current = setTimeout(() => { manualOverrideRef.current = null }, 1500)
+                        }}
                       onMouseEnter={() => setHoveredTab(item.name)}
                       onMouseLeave={() => setHoveredTab(null)}
                       className={cn(
@@ -290,6 +327,8 @@ export function AnimeNavBar({
                         onClick={(e) => {
                           if (item.onClick) { e.preventDefault(); item.onClick(e) }
                           setActiveTab(item.name)
+                          if (manualOverrideRef.current) clearTimeout(manualOverrideRef.current)
+                          manualOverrideRef.current = setTimeout(() => { manualOverrideRef.current = null }, 1500)
                         }}
                         onMouseEnter={() => setHoveredTab(item.name)}
                         onMouseLeave={() => setHoveredTab(null)}

@@ -49,6 +49,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
+import { MobileBottomNav } from "@/components/ui/mobile-bottom-nav";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -1192,6 +1193,8 @@ export default function Home() {
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // Shared active tab state — synced between AnimeNavBar and MobileBottomNav
+  const [activeNavTab, setActiveNavTab] = useState("Home");
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
@@ -1203,11 +1206,11 @@ export default function Home() {
     }
   }, []);
 
-  // AnimeNavBar items
+  // AnimeNavBar items — sectionId wires up IntersectionObserver for scroll-aware active tab
   const navItems = [
     { name: "Home", url: "/", icon: HomeIcon },
-    { name: "Clubs", url: "/clubs", icon: Building2 },
-    { name: "Analyze", url: "/record", icon: Video },
+    { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
+    { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },
     ...(!user ? [{ name: "Sign In", url: "#", icon: LogIn, onClick: () => setAuthOpen(true) }] : []),
   ];
 
@@ -1261,12 +1264,18 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-16 md:pb-0">
       <AnimeNavBar
         items={navItems}
-        defaultActive="Home"
+        defaultActive={activeNavTab}
         logo={logoEl}
         rightSlot={rightSlotEl}
+        onActiveChange={setActiveNavTab}
+      />
+      <MobileBottomNav
+        items={navItems}
+        activeTab={activeNavTab}
+        onTabChange={setActiveNavTab}
       />
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
