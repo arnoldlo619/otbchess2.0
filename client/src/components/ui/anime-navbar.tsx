@@ -196,7 +196,7 @@ export function AnimeNavBar({
 
   return (
     // The outer wrapper must NOT clip overflow so the mascot can float above
-    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
+    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible hidden md:block", className)}>
       <AnimatePresence mode="wait">
         {/* ── EXPANDED state ──────────────────────────────────────────────────── */}
         {!scrolled ? (
