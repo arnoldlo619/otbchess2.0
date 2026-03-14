@@ -2030,14 +2030,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## AnimeNavBar Scroll Behavior & Mascot Fix (Mar 10 2026)
 
-- [ ] Fix mascot face clipping at top of viewport (increase top padding / overflow visible)
-- [ ] Expanded state at top: full-width transparent bar with large logo + nav links
-- [ ] Compact state on scroll: floating pill compresses, background gets darker/blurred
-- [ ] Smooth framer-motion transition between expanded and compact states
+- [x] Fix mascot face clipping at top of viewport (increase top padding / overflow visible)
+- [x] Expanded state at top: full-width transparent bar with large logo + nav links
+- [x] Compact state on scroll: floating pill compresses, background gets darker/blurred
+- [x] Smooth framer-motion transition between expanded and compact states
 
 ## Scroll-Aware Nav + Mobile Bottom Nav
-- [ ] Add section IDs to landing page sections (home, clubs, analyze)
-- [ ] Implement IntersectionObserver in AnimeNavBar to auto-switch active tab on scroll
-- [ ] Build MobileBottomNav component (fixed bottom bar, icon + label per tab)
-- [ ] Show MobileBottomNav only on small screens (hidden on md+)
-- [ ] Hide AnimeNavBar pill/compact state on mobile (show only expanded top bar)
+- [x] Add section IDs to landing page sections (home, clubs, analyze)
+- [x] Implement IntersectionObserver in AnimeNavBar to auto-switch active tab on scroll
+- [x] Build MobileBottomNav component (fixed bottom bar, icon + label per tab)
+- [x] Show MobileBottomNav only on small screens (hidden on md+)
+- [x] Hide AnimeNavBar pill/compact state on mobile (show only expanded top bar)
+
+## Backdrop Blur on Expanded Nav
+- [x] Add gradient fade from page background on expanded nav (blends with hero)
+- [x] Increase backdrop blur/opacity as user scrolls down (scrollProgress 0→1 over 60px)
+- [x] Compact pill retains its existing dark background (unaffected)

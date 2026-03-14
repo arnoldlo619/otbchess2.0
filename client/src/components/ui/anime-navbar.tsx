@@ -126,6 +126,7 @@ export function AnimeNavBar({
   const [hoveredTab, setHoveredTab] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
   const [scrolled, setScrolled] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0) // 0 = top, 1 = fully scrolled
   // Track whether the user has manually clicked a tab (suppress IntersectionObserver briefly)
   const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -136,7 +137,12 @@ export function AnimeNavBar({
 
   useEffect(() => {
     setMounted(true)
-    const handleScroll = () => setScrolled(window.scrollY > 60)
+    const handleScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 60)
+      // scrollProgress: 0 at top, 1 at 60px (where compact kicks in)
+      setScrollProgress(Math.min(1, y / 60))
+    }
     window.addEventListener("scroll", handleScroll, { passive: true })
 
     // IntersectionObserver: auto-switch active tab as sections scroll into view
@@ -201,6 +207,11 @@ export function AnimeNavBar({
             exit={{ opacity: 0, y: -16, transition: { duration: 0.18 } }}
             transition={{ type: "spring", stiffness: 280, damping: 24 }}
             className="w-full px-6 pt-4 pb-2 overflow-visible"
+            style={{
+              background: `linear-gradient(to bottom, rgba(10,31,10,${0.85 * scrollProgress}) 0%, rgba(10,31,10,0) 100%)`,
+              backdropFilter: scrollProgress > 0.1 ? `blur(${scrollProgress * 8}px)` : undefined,
+              WebkitBackdropFilter: scrollProgress > 0.1 ? `blur(${scrollProgress * 8}px)` : undefined,
+            }}
           >
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               {/* Logo */}
