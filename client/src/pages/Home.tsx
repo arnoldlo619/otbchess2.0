@@ -49,7 +49,6 @@ import {
   LogIn,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
-import { MobileBottomNav } from "@/components/ui/mobile-bottom-nav";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -412,7 +411,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const isDark = theme === "dark";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+    <section className={`relative min-h-screen flex items-center overflow-hidden pt-16 md:pt-28 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
@@ -1193,7 +1192,7 @@ export default function Home() {
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  // Shared active tab state — synced between AnimeNavBar and MobileBottomNav
+  // Active tab state — synced with AnimeNavBar via IntersectionObserver
   const [activeNavTab, setActiveNavTab] = useState("Home");
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
@@ -1236,7 +1235,7 @@ export default function Home() {
             <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-[#3D6B47] text-white">
               {(user.displayName || user.email).charAt(0).toUpperCase()}
             </span>
-            <span className="max-w-[100px] truncate">{user.displayName || user.email}</span>
+            <span className="hidden sm:inline max-w-[100px] truncate">{user.displayName || user.email}</span>
           </button>
           {userMenuOpen && (
             <div
@@ -1264,18 +1263,13 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0">
+    <div className="min-h-screen">
       <AnimeNavBar
         items={navItems}
         defaultActive={activeNavTab}
         logo={logoEl}
         rightSlot={rightSlotEl}
         onActiveChange={setActiveNavTab}
-      />
-      <MobileBottomNav
-        items={navItems}
-        activeTab={activeNavTab}
-        onTabChange={setActiveNavTab}
       />
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />

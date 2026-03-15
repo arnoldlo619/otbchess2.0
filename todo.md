@@ -2046,3 +2046,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add gradient fade from page background on expanded nav (blends with hero)
 - [x] Increase backdrop blur/opacity as user scrolls down (scrollProgress 0→1 over 60px)
 - [x] Compact pill retains its existing dark background (unaffected)
+
+## Mobile Nav Refactor (Mar 14 2026)
+- [x] Remove MobileBottomNav component from Home.tsx
+- [x] Remove hidden md:block from AnimeNavBar so it shows on all screen sizes
+- [x] Ensure AnimeNavBar compact pill is readable and usable on mobile (icons on mobile, labels on desktop)
+- [x] Remove pb-20 md:pb-0 bottom padding from Home.tsx page container

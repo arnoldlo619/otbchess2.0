@@ -127,6 +127,7 @@ export function AnimeNavBar({
   const [activeTab, setActiveTab] = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
   const [scrolled, setScrolled] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0) // 0 = top, 1 = fully scrolled
+  const [isDesktop, setIsDesktop] = useState(false)
   // Track whether the user has manually clicked a tab (suppress IntersectionObserver briefly)
   const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -137,6 +138,9 @@ export function AnimeNavBar({
 
   useEffect(() => {
     setMounted(true)
+    setIsDesktop(window.innerWidth >= 768)
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768)
+    window.addEventListener("resize", handleResize, { passive: true })
     const handleScroll = () => {
       const y = window.scrollY
       setScrolled(y > 60)
@@ -169,6 +173,7 @@ export function AnimeNavBar({
     })
 
     return () => {
+      window.removeEventListener("resize", handleResize)
       window.removeEventListener("scroll", handleScroll)
       observers.forEach((o) => o.disconnect())
     }
@@ -196,7 +201,7 @@ export function AnimeNavBar({
 
   return (
     // The outer wrapper must NOT clip overflow so the mascot can float above
-    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible hidden md:block", className)}>
+    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
       <AnimatePresence mode="wait">
         {/* ── EXPANDED state ──────────────────────────────────────────────────── */}
         {!scrolled ? (
@@ -206,14 +211,14 @@ export function AnimeNavBar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16, transition: { duration: 0.18 } }}
             transition={{ type: "spring", stiffness: 280, damping: 24 }}
-            className="w-full px-6 pt-4 pb-2 overflow-visible"
+            className="w-full px-3 md:px-6 pt-3 md:pt-4 pb-2 overflow-visible"
             style={{
               background: `linear-gradient(to bottom, rgba(10,31,10,${0.85 * scrollProgress}) 0%, rgba(10,31,10,0) 100%)`,
               backdropFilter: scrollProgress > 0.1 ? `blur(${scrollProgress * 8}px)` : undefined,
               WebkitBackdropFilter: scrollProgress > 0.1 ? `blur(${scrollProgress * 8}px)` : undefined,
             }}
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
               {/* Logo */}
               {logo && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.08 }}>
@@ -222,7 +227,7 @@ export function AnimeNavBar({
               )}
 
               {/* Nav links — full-width, no pill background */}
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-0 md:gap-0.5">
                 {items.map((item) => {
                   const isActive = activeTab === item.name
                   const isHovered = hoveredTab === item.name
@@ -240,7 +245,7 @@ export function AnimeNavBar({
                       onMouseEnter={() => setHoveredTab(item.name)}
                       onMouseLeave={() => setHoveredTab(null)}
                       className={cn(
-                        "relative cursor-pointer text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 select-none",
+                        "relative cursor-pointer text-xs md:text-sm font-semibold px-3 md:px-5 py-2 rounded-full transition-colors duration-200 select-none",
                         isActive ? "text-white" : "text-white/55 hover:text-white"
                       )}
                     >
@@ -281,9 +286,10 @@ export function AnimeNavBar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16, transition: { duration: 0.18 } }}
             transition={{ type: "spring", stiffness: 280, damping: 24 }}
-            // paddingTop = mascot height (40px) + tail (8px) + gap (12px) = 60px
+            // paddingTop = mascot height (40px) + tail (8px) + gap (12px) = 60px (desktop)
+            // On mobile: use minimal padding since mascot is hidden
             className="flex justify-center px-4 overflow-visible"
-            style={{ paddingTop: "60px" }}
+            style={{ paddingTop: isDesktop ? "60px" : "12px" }}
           >
             <div className="flex items-center gap-3 overflow-visible">
               {/* Logo pill */}
@@ -298,9 +304,9 @@ export function AnimeNavBar({
 
               {/* Nav pill — overflow:visible so mascot isn't clipped */}
               <div className="relative overflow-visible">
-                {/* Mascot floats ABOVE the pill, absolutely positioned relative to this wrapper */}
+                {/* Mascot floats ABOVE the pill — desktop only */}
                 <AnimatePresence>
-                  {mascotLeft !== null && (
+                  {mascotLeft !== null && isDesktop && (
                     <motion.div
                       key={activeTab}
                       initial={{ opacity: 0, y: 8, scale: 0.85 }}
