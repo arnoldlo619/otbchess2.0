@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter } from "./auth.js";
@@ -1143,6 +1143,79 @@ export function createApp() {
     } catch (err) {
       console.error("[battles] join error:", err);
       res.status(500).json({ error: "Failed to join battle room" });
+    }
+  });
+
+  // GET /api/battles/history — Get the signed-in user's battle history (requires auth)
+  app.get("/api/battles/history", async (req, res) => {
+    const { battleRooms, users } = await import("../shared/schema.js");
+    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    try {
+      const db = await getDb();
+      // Fetch all completed battles where user was host or guest
+      const rows = await db
+        .select()
+        .from(battleRooms)
+        .where(
+          and(
+            eq(battleRooms.status, "completed"),
+            or(
+              eq(battleRooms.hostId, userId),
+              eq(battleRooms.guestId, userId)
+            )
+          )
+        )
+        .orderBy(desc(battleRooms.completedAt))
+        .limit(50);
+
+      // Collect opponent user IDs to fetch their profiles
+      const opponentIds = Array.from(new Set(
+        rows.map((r) => r.hostId === userId ? r.guestId : r.hostId).filter(Boolean) as string[]
+      ));
+
+      // Fetch opponent profiles in one query
+      const opponentMap: Record<string, { displayName: string; avatarUrl: string | null; chesscomUsername: string | null }> = {};
+      if (opponentIds.length > 0) {
+        const profiles = await db.select({
+          id: users.id,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+          chesscomUsername: users.chesscomUsername,
+        }).from(users).where(inArray(users.id, opponentIds));
+        for (const p of profiles) opponentMap[p.id] = p;
+      }
+
+      // Shape the response
+      const history = rows.map((r) => {
+        const isHost = r.hostId === userId;
+        const opponentId = isHost ? r.guestId : r.hostId;
+        const opponent = opponentId ? opponentMap[opponentId] : null;
+        let outcome: "win" | "loss" | "draw" = "draw";
+        if (r.result === "draw") outcome = "draw";
+        else if ((r.result === "host_win" && isHost) || (r.result === "guest_win" && !isHost)) outcome = "win";
+        else outcome = "loss";
+        return {
+          id: r.id,
+          code: r.code,
+          outcome,
+          result: r.result,
+          isHost,
+          opponent: opponent ? {
+            id: opponentId,
+            displayName: opponent.displayName,
+            avatarUrl: opponent.avatarUrl,
+            chesscomUsername: opponent.chesscomUsername,
+          } : null,
+          completedAt: r.completedAt,
+          createdAt: r.createdAt,
+        };
+      });
+
+      res.json({ history });
+    } catch (err) {
+      console.error("[battles] history error:", err);
+      res.status(500).json({ error: "Failed to fetch battle history" });
     }
   });
 

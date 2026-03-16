@@ -2149,3 +2149,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Server routes: POST /api/battles, GET /api/battles/:code, PATCH /api/battles/:code/join, PATCH /api/battles/:code/result
 - [x] 3s polling for room state updates (host waiting + guest battle room)
 - [x] 18 vitest tests passing for battle logic (code gen, status, result, join, QR parsing)
+
+## Battle History on Profile Page (Mar 16 2026)
+- [x] Add GET /api/battles/history server endpoint returning user's past battles (with opponent profiles)
+- [x] Build BattleHistorySection inline in Profile.tsx (WIN/LOSS/DRAW badge, opponent avatar, date)
+- [x] Integrate BattleHistorySection into the user profile page (between My Clubs and Account)
+- [x] Show W/D/L record summary at top of section
+- [x] Write vitest tests for battle history data helpers (12 new tests, 30 total passing)

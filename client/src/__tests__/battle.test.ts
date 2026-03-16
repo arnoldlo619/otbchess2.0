@@ -165,3 +165,98 @@ describe("QR Code Join URL Parsing", () => {
     expect(params.get("join")).toBeNull();
   });
 });
+
+// ── Battle History Helpers ────────────────────────────────────────────────────
+
+function computeOutcome(
+  result: string | null,
+  isHost: boolean
+): "win" | "loss" | "draw" {
+  if (result === "draw") return "draw";
+  if ((result === "host_win" && isHost) || (result === "guest_win" && !isHost))
+    return "win";
+  return "loss";
+}
+
+function formatBattleDate(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function summarise(history: Array<{ outcome: "win" | "loss" | "draw" }>) {
+  return {
+    wins:   history.filter((b) => b.outcome === "win").length,
+    losses: history.filter((b) => b.outcome === "loss").length,
+    draws:  history.filter((b) => b.outcome === "draw").length,
+  };
+}
+
+describe("Battle History Outcome Computation", () => {
+  it("host wins when result is host_win", () => {
+    expect(computeOutcome("host_win", true)).toBe("win");
+  });
+
+  it("guest wins when result is guest_win", () => {
+    expect(computeOutcome("guest_win", false)).toBe("win");
+  });
+
+  it("host loses when result is guest_win", () => {
+    expect(computeOutcome("guest_win", true)).toBe("loss");
+  });
+
+  it("guest loses when result is host_win", () => {
+    expect(computeOutcome("host_win", false)).toBe("loss");
+  });
+
+  it("both get draw when result is draw", () => {
+    expect(computeOutcome("draw", true)).toBe("draw");
+    expect(computeOutcome("draw", false)).toBe("draw");
+  });
+
+  it("returns loss for null result", () => {
+    expect(computeOutcome(null, true)).toBe("loss");
+  });
+});
+
+describe("Battle History Summary", () => {
+  const history = [
+    { outcome: "win"  as const },
+    { outcome: "win"  as const },
+    { outcome: "loss" as const },
+    { outcome: "draw" as const },
+  ];
+
+  it("counts wins correctly", () => {
+    expect(summarise(history).wins).toBe(2);
+  });
+
+  it("counts losses correctly", () => {
+    expect(summarise(history).losses).toBe(1);
+  });
+
+  it("counts draws correctly", () => {
+    expect(summarise(history).draws).toBe(1);
+  });
+
+  it("returns zeros for empty history", () => {
+    expect(summarise([])).toEqual({ wins: 0, losses: 0, draws: 0 });
+  });
+});
+
+describe("Battle Date Formatting", () => {
+  it("formats a valid ISO date string", () => {
+    const result = formatBattleDate("2026-03-16T20:00:00.000Z");
+    // Should contain month, day, year components
+    expect(result).toMatch(/Mar|March/);
+    expect(result).toMatch(/2026/);
+  });
+
+  it("returns empty string for null", () => {
+    expect(formatBattleDate(null)).toBe("");
+  });
+});

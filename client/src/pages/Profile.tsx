@@ -22,6 +22,7 @@ import {
   Shield,
   Trash2,
   AlertTriangle,
+  Swords,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
@@ -122,6 +123,40 @@ export default function ProfilePage() {
       });
     }
   }, [user]);
+
+  // ── Battle history ──────────────────────────────────────────────────────────
+  interface BattleEntry {
+    id: string;
+    code: string;
+    outcome: "win" | "loss" | "draw";
+    result: string | null;
+    isHost: boolean;
+    opponent: { id: string | null; displayName: string; avatarUrl: string | null; chesscomUsername: string | null } | null;
+    completedAt: string | null;
+    createdAt: string;
+  }
+  const [battleHistory, setBattleHistory] = useState<BattleEntry[] | null>(null);
+  const [battleHistoryLoading, setBattleHistoryLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setBattleHistoryLoading(true);
+    fetch("/api/battles/history", { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.history) setBattleHistory(data.history); })
+      .catch(() => {})
+      .finally(() => setBattleHistoryLoading(false));
+  }, [user]);
+
+  const battleWins   = (battleHistory ?? []).filter((b) => b.outcome === "win").length;
+  const battleLosses = (battleHistory ?? []).filter((b) => b.outcome === "loss").length;
+  const battleDraws  = (battleHistory ?? []).filter((b) => b.outcome === "draw").length;
+
+  function formatBattleDate(iso: string | null): string {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
 
   // Fetch tournaments from API (cross-device) when signed in; fall back to localStorage
   const [apiTournaments, setApiTournaments] = useState<Array<{
@@ -553,6 +588,104 @@ export default function ProfilePage() {
                 >
                   View all {tournamentCount} tournaments →
                 </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Battle History */}
+        <div className={`rounded-3xl border p-6 ${card}`}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+              <h2 className={`text-base font-bold ${text}`}>Battle History</h2>
+            </div>
+            {battleHistory && battleHistory.length > 0 && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-emerald-500">{battleWins}W</span>
+                <span className={`text-xs font-semibold ${muted}`}>{battleDraws}D</span>
+                <span className="text-xs font-semibold text-red-400">{battleLosses}L</span>
+              </div>
+            )}
+          </div>
+
+          {battleHistoryLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-[#2d6a4f]" />
+            </div>
+          ) : !battleHistory || battleHistory.length === 0 ? (
+            <div className={`flex flex-col items-center gap-3 py-8 ${muted}`}>
+              <Swords className="w-8 h-8 opacity-30" />
+              <p className="text-sm text-center">No battles yet.<br />Challenge someone to a 1v1 battle!</p>
+              <a
+                href="/battle"
+                className={`mt-1 text-xs px-4 py-2 rounded-xl font-medium transition ${
+                  isDark
+                    ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25"
+                    : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"
+                }`}
+              >
+                Start a Battle
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {battleHistory.slice(0, 8).map((b) => {
+                const outcomeConfig = {
+                  win:  { label: "WIN",  bg: isDark ? "bg-emerald-900/40" : "bg-emerald-50",  text: "text-emerald-500",  border: isDark ? "border-emerald-800/50" : "border-emerald-200" },
+                  loss: { label: "LOSS", bg: isDark ? "bg-red-900/30"     : "bg-red-50",      text: "text-red-400",     border: isDark ? "border-red-900/40"     : "border-red-200"     },
+                  draw: { label: "DRAW", bg: isDark ? "bg-white/5"        : "bg-gray-50",     text: muted,             border: isDark ? "border-white/10"       : "border-gray-200"    },
+                }[b.outcome];
+                const opponentInitials = b.opponent
+                  ? b.opponent.displayName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+                  : "?";
+                return (
+                  <div
+                    key={b.id}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition ${outcomeConfig.bg} ${outcomeConfig.border}`}
+                  >
+                    {/* Outcome badge */}
+                    <span className={`text-[10px] font-bold tracking-widest w-9 text-center flex-shrink-0 ${outcomeConfig.text}`}>
+                      {outcomeConfig.label}
+                    </span>
+
+                    {/* VS divider */}
+                    <span className={`text-[10px] font-bold ${muted} flex-shrink-0`}>vs</span>
+
+                    {/* Opponent avatar */}
+                    <div className="flex-shrink-0">
+                      {b.opponent?.avatarUrl ? (
+                        <img src={b.opponent.avatarUrl} alt={b.opponent.displayName} className="w-8 h-8 rounded-xl object-cover" />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
+                          isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
+                        }`}>
+                          {opponentInitials}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Opponent name + username */}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${text} truncate`}>
+                        {b.opponent?.displayName ?? "Unknown opponent"}
+                      </p>
+                      {b.opponent?.chesscomUsername && (
+                        <p className={`text-xs ${muted} truncate`}>@{b.opponent.chesscomUsername}</p>
+                      )}
+                    </div>
+
+                    {/* Date */}
+                    <span className={`text-xs ${muted} flex-shrink-0`}>
+                      {formatBattleDate(b.completedAt ?? b.createdAt)}
+                    </span>
+                  </div>
+                );
+              })}
+              {battleHistory.length > 8 && (
+                <p className={`text-center text-xs pt-1 ${muted}`}>
+                  +{battleHistory.length - 8} more battles
+                </p>
               )}
             </div>
           )}
