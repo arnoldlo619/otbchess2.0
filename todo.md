@@ -2103,3 +2103,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Mascot Top Offset Adjustment (Mar 16 2026)
 - [x] Increase mascot top offset from -top-14 to -top-16 for more breathing room
 - [x] Adjust hero section top padding from pt-16/pt-28 to pt-20/pt-32 to compensate
+
+## Mascot Idle Animations (Mar 16 2026)
+- [x] Add periodic eye-blink idle animation (every 4-8s randomly, 60% probability)
+- [x] Add periodic head-tilt idle animation (every 4-8s randomly, 40% probability)
+- [x] Ensure idle animations pause during hover interactions (isHovered suppresses idle state)
+- [x] Keep animations subtle and non-distracting (blink 0.25s, tilt 0.65s)

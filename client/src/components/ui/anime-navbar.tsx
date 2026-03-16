@@ -50,8 +50,41 @@ interface AnimeNavBarProps {
 
 // ─── Mascot ───────────────────────────────────────────────────────────────────
 // Floating face that springs to the active tab via layoutId.
+// Idle animations: periodic eye-blink (every 4-7s) and head-tilt (every 6-10s)
+// both pause during hover interactions.
+
+type IdleState = "none" | "blink" | "tilt"
 
 function MascotFace({ isHovered }: { isHovered: boolean }) {
+  const [idleAnim, setIdleAnim] = useState<IdleState>("none")
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Schedule the next idle animation at a random interval
+  const scheduleNextIdle = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    // Randomly pick blink (60%) or tilt (40%)
+    const delay = 4000 + Math.random() * 4000 // 4–8s
+    idleTimerRef.current = setTimeout(() => {
+      const pick = Math.random() < 0.6 ? "blink" : "tilt"
+      setIdleAnim(pick)
+      // Reset after the animation completes, then schedule next
+      const duration = pick === "blink" ? 300 : 700
+      setTimeout(() => {
+        setIdleAnim("none")
+        scheduleNextIdle()
+      }, duration)
+    }, delay)
+  }
+
+  useEffect(() => {
+    scheduleNextIdle()
+    return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current) }
+  }, [])
+
+  // Suppress idle animations while hovered
+  const isBlinking = !isHovered && idleAnim === "blink"
+  const isTilting  = !isHovered && idleAnim === "tilt"
+
   return (
     <div className="relative w-10 h-10">
       {/* White circle face */}
@@ -60,19 +93,33 @@ function MascotFace({ isHovered }: { isHovered: boolean }) {
         animate={
           isHovered
             ? { scale: [1, 1.12, 1], rotate: [0, -6, 6, 0], transition: { duration: 0.5 } }
+            : isTilting
+            ? { rotate: [0, -8, 8, -4, 0], transition: { duration: 0.65, ease: "easeInOut" } }
             : { y: [0, -3, 0], transition: { duration: 2, repeat: Infinity, ease: "easeInOut" } }
         }
       >
         {/* Left eye */}
         <motion.div
           className="absolute w-1.5 h-1.5 bg-gray-900 rounded-full"
-          animate={isHovered ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } } : {}}
+          animate={
+            isHovered
+              ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } }
+              : isBlinking
+              ? { scaleY: [1, 0.08, 1], transition: { duration: 0.25, ease: "easeInOut" } }
+              : {}
+          }
           style={{ left: "26%", top: "36%" }}
         />
         {/* Right eye */}
         <motion.div
           className="absolute w-1.5 h-1.5 bg-gray-900 rounded-full"
-          animate={isHovered ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } } : {}}
+          animate={
+            isHovered
+              ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } }
+              : isBlinking
+              ? { scaleY: [1, 0.08, 1], transition: { duration: 0.25, ease: "easeInOut" } }
+              : {}
+          }
           style={{ right: "26%", top: "36%" }}
         />
         {/* Left cheek — OTB green tint */}
