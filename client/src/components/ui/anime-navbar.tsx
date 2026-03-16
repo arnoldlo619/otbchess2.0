@@ -349,9 +349,10 @@ export function AnimeNavBar({
                 className="flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 py-1.5 relative"
                 style={{
                   background: "rgba(0,0,0,0.45)",
-                  border: "1px solid rgba(255,255,255,0.10)",
+                  border: "1px solid rgba(61,107,71,0.30)",
                   backdropFilter: "blur(12px)",
                   WebkitBackdropFilter: "blur(12px)",
+                  boxShadow: "0 0 18px rgba(61,107,71,0.22), 0 0 6px rgba(76,175,80,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
                 }}
               >
                 {/* Mascot — springs between active tabs via layoutId */}

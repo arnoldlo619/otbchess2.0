@@ -2109,3 +2109,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add periodic head-tilt idle animation (every 4-8s randomly, 40% probability)
 - [x] Ensure idle animations pause during hover interactions (isHovered suppresses idle state)
 - [x] Keep animations subtle and non-distracting (blink 0.25s, tilt 0.65s)
+
+## Nav Pill Glow Effect (Mar 16 2026)
+- [x] Add subtle OTB-green box-shadow glow to nav pill container (outer glow + inner highlight + green border)
