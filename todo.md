@@ -2082,3 +2082,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Smooth transition between states (0.3s duration with easeInOut)
 - [x] Reverse animation when drawer closes
 - [x] Ensure icon remains centered and properly sized (cross-fade with scale)
+
+## Host Tournament Page Nav Bar (Mar 16 2026)
+- [x] Hide AnimeNavBar when TournamentWizard is open
+- [x] Make OTB logo hyperlinked to navigate back to landing page (closes wizard)
+- [x] Ensure logo link is properly styled and clickable (cursor pointer on hover)

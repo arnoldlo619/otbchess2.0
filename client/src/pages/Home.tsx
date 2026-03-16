@@ -1264,13 +1264,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <AnimeNavBar
-        items={navItems}
-        defaultActive={activeNavTab}
-        logo={logoEl}
-        rightSlot={rightSlotEl}
-        onActiveChange={setActiveNavTab}
-      />
+      {!wizardOpen && (
+        <AnimeNavBar
+          items={navItems}
+          defaultActive={activeNavTab}
+          logo={logoEl}
+          rightSlot={rightSlotEl}
+          onActiveChange={setActiveNavTab}
+        />
+      )}
       <Hero onCreateTournament={() => setWizardOpen(true)} />
       <StatsBar />
       <HowItWorks />

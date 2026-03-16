@@ -226,10 +226,12 @@ function HeroPanel({
   step,
   isDark,
   mode,
+  onClose,
 }: {
   step: number;
   isDark: boolean;
   mode: "quickstart" | "schedule";
+  onClose?: () => void;
 }) {
   const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
   const Icon = s.icon;
@@ -255,14 +257,18 @@ function HeroPanel({
         }}
       />
 
-      {/* Logo mark */}
-      <div className="relative flex items-center">
+      {/* Logo mark — clickable to close wizard */}
+      <button
+        onClick={onClose}
+        className="relative flex items-center cursor-pointer transition-opacity hover:opacity-70"
+        aria-label="Close wizard and return to home"
+      >
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
           alt="OTB Chess"
           style={{ height: 36, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
         />
-      </div>
+      </button>
 
       {/* Step content */}
       <div className="relative" key={`${mode}-${step}`} style={{ animation: `heroIn 0.45s cubic-bezier(0.22,1,0.36,1) both` }}>
@@ -1980,7 +1986,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     >
       {/* ── Left hero panel (hidden on mobile) ── */}
       <div className="hidden lg:flex lg:w-[32%] xl:w-[34%] flex-shrink-0">
-        <HeroPanel step={heroStep} isDark={isDark} mode={mode} />
+        <HeroPanel step={heroStep} isDark={isDark} mode={mode} onClose={() => onClose()} />
       </div>
 
       {/* ── Right input panel ── */}
