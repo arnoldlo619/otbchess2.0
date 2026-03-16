@@ -2052,3 +2052,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove hidden md:block from AnimeNavBar so it shows on all screen sizes
 - [x] Ensure AnimeNavBar compact pill is readable and usable on mobile (icons on mobile, labels on desktop)
 - [x] Remove pb-20 md:pb-0 bottom padding from Home.tsx page container
+
+## Hamburger Menu for Ultra-Small Screens (Mar 15 2026)
+- [x] Add hamburger menu state to AnimeNavBar (open/close)
+- [x] Add screen size detection for < 320px breakpoint
+- [x] Hide nav items in expanded state on ultra-small screens, show hamburger icon instead
+- [x] Implement drawer/modal UI for menu items on ultra-small screens (vertical stack with icons + labels)
+- [x] Close drawer when nav item is clicked
+- [x] Auto-close drawer on resize to >= 320px
+
+## Sticky Header Nav Refactor (Mar 15 2026)
+- [x] Remove compact pill scroll state from AnimeNavBar
+- [x] Keep expanded header layout on scroll (no state change)
+- [x] Add glassmorphic background to header (blur + semi-transparent dark, intensifies on scroll)
+- [x] Ensure header remains sticky at top while scrolling
+- [x] Verify logo, nav items, and right slot remain visible and properly spaced
