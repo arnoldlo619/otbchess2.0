@@ -2112,3 +2112,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Nav Pill Glow Effect (Mar 16 2026)
 - [x] Add subtle OTB-green box-shadow glow to nav pill container (outer glow + inner highlight + green border)
+
+## Mascot Clipping Fix (Mar 16 2026)
+- [x] Add top padding to header wrapper (pt-20) so mascot is not clipped by viewport edge
+- [x] Ensure header overflow is visible so mascot floats above the pill unobstructed
+- [x] Increase hero section top padding to pt-36/pt-44 to compensate for taller header

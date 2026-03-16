@@ -411,7 +411,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const isDark = theme === "dark";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-20 md:pt-32 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+    <section className={`relative min-h-screen flex items-center overflow-hidden pt-36 md:pt-44 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
