@@ -2067,3 +2067,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add glassmorphic background to header (blur + semi-transparent dark, intensifies on scroll)
 - [x] Ensure header remains sticky at top while scrolling
 - [x] Verify logo, nav items, and right slot remain visible and properly spaced
+
+## Hamburger Menu Swipe-to-Close Gesture (Mar 16 2026)
+- [x] Add touch event listeners (touchstart, touchmove, touchend) to drawer
+- [x] Detect upward swipe gesture (velocity and distance thresholds: 60px or 0.5px/ms)
+- [x] Animate drawer slide-up on swipe-to-close with spring animation
+- [x] Close drawer state after swipe animation completes
+- [x] Add visual feedback during swipe (cursor grab/grabbing, drawer Y translation)
+- [x] Test swipe gesture on mobile devices

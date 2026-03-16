@@ -129,8 +129,12 @@ export function AnimeNavBar({
   const [isDesktop, setIsDesktop] = useState(false)
   const [isUltraSmall, setIsUltraSmall] = useState(false) // < 320px: show hamburger
   const [hamburgerOpen, setHamburgerOpen] = useState(false)
+  const [drawerSwipeY, setDrawerSwipeY] = useState(0) // Track swipe Y position for visual feedback
   // Track whether the user has manually clicked a tab (suppress IntersectionObserver briefly)
   const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Track touch start position for swipe gesture
+  const touchStartYRef = useRef<number>(0)
+  const touchStartTimeRef = useRef<number>(0)
 
   useEffect(() => {
     setMounted(true)
@@ -192,6 +196,31 @@ export function AnimeNavBar({
     // Close hamburger after clicking
     setHamburgerOpen(false)
     onActiveChange?.(item.name)
+  }
+
+  const handleDrawerTouchStart = (e: React.TouchEvent) => {
+    touchStartYRef.current = e.touches[0].clientY
+    touchStartTimeRef.current = Date.now()
+    setDrawerSwipeY(0)
+  }
+
+  const handleDrawerTouchMove = (e: React.TouchEvent) => {
+    if (!hamburgerOpen) return
+    const currentY = e.touches[0].clientY
+    const deltaY = currentY - touchStartYRef.current
+    if (deltaY < 0) {
+      setDrawerSwipeY(deltaY)
+    }
+  }
+
+  const handleDrawerTouchEnd = () => {
+    const deltaY = drawerSwipeY
+    const deltaTime = Date.now() - touchStartTimeRef.current
+    const velocity = Math.abs(deltaY) / deltaTime
+    if (Math.abs(deltaY) > 60 || velocity > 0.5) {
+      setHamburgerOpen(false)
+    }
+    setDrawerSwipeY(0)
   }
 
   return (
@@ -284,10 +313,13 @@ export function AnimeNavBar({
           {isUltraSmall && hamburgerOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden border-t border-white/10"
+              animate={{ opacity: 1, height: "auto", y: drawerSwipeY }}
+              exit={{ opacity: 0, height: 0, y: -100 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              onTouchStart={handleDrawerTouchStart}
+              onTouchMove={handleDrawerTouchMove}
+              onTouchEnd={handleDrawerTouchEnd}
+              className="overflow-hidden border-t border-white/10 cursor-grab active:cursor-grabbing"
             >
               <div className="flex flex-col gap-1 px-3 py-3">
                 {items.map((item) => {
