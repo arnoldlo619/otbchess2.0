@@ -1,9 +1,33 @@
 "use client"
 
+/**
+ * AnimeNavBar — OTB Chess
+ *
+ * Merges the upstream "anime-navbar" component (animated mascot, multi-layer OTB-green
+ * glow on active tab, shine sweep, spring mascot transition) with the platform's
+ * existing feature set:
+ *   - Logo slot (left)
+ *   - Right slot (theme toggle + user avatar)
+ *   - Glassmorphic scroll background (intensifies on scroll)
+ *   - IntersectionObserver scroll-aware active tab
+ *   - Hamburger drawer for ultra-small (< 320 px) screens with swipe-to-close
+ *   - Animated hamburger → X icon transition
+ *
+ * Design tokens:
+ *   OTB green: oklch(0.55 0.18 145) ≈ #3D6B47 / #4CAF50
+ */
+
 import React, { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { LucideIcon, Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+// ─── OTB design tokens ────────────────────────────────────────────────────────
+const OTB_GREEN       = "#4CAF50"          // bright accent
+const OTB_GREEN_DARK  = "#3D6B47"          // deep forest green
+const OTB_GREEN_GLOW  = "rgba(61,107,71,"  // prefix for rgba glow layers
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface NavItem {
   name: string
@@ -24,7 +48,9 @@ interface AnimeNavBarProps {
   onActiveChange?: (name: string) => void
 }
 
-// Mascot face rendered as a standalone floating element
+// ─── Mascot ───────────────────────────────────────────────────────────────────
+// Floating face that springs to the active tab via layoutId.
+
 function MascotFace({ isHovered }: { isHovered: boolean }) {
   return (
     <div className="relative w-10 h-10">
@@ -49,17 +75,17 @@ function MascotFace({ isHovered }: { isHovered: boolean }) {
           animate={isHovered ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } } : {}}
           style={{ right: "26%", top: "36%" }}
         />
-        {/* Left cheek */}
+        {/* Left cheek — OTB green tint */}
         <motion.div
-          className="absolute w-2 h-1.5 bg-[#4CAF50]/50 rounded-full"
+          className="absolute w-2 h-1.5 rounded-full"
+          style={{ background: `${OTB_GREEN_GLOW}0.55)`, left: "10%", top: "57%" }}
           animate={{ opacity: isHovered ? 0.9 : 0.55 }}
-          style={{ left: "10%", top: "57%" }}
         />
         {/* Right cheek */}
         <motion.div
-          className="absolute w-2 h-1.5 bg-[#4CAF50]/50 rounded-full"
+          className="absolute w-2 h-1.5 rounded-full"
+          style={{ background: `${OTB_GREEN_GLOW}0.55)`, right: "10%", top: "57%" }}
           animate={{ opacity: isHovered ? 0.9 : 0.55 }}
-          style={{ right: "10%", top: "57%" }}
         />
         {/* Smile */}
         <motion.div
@@ -99,7 +125,6 @@ function MascotFace({ isHovered }: { isHovered: boolean }) {
             : { y: [0, 2, 0], transition: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 } }
         }
       >
-        {/* CSS triangle via borders */}
         <div
           style={{
             width: 0,
@@ -114,6 +139,8 @@ function MascotFace({ isHovered }: { isHovered: boolean }) {
   )
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export function AnimeNavBar({
   items,
   className,
@@ -122,46 +149,38 @@ export function AnimeNavBar({
   rightSlot,
   onActiveChange,
 }: AnimeNavBarProps) {
-  const [mounted, setMounted] = useState(false)
-  const [hoveredTab, setHoveredTab] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
-  const [scrollProgress, setScrollProgress] = useState(0) // 0 = top, 1 = fully scrolled (for glassmorphic intensity)
-  const [isDesktop, setIsDesktop] = useState(false)
-  const [isUltraSmall, setIsUltraSmall] = useState(false) // < 320px: show hamburger
+  const [mounted, setMounted]           = useState(false)
+  const [hoveredTab, setHoveredTab]     = useState<string | null>(null)
+  const [activeTab, setActiveTab]       = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [isDesktop, setIsDesktop]       = useState(false)
+  const [isUltraSmall, setIsUltraSmall] = useState(false)
   const [hamburgerOpen, setHamburgerOpen] = useState(false)
-  const [drawerSwipeY, setDrawerSwipeY] = useState(0) // Track swipe Y position for visual feedback
-  // Track whether the user has manually clicked a tab (suppress IntersectionObserver briefly)
-  const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  // Track touch start position for swipe gesture
-  const touchStartYRef = useRef<number>(0)
-  const touchStartTimeRef = useRef<number>(0)
+  const [drawerSwipeY, setDrawerSwipeY] = useState(0)
+
+  const manualOverrideRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchStartYRef     = useRef<number>(0)
+  const touchStartTimeRef  = useRef<number>(0)
 
   useEffect(() => {
     setMounted(true)
     setIsDesktop(window.innerWidth >= 768)
     setIsUltraSmall(window.innerWidth < 320)
+
     const handleResize = () => {
       setIsDesktop(window.innerWidth >= 768)
       setIsUltraSmall(window.innerWidth < 320)
-      // Close hamburger on resize to larger screen
-      if (window.innerWidth >= 320) {
-        setHamburgerOpen(false)
-      }
+      if (window.innerWidth >= 320) setHamburgerOpen(false)
     }
-    window.addEventListener("resize", handleResize, { passive: true })
     const handleScroll = () => {
-      const y = window.scrollY
-      // scrollProgress: 0 at top, 1 at 100px (for glassmorphic intensity)
-      setScrollProgress(Math.min(1, y / 100))
+      setScrollProgress(Math.min(1, window.scrollY / 100))
     }
+
+    window.addEventListener("resize", handleResize, { passive: true })
     window.addEventListener("scroll", handleScroll, { passive: true })
 
-    // IntersectionObserver: auto-switch active tab as sections scroll into view
+    // IntersectionObserver: scroll-aware active tab
     const sectionItems = items.filter((i) => i.sectionId)
-    if (sectionItems.length === 0) {
-      return () => window.removeEventListener("scroll", handleScroll)
-    }
-
     const observers: IntersectionObserver[] = []
     sectionItems.forEach((item) => {
       const el = document.getElementById(item.sectionId!)
@@ -193,38 +212,34 @@ export function AnimeNavBar({
     setActiveTab(item.name)
     if (manualOverrideRef.current) clearTimeout(manualOverrideRef.current)
     manualOverrideRef.current = setTimeout(() => { manualOverrideRef.current = null }, 1500)
-    // Close hamburger after clicking
     setHamburgerOpen(false)
     onActiveChange?.(item.name)
   }
 
+  // ── Swipe-to-close gesture handlers ──────────────────────────────────────
   const handleDrawerTouchStart = (e: React.TouchEvent) => {
-    touchStartYRef.current = e.touches[0].clientY
+    touchStartYRef.current    = e.touches[0].clientY
     touchStartTimeRef.current = Date.now()
     setDrawerSwipeY(0)
   }
-
   const handleDrawerTouchMove = (e: React.TouchEvent) => {
     if (!hamburgerOpen) return
-    const currentY = e.touches[0].clientY
-    const deltaY = currentY - touchStartYRef.current
-    if (deltaY < 0) {
-      setDrawerSwipeY(deltaY)
-    }
+    const deltaY = e.touches[0].clientY - touchStartYRef.current
+    if (deltaY < 0) setDrawerSwipeY(deltaY)
   }
-
   const handleDrawerTouchEnd = () => {
-    const deltaY = drawerSwipeY
     const deltaTime = Date.now() - touchStartTimeRef.current
-    const velocity = Math.abs(deltaY) / deltaTime
-    if (Math.abs(deltaY) > 60 || velocity > 0.5) {
-      setHamburgerOpen(false)
-    }
+    const velocity  = Math.abs(drawerSwipeY) / deltaTime
+    if (Math.abs(drawerSwipeY) > 60 || velocity > 0.5) setHamburgerOpen(false)
     setDrawerSwipeY(0)
   }
 
+  // ── Glassmorphic background values ───────────────────────────────────────
+  const bgAlpha1 = (0.40 + 0.45 * scrollProgress).toFixed(2)
+  const bgAlpha2 = (0.15 + 0.25 * scrollProgress).toFixed(2)
+  const blurPx   = (4 + scrollProgress * 12).toFixed(1)
+
   return (
-    // The outer wrapper is fixed at top with glassmorphic background
     <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
       <motion.div
         initial={{ opacity: 0, y: -16 }}
@@ -232,22 +247,23 @@ export function AnimeNavBar({
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
         className="w-full px-3 md:px-6 pt-3 md:pt-4 pb-2 overflow-visible"
         style={{
-          // Glassmorphic background: increases opacity and blur as user scrolls
-          background: `linear-gradient(to bottom, rgba(10,31,10,${0.4 + 0.45 * scrollProgress}) 0%, rgba(10,31,10,${0.15 + 0.25 * scrollProgress}) 100%)`,
-          backdropFilter: `blur(${4 + scrollProgress * 12}px)`,
-          WebkitBackdropFilter: `blur(${4 + scrollProgress * 12}px)`,
+          background: `linear-gradient(to bottom, rgba(10,31,10,${bgAlpha1}) 0%, rgba(10,31,10,${bgAlpha2}) 100%)`,
+          backdropFilter: `blur(${blurPx}px)`,
+          WebkitBackdropFilter: `blur(${blurPx}px)`,
         }}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          {/* Logo */}
+
+          {/* ── Logo ── */}
           {logo && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.08 }}>
               {logo}
             </motion.div>
           )}
 
-          {/* Nav links — hamburger on ultra-small screens, full-width otherwise */}
+          {/* ── Nav items (or hamburger on ultra-small) ── */}
           {isUltraSmall ? (
+            /* Hamburger toggle button */
             <div className="flex-1 flex items-center justify-center">
               <button
                 onClick={() => setHamburgerOpen(!hamburgerOpen)}
@@ -261,22 +277,16 @@ export function AnimeNavBar({
                 >
                   <AnimatePresence mode="wait">
                     {hamburgerOpen ? (
-                      <motion.div
-                        key="close"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
+                      <motion.div key="close"
+                        initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}
                       >
                         <X className="w-6 h-6" />
                       </motion.div>
                     ) : (
-                      <motion.div
-                        key="menu"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
+                      <motion.div key="menu"
+                        initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}
                       >
                         <Menu className="w-6 h-6" />
                       </motion.div>
@@ -286,45 +296,123 @@ export function AnimeNavBar({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-0 md:gap-0.5">
-              {items.map((item) => {
-                const isActive = activeTab === item.name
-                const isHovered = hoveredTab === item.name
-                return (
-                  <a
-                    key={item.name}
-                    href={item.url}
-                    onClick={handleNavClick(item)}
-                    onMouseEnter={() => setHoveredTab(item.name)}
-                    onMouseLeave={() => setHoveredTab(null)}
-                    className={cn(
-                      "relative cursor-pointer text-xs md:text-sm font-semibold px-3 md:px-5 py-2 rounded-full transition-colors duration-200 select-none",
-                      isActive ? "text-white" : "text-white/55 hover:text-white"
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="expanded-pill"
-                        className="absolute inset-0 rounded-full bg-white/10 border border-white/20"
-                        transition={{ type: "spring", stiffness: 320, damping: 30 }}
-                      />
-                    )}
-                    <AnimatePresence>
-                      {isHovered && !isActive && (
+            /* Full nav pill — centred, floating */
+            <div className="flex-1 flex justify-center">
+              <motion.div
+                className="flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 py-1.5 relative"
+                style={{
+                  background: "rgba(0,0,0,0.45)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                }}
+              >
+                {/* Mascot — springs between active tabs via layoutId */}
+                {items.map((item) => {
+                  const isActive  = activeTab === item.name
+                  const isHovered = hoveredTab === item.name
+
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.url}
+                      onClick={handleNavClick(item)}
+                      onMouseEnter={() => setHoveredTab(item.name)}
+                      onMouseLeave={() => setHoveredTab(null)}
+                      className={cn(
+                        "relative cursor-pointer text-xs md:text-sm font-semibold px-4 md:px-5 py-2 rounded-full transition-colors duration-200 select-none overflow-visible",
+                        isActive ? "text-white" : "text-white/60 hover:text-white"
+                      )}
+                    >
+                      {/* ── Floating mascot above active tab ── */}
+                      {isActive && (
                         <motion.div
-                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                          className="absolute inset-0 rounded-full bg-white/[0.06]"
+                          layoutId="anime-mascot"
+                          className="absolute -top-14 left-1/2 -translate-x-1/2 pointer-events-none"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        >
+                          <MascotFace isHovered={!!hoveredTab} />
+                        </motion.div>
+                      )}
+
+                      {/* ── Multi-layer OTB-green glow on active tab ── */}
+                      {isActive && (
+                        <motion.div
+                          className="absolute inset-0 rounded-full -z-10 overflow-hidden"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: [0.35, 0.55, 0.35], scale: [1, 1.03, 1] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          {/* Inner glow layers */}
+                          <div className="absolute inset-0 rounded-full blur-md"
+                            style={{ background: `${OTB_GREEN_GLOW}0.28)` }} />
+                          <div className="absolute rounded-full blur-xl"
+                            style={{ inset: "-4px", background: `${OTB_GREEN_GLOW}0.18)` }} />
+                          <div className="absolute rounded-full blur-2xl"
+                            style={{ inset: "-8px", background: `${OTB_GREEN_GLOW}0.12)` }} />
+                          <div className="absolute rounded-full blur-3xl"
+                            style={{ inset: "-12px", background: `${OTB_GREEN_GLOW}0.06)` }} />
+                          {/* Shine sweep */}
+                          <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: `linear-gradient(90deg, ${OTB_GREEN_GLOW}0) 0%, ${OTB_GREEN_GLOW}0.22) 50%, ${OTB_GREEN_GLOW}0) 100%)`,
+                              animation: "otb-shine 3s ease-in-out infinite",
+                            }}
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* ── Active tab solid pill background ── */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="expanded-pill"
+                          className="absolute inset-0 rounded-full -z-10"
+                          style={{
+                            background: `linear-gradient(135deg, ${OTB_GREEN_GLOW}0.22) 0%, ${OTB_GREEN_GLOW}0.12) 100%)`,
+                            border: `1px solid ${OTB_GREEN_GLOW}0.35)`,
+                          }}
+                          transition={{ type: "spring", stiffness: 320, damping: 30 }}
                         />
                       )}
-                    </AnimatePresence>
-                    <span className="relative z-10">{item.name}</span>
-                  </a>
-                )
-              })}
+
+                      {/* ── Hover background (non-active) ── */}
+                      <AnimatePresence>
+                        {isHovered && !isActive && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.85 }}
+                            className="absolute inset-0 bg-white/[0.07] rounded-full -z-10"
+                          />
+                        )}
+                      </AnimatePresence>
+
+                      {/* ── Label: text on desktop, icon on mobile ── */}
+                      <motion.span
+                        className="hidden md:inline relative z-10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {item.name}
+                      </motion.span>
+                      <motion.span
+                        className="md:hidden relative z-10"
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <item.icon size={16} strokeWidth={2.5} />
+                      </motion.span>
+                    </a>
+                  )
+                })}
+              </motion.div>
             </div>
           )}
 
-          {/* Right slot */}
+          {/* ── Right slot ── */}
           {rightSlot && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }}>
               {rightSlot}
@@ -332,7 +420,7 @@ export function AnimeNavBar({
           )}
         </div>
 
-        {/* Hamburger menu drawer — appears below expanded nav on ultra-small screens */}
+        {/* ── Hamburger drawer (ultra-small screens only) ── */}
         <AnimatePresence>
           {isUltraSmall && hamburgerOpen && (
             <motion.div
@@ -356,9 +444,10 @@ export function AnimeNavBar({
                       className={cn(
                         "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
                         isActive
-                          ? "bg-[#3D6B47]/40 text-white border border-[#4CAF50]/30"
+                          ? "text-white border border-[#4CAF50]/30"
                           : "text-white/70 hover:bg-white/10 hover:text-white"
                       )}
+                      style={isActive ? { background: `${OTB_GREEN_GLOW}0.35)` } : {}}
                     >
                       <item.icon className="w-4 h-4" />
                       <span>{item.name}</span>

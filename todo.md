@@ -2092,3 +2092,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add subtle scale animation (1.0 → 1.10) on hover to OTB logo in HeroPanel
 - [x] Use spring cubic-bezier (0.34, 1.56, 0.64, 1) for natural overshoot feel
 - [x] Combine with opacity reveal (0.85 → 1.0) for layered feedback
+
+## New AnimeNavBar Integration (Mar 16 2026)
+- [x] Merge new component's mascot, glow effects, and spring animations into existing anime-navbar.tsx
+- [x] Adapt primary colour from generic `primary` to OTB green (#3D6B47 / #4CAF50)
+- [x] Preserve logo slot, right slot, glassmorphic scroll background, and hamburger menu
+- [x] Add @keyframes otb-shine to index.css
+- [x] Verify TypeScript 0 errors and test on desktop + mobile

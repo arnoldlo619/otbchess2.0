@@ -772,6 +772,13 @@
   100% { transform: translateX(-100%); }
 }
 
+/* ── OTB nav glow sweep (alias for anime-navbar active tab shine) ─────────── */
+@keyframes otb-shine {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
 /* ── Avatar shimmer skeleton animation ─────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
