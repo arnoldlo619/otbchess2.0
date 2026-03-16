@@ -260,13 +260,21 @@ function HeroPanel({
       {/* Logo mark — clickable to close wizard */}
       <button
         onClick={onClose}
-        className="relative flex items-center cursor-pointer transition-opacity hover:opacity-70"
+        className="relative flex items-center cursor-pointer group"
         aria-label="Close wizard and return to home"
+        style={{ background: "none", border: "none", padding: 0 }}
       >
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
           alt="OTB Chess"
-          style={{ height: 36, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
+          style={{
+            height: 36,
+            width: "auto",
+            objectFit: "contain",
+            filter: "brightness(0) invert(1) opacity(0.85)",
+            transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease",
+          }}
+          className="group-hover:scale-110 group-hover:opacity-100"
         />
       </button>
 

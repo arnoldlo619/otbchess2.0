@@ -2087,3 +2087,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Hide AnimeNavBar when TournamentWizard is open
 - [x] Make OTB logo hyperlinked to navigate back to landing page (closes wizard)
 - [x] Ensure logo link is properly styled and clickable (cursor pointer on hover)
+
+## OTB Logo Hover Animation (Mar 16 2026)
+- [x] Add subtle scale animation (1.0 → 1.10) on hover to OTB logo in HeroPanel
+- [x] Use spring cubic-bezier (0.34, 1.56, 0.64, 1) for natural overshoot feel
+- [x] Combine with opacity reveal (0.85 → 1.0) for layered feedback
