@@ -2099,3 +2099,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Preserve logo slot, right slot, glassmorphic scroll background, and hamburger menu
 - [x] Add @keyframes otb-shine to index.css
 - [x] Verify TypeScript 0 errors and test on desktop + mobile
+
+## Mascot Top Offset Adjustment (Mar 16 2026)
+- [x] Increase mascot top offset from -top-14 to -top-16 for more breathing room
+- [x] Adjust hero section top padding from pt-16/pt-28 to pt-20/pt-32 to compensate
