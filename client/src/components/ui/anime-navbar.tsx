@@ -251,14 +251,38 @@ export function AnimeNavBar({
             <div className="flex-1 flex items-center justify-center">
               <button
                 onClick={() => setHamburgerOpen(!hamburgerOpen)}
-                className="relative cursor-pointer text-white/80 hover:text-white transition-colors p-2"
+                className="relative cursor-pointer text-white/80 hover:text-white p-2"
                 aria-label="Toggle menu"
               >
-                {hamburgerOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
+                <motion.div
+                  animate={{ rotate: hamburgerOpen ? 90 : 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="w-6 h-6"
+                >
+                  <AnimatePresence mode="wait">
+                    {hamburgerOpen ? (
+                      <motion.div
+                        key="close"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <X className="w-6 h-6" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="menu"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Menu className="w-6 h-6" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               </button>
             </div>
           ) : (

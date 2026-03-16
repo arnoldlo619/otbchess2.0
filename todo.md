@@ -2075,3 +2075,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Close drawer state after swipe animation completes
 - [x] Add visual feedback during swipe (cursor grab/grabbing, drawer Y translation)
 - [x] Test swipe gesture on mobile devices
+
+## Hamburger Icon Animation (Mar 16 2026)
+- [x] Replace static Menu/X icons with animated SVG or custom icon
+- [x] Animate hamburger icon rotation/transformation to X on drawer open (90° rotation)
+- [x] Smooth transition between states (0.3s duration with easeInOut)
+- [x] Reverse animation when drawer closes
+- [x] Ensure icon remains centered and properly sized (cross-fade with scale)
