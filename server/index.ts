@@ -1065,6 +1065,108 @@ export function createApp() {
     res.json({ ok: true });
   });
 
+  // ─── Battle Rooms API ────────────────────────────────────────────────────────────────
+  // POST /api/battles — Create a new battle room (requires auth)
+  app.post("/api/battles", async (req, res) => {
+    const { battleRooms } = await import("../shared/schema.js");
+    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    try {
+      const db = await getDb();
+      // Generate a unique 6-char uppercase code
+      let code: string;
+      let attempts = 0;
+      do {
+        code = Math.random().toString(36).slice(2, 8).toUpperCase();
+        const existing = await db.select({ id: battleRooms.id }).from(battleRooms).where(eq(battleRooms.code, code)).limit(1);
+        if (existing.length === 0) break;
+        attempts++;
+      } while (attempts < 10);
+      const id = nanoid();
+      await db.insert(battleRooms).values({
+        id,
+        code: code!,
+        hostId: userId,
+        status: "waiting",
+      });
+      res.status(201).json({ id, code: code! });
+    } catch (err) {
+      console.error("[battles] create error:", err);
+      res.status(500).json({ error: "Failed to create battle room" });
+    }
+  });
+
+  // GET /api/battles/:code — Get battle room by code (public)
+  app.get("/api/battles/:code", async (req, res) => {
+    const { battleRooms } = await import("../shared/schema.js");
+    const { users } = await import("../shared/schema.js");
+    try {
+      const db = await getDb();
+      const rows = await db.select().from(battleRooms).where(eq(battleRooms.code, req.params.code.toUpperCase())).limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Battle room not found" });
+      const room = rows[0];
+      // Fetch host profile
+      const hostRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, room.hostId)).limit(1);
+      const host = hostRows[0] ?? null;
+      // Fetch guest profile if present
+      let guest = null;
+      if (room.guestId) {
+        const guestRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, room.guestId)).limit(1);
+        guest = guestRows[0] ?? null;
+      }
+      res.json({ ...room, host, guest });
+    } catch (err) {
+      console.error("[battles] get error:", err);
+      res.status(500).json({ error: "Failed to fetch battle room" });
+    }
+  });
+
+  // PATCH /api/battles/:code/join — Join a battle room as guest (requires auth)
+  app.patch("/api/battles/:code/join", async (req, res) => {
+    const { battleRooms } = await import("../shared/schema.js");
+    const { users } = await import("../shared/schema.js");
+    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    try {
+      const db = await getDb();
+      const rows = await db.select().from(battleRooms).where(eq(battleRooms.code, req.params.code.toUpperCase())).limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Battle room not found" });
+      const room = rows[0];
+      if (room.status !== "waiting") return res.status(409).json({ error: "Battle room is no longer available" });
+      if (room.hostId === userId) return res.status(400).json({ error: "You cannot join your own battle room" });
+      if (room.guestId) return res.status(409).json({ error: "Battle room is already full" });
+      await db.update(battleRooms).set({ guestId: userId, status: "active", startedAt: new Date() }).where(eq(battleRooms.code, req.params.code.toUpperCase()));
+      // Return updated room with profiles
+      const hostRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, room.hostId)).limit(1);
+      const guestRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, userId)).limit(1);
+      res.json({ ...room, guestId: userId, status: "active", host: hostRows[0] ?? null, guest: guestRows[0] ?? null });
+    } catch (err) {
+      console.error("[battles] join error:", err);
+      res.status(500).json({ error: "Failed to join battle room" });
+    }
+  });
+
+  // PATCH /api/battles/:code/result — Report result (host only)
+  app.patch("/api/battles/:code/result", async (req, res) => {
+    const { battleRooms } = await import("../shared/schema.js");
+    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    const { result } = req.body as { result: string };
+    if (!["host_win", "guest_win", "draw"].includes(result)) return res.status(400).json({ error: "Invalid result" });
+    try {
+      const db = await getDb();
+      const rows = await db.select().from(battleRooms).where(eq(battleRooms.code, req.params.code.toUpperCase())).limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Battle room not found" });
+      const room = rows[0];
+      if (room.hostId !== userId) return res.status(403).json({ error: "Only the host can report the result" });
+      await db.update(battleRooms).set({ result, status: "completed", completedAt: new Date() }).where(eq(battleRooms.code, req.params.code.toUpperCase()));
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[battles] result error:", err);
+      res.status(500).json({ error: "Failed to report result" });
+    }
+  });
+
   return app;
 }
 

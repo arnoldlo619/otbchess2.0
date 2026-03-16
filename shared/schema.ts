@@ -355,3 +355,36 @@ export const cvJobs = mysqlTable(
 
 export type CvJob = typeof cvJobs.$inferSelect;
 export type NewCvJob = typeof cvJobs.$inferInsert;
+
+// ─── battle_rooms ─────────────────────────────────────────────────────────────
+// One row per 1v1 battle room created by a host.
+// Status lifecycle: waiting → active → completed
+export const battleRooms = mysqlTable(
+  "battle_rooms",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    // 6-character uppercase join code (e.g. "AB12CD")
+    code: varchar("code", { length: 8 }).notNull().unique(),
+    // Host user ID (must be a registered user)
+    hostId: varchar("host_id", { length: 36 }).notNull(),
+    // Guest user ID (null until opponent joins)
+    guestId: varchar("guest_id", { length: 36 }),
+    // waiting | active | completed | cancelled
+    status: varchar("status", { length: 20 }).notNull().default("waiting"),
+    // Game result: null | host_win | guest_win | draw
+    result: varchar("result", { length: 20 }),
+    // Optional time control string (e.g. "10+0", "5+3")
+    timeControl: varchar("time_control", { length: 20 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    startedAt: timestamp("started_at"),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => ({
+    codeIdx: index("br_code_idx").on(table.code),
+    hostIdx: index("br_host_id_idx").on(table.hostId),
+    statusIdx: index("br_status_idx").on(table.status),
+  })
+);
+
+export type BattleRoom = typeof battleRooms.$inferSelect;
+export type NewBattleRoom = typeof battleRooms.$inferInsert;

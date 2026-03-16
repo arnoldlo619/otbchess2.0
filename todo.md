@@ -2117,3 +2117,35 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add top padding to header wrapper (pt-20) so mascot is not clipped by viewport edge
 - [x] Ensure header overflow is visible so mascot floats above the pill unobstructed
 - [x] Increase hero section top padding to pt-36/pt-44 to compensate for taller header
+
+## Battle Feature + Sign In Profile Icon (Mar 16 2026)
+
+### Phase 1 – Header Nav Changes
+- [x] Move Sign In button from nav pill to right slot as a profile icon button (styled like theme toggle)
+- [x] Add "Battle" nav item to the nav pill
+
+### Phase 2 – Battle Landing Page
+- [x] Create /battle route and BattlePage component
+- [x] Build Host vs Join mode-select UI (similar to Tournament onboarding)
+
+### Phase 3 – Host Battle Flow
+- [x] Create battle room on server (unique 6-char code, no ambiguous chars)
+- [x] Display QR code for opponent to scan (qrcode.react)
+- [x] Show waiting room while opponent joins (3s polling)
+
+### Phase 4 – Join Battle Flow
+- [x] QR code scan auto-populates code via ?join= URL param
+- [x] Manual code entry with uppercase normalization
+
+### Phase 5 – Battle Room (Head-to-Head)
+- [x] Head-to-head player profile display (VS character-select style)
+- [x] Show both player avatars, ratings, and stats side by side
+- [x] Animated VS reveal when both players are in the room
+- [x] Battle room result reporting (host-only: I Won / Opponent Won / Draw)
+- [x] Result screen with winner display and mini player cards
+
+### Phase 6 – Database & Server
+- [x] Added battle_rooms table to schema (id, code, host_id, guest_id, status, result, time_control, created_at)
+- [x] Server routes: POST /api/battles, GET /api/battles/:code, PATCH /api/battles/:code/join, PATCH /api/battles/:code/result
+- [x] 3s polling for room state updates (host waiting + guest battle room)
+- [x] 18 vitest tests passing for battle logic (code gen, status, result, join, QR parsing)

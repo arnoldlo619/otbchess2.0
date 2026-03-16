@@ -1209,8 +1209,8 @@ export default function Home() {
   const navItems = [
     { name: "Home", url: "/", icon: HomeIcon },
     { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
+    { name: "Battle", url: "/battle", icon: Swords },
     { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },
-    ...(!user ? [{ name: "Sign In", url: "#", icon: LogIn, onClick: () => setAuthOpen(true) }] : []),
   ];
 
   const logoEl = (
@@ -1226,6 +1226,15 @@ export default function Home() {
   const rightSlotEl = (
     <div className="flex items-center gap-3">
       <ThemeToggle />
+      {!user && (
+        <button
+          onClick={() => setAuthOpen(true)}
+          title="Sign In"
+          className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 text-white/70 hover:text-white hover:bg-white/10 bg-black/40 backdrop-blur-md transition-all"
+        >
+          <LogIn className="w-4 h-4" />
+        </button>
+      )}
       {user && (
         <div className="relative">
           <button
