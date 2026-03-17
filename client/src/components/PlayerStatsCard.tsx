@@ -337,7 +337,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   textTransform: "uppercase",
                 }}
               >
-                OTBchess.app
+                OTBchess.club
               </span>
             </div>
 
