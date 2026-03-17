@@ -16,8 +16,10 @@ import {
   Loader2,
   AlertCircle,
   ChevronRight,
+  LogIn,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import AuthModal from "../components/AuthModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -165,6 +167,7 @@ export default function Battle() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   // Auto-populate join code from QR scan URL param (?join=CODE)
   useEffect(() => {
@@ -363,9 +366,14 @@ export default function Battle() {
               )}
 
               {!user && (
-                <div className="mb-6 text-white/40 text-sm bg-white/5 rounded-xl px-4 py-3 border border-white/10">
-                  Sign in to host or join a battle.
-                </div>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="mb-6 w-full flex items-center justify-center gap-2 text-sm bg-white/5 rounded-xl px-4 py-3 border border-white/10 text-green-400 hover:text-green-300 hover:bg-white/10 hover:border-green-500/30 transition-all group"
+                >
+                  <LogIn className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span>Sign in to host or join a battle</span>
+                  <ChevronRight className="w-3 h-3 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                </button>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -735,6 +743,9 @@ export default function Battle() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Auth modal — opened when unauthenticated user clicks sign-in prompt */}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
     </div>
   );
 }

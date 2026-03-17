@@ -2167,3 +2167,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Sign In Icon Tooltip (Mar 16 2026)
 - [x] Add animated hover tooltip "Sign In" to the Sign In icon button in the nav right slot (fade + scale, 200ms)
+
+## Battle Page Sign-In Link (Mar 16 2026)
+- [x] Replace static "Sign in to host or join a battle" text with a clickable button that opens the sign-in modal (AuthModal with isDark, LogIn icon + ChevronRight, green hover state)
