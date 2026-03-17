@@ -2308,3 +2308,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add navigator.vibrate() haptic feedback on successful ELO lookup in Join.tsx (50ms buzz)
 - [x] Add haptic feedback on successful tournament registration (double-pulse [40, 50, 100])
 - [x] Add haptic feedback on QR mode join success (double-pulse [50, 60, 80])
+
+## Swipe-Right Back Gesture on Join Page (Mar 17 2026)
+- [x] Add touch swipe-right gesture on Join page to navigate back to previous step (60px threshold, left-edge origin, green edge indicator, 30ms haptic)

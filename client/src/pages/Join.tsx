@@ -382,6 +382,43 @@ export default function JoinPage() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Swipe-right to go back (native iOS/Android feel)
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
+  const [swipeProgress, setSwipeProgress] = useState(0); // 0-1 for edge indicator
+
+  function handleTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    swipeStartX.current = t.clientX;
+    swipeStartY.current = t.clientY;
+    setSwipeProgress(0);
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (swipeStartX.current === null || swipeStartY.current === null) return;
+    const dx = e.touches[0].clientX - swipeStartX.current;
+    const dy = Math.abs(e.touches[0].clientY - swipeStartY.current);
+    // Only track horizontal-dominant rightward swipes starting from left edge
+    if (dx > 0 && dx > dy && swipeStartX.current < 40) {
+      setSwipeProgress(Math.min(dx / 80, 1));
+    }
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (swipeStartX.current === null || swipeStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
+    setSwipeProgress(0);
+    swipeStartX.current = null;
+    swipeStartY.current = null;
+    // Trigger back if: rightward ≥ 60px, horizontal-dominant, started near left edge
+    const startedNearEdge = (e.changedTouches[0].clientX - dx) < 40;
+    if (dx >= 60 && dx > dy && startedNearEdge) {
+      if (step === "username") { haptic(30); advanceStep("code"); }
+      else if (step === "confirm") { haptic(30); advanceStep("username"); active.reset(); setUnifiedProfile(null); }
+    }
+  }
+
   // Already-registered detection — check localStorage on mount and whenever the code changes
   const [existingReg, setExistingReg] = useState<RegistrationEntry | null>(null);
   useEffect(() => {
@@ -756,8 +793,26 @@ export default function JoinPage() {
         </div>
       )}
 
+      {/* -- Swipe-right edge indicator (visible during active swipe from left edge) */}
+      {swipeProgress > 0 && (step === "username" || step === "confirm") && (
+        <div
+          className="fixed left-0 top-0 bottom-0 z-50 w-1 pointer-events-none"
+          style={{
+            background: `linear-gradient(to right, oklch(0.55 0.13 145 / ${swipeProgress * 0.9}), transparent)`,
+            opacity: swipeProgress,
+            transition: "opacity 0.05s ease",
+          }}
+        />
+      )}
+
       {/* -- Scrollable content ----------------------------------------------- */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto overscroll-none">
+      <div
+        ref={contentRef}
+        className="flex-1 overflow-y-auto overscroll-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="px-4 pt-5 pb-32 max-w-sm mx-auto space-y-4">
 
           {/* Tournament info chip */}
