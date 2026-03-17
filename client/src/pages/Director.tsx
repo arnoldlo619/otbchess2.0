@@ -1658,51 +1658,118 @@ export default function Director() {
                     </div>
                   )}
 
-                  {/* Tournament complete banner */}
-                  {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (
-                    <div className={`rounded-xl border p-4 space-y-3 ${
-                      isDark
-                        ? "bg-[#3D6B47]/15 border-[#4CAF50]/30"
-                        : "bg-[#3D6B47]/06 border-[#3D6B47]/20"
-                    }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
-                          <Trophy className={`w-4.5 h-4.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                  {/* Tournament complete celebration banner */}
+                  {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (() => {
+                    const finalStandings = getStandings(state.players);
+                    const winner = finalStandings[0];
+                    const winnerPlayer = winner ? state.players.find(p => p.id === winner.id) : null;
+                    const pointsLabel = winner
+                      ? (winner.points % 1 !== 0 ? `${Math.floor(winner.points)}½` : String(winner.points))
+                      : "";
+                    return (
+                      <div className={`rounded-2xl border overflow-hidden animate-in fade-in slide-in-from-bottom-2 ${
+                        isDark
+                          ? "bg-[#3D6B47]/18 border-[#4CAF50]/35"
+                          : "bg-gradient-to-br from-[#3D6B47]/08 to-[#3D6B47]/04 border-[#3D6B47]/25 shadow-sm"
+                      }`} style={{ animationDuration: "500ms", animationFillMode: "both" }}>
+                        {/* Header strip */}
+                        <div className={`flex items-center justify-between px-5 py-3 border-b ${
+                          isDark ? "border-[#4CAF50]/15" : "border-[#3D6B47]/12"
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            <Trophy className={`w-4 h-4 ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                            <span className={`text-sm font-black tracking-tight ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
+                              style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                              Tournament Complete
+                            </span>
+                          </div>
+                          <span className={`text-[11px] font-semibold ${ isDark ? "text-white/40" : "text-gray-400"}`}>
+                            {state.totalRounds} round{state.totalRounds !== 1 ? "s" : ""} · {state.players.length} players
+                          </span>
                         </div>
-                        <div>
-                          <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                            Tournament Complete!
-                          </p>
-                          <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                            All {state.totalRounds} rounds finished · Final standings ready
-                          </p>
+
+                        {/* Winner spotlight */}
+                        {winner && winnerPlayer && (
+                          <div className="px-5 py-4 flex items-center gap-4">
+                            {/* Gold medal badge */}
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 font-black text-xl ${
+                              isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-500 border border-amber-200"
+                            }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>1</div>
+
+                            {/* Player avatar */}
+                            <PlayerAvatar
+                              name={winnerPlayer.name}
+                              username={winnerPlayer.username}
+                              size={48}
+                              platform={winnerPlayer.platform === "lichess" ? "lichess" : "chesscom"}
+                              avatarUrl={winnerPlayer.avatarUrl}
+                            />
+
+                            {/* Name + meta */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-base font-black truncate ${ isDark ? "text-white" : "text-gray-900"}`}
+                                  style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                  {winnerPlayer.name}
+                                </span>
+                                {winnerPlayer.title && (
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                                    winnerPlayer.title === "GM"
+                                      ? isDark ? "bg-amber-400/15 border-amber-400/30 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"
+                                      : isDark ? "bg-violet-400/15 border-violet-400/30 text-violet-300" : "bg-violet-50 border-violet-200 text-violet-700"
+                                  }`}>{winnerPlayer.title}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-0.5">
+                                {winnerPlayer.elo != null && (
+                                  <span className={`text-xs font-semibold ${ isDark ? "text-white/50" : "text-gray-400"}`}>
+                                    {winnerPlayer.elo} ELO
+                                  </span>
+                                )}
+                                <span className={`text-xs font-semibold ${ isDark ? "text-white/50" : "text-gray-400"}`}>
+                                  {winner.wins}W {winner.draws}D {winner.losses}L
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Score */}
+                            <div className="flex-shrink-0 text-right">
+                              <span className={`text-3xl font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
+                                style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                {pointsLabel}
+                              </span>
+                              <p className={`text-[11px] font-semibold mt-0.5 ${ isDark ? "text-white/35" : "text-gray-400"}`}>pts</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className={`flex flex-wrap gap-2 px-5 pb-4`}>
+                          <Link href={`/tournament/${tournamentId}`}>
+                            <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                              isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
+                            }`}>
+                              <BarChart3 className="w-4 h-4" /> View Results
+                            </button>
+                          </Link>
+                          <Link href={`/tournament/${tournamentId}/report`}>
+                            <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                              isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
+                            }`}>
+                              <Trophy className="w-4 h-4" /> Player Reports
+                            </button>
+                          </Link>
+                          <Link href={`/tournament/${tournamentId}/print`}>
+                            <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                              isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                            }`}>
+                              <Download className="w-4 h-4" /> Print / Export
+                            </button>
+                          </Link>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Link href={`/tournament/${tournamentId}`}>
-                          <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
-                            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-                          }`}>
-                            <BarChart3 className="w-4 h-4" /> View Results
-                          </button>
-                        </Link>
-                        <Link href={`/tournament/${tournamentId}/report`}>
-                          <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
-                            isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
-                          }`}>
-                            <Trophy className="w-4 h-4" /> Player Reports
-                          </button>
-                        </Link>
-                        <Link href={`/tournament/${tournamentId}/print`}>
-                          <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors active:scale-95 ${
-                            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                          }`}>
-                            <Download className="w-4 h-4" /> Print / Export
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Pending results hint */}
                   {!allResultsIn && (
