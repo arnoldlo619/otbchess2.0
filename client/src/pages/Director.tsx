@@ -1661,11 +1661,12 @@ export default function Director() {
                   {/* Tournament complete celebration banner */}
                   {allResultsIn && !canGenerateNext && state.currentRound >= state.totalRounds && (() => {
                     const finalStandings = getStandings(state.players);
-                    const winner = finalStandings[0];
-                    const winnerPlayer = winner ? state.players.find(p => p.id === winner.id) : null;
-                    const pointsLabel = winner
-                      ? (winner.points % 1 !== 0 ? `${Math.floor(winner.points)}½` : String(winner.points))
-                      : "";
+                    // Podium config: rank index, medal colours, score size
+                    const podiumConfig = [
+                      { rank: 1, idx: 0, medalDark: "bg-amber-400/15 text-amber-300",   medalLight: "bg-amber-50 text-amber-500 border border-amber-200",   scoreSize: "text-3xl" },
+                      { rank: 2, idx: 1, medalDark: "bg-slate-400/15 text-slate-300",   medalLight: "bg-slate-50 text-slate-500 border border-slate-200",   scoreSize: "text-2xl" },
+                      { rank: 3, idx: 2, medalDark: "bg-orange-400/15 text-orange-300", medalLight: "bg-orange-50 text-orange-500 border border-orange-200", scoreSize: "text-2xl" },
+                    ];
                     return (
                       <div className={`rounded-2xl border overflow-hidden animate-in fade-in slide-in-from-bottom-2 ${
                         isDark
@@ -1688,63 +1689,79 @@ export default function Director() {
                           </span>
                         </div>
 
-                        {/* Winner spotlight */}
-                        {winner && winnerPlayer && (
-                          <div className="px-5 py-4 flex items-center gap-4">
-                            {/* Gold medal badge */}
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 font-black text-xl ${
-                              isDark ? "bg-amber-400/15 text-amber-300" : "bg-amber-50 text-amber-500 border border-amber-200"
-                            }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>1</div>
+                        {/* Podium — top 3 finishers */}
+                        <div className={`divide-y ${ isDark ? "divide-white/06" : "divide-[#3D6B47]/08"}`}>
+                          {podiumConfig.map(({ rank, idx, medalDark, medalLight, scoreSize }) => {
+                            const standing = finalStandings[idx];
+                            if (!standing) return null;
+                            const player = state.players.find(p => p.id === standing.id);
+                            if (!player) return null;
+                            const pts = standing.points % 1 !== 0
+                              ? `${Math.floor(standing.points)}½`
+                              : String(standing.points);
+                            const isFirst = rank === 1;
+                            return (
+                              <div
+                                key={rank}
+                                className={`flex items-center gap-4 px-5 ${ isFirst ? "py-4" : "py-3"}`}
+                                style={{ animationDelay: `${idx * 80}ms`, animationFillMode: "both" }}
+                              >
+                                {/* Medal badge */}
+                                <div className={`${ isFirst ? "w-12 h-12 text-xl" : "w-9 h-9 text-base"} rounded-xl flex items-center justify-center flex-shrink-0 font-black ${
+                                  isDark ? medalDark : medalLight
+                                }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{rank}</div>
 
-                            {/* Player avatar */}
-                            <PlayerAvatar
-                              name={winnerPlayer.name}
-                              username={winnerPlayer.username}
-                              size={48}
-                              platform={winnerPlayer.platform === "lichess" ? "lichess" : "chesscom"}
-                              avatarUrl={winnerPlayer.avatarUrl}
-                            />
+                                {/* Avatar */}
+                                <PlayerAvatar
+                                  name={player.name}
+                                  username={player.username}
+                                  size={isFirst ? 44 : 36}
+                                  platform={player.platform === "lichess" ? "lichess" : "chesscom"}
+                                  avatarUrl={player.avatarUrl}
+                                />
 
-                            {/* Name + meta */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`text-base font-black truncate ${ isDark ? "text-white" : "text-gray-900"}`}
-                                  style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                                  {winnerPlayer.name}
-                                </span>
-                                {winnerPlayer.title && (
-                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                                    winnerPlayer.title === "GM"
-                                      ? isDark ? "bg-amber-400/15 border-amber-400/30 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"
-                                      : isDark ? "bg-violet-400/15 border-violet-400/30 text-violet-300" : "bg-violet-50 border-violet-200 text-violet-700"
-                                  }`}>{winnerPlayer.title}</span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 mt-0.5">
-                                {winnerPlayer.elo != null && (
-                                  <span className={`text-xs font-semibold ${ isDark ? "text-white/50" : "text-gray-400"}`}>
-                                    {winnerPlayer.elo} ELO
+                                {/* Name + meta */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className={`${ isFirst ? "text-base" : "text-sm"} font-black truncate ${ isDark ? "text-white" : "text-gray-900"}`}
+                                      style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                      {player.name}
+                                    </span>
+                                    {player.title && (
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                                        player.title === "GM"
+                                          ? isDark ? "bg-amber-400/15 border-amber-400/30 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"
+                                          : isDark ? "bg-violet-400/15 border-violet-400/30 text-violet-300" : "bg-violet-50 border-violet-200 text-violet-700"
+                                      }`}>{player.title}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    {player.elo != null && (
+                                      <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-gray-400"}`}>
+                                        {player.elo} ELO
+                                      </span>
+                                    )}
+                                    <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-gray-400"}`}>
+                                      {standing.wins}W {standing.draws}D {standing.losses}L
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Score */}
+                                <div className="flex-shrink-0 text-right">
+                                  <span className={`${scoreSize} font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
+                                    style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                    {pts}
                                   </span>
-                                )}
-                                <span className={`text-xs font-semibold ${ isDark ? "text-white/50" : "text-gray-400"}`}>
-                                  {winner.wins}W {winner.draws}D {winner.losses}L
-                                </span>
+                                  <p className={`text-[11px] font-semibold ${ isDark ? "text-white/35" : "text-gray-400"}`}>pts</p>
+                                </div>
                               </div>
-                            </div>
-
-                            {/* Score */}
-                            <div className="flex-shrink-0 text-right">
-                              <span className={`text-3xl font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
-                                style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                                {pointsLabel}
-                              </span>
-                              <p className={`text-[11px] font-semibold mt-0.5 ${ isDark ? "text-white/35" : "text-gray-400"}`}>pts</p>
-                            </div>
-                          </div>
-                        )}
+                            );
+                          })}
+                        </div>
 
                         {/* Action buttons */}
-                        <div className={`flex flex-wrap gap-2 px-5 pb-4`}>
+                        <div className={`flex flex-wrap gap-2 px-5 pb-4 pt-3 border-t ${ isDark ? "border-white/06" : "border-[#3D6B47]/08"}`}>
                           <Link href={`/tournament/${tournamentId}`}>
                             <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                               isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
