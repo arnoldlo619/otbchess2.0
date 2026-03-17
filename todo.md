@@ -2286,3 +2286,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Glass Button Rollout (Mar 17 2026)
 - [x] Apply glass variant to secondary CTAs throughout the app (Home, Join, Tournament, Director pages)
+
+## Glass Button Light Mode (Mar 17 2026)
+- [x] Add light mode variant to SpinBorderButton glass — adapts bg/border/text for light-themed pages
