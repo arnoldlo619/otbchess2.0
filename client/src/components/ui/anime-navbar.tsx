@@ -291,7 +291,7 @@ export function AnimeNavBar({
   const blurPx   = (4 + scrollProgress * 12).toFixed(1)
 
   return (
-    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
+    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible hidden sm:block", className)}>
       <motion.div
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}

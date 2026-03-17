@@ -1094,7 +1094,7 @@ export default function Director() {
 
       {/* ── Sub-toolbar: QR buttons (sits below the AnimeNavBar at top-[112px]) ── */}
       <header
-        className={`sticky top-[112px] z-40 border-b transition-colors duration-300 ${
+        className={`sticky top-0 sm:top-[112px] z-40 border-b transition-colors duration-300 ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
             : "bg-white/95 backdrop-blur-md border-gray-100"
@@ -1146,7 +1146,7 @@ export default function Director() {
       {/* ── Sticky "All Results In" Banner ──────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
         <div
-          className={`sticky top-[160px] z-30 border-b transition-all duration-300 ${
+          className={`sticky top-[48px] sm:top-[160px] z-30 border-b transition-all duration-300 ${
             isDark
               ? "bg-[#1a3d22]/95 backdrop-blur-md border-[#4CAF50]/25"
               : "bg-[#f0f9f1]/95 backdrop-blur-md border-[#3D6B47]/20"
@@ -1208,7 +1208,7 @@ export default function Director() {
       )}
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-28">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-28">
         <div className="flex gap-6 items-start">
 
           {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}
@@ -1387,7 +1387,7 @@ export default function Director() {
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
                   }`}>
                     {/* Header row */}
-                    <div className={`flex items-center justify-between px-6 py-4 border-b ${
+                    <div className={`flex items-center justify-between px-4 sm:px-6 py-4 border-b ${
                       isDark ? "border-white/06" : "border-gray-100"
                     }`}>
                       <div className="flex items-center gap-3">
@@ -1409,7 +1409,7 @@ export default function Director() {
                     </div>
 
                     {/* Join link + QR row */}
-                    <div className={`px-6 py-4 border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
+                    <div className={`px-4 sm:px-6 py-4 border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
                       <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${
                         isDark ? "text-white/30" : "text-gray-400"
                       }`}>Share with players</p>
@@ -1441,7 +1441,7 @@ export default function Director() {
                     </div>
 
                     {/* Live player list */}
-                    <div className="px-6 py-4">
+                    <div className="px-4 sm:px-6 py-4">
                       {state.players.length === 0 ? (
                         <div className={`flex flex-col items-center justify-center py-10 gap-3 ${
                           isDark ? "text-white/20" : "text-gray-300"
@@ -1502,7 +1502,7 @@ export default function Director() {
                     </div>
 
                     {/* Add player + Start CTA footer */}
-                    <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${
+                    <div className={`px-4 sm:px-6 py-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${
                       isDark ? "border-white/06" : "border-gray-100"
                     }`}>
                       <button

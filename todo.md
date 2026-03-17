@@ -2289,3 +2289,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Glass Button Light Mode (Mar 17 2026)
 - [x] Add light mode variant to SpinBorderButton glass — adapts bg/border/text for light-themed pages
+
+## Mobile UI Polish (Mar 17 2026)
+- [x] Hide animated AnimeNavBar on mobile (per design spec) — add sm:hidden wrapper
+- [x] Polish Home.tsx hero on mobile — text-4xl base, full-width stacked buttons, pt-20 sm:pt-44
+- [x] Tournament.tsx TournamentNav: top-0 sm:top-[112px] (no AnimeNavBar on mobile)
+- [x] Director.tsx sub-toolbar: top-0 sm:top-[112px], body pt-4 sm:pt-28
+- [x] Director.tsx board cards: px-4 sm:px-6 padding for mobile comfort

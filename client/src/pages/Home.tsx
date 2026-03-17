@@ -436,7 +436,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const isDark = theme === "dark";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-44 md:pt-52 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+    <section className={`relative min-h-screen flex items-center overflow-hidden pt-20 sm:pt-44 md:pt-52 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
@@ -465,7 +465,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           </div>
 
           <h1
-            className="opacity-0-init animate-fade-in-up text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight mb-6 text-foreground"
+            className="opacity-0-init animate-fade-in-up text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-semibold leading-[1.05] tracking-tight mb-5 sm:mb-6 text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "0.2s", animationFillMode: "forwards" }}
           >
             Chess Tournaments,
@@ -476,14 +476,14 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           </h1>
 
           <p
-            className="opacity-0-init animate-fade-in-up text-lg leading-relaxed mb-10 max-w-xl mx-auto text-muted-foreground"
+            className="opacity-0-init animate-fade-in-up text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-2 sm:px-0"
             style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
           >
             Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.
           </p>
 
           <div
-            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center"
+            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center"
             style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
           >
             <SpinBorderButton

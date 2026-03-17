@@ -133,7 +133,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
 
   return (
     <nav
-      className={`sticky top-[112px] z-40 border-b transition-colors duration-300 ${
+      className={`sticky top-0 sm:top-[112px] z-40 border-b transition-colors duration-300 ${
         isDark
           ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"
           : "bg-white/95 backdrop-blur-md border-[#EEEED2]"
