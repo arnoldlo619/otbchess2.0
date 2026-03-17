@@ -1230,22 +1230,6 @@ export default function Director() {
               {/* generate button lives in Boards tab — nothing here */}
             </div>
 
-            {/* Status pill row — sits above the title */}
-            <div className="flex items-center gap-2 px-0.5">
-              <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
-                isRegistration
-                  ? isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-amber-50 border-amber-200 text-amber-600"
-                  : state.status === "paused"
-                  ? isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-amber-50 border-amber-200 text-amber-600"
-                  : isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/20 text-[#4CAF50]" : "bg-green-50 border-green-200 text-green-700"
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                  isRegistration ? "bg-amber-400" : state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
-                }`} />
-                {isRegistration ? "Registration" : state.status === "paused" ? "Paused" : `Round ${state.currentRound} of ${state.totalRounds}`}
-              </span>
-            </div>
-
             {/* Round progress pip widget — above tabs, only when tournament is active */}
             {!isRegistration && (
               <div className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border ${
