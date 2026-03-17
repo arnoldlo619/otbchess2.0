@@ -1226,13 +1226,21 @@ export default function Home() {
     <div className="flex items-center gap-3">
       <ThemeToggle />
       {!user && (
-        <button
-          onClick={() => setAuthOpen(true)}
-          title="Sign In"
-          className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 text-white/70 hover:text-white hover:bg-white/10 transition-all"
-        >
-          <LogIn className="w-4 h-4" />
-        </button>
+        <div className="relative group">
+          <button
+            onClick={() => setAuthOpen(true)}
+            aria-label="Sign In"
+            className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 text-white/70 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <LogIn className="w-4 h-4" />
+          </button>
+          {/* Tooltip */}
+          <span
+            className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium text-white bg-black/70 backdrop-blur-sm border border-white/10 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 z-50"
+          >
+            Sign In
+          </span>
+        </div>
       )}
       {user && (
         <div className="relative">

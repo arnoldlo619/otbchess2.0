@@ -2164,3 +2164,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Center only Clubs, Battle, Analyze in nav pill
 - [x] Shift nav bar lower (pt-28) so mascot sits fully visible above the pill
 - [x] Increase hero section top padding to pt-44/pt-52 to compensate for the lower nav
+
+## Sign In Icon Tooltip (Mar 16 2026)
+- [x] Add animated hover tooltip "Sign In" to the Sign In icon button in the nav right slot (fade + scale, 200ms)
