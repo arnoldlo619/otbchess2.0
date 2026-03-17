@@ -519,7 +519,7 @@ export function AnimeNavBar({
 
           {/* ── Right slot ── */}
           {rightSlot && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="flex-none min-w-0">
               {rightSlot}
             </motion.div>
           )}

@@ -151,7 +151,7 @@ export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, classNam
                 {(user.displayName || user.email).charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="hidden sm:inline max-w-[100px] truncate">
+            <span className="hidden sm:inline max-w-[80px] truncate">
               {user.displayName || user.email}
             </span>
             {user.isGuest && <span className="hidden sm:inline text-xs opacity-60">(guest)</span>}

@@ -245,7 +245,7 @@ function Nav({
                     {(user.displayName || user.email).charAt(0).toUpperCase()}
                   </span>
                 )}
-                <span className="max-w-[120px] truncate">{user.displayName || user.email}</span>
+                <span className="max-w-[80px] truncate">{user.displayName || user.email}</span>
                 {user.isGuest && <span className="text-xs opacity-60">(guest)</span>}
               </button>
               {userMenuOpen && (
@@ -1292,7 +1292,7 @@ export default function Home() {
                 {(user.displayName || user.email).charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="hidden sm:inline max-w-[100px] truncate">{user.displayName || user.email}</span>
+            <span className="hidden sm:inline max-w-[80px] truncate">{user.displayName || user.email}</span>
             {user.isGuest && <span className="hidden sm:inline text-xs opacity-60">(guest)</span>}
           </button>
           {userMenuOpen && (

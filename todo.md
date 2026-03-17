@@ -2319,3 +2319,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Nav Bar Centering Fix (Mar 17 2026)
 - [x] Fix AnimeNavBar pill group to be perfectly viewport-centred (left-1/2 -translate-x-1/2) independent of logo/user-menu widths
+
+## Username Truncation in Nav Bar (Mar 17 2026)
+- [x] Truncate long usernames in all nav user menus to max-w-[80px] truncate; added flex-none min-w-0 to rightSlot wrapper in AnimeNavBar
