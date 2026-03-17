@@ -10,7 +10,7 @@
  *    so the SPA still loads offline.
  */
 
-const CACHE_VERSION = "otb-chess-v3";
+const CACHE_VERSION = "otb-chess-v4";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
 
@@ -57,6 +57,7 @@ self.addEventListener("fetch", (event) => {
   // old cached CJS React wrapper causes "Invalid hook call" (two React instances).
   if (
     url.pathname.startsWith("/@") ||
+    url.pathname.startsWith("/src/") ||
     url.pathname.startsWith("/node_modules/") ||
     url.pathname.startsWith("/__manus__") ||
     url.search.includes("v=") ||

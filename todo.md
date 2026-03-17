@@ -2179,3 +2179,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Provide Bullet (1+0, 2+1), Blitz (3+0, 3+2, 5+0, 5+3), Rapid (10+0, 15+10, 30+0) options
 - [x] Store selected time control in battle room creation API call (POST body)
 - [x] Display selected time control as green badge in QR/waiting room and battle room
+
+## Home.tsx Dynamic Import Error Fix (Mar 17 2026)
+- [x] Fixed "Failed to fetch dynamically imported module: Home.tsx" — root cause: SW was caching /src/*.tsx Vite module URLs (cache-first strategy) and serving stale content after HMR rebuilds. Fix: (1) SW only registers in PROD (import.meta.env.PROD guard in main.tsx), (2) dev mode auto-unregisters any existing SW, (3) added /src/ to SW fetch bypass list, (4) bumped SW cache version to v4 to evict stale caches.

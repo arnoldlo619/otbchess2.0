@@ -5,7 +5,9 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(<App />);
 
 // ─── PWA Service Worker Registration ─────────────────────────────────────────
-if ("serviceWorker" in navigator) {
+// Only register in production — in dev the SW caches /src/* Vite module URLs
+// which causes "Failed to fetch dynamically imported module" after any HMR rebuild.
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
@@ -17,5 +19,10 @@ if ("serviceWorker" in navigator) {
         // SW registration failure is non-fatal — app still works online
         console.warn("[OTB Chess] Service worker registration failed:", err);
       });
+  });
+} else if ("serviceWorker" in navigator && import.meta.env.DEV) {
+  // In dev: unregister any previously installed SW to clear stale module caches
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((r) => r.unregister());
   });
 }
