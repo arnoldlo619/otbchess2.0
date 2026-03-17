@@ -2260,3 +2260,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Home.tsx Visual Edit (Mar 17 2026)
 - [x] Update h2 section heading from "Try it: look up any player." to "Seamless User Onboarding"
+
+## Hero Pill Polish (Mar 17 2026)
+- [x] Polish and centrally align the "FOR CHESS CLUBS & COMMUNITIES" hero pill — fix centering, spacing, and visual refinement

@@ -450,11 +450,13 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center py-24 lg:py-32">
-          <div className="opacity-0-init animate-fade-in-up" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
+          <div className="opacity-0-init animate-fade-in-up flex justify-center mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
             <HoverBorderGradient
               as="span"
-              containerClassName={`mb-8 ${isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-white"}`}
-              className={`text-xs font-semibold tracking-widest uppercase ${isDark ? "text-white/70 bg-[oklch(0.18_0.05_145)]" : "text-[#3D6B47] bg-white"}`}
+              containerClassName={isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-white"}
+              className={`text-[11px] font-semibold tracking-[0.18em] uppercase leading-none ${
+                isDark ? "text-white/75 bg-[oklch(0.18_0.05_145)]" : "text-[#3D6B47] bg-white"
+              }`}
             >
               For Chess Clubs &amp; Communities
             </HoverBorderGradient>
