@@ -17,6 +17,7 @@ import {
   AlertCircle,
   ChevronRight,
   LogIn,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
@@ -45,10 +46,20 @@ interface BattleRoom {
 
 type Screen =
   | "mode_select"
+  | "host_time_control"
   | "host_waiting"
   | "join_enter_code"
   | "battle_room"
   | "result";
+
+interface TimeControlOption {
+  label: string;
+  value: string;
+  minutes: number;
+  increment: number;
+  description: string;
+  category: "bullet" | "blitz" | "rapid" | "custom";
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -168,6 +179,20 @@ export default function Battle() {
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControlOption | null>(null);
+
+  // ── Time control presets ───────────────────────────────────────────────────
+  const TIME_CONTROLS: TimeControlOption[] = [
+    { label: "1+0", value: "1+0", minutes: 1, increment: 0, description: "Bullet", category: "bullet" },
+    { label: "2+1", value: "2+1", minutes: 2, increment: 1, description: "Bullet", category: "bullet" },
+    { label: "3+0", value: "3+0", minutes: 3, increment: 0, description: "Blitz", category: "blitz" },
+    { label: "3+2", value: "3+2", minutes: 3, increment: 2, description: "Blitz", category: "blitz" },
+    { label: "5+0", value: "5+0", minutes: 5, increment: 0, description: "Blitz", category: "blitz" },
+    { label: "5+3", value: "5+3", minutes: 5, increment: 3, description: "Blitz", category: "blitz" },
+    { label: "10+0", value: "10+0", minutes: 10, increment: 0, description: "Rapid", category: "rapid" },
+    { label: "15+10", value: "15+10", minutes: 15, increment: 10, description: "Rapid", category: "rapid" },
+    { label: "30+0", value: "30+0", minutes: 30, increment: 0, description: "Rapid", category: "rapid" },
+  ];
 
   // Auto-populate join code from QR scan URL param (?join=CODE)
   useEffect(() => {
@@ -209,15 +234,26 @@ export default function Battle() {
   }, [room?.code, screen, fetchRoom]);
 
   // ── Host a battle ──────────────────────────────────────────────────────────
-  async function handleHost() {
+  function handleHost() {
     if (!user) {
       setAuthOpen(true);
       return;
     }
+    setError(null);
+    setScreen("host_time_control");
+  }
+
+  // ── Create room after time control is selected ─────────────────────────────
+  async function handleCreateRoom(tc: TimeControlOption) {
+    setSelectedTimeControl(tc);
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/battles", { method: "POST" });
+      const res = await fetch("/api/battles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeControl: tc.value }),
+      });
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error ?? "Failed to create battle room");
@@ -427,6 +463,70 @@ export default function Battle() {
             </motion.div>
           )}
 
+          {/* ── Host: Time Control Selector ──────────────────────────────── */}
+          {screen === "host_time_control" && (
+            <motion.div
+              key="host_time_control"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-lg"
+            >
+              <div className="text-center mb-8">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="mb-4 flex justify-center"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-green-900/40 border border-green-500/30 flex items-center justify-center">
+                    <Clock className="w-7 h-7 text-green-400" />
+                  </div>
+                </motion.div>
+                <h2 className="text-3xl font-black tracking-tight mb-2">Choose Time Control</h2>
+                <p className="text-white/40 text-sm">Select the time format for this battle.</p>
+              </div>
+
+              {error && (
+                <div className="mb-6 flex items-center gap-2 text-red-400 text-sm bg-red-900/20 border border-red-500/20 rounded-xl px-4 py-3">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              {/* Category groups */}
+              {(["bullet", "blitz", "rapid"] as const).map((cat) => (
+                <div key={cat} className="mb-6">
+                  <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-3 px-1">
+                    {cat === "bullet" ? "⚡ Bullet" : cat === "blitz" ? "🔥 Blitz" : "⏱ Rapid"}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TIME_CONTROLS.filter((tc) => tc.category === cat).map((tc) => (
+                      <motion.button
+                        key={tc.value}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => handleCreateRoom(tc)}
+                        disabled={loading}
+                        className="flex flex-col items-center gap-1 py-4 px-3 rounded-xl border border-white/10 bg-white/5 hover:border-green-500/40 hover:bg-green-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+                      >
+                        <span className="text-xl font-black text-white group-hover:text-green-300 transition-colors">
+                          {tc.label}
+                        </span>
+                        <span className="text-xs text-white/30">
+                          {tc.increment > 0 ? `+${tc.increment}s` : "no inc."}
+                        </span>
+                        {loading && selectedTimeControl?.value === tc.value && (
+                          <Loader2 className="w-3 h-3 text-green-400 animate-spin mt-0.5" />
+                        )}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
           {/* ── Host Waiting ─────────────────────────────────────────────── */}
           {screen === "host_waiting" && room && (
             <motion.div
@@ -471,6 +571,16 @@ export default function Battle() {
                   )}
                 </button>
               </div>
+
+              {/* Time control badge */}
+              {room.timeControl && (
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-900/40 border border-green-500/20 text-green-400 text-xs font-bold">
+                    <Clock className="w-3 h-3" />
+                    {room.timeControl}
+                  </span>
+                </div>
+              )}
 
               {/* Waiting indicator */}
               <div className="flex items-center justify-center gap-2 text-white/40 text-sm">
@@ -558,6 +668,14 @@ export default function Battle() {
                 <p className="text-white/30 text-sm mt-1">
                   Both players are ready — let the battle begin!
                 </p>
+                {room.timeControl && (
+                  <div className="flex items-center justify-center gap-1.5 mt-3">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-900/40 border border-green-500/20 text-green-400 text-xs font-bold">
+                      <Clock className="w-3 h-3" />
+                      {room.timeControl}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Player cards */}

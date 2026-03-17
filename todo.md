@@ -2173,3 +2173,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Battle Auto-Trigger Sign-In (Mar 16 2026)
 - [x] Open auth modal when unauthenticated user clicks Host Battle or Join Battle buttons (setAuthOpen(true) in handleHost and handleJoin)
+
+## Battle Time Control Selector (Mar 16 2026)
+- [x] Add time control selector screen between mode-select and QR code in host flow
+- [x] Provide Bullet (1+0, 2+1), Blitz (3+0, 3+2, 5+0, 5+3), Rapid (10+0, 15+10, 30+0) options
+- [x] Store selected time control in battle room creation API call (POST body)
+- [x] Display selected time control as green badge in QR/waiting room and battle room
