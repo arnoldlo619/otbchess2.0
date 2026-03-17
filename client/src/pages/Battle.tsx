@@ -18,6 +18,7 @@ import {
   ChevronRight,
   LogIn,
   Clock,
+  Ghost,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
@@ -233,10 +234,14 @@ export default function Battle() {
     };
   }, [room?.code, screen, fetchRoom]);
 
-  // ── Host a battle ──────────────────────────────────────────────────────────
+    // ── Host a battle ──────────────────────────────────────────────────────
   function handleHost() {
     if (!user) {
       setAuthOpen(true);
+      return;
+    }
+    if (user.isGuest) {
+      setError("Guest accounts cannot host battles. Create a free account to host.");
       return;
     }
     setError(null);
@@ -407,9 +412,24 @@ export default function Battle() {
                   className="mb-6 w-full flex items-center justify-center gap-2 text-sm bg-white/5 rounded-xl px-4 py-3 border border-white/10 text-green-400 hover:text-green-300 hover:bg-white/10 hover:border-green-500/30 transition-all group"
                 >
                   <LogIn className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span>Sign in to host or join a battle</span>
+                  <span>Sign in or continue as guest to join a battle</span>
                   <ChevronRight className="w-3 h-3 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
                 </button>
+              )}
+
+              {user?.isGuest && (
+                <div className="mb-6 flex items-center justify-between gap-3 text-sm bg-amber-900/20 border border-amber-500/20 rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2 text-amber-300">
+                    <Ghost className="w-4 h-4 shrink-0" />
+                    <span>Playing as guest &mdash; join battles below. <span className="text-amber-200/60">History won&apos;t be saved.</span></span>
+                  </div>
+                  <button
+                    onClick={() => setAuthOpen(true)}
+                    className="shrink-0 text-xs font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2 transition"
+                  >
+                    Upgrade
+                  </button>
+                </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -418,7 +438,8 @@ export default function Battle() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleHost}
-                  disabled={loading || !user}
+                  disabled={loading || !user || user.isGuest}
+                  title={user?.isGuest ? "Create a free account to host battles" : undefined}
                   className="group relative flex flex-col items-center gap-4 p-8 rounded-2xl border border-green-500/30 bg-gradient-to-br from-green-900/40 to-green-950/60 hover:border-green-400/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <div className="w-12 h-12 rounded-xl bg-green-700/40 flex items-center justify-center group-hover:bg-green-700/60 transition-colors">
@@ -442,10 +463,11 @@ export default function Battle() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
+                    if (!user) { setAuthOpen(true); return; }
                     setError(null);
                     setScreen("join_enter_code");
                   }}
-                  disabled={!user}
+                  disabled={false}
                   className="group relative flex flex-col items-center gap-4 p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">

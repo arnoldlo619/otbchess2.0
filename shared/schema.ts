@@ -19,6 +19,7 @@ import {
   int,
   float,
   tinyint,
+  boolean,
 } from "drizzle-orm/mysql-core";
 
 // ─── users ────────────────────────────────────────────────────────────────────
@@ -50,6 +51,9 @@ export const users = mysqlTable(
 
     // Avatar URL (chess.com avatar or custom upload)
     avatarUrl: text("avatar_url"),
+
+    // Guest flag — true for ephemeral guest sessions (no email/password)
+    isGuest: boolean("is_guest").default(false).notNull(),
 
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),

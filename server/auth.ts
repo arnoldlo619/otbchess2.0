@@ -34,17 +34,20 @@ function getJwtSecret(): string {
   return secret;
 }
 
-function signToken(userId: string, remember = false): string {
+const JWT_EXPIRY_GUEST = "24h";
+const COOKIE_MAX_AGE_GUEST_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function signToken(userId: string, remember = false, isGuest = false): string {
   return jwt.sign(
-    { sub: userId },
+    { sub: userId, ...(isGuest ? { isGuest: true } : {}) },
     getJwtSecret(),
-    { expiresIn: remember ? JWT_EXPIRY_REMEMBER : JWT_EXPIRY_DEFAULT }
+    { expiresIn: isGuest ? JWT_EXPIRY_GUEST : remember ? JWT_EXPIRY_REMEMBER : JWT_EXPIRY_DEFAULT }
   );
 }
 
-function verifyToken(token: string): { sub: string } | null {
+function verifyToken(token: string): { sub: string; isGuest?: boolean } | null {
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as { sub: string };
+    const payload = jwt.verify(token, getJwtSecret()) as { sub: string; isGuest?: boolean };
     return payload;
   } catch {
     return null;
@@ -58,7 +61,8 @@ function safeUser(user: typeof users.$inferSelect) {
 }
 
 // ─── Middleware: requireAuth ──────────────────────────────────────────────────
-// Attaches req.userId if a valid JWT is present in cookie or Authorization header.
+// Accepts both full-account JWTs and guest JWTs.
+// Sets req.userId and req.isGuest on the request object.
 export function requireAuth(
   req: import("express").Request,
   res: import("express").Response,
@@ -70,7 +74,30 @@ export function requireAuth(
   if (!raw) return res.status(401).json({ error: "Not authenticated" });
   const payload = verifyToken(raw);
   if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
-  (req as import("express").Request & { userId: string }).userId = payload.sub;
+  const r = req as import("express").Request & { userId: string; isGuest: boolean };
+  r.userId = payload.sub;
+  r.isGuest = payload.isGuest === true;
+  next();
+}
+
+// ─── Middleware: requireFullAuth ──────────────────────────────────────────────
+// Like requireAuth but additionally rejects guest JWTs.
+// Use on routes that require a full registered account (host battle, profile edit, etc.).
+export function requireFullAuth(
+  req: import("express").Request,
+  res: import("express").Response,
+  next: import("express").NextFunction
+) {
+  const cookieToken = req.cookies?.token as string | undefined;
+  const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+  const raw = cookieToken || headerToken;
+  if (!raw) return res.status(401).json({ error: "Not authenticated" });
+  const payload = verifyToken(raw);
+  if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+  if (payload.isGuest) return res.status(403).json({ error: "Guest accounts cannot perform this action. Please create a free account.", code: "GUEST_FORBIDDEN" });
+  const r = req as import("express").Request & { userId: string; isGuest: boolean };
+  r.userId = payload.sub;
+  r.isGuest = false;
   next();
 }
 
@@ -187,6 +214,47 @@ export function createAuthRouter(): Router {
   router.post("/logout", (_req, res) => {
     res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
     return res.json({ ok: true });
+  });
+
+  // ── POST /api/auth/guest ─────────────────────────────────────────────────
+  // Creates an ephemeral guest user row and returns a 24-hour JWT.
+  // Guest users can join battles but cannot host, edit profiles, or
+  // access any route guarded by requireFullAuth.
+  router.post("/guest", async (req, res) => {
+    const { displayName } = req.body as { displayName?: string };
+    const rawName = (displayName ?? "").trim();
+    if (!rawName || rawName.length < 2) {
+      return res.status(400).json({ error: "Display name must be at least 2 characters" });
+    }
+    if (rawName.length > 30) {
+      return res.status(400).json({ error: "Display name must be 30 characters or fewer" });
+    }
+    try {
+      const db = await getDb();
+      const id = nanoid();
+      // Guest rows use a synthetic email that can never be used to log in
+      const guestEmail = `guest_${id}@otbchess.guest`;
+      await db.insert(users).values({
+        id,
+        email: guestEmail,
+        passwordHash: "", // guests have no password
+        displayName: rawName,
+        isGuest: true,
+      });
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      const token = signToken(id, false, true);
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: COOKIE_MAX_AGE_GUEST_MS,
+      });
+      console.log(`[auth] Guest session created: ${rawName} (${id})`);
+      return res.status(201).json({ user: safeUser(user), token });
+    } catch (err) {
+      console.error("[auth] guest error:", err);
+      return res.status(500).json({ error: "Failed to create guest session" });
+    }
   });
 
   // ── GET /api/auth/me ─────────────────────────────────────────────────────

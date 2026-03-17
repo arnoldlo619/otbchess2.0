@@ -2187,3 +2187,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fetch battle history in Profile page and compute W/D/L totals
 - [x] Add W/D/L as a combined stat badge in the existing stat badges row at the top of the profile card
 - [x] Style with OTB-green for wins, neutral for draws, muted-red for losses
+
+## Guest Mode Feature (Mar 17 2026)
+- [x] POST /api/auth/guest — create ephemeral guest user row, return JWT with isGuest:true
+- [x] requireAuth middleware: accept guest JWTs (isGuest flag), add req.isGuest
+- [x] requireFullAuth middleware: reject guest JWTs (for host/profile routes)
+- [x] GuestEntryModal — single username input, "Continue as Guest" CTA
+- [x] Wire GuestEntryModal into AuthModal as a third tab/option alongside Sign In / Sign Up
+- [x] Nav profile icon: show guest avatar (ghost icon) when signed in as guest
+- [x] Battle page: guests can JOIN battles (requireAuth) but not HOST (requireFullAuth)
+- [x] Profile page: redirect guests to upgrade prompt instead of profile
+- [x] GuestBanner — amber banner on Battle page for guests with Upgrade CTA
+- [x] Upgrade prompt via "Create Free Account" in nav user menu for guests
+- [x] Guest sessions expire after 24 h (JWT exp)
+- [x] Unit tests for guest auth helpers (23 tests, all passing)

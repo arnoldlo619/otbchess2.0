@@ -8,7 +8,7 @@ import { nanoid } from "nanoid";
 import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
-import { createAuthRouter, requireAuth } from "./auth.js";
+import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
@@ -1066,8 +1066,8 @@ export function createApp() {
   });
 
   // ─── Battle Rooms API ────────────────────────────────────────────────────────────────
-  // POST /api/battles — Create a new battle room (requires auth)
-  app.post("/api/battles", requireAuth, async (req, res) => {
+  // POST /api/battles — Create a new battle room (requires full account, not guest)
+  app.post("/api/battles", requireFullAuth, async (req, res) => {
     const { battleRooms } = await import("../shared/schema.js");
     const userId = (req as import("express").Request & { userId: string }).userId;
     if (!userId) return res.status(401).json({ error: "Authentication required" });

@@ -6,6 +6,7 @@
  *  - loading: true while the initial /api/auth/me check is in flight
  *  - login(email, password) → throws on failure
  *  - register(email, password, displayName, chesscomUsername?) → throws on failure
+ *  - loginAsGuest(displayName) → creates an ephemeral 24-hour guest session
  *  - logout()
  *  - updateProfile(fields) → PATCH /api/auth/me
  *
@@ -23,6 +24,8 @@ export interface AuthUser {
   chesscomElo: number | null;
   lichessElo: number | null;
   avatarUrl: string | null;
+  /** True for ephemeral guest sessions created via POST /api/auth/guest */
+  isGuest: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +91,20 @@ export function useAuth() {
     []
   );
 
+  /**
+   * Creates an ephemeral guest session (24-hour JWT, isGuest: true).
+   * Guests can join battles but cannot host, edit profiles, or access
+   * routes guarded by requireFullAuth.
+   */
+  const loginAsGuest = useCallback(async (displayName: string) => {
+    const { user } = await apiFetch<{ user: AuthUser }>("/api/auth/guest", {
+      method: "POST",
+      body: JSON.stringify({ displayName }),
+    });
+    setUser(user);
+    return user;
+  }, []);
+
   const logout = useCallback(async () => {
     await apiFetch("/api/auth/logout", { method: "POST" });
     setUser(null);
@@ -102,5 +119,5 @@ export function useAuth() {
     return user;
   }, []);
 
-  return { user, loading, login, register, logout, updateProfile };
+  return { user, loading, login, register, loginAsGuest, logout, updateProfile };
 }

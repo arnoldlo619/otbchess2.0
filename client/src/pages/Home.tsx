@@ -47,6 +47,7 @@ import {
   Building2,
   Video,
   LogIn,
+  Ghost,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 
@@ -128,9 +129,11 @@ function useCountUp(
 function Nav({
   onCreateTournament,
   onSignIn,
+  onUpgrade,
 }: {
   onCreateTournament: () => void;
   onSignIn: () => void;
+  onUpgrade?: () => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -223,17 +226,24 @@ function Nav({
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
-                  isDark
-                    ? "border-white/20 text-white/80 hover:bg-white/10"
-                    : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                  user.isGuest
+                    ? isDark ? "border-amber-500/30 text-amber-300 hover:bg-amber-500/10" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
+                    : isDark
+                      ? "border-white/20 text-white/80 hover:bg-white/10"
+                      : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/08"
                 }`}
               >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  isDark ? "bg-[#3D6B47] text-white" : "bg-[#3D6B47] text-white"
-                }`}>
-                  {(user.displayName || user.email).charAt(0).toUpperCase()}
-                </span>
+                {user.isGuest ? (
+                  <Ghost className="w-4 h-4" />
+                ) : (
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    isDark ? "bg-[#3D6B47] text-white" : "bg-[#3D6B47] text-white"
+                  }`}>
+                    {(user.displayName || user.email).charAt(0).toUpperCase()}
+                  </span>
+                )}
                 <span className="max-w-[120px] truncate">{user.displayName || user.email}</span>
+                {user.isGuest && <span className="text-xs opacity-60">(guest)</span>}
               </button>
               {userMenuOpen && (
                 <div
@@ -242,15 +252,27 @@ function Nav({
                   }`}
                   onMouseLeave={() => setUserMenuOpen(false)}
                 >
-                  <Link
-                    href="/profile"
-                    className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors ${
-                      isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#3D6B47]/06"
-                    }`}
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    <Crown className="w-4 h-4" /> My Profile
-                  </Link>
+                  {!user.isGuest && (
+                    <Link
+                      href="/profile"
+                      className={`flex items-center gap-2 px-4 py-3 text-sm transition-colors ${
+                        isDark ? "text-white/80 hover:bg-white/08" : "text-[#1a1a1a] hover:bg-[#3D6B47]/06"
+                      }`}
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Crown className="w-4 h-4" /> My Profile
+                    </Link>
+                  )}
+                  {user.isGuest && (
+                    <button
+                      onClick={() => { setUserMenuOpen(false); onUpgrade?.(); }}
+                      className={`flex items-center gap-2 w-full px-4 py-3 text-sm transition-colors ${
+                        isDark ? "text-amber-300 hover:bg-amber-500/10" : "text-amber-600 hover:bg-amber-50"
+                      }`}
+                    >
+                      <Crown className="w-4 h-4" /> Create Free Account
+                    </button>
+                  )}
                   <button
                     onClick={() => { logout(); setUserMenuOpen(false); }}
                     className={`flex items-center gap-2 w-full px-4 py-3 text-sm transition-colors border-t ${
@@ -1246,25 +1268,44 @@ export default function Home() {
         <div className="relative">
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border border-white/20 text-white/80 hover:bg-white/10 bg-black/40 backdrop-blur-md"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border bg-black/40 backdrop-blur-md ${
+              user.isGuest
+                ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                : "border-white/20 text-white/80 hover:bg-white/10"
+            }`}
           >
-            <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-[#3D6B47] text-white">
-              {(user.displayName || user.email).charAt(0).toUpperCase()}
-            </span>
+            {user.isGuest ? (
+              <Ghost className="w-4 h-4" />
+            ) : (
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-[#3D6B47] text-white">
+                {(user.displayName || user.email).charAt(0).toUpperCase()}
+              </span>
+            )}
             <span className="hidden sm:inline max-w-[100px] truncate">{user.displayName || user.email}</span>
+            {user.isGuest && <span className="hidden sm:inline text-xs opacity-60">(guest)</span>}
           </button>
           {userMenuOpen && (
             <div
-              className="absolute right-0 top-full mt-2 w-48 rounded-xl shadow-xl border z-50 overflow-hidden bg-[oklch(0.22_0.06_145)] border-white/10"
+              className="absolute right-0 top-full mt-2 w-52 rounded-xl shadow-xl border z-50 overflow-hidden bg-[oklch(0.22_0.06_145)] border-white/10"
               onMouseLeave={() => setUserMenuOpen(false)}
             >
-              <Link
-                href="/profile"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/08 transition-colors"
-                onClick={() => setUserMenuOpen(false)}
-              >
-                <Crown className="w-4 h-4" /> My Profile
-              </Link>
+              {!user.isGuest && (
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 px-4 py-3 text-sm text-white/80 hover:bg-white/08 transition-colors"
+                  onClick={() => setUserMenuOpen(false)}
+                >
+                  <Crown className="w-4 h-4" /> My Profile
+                </Link>
+              )}
+              {user.isGuest && (
+                <button
+                  onClick={() => { setUserMenuOpen(false); setAuthOpen(true); }}
+                  className="flex items-center gap-2 w-full px-4 py-3 text-sm text-amber-300 hover:bg-amber-500/10 transition-colors"
+                >
+                  <Crown className="w-4 h-4" /> Create Free Account
+                </button>
+              )}
               <button
                 onClick={() => { logout(); setUserMenuOpen(false); }}
                 className="flex items-center gap-2 w-full px-4 py-3 text-sm text-red-400 hover:bg-white/08 border-t border-white/08 transition-colors"

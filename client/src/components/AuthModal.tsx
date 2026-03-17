@@ -1,5 +1,10 @@
 /**
- * AuthModal — Sign In / Sign Up overlay for OTB Chess
+ * AuthModal — Sign In / Sign Up / Guest overlay for OTB Chess
+ *
+ * Three tabs:
+ *  - "signin"  — email + password login
+ *  - "signup"  — full account registration
+ *  - "guest"   — ephemeral 24-hour session with just a display name
  *
  * UX improvements:
  *  - Auto-focus first field when modal opens
@@ -14,14 +19,13 @@
  *  - Escape key closes modal
  */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Eye, EyeOff, Crown, Loader2, ChevronRight, CheckCircle2 } from "lucide-react";
+import { X, Eye, EyeOff, Crown, Loader2, ChevronRight, CheckCircle2, Ghost } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 
-type Tab = "signin" | "signup";
+type Tab = "signin" | "signup" | "guest";
 
 /* ─── Password strength ─────────────────────────────── */
 export type StrengthLevel = "empty" | "weak" | "fair" | "strong";
-
 export function scorePassword(pw: string): StrengthLevel {
   if (!pw) return "empty";
   let score = 0;
@@ -34,21 +38,18 @@ export function scorePassword(pw: string): StrengthLevel {
   if (score <= 3) return "fair";
   return "strong";
 }
-
 const strengthLabel: Record<StrengthLevel, string> = {
   empty: "",
   weak: "Weak",
   fair: "Fair",
   strong: "Strong",
 };
-
 const strengthColor: Record<StrengthLevel, string> = {
   empty: "bg-transparent",
   weak: "bg-red-500",
   fair: "bg-yellow-400",
   strong: "bg-emerald-500",
 };
-
 const strengthWidth: Record<StrengthLevel, string> = {
   empty: "w-0",
   weak: "w-1/3",
@@ -188,15 +189,17 @@ export function validateEmail(email: string): string | undefined {
   if (!email) return "Email is required.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Enter a valid email address.";
 }
-
 export function validatePassword(pw: string, isSignUp = false): string | undefined {
   if (!pw) return "Password is required.";
   if (isSignUp && pw.length < 8) return "Password must be at least 8 characters.";
 }
-
 export function validateDisplayName(name: string): string | undefined {
   if (!name) return "Display name is required.";
   if (name.trim().length < 2) return "Display name must be at least 2 characters.";
+}
+export function validateGuestName(name: string): string | undefined {
+  if (!name || name.trim().length < 2) return "Enter a name of at least 2 characters.";
+  if (name.trim().length > 30) return "Name must be 30 characters or fewer.";
 }
 
 /* ─── Main component ────────────────────────────────── */
@@ -213,7 +216,7 @@ export default function AuthModal({
   isDark = false,
   initialTab = "signin",
 }: AuthModalProps) {
-  const { login, register } = useAuthContext();
+  const { login, register, loginAsGuest } = useAuthContext();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -233,11 +236,16 @@ export default function AuthModal({
     name?: string; email?: string; password?: string; general?: string;
   }>({});
 
+  // Guest fields + errors
+  const [guestName, setGuestName] = useState("");
+  const [guestError, setGuestError] = useState<string | undefined>();
+
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const resetAll = useCallback(() => {
     setSiEmail(""); setSiPassword(""); setSiRemember(false); setSiErrors({});
     setSuName(""); setSuEmail(""); setSuPassword(""); setSuChesscom(""); setSuErrors({});
+    setGuestName(""); setGuestError(undefined);
     setSuccess(false); setLoading(false);
   }, []);
 
@@ -253,7 +261,8 @@ export default function AuthModal({
   // Tab switch clears errors
   const switchTab = (t: Tab) => {
     setTab(t);
-    setSiErrors({}); setSuErrors({});
+    setSiErrors({}); setSuErrors({}); setGuestError(undefined);
+    setTimeout(() => firstInputRef.current?.focus(), 80);
   };
 
   // Escape to close
@@ -307,6 +316,23 @@ export default function AuthModal({
     }
   }
 
+  /* ── Guest submit ── */
+  async function handleGuest(e: React.FormEvent) {
+    e.preventDefault();
+    const err = validateGuestName(guestName);
+    if (err) { setGuestError(err); return; }
+    setLoading(true); setGuestError(undefined);
+    try {
+      await loginAsGuest(guestName.trim());
+      setSuccess(true);
+      setTimeout(onClose, 1200);
+    } catch (err) {
+      setGuestError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   /* ── Styles ── */
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const border = isDark ? "border-white/10" : "border-gray-200";
@@ -326,6 +352,11 @@ export default function AuthModal({
   const tabInactive = isDark
     ? "text-white/40 hover:text-white/70"
     : "text-gray-400 hover:text-gray-600";
+
+  const headerSubtitle =
+    tab === "signin" ? "Welcome back" :
+    tab === "signup" ? "Create your account" :
+    "Quick guest access";
 
   return (
     <div
@@ -348,9 +379,7 @@ export default function AuthModal({
             </div>
             <div>
               <h2 className={`text-lg font-bold leading-tight ${text}`}>OTB Chess</h2>
-              <p className={`text-xs ${muted}`}>
-                {tab === "signin" ? "Welcome back" : "Create your account"}
-              </p>
+              <p className={`text-xs ${muted}`}>{headerSubtitle}</p>
             </div>
           </div>
           <button
@@ -366,15 +395,16 @@ export default function AuthModal({
 
         {/* Tab switcher */}
         <div className="flex gap-1 px-7 pt-5 pb-1">
-          {(["signin", "signup"] as Tab[]).map((t) => (
+          {(["signin", "signup", "guest"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => switchTab(t)}
-              className={`flex-1 py-2.5 rounded-xl text-sm transition ${
+              className={`flex-1 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-1.5 ${
                 tab === t ? tabActive : tabInactive
               }`}
             >
-              {t === "signin" ? "Sign In" : "Create Account"}
+              {t === "guest" && <Ghost className="w-3.5 h-3.5" />}
+              {t === "signin" ? "Sign In" : t === "signup" ? "Sign Up" : "Guest"}
             </button>
           ))}
         </div>
@@ -387,10 +417,10 @@ export default function AuthModal({
             </div>
             <div className="text-center">
               <p className={`text-xl font-bold ${text}`}>
-                {tab === "signin" ? "Welcome back!" : "Account created!"}
+                {tab === "signin" ? "Welcome back!" : tab === "signup" ? "Account created!" : `Welcome, ${guestName.trim()}!`}
               </p>
               <p className={`text-sm mt-1 ${muted}`}>
-                {tab === "signin" ? "Signing you in…" : "Setting up your profile…"}
+                {tab === "signin" ? "Signing you in…" : tab === "signup" ? "Setting up your profile…" : "Starting your guest session…"}
               </p>
             </div>
           </div>
@@ -544,6 +574,80 @@ export default function AuthModal({
                     className="text-[#2d6a4f] dark:text-[#4ade80] font-medium hover:underline"
                   >
                     Sign in
+                  </button>
+                </p>
+              </form>
+            )}
+
+            {/* ── Guest form ── */}
+            {tab === "guest" && (
+              <form onSubmit={handleGuest} className="space-y-4" noValidate>
+                {/* What guests can/can't do */}
+                <div className={`rounded-2xl border px-4 py-3.5 space-y-2 ${
+                  isDark ? "bg-white/3 border-white/8" : "bg-gray-50 border-gray-200"
+                }`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide ${muted}`}>Guest access</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-emerald-500 font-bold">✓</span>
+                      <span className={isDark ? "text-white/70" : "text-gray-600"}>Join 1v1 Battle rooms</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-emerald-500 font-bold">✓</span>
+                      <span className={isDark ? "text-white/70" : "text-gray-600"}>View tournaments as spectator</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className={isDark ? "text-white/30" : "text-gray-400"}>✗</span>
+                      <span className={isDark ? "text-white/30" : "text-gray-400"}>Host battles or create tournaments</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className={isDark ? "text-white/30" : "text-gray-400"}>✗</span>
+                      <span className={isDark ? "text-white/30" : "text-gray-400"}>Save history (session lasts 24 h)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-1.5 ${muted}`}>
+                    Your name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    ref={firstInputRef}
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => { setGuestName(e.target.value); setGuestError(undefined); }}
+                    placeholder="e.g. Magnus"
+                    autoComplete="nickname"
+                    maxLength={30}
+                    className={inputCls(!!guestError)}
+                  />
+                  <FieldError msg={guestError} />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full flex items-center justify-center gap-2 rounded-xl font-semibold py-3.5 text-base transition disabled:opacity-60 mt-2 ${
+                    isDark
+                      ? "bg-white/10 hover:bg-white/15 text-white border border-white/15"
+                      : "bg-gray-900 hover:bg-gray-800 text-white"
+                  }`}
+                >
+                  {loading ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Starting session…</>
+                  ) : (
+                    <><Ghost className="w-4 h-4" /> Continue as Guest</>
+                  )}
+                </button>
+
+                <p className={`text-center text-xs ${muted}`}>
+                  Want to save your progress?{" "}
+                  <button
+                    type="button"
+                    onClick={() => switchTab("signup")}
+                    className="text-[#2d6a4f] dark:text-[#4ade80] font-medium hover:underline"
+                  >
+                    Create a free account
                   </button>
                 </p>
               </form>

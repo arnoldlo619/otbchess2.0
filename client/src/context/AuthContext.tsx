@@ -16,6 +16,8 @@ interface AuthContextValue {
     displayName: string,
     chesscomUsername?: string
   ) => Promise<AuthUser>;
+  /** Creates an ephemeral 24-hour guest session with just a display name. */
+  loginAsGuest: (displayName: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   updateProfile: (fields: UpdateProfileFields) => Promise<AuthUser>;
 }
