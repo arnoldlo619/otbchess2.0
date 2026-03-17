@@ -1544,30 +1544,57 @@ export default function Director() {
                       </div>
                     </div>
 
-                    {/* Round pairings header row */}
-                    <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
-                      isDark ? "border-white/06" : "border-gray-100"
-                    }`}>
-                      <h3
-                        className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
-                        style={{ fontFamily: "'Clash Display', sans-serif" }}
-                      >
-                        Round {state.currentRound} Pairings
-                      </h3>
-                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
-                        allResultsIn
-                          ? isDark
-                            ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50]"
-                            : "bg-green-50 border-green-200 text-green-700"
-                          : isDark
-                          ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                          : "bg-amber-50 border-amber-200 text-amber-600"
+                    {/* Round pairings header row + boards progress bar */}
+                    <div>
+                      <div className={`flex items-center justify-between px-5 py-3 ${
+                        isDark ? "" : ""
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          allResultsIn ? (isDark ? "bg-[#4CAF50]" : "bg-green-500") : "bg-amber-400 animate-pulse"
-                        }`} />
-                        {allResultsIn ? "Complete" : "In Progress"}
-                      </span>
+                        <h3
+                          className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                          style={{ fontFamily: "'Clash Display', sans-serif" }}
+                        >
+                          Round {state.currentRound} Pairings
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          {/* Boards complete count */}
+                          <span className={`text-[11px] font-bold tabular-nums ${
+                            allResultsIn
+                              ? isDark ? "text-[#4CAF50]" : "text-green-700"
+                              : isDark ? "text-white/40" : "text-gray-400"
+                          }`}>
+                            {completedGames} / {totalGames}
+                          </span>
+                          <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+                            allResultsIn
+                              ? isDark
+                                ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50]"
+                                : "bg-green-50 border-green-200 text-green-700"
+                              : isDark
+                              ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                              : "bg-amber-50 border-amber-200 text-amber-600"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                              allResultsIn ? (isDark ? "bg-[#4CAF50]" : "bg-green-500") : "bg-amber-400 animate-pulse"
+                            }`} />
+                            {allResultsIn ? "Complete" : "In Progress"}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      <div className={`h-1 w-full ${
+                        isDark ? "bg-white/06" : "bg-gray-100"
+                      }`}>
+                        <div
+                          className={`h-full transition-all duration-500 ease-out rounded-full ${
+                            allResultsIn
+                              ? isDark ? "bg-[#4CAF50]" : "bg-green-500"
+                              : isDark ? "bg-amber-400" : "bg-amber-400"
+                          }`}
+                          style={{
+                            width: totalGames > 0 ? `${(completedGames / totalGames) * 100}%` : "0%",
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
 

@@ -2226,3 +2226,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Polish completed rounds accordion: consistent border-radius, cleaner result badges
 - [x] Polish global spacing: consistent card padding, gap values, section rhythm
 - [x] Polish sticky banner: stronger generate button prominence
+- [x] Add boards-complete progress bar to compact tournament summary card in director dashboard header
