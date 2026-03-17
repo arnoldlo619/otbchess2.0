@@ -918,7 +918,7 @@ export default function JoinPage() {
               )}
 
               {/* Form card */}
-              <div className={`mobile-card border ${card} p-6 space-y-5`}>
+              <div className={`mobile-card border ${card} p-6 space-y-6`}>
                 {/* Name field */}
                 <div>
                   <label className={`mobile-section-label block mb-2 ${labelCls}`}>Your name</label>
@@ -1011,36 +1011,52 @@ export default function JoinPage() {
                 ))}
               </div>
 
-              <div className={`mobile-card border ${card} p-5`}>
-                <label className={`mobile-section-label block mb-2 ${labelCls}`}>
-                  {platform === "chesscom" ? "chess.com username" : "Lichess username"}
-                </label>
-                <div className="relative">
-                  <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
-                  <input
-                    ref={usernameRef}
-                    type="text"
-                    value={username}
-                    onChange={(e) => { setUsername(e.target.value); setError(""); }}
-                    placeholder={platform === "chesscom" ? "e.g. hikaru" : "e.g. DrNykterstein"}
-                    className={`${inputBase} !pl-10 text-base`}
-                    autoComplete="off"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    inputMode="text"
-                  />
-                </div>
-                <p className={`text-xs mt-2 ${textMuted}`}>
-                  {platform === "chesscom"
-                    ? "Try: hikaru · gothamchess · magnuscarlsen"
-                    : "Try: DrNykterstein · Hikaru · penguingim1"}
-                </p>
-                {error && (
-                  <div className="flex items-start gap-2 text-red-500 text-xs mt-2.5">
-                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
+              <div className={`mobile-card border ${card} p-5 space-y-4`}>
+                <div>
+                  <label className={`mobile-section-label block mb-2 ${labelCls}`}>
+                    {platform === "chesscom" ? "chess.com username" : "Lichess username"}
+                  </label>
+                  <div className="relative">
+                    <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
+                    <input
+                      ref={usernameRef}
+                      type="text"
+                      value={username}
+                      onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                      onKeyDown={(e) => { if (e.key === "Enter" && username.trim()) handleUsernameSubmit(e as unknown as React.FormEvent); }}
+                      placeholder={platform === "chesscom" ? "e.g. hikaru" : "e.g. DrNykterstein"}
+                      className={`${inputBase} !pl-10 !pr-24 text-base`}
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      inputMode="text"
+                    />
+                    {/* Inline lookup button */}
+                    <button
+                      type="button"
+                      onClick={handleUsernameSubmit as unknown as React.MouseEventHandler}
+                      disabled={!username.trim() || loading}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 ${
+                        isDark
+                          ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
+                          : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/18"
+                      }`}
+                    >
+                      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Look up"}
+                    </button>
                   </div>
-                )}
+                  <p className={`text-xs mt-2 ${textMuted}`}>
+                    {platform === "chesscom"
+                      ? "Try: hikaru · gothamchess · magnuscarlsen"
+                      : "Try: DrNykterstein · Hikaru · penguingim1"}
+                  </p>
+                  {error && (
+                    <div className="flex items-start gap-2 text-red-500 text-xs mt-2.5">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />{error}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

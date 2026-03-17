@@ -2296,3 +2296,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tournament.tsx TournamentNav: top-0 sm:top-[112px] (no AnimeNavBar on mobile)
 - [x] Director.tsx sub-toolbar: top-0 sm:top-[112px], body pt-4 sm:pt-28
 - [x] Director.tsx board cards: px-4 sm:px-6 padding for mobile comfort
+
+## Join Page Mobile Form Polish (Mar 17 2026)
+- [x] Username input already full-width via mobile-input class (w-full min-h-[52px])
+- [x] Confirm/submit button already full-width via mobile-cta class (w-full min-h-[52px])
+- [x] Added inline "Look up" button inside username input for one-thumb submit without scrolling
+- [x] Added Enter key handler on username input to trigger lookup
+- [x] Increased QR mode form card spacing from space-y-5 to space-y-6 for breathing room
