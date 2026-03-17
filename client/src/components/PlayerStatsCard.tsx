@@ -308,25 +308,19 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
           >
             {/* Brand */}
             <div style={{ display: "flex", alignItems: "center", gap: forExport ? 10 : 6 }}>
-              <div
+              {/* OTB!! logo image */}
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png"
+                alt="OTB!!"
+                crossOrigin="anonymous"
                 style={{
-                  width: forExport ? 34 : 20,
-                  height: forExport ? 34 : 20,
-                  borderRadius: forExport ? 8 : 5,
-                  background: accentColor,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: forExport ? 44 : 26,
+                  height: forExport ? 44 : 26,
+                  objectFit: "contain",
                   flexShrink: 0,
+                  filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))",
                 }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  style={{ width: forExport ? 18 : 11, height: forExport ? 18 : 11, fill: "white" }}
-                >
-                  <path d="M11 2h2v2h2v2h-2v2h2l1 2H8l1-2h2V6H9V4h2V2zm-4 9h10l1 9H6l1-9z" />
-                </svg>
-              </div>
+              />
               <span
                 style={{
                   fontFamily: "'Clash Display', sans-serif",

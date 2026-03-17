@@ -414,24 +414,27 @@ function ExportableCard({
   const [exporting, setExporting] = useState(false);
 
   const handleExport = useCallback(async () => {
-    if (!cardRef.current) return;
+    // Prefer the hidden high-res forExport card; fall back to visible card
+    const target = exportRef.current ?? cardRef.current;
+    if (!target) return;
     setExporting(true);
     try {
       const filename = `${perf.player.username}-${tournamentName.toLowerCase().replace(/\s+/g, "-")}.png`;
-      await exportCardAsPng(cardRef.current, filename);
+      await exportCardAsPng(target, filename);
       toast.success(`Card saved for ${perf.player.name}`);
     } catch {
       toast.error("Export failed — try again");
     } finally {
       setExporting(false);
     }
-  }, [perf, tournamentName]);
+  }, [perf, tournamentName, exportRef]);
 
   const handleShare = useCallback(async () => {
-    if (!cardRef.current) return;
+    const target = exportRef.current ?? cardRef.current;
+    if (!target) return;
     setExporting(true);
     try {
-      const blob = await renderCardToBlob(cardRef.current);
+      const blob = await renderCardToBlob(target);
       const file = new File([blob], `${perf.player.username}-stats.png`, { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
