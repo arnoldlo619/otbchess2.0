@@ -2252,3 +2252,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Escape Key for Projection Overlay (Mar 17 2026)
 - [x] Add Escape key listener to ShareResultsModal QR projection overlay (setProjecting(false) on Escape)
 - [x] SpectatorQRScreen already had Escape-to-close — confirmed working
+
+## Upload RSVPs Preview Table (Mar 17 2026)
+- [x] Add preview step to UploadRSVPModal: after parsing, show table of username + fetched ELO with checkboxes
+- [x] Allow directors to deselect individual rows before committing the import
+- [x] "Import Selected" button only adds checked rows; "Select All / Deselect All" toggle
+
+## Home.tsx Visual Edit (Mar 17 2026)
+- [x] Update h2 section heading from "Try it: look up any player." to "Seamless User Onboarding"

@@ -7,13 +7,12 @@
  *   2. We parse the file and extract usernames from any column whose header
  *      contains "username", "user", "chess", "lichess", or "name"
  *      (case-insensitive). If no header matches we fall back to the first column.
- *   3. We show a preview table. Each row has a status badge:
- *      • Pending  — not yet looked up
- *      • Loading  — API call in flight
- *      • Ready    — found on chess.com / Lichess
- *      • Duplicate — already in the tournament
- *      • Error    — not found
- *   4. Director clicks "Add X Players" to bulk-call onAdd for all Ready rows.
+ *   3. We show a preview table. Each row has:
+ *      • A checkbox (checked by default for Ready rows, disabled for Duplicate/Error)
+ *      • Status badge: Pending / Loading / Ready / Duplicate / Error
+ *      • Name and ELO once looked up
+ *   4. A "Select All / Deselect All" toggle controls all Ready rows at once.
+ *   5. Director clicks "Import Selected" to bulk-call onAdd for all checked Ready rows.
  */
 
 import { useState, useCallback, useRef } from "react";
@@ -31,7 +30,6 @@ import {
   AlertCircle,
   Loader2,
   Users,
-  ChevronDown,
   Info,
   Search,
 } from "lucide-react";
@@ -46,6 +44,8 @@ interface RSVPRow {
   status: RowStatus;
   player?: Player;
   errorMsg?: string;
+  /** Whether the director has this row checked for import (only relevant when status === "ready") */
+  selected: boolean;
 }
 
 interface UploadRSVPModalProps {
@@ -124,7 +124,6 @@ function makePlayer(partial: Partial<Player>): Player {
 function extractUsernames(rows: Record<string, string>[]): string[] {
   if (rows.length === 0) return [];
   const headers = Object.keys(rows[0]);
-  // Prefer a column whose header hints at username/chess/lichess
   const preferred = headers.find((h) =>
     /username|user|chess|lichess|handle|player/i.test(h)
   ) ?? headers[0];
@@ -178,6 +177,48 @@ function StatusBadge({ status, errorMsg, isDark }: { status: RowStatus; errorMsg
     <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
       Pending
     </span>
+  );
+}
+
+// ─── Checkbox ─────────────────────────────────────────────────────────────────
+function Checkbox({
+  checked,
+  indeterminate,
+  onChange,
+  disabled,
+  isDark,
+}: {
+  checked: boolean;
+  indeterminate?: boolean;
+  onChange: () => void;
+  disabled?: boolean;
+  isDark: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={indeterminate ? "mixed" : checked}
+      disabled={disabled}
+      onClick={onChange}
+      className={`w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border transition-all ${
+        disabled
+          ? isDark ? "border-white/10 opacity-30 cursor-not-allowed" : "border-gray-200 opacity-30 cursor-not-allowed"
+          : checked || indeterminate
+          ? "bg-[#3D6B47] border-[#3D6B47]"
+          : isDark
+          ? "border-white/20 hover:border-white/40"
+          : "border-gray-300 hover:border-gray-400"
+      }`}
+    >
+      {indeterminate ? (
+        <span className="block w-2 h-0.5 bg-white rounded-full" />
+      ) : checked ? (
+        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ) : null}
+    </button>
   );
 }
 
@@ -248,12 +289,13 @@ export function UploadRSVPModal({
     const newRows: RSVPRow[] = [];
     for (const u of usernames) {
       const lower = u.toLowerCase();
-      if (seen.has(lower)) continue; // deduplicate within file
+      if (seen.has(lower)) continue;
       seen.add(lower);
       const isDuplicate = existingUsernames.some((e) => e.toLowerCase() === lower);
       newRows.push({
         rawUsername: u,
         status: isDuplicate ? "duplicate" : "pending",
+        selected: false, // not selectable until status === "ready"
       });
     }
     setRows(newRows);
@@ -276,7 +318,6 @@ export function UploadRSVPModal({
     lookupInProgress.current = true;
     setLookupStarted(true);
 
-    // Process in batches of 3 to avoid rate-limiting
     const BATCH = 3;
     const indices = rows
       .map((r, i) => (r.status === "pending" ? i : -1))
@@ -284,7 +325,6 @@ export function UploadRSVPModal({
 
     for (let b = 0; b < indices.length; b += BATCH) {
       const batch = indices.slice(b, b + BATCH);
-      // Mark batch as loading
       setRows((prev) =>
         prev.map((r, i) =>
           batch.includes(i) ? { ...r, status: "loading" } : r
@@ -301,37 +341,58 @@ export function UploadRSVPModal({
             const player = makePlayer(partial);
             setRows((prev) =>
               prev.map((r, i) =>
-                i === idx ? { ...r, status: "ready", player } : r
+                i === idx ? { ...r, status: "ready", player, selected: true } : r
               )
             );
           } catch (err) {
             setRows((prev) =>
               prev.map((r, i) =>
                 i === idx
-                  ? { ...r, status: "error", errorMsg: (err as Error).message }
+                  ? { ...r, status: "error", errorMsg: (err as Error).message, selected: false }
                   : r
               )
             );
           }
         })
       );
-      // Small delay between batches
       if (b + BATCH < indices.length) await new Promise((r) => setTimeout(r, 400));
     }
     lookupInProgress.current = false;
   }, [rows, platform]);
 
-  // ── Add all ready players ───────────────────────────────────────────────────
-  const handleAddAll = useCallback(() => {
-    const readyRows = rows.filter((r) => r.status === "ready" && r.player);
-    if (readyRows.length === 0) return;
-    readyRows.forEach((r) => onAdd(r.player!));
-    toast.success(`Added ${readyRows.length} player${readyRows.length > 1 ? "s" : ""} to the tournament`);
+  // ── Checkbox helpers ────────────────────────────────────────────────────────
+  const toggleRow = useCallback((idx: number) => {
+    setRows((prev) =>
+      prev.map((r, i) =>
+        i === idx && r.status === "ready" ? { ...r, selected: !r.selected } : r
+      )
+    );
+  }, []);
+
+  const readyRows = rows.filter((r) => r.status === "ready");
+  const selectedReadyRows = readyRows.filter((r) => r.selected);
+  const allSelected = readyRows.length > 0 && selectedReadyRows.length === readyRows.length;
+  const someSelected = selectedReadyRows.length > 0 && !allSelected;
+
+  const toggleSelectAll = useCallback(() => {
+    const shouldSelectAll = !allSelected;
+    setRows((prev) =>
+      prev.map((r) =>
+        r.status === "ready" ? { ...r, selected: shouldSelectAll } : r
+      )
+    );
+  }, [allSelected]);
+
+  // ── Import selected players ─────────────────────────────────────────────────
+  const handleImportSelected = useCallback(() => {
+    const toAdd = rows.filter((r) => r.status === "ready" && r.selected && r.player);
+    if (toAdd.length === 0) return;
+    toAdd.forEach((r) => onAdd(r.player!));
+    toast.success(`Added ${toAdd.length} player${toAdd.length > 1 ? "s" : ""} to the tournament`);
     handleClose();
   }, [rows, onAdd, handleClose]);
 
   const pendingCount = rows.filter((r) => r.status === "pending").length;
-  const readyCount = rows.filter((r) => r.status === "ready").length;
   const errorCount = rows.filter((r) => r.status === "error").length;
   const loadingCount = rows.filter((r) => r.status === "loading").length;
   const isLookingUp = loadingCount > 0;
@@ -459,7 +520,8 @@ export function UploadRSVPModal({
               Your spreadsheet should have a column header containing "username". Each row should have one {platform === "chesscom" ? "chess.com" : "Lichess"} username.
               {" "}<button
                 className={`underline underline-offset-2 ${isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#3D6B47] hover:text-[#2A4A32]"}`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   const csv = "username\nhikaru\nmagnus\nalireza\n";
                   const blob = new Blob([csv], { type: "text/csv" });
                   const url = URL.createObjectURL(blob);
@@ -479,20 +541,42 @@ export function UploadRSVPModal({
           {rows.length > 0 && (
             <div className="space-y-3">
               {/* Summary row */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-700"}`}>
-                  {rows.length} usernames found
-                </span>
-                {readyCount > 0 && (
-                  <span className="text-xs text-emerald-400 font-medium">{readyCount} ready</span>
-                )}
-                {errorCount > 0 && (
-                  <span className="text-xs text-red-400 font-medium">{errorCount} not found</span>
-                )}
-                {loadingCount > 0 && (
-                  <span className="text-xs text-amber-400 font-medium flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" /> {loadingCount} looking up…
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                    {rows.length} usernames found
                   </span>
+                  {readyRows.length > 0 && (
+                    <span className="text-xs text-emerald-400 font-medium">{readyRows.length} ready</span>
+                  )}
+                  {errorCount > 0 && (
+                    <span className="text-xs text-red-400 font-medium">{errorCount} not found</span>
+                  )}
+                  {loadingCount > 0 && (
+                    <span className="text-xs text-amber-400 font-medium flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> {loadingCount} looking up…
+                    </span>
+                  )}
+                </div>
+
+                {/* Select All / Deselect All — only shown when there are ready rows */}
+                {readyRows.length > 0 && !isLookingUp && (
+                  <button
+                    onClick={toggleSelectAll}
+                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                      isDark
+                        ? "text-white/50 hover:text-white/80"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={someSelected}
+                      onChange={toggleSelectAll}
+                      isDark={isDark}
+                    />
+                    {allSelected ? "Deselect all" : someSelected ? "Select all" : "Select all"}
+                  </button>
                 )}
               </div>
 
@@ -500,40 +584,71 @@ export function UploadRSVPModal({
               <div className={`rounded-xl border overflow-hidden ${
                 isDark ? "border-white/08" : "border-gray-100"
               }`}>
-                <div className={`grid grid-cols-[1fr_1fr_auto] text-xs font-semibold px-4 py-2 border-b ${
+                {/* Column headers */}
+                <div className={`grid text-xs font-semibold px-4 py-2 border-b ${
                   isDark ? "bg-white/04 text-white/40 border-white/08" : "bg-gray-50 text-gray-500 border-gray-100"
-                }`}>
+                }`} style={{ gridTemplateColumns: "1.5rem 1fr 1fr auto" }}>
+                  <span />
                   <span>Username</span>
                   <span>Name / ELO</span>
                   <span>Status</span>
                 </div>
-                <div className="divide-y divide-white/04 max-h-64 overflow-y-auto">
+
+                <div className={`divide-y max-h-64 overflow-y-auto ${isDark ? "divide-white/04" : "divide-gray-50"}`}>
                   {rows.map((row, i) => (
                     <div
                       key={i}
-                      className={`grid grid-cols-[1fr_1fr_auto] items-center px-4 py-2.5 text-xs transition-colors ${
+                      onClick={() => row.status === "ready" && toggleRow(i)}
+                      className={`grid items-center px-4 py-2.5 text-xs transition-colors ${
                         row.status === "ready"
-                          ? isDark ? "bg-emerald-900/10" : "bg-emerald-50/60"
+                          ? `cursor-pointer ${
+                              row.selected
+                                ? isDark ? "bg-emerald-900/15" : "bg-emerald-50/70"
+                                : isDark ? "hover:bg-white/03" : "hover:bg-gray-50"
+                            }`
                           : row.status === "error"
                           ? isDark ? "bg-red-900/10" : "bg-red-50/40"
                           : row.status === "duplicate"
                           ? isDark ? "bg-white/02" : "bg-gray-50/60"
                           : ""
                       }`}
+                      style={{ gridTemplateColumns: "1.5rem 1fr 1fr auto" }}
                     >
+                      {/* Checkbox */}
+                      <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={row.status === "ready" && row.selected}
+                          onChange={() => toggleRow(i)}
+                          disabled={row.status !== "ready"}
+                          isDark={isDark}
+                        />
+                      </div>
+
+                      {/* Username */}
                       <span className={`font-mono truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>
                         {row.rawUsername}
                       </span>
+
+                      {/* Name / ELO */}
                       <span className={`truncate ${isDark ? "text-white/50" : "text-gray-500"}`}>
                         {row.player
                           ? `${row.player.name} · ${row.player.elo}`
                           : "—"}
                       </span>
+
+                      {/* Status */}
                       <StatusBadge status={row.status} errorMsg={row.errorMsg} isDark={isDark} />
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Selection count hint */}
+              {readyRows.length > 0 && !isLookingUp && (
+                <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                  {selectedReadyRows.length} of {readyRows.length} ready player{readyRows.length !== 1 ? "s" : ""} selected for import
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -575,12 +690,13 @@ export function UploadRSVPModal({
                   Looking up players…
                 </span>
               )}
-              {/* Add All button */}
+
+              {/* Import Selected button */}
               <button
-                onClick={handleAddAll}
-                disabled={readyCount === 0}
+                onClick={handleImportSelected}
+                disabled={selectedReadyRows.length === 0}
                 className={`flex items-center gap-2 text-sm font-semibold px-5 py-2 rounded-xl transition-all ${
-                  readyCount > 0
+                  selectedReadyRows.length > 0
                     ? "bg-[#3D6B47] text-white hover:bg-[#2A4A32] shadow-sm"
                     : isDark
                     ? "bg-white/08 text-white/20 cursor-not-allowed"
@@ -588,7 +704,7 @@ export function UploadRSVPModal({
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
-                Add {readyCount > 0 ? `${readyCount} ` : ""}Player{readyCount !== 1 ? "s" : ""}
+                Import {selectedReadyRows.length > 0 ? `${selectedReadyRows.length} ` : ""}Selected
               </button>
             </div>
           </div>
@@ -598,5 +714,3 @@ export function UploadRSVPModal({
     document.body
   );
 }
-
-

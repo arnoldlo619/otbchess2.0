@@ -50,6 +50,7 @@ import {
   Ghost,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -450,11 +451,13 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
       <div className="container relative z-10">
         <div className="max-w-3xl mx-auto text-center py-24 lg:py-32">
           <div className="opacity-0-init animate-fade-in-up" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
-            <span className={`inline-flex items-center text-xs font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full border mb-8 ${
-              isDark ? "border-white/20 text-white/70 bg-white/05" : "border-[#3D6B47]/30 text-[#3D6B47] bg-[#3D6B47]/06"
-            }`}>
-              For Chess Clubs & Communities
-            </span>
+            <HoverBorderGradient
+              as="span"
+              containerClassName={`mb-8 ${isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-white"}`}
+              className={`text-xs font-semibold tracking-widest uppercase ${isDark ? "text-white/70 bg-[oklch(0.18_0.05_145)]" : "text-[#3D6B47] bg-white"}`}
+            >
+              For Chess Clubs &amp; Communities
+            </HoverBorderGradient>
           </div>
 
           <h1
@@ -902,7 +905,7 @@ function PlayerDemo() {
             chess.com Integration
           </p>
           <h2 className="text-4xl font-semibold tracking-tight mb-4 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Try it: look up any player.
+            Seamless User Onboarding
           </h2>
           <p className="text-muted-foreground">
             Enter a chess.com username below to see how player registration works. Try{" "}
