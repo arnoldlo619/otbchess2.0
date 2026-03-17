@@ -1133,7 +1133,7 @@ function Footer() {
     ],
     Company: [
       { label: "About", href: "/#how-it-works" },
-      { label: "Contact", href: "mailto:hello@otbchess.app" },
+      { label: "Contact", href: "mailto:hello@otbchess.club" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
     ],

@@ -20,7 +20,7 @@
  *   - A call-to-action to view the full report
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import {
   X,
@@ -279,6 +279,16 @@ function QRCodePanel({
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [projecting, setProjecting] = useState(false);
+
+  // Close projection overlay on Escape key
+  useEffect(() => {
+    if (!projecting) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setProjecting(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [projecting]);
 
   const hasUrl = Boolean(reportUrl);
   const qrValue = reportUrl || window.location.href;

@@ -13,6 +13,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
+import { UploadRSVPModal } from "@/components/UploadRSVPModal";
 import { QRModal } from "@/components/QRModal";
 import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
@@ -71,6 +72,7 @@ import {
   Tv2,
   Undo2,
   Info,
+  FileSpreadsheet,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -807,6 +809,7 @@ export default function Director() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showFilters, setShowFilters] = useState(false);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
+  const [showUploadRSVP, setShowUploadRSVP] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
@@ -2221,16 +2224,29 @@ export default function Director() {
                         showFilters ? "rotate-180" : ""
                       }`} />
                     </button>
-                    {/* Add Player button — only during registration */}
+                    {/* Add Player + Upload RSVPs buttons — only during registration */}
                     {isRegistration && (
-                      <button
-                        onClick={() => setShowAddPlayer(true)}
-                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all"
-                        style={{ background: "#3D6B47", color: "#FFFFFF" }}
-                      >
-                        <UserPlus className="w-3.5 h-3.5" />
-                        Add Player
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setShowUploadRSVP(true)}
+                          className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all ${
+                            isDark
+                              ? "border-[#4CAF50]/40 text-[#4CAF50] hover:bg-[#3D6B47]/20"
+                              : "border-[#3D6B47]/40 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                          }`}
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                          Upload RSVPs
+                        </button>
+                        <button
+                          onClick={() => setShowAddPlayer(true)}
+                          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all"
+                          style={{ background: "#3D6B47", color: "#FFFFFF" }}
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          Add Player
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -2851,6 +2867,16 @@ export default function Director() {
         onAdd={(player) => {
           addPlayer(player);
           toast.success(`${player.name} added to the tournament`);
+        }}
+        existingUsernames={existingUsernames}
+      />
+
+      {/* ── Upload RSVP Modal ─────────────────────────────────────────────────── */}
+      <UploadRSVPModal
+        open={showUploadRSVP}
+        onClose={() => setShowUploadRSVP(false)}
+        onAdd={(player) => {
+          addPlayer(player);
         }}
         existingUsernames={existingUsernames}
       />

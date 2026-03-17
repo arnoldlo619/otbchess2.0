@@ -2234,3 +2234,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add tiebreak info footer row
 - [x] Add fade-in-up animation on mount for podium cards and table rows
 - [x] Remove old StandingsPanel wrapper card and replace with new premium layout
+
+## Upload RSVPs Feature (Mar 17 2026)
+- [x] UploadRSVPModal component — drag-and-drop .csv/.xlsx/.xls file upload, platform toggle (chess.com / Lichess)
+- [x] Parses "username" column (or first column) from spreadsheet, deduplicates, skips existing players
+- [x] Bulk-registers players via existing addPlayerToTournament flow with chess.com/Lichess ELO fetch
+- [x] Progress bar during import, per-row status (added / duplicate / error)
+- [x] "Upload RSVPs" button wired into Director.tsx Players tab toolbar (registration phase only)
+- [x] "Download template" link in modal for easy onboarding
+- [x] FileSpreadsheet icon added to lucide-react import in Director.tsx
+
+## Domain & Contact Email Update (Mar 17 2026)
+- [x] Update footer contact email from hello@otbchess.app to hello@otbchess.club in Home.tsx
+- [x] Update report issue mailto from hello@otbchess.app to hello@otbchess.club in Tournament.tsx
+- [x] Update Print.tsx footer domain reference from otbchess.app to otbchess.club
+
+## Escape Key for Projection Overlay (Mar 17 2026)
+- [x] Add Escape key listener to ShareResultsModal QR projection overlay (setProjecting(false) on Escape)
+- [x] SpectatorQRScreen already had Escape-to-close — confirmed working

@@ -1372,7 +1372,7 @@ export default function TournamentPage() {
           </div>
           <div className="flex items-center gap-4">
             <span>Powered by chess.com API</span>
-            <a href="mailto:hello@otbchess.app?subject=Issue+Report" className="hover:text-foreground transition-colors">
+            <a href="mailto:hello@otbchess.club?subject=Issue+Report" className="hover:text-foreground transition-colors">
               Report Issue
             </a>
           </div>
