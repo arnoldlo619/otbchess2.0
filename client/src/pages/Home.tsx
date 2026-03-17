@@ -51,6 +51,7 @@ import {
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -484,20 +485,20 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center"
             style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
           >
-            <button
+            <SpinBorderButton
+              variant="solid"
               onClick={onCreateTournament}
-              className="btn-chess-primary flex items-center justify-center gap-2"
             >
               Host Tournament
               <ArrowRight className="w-4 h-4" />
-            </button>
-            <Link
-              href="/join"
-              className="btn-chess-secondary flex items-center justify-center gap-2"
+            </SpinBorderButton>
+            <SpinBorderButton
+              variant="outline"
+              onClick={() => window.location.href = "/join"}
             >
               Join
               <ArrowRight className="w-4 h-4" />
-            </Link>
+            </SpinBorderButton>
           </div>
           <div
             className="opacity-0-init animate-fade-in-up mt-3"

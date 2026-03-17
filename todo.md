@@ -2263,3 +2263,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Hero Pill Polish (Mar 17 2026)
 - [x] Polish and centrally align the "FOR CHESS CLUBS & COMMUNITIES" hero pill — fix centering, spacing, and visual refinement
+
+## Hero Animated Buttons (Mar 17 2026)
+- [x] Transform "Host Tournament" and "Join" hero buttons to use spinning conic-gradient animated border style
