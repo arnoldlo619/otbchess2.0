@@ -508,29 +508,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </Link>
           </div>
 
-          {/* Social proof */}
-          <div
-            className="opacity-0-init animate-fade-in-up mt-10 flex items-center justify-center gap-6"
-            style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}
-          >
-            <div className="flex -space-x-2">
-              {["#3D6B47", "#769656", "#2A4A32", "#5A8A6A"].map((c, i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: c }}>
-                  {["M", "A", "K", "R"][i]}
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="flex items-center gap-1 mb-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-3.5 h-3.5 ${isDark ? "fill-[oklch(0.65_0.14_145)] text-[oklch(0.65_0.14_145)]" : "fill-[#3D6B47] text-[#3D6B47]"}`} />
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Trusted by <strong className="text-foreground">80+ chess clubs</strong> worldwide
-              </p>
-            </div>
-          </div>
+
 
           {/* Quick-stat chips */}
           <div
