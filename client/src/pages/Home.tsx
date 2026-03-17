@@ -1095,7 +1095,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             starts here.
           </h2>
           <p className="text-white/75 text-lg mb-10">
-            Free for clubs with up to 20 players. No credit card required.
+            Free for clubs with up to 62 players. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
