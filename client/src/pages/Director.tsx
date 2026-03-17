@@ -1246,6 +1246,54 @@ export default function Director() {
               </span>
             </div>
 
+            {/* Round progress pip widget — above tabs, only when tournament is active */}
+            {!isRegistration && (
+              <div className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border ${
+                isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
+              }`}>
+                <div className="text-center min-w-[1.5rem]">
+                  <div className={`text-2xl font-black tabular-nums leading-none ${isDark ? "text-white" : "text-gray-900"}`}
+                    style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {state.currentRound}
+                  </div>
+                  <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    Round
+                  </div>
+                </div>
+                {/* Pip dots */}
+                <div className="flex items-center gap-1.5 flex-1 justify-center">
+                  {Array.from({ length: state.totalRounds }).map((_, i) => {
+                    const roundNum = i + 1;
+                    const isComplete = roundNum < state.currentRound;
+                    const isCurrent = roundNum === state.currentRound;
+                    return (
+                      <div
+                        key={i}
+                        className={`rounded-full transition-all duration-300 ${
+                          isComplete
+                            ? "w-3 h-3 bg-[#4CAF50]"
+                            : isCurrent
+                            ? "w-3 h-3 bg-[#4CAF50]/50 ring-2 ring-[#4CAF50]/40"
+                            : isDark
+                            ? "w-2.5 h-2.5 bg-white/12"
+                            : "w-2.5 h-2.5 bg-gray-200"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="text-center min-w-[1.5rem]">
+                  <div className={`text-2xl font-black tabular-nums leading-none ${isDark ? "text-white/40" : "text-gray-400"}`}
+                    style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {state.totalRounds}
+                  </div>
+                  <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/25" : "text-gray-300"}`}>
+                    Total
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Unified tab bar */}
             <div
               className={`flex rounded-2xl p-1 w-full overflow-x-auto ${
@@ -1462,85 +1510,37 @@ export default function Director() {
                   <div className={`w-full rounded-2xl border overflow-hidden ${
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
                   }`}>
-                    {/* Tournament name + meta + round pip widget */}
-                    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 border-b ${
+                    {/* Tournament name + meta */}
+                    <div className={`px-5 py-4 border-b ${
                       isDark ? "border-white/08" : "border-gray-100"
                     }`}>
-                      {/* Left: name + meta chips */}
-                      <div className="flex-1 min-w-0">
-                        <h2
-                          className={`text-base font-black truncate ${isDark ? "text-white" : "text-gray-900"}`}
-                          style={{ fontFamily: "'Clash Display', sans-serif" }}
-                        >
-                          {state.tournamentName}
-                        </h2>
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                          {tournamentConfig?.timePreset && (
-                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                              isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                            }`}>
-                              <Clock className="w-3 h-3" />
-                              {tournamentConfig.timePreset}
-                            </span>
-                          )}
+                      <h2
+                        className={`text-base font-black truncate ${isDark ? "text-white" : "text-gray-900"}`}
+                        style={{ fontFamily: "'Clash Display', sans-serif" }}
+                      >
+                        {state.tournamentName}
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        {tournamentConfig?.timePreset && (
                           <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
                             isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
                           }`}>
-                            <Users className="w-3 h-3" />
-                            {state.players.length} players
+                            <Clock className="w-3 h-3" />
+                            {tournamentConfig.timePreset}
                           </span>
-                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                            isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                          }`}>
-                            <Trophy className="w-3 h-3" />
-                            Swiss · {state.totalRounds}R
-                          </span>
-                        </div>
-                      </div>
-                      {/* Right: Round X / pip dots / Total widget */}
-                      <div className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl border ${
-                        isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
-                      }`}>
-                        <div className="text-center min-w-[1.5rem]">
-                          <div className={`text-3xl font-black tabular-nums leading-none ${isDark ? "text-white" : "text-gray-900"}`}
-                            style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                            {state.currentRound}
-                          </div>
-                          <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                            Round
-                          </div>
-                        </div>
-                        {/* Pip dots — larger and more visible */}
-                        <div className="flex items-center gap-1.5">
-                          {Array.from({ length: state.totalRounds }).map((_, i) => {
-                            const roundNum = i + 1;
-                            const isComplete = roundNum < state.currentRound;
-                            const isCurrent = roundNum === state.currentRound;
-                            return (
-                              <div
-                                key={i}
-                                className={`rounded-full transition-all duration-300 ${
-                                  isComplete
-                                    ? "w-3 h-3 bg-[#4CAF50]"
-                                    : isCurrent
-                                    ? "w-3 h-3 bg-[#4CAF50]/50 ring-2 ring-[#4CAF50]/40"
-                                    : isDark
-                                    ? "w-2.5 h-2.5 bg-white/12"
-                                    : "w-2.5 h-2.5 bg-gray-200"
-                                }`}
-                              />
-                            );
-                          })}
-                        </div>
-                        <div className="text-center min-w-[1.5rem]">
-                          <div className={`text-3xl font-black tabular-nums leading-none ${isDark ? "text-white/40" : "text-gray-400"}`}
-                            style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                            {state.totalRounds}
-                          </div>
-                          <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/25" : "text-gray-300"}`}>
-                            Total
-                          </div>
-                        </div>
+                        )}
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                          isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          <Users className="w-3 h-3" />
+                          {state.players.length} players
+                        </span>
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                          isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          <Trophy className="w-3 h-3" />
+                          Swiss · {state.totalRounds}R
+                        </span>
                       </div>
                     </div>
 
