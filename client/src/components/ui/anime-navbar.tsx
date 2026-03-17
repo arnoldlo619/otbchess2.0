@@ -36,6 +36,8 @@ interface NavItem {
   onClick?: (e: React.MouseEvent) => void
   /** Optional section ID to watch with IntersectionObserver for scroll-aware active state */
   sectionId?: string
+  /** Optional tooltip text shown below the tab on hover */
+  tooltip?: string
 }
 
 interface AnimeNavBarProps {
@@ -453,6 +455,39 @@ export function AnimeNavBar({
                       >
                         <item.icon size={16} strokeWidth={2.5} />
                       </motion.span>
+
+                      {/* ── Tooltip (shown on hover when tooltip text is provided) ── */}
+                      <AnimatePresence>
+                        {isHovered && item.tooltip && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4, scale: 0.92 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -4, scale: 0.92 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[10000]"
+                          >
+                            <div
+                              className="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold text-white/90 border border-white/12 shadow-xl"
+                              style={{
+                                background: "rgba(10,31,10,0.92)",
+                                backdropFilter: "blur(12px)",
+                                WebkitBackdropFilter: "blur(12px)",
+                              }}
+                            >
+                              {item.tooltip}
+                              {/* Arrow */}
+                              <div
+                                className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden"
+                              >
+                                <div
+                                  className="w-2 h-2 rotate-45 border border-white/12 mx-auto"
+                                  style={{ background: "rgba(10,31,10,0.92)", marginTop: "2px" }}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </a>
                   )
                 })}

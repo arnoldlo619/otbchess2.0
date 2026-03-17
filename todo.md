@@ -2274,3 +2274,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Dashboard Active State (Mar 17 2026)
 - [x] Set Dashboard as active nav tab on /tournament/:id/manage (Director page)
 - [x] Set Dashboard as active nav tab on /tournament/:id (Participant page)
+
+## Dashboard Tooltip (Mar 17 2026)
+- [x] Add hover tooltip to Dashboard nav button previewing destination (e.g. "Spring Open 2026 — Director View")

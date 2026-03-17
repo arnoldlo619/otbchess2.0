@@ -53,6 +53,31 @@ function getDashboardUrl(): string {
   return "/join";
 }
 
+/**
+ * Build the tooltip label for the Dashboard button, e.g.:
+ *   "Spring Open 2026 — Director View"
+ *   "Spring Open 2026 — Player View"
+ *   undefined when there is no tournament history (shows no tooltip)
+ */
+function getDashboardTooltip(): string | undefined {
+  const allTournaments = listTournaments();
+  const directed = allTournaments.find((t) => hasDirectorSession(t.id));
+  if (directed) {
+    const name = directed.name || directed.id;
+    return `${name} — Director View`;
+  }
+
+  const registrations = getAllRegistrations();
+  if (registrations.length > 0) {
+    const reg = registrations[0];
+    const config = resolveTournament(reg.tournamentId);
+    const name = config?.name || reg.tournamentId;
+    return `${name} — Player View`;
+  }
+
+  return undefined;
+}
+
 export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, className }: AppNavBarProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -61,12 +86,14 @@ export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, classNam
   const [activeTab, setActiveTab] = useState(defaultActive);
 
   const dashboardUrl = getDashboardUrl();
+  const dashboardTooltip = getDashboardTooltip();
 
   const navItems = [
     {
       name: "Dashboard",
       url: dashboardUrl,
       icon: LayoutDashboard,
+      tooltip: dashboardTooltip,
       onClick: (e: React.MouseEvent) => {
         e.preventDefault();
         window.location.href = getDashboardUrl();
