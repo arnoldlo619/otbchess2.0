@@ -1689,39 +1689,49 @@ export default function Director() {
                     }`}>Round {state.currentRound} Boards</h2>
                     {currentRoundData ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {currentRoundData.games.map((game) =>
+                        {currentRoundData.games.map((game, cardIdx) =>
                           game.whiteId === "BYE" ? (
-                            <ByeCard
+                            <div
                               key={game.id}
-                              game={game}
-                              players={state.players}
-                              isDark={isDark}
-                            />
+                              className="animate-in fade-in slide-in-from-bottom-3"
+                              style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}
+                            >
+                              <ByeCard
+                                game={game}
+                                players={state.players}
+                                isDark={isDark}
+                              />
+                            </div>
                           ) : (
-                            <BoardCard
+                            <div
                               key={game.id}
-                              game={game}
-                              players={state.players}
-                              onUndo={undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
-                              onResult={(gameId, newResult) => {
-                                const prevResult = game.result;
-                                const white = state.players.find((p) => p.id === game.whiteId);
-                                const black = state.players.find((p) => p.id === game.blackId);
-                                const label =
-                                  newResult === "*"
-                                    ? `Board ${game.board}: cleared`
-                                    : `Board ${game.board}: ${
-                                        newResult === "1-0"
-                                          ? `${white?.name ?? "White"} wins`
-                                          : newResult === "0-1"
-                                          ? `${black?.name ?? "Black"} wins`
-                                          : "Draw"
-                                      }`;
-                                recordWithUndo(gameId, newResult, prevResult, label);
-                                pushStandingsNow();
-                              }}
-                              isDark={isDark}
-                            />
+                              className="animate-in fade-in slide-in-from-bottom-3"
+                              style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}
+                            >
+                              <BoardCard
+                                game={game}
+                                players={state.players}
+                                onUndo={undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
+                                onResult={(gameId, newResult) => {
+                                  const prevResult = game.result;
+                                  const white = state.players.find((p) => p.id === game.whiteId);
+                                  const black = state.players.find((p) => p.id === game.blackId);
+                                  const label =
+                                    newResult === "*"
+                                      ? `Board ${game.board}: cleared`
+                                      : `Board ${game.board}: ${
+                                          newResult === "1-0"
+                                            ? `${white?.name ?? "White"} wins`
+                                            : newResult === "0-1"
+                                            ? `${black?.name ?? "Black"} wins`
+                                            : "Draw"
+                                        }`;
+                                  recordWithUndo(gameId, newResult, prevResult, label);
+                                  pushStandingsNow();
+                                }}
+                                isDark={isDark}
+                              />
+                            </div>
                           )
                         )}
                       </div>
