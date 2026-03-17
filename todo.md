@@ -2182,3 +2182,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Home.tsx Dynamic Import Error Fix (Mar 17 2026)
 - [x] Fixed "Failed to fetch dynamically imported module: Home.tsx" — root cause: SW was caching /src/*.tsx Vite module URLs (cache-first strategy) and serving stale content after HMR rebuilds. Fix: (1) SW only registers in PROD (import.meta.env.PROD guard in main.tsx), (2) dev mode auto-unregisters any existing SW, (3) added /src/ to SW fetch bypass list, (4) bumped SW cache version to v4 to evict stale caches.
+
+## Battle Stats in Profile Stat Badges (Mar 17 2026)
+- [x] Fetch battle history in Profile page and compute W/D/L totals
+- [x] Add W/D/L as a combined stat badge in the existing stat badges row at the top of the profile card
+- [x] Style with OTB-green for wins, neutral for draws, muted-red for losses

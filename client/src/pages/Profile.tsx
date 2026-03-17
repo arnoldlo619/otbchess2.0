@@ -61,6 +61,42 @@ function StatBadge({
   );
 }
 
+/** Compact W/D/L badge shown in the stat row while battle history is loading or loaded. */
+function BattleStatBadge({
+  wins,
+  draws,
+  losses,
+  loading,
+  isDark,
+}: {
+  wins: number;
+  draws: number;
+  losses: number;
+  loading: boolean;
+  isDark: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col items-center gap-1 px-3 py-4 rounded-2xl ${
+        isDark ? "bg-white/5" : "bg-gray-50"
+      }`}
+    >
+      {loading ? (
+        <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>—</span>
+      ) : (
+        <div className="flex items-center gap-1.5">
+          <span className="text-base font-bold text-[#4ade80]">{wins}W</span>
+          <span className={`text-base font-bold ${isDark ? "text-white/40" : "text-gray-400"}`}>{draws}D</span>
+          <span className="text-base font-bold text-red-400">{losses}L</span>
+        </div>
+      )}
+      <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+        Battles
+      </span>
+    </div>
+  );
+}
+
 /**
  * Maps a DirectorState status string to a human-readable label and colour.
  * Values: "registration" → Lobby (amber), "in_progress" → Active (green),
@@ -329,12 +365,19 @@ export default function ProfilePage() {
           </div>
 
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             <StatBadge label="Tournaments" value={tournamentCount} isDark={isDark} />
             <StatBadge label="ELO" value={elo ?? "—"} isDark={isDark} />
             <StatBadge
               label="Member since"
               value={new Date(user.createdAt).getFullYear()}
+              isDark={isDark}
+            />
+            <BattleStatBadge
+              wins={battleWins}
+              draws={battleDraws}
+              losses={battleLosses}
+              loading={battleHistoryLoading}
               isDark={isDark}
             />
           </div>
