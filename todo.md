@@ -2208,3 +2208,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Guest Join Code Preservation (Mar 17 2026)
 - [x] Store join code in sessionStorage before guest opens AuthModal to upgrade
 - [x] After successful registration, restore join code and navigate back to join flow
+
+## Director Dashboard UI Redesign (Mar 17 2026)
+- [x] Remove round clock/timer hero card from active phase of Home tab
+- [x] Add compact tournament header card with round progress pips
+- [x] Redesign BoardCard: single-line player rows with avatar+name+title+ELO, slim vs divider, full-width result buttons
+- [x] Remove unused RoundTimerCard import and useRoundTimer hook usage
