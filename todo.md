@@ -2204,3 +2204,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Guest Name Pre-population on Sign Up (Mar 17 2026)
 - [x] Pre-populate Sign Up display name field with guest user's current display name
+
+## Guest Join Code Preservation (Mar 17 2026)
+- [x] Store join code in sessionStorage before guest opens AuthModal to upgrade
+- [x] After successful registration, restore join code and navigate back to join flow

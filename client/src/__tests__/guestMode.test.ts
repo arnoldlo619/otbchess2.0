@@ -137,3 +137,68 @@ describe("Guest access scoping logic", () => {
     expect(canJoin({ isGuest: false })).toBe(true);
   });
 });
+
+// ─── Join code preservation helpers ──────────────────────────────────────────
+
+describe("Join code preservation across guest upgrade", () => {
+  const PENDING_JOIN_KEY = "otb_pending_join_code";
+
+  // In-memory sessionStorage shim (vitest runs in node environment, no DOM)
+  let store: Record<string, string> = {};
+  const fakeSession = {
+    getItem: (k: string) => store[k] ?? null,
+    setItem: (k: string, v: string) => { store[k] = v; },
+    removeItem: (k: string) => { delete store[k]; },
+    clear: () => { store = {}; },
+  };
+
+  beforeEach(() => { fakeSession.clear(); });
+
+  function openAuthForUpgrade(joinCode: string) {
+    if (joinCode.trim()) {
+      fakeSession.setItem(PENDING_JOIN_KEY, joinCode.trim());
+    }
+  }
+
+  function handleAuthClose(): { restoredCode: string | null } {
+    const pending = fakeSession.getItem(PENDING_JOIN_KEY);
+    if (pending) {
+      fakeSession.removeItem(PENDING_JOIN_KEY);
+      return { restoredCode: pending.toUpperCase() };
+    }
+    return { restoredCode: null };
+  }
+
+  it("stashes a non-empty join code in sessionStorage on upgrade", () => {
+    openAuthForUpgrade("abc123");
+    expect(fakeSession.getItem(PENDING_JOIN_KEY)).toBe("abc123");
+  });
+
+  it("does not stash an empty join code", () => {
+    openAuthForUpgrade("   ");
+    expect(fakeSession.getItem(PENDING_JOIN_KEY)).toBeNull();
+  });
+
+  it("restores the stashed code in uppercase on modal close", () => {
+    openAuthForUpgrade("abc123");
+    const { restoredCode } = handleAuthClose();
+    expect(restoredCode).toBe("ABC123");
+  });
+
+  it("removes the stashed code from sessionStorage after restoration", () => {
+    openAuthForUpgrade("abc123");
+    handleAuthClose();
+    expect(fakeSession.getItem(PENDING_JOIN_KEY)).toBeNull();
+  });
+
+  it("returns null when no code was stashed (non-guest close)", () => {
+    const { restoredCode } = handleAuthClose();
+    expect(restoredCode).toBeNull();
+  });
+
+  it("preserves the exact code characters (case-insensitive stash, uppercase restore)", () => {
+    openAuthForUpgrade("XyZ789");
+    const { restoredCode } = handleAuthClose();
+    expect(restoredCode).toBe("XYZ789");
+  });
+});

@@ -180,6 +180,29 @@ export default function Battle() {
   const [copied, setCopied] = useState(false);
   const [polling, setPolling] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+
+  // ── Join-code preservation across guest → account upgrade ──────────────────
+  // When a guest opens the AuthModal while a join code is entered, we stash the
+  // code in sessionStorage so AuthModal can restore it after registration.
+  const PENDING_JOIN_KEY = "otb_pending_join_code";
+
+  function openAuthForUpgrade() {
+    if (joinCode.trim()) {
+      sessionStorage.setItem(PENDING_JOIN_KEY, joinCode.trim());
+    }
+    setAuthOpen(true);
+  }
+
+  // After AuthModal closes (successful registration), restore the stashed code.
+  function handleAuthClose() {
+    setAuthOpen(false);
+    const pending = sessionStorage.getItem(PENDING_JOIN_KEY);
+    if (pending) {
+      sessionStorage.removeItem(PENDING_JOIN_KEY);
+      setJoinCode(pending.toUpperCase());
+      setScreen("join_enter_code");
+    }
+  }
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControlOption | null>(null);
 
   // ── Time control presets ───────────────────────────────────────────────────
@@ -424,7 +447,7 @@ export default function Battle() {
                     <span>Playing as guest &mdash; join battles below. <span className="text-amber-200/60">History won&apos;t be saved.</span></span>
                   </div>
                   <button
-                    onClick={() => setAuthOpen(true)}
+                    onClick={openAuthForUpgrade}
                     className="shrink-0 text-xs font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2 transition"
                   >
                     Upgrade
@@ -463,7 +486,7 @@ export default function Battle() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    if (!user) { setAuthOpen(true); return; }
+                    if (!user) { openAuthForUpgrade(); return; }
                     setError(null);
                     setScreen("join_enter_code");
                   }}
@@ -665,6 +688,20 @@ export default function Battle() {
                 )}
                 Enter Battle
               </motion.button>
+
+              {/* Guest upgrade nudge — code is stashed so it survives registration */}
+              {user?.isGuest && (
+                <p className="mt-5 text-xs text-white/30">
+                  Want your result saved?{" "}
+                  <button
+                    onClick={openAuthForUpgrade}
+                    className="text-amber-400 hover:text-amber-300 underline underline-offset-2 transition"
+                  >
+                    Create a free account
+                  </button>
+                  {" "}&mdash; your join code will be kept.
+                </p>
+              )}
             </motion.div>
           )}
 
@@ -885,7 +922,7 @@ export default function Battle() {
       </main>
 
       {/* Auth modal — opened when unauthenticated user clicks sign-in prompt */}
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+      <AuthModal isOpen={authOpen} onClose={handleAuthClose} isDark />
     </div>
   );
 }
