@@ -1735,7 +1735,7 @@ export default function Director() {
                                       }`}>{player.title}</span>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 mt-0.5">
+                                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                     {player.elo != null && (
                                       <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-gray-400"}`}>
                                         {player.elo} ELO
@@ -1744,6 +1744,11 @@ export default function Director() {
                                     <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-gray-400"}`}>
                                       {standing.wins}W {standing.draws}D {standing.losses}L
                                     </span>
+                                    {standing.buchholz > 0 && (
+                                      <span className={`text-xs font-semibold ${ isDark ? "text-white/30" : "text-gray-300"}`}>
+                                        · Buch. {standing.buchholz.toFixed(1)}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
 
