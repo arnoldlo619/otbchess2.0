@@ -2280,3 +2280,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Dashboard Dropdown (Mar 17 2026)
 - [x] Transform Dashboard nav button into a dropdown listing multiple recent tournaments with Director/Player role badges
+
+## Join Button Polish (Mar 17 2026)
+- [x] Polish and refine the hero "Join" button for a smoother, cleaner design

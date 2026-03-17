@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 export interface SpinBorderButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "solid" | "outline";
+  variant?: "solid" | "outline" | "glass";
   /** Render as a different element (e.g. pass an <a> or wouter <Link> as child) */
   asChild?: boolean;
   children?: React.ReactNode;
@@ -25,6 +25,40 @@ export const SpinBorderButton = React.forwardRef<
   SpinBorderButtonProps
 >(({ variant = "solid", className, children, asChild, ...props }, ref) => {
   const isSolid = variant === "solid";
+  const isGlass = variant === "glass";
+
+  // Glass variant: clean glassmorphic button, no spinning border
+  if (isGlass) {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "group relative inline-flex items-center justify-center gap-2 overflow-hidden",
+          "rounded-lg px-6 py-3 text-sm font-semibold tracking-wide",
+          "border border-white/20 text-white",
+          "bg-white/08 backdrop-blur-md",
+          "transition-all duration-300 ease-out",
+          "hover:bg-white/14 hover:border-white/35 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2",
+          "disabled:pointer-events-none disabled:opacity-50",
+          "cursor-pointer",
+          className
+        )}
+        {...props}
+      >
+        {/* Subtle shimmer sweep on hover */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%)",
+          }}
+        />
+        {children}
+      </button>
+    );
+  }
 
   return (
     <button
