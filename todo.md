@@ -2283,3 +2283,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Join Button Polish (Mar 17 2026)
 - [x] Polish and refine the hero "Join" button for a smoother, cleaner design
+
+## Glass Button Rollout (Mar 17 2026)
+- [x] Apply glass variant to secondary CTAs throughout the app (Home, Join, Tournament, Director pages)

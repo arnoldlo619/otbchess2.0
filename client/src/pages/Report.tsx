@@ -17,6 +17,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { loadTournamentState } from "@/lib/directorState";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { computeAllPerformances, type PlayerPerformance } from "@/lib/performanceStats";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import PlayerStatsCard, {
@@ -657,11 +658,12 @@ export default function ReportPage() {
           <p className={`text-sm mb-6 ${isDark ? "text-white/50" : "text-gray-500"}`}>
             Performance reports are generated after the tournament is complete and all results are entered.
           </p>
-          <Link href={`/tournament/${tournamentId}/manage`}>
-            <button className="px-4 py-2 rounded-xl bg-[#3D6B47] text-white text-sm font-semibold hover:bg-[#2d5235] transition-colors">
-              Back to Dashboard
-            </button>
-          </Link>
+          <SpinBorderButton
+            variant="glass"
+            onClick={() => window.location.href = `/tournament/${tournamentId}/manage`}
+          >
+            Back to Dashboard
+          </SpinBorderButton>
         </div>
       </div>
     );

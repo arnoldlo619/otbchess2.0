@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
+import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -906,15 +907,13 @@ export default function Battle() {
                 >
                   New Battle
                 </motion.button>
-                <Link href="/">
-                  <motion.span
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="inline-flex px-6 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold text-sm transition-all cursor-pointer"
-                  >
-                    Back to Home
-                  </motion.span>
-                </Link>
+                <SpinBorderButton
+                  variant="glass"
+                  onClick={() => window.location.href = "/"}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Home
+                </SpinBorderButton>
               </div>
             </motion.div>
           )}

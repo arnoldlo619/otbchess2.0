@@ -1111,12 +1111,13 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             >
               Create Free Tournament
             </button>
-            <Link
-              href="/tournament/otb-demo-2026"
-              className="border border-white/40 text-white font-semibold text-sm px-8 py-3 rounded-md hover:bg-white/10 transition-all duration-200 inline-block text-center"
+            <SpinBorderButton
+              variant="glass"
+              onClick={() => window.location.href = "/tournament/otb-demo-2026"}
             >
               View Live Demo
-            </Link>
+              <ArrowRight className="w-4 h-4" />
+            </SpinBorderButton>
           </div>
         </div>
       </div>

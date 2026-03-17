@@ -3,6 +3,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
 import { Crown, ChevronLeft, Search } from "lucide-react";
+import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
@@ -80,17 +81,13 @@ export default function NotFound() {
               <Crown className="w-4 h-4" />
               Go to Home
             </button>
-            <button
+            <SpinBorderButton
+              variant="glass"
               onClick={() => window.history.back()}
-              className={`flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl border transition-all duration-200 hover:-translate-y-0.5 ${
-                isDark
-                  ? "border-white/15 text-white/70 hover:text-white hover:border-white/30 bg-white/05"
-                  : "border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 bg-white"
-              }`}
             >
               <ChevronLeft className="w-4 h-4" />
               Go Back
-            </button>
+            </SpinBorderButton>
           </div>
 
           {/* Quick links */}
