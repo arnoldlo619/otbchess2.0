@@ -2270,3 +2270,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Dashboard Nav Button (Mar 17 2026)
 - [x] Add "Dashboard" button left of "Clubs" in header nav — smart routes to most recent tournament (director or participant view)
 - [x] Rebalance nav bar centering with 4 items
+
+## Dashboard Active State (Mar 17 2026)
+- [x] Set Dashboard as active nav tab on /tournament/:id/manage (Director page)
+- [x] Set Dashboard as active nav tab on /tournament/:id (Participant page)

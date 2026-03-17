@@ -20,6 +20,7 @@ import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
 import { Link, useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
+import { AppNavBar } from "@/components/AppNavBar";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -1088,25 +1089,26 @@ export default function Director() {
         isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
       }`}
     >
-      {/* ── Top Bar ─────────────────────────────────────────────────────────── */}
+      {/* ── Animated Nav Bar (fixed overlay, z-9999) ─────────────────────── */}
+      <AppNavBar defaultActive="Dashboard" />
+
+      {/* ── Sub-toolbar: QR buttons (sits below the AnimeNavBar at top-[112px]) ── */}
       <header
-        className={`sticky top-0 z-40 border-b transition-colors duration-300 ${
+        className={`sticky top-[112px] z-40 border-b transition-colors duration-300 ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
             : "bg-white/95 backdrop-blur-md border-gray-100"
         }`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        {/* Main nav row */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-3">
-          {/* Left: logo only */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-12 flex items-center justify-between gap-3">
+          {/* Left: logo (visible on small screens where AnimeNavBar shows hamburger) */}
           <div className="flex items-center">
-            <NavLogo />
+            <NavLogo className="md:hidden" />
           </div>
 
-            {/* Right: QR button group + theme toggle */}
+          {/* Right: QR button group */}
           <div className="flex items-center gap-2">
-            {/* Unified QR button group */}
             <div className={`flex items-center rounded-xl border overflow-hidden ${
               isDark ? "border-white/10 bg-white/04" : "border-gray-200 bg-gray-50"
             }`}>
@@ -1138,16 +1140,13 @@ export default function Director() {
                 <span className="hidden sm:inline">Project QR</span>
               </button>
             </div>
-            {/* Theme toggle */}
-            <ThemeToggle />
           </div>
         </div>
       </header>
-
-      {/* ── Sticky "All Results In" Banner ─────────────────────────────────── */}
+      {/* ── Sticky "All Results In" Banner ──────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
         <div
-          className={`sticky top-14 z-30 border-b transition-all duration-300 ${
+          className={`sticky top-[160px] z-30 border-b transition-all duration-300 ${
             isDark
               ? "bg-[#1a3d22]/95 backdrop-blur-md border-[#4CAF50]/25"
               : "bg-[#f0f9f1]/95 backdrop-blur-md border-[#3D6B47]/20"
@@ -1209,13 +1208,13 @@ export default function Director() {
       )}
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-28">
         <div className="flex gap-6 items-start">
 
           {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}
           {!isRegistration && (
             <div
-              className="hidden md:flex flex-col items-center sticky top-24 self-start"
+              className="hidden md:flex flex-col items-center sticky top-[200px] self-start"
               style={{ minWidth: 64 }}
             >
               <VerticalRoundTracker

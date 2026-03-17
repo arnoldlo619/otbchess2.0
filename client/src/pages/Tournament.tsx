@@ -16,6 +16,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
+import { AppNavBar } from "@/components/AppNavBar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import {
@@ -132,27 +133,20 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
 
   return (
     <nav
-      className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
+      className={`sticky top-[112px] z-40 border-b transition-colors duration-300 ${
         isDark
           ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"
           : "bg-white/95 backdrop-blur-md border-[#EEEED2]"
       }`}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="container flex items-center justify-between h-16 gap-3">
+      <div className="container flex items-center justify-between h-12 gap-3">
+        {/* Left: logo on ultra-small screens only */}
         <div className="flex items-center gap-2 min-w-0">
-          <Link
-            href="/"
-            className="touch-target -ml-1 flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 active:scale-95"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium hidden sm:block">Back</span>
-          </Link>
-          <NavLogo />
+          <NavLogo className="md:hidden" />
         </div>
 
         <div className="flex items-center gap-1.5">
-          <ThemeToggle />
           <button
             onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
             className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all active:scale-95 ${
@@ -1240,8 +1234,9 @@ export default function TournamentPage() {
   if (serverFetching && !tournamentState && tournamentId !== "otb-demo-2026") {
     return (
       <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+        <AppNavBar defaultActive="Dashboard" />
         <TournamentNav tournamentId={tournamentId} />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 pt-28">
           <div className="w-10 h-10 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground font-medium">Loading tournament…</p>
         </div>
@@ -1251,6 +1246,7 @@ export default function TournamentPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+      <AppNavBar defaultActive="Dashboard" />
       {/* New round flash notification */}
       {newRoundFlash !== null && (
         <NewRoundFlash round={newRoundFlash} onDismiss={dismissFlash} />
