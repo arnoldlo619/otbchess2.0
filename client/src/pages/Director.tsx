@@ -1222,11 +1222,29 @@ export default function Director() {
                     </span>
                   )}
                 </div>
-                <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
-                  {completedGames === totalGames && totalGames > 0
-                    ? "All results recorded — ready for next round"
-                    : `${totalGames - completedGames} game${totalGames - completedGames !== 1 ? "s" : ""} in progress`}
-                </p>
+                {/* Meta chips — time control, players, format */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  {tournamentConfig?.timePreset && (
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                      isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                    }`}>
+                      <Clock className="w-3 h-3" />
+                      {tournamentConfig.timePreset}
+                    </span>
+                  )}
+                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                    isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    <Users className="w-3 h-3" />
+                    {state.players.length} players
+                  </span>
+                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                    isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    <Trophy className="w-3 h-3" />
+                    Swiss · {state.totalRounds}R
+                  </span>
+                </div>
               </div>
               {/* generate button lives in Boards tab — nothing here */}
             </div>
@@ -1495,39 +1513,7 @@ export default function Director() {
                   <div className={`w-full rounded-2xl border overflow-hidden ${
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
                   }`}>
-                    {/* Tournament name + meta */}
-                    <div className={`px-5 py-4 border-b ${
-                      isDark ? "border-white/08" : "border-gray-100"
-                    }`}>
-                      <h2
-                        className={`text-base font-black truncate ${isDark ? "text-white" : "text-gray-900"}`}
-                        style={{ fontFamily: "'Clash Display', sans-serif" }}
-                      >
-                        {state.tournamentName}
-                      </h2>
-                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                        {tournamentConfig?.timePreset && (
-                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                            isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                          }`}>
-                            <Clock className="w-3 h-3" />
-                            {tournamentConfig.timePreset}
-                          </span>
-                        )}
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                          isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                        }`}>
-                          <Users className="w-3 h-3" />
-                          {state.players.length} players
-                        </span>
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                          isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                        }`}>
-                          <Trophy className="w-3 h-3" />
-                          Swiss · {state.totalRounds}R
-                        </span>
-                      </div>
-                    </div>
+                    {/* Round pairings label — compact card header */}
 
                     {/* Round pairings header row + boards progress bar */}
                     <div>
