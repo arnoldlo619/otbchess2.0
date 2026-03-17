@@ -2266,3 +2266,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Hero Animated Buttons (Mar 17 2026)
 - [x] Transform "Host Tournament" and "Join" hero buttons to use spinning conic-gradient animated border style
+
+## Dashboard Nav Button (Mar 17 2026)
+- [x] Add "Dashboard" button left of "Clubs" in header nav — smart routes to most recent tournament (director or participant view)
+- [x] Rebalance nav bar centering with 4 items

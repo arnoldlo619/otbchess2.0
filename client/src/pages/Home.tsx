@@ -24,7 +24,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
-import { resolveTournament } from "@/lib/tournamentRegistry";
+import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
 import AuthModal from "../components/AuthModal";
 import { useAuthContext } from "../context/AuthContext";
 import {
@@ -48,6 +48,7 @@ import {
   Video,
   LogIn,
   Ghost,
+  LayoutDashboard,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
@@ -1211,8 +1212,33 @@ export default function Home() {
     }
   }, []);
 
+  // ── Dashboard smart routing ─────────────────────────────────────────────────
+  // Priority: 1. Most recent directed tournament → /tournament/:id/manage
+  //           2. Most recent joined tournament   → /tournament/:id
+  //           3. Fallback                        → /join
+  const getDashboardUrl = (): string => {
+    // Check director sessions — listTournaments returns newest-first
+    const allTournaments = listTournaments();
+    const directedTournament = allTournaments.find((t) => hasDirectorSession(t.id));
+    if (directedTournament) return `/tournament/${directedTournament.id}/manage`;
+
+    // Check participant registrations — getAllRegistrations returns newest-first
+    const registrations = getAllRegistrations();
+    if (registrations.length > 0) {
+      const reg = registrations[0];
+      // Try to resolve the tournament slug from the stored tournamentId
+      const config = resolveTournament(reg.tournamentId);
+      const slug = config?.id ?? reg.tournamentId;
+      return `/tournament/${slug}`;
+    }
+
+    // No history — send to the join page
+    return "/join";
+  };
+
   // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
+    { name: "Dashboard", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
     { name: "Battle", url: "/battle", icon: Swords },
     { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },
