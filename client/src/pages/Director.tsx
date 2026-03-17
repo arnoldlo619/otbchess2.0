@@ -1167,15 +1167,19 @@ export default function Director() {
             {/* Round title row */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h1
-                  className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  Round {state.currentRound}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1
+                    className={`text-2xl font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                    style={{ fontFamily: "'Clash Display', sans-serif" }}
+                  >
+                    {state.tournamentName}
+                  </h1>
                   {state.status === "paused" && (
-                    <span className="ml-2 text-sm font-medium text-amber-500 align-middle">· Paused</span>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
+                      Paused
+                    </span>
                   )}
-                </h1>
+                </div>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
                   {completedGames === totalGames && totalGames > 0
                     ? "All results recorded — ready for next round"
