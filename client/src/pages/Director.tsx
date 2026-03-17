@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import confetti from "canvas-confetti";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { QRModal } from "@/components/QRModal";
 import { AnnounceModal } from "@/components/AnnounceModal";
@@ -933,6 +934,39 @@ export default function Director() {
     }
     prevAllResultsIn.current = allResultsIn;
   }, [allResultsIn, isRegistration, state.currentRound, broadcastResultsPosted]);
+
+  // 🎉 Confetti burst when the final round's last result is entered
+  const confettiFiredRef = useRef<number>(-1);
+  useEffect(() => {
+    const isFinalRound = state.currentRound >= state.totalRounds && state.totalRounds > 0;
+    const justCompleted = allResultsIn && !prevAllResultsIn.current;
+    // Only fire once per tournament (track by totalRounds so it resets if rounds change)
+    if (isFinalRound && justCompleted && confettiFiredRef.current !== state.totalRounds) {
+      confettiFiredRef.current = state.totalRounds;
+      // Two-cannon burst from both sides
+      const duration = 3000;
+      const end = Date.now() + duration;
+      const colors = ["#4CAF50", "#ffffff", "#3D6B47", "#a3e635", "#fbbf24"];
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors,
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors,
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }
+  }, [allResultsIn, state.currentRound, state.totalRounds]);
 
   // ── Server player sync — SSE stream ────────────────────────────────────
   // During the registration phase, open a persistent SSE connection to the
