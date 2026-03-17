@@ -2316,3 +2316,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add swipe-left/right gesture on Tournament page content area to cycle between Pairings, Players, and Standings tabs
 - [x] Added mobile tab bar (Pairings | Standings | Players) replacing MobileStandingsAccordion
 - [x] Swipe-left = next tab, swipe-right = previous tab, 20ms haptic tick on each switch
+
+## Nav Bar Centering Fix (Mar 17 2026)
+- [x] Fix AnimeNavBar pill group to be perfectly viewport-centred (left-1/2 -translate-x-1/2) independent of logo/user-menu widths

@@ -303,7 +303,7 @@ export function AnimeNavBar({
           WebkitBackdropFilter: `blur(${blurPx}px)`,
         }}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 relative">
 
           {/* ── Logo ── */}
           {logo && (
@@ -347,8 +347,8 @@ export function AnimeNavBar({
               </button>
             </div>
           ) : (
-            /* Full nav pill — centred, floating */
-            <div className="flex-1 flex justify-center">
+            /* Full nav pill — absolutely centred on viewport, independent of logo/user-menu widths */
+            <div className="absolute left-1/2 -translate-x-1/2">
               <motion.div
                 className="flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 py-1.5 relative"
                 style={{
