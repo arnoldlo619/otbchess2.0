@@ -642,6 +642,8 @@ function QuickstartForm({
   const [inlinePicker, setInlinePicker] = useState<InlinePicker>(null);
   const toggleInline = (p: InlinePicker) =>
     setInlinePicker((prev) => (prev === p ? null : p));
+  // rounds suggestion banner: shown after user picks a new cap that implies a different optimal rounds
+  const [roundsSuggestion, setRoundsSuggestion] = useState<number | null>(null);
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -755,6 +757,45 @@ function QuickstartForm({
           <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
           <span className="text-xs lg:text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>Swiss System</span>
         </div>
+
+        {/* Rounds suggestion banner — appears after Max Players change */}
+        {roundsSuggestion !== null && roundsSuggestion !== data.rounds && (
+          <div
+            className="mx-3 my-2 rounded-xl flex items-center gap-3 px-3 py-2.5"
+            style={{
+              background: isDark ? "rgba(61,107,71,0.22)" : "rgba(61,107,71,0.10)",
+              border: `1px solid ${isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"}`,
+            }}
+          >
+            <Zap className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
+            <span className="text-xs flex-1 leading-snug" style={{ color: isDark ? T.dText : T.lText }}>
+              Recommended <strong>{roundsSuggestion} rounds</strong> for {data.maxPlayers} players
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                onChange({ rounds: roundsSuggestion });
+                setRoundsSuggestion(null);
+              }}
+              className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+              style={{
+                background: T.green,
+                color: "#FFFFFF",
+              }}
+            >
+              Apply
+            </button>
+            <button
+              type="button"
+              onClick={() => setRoundsSuggestion(null)}
+              className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full transition-colors"
+              style={{ color: isDark ? T.dMuted : T.lMuted }}
+              aria-label="Dismiss suggestion"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         {/* Rounds row — editable */}
         <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
@@ -884,6 +925,13 @@ function QuickstartForm({
                       onClick={() => {
                         onChange({ maxPlayers: cap });
                         setInlinePicker(null);
+                        // suggest new rounds if the optimal count differs from current selection
+                        const suggested = recommendedRounds(cap);
+                        if (suggested !== data.rounds) {
+                          setRoundsSuggestion(suggested);
+                        } else {
+                          setRoundsSuggestion(null);
+                        }
                       }}
                       className="flex flex-col items-center rounded-xl border transition-all duration-150"
                       style={{

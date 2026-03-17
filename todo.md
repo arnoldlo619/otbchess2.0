@@ -2363,3 +2363,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Non-default values shown in green to indicate customization
 - [x] Removed the three separate collapsible picker toggles below the card (now consolidated inline)
 - [x] TypeScript: 0 errors
+
+## Auto-Suggest Rounds on Max Players Change (Mar 17 2026)
+- [x] After user selects a new Max Players cap, compute recommendedRounds(cap) and compare to current data.rounds
+- [x] If they differ, show a suggestion banner inside the Smart Defaults card: "Recommended N rounds for X players" with Apply and dismiss (×) buttons
+- [x] Apply button sets rounds to the suggestion and dismisses the banner in one tap
+- [x] Dismiss button hides the banner without changing rounds
+- [x] Banner is suppressed if the new cap's optimal rounds already matches the current rounds selection
+- [x] TypeScript: 0 errors
