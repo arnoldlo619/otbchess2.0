@@ -2322,3 +2322,31 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Username Truncation in Nav Bar (Mar 17 2026)
 - [x] Truncate long usernames in all nav user menus to max-w-[80px] truncate; added flex-none min-w-0 to rightSlot wrapper in AnimeNavBar
+
+## Instagram Carousel Tournament Recap (Mar 17 2026)
+- [ ] Build InstagramCarouselModal component with 5 branded slides
+- [ ] Slide 1: Cover — tournament name, club name, date, OTB branding, champion name
+- [ ] Slide 2: Podium — top 3 players with ELO, points, and medal styling
+- [ ] Slide 3: Full standings — ranked player list with scores
+- [ ] Slide 4: Tournament stats — total players, rounds, format, avg ELO, top upset
+- [ ] Slide 5: CTA — "Play at [Club Name]" with OTB branding and join info
+- [ ] Per-slide PNG export using html2canvas (1080x1080 Instagram square format)
+- [ ] ZIP download of all slides via JSZip
+- [ ] "Create Instagram Recap" button on FinalStandings page
+- [ ] Club name branding support (from TournamentConfig.clubName)
+- [ ] Light/dark slide theme toggle in the modal
+
+## Instagram Carousel Tournament Recap — Completed (Mar 17 2026)
+- [x] Build InstagramCarouselModal component with 5 branded slides
+- [x] Slide 1: Cover — tournament name, club name, date, OTB branding, champion name
+- [x] Slide 2: Podium — top 3 players with ELO, points, and medal styling
+- [x] Slide 3: Full standings — ranked player list with scores
+- [x] Slide 4: Tournament stats — total players, rounds, format, avg ELO, top performer
+- [x] Slide 5: CTA — "Play at [Club Name]" with OTB branding and join info
+- [x] Per-slide PNG export using html2canvas (1080x1080 Instagram square format)
+- [x] ZIP download of all slides via JSZip
+- [x] "Create Instagram Recap" button on FinalStandings page
+- [x] "Create Recap" button on Director completed tournament section
+- [x] Club name branding support (from TournamentConfig.clubName)
+- [x] StandingRow type compatibility verified — both Director liveStandings and FinalStandings rows use same computeStandings() return type
+- [x] TypeScript: 0 errors; 2106/2115 tests pass (9 pre-existing cv2/OpenCV failures unrelated to this feature)

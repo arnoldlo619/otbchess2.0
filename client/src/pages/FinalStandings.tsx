@@ -14,7 +14,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { Trophy, ArrowLeft, Download, Share2, Medal } from "lucide-react";
+import { Trophy, ArrowLeft, Download, Share2, Medal, Instagram } from "lucide-react";
+import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
+import type { TournamentConfig } from "@/lib/tournamentRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
 import type { Player, Round } from "@/lib/tournamentData";
@@ -82,6 +84,7 @@ export default function FinalStandings() {
   const [rows, setRows] = useState<StandingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCarousel, setShowCarousel] = useState(false);
 
   // ── Fetch tournament state ──────────────────────────────────────────────────
   const fetchState = useCallback(async () => {
@@ -416,6 +419,20 @@ export default function FinalStandings() {
                 <ArrowLeft className="w-4 h-4" />
                 Tournament Page
               </Link>
+              {/* Instagram Carousel export */}
+              <button
+                onClick={() => setShowCarousel(true)}
+                className={`flex items-center justify-center gap-2 flex-1 py-3.5 rounded-xl text-sm font-semibold border transition-all ${
+                  isDark
+                    ? "border-white/12 text-white/70 hover:bg-white/06 hover:border-white/20"
+                    : "border-[#E8F0E8] text-gray-600 hover:bg-[#F0F5EE]"
+                }`}
+              >
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center">
+                  <Instagram className="w-2.5 h-2.5 text-white" />
+                </div>
+                Create Recap
+              </button>
               <button
                 onClick={() => {
                   if (navigator.share) {
@@ -439,6 +456,18 @@ export default function FinalStandings() {
           </>
         )}
       </main>
+
+      {/* ── Instagram Carousel Modal ──────────────────────────────────────── */}
+      {showCarousel && meta && (
+        <InstagramCarouselModal
+          open={showCarousel}
+          onClose={() => setShowCarousel(false)}
+          rows={rows}
+          config={null}
+          tournamentName={meta.name}
+          totalRounds={meta.rounds}
+        />
+      )}
     </div>
   );
 }

@@ -34,6 +34,7 @@ import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
+import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import {
   Crown,
   ChevronLeft,
@@ -811,6 +812,7 @@ export default function Director() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showUploadRSVP, setShowUploadRSVP] = useState(false);
+  const [showCarousel, setShowCarousel] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
@@ -1790,6 +1792,18 @@ export default function Director() {
                               <Download className="w-4 h-4" /> Print / Export
                             </button>
                           </Link>
+                          {/* Instagram Carousel Recap */}
+                          <button
+                            onClick={() => setShowCarousel(true)}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                              isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <div className="w-4 h-4 rounded bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045] flex items-center justify-center flex-shrink-0">
+                              <svg viewBox="0 0 24 24" fill="white" className="w-2.5 h-2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
+                            </div>
+                            Create Recap
+                          </button>
                         </div>
                       </div>
                     );
@@ -2870,7 +2884,19 @@ export default function Director() {
         existingUsernames={existingUsernames}
       />
 
-      {/* ── Upload RSVP Modal ─────────────────────────────────────────────────── */}
+       {/* ── Instagram Carousel Modal ──────────────────────────────────────── */}
+      {showCarousel && (
+        <InstagramCarouselModal
+          open={showCarousel}
+          onClose={() => setShowCarousel(false)}
+          rows={liveStandings}
+          config={getTournamentConfig(tournamentId) ?? null}
+          tournamentName={state.tournamentName}
+          totalRounds={state.totalRounds}
+        />
+      )}
+
+      {/* ── Upload RSVP Modal ────────────────────────────────────────────── */}
       <UploadRSVPModal
         open={showUploadRSVP}
         onClose={() => setShowUploadRSVP(false)}
