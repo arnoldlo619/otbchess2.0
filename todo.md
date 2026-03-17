@@ -2350,3 +2350,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Club name branding support (from TournamentConfig.clubName)
 - [x] StandingRow type compatibility verified — both Director liveStandings and FinalStandings rows use same computeStandings() return type
 - [x] TypeScript: 0 errors; 2106/2115 tests pass (9 pre-existing cv2/OpenCV failures unrelated to this feature)
+
+## Smart Defaults Inline Editing (Mar 17 2026)
+- [x] Replace static Smart Defaults card with interactive inline card in QuickstartForm
+- [x] Rounds row: tap to expand inline picker with all round options and "Best" badge, auto-closes on selection
+- [x] Max Players row: tap to expand inline picker with cap options and recommended rounds hint, auto-closes on selection
+- [x] Time Control row: tap to expand inline 2x2 grid picker (Bullet/Blitz/Rapid/Classical), auto-closes on selection
+- [x] Format and Rating rows remain static (non-editable) in the card
+- [x] "tap to edit" hint label in card header
+- [x] Active row highlighted with green tint background when picker is open
+- [x] Chevron rotates 180deg when picker is open
+- [x] Non-default values shown in green to indicate customization
+- [x] Removed the three separate collapsible picker toggles below the card (now consolidated inline)
+- [x] TypeScript: 0 errors

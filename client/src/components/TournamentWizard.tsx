@@ -637,9 +637,11 @@ function QuickstartForm({
   onSubmit?: () => void;
 }) {
   const [showRatingPicker, setShowRatingPicker] = useState(false);
-  const [showRoundsPicker, setShowRoundsPicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showCapPicker, setShowCapPicker] = useState(false);
+  // inline pickers inside the Smart Defaults card
+  type InlinePicker = "rounds" | "cap" | "time" | null;
+  const [inlinePicker, setInlinePicker] = useState<InlinePicker>(null);
+  const toggleInline = (p: InlinePicker) =>
+    setInlinePicker((prev) => (prev === p ? null : p));
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -726,244 +728,275 @@ function QuickstartForm({
         />
       </div>
 
-      {/* Smart defaults summary */}
+      {/* Smart Defaults — interactive inline card */}
       <div
-        className="rounded-2xl border px-5 lg:px-7 py-4 lg:py-6 space-y-3 lg:space-y-4"
+        className="rounded-2xl border overflow-hidden"
         style={{
           background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
           border: `1.5px solid ${isDark ? "rgba(61,107,71,0.25)" : "rgba(61,107,71,0.18)"}`,
         }}
       >
-        <div className="flex items-center gap-2">
+        {/* Card header */}
+        <div className="flex items-center gap-2 px-5 lg:px-6 pt-4 lg:pt-5 pb-3">
           <Zap className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
           <span className="text-xs font-bold uppercase tracking-widest" style={{ color: T.green }}>
             Smart Defaults Applied
           </span>
+          <span className="ml-auto text-[10px] font-medium" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            tap to edit
+          </span>
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 lg:gap-y-3">
-          {[
-            ["Format",       "Swiss System"],
-            ["Rounds",       String(data.rounds)],
-            ["Max Players",  String(data.maxPlayers)],
-            ["Time Control", activeTime ? `${activeTime.preset} ${activeTime.label}` : `${data.timePreset} Rapid`],
-            ["Rating",       activeRating?.label ?? "chess.com"],
-          ].map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between gap-2">
-              <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>{label}</span>
+
+        {/* Format row — static, not editable */}
+        <div
+          className="flex items-center justify-between px-5 lg:px-6 py-2.5"
+          style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+        >
+          <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
+          <span className="text-xs lg:text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>Swiss System</span>
+        </div>
+
+        {/* Rounds row — editable */}
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+          <button
+            type="button"
+            onClick={() => toggleInline("rounds")}
+            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
+            style={{
+              background: inlinePicker === "rounds"
+                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                : "transparent",
+            }}
+          >
+            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Rounds</span>
+            <div className="flex items-center gap-1.5">
               <span
                 className="text-xs lg:text-sm font-semibold"
-                style={{
-                  color:
-                    (label === "Rating" && isNonDefaultRating) ||
-                    (label === "Rounds" && isNonDefaultRounds) ||
-                    (label === "Time Control" && isNonDefaultTime) ||
-                    (label === "Max Players" && isNonDefaultCap)
-                      ? T.green
-                      : isDark ? T.dText : T.lText,
-                }}
+                style={{ color: isNonDefaultRounds ? T.green : isDark ? T.dText : T.lText }}
               >
-                {value}
+                {data.rounds}
               </span>
+              <ChevronDown
+                className="w-3.5 h-3.5 transition-transform duration-200"
+                style={{
+                  color: isDark ? T.dMuted : T.lMuted,
+                  transform: inlinePicker === "rounds" ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
             </div>
-          ))}
-        </div>
-        <p className="text-xs lg:text-sm leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
-          You can adjust format and time control from the Director Dashboard after creating the tournament.
-        </p>
-      </div>
-
-      {/* Optional time control picker toggle */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowTimePicker((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-          style={{ color: isNonDefaultTime ? T.green : isDark ? T.dMuted : T.lMuted }}
-        >
-          <ChevronDown
-            className="w-3.5 h-3.5 transition-transform duration-200"
-            style={{ transform: showTimePicker ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-          {isNonDefaultTime
-            ? `Time: ${activeTime?.label ?? data.timePreset} · Change`
-            : "Want a different time control?"}
-        </button>
-
-        {showTimePicker && (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {timeControlOptions.map((opt) => {
-              const active = data.timePreset === opt.preset;
-              return (
-                <button
-                  key={opt.preset}
-                  type="button"
-                  onClick={() => {
-                    onChange({ timePreset: opt.preset, timeBase: opt.base, timeIncrement: opt.inc });
-                    if (active) setShowTimePicker(false);
-                  }}
-                  className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
-                  style={{
-                    padding: "10px 14px",
-                    background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                    border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
-                    boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
-                  }}
-                >
-                  <span className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                    {opt.label}
-                  </span>
-                  <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                    {opt.sub}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Optional rounds picker toggle */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowRoundsPicker((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-          style={{ color: isNonDefaultRounds ? T.green : isDark ? T.dMuted : T.lMuted }}
-        >
-          <ChevronDown
-            className="w-3.5 h-3.5 transition-transform duration-200"
-            style={{ transform: showRoundsPicker ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-          {isNonDefaultRounds
-            ? `Rounds: ${data.rounds} · Change`
-            : "Want a different number of rounds?"}
-        </button>
-
-        {showRoundsPicker && (
-          <div className="mt-3 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {roundOptions.map((r) => {
-                const active = data.rounds === r;
-                const isOptimal = r === optimalRounds;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => {
-                      onChange({ rounds: r });
-                      if (active) setShowRoundsPicker(false);
-                    }}
-                    className="flex flex-col items-center rounded-xl border transition-all duration-150 relative"
-                    style={{
-                      padding: "10px 18px",
-                      background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                      border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
-                      boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
-                      minWidth: "56px",
-                    }}
-                  >
-                    {isOptimal && (
-                      <span
-                        className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                        style={{
-                          background: active ? T.green : isDark ? "rgba(61,107,71,0.35)" : "#D1FAE5",
-                          color: active ? "#FFFFFF" : T.green,
-                        }}
-                      >
-                        ★ Best
-                      </span>
-                    )}
-                    <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                      {r}
-                    </span>
-                    <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                      {r === 1 ? "round" : "rounds"}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {/* Dynamic hint based on current selection */}
+          </button>
+          {inlinePicker === "rounds" && (
             <div
-              className="flex items-start gap-2 rounded-xl px-3 py-2.5"
-              style={{
-                background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
-              }}
+              className="px-5 lg:px-6 pb-4 space-y-3"
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
             >
-              <span className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
-                {currentHint}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Optional player cap picker toggle */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowCapPicker((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-          style={{ color: isNonDefaultCap ? T.green : isDark ? T.dMuted : T.lMuted }}
-        >
-          <ChevronDown
-            className="w-3.5 h-3.5 transition-transform duration-200"
-            style={{ transform: showCapPicker ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-          {isNonDefaultCap
-            ? `Max Players: ${data.maxPlayers} · Change`
-            : "Expecting more or fewer players? Set cap"}
-        </button>
-
-        {showCapPicker && (
-          <div className="mt-3 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {capOptions.map((cap) => {
-                const active = data.maxPlayers === cap;
-                const optRounds = recommendedRounds(cap);
-                return (
-                  <button
-                    key={cap}
-                    type="button"
-                    onClick={() => {
-                      onChange({ maxPlayers: cap });
-                      if (active) setShowCapPicker(false);
-                    }}
-                    className="flex flex-col items-center rounded-xl border transition-all duration-150"
-                    style={{
-                      padding: "10px 18px",
-                      background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                      border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
-                      boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
-                      minWidth: "60px",
-                    }}
-                  >
-                    <span className="text-base font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                      {cap}
-                    </span>
-                    <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                      {cap === 1 ? "player" : "players"}
-                    </span>
-                    <span
-                      className="text-[10px] mt-1 font-medium"
-                      style={{ color: active ? T.green : isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
+              <div className="flex flex-wrap gap-2 pt-3">
+                {roundOptions.map((r) => {
+                  const active = data.rounds === r;
+                  const isOptimal = r === optimalRounds;
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => {
+                        onChange({ rounds: r });
+                        setInlinePicker(null);
+                      }}
+                      className="flex flex-col items-center rounded-xl border transition-all duration-150 relative"
+                      style={{
+                        padding: "8px 16px",
+                        background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                        border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                        boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                        minWidth: "52px",
+                      }}
                     >
-                      {optRounds}R opt.
-                    </span>
-                  </button>
-                );
-              })}
+                      {isOptimal && (
+                        <span
+                          className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                          style={{
+                            background: active ? T.green : isDark ? "rgba(61,107,71,0.35)" : "#D1FAE5",
+                            color: active ? "#FFFFFF" : T.green,
+                          }}
+                        >
+                          ★ Best
+                        </span>
+                      )}
+                      <span className="text-sm font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                        {r}
+                      </span>
+                      <span className="text-[10px] mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                        {r === 1 ? "round" : "rounds"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+                {currentHint}
+              </p>
             </div>
-            <div
-              className="rounded-xl px-3 py-2.5"
-              style={{ background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE" }}
-            >
-              <span className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
-                Cap limits how many players can join via the invite link. The recommended rounds count updates automatically.
+          )}
+        </div>
+
+        {/* Max Players row — editable */}
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+          <button
+            type="button"
+            onClick={() => toggleInline("cap")}
+            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
+            style={{
+              background: inlinePicker === "cap"
+                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                : "transparent",
+            }}
+          >
+            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Max Players</span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className="text-xs lg:text-sm font-semibold"
+                style={{ color: isNonDefaultCap ? T.green : isDark ? T.dText : T.lText }}
+              >
+                {data.maxPlayers}
               </span>
+              <ChevronDown
+                className="w-3.5 h-3.5 transition-transform duration-200"
+                style={{
+                  color: isDark ? T.dMuted : T.lMuted,
+                  transform: inlinePicker === "cap" ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
             </div>
-          </div>
-        )}
+          </button>
+          {inlinePicker === "cap" && (
+            <div
+              className="px-5 lg:px-6 pb-4 space-y-3"
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+            >
+              <div className="flex flex-wrap gap-2 pt-3">
+                {capOptions.map((cap) => {
+                  const active = data.maxPlayers === cap;
+                  const optRounds = recommendedRounds(cap);
+                  return (
+                    <button
+                      key={cap}
+                      type="button"
+                      onClick={() => {
+                        onChange({ maxPlayers: cap });
+                        setInlinePicker(null);
+                      }}
+                      className="flex flex-col items-center rounded-xl border transition-all duration-150"
+                      style={{
+                        padding: "8px 16px",
+                        background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                        border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                        boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                        minWidth: "56px",
+                      }}
+                    >
+                      <span className="text-sm font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                        {cap}
+                      </span>
+                      <span className="text-[10px] mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                        {cap === 1 ? "player" : "players"}
+                      </span>
+                      <span
+                        className="text-[10px] mt-0.5 font-medium"
+                        style={{ color: active ? T.green : isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
+                      >
+                        {optRounds}R opt.
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+                Cap limits how many players can join via the invite link. Recommended rounds updates automatically.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Time Control row — editable */}
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+          <button
+            type="button"
+            onClick={() => toggleInline("time")}
+            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
+            style={{
+              background: inlinePicker === "time"
+                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                : "transparent",
+            }}
+          >
+            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Time Control</span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className="text-xs lg:text-sm font-semibold"
+                style={{ color: isNonDefaultTime ? T.green : isDark ? T.dText : T.lText }}
+              >
+                {activeTime ? `${activeTime.preset} ${activeTime.label}` : `${data.timePreset} Rapid`}
+              </span>
+              <ChevronDown
+                className="w-3.5 h-3.5 transition-transform duration-200"
+                style={{
+                  color: isDark ? T.dMuted : T.lMuted,
+                  transform: inlinePicker === "time" ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </div>
+          </button>
+          {inlinePicker === "time" && (
+            <div
+              className="px-5 lg:px-6 pb-4"
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+            >
+              <div className="grid grid-cols-2 gap-2 pt-3">
+                {timeControlOptions.map((opt) => {
+                  const active = data.timePreset === opt.preset;
+                  return (
+                    <button
+                      key={opt.preset}
+                      type="button"
+                      onClick={() => {
+                        onChange({ timePreset: opt.preset, timeBase: opt.base, timeIncrement: opt.inc });
+                        setInlinePicker(null);
+                      }}
+                      className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
+                      style={{
+                        padding: "8px 12px",
+                        background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                        border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                        boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                      }}
+                    >
+                      <span className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                        {opt.label}
+                      </span>
+                      <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                        {opt.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Rating row — static display (editable via separate toggle below) */}
+        <div
+          className="flex items-center justify-between px-5 lg:px-6 py-2.5"
+          style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+        >
+          <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Rating</span>
+          <span
+            className="text-xs lg:text-sm font-semibold"
+            style={{ color: isNonDefaultRating ? T.green : isDark ? T.dText : T.lText }}
+          >
+            {activeRating?.label ?? "chess.com"}
+          </span>
+        </div>
       </div>
 
       {/* Optional rating system toggle */}
