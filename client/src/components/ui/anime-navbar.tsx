@@ -292,7 +292,7 @@ export function AnimeNavBar({
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
-        className="w-full px-3 md:px-6 pt-20 pb-2 overflow-visible"
+        className="w-full px-3 md:px-6 pt-28 pb-3 overflow-visible"
         style={{
           background: `linear-gradient(to bottom, rgba(10,31,10,${bgAlpha1}) 0%, rgba(10,31,10,${bgAlpha2}) 100%)`,
           backdropFilter: `blur(${blurPx}px)`,

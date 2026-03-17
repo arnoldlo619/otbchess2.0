@@ -411,7 +411,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const isDark = theme === "dark";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-36 md:pt-44 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+    <section className={`relative min-h-screen flex items-center overflow-hidden pt-44 md:pt-52 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
@@ -1193,7 +1193,7 @@ export default function Home() {
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
-  const [activeNavTab, setActiveNavTab] = useState("Home");
+  const [activeNavTab, setActiveNavTab] = useState("Clubs");
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
@@ -1205,9 +1205,8 @@ export default function Home() {
     }
   }, []);
 
-  // AnimeNavBar items — sectionId wires up IntersectionObserver for scroll-aware active tab
+  // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
-    { name: "Home", url: "/", icon: HomeIcon },
     { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
     { name: "Battle", url: "/battle", icon: Swords },
     { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },
@@ -1230,7 +1229,7 @@ export default function Home() {
         <button
           onClick={() => setAuthOpen(true)}
           title="Sign In"
-          className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 text-white/70 hover:text-white hover:bg-white/10 bg-black/40 backdrop-blur-md transition-all"
+          className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 text-white/70 hover:text-white hover:bg-white/10 transition-all"
         >
           <LogIn className="w-4 h-4" />
         </button>

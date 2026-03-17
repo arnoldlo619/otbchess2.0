@@ -2156,3 +2156,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Integrate BattleHistorySection into the user profile page (between My Clubs and Account)
 - [x] Show W/D/L record summary at top of section
 - [x] Write vitest tests for battle history data helpers (12 new tests, 30 total passing)
+
+## Nav Bar Polish Refactor (Mar 16 2026)
+- [x] Remove "Home" from nav pill items
+- [x] Move Sign In button to right slot as profile icon (styled like theme toggle)
+- [x] Align logo far left in header layout
+- [x] Center only Clubs, Battle, Analyze in nav pill
+- [x] Shift nav bar lower (pt-28) so mascot sits fully visible above the pill
+- [x] Increase hero section top padding to pt-44/pt-52 to compensate for the lower nav
