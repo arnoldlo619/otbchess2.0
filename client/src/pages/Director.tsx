@@ -179,40 +179,44 @@ function BoardCard({
 
   return (
     <div
-      className={`rounded-xl border transition-all duration-200 ${
+      className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
         isDark
           ? isComplete
             ? "bg-[oklch(0.22_0.06_145)] border-white/10"
-            : "bg-[oklch(0.25_0.07_145)] border-[#4CAF50]/30 shadow-[0_0_0_1px_oklch(0.45_0.15_145/0.3)]"
+            : "bg-[oklch(0.24_0.07_145)] border-[#4CAF50]/25 shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
           : isComplete
-          ? "bg-white border-gray-100"
-          : "bg-white border-[#3D6B47]/20 shadow-sm"
+          ? "bg-white border-gray-200/60 shadow-sm"
+          : "bg-white border-[#3D6B47]/25 shadow-[0_2px_8px_rgba(61,107,71,0.08)]"
       }`}
     >
       {/* Board header */}
       <div
-        className={`flex items-center justify-between px-5 py-3 border-b rounded-t-xl ${
-          isDark ? "border-white/08 bg-white/04" : "border-gray-50 bg-gray-50/80"
+        className={`flex items-center justify-between px-4 py-2.5 border-b ${
+          isDark
+            ? "border-white/08 bg-white/03"
+            : "border-gray-100 bg-gray-50/60"
         }`}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <span
-            className={`text-sm font-bold tracking-widest uppercase ${
-              isDark ? "text-white/50" : "text-gray-500"
+            className={`text-[11px] font-black tracking-[0.12em] uppercase ${
+              isDark ? "text-white/35" : "text-gray-400"
             }`}
           >
             Board {game.board}
           </span>
           {!isComplete && (
-            <span className="flex items-center gap-1.5 text-sm text-amber-500 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+              isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+            }`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               Live
             </span>
           )}
         </div>
         {isComplete && (
           <span
-            className={`text-sm font-bold px-3 py-1 rounded-full ${resultBadgeClass(game.result, isDark)}`}
+            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${resultBadgeClass(game.result, isDark)}`}
           >
             {game.result}
           </span>
@@ -222,101 +226,120 @@ function BoardCard({
       {/* Players */}
       <div className="px-4 pt-3 pb-2 space-y-0">
         {/* White */}
-        <div className="flex items-center gap-3 py-2">
-          {/* Avatar with white/black indicator */}
+        <div className="flex items-center gap-3 py-2.5">
+          {/* Avatar with white piece indicator */}
           <div className="relative flex-shrink-0">
             <PlayerAvatar
               username={white.username}
               name={white.name}
               platform={white.platform === "lichess" ? "lichess" : "chesscom"}
-              size={36}
+              size={38}
               showBadge
               avatarUrl={white.avatarUrl}
               flairEmoji={white.flairEmoji}
             />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${isDark ? "border-[oklch(0.25_0.07_145)]" : "border-white"} bg-white`} />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 shadow-sm ${
+              isDark ? "border-[oklch(0.24_0.07_145)] bg-white" : "border-white bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
+            }`} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <PlayerHoverCard player={white} isDark={isDark}>
-                <span className={`text-sm font-bold cursor-default hover:text-[#3D6B47] transition-colors truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                <span className={`text-sm font-bold cursor-default hover:text-[#3D6B47] transition-colors truncate ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}>
                   {white.name}
                 </span>
               </PlayerHoverCard>
               {white.title && (
-                <span className="flex-shrink-0 text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
+                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                }`}>
                   {white.title}
                 </span>
               )}
-              <span className={`flex-shrink-0 text-xs font-mono px-1.5 py-0.5 rounded ${
-                isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"
+              <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+                isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
               }`}>{white.elo}</span>
             </div>
           </div>
-          <span className={`flex-shrink-0 text-lg font-black tabular-nums ${
-            game.result === "1-0" ? "text-emerald-500"
-            : game.result === "0-1" ? isDark ? "text-white/20" : "text-gray-200"
-            : game.result === "½-½" ? "text-blue-500"
-            : isDark ? "text-white/15" : "text-gray-200"
+          <span className={`flex-shrink-0 text-xl font-black tabular-nums ${
+            game.result === "1-0" ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+            : game.result === "0-1" ? isDark ? "text-white/15" : "text-gray-200"
+            : game.result === "½-½" ? isDark ? "text-blue-400" : "text-blue-500"
+            : isDark ? "text-white/12" : "text-gray-200"
           }`}>{pointsFor(game.result, "white")}</span>
         </div>
 
         {/* VS divider */}
-        <div className={`flex items-center gap-2 py-0.5 ${isDark ? "text-white/20" : "text-gray-300"}`}>
-          <div className={`flex-1 h-px ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
-          <span className="text-[10px] font-bold uppercase tracking-widest">vs</span>
-          <div className={`flex-1 h-px ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
+        <div className={`flex items-center gap-2 py-0 ${
+          isDark ? "text-white/15" : "text-gray-300"
+        }`}>
+          <div className={`flex-1 h-px ${
+            isDark ? "bg-white/05" : "bg-gray-100"
+          }`} />
+          <span className={`text-[9px] font-black uppercase tracking-[0.15em] ${
+            isDark ? "text-white/20" : "text-gray-300"
+          }`}>vs</span>
+          <div className={`flex-1 h-px ${
+            isDark ? "bg-white/05" : "bg-gray-100"
+          }`} />
         </div>
 
         {/* Black */}
-        <div className="flex items-center gap-3 py-2">
+        <div className="flex items-center gap-3 py-2.5">
           <div className="relative flex-shrink-0">
             <PlayerAvatar
               username={black.username}
               name={black.name}
               platform={black.platform === "lichess" ? "lichess" : "chesscom"}
-              size={36}
+              size={38}
               showBadge
               avatarUrl={black.avatarUrl}
               flairEmoji={black.flairEmoji}
             />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${isDark ? "border-[oklch(0.25_0.07_145)]" : "border-white"} bg-gray-800`} />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 shadow-sm ${
+              isDark ? "border-[oklch(0.24_0.07_145)] bg-gray-900" : "border-white bg-gray-900 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]"
+            }`} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <PlayerHoverCard player={black} isDark={isDark}>
-                <span className={`text-sm font-bold cursor-default hover:text-[#3D6B47] transition-colors truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                <span className={`text-sm font-bold cursor-default hover:text-[#3D6B47] transition-colors truncate ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}>
                   {black.name}
                 </span>
               </PlayerHoverCard>
               {black.title && (
-                <span className="flex-shrink-0 text-xs font-bold text-[#3D6B47] bg-[#3D6B47]/10 px-1.5 py-0.5 rounded">
+                <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
+                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                }`}>
                   {black.title}
                 </span>
               )}
-              <span className={`flex-shrink-0 text-xs font-mono px-1.5 py-0.5 rounded ${
-                isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"
+              <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+                isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
               }`}>{black.elo}</span>
             </div>
           </div>
-          <span className={`flex-shrink-0 text-lg font-black tabular-nums ${
-            game.result === "0-1" ? "text-emerald-500"
-            : game.result === "1-0" ? isDark ? "text-white/20" : "text-gray-200"
-            : game.result === "½-½" ? "text-blue-500"
-            : isDark ? "text-white/15" : "text-gray-200"
+          <span className={`flex-shrink-0 text-xl font-black tabular-nums ${
+            game.result === "0-1" ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+            : game.result === "1-0" ? isDark ? "text-white/15" : "text-gray-200"
+            : game.result === "½-½" ? isDark ? "text-blue-400" : "text-blue-500"
+            : isDark ? "text-white/12" : "text-gray-200"
           }`}>{pointsFor(game.result, "black")}</span>
         </div>
       </div>
 
       {/* Result entry buttons — show player names instead of chess notation */}
       <div
-        className={`px-4 pb-4 pt-1 flex gap-2 ${isComplete ? "opacity-60" : ""}`}
+        className={`px-4 pb-4 pt-1.5 flex gap-2 ${isComplete ? "opacity-55" : ""}`}
       >
-        {/* White wins */}
         {([
-          { value: "1-0"  as Result, label: white?.name?.split(" ")[0] ?? "White", color: "emerald" },
-          { value: "½-½" as Result, label: "Draw",                              color: "blue"    },
-          { value: "0-1"  as Result, label: black?.name?.split(" ")[0] ?? "Black", color: "red"     },
+          { value: "1-0"  as Result, label: white?.name?.split(" ")[0] ?? "White", color: "green" },
+          { value: "½-½" as Result, label: "Draw",                              color: "blue"  },
+          { value: "0-1"  as Result, label: black?.name?.split(" ")[0] ?? "Black", color: "red"   },
         ] as const).map((opt) => {
           const isSelected = game.result === opt.value;
           return (
@@ -331,16 +354,22 @@ function BoardCard({
                   : "Draw";
                 toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
-              className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-xl border transition-all duration-150 active:scale-95 truncate ${
+              className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
-                  ? opt.color === "emerald"
-                    ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-[1.03]"
+                  ? opt.color === "green"
+                    ? isDark
+                      ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50] shadow-[0_0_0_1px_rgba(76,175,80,0.2)] scale-[1.02]"
+                      : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47] shadow-[0_0_0_1px_rgba(61,107,71,0.15)] scale-[1.02]"
                     : opt.color === "red"
-                    ? "bg-red-500 border-red-500 text-white shadow-md shadow-red-500/30 scale-[1.03]"
-                    : "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/30 scale-[1.03]"
+                    ? isDark
+                      ? "bg-red-500/15 border-red-500/40 text-red-400 shadow-[0_0_0_1px_rgba(239,68,68,0.15)] scale-[1.02]"
+                      : "bg-red-50 border-red-300 text-red-600 shadow-[0_0_0_1px_rgba(239,68,68,0.1)] scale-[1.02]"
+                    : isDark
+                    ? "bg-blue-500/15 border-blue-500/40 text-blue-400 shadow-[0_0_0_1px_rgba(59,130,246,0.15)] scale-[1.02]"
+                    : "bg-blue-50 border-blue-300 text-blue-600 shadow-[0_0_0_1px_rgba(59,130,246,0.1)] scale-[1.02]"
                   : isDark
-                  ? "bg-white/05 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
-                  : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                  ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80 hover:border-white/15"
+                  : "bg-gray-50/80 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300"
               }`}
               title={opt.value === "1-0" ? `${white?.name} wins` : opt.value === "0-1" ? `${black?.name} wins` : "Draw"}
             >
@@ -390,7 +419,7 @@ function BoardCard({
   );
 }
 
-// ─── Standings Mini Table ─────────────────────────────────────────────────────
+/// ─── Standings Mini Table ─────────────────────────────────────────────────────
 function StandingsPanel({
   players,
   isDark,
@@ -399,23 +428,30 @@ function StandingsPanel({
   isDark: boolean;
 }) {
   const standings = getStandings(players);
-  const medals = ["🥇", "🥈", "🥉"];
-
+  // Rank badge colours: gold / silver / bronze / plain
+  const rankColors = [
+    isDark ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-amber-50 text-amber-600 border border-amber-200",
+    isDark ? "bg-gray-400/15 text-gray-300 border border-gray-400/25" : "bg-gray-100 text-gray-500 border border-gray-200",
+    isDark ? "bg-orange-500/15 text-orange-400 border border-orange-500/25" : "bg-orange-50 text-orange-600 border border-orange-200",
+  ];
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       {standings.map((p, i) => (
         <div
           key={p.id}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
-            i < 3
-              ? isDark
-                ? "bg-[#3D6B47]/20"
-                : "bg-[#3D6B47]/06"
+            i === 0
+              ? isDark ? "bg-amber-500/08" : "bg-amber-50/60"
+              : i < 3
+              ? isDark ? "bg-white/03" : "bg-gray-50/60"
               : ""
           }`}
         >
-          <span className="text-base w-6 text-center flex-shrink-0">
-            {i < 3 ? medals[i] : <span className={`text-sm font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>{i + 1}</span>}
+          {/* Rank badge */}
+          <span className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-black ${
+            i < 3 ? rankColors[i] : isDark ? "text-white/20" : "text-gray-300"
+          }`}>
+            {i + 1}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
@@ -425,16 +461,20 @@ function StandingsPanel({
                 {p.name.split(" ")[0]}
               </span>
               {p.title && (
-                <span className="text-xs font-bold text-[#3D6B47]">{p.title}</span>
+                <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
+                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                }`}>{p.title}</span>
               )}
             </div>
-            <span className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>
-              {p.elo} ELO
+            <span className={`text-[11px] tabular-nums ${isDark ? "text-white/30" : "text-gray-400"}`}>
+              {p.elo}
             </span>
           </div>
           <span
-            className={`text-base font-bold tabular-nums ${
-              isDark ? "text-white" : "text-gray-900"
+            className={`text-base font-black tabular-nums ${
+              i === 0
+                ? isDark ? "text-amber-400" : "text-amber-600"
+                : isDark ? "text-white" : "text-gray-900"
             }`}
           >
             {p.points}
@@ -1026,43 +1066,44 @@ export default function Director() {
             <NavLogo />
           </div>
 
-          {/* Right: theme toggle + both QR buttons */}
-          <div className="flex items-center gap-1">
-
-            {/* Join QR — full-screen projection mode */}
-            <button
-              onClick={() => setShowAnnounce(true)}
-              className={`touch-target flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-                isDark
-                  ? "bg-[#4CAF50]/12 hover:bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/20"
-                  : "bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
-              }`}
-              title="Show join QR code full-screen"
-            >
-              <QrCode className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Join QR</span>
-            </button>
-
-            {/* Spectator QR — full-screen projection mode */}
-            <button
-              onClick={() => setShowSpectatorQR(true)}
-              className={`touch-target flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
-                isDark
-                  ? "bg-blue-500/12 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20"
-                  : "bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200"
-              }`}
-              title="Show spectator QR full-screen (for projector)"
-            >
-              <QrCode className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Project QR</span>
-            </button>
-
+            {/* Right: QR button group + theme toggle */}
+          <div className="flex items-center gap-2">
+            {/* Unified QR button group */}
+            <div className={`flex items-center rounded-xl border overflow-hidden ${
+              isDark ? "border-white/10 bg-white/04" : "border-gray-200 bg-gray-50"
+            }`}>
+              <button
+                onClick={() => setShowAnnounce(true)}
+                className={`touch-target flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 ${
+                  isDark
+                    ? "text-[#4CAF50] hover:bg-[#4CAF50]/12"
+                    : "text-[#3D6B47] hover:bg-green-50"
+                }`}
+                title="Show join QR code full-screen"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Join QR</span>
+              </button>
+              <div className={`w-px h-5 flex-shrink-0 ${
+                isDark ? "bg-white/10" : "bg-gray-200"
+              }`} />
+              <button
+                onClick={() => setShowSpectatorQR(true)}
+                className={`touch-target flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 ${
+                  isDark
+                    ? "text-white/50 hover:bg-white/06 hover:text-white/70"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                }`}
+                title="Show spectator QR full-screen (for projector)"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Project QR</span>
+              </button>
+            </div>
             {/* Theme toggle */}
             <ThemeToggle />
-
           </div>
         </div>
-
       </header>
 
       {/* ── Sticky "All Results In" Banner ─────────────────────────────────── */}
@@ -1189,38 +1230,26 @@ export default function Director() {
               {/* generate button lives in Boards tab — nothing here */}
             </div>
 
-            {/* Tournament name subtitle */}
-            <div className="flex items-center justify-between gap-3 px-1 -mt-1 mb-1">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/10"}`}>
-                  <Shield className={`w-3.5 h-3.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                </div>
-                <p
-                  className={`text-sm font-bold truncate ${isDark ? "text-white/90" : "text-gray-800"}`}
-                  style={{ fontFamily: "'Clash Display', sans-serif" }}
-                >
-                  {state.tournamentName}
-                </p>
-              </div>
-              <span className={`flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${
+            {/* Status pill row — sits above the title */}
+            <div className="flex items-center gap-2 px-0.5">
+              <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                 isRegistration
-                  ? isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                  ? isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-amber-50 border-amber-200 text-amber-600"
                   : state.status === "paused"
-                  ? isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-600"
-                  : isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                  ? isDark ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-amber-50 border-amber-200 text-amber-600"
+                  : isDark ? "bg-[#4CAF50]/10 border-[#4CAF50]/20 text-[#4CAF50]" : "bg-green-50 border-green-200 text-green-700"
               }`}>
-                {isRegistration
-                  ? "Registration"
-                  : state.status === "paused"
-                  ? "Paused"
-                  : `Round ${state.currentRound} of ${state.totalRounds}`}
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  isRegistration ? "bg-amber-400" : state.status === "paused" ? "bg-amber-400" : "bg-[#4CAF50] animate-pulse"
+                }`} />
+                {isRegistration ? "Registration" : state.status === "paused" ? "Paused" : `Round ${state.currentRound} of ${state.totalRounds}`}
               </span>
             </div>
 
-            {/* Unified 5-tab bar */}
+            {/* Unified tab bar */}
             <div
               className={`flex rounded-2xl p-1 w-full overflow-x-auto ${
-                isDark ? "bg-white/08" : "bg-gray-100"
+                isDark ? "bg-white/06 border border-white/06" : "bg-gray-100/80 border border-gray-200/60"
               }`}
             >
               {([
@@ -1232,22 +1261,22 @@ export default function Director() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                  className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
                     activeTab === tab.id
                       ? isDark
-                        ? "bg-[#3D6B47] text-white shadow-sm"
-                        : "bg-white text-gray-900 shadow-sm"
+                        ? "bg-[oklch(0.32_0.09_145)] text-white shadow-[0_1px_4px_rgba(0,0,0,0.3)]"
+                        : "bg-white text-gray-900 shadow-[0_1px_3px_rgba(0,0,0,0.10)]"
                       : isDark
-                      ? "text-white/50 hover:text-white/70"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-white/45 hover:text-white/70 hover:bg-white/04"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-white/60"
                   }`}
                 >
                   {tab.label}
                   {tab.id === "players" && state.players.length > 0 && (
-                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       activeTab === "players"
-                        ? isDark ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
-                        : isDark ? "bg-white/10 text-white/60" : "bg-gray-200 text-gray-500"
+                        ? isDark ? "bg-white/20 text-white" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        : isDark ? "bg-white/08 text-white/50" : "bg-gray-200 text-gray-500"
                     }`}>
                       {state.players.length}
                     </span>
@@ -1431,52 +1460,58 @@ export default function Director() {
                 <>
                   {/* ── Compact Tournament Summary Card ──────────────────────────────── */}
                   <div className={`w-full rounded-2xl border overflow-hidden ${
-                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
                   }`}>
                     {/* Tournament name + meta + round pip widget */}
                     <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 border-b ${
-                      isDark ? "border-white/06" : "border-gray-100"
+                      isDark ? "border-white/08" : "border-gray-100"
                     }`}>
-                      {/* Left: name + meta badges */}
+                      {/* Left: name + meta chips */}
                       <div className="flex-1 min-w-0">
                         <h2
-                          className={`text-lg font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}
+                          className={`text-base font-black truncate ${isDark ? "text-white" : "text-gray-900"}`}
                           style={{ fontFamily: "'Clash Display', sans-serif" }}
                         >
                           {state.tournamentName}
                         </h2>
-                        <div className="flex flex-wrap items-center gap-3 mt-1">
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                           {tournamentConfig?.timePreset && (
-                            <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/45" : "text-gray-500"}`}>
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                              isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                            }`}>
                               <Clock className="w-3 h-3" />
                               {tournamentConfig.timePreset}
                             </span>
                           )}
-                          <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/45" : "text-gray-500"}`}>
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                          }`}>
                             <Users className="w-3 h-3" />
                             {state.players.length} players
                           </span>
-                          <span className={`flex items-center gap-1 text-xs ${isDark ? "text-white/45" : "text-gray-500"}`}>
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                          }`}>
                             <Trophy className="w-3 h-3" />
-                            swiss · {state.totalRounds}R
+                            Swiss · {state.totalRounds}R
                           </span>
                         </div>
                       </div>
-                      {/* Right: Round X / pip dots / Total card */}
+                      {/* Right: Round X / pip dots / Total widget */}
                       <div className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl border ${
-                        isDark ? "bg-white/04 border-white/08" : "bg-gray-50 border-gray-200"
+                        isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
                       }`}>
-                        <div className="text-center">
-                          <div className={`text-2xl font-black tabular-nums leading-none ${isDark ? "text-white" : "text-gray-900"}`}
+                        <div className="text-center min-w-[1.5rem]">
+                          <div className={`text-3xl font-black tabular-nums leading-none ${isDark ? "text-white" : "text-gray-900"}`}
                             style={{ fontFamily: "'Clash Display', sans-serif" }}>
                             {state.currentRound}
                           </div>
-                          <div className={`text-[10px] font-semibold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                          <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
                             Round
                           </div>
                         </div>
-                        {/* Pip dots */}
-                        <div className="flex items-center gap-1">
+                        {/* Pip dots — larger and more visible */}
+                        <div className="flex items-center gap-1.5">
                           {Array.from({ length: state.totalRounds }).map((_, i) => {
                             const roundNum = i + 1;
                             const isComplete = roundNum < state.currentRound;
@@ -1486,23 +1521,23 @@ export default function Director() {
                                 key={i}
                                 className={`rounded-full transition-all duration-300 ${
                                   isComplete
-                                    ? "w-2.5 h-2.5 bg-[#4CAF50]"
+                                    ? "w-3 h-3 bg-[#4CAF50]"
                                     : isCurrent
-                                    ? "w-2.5 h-2.5 bg-[#4CAF50] opacity-60"
+                                    ? "w-3 h-3 bg-[#4CAF50]/50 ring-2 ring-[#4CAF50]/40"
                                     : isDark
-                                    ? "w-2 h-2 bg-white/15"
-                                    : "w-2 h-2 bg-gray-200"
+                                    ? "w-2.5 h-2.5 bg-white/12"
+                                    : "w-2.5 h-2.5 bg-gray-200"
                                 }`}
                               />
                             );
                           })}
                         </div>
-                        <div className="text-center">
-                          <div className={`text-2xl font-black tabular-nums leading-none ${isDark ? "text-white" : "text-gray-900"}`}
+                        <div className="text-center min-w-[1.5rem]">
+                          <div className={`text-3xl font-black tabular-nums leading-none ${isDark ? "text-white/40" : "text-gray-400"}`}
                             style={{ fontFamily: "'Clash Display', sans-serif" }}>
                             {state.totalRounds}
                           </div>
-                          <div className={`text-[10px] font-semibold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                          <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/25" : "text-gray-300"}`}>
                             Total
                           </div>
                         </div>
@@ -1510,22 +1545,27 @@ export default function Director() {
                     </div>
 
                     {/* Round pairings header row */}
-                    <div className="flex items-center justify-between px-5 py-3">
+                    <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
+                      isDark ? "border-white/06" : "border-gray-100"
+                    }`}>
                       <h3
-                        className={`text-base font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                        className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}
                       >
                         Round {state.currentRound} Pairings
                       </h3>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                         allResultsIn
                           ? isDark
-                            ? "bg-[#4CAF50]/15 border-[#4CAF50]/30 text-[#4CAF50]"
+                            ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50]"
                             : "bg-green-50 border-green-200 text-green-700"
                           : isDark
-                          ? "bg-amber-500/12 border-amber-500/25 text-amber-400"
+                          ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                           : "bg-amber-50 border-amber-200 text-amber-600"
                       }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                          allResultsIn ? (isDark ? "bg-[#4CAF50]" : "bg-green-500") : "bg-amber-400 animate-pulse"
+                        }`} />
                         {allResultsIn ? "Complete" : "In Progress"}
                       </span>
                     </div>
@@ -1709,7 +1749,7 @@ export default function Director() {
                   {/* ── Completed rounds accordion ───────────────────────────────── */}
                   {state.rounds.filter((r) => r.number < state.currentRound).length > 0 && (
                     <div>
-                      <h2 className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                      <h2 className={`text-[10px] font-black uppercase tracking-[0.12em] mb-3 ${isDark ? "text-white/25" : "text-gray-400"}`}>
                         Completed Rounds
                       </h2>
                       <div className="space-y-2">
@@ -1719,15 +1759,19 @@ export default function Director() {
                           .map((round) => (
                             <div
                               key={round.number}
-                              className={`rounded-xl border px-4 py-3 ${
-                                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/06" : "bg-white border-gray-100"
+                              className={`rounded-2xl border px-4 py-3 ${
+                                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-200/60 shadow-sm"
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className={`text-xs font-bold ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                              <div className="flex items-center justify-between mb-2.5">
+                                <span className={`text-[11px] font-black uppercase tracking-widest ${
+                                  isDark ? "text-white/40" : "text-gray-500"
+                                }`}>
                                   Round {round.number}
                                 </span>
-                                <span className="flex items-center gap-1 text-xs text-[#3D6B47] font-medium">
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  isDark ? "bg-[#4CAF50]/10 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                                }`}>
                                   <CheckCircle2 className="w-3 h-3" /> Complete
                                 </span>
                               </div>
@@ -1736,14 +1780,16 @@ export default function Director() {
                                   const w = state.players.find((p) => p.id === g.whiteId);
                                   const b = state.players.find((p) => p.id === g.blackId);
                                   return (
-                                    <div key={g.id} className="flex items-center gap-2 min-w-0">
-                                      <span className={`flex-1 truncate text-xs font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                                    <div key={g.id} className={`flex items-center gap-2 min-w-0 px-2 py-1.5 rounded-lg ${
+                                      isDark ? "bg-white/03" : "bg-gray-50/60"
+                                    }`}>
+                                      <span className={`flex-1 truncate text-xs font-semibold ${isDark ? "text-white/65" : "text-gray-700"}`}>
                                         {w?.name.split(" ")[0]}
                                       </span>
-                                      <span className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-xs ${resultBadgeClass(g.result, isDark)}`}>
+                                      <span className={`flex-shrink-0 font-bold px-2 py-0.5 rounded-md text-[10px] ${resultBadgeClass(g.result, isDark)}`}>
                                         {g.result}
                                       </span>
-                                      <span className={`flex-1 truncate text-xs font-medium text-right ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                                      <span className={`flex-1 truncate text-xs font-semibold text-right ${isDark ? "text-white/65" : "text-gray-700"}`}>
                                         {b?.name.split(" ")[0]}
                                       </span>
                                     </div>
@@ -1761,16 +1807,20 @@ export default function Director() {
           )}
           {/* ── Standings Tab ───────────────────────────────────────────────────── */}
           {activeTab === "standings" && (
-            <div className={`rounded-2xl border p-5 ${
-              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+            <div className={`rounded-2xl border overflow-hidden ${
+              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
             }`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-xs font-bold uppercase tracking-widest ${
-                  isDark ? "text-white/40" : "text-gray-400"
+              <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
+                isDark ? "border-white/08" : "border-gray-100"
+              }`}>
+                <h3 className={`text-[11px] font-black uppercase tracking-[0.12em] ${
+                  isDark ? "text-white/40" : "text-gray-500"
                 }`}>Live Standings</h3>
-                <BarChart3 className={`w-4 h-4 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+                <BarChart3 className={`w-3.5 h-3.5 ${isDark ? "text-white/25" : "text-gray-300"}`} />
               </div>
-              <StandingsPanel players={state.players} isDark={isDark} />
+              <div className="p-4">
+                <StandingsPanel players={state.players} isDark={isDark} />
+              </div>
             </div>
           )}
 

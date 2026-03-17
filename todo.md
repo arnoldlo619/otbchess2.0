@@ -2214,3 +2214,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add compact tournament header card with round progress pips
 - [x] Redesign BoardCard: single-line player rows with avatar+name+title+ELO, slim vs divider, full-width result buttons
 - [x] Remove unused RoundTimerCard import and useRoundTimer hook usage
+
+## Director Dashboard Visual Polish (Mar 17 2026)
+- [x] Polish header: unify QR button group, improve spacing and visual weight
+- [x] Polish page title area: remove redundant Shield+name row, elevate h1 hierarchy
+- [x] Polish tab bar: consistent active state light/dark, stronger pill contrast
+- [x] Polish compact tournament summary card: stronger borders, better pip dot sizing
+- [x] Polish BoardCard: header surface contrast, piece indicators, result button states
+- [x] Polish result buttons: premium tinted selected state instead of saturated fill
+- [x] Polish StandingsPanel: replace emoji medals with numbered rank badges
+- [x] Polish completed rounds accordion: consistent border-radius, cleaner result badges
+- [x] Polish global spacing: consistent card padding, gap values, section rhythm
+- [x] Polish sticky banner: stronger generate button prominence
