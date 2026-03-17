@@ -8,7 +8,7 @@ import { nanoid } from "nanoid";
 import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
-import { createAuthRouter } from "./auth.js";
+import { createAuthRouter, requireAuth } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
@@ -1067,9 +1067,9 @@ export function createApp() {
 
   // ─── Battle Rooms API ────────────────────────────────────────────────────────────────
   // POST /api/battles — Create a new battle room (requires auth)
-  app.post("/api/battles", async (req, res) => {
+  app.post("/api/battles", requireAuth, async (req, res) => {
     const { battleRooms } = await import("../shared/schema.js");
-    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    const userId = (req as import("express").Request & { userId: string }).userId;
     if (!userId) return res.status(401).json({ error: "Authentication required" });
     try {
       const db = await getDb();
@@ -1122,10 +1122,10 @@ export function createApp() {
   });
 
   // PATCH /api/battles/:code/join — Join a battle room as guest (requires auth)
-  app.patch("/api/battles/:code/join", async (req, res) => {
+  app.patch("/api/battles/:code/join", requireAuth, async (req, res) => {
     const { battleRooms } = await import("../shared/schema.js");
     const { users } = await import("../shared/schema.js");
-    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    const userId = (req as import("express").Request & { userId: string }).userId;
     if (!userId) return res.status(401).json({ error: "Authentication required" });
     try {
       const db = await getDb();
@@ -1147,9 +1147,9 @@ export function createApp() {
   });
 
   // GET /api/battles/history — Get the signed-in user's battle history (requires auth)
-  app.get("/api/battles/history", async (req, res) => {
+  app.get("/api/battles/history", requireAuth, async (req, res) => {
     const { battleRooms, users } = await import("../shared/schema.js");
-    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    const userId = (req as import("express").Request & { userId: string }).userId;
     if (!userId) return res.status(401).json({ error: "Authentication required" });
     try {
       const db = await getDb();
@@ -1220,9 +1220,9 @@ export function createApp() {
   });
 
   // PATCH /api/battles/:code/result — Report result (host only)
-  app.patch("/api/battles/:code/result", async (req, res) => {
+  app.patch("/api/battles/:code/result", requireAuth, async (req, res) => {
     const { battleRooms } = await import("../shared/schema.js");
-    const userId = (req as import("express").Request & { user?: { id: string } }).user?.id;
+    const userId = (req as import("express").Request & { userId: string }).userId;
     if (!userId) return res.status(401).json({ error: "Authentication required" });
     const { result } = req.body as { result: string };
     if (!["host_win", "guest_win", "draw"].includes(result)) return res.status(400).json({ error: "Invalid result" });
