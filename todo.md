@@ -2311,3 +2311,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Swipe-Right Back Gesture on Join Page (Mar 17 2026)
 - [x] Add touch swipe-right gesture on Join page to navigate back to previous step (60px threshold, left-edge origin, green edge indicator, 30ms haptic)
+
+## Tournament Tab Swipe Gestures (Mar 17 2026)
+- [x] Add swipe-left/right gesture on Tournament page content area to cycle between Pairings, Players, and Standings tabs
+- [x] Added mobile tab bar (Pairings | Standings | Players) replacing MobileStandingsAccordion
+- [x] Swipe-left = next tab, swipe-right = previous tab, 20ms haptic tick on each switch

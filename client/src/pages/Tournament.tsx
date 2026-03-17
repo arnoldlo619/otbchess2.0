@@ -1218,6 +1218,39 @@ export default function TournamentPage() {
     .find((r) => r.number === displayState.currentRound)
     ?.games.filter((g) => g.result === "*").length ?? 0;
 
+  // Mobile tab state for Pairings / Standings / Players
+  type MobileTab = "pairings" | "standings" | "players";
+  const MOBILE_TABS: MobileTab[] = ["pairings", "standings", "players"];
+  const [mobileTab, setMobileTab] = useState<MobileTab>("pairings");
+
+  // Swipe gesture state for tab switching
+  const tabSwipeStartX = useRef<number | null>(null);
+  const tabSwipeStartY = useRef<number | null>(null);
+
+  function handleTabTouchStart(e: React.TouchEvent) {
+    tabSwipeStartX.current = e.touches[0].clientX;
+    tabSwipeStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTabTouchEnd(e: React.TouchEvent) {
+    if (tabSwipeStartX.current === null || tabSwipeStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - tabSwipeStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - tabSwipeStartY.current);
+    tabSwipeStartX.current = null;
+    tabSwipeStartY.current = null;
+    if (Math.abs(dx) < 50 || dy > Math.abs(dx)) return; // not a horizontal swipe
+    const idx = MOBILE_TABS.indexOf(mobileTab);
+    if (dx < 0 && idx < MOBILE_TABS.length - 1) {
+      // swipe left → next tab
+      try { if ("vibrate" in navigator) navigator.vibrate(20); } catch { /* ignore */ }
+      setMobileTab(MOBILE_TABS[idx + 1]);
+    } else if (dx > 0 && idx > 0) {
+      // swipe right → previous tab
+      try { if ("vibrate" in navigator) navigator.vibrate(20); } catch { /* ignore */ }
+      setMobileTab(MOBILE_TABS[idx - 1]);
+    }
+  }
+
   // Identify the viewing participant — look up their registration in localStorage
   const myPlayerId = useMemo(() => {
     const reg = getRegistration(tournamentId);
@@ -1322,12 +1355,85 @@ export default function TournamentPage() {
 
           {/* Main content */}
           <div className="container py-4 sm:py-8">
-            {/* Mobile: Standings accordion above pairings */}
-            <div className="block lg:hidden mb-4">
-              <MobileStandingsAccordion players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
+
+            {/* ── Mobile tab bar (hidden on lg+) ─────────────────────────── */}
+            <div className="flex lg:hidden mb-4 rounded-2xl overflow-hidden border p-1 gap-1"
+              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#F0F5EE", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#EEEED2" }}>
+              {(["pairings", "standings", "players"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setMobileTab(tab)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 capitalize ${
+                    mobileTab === tab
+                      ? isDark
+                        ? "bg-[#3D6B47] text-white shadow-sm"
+                        : "bg-white text-[#3D6B47] shadow-sm"
+                      : isDark
+                      ? "text-white/45 hover:text-white/70"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
 
-            <div className="grid lg:grid-cols-[1fr_380px] gap-8">
+            {/* ── Mobile swipeable content area ─────────────────────────── */}
+            <div
+              className="block lg:hidden"
+              onTouchStart={handleTabTouchStart}
+              onTouchEnd={handleTabTouchEnd}
+            >
+              {mobileTab === "pairings" && (
+                <PairingsPanel
+                  players={displayState.players}
+                  rounds={displayState.rounds}
+                  totalRounds={displayState.totalRounds}
+                  currentRound={displayState.currentRound}
+                  myPlayerId={myPlayerId}
+                />
+              )}
+              {mobileTab === "standings" && (
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
+              )}
+              {mobileTab === "players" && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>Players</h3>
+                    <span className="text-sm text-muted-foreground">{displayState.players.length} registered</span>
+                  </div>
+                  {displayState.players.map((p) => (
+                    <div key={p.id} className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border ${
+                      p.id === myPlayerId
+                        ? isDark ? "border-[#3D6B47]/50 bg-[#3D6B47]/10" : "border-[#3D6B47]/30 bg-[#F0F8F2]"
+                        : isDark ? "border-white/08 bg-[oklch(0.25_0.07_145)]" : "border-[#EEEED2] bg-white"
+                    }`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                        isDark ? "bg-white/10 text-white/70" : "bg-[#F0F5EE] text-[#3D6B47]"
+                      }`}>{p.name.charAt(0).toUpperCase()}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-foreground truncate">{p.name}</span>
+                          {p.title && <TitleBadge title={p.title} />}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <ELOBadge elo={p.elo} size="sm" />
+                          {p.country && <span className="text-sm">{FLAG_EMOJI[p.country] ?? ""}</span>}
+                        </div>
+                      </div>
+                      {p.id === myPlayerId && (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          isDark ? "bg-[#3D6B47]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        }`}>You</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── Desktop layout (unchanged) ────────────────────────────── */}
+            <div className="hidden lg:grid lg:grid-cols-[1fr_380px] gap-8">
               {/* Left: Pairings */}
               <div>
                 <PairingsPanel
@@ -1340,7 +1446,7 @@ export default function TournamentPage() {
               </div>
 
               {/* Right: Standings — desktop only */}
-              <div className="hidden lg:block">
+              <div>
                 <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
               </div>
             </div>
