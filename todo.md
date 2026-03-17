@@ -2277,3 +2277,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Dashboard Tooltip (Mar 17 2026)
 - [x] Add hover tooltip to Dashboard nav button previewing destination (e.g. "Spring Open 2026 — Director View")
+
+## Dashboard Dropdown (Mar 17 2026)
+- [x] Transform Dashboard nav button into a dropdown listing multiple recent tournaments with Director/Player role badges

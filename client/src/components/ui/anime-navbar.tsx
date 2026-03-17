@@ -36,8 +36,10 @@ interface NavItem {
   onClick?: (e: React.MouseEvent) => void
   /** Optional section ID to watch with IntersectionObserver for scroll-aware active state */
   sectionId?: string
-  /** Optional tooltip text shown below the tab on hover */
+  /** Optional tooltip text shown below the tab on hover (ignored when dropdown is set) */
   tooltip?: string
+  /** Optional dropdown panel rendered below the tab on hover */
+  dropdown?: React.ReactNode
 }
 
 interface AnimeNavBarProps {
@@ -456,9 +458,32 @@ export function AnimeNavBar({
                         <item.icon size={16} strokeWidth={2.5} />
                       </motion.span>
 
-                      {/* ── Tooltip (shown on hover when tooltip text is provided) ── */}
+                      {/* ── Dropdown panel (shown on hover when dropdown is provided) ── */}
                       <AnimatePresence>
-                        {isHovered && item.tooltip && (
+                        {isHovered && item.dropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[10000]"
+                            style={{ pointerEvents: "auto" }}
+                          >
+                            {/* Arrow */}
+                            <div className="flex justify-center mb-0.5">
+                              <div
+                                className="w-2.5 h-2.5 rotate-45 border-t border-l border-white/12"
+                                style={{ background: "rgba(10,31,10,0.95)" }}
+                              />
+                            </div>
+                            {item.dropdown}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* ── Tooltip (shown on hover when tooltip text is provided and no dropdown) ── */}
+                      <AnimatePresence>
+                        {isHovered && item.tooltip && !item.dropdown && (
                           <motion.div
                             initial={{ opacity: 0, y: -4, scale: 0.92 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -475,10 +500,7 @@ export function AnimeNavBar({
                               }}
                             >
                               {item.tooltip}
-                              {/* Arrow */}
-                              <div
-                                className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden"
-                              >
+                              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden">
                                 <div
                                   className="w-2 h-2 rotate-45 border border-white/12 mx-auto"
                                   style={{ background: "rgba(10,31,10,0.92)", marginTop: "2px" }}

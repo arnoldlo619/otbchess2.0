@@ -18,6 +18,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/tournamentRegistry";
 import { getAllRegistrations } from "@/lib/registrationStore";
+import { DashboardDropdown } from "@/components/DashboardDropdown";
 
 const LOGO_URL =
   "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png";
@@ -94,6 +95,7 @@ export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, classNam
       url: dashboardUrl,
       icon: LayoutDashboard,
       tooltip: dashboardTooltip,
+      dropdown: <DashboardDropdown />,
       onClick: (e: React.MouseEvent) => {
         e.preventDefault();
         window.location.href = getDashboardUrl();
