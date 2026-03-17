@@ -2170,3 +2170,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Battle Page Sign-In Link (Mar 16 2026)
 - [x] Replace static "Sign in to host or join a battle" text with a clickable button that opens the sign-in modal (AuthModal with isDark, LogIn icon + ChevronRight, green hover state)
+
+## Battle Auto-Trigger Sign-In (Mar 16 2026)
+- [x] Open auth modal when unauthenticated user clicks Host Battle or Join Battle buttons (setAuthOpen(true) in handleHost and handleJoin)

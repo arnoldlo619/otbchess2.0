@@ -211,7 +211,7 @@ export default function Battle() {
   // ── Host a battle ──────────────────────────────────────────────────────────
   async function handleHost() {
     if (!user) {
-      setError("You must be signed in to host a battle.");
+      setAuthOpen(true);
       return;
     }
     setLoading(true);
@@ -238,7 +238,7 @@ export default function Battle() {
   // ── Join a battle ──────────────────────────────────────────────────────────
   async function handleJoin() {
     if (!user) {
-      setError("You must be signed in to join a battle.");
+      setAuthOpen(true);
       return;
     }
     if (!joinCode.trim()) {
