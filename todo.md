@@ -2201,3 +2201,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Upgrade prompt via "Create Free Account" in nav user menu for guests
 - [x] Guest sessions expire after 24 h (JWT exp)
 - [x] Unit tests for guest auth helpers (23 tests, all passing)
+
+## Guest Name Pre-population on Sign Up (Mar 17 2026)
+- [x] Pre-populate Sign Up display name field with guest user's current display name

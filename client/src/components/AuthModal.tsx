@@ -216,7 +216,7 @@ export default function AuthModal({
   isDark = false,
   initialTab = "signin",
 }: AuthModalProps) {
-  const { login, register, loginAsGuest } = useAuthContext();
+  const { login, register, loginAsGuest, user } = useAuthContext();
   const [tab, setTab] = useState<Tab>(initialTab);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -249,14 +249,20 @@ export default function AuthModal({
     setSuccess(false); setLoading(false);
   }, []);
 
-  // Open/close
+  // Open/close — when a guest opens the modal, land on Sign Up and pre-fill their name
   useEffect(() => {
     if (isOpen) {
-      setTab(initialTab);
+      const guestUpgrade = user?.isGuest;
+      setTab(guestUpgrade ? "signup" : initialTab);
       resetAll();
+      // Pre-populate display name from guest session after reset
+      if (guestUpgrade && user?.displayName) {
+        setSuName(user.displayName);
+      }
       setTimeout(() => firstInputRef.current?.focus(), 80);
     }
-  }, [isOpen, initialTab, resetAll]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Tab switch clears errors
   const switchTab = (t: Tab) => {
