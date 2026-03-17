@@ -2227,3 +2227,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Polish global spacing: consistent card padding, gap values, section rhythm
 - [x] Polish sticky banner: stronger generate button prominence
 - [x] Add boards-complete progress bar to compact tournament summary card in director dashboard header
+
+## Standings Tab Premium Redesign (Mar 17 2026)
+- [x] Build podium hero card for top 3 players (gold/silver/bronze accents, avatar, full name, title, ELO, points)
+- [x] Build full leaderboard table with column headers (#, Player, Pts, W/D/L, Buch.)
+- [x] Add tiebreak info footer row
+- [x] Add fade-in-up animation on mount for podium cards and table rows
+- [x] Remove old StandingsPanel wrapper card and replace with new premium layout

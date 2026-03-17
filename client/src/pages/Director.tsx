@@ -69,6 +69,7 @@ import {
   MessageSquare,
   Tv2,
   Undo2,
+  Info,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1817,23 +1818,220 @@ export default function Director() {
             </div>
           )}
           {/* ── Standings Tab ───────────────────────────────────────────────────── */}
-          {activeTab === "standings" && (
-            <div className={`rounded-2xl border overflow-hidden ${
-              isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
-            }`}>
-              <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
-                isDark ? "border-white/08" : "border-gray-100"
-              }`}>
-                <h3 className={`text-[11px] font-black uppercase tracking-[0.12em] ${
-                  isDark ? "text-white/40" : "text-gray-500"
-                }`}>Live Standings</h3>
-                <BarChart3 className={`w-3.5 h-3.5 ${isDark ? "text-white/25" : "text-gray-300"}`} />
+          {activeTab === "standings" && (() => {
+            const standingsData = getStandings(state.players);
+            const podiumOrder = [standingsData[1], standingsData[0], standingsData[2]].filter(Boolean);
+            const podiumConfig = [
+              { rank: 2, height: "h-20", labelColor: isDark ? "text-gray-300" : "text-gray-500", borderColor: isDark ? "border-gray-400/40" : "border-gray-300", bgColor: isDark ? "bg-gray-400/08" : "bg-gray-50", numColor: isDark ? "text-gray-300" : "text-gray-500" },
+              { rank: 1, height: "h-28", labelColor: isDark ? "text-amber-400" : "text-amber-600", borderColor: isDark ? "border-amber-500/50" : "border-amber-300", bgColor: isDark ? "bg-amber-500/10" : "bg-amber-50", numColor: isDark ? "text-amber-400" : "text-amber-600" },
+              { rank: 3, height: "h-16", labelColor: isDark ? "text-orange-400" : "text-orange-600", borderColor: isDark ? "border-orange-500/40" : "border-orange-200", bgColor: isDark ? "bg-orange-500/08" : "bg-orange-50", numColor: isDark ? "text-orange-400" : "text-orange-600" },
+            ];
+            return (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+                {/* ── Podium Hero (top 3) ───────────────────────────────────────── */}
+                {standingsData.length >= 2 && (
+                  <div className={`rounded-2xl border overflow-hidden ${
+                    isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
+                  }`}>
+                    {/* Header */}
+                    <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
+                      isDark ? "border-white/08" : "border-gray-100"
+                    }`}>
+                      <h3 className={`text-[11px] font-black uppercase tracking-[0.12em] ${
+                        isDark ? "text-white/40" : "text-gray-500"
+                      }`}>Top Standings</h3>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                        isDark ? "bg-[#4CAF50]/12 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                      }`}>Round {state.currentRound} of {state.totalRounds}</span>
+                    </div>
+
+                    {/* Podium cards */}
+                    <div className="px-4 pt-6 pb-4">
+                      <div className="flex items-end justify-center gap-3">
+                        {podiumOrder.map((player, idx) => {
+                          if (!player) return null;
+                          const cfg = podiumConfig[idx];
+                          const isFirst = cfg.rank === 1;
+                          return (
+                            <div
+                              key={player.id}
+                              className={`flex-1 flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border transition-all duration-200 ${
+                                cfg.bgColor
+                              } ${
+                                cfg.borderColor
+                              }`}
+                              style={{ animationDelay: `${idx * 60}ms` }}
+                            >
+                              {/* Rank number */}
+                              <span
+                                className={`text-[10px] font-black uppercase tracking-widest ${cfg.numColor}`}
+                              >
+                                #{cfg.rank}
+                              </span>
+                              {/* Avatar */}
+                              <PlayerAvatar
+                                username={player.username}
+                                name={player.name}
+                                size={isFirst ? 52 : 40}
+                                showBadge
+                                platform={player.platform}
+                                avatarUrl={player.avatarUrl}
+                                flairEmoji={player.flairEmoji}
+                              />
+                              {/* Name + title */}
+                              <div className="text-center min-w-0 w-full">
+                                <p className={`text-xs font-black truncate ${
+                                  isDark ? "text-white" : "text-gray-900"
+                                }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                                  {player.name.split(" ")[0]}
+                                </p>
+                                {player.title && (
+                                  <span className={`text-[9px] font-black px-1.5 py-0.5 rounded mt-0.5 inline-block ${
+                                    isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                                  }`}>{player.title}</span>
+                                )}
+                              </div>
+                              {/* Points */}
+                              <div className={`text-center ${cfg.numColor}`}>
+                                <span
+                                  className={`font-black tabular-nums leading-none ${
+                                    isFirst ? "text-2xl" : "text-xl"
+                                  }`}
+                                  style={{ fontFamily: "'Clash Display', sans-serif" }}
+                                >
+                                  {player.points % 1 !== 0 ? `${Math.floor(player.points)}½` : player.points}
+                                </span>
+                                <span className={`text-[9px] font-bold ml-0.5 ${
+                                  isDark ? "text-white/25" : "text-gray-400"
+                                }`}>pts</span>
+                              </div>
+                              {/* W/D/L */}
+                              <p className={`text-[10px] tabular-nums ${
+                                isDark ? "text-white/35" : "text-gray-400"
+                              }`}>{player.wins}W {player.draws}D {player.losses}L</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Full Leaderboard Table ────────────────────────────────────── */}
+                <div className={`rounded-2xl border overflow-hidden ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
+                }`}>
+                  {/* Table header */}
+                  <div className={`grid grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem] gap-x-2 px-4 py-2.5 border-b ${
+                    isDark ? "border-white/08 bg-white/02" : "border-gray-100 bg-gray-50/60"
+                  }`}>
+                    {["#", "Player", "Pts", "W / D / L", "Buch."].map((col, ci) => (
+                      <span key={ci} className={`text-[10px] font-black uppercase tracking-[0.1em] ${
+                        ci === 0 ? "text-center" : ci >= 2 ? "text-right" : ""
+                      } ${
+                        isDark ? "text-white/30" : "text-gray-400"
+                      }`}>{col}</span>
+                    ))}
+                  </div>
+
+                  {/* Rows */}
+                  <div className="divide-y divide-transparent">
+                    {standingsData.map((p, i) => {
+                      const isLeader = i === 0;
+                      const isPodium = i < 3;
+                      return (
+                        <div
+                          key={p.id}
+                          className={`grid grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem] gap-x-2 items-center px-4 py-2.5 transition-colors ${
+                            isLeader
+                              ? isDark ? "bg-amber-500/06 hover:bg-amber-500/10" : "bg-amber-50/70 hover:bg-amber-50"
+                              : isPodium
+                              ? isDark ? "hover:bg-white/03" : "hover:bg-gray-50/60"
+                              : isDark ? "hover:bg-white/02" : "hover:bg-gray-50/40"
+                          } ${
+                            i > 0 ? (isDark ? "border-t border-white/04" : "border-t border-gray-100/80") : ""
+                          }`}
+                        >
+                          {/* Rank */}
+                          <span className={`text-[11px] font-black text-center tabular-nums ${
+                            isLeader
+                              ? isDark ? "text-amber-400" : "text-amber-600"
+                              : i === 1
+                              ? isDark ? "text-gray-300" : "text-gray-500"
+                              : i === 2
+                              ? isDark ? "text-orange-400" : "text-orange-600"
+                              : isDark ? "text-white/25" : "text-gray-300"
+                          }`}>{i + 1}</span>
+
+                          {/* Player */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <PlayerAvatar
+                              username={p.username}
+                              name={p.name}
+                              size={28}
+                              platform={p.platform}
+                              avatarUrl={p.avatarUrl}
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className={`text-xs font-bold truncate ${
+                                  isDark ? "text-white" : "text-gray-900"
+                                }`}>{p.name.split(" ")[0]}</span>
+                                {p.title && (
+                                  <span className={`flex-shrink-0 text-[9px] font-black px-1 py-0.5 rounded ${
+                                    isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                                  }`}>{p.title}</span>
+                                )}
+                              </div>
+                              <span className={`text-[10px] tabular-nums ${
+                                isDark ? "text-white/25" : "text-gray-400"
+                              }`}>{p.elo}</span>
+                            </div>
+                          </div>
+
+                          {/* Points */}
+                          <span className={`text-sm font-black tabular-nums text-right ${
+                            isLeader
+                              ? isDark ? "text-amber-400" : "text-amber-600"
+                              : isDark ? "text-white" : "text-gray-900"
+                          }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                            {p.points % 1 !== 0 ? `${Math.floor(p.points)}½` : p.points}
+                          </span>
+
+                          {/* W/D/L */}
+                          <span className={`text-[10px] tabular-nums text-right ${
+                            isDark ? "text-white/40" : "text-gray-500"
+                          }`}>{p.wins}/{p.draws}/{p.losses}</span>
+
+                          {/* Buchholz */}
+                          <span className={`text-[10px] tabular-nums text-right ${
+                            isDark ? "text-white/30" : "text-gray-400"
+                          }`}>{p.buchholz.toFixed(1)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tiebreak footer */}
+                  <div className={`flex items-start gap-2 px-4 py-3 border-t ${
+                    isDark ? "border-white/06 bg-white/01" : "border-gray-100 bg-gray-50/40"
+                  }`}>
+                    <Info className={`w-3 h-3 mt-0.5 flex-shrink-0 ${
+                      isDark ? "text-white/20" : "text-gray-300"
+                    }`} />
+                    <p className={`text-[10px] leading-relaxed ${
+                      isDark ? "text-white/25" : "text-gray-400"
+                    }`}>
+                      <span className="font-bold">Tiebreak: Buchholz</span> — sum of opponents' scores. Higher = stronger opposition faced.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="p-4">
-                <StandingsPanel players={state.players} isDark={isDark} />
-              </div>
-            </div>
-          )}
+            );
+          })()}
+
+          {/* ── Players Tab ─────────────────────────────────────────────────── */}
 
           {/* ── Players Tab ─────────────────────────────────────────────────── */}
           {activeTab === "players" && (
