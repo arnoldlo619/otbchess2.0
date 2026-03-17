@@ -208,32 +208,29 @@ export const GameHighlightCard = forwardRef<
       >
         {/* Logo / branding */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png"
+            alt="OTB!!"
+            crossOrigin="anonymous"
             style={{
-              width: 22,
-              height: 22,
-              background: "#3D6B47",
-              borderRadius: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 12,
-              fontWeight: 800,
-              color: "#fff",
+              width: 26,
+              height: 26,
+              objectFit: "contain",
+              flexShrink: 0,
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
             }}
-          >
-            ♟
-          </div>
+          />
           <span
             style={{
               fontSize: 11,
               fontWeight: 700,
-              color: "#3D6B47",
-              letterSpacing: "0.05em",
+              color: "rgba(255,255,255,0.55)",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
+              fontFamily: "'Clash Display', sans-serif",
             }}
           >
-            ChessOTB.club
+            OTBchess.club
           </span>
         </div>
 
