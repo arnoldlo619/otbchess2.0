@@ -2303,3 +2303,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added inline "Look up" button inside username input for one-thumb submit without scrolling
 - [x] Added Enter key handler on username input to trigger lookup
 - [x] Increased QR mode form card spacing from space-y-5 to space-y-6 for breathing room
+
+## Haptic Feedback (Mar 17 2026)
+- [x] Add navigator.vibrate() haptic feedback on successful ELO lookup in Join.tsx (50ms buzz)
+- [x] Add haptic feedback on successful tournament registration (double-pulse [40, 50, 100])
+- [x] Add haptic feedback on QR mode join success (double-pulse [50, 60, 80])

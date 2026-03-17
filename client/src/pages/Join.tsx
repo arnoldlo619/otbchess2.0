@@ -466,11 +466,17 @@ export default function JoinPage() {
     await active.lookup(username.trim());
     // advance handled via useEffect watching lookupStatus
   }
+  // Haptic feedback helper — gracefully no-ops on unsupported devices
+  function haptic(pattern: number | number[]) {
+    try { if ("vibrate" in navigator) navigator.vibrate(pattern); } catch { /* ignore */ }
+  }
+
   // Advance to confirm step once lookup succeeds; normalise into UnifiedProfile
   useEffect(() => {
     if (lookupStatus === "success" && step === "username") {
       const raw = active.profile;
       if (raw) {
+        haptic(50); // short buzz — ELO found
         setUnifiedProfile(raw as UnifiedProfile);
         advanceStep("confirm");
       }
@@ -539,6 +545,7 @@ export default function JoinPage() {
           registeredAt: new Date().toISOString(),
         });
         setConfirming(false);
+        haptic([50, 60, 80]); // double-pulse — QR join success
         navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(prof.username)}`);
       } else if (embeddedMeta) {
         // embeddedMeta was registered in the bootstrap useEffect above;
@@ -576,6 +583,7 @@ export default function JoinPage() {
             registeredAt: new Date().toISOString(),
           });
           setConfirming(false);
+          haptic([50, 60, 80]); // double-pulse — QR join success (embedded)
           navigate(`/tournament/${bootstrapped.id}/play?username=${encodeURIComponent(prof.username)}`);
         } else {
           setConfirming(false);
@@ -649,6 +657,7 @@ export default function JoinPage() {
     }
     await new Promise((r) => setTimeout(r, 900));
     setConfirming(false);
+    haptic([40, 50, 100]); // double-pulse — registration confirmed
     // Navigate directly to the player game view.
     // Priority: resolved registry id → embeddedMeta.id → raw tournamentCode
     if (profile) {
