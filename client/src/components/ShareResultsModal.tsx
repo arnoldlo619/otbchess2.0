@@ -35,6 +35,8 @@ import {
   Trophy,
   QrCode,
   Download,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
@@ -276,6 +278,7 @@ function QRCodePanel({
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [projecting, setProjecting] = useState(false);
 
   const hasUrl = Boolean(reportUrl);
   const qrValue = reportUrl || window.location.href;
@@ -454,6 +457,15 @@ function QRCodePanel({
         </p>
       )}
 
+      {/* Project on screen button */}
+      <button
+        onClick={() => setProjecting(true)}
+        className="flex items-center justify-center gap-2 w-full max-w-[280px] px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-[#3D6B47] text-[#3D6B47] hover:bg-[#3D6B47] hover:text-white transition-colors"
+      >
+        <Maximize2 className="w-4 h-4" />
+        Project on Screen
+      </button>
+
       {/* Action buttons */}
       <div className="flex items-center gap-2 w-full max-w-[280px]">
         <button
@@ -484,6 +496,128 @@ function QRCodePanel({
       <p className={`text-[10px] text-center ${textSub} max-w-[260px] leading-relaxed`}>
         Print or display this card at your venue. Players scan the QR code to view the final standings and download their personal performance card.
       </p>
+
+      {/* Fullscreen projection overlay */}
+      {projecting && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "#0a1f10",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 40,
+          }}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setProjecting(false)}
+            style={{
+              position: "absolute",
+              top: 24,
+              right: 24,
+              background: "rgba(255,255,255,0.08)",
+              border: "none",
+              borderRadius: 12,
+              padding: "10px 16px",
+              color: "rgba(255,255,255,0.6)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            <Minimize2 size={16} />
+            Exit Projection
+          </button>
+
+          {/* OTB!! logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <img
+              src={OTB_LOGO_URL}
+              alt="OTB!!"
+              crossOrigin="anonymous"
+              style={{ width: 52, height: 52, objectFit: "contain" }}
+            />
+            <span
+              style={{
+                fontSize: 22,
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.65)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontFamily: "'Clash Display', sans-serif",
+              }}
+            >
+              OTBchess.club
+            </span>
+          </div>
+
+          {/* Tournament name */}
+          <div
+            style={{
+              fontSize: 42,
+              fontWeight: 900,
+              color: "#fff",
+              textAlign: "center",
+              lineHeight: 1.15,
+              fontFamily: "'Clash Display', sans-serif",
+              maxWidth: 700,
+              padding: "0 32px",
+            }}
+          >
+            {tournamentName}
+          </div>
+
+          {/* Large QR code */}
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 24,
+              padding: 28,
+              boxShadow: "0 16px 80px rgba(0,0,0,0.6)",
+            }}
+          >
+            <QRCodeSVG
+              value={qrValue}
+              size={320}
+              bgColor="#ffffff"
+              fgColor="#0a1f10"
+              level="H"
+              imageSettings={{
+                src: OTB_LOGO_URL,
+                height: 52,
+                width: 52,
+                excavate: true,
+              }}
+            />
+          </div>
+
+          {/* CTA */}
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: "#6ee7a0",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                fontFamily: "'Clash Display', sans-serif",
+              }}
+            >
+              Scan to view results
+            </div>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>
+              View standings &middot; Download your player card
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
