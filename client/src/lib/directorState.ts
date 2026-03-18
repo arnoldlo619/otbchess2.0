@@ -412,6 +412,68 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     []
   );
 
+  // Assign a manual bye to a player in the current round
+  // Creates a bye game (whiteId="BYE", blackId=playerId, result="½-½") and awards ½ point
+  const assignBye = useCallback((playerId: string) => {
+    setState((prev) => {
+      if (prev.status === "registration" || prev.status === "completed") return prev;
+      const currentRound = prev.rounds.find((r) => r.number === prev.currentRound);
+      if (!currentRound) return prev;
+      // Don't double-assign
+      const alreadyBye = currentRound.games.some(
+        (g) => g.whiteId === "BYE" && g.blackId === playerId
+      );
+      if (alreadyBye) return prev;
+      const maxBoard = Math.max(0, ...currentRound.games.map((g) => g.board));
+      const byeGame: import("@/lib/tournamentData").Game = {
+        id: `bye-${playerId}-r${prev.currentRound}`,
+        round: prev.currentRound,
+        board: maxBoard + 1,
+        whiteId: "BYE",
+        blackId: playerId,
+        result: "½-½",
+      };
+      return {
+        ...prev,
+        rounds: prev.rounds.map((r) =>
+          r.number === prev.currentRound
+            ? { ...r, games: [...r.games, byeGame] }
+            : r
+        ),
+        players: prev.players.map((p) =>
+          p.id === playerId
+            ? { ...p, points: p.points + 0.5, draws: p.draws + 1 }
+            : p
+        ),
+      };
+    });
+  }, []);
+
+  // Revoke a manually assigned bye from a player in the current round
+  const revokeBye = useCallback((playerId: string) => {
+    setState((prev) => {
+      const currentRound = prev.rounds.find((r) => r.number === prev.currentRound);
+      if (!currentRound) return prev;
+      const byeGame = currentRound.games.find(
+        (g) => g.whiteId === "BYE" && g.blackId === playerId
+      );
+      if (!byeGame) return prev;
+      return {
+        ...prev,
+        rounds: prev.rounds.map((r) =>
+          r.number === prev.currentRound
+            ? { ...r, games: r.games.filter((g) => g.id !== byeGame.id) }
+            : r
+        ),
+        players: prev.players.map((p) =>
+          p.id === playerId
+            ? { ...p, points: Math.max(0, p.points - 0.5), draws: Math.max(0, p.draws - 1) }
+            : p
+        ),
+      };
+    });
+  }, []);
+
   // Update mutable tournament settings (name, totalRounds) from the Settings panel
   const updateSettings = useCallback(
     (patch: { tournamentName?: string; totalRounds?: number }) => {
@@ -451,6 +513,8 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     updatePlayer,
     removePlayer,
     swapBoards,
+    assignBye,
+    revokeBye,
     startTournament,
     enterResult,
     generateNextRound,

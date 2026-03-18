@@ -78,6 +78,7 @@ import {
   ArrowLeftRight,
   GripVertical,
   Pencil,
+  Coffee,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1064,6 +1065,8 @@ export default function Director() {
     updatePlayer,
     removePlayer,
     swapBoards,
+    assignBye,
+    revokeBye,
     startTournament,
     enterResult,
     generateNextRound,
@@ -1404,6 +1407,13 @@ export default function Director() {
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
   const allCountries = Array.from(new Set(standings.map((p) => p.country)));
   const existingUsernames = state.players.map((p) => p.username);
+
+  // Set of player IDs that have a manual bye in the current round
+  const byePlayerIds = new Set(
+    (currentRoundData?.games ?? [])
+      .filter((g) => g.whiteId === "BYE")
+      .map((g) => g.blackId)
+  );
 
   const filteredPlayers = standings
     .filter((p) => {
@@ -2958,6 +2968,42 @@ export default function Director() {
                             }`} title={c === "W" ? "White" : "Black"} />
                           ))}
                         </div>
+                        {/* Bye button — only during active round */}
+                        {!isRegistration && currentRoundData && (
+                          byePlayerIds.has(p.id) ? (
+                            <button
+                              onClick={() => {
+                                revokeBye(p.id);
+                                toast.info(`${p.name}'s bye revoked`);
+                              }}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all active:scale-95 ${
+                                isDark
+                                  ? "bg-blue-500/15 border-blue-500/30 text-blue-400 hover:bg-blue-500/25"
+                                  : "bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
+                              }`}
+                              title="Revoke bye"
+                            >
+                              <Coffee className="w-3 h-3" />
+                              Bye ✓
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                assignBye(p.id);
+                                toast.success(`${p.name} assigned a bye (+½pt)`);
+                              }}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border transition-all active:scale-95 opacity-0 group-hover:opacity-100 ${
+                                isDark
+                                  ? "bg-white/06 border-white/10 text-white/50 hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-400"
+                                  : "bg-white border-gray-200 text-gray-400 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600"
+                              }`}
+                              title="Give bye (+½pt)"
+                            >
+                              <Coffee className="w-3 h-3" />
+                              Bye
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                   ))}
@@ -3031,6 +3077,34 @@ export default function Director() {
                         </div>
                         <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>colors</p>
                       </div>
+                      {/* Bye button — mobile */}
+                      {!isRegistration && currentRoundData && (
+                        byePlayerIds.has(p.id) ? (
+                          <button
+                            onClick={() => { revokeBye(p.id); toast.info(`${p.name}'s bye revoked`); }}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                              isDark
+                                ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
+                                : "bg-blue-50 border-blue-200 text-blue-600"
+                            }`}
+                          >
+                            <Coffee className="w-3 h-3" />
+                            Bye ✓
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => { assignBye(p.id); toast.success(`${p.name} assigned a bye (+½pt)`); }}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                              isDark
+                                ? "bg-white/06 border-white/10 text-white/40 hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-400"
+                                : "bg-white border-gray-200 text-gray-400 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600"
+                            }`}
+                          >
+                            <Coffee className="w-3 h-3" />
+                            Bye
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 ))}

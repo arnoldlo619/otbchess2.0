@@ -2549,3 +2549,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Visual feedback: swapped boards briefly flash green to confirm the change (toast notification)
 - [x] Edit mode exits automatically when director clicks "Done Editing" button; result entry blocked in edit mode
 - [x] TypeScript: 0 errors
+
+## Director Dashboard — Manual Bye Assignment
+
+- [x] Add assignBye(playerId) action to directorState: injects a bye game for the player in the current round and awards ½ point
+- [x] Add revokeBye(playerId) action to directorState: removes the bye game and reverses the point award
+- [x] In Players tab, show a "Give Bye" button (or menu item) on each player row that is not already paired or has a bye this round
+- [x] Players already assigned a bye this round show a "Bye" badge and a "Revoke Bye" option instead
+- [x] Bye assignment is only available during an active round (not during registration or after tournament completion)
+- [x] TypeScript: 0 errors
