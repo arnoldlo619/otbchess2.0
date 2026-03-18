@@ -408,3 +408,64 @@ export function applyResultToPlayers(
     };
   });
 }
+
+// ─── Double Swiss ─────────────────────────────────────────────────────────────
+
+/**
+ * Generate Double Swiss pairings for the next round.
+ *
+ * Calls the standard Swiss engine to produce pairings, then doubles every
+ * game: Game A keeps the assigned colors; Game B swaps them. Both games
+ * share the same board number so the Director can display them as a pair.
+ *
+ * IDs:
+ *   Game A: r{round}b{board}a  (gameIndex = 0)
+ *   Game B: r{round}b{board}b  (gameIndex = 1)
+ *
+ * Bye games are NOT doubled — the bye player still receives ½ point once.
+ */
+export function generateDoubleSwissPairings(
+  players: Player[],
+  rounds: Round[],
+  nextRound: number
+): Game[] {
+  // Get standard Swiss pairings (includes bye if needed)
+  const baseGames = generateSwissPairings(players, rounds, nextRound);
+
+  const doubled: Game[] = [];
+  for (const game of baseGames) {
+    // Bye games are not doubled
+    if (game.whiteId === "BYE" || game.blackId === "BYE") {
+      doubled.push({ ...game, gameIndex: 0 });
+      continue;
+    }
+
+    // Game A — normal colors (gameIndex 0)
+    doubled.push({
+      ...game,
+      id: `${game.id}a`,
+      gameIndex: 0,
+    });
+
+    // Game B — colors swapped (gameIndex 1)
+    doubled.push({
+      id: `${game.id}b`,
+      round: game.round,
+      board: game.board,
+      whiteId: game.blackId,
+      blackId: game.whiteId,
+      result: "*",
+      gameIndex: 1,
+    });
+  }
+
+  return doubled;
+}
+
+/**
+ * Check whether a round is complete in Double Swiss mode.
+ * Both Game A and Game B for every board must have a result.
+ */
+export function isDoubleSwissRoundComplete(games: Game[]): boolean {
+  return games.every((g) => g.result !== "*");
+}

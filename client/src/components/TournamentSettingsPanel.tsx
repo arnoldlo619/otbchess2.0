@@ -74,7 +74,7 @@ interface SettingsForm {
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "roundrobin" | "elimination";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination";
   rounds: number;
   maxPlayers: number;
   timeBase: number;

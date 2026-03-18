@@ -1198,7 +1198,11 @@ export default function TournamentPage() {
   const displayDate = config?.date ?? (isDemo ? DEMO_TOURNAMENT.date : "");
   const displayVenue = config?.venue ?? (isDemo ? DEMO_TOURNAMENT.venue : "");
   const displayTimeControl = config?.timePreset ?? (isDemo ? DEMO_TOURNAMENT.timeControl : "");
-  const displayFormat = config?.format ? (config.format.charAt(0).toUpperCase() + config.format.slice(1)) : (isDemo ? DEMO_TOURNAMENT.format : "Swiss");
+  const displayFormat = config?.format
+    ? config.format === "doubleswiss" ? "Double Swiss"
+    : config.format === "roundrobin" ? "Round Robin"
+    : config.format.charAt(0).toUpperCase() + config.format.slice(1)
+    : (isDemo ? DEMO_TOURNAMENT.format : "Swiss");
 
   // Simulate live clock
   const [elapsed, setElapsed] = useState(0);

@@ -66,7 +66,7 @@ interface WizardData {
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "roundrobin" | "elimination";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination";
   rounds: number;
   maxPlayers: number;
   timeBase: number;
@@ -1253,6 +1253,7 @@ function StepFormat({
 }) {
   const formats = [
     { value: "swiss" as const, label: "Swiss System", desc: "Paired by score — best for large groups.", icon: Shuffle },
+    { value: "doubleswiss" as const, label: "Double Swiss", desc: "Each pairing plays both colors per round — maximum fairness.", icon: Shuffle },
     { value: "roundrobin" as const, label: "Round Robin", desc: "Everyone plays everyone — best for small groups.", icon: Users },
     { value: "elimination" as const, label: "Elimination", desc: "Single knockout bracket — fast and exciting.", icon: Trophy },
   ];
@@ -1366,6 +1367,8 @@ function StepFormat({
         <span>
           {data.format === "swiss"
             ? `Swiss · ${data.rounds} rounds · up to ${data.maxPlayers} players. Optimal for ${Math.pow(2, data.rounds - 1)} players.`
+            : data.format === "doubleswiss"
+            ? `Double Swiss · ${data.rounds} rounds · ${data.maxPlayers} players. Each round: 2 games per pairing (both colors).`
             : data.format === "roundrobin"
             ? `Round Robin · ${data.maxPlayers} players = ${(data.maxPlayers * (data.maxPlayers - 1)) / 2} total games.`
             : `Single elimination bracket for up to ${data.maxPlayers} players.`}

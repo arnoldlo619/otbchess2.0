@@ -40,6 +40,8 @@ export interface Game {
   blackId: string;
   result: Result;
   duration?: string; // e.g. "42 moves"
+  /** Double Swiss only: 0 = first game (normal colors), 1 = return game (colors swapped) */
+  gameIndex?: 0 | 1;
 }
 
 export interface Round {

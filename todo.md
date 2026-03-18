@@ -2409,3 +2409,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update pairing engine to use the selected rating type for ELO-based pairings
 - [x] Display correct rating label in Director, Tournament, and PlayerView pages
 - [x] TypeScript: 0 errors
+
+## Double Swiss Format (Mar 18 2026)
+- [x] Add "doubleswiss" to TournamentConfig format type and registry
+- [x] Add Double Swiss option to Quickstart Smart Defaults and Schedule wizard format step
+- [x] Extend Swiss pairing engine to generate two games per pairing (game A + game B with swapped colors)
+- [x] Update Game type to support a "gameIndex" field (0 = first game, 1 = return game)
+- [x] Update Director board cards to show both game slots per pairing with independent result entry
+- [x] Update computeStandings to correctly score Double Swiss games (both games count — standard Game objects)
+- [x] Update round completion detection for Double Swiss (all games in both slots must have results)
+- [x] Update spectator Tournament page to display Double Swiss boards correctly
+- [x] Add "Double Swiss" label/badge in Director header and tournament display
+- [x] TypeScript: 0 errors
+- [x] Unit tests for Double Swiss pairing and scoring (8 tests, all passing)

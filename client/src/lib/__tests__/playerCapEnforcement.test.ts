@@ -30,7 +30,7 @@ function makePlayer(username: string): Player {
 
 const TOURNAMENT_ID = "test-cap-tournament";
 const REGISTRY_KEY = "otb-tournament-registry-v1"; // matches tournamentRegistry.ts
-const SCHEMA_VERSION = 2; // matches directorState.ts
+const SCHEMA_VERSION = 3; // matches directorState.ts
 const STATE_KEY = `otb-director-state-v${SCHEMA_VERSION}-${TOURNAMENT_ID}`;
 
 function seedRegistry(maxPlayers: number) {

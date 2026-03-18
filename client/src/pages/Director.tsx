@@ -425,6 +425,197 @@ function BoardCard({
   );
 }
 
+// ─── Double Swiss Board Card ─────────────────────────────────────────────────
+/**
+ * Shows both Game A (normal colors) and Game B (swapped colors) for a single
+ * Double Swiss board pairing. Players are displayed once at the top; two
+ * result rows sit below — one per game.
+ */
+function DoubleSwissBoardCard({
+  gameA,
+  gameB,
+  players,
+  onResult,
+  isDark,
+}: {
+  gameA: import("@/lib/tournamentData").Game;
+  gameB: import("@/lib/tournamentData").Game;
+  players: import("@/lib/tournamentData").Player[];
+  onResult: (gameId: string, result: Result) => void;
+  isDark: boolean;
+}) {
+  const p1 = players.find((p) => p.id === gameA.whiteId)!;
+  const p2 = players.find((p) => p.id === gameA.blackId)!;
+  const bothComplete = gameA.result !== "*" && gameB.result !== "*";
+
+  function GameRow({ game, label }: { game: import("@/lib/tournamentData").Game; label: string }) {
+    const white = players.find((p) => p.id === game.whiteId)!;
+    const black = players.find((p) => p.id === game.blackId)!;
+    const isComplete = game.result !== "*";
+    return (
+      <div className={`rounded-xl border px-3 py-2.5 ${
+        isDark
+          ? isComplete ? "bg-white/03 border-white/08" : "bg-white/05 border-[#4CAF50]/20"
+          : isComplete ? "bg-gray-50 border-gray-200" : "bg-white border-[#3D6B47]/20"
+      }`}>
+        {/* Game label + result badge */}
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-[10px] font-black tracking-widest uppercase ${
+            isDark ? "text-white/30" : "text-gray-400"
+          }`}>{label}</span>
+          {isComplete && (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${resultBadgeClass(game.result, isDark)}`}>
+              {game.result}
+            </span>
+          )}
+        </div>
+        {/* Color indicators */}
+        <div className="flex items-center gap-1.5 mb-2.5 text-[11px]">
+          <span className={`px-1.5 py-0.5 rounded font-bold ${
+            isDark ? "bg-white/90 text-gray-900" : "bg-white border border-gray-200 text-gray-700"
+          }`}>{white.name.split(" ")[0]} ⬜</span>
+          <span className={isDark ? "text-white/25" : "text-gray-300"}>vs</span>
+          <span className={`px-1.5 py-0.5 rounded font-bold ${
+            isDark ? "bg-gray-900/80 text-white/80 border border-white/10" : "bg-gray-900 text-white"
+          }`}>{black.name.split(" ")[0]} ⬛</span>
+        </div>
+        {/* Result buttons */}
+        <div className={`flex gap-1.5 ${isComplete ? "opacity-60" : ""}`}>
+          {(["1-0", "½-½", "0-1"] as Result[]).map((v) => {
+            const isSelected = game.result === v;
+            const label = v === "1-0" ? white.name.split(" ")[0] : v === "0-1" ? black.name.split(" ")[0] : "Draw";
+            const color = v === "1-0" ? "green" : v === "0-1" ? "red" : "blue";
+            return (
+              <button
+                key={v}
+                onClick={() => {
+                  if (navigator.vibrate) navigator.vibrate(isSelected ? [30, 20, 30] : 40);
+                  onResult(game.id, v);
+                }}
+                className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
+                  isSelected
+                    ? color === "green"
+                      ? isDark
+                        ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
+                        : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47]"
+                      : color === "red"
+                      ? isDark
+                        ? "bg-red-500/15 border-red-500/40 text-red-400"
+                        : "bg-red-50 border-red-300 text-red-600"
+                      : isDark
+                      ? "bg-blue-500/15 border-blue-500/40 text-blue-400"
+                      : "bg-blue-50 border-blue-300 text-blue-600"
+                    : isDark
+                    ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80"
+                    : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+          {isComplete && (
+            <button
+              onClick={() => onResult(game.id, "*")}
+              className={`flex-shrink-0 w-9 py-2 text-xs rounded-lg border transition-all duration-150 ${
+                isDark
+                  ? "bg-white/05 border-white/10 text-white/40 hover:bg-white/10"
+                  : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100"
+              }`}
+              title="Clear result"
+            >✕</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`rounded-2xl border overflow-hidden transition-all duration-200 ${
+      isDark
+        ? bothComplete
+          ? "bg-[oklch(0.22_0.06_145)] border-white/10"
+          : "bg-[oklch(0.24_0.07_145)] border-[#4CAF50]/25 shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
+        : bothComplete
+        ? "bg-white border-gray-200/60 shadow-sm"
+        : "bg-white border-[#3D6B47]/25 shadow-[0_2px_8px_rgba(61,107,71,0.08)]"
+    }`}>
+      {/* Board header */}
+      <div className={`flex items-center justify-between px-4 py-2.5 border-b ${
+        isDark ? "border-white/08 bg-white/03" : "border-gray-100 bg-gray-50/60"
+      }`}>
+        <div className="flex items-center gap-2">
+          <span className={`text-[11px] font-black tracking-[0.12em] uppercase ${
+            isDark ? "text-white/35" : "text-gray-400"
+          }`}>Board {gameA.board}</span>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+          }`}>2× Games</span>
+          {!bothComplete && (
+            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+              isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+            }`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Live
+            </span>
+          )}
+        </div>
+        {/* Mini score summary */}
+        {bothComplete && (
+          <div className="flex items-center gap-1 text-xs font-bold">
+            <span style={{ color: isDark ? "#4CAF50" : "#3D6B47" }}>{p1.name.split(" ")[0]}</span>
+            <span className={isDark ? "text-white/30" : "text-gray-400"}>
+              {(gameA.result === "1-0" ? 1 : gameA.result === "½-½" ? 0.5 : 0) +
+               (gameB.result === "0-1" ? 1 : gameB.result === "½-½" ? 0.5 : 0)}
+              –
+              {(gameA.result === "0-1" ? 1 : gameA.result === "½-½" ? 0.5 : 0) +
+               (gameB.result === "1-0" ? 1 : gameB.result === "½-½" ? 0.5 : 0)}
+            </span>
+            <span style={{ color: isDark ? "#4CAF50" : "#3D6B47" }}>{p2.name.split(" ")[0]}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Player names row */}
+      <div className="px-4 pt-3 pb-2 flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <PlayerAvatar username={p1.username} name={p1.name}
+            platform={p1.platform === "lichess" ? "lichess" : "chesscom"}
+            size={32} showBadge avatarUrl={p1.avatarUrl} flairEmoji={p1.flairEmoji} />
+          <span className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{p1.name}</span>
+          {p1.title && <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
+            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+          }`}>{p1.title}</span>}
+          <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+            isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+          }`}>{p1.elo}</span>
+        </div>
+        <span className={`flex-shrink-0 text-[10px] font-black uppercase tracking-widest ${
+          isDark ? "text-white/20" : "text-gray-300"
+        }`}>vs</span>
+        <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+          <span className={`text-sm font-bold truncate text-right ${isDark ? "text-white" : "text-gray-900"}`}>{p2.name}</span>
+          {p2.title && <span className={`flex-shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded ${
+            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+          }`}>{p2.title}</span>}
+          <span className={`flex-shrink-0 text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${
+            isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+          }`}>{p2.elo}</span>
+          <PlayerAvatar username={p2.username} name={p2.name}
+            platform={p2.platform === "lichess" ? "lichess" : "chesscom"}
+            size={32} showBadge avatarUrl={p2.avatarUrl} flairEmoji={p2.flairEmoji} />
+        </div>
+      </div>
+
+      {/* Two game rows */}
+      <div className="px-4 pb-4 space-y-2">
+        <GameRow game={gameA} label="Game A" />
+        <GameRow game={gameB} label="Game B" />
+      </div>
+    </div>
+  );
+}
+
 /// ─── Standings Mini Table ─────────────────────────────────────────────────────
 function StandingsPanel({
   players,
@@ -1283,7 +1474,7 @@ export default function Director() {
                     isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
                   }`}>
                     <Trophy className="w-3 h-3" />
-                    Swiss · {state.totalRounds}R
+                    {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} · {state.totalRounds}R
                   </span>
                 </div>
               </div>
@@ -1658,7 +1849,7 @@ export default function Director() {
                           style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
                         >
                           <Zap className="w-4 h-4" />
-                          Generate Round {state.currentRound + 1} — Swiss Pairings
+                          Generate Round {state.currentRound + 1} — {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} Pairings
                           <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
@@ -1830,6 +2021,54 @@ export default function Director() {
                       isDark ? "text-white/30" : "text-gray-400"
                     }`}>Round {state.currentRound} Boards</h2>
                     {currentRoundData ? (
+                      state.format === "doubleswiss" ? (
+                        // Double Swiss: group games by board number, show Game A + Game B per card
+                        (() => {
+                          const boardNums = Array.from(new Set(currentRoundData.games.map((g) => g.board))).sort((a, b) => a - b);
+                          return (
+                            <div className="grid grid-cols-1 gap-4">
+                              {boardNums.map((boardNum, cardIdx) => {
+                                const boardGamesForNum = currentRoundData.games.filter((g) => g.board === boardNum);
+                                const gA = boardGamesForNum.find((g) => (g.gameIndex ?? 0) === 0);
+                                const gB = boardGamesForNum.find((g) => g.gameIndex === 1);
+                                if (gA && (gA.whiteId === "BYE" || gA.blackId === "BYE")) {
+                                  return (
+                                    <div key={`board-${boardNum}`} className="animate-in fade-in slide-in-from-bottom-3" style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}>
+                                      <ByeCard game={gA} players={state.players} isDark={isDark} />
+                                    </div>
+                                  );
+                                }
+                                if (!gA || !gB) return null;
+                                return (
+                                  <div key={`board-${boardNum}`} className="animate-in fade-in slide-in-from-bottom-3" style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}>
+                                    <DoubleSwissBoardCard
+                                      gameA={gA}
+                                      gameB={gB}
+                                      players={state.players}
+                                      onResult={(gameId, newResult) => {
+                                        const game = currentRoundData.games.find((g) => g.id === gameId)!;
+                                        const prevResult = game.result;
+                                        const white = state.players.find((p) => p.id === game.whiteId);
+                                        const black = state.players.find((p) => p.id === game.blackId);
+                                        const label = newResult === "*"
+                                          ? `Board ${boardNum}: cleared`
+                                          : `Board ${boardNum}: ${
+                                              newResult === "1-0" ? `${white?.name ?? "White"} wins`
+                                              : newResult === "0-1" ? `${black?.name ?? "Black"} wins`
+                                              : "Draw"
+                                            }`;
+                                        recordWithUndo(gameId, newResult, prevResult, label);
+                                        pushStandingsNow();
+                                      }}
+                                      isDark={isDark}
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()
+                      ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {currentRoundData.games.map((game, cardIdx) =>
                           game.whiteId === "BYE" ? (
@@ -1877,6 +2116,7 @@ export default function Director() {
                           )
                         )}
                       </div>
+                      )
                     ) : (
                       <div className={`flex flex-col items-center justify-center py-16 rounded-xl border ${
                         isDark ? "border-white/08 text-white/30" : "border-gray-100 text-gray-300"
@@ -2742,7 +2982,7 @@ export default function Director() {
                   <div className="divide-y">
                     {[
                       { label: "Name", value: state.tournamentName },
-                      { label: "Format", value: `Swiss · ${state.totalRounds} rounds` },
+                      { label: "Format", value: `${state.format === "doubleswiss" ? "Double Swiss" : state.format === "roundrobin" ? "Round Robin" : state.format === "elimination" ? "Elimination" : "Swiss"} · ${state.totalRounds} rounds` },
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between px-5 py-3">
                         <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</span>

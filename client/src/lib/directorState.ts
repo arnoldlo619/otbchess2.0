@@ -10,13 +10,13 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
-import { generateSwissPairings, applyResultToPlayers, computeStandings } from "./swiss";
+import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
 
 // ─── Schema Version ───────────────────────────────────────────────────────────
 // Bump this when the DirectorState shape changes to force a clean reset
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 function storageKey(tournamentId: string): string {
   return `otb-director-state-v${SCHEMA_VERSION}-${tournamentId}`;
@@ -27,6 +27,8 @@ export interface DirectorState {
   tournamentId: string;
   tournamentName: string;
   totalRounds: number;
+  /** Tournament format — used to select the correct pairing engine. */
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination";
   players: Player[];
   rounds: Round[];
   currentRound: number;
@@ -45,6 +47,7 @@ function getDemoInitialState(): DirectorState {
     tournamentId: "otb-demo-2026",
     tournamentName: DEMO_TOURNAMENT.name,
     totalRounds: DEMO_TOURNAMENT.rounds,
+    format: "swiss",
     players: DEMO_TOURNAMENT.players.map((p) => ({ ...p })),
     rounds: DEMO_TOURNAMENT.roundData.map((r) => ({
       ...r,
@@ -60,6 +63,7 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
     tournamentId: config.id,
     tournamentName: config.name,
     totalRounds: config.rounds,
+    format: config.format ?? "swiss",
     players: [],
     rounds: [],
     currentRound: 0,
@@ -277,7 +281,9 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const startTournament = useCallback(() => {
     setState((prev) => {
       if (prev.players.length < 2) return prev;
-      const games = generateSwissPairings(prev.players, [], 1);
+      const games = prev.format === "doubleswiss"
+        ? generateDoubleSwissPairings(prev.players, [], 1)
+        : generateSwissPairings(prev.players, [], 1);
       const round1: Round = { number: 1, status: "in_progress", games };
       return { ...prev, rounds: [round1], currentRound: 1, status: "in_progress" };
     });
@@ -336,8 +342,10 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       const allDone = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
       if (!allDone) return prev;
 
-      // Use the full Swiss engine
-      const newGames = generateSwissPairings(prev.players, prev.rounds, nextRoundNum);
+      // Use the correct pairing engine based on format
+      const newGames = prev.format === "doubleswiss"
+        ? generateDoubleSwissPairings(prev.players, prev.rounds, nextRoundNum)
+        : generateSwissPairings(prev.players, prev.rounds, nextRoundNum);
       const newRound: Round = {
         number: nextRoundNum,
         status: "in_progress",
