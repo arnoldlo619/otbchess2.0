@@ -1201,7 +1201,7 @@ export default function Home() {
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
-  const [activeNavTab, setActiveNavTab] = useState("Clubs");
+  const [activeNavTab, setActiveNavTab] = useState("Dashboard");
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
