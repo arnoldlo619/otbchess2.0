@@ -2447,3 +2447,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Render Match W/D/L column in Tournament spectator standings (visible only in Double Swiss mode)
 - [x] TypeScript: 0 errors
 - [x] Unit tests for matchW/D/L computation (8 doubleSwiss tests, all passing)
+
+## Minimal Tournament Nav Header (Mar 18 2026)
+- [x] Create MinimalTournamentNav component (logo left, theme toggle + sign-in right, no nav links)
+- [x] Replace AppNavBar in Director.tsx with MinimalTournamentNav
+- [x] Replace AppNavBar in Tournament.tsx with MinimalTournamentNav
+- [x] Remove the 168px spacer divs and replace with 56px spacers
+- [x] Ensure content clears the new minimal header height (56px) — sub-toolbar sticky at top-[56px], banner at top-[104px]
+- [x] TypeScript: 0 errors

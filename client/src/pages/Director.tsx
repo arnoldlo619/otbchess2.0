@@ -20,7 +20,7 @@ import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
 import { Link, useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
-import { AppNavBar } from "@/components/AppNavBar";
+import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -1370,15 +1370,15 @@ export default function Director() {
         isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
       }`}
     >
-      {/* ── Animated Nav Bar (fixed overlay, z-9999) ─────────────────────── */}
-      <AppNavBar defaultActive="Dashboard" />
+      {/* ── Minimal Tournament Nav (fixed, 56px tall) ─────────────────── */}
+      <MinimalTournamentNav />
 
-      {/* Spacer to push content below the fixed nav bar (hidden on mobile where nav is hidden) */}
-      <div className="hidden sm:block" style={{ height: 168 }} aria-hidden />
+      {/* Spacer to push content below the fixed minimal nav */}
+      <div style={{ height: 56 }} aria-hidden />
 
       {/* ── Sub-toolbar: QR buttons (sits below the AnimeNavBar) ── */}
       <header
-        className={`sticky top-0 sm:top-[168px] z-40 border-b transition-colors duration-300 ${
+        className={`sticky top-[56px] z-40 border-b transition-colors duration-300 ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
             : "bg-white/95 backdrop-blur-md border-gray-100"
@@ -1386,11 +1386,6 @@ export default function Director() {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-12 flex items-center justify-between gap-3">
-          {/* Left: logo (visible on small screens where AnimeNavBar shows hamburger) */}
-          <div className="flex items-center">
-            <NavLogo className="md:hidden" />
-          </div>
-
           {/* Right: QR button group */}
           <div className="flex items-center gap-2">
             <div className={`flex items-center rounded-xl border overflow-hidden ${
@@ -1430,7 +1425,7 @@ export default function Director() {
       {/* ── Sticky "All Results In" Banner ──────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
         <div
-          className={`sticky top-[48px] sm:top-[216px] z-30 border-b transition-all duration-300 ${
+          className={`sticky top-[104px] z-30 border-b transition-all duration-300 ${
             isDark
               ? "bg-[#1a3d22]/95 backdrop-blur-md border-[#4CAF50]/25"
               : "bg-[#f0f9f1]/95 backdrop-blur-md border-[#3D6B47]/20"

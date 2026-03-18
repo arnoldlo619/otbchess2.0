@@ -16,7 +16,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
-import { AppNavBar } from "@/components/AppNavBar";
+import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import {
@@ -1286,8 +1286,8 @@ export default function TournamentPage() {
   if (serverFetching && !tournamentState && tournamentId !== "otb-demo-2026") {
     return (
       <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-        <AppNavBar defaultActive="Dashboard" />
-        <div className="hidden sm:block" style={{ height: 168 }} aria-hidden />
+        <MinimalTournamentNav />
+        <div style={{ height: 56 }} aria-hidden />
         <TournamentNav tournamentId={tournamentId} />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 pt-28">
           <div className="w-10 h-10 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
@@ -1299,8 +1299,8 @@ export default function TournamentPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-      <AppNavBar defaultActive="Dashboard" />
-      <div className="hidden sm:block" style={{ height: 168 }} aria-hidden />
+      <MinimalTournamentNav />
+      <div style={{ height: 56 }} aria-hidden />
       {/* New round flash notification */}
       {newRoundFlash !== null && (
         <NewRoundFlash round={newRoundFlash} onDismiss={dismissFlash} />
