@@ -2594,3 +2594,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Visual feedback: brief edge flash/glow in the swipe direction on gesture recognition
 - [x] Guard: ignore swipes that start on horizontally scrollable children (board grid, table rows)
 - [x] TypeScript: 0 errors
+
+## Spectator View — Swipe Gesture Navigation
+
+- [x] Wire useSwipeGesture to the Tournament/Spectator page tab content area
+- [x] Swipe-right navigates to previous tab, swipe-left to next tab
+- [x] Same lime-green edge flash feedback as Director dashboard
+- [x] TypeScript: 0 errors

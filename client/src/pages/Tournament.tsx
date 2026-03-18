@@ -35,6 +35,7 @@ import { computeStandings } from "@/lib/swiss";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import {
   Crown,
   ArrowLeft,
@@ -1241,34 +1242,24 @@ export default function TournamentPage() {
   type MobileTab = "pairings" | "standings" | "players";
   const MOBILE_TABS: MobileTab[] = ["pairings", "standings", "players"];
   const [mobileTab, setMobileTab] = useState<MobileTab>("pairings");
+  const [swipeFlash, setSwipeFlash] = useState<"left" | "right" | null>(null);
 
-  // Swipe gesture state for tab switching
-  const tabSwipeStartX = useRef<number | null>(null);
-  const tabSwipeStartY = useRef<number | null>(null);
-
-  function handleTabTouchStart(e: React.TouchEvent) {
-    tabSwipeStartX.current = e.touches[0].clientX;
-    tabSwipeStartY.current = e.touches[0].clientY;
-  }
-
-  function handleTabTouchEnd(e: React.TouchEvent) {
-    if (tabSwipeStartX.current === null || tabSwipeStartY.current === null) return;
-    const dx = e.changedTouches[0].clientX - tabSwipeStartX.current;
-    const dy = Math.abs(e.changedTouches[0].clientY - tabSwipeStartY.current);
-    tabSwipeStartX.current = null;
-    tabSwipeStartY.current = null;
-    if (Math.abs(dx) < 50 || dy > Math.abs(dx)) return; // not a horizontal swipe
+  const navigateMobileTab = useCallback((direction: "prev" | "next") => {
     const idx = MOBILE_TABS.indexOf(mobileTab);
-    if (dx < 0 && idx < MOBILE_TABS.length - 1) {
-      // swipe left → next tab
-      try { if ("vibrate" in navigator) navigator.vibrate(20); } catch { /* ignore */ }
-      setMobileTab(MOBILE_TABS[idx + 1]);
-    } else if (dx > 0 && idx > 0) {
-      // swipe right → previous tab
-      try { if ("vibrate" in navigator) navigator.vibrate(20); } catch { /* ignore */ }
-      setMobileTab(MOBILE_TABS[idx - 1]);
-    }
-  }
+    const nextIdx = direction === "prev" ? idx - 1 : idx + 1;
+    if (nextIdx < 0 || nextIdx >= MOBILE_TABS.length) return;
+    setMobileTab(MOBILE_TABS[nextIdx]);
+    setSwipeFlash(direction === "prev" ? "right" : "left");
+    setTimeout(() => setSwipeFlash(null), 350);
+  }, [mobileTab]);
+
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+  useSwipeGesture(swipeContainerRef, {
+    threshold: 60,
+    maxVerticalDrift: 80,
+    onSwipeRight: () => navigateMobileTab("prev"),
+    onSwipeLeft: () => navigateMobileTab("next"),
+  });
 
   // Identify the viewing participant — look up their registration in localStorage
   const myPlayerId = useMemo(() => {
@@ -1399,11 +1390,22 @@ export default function TournamentPage() {
               ))}
             </div>
 
+            {/* ── Swipe flash overlay (mobile only) ───────────────────────── */}
+            {swipeFlash && (
+              <div
+                className={`pointer-events-none fixed inset-y-0 z-50 w-16 transition-opacity duration-300 ${
+                  swipeFlash === "right"
+                    ? "left-0 bg-gradient-to-r from-[#4CAF50]/20 to-transparent"
+                    : "right-0 bg-gradient-to-l from-[#4CAF50]/20 to-transparent"
+                }`}
+                aria-hidden
+              />
+            )}
+
             {/* ── Mobile swipeable content area ─────────────────────────── */}
             <div
+              ref={swipeContainerRef}
               className="block lg:hidden"
-              onTouchStart={handleTabTouchStart}
-              onTouchEnd={handleTabTouchEnd}
             >
               {mobileTab === "pairings" && (
                 <PairingsPanel
