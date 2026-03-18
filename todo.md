@@ -2371,3 +2371,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Dismiss button hides the banner without changing rounds
 - [x] Banner is suppressed if the new cap's optimal rounds already matches the current rounds selection
 - [x] TypeScript: 0 errors
+
+## UI/UX Design Polish & Accessibility Audit (Mar 17 2026)
+- [x] Audit homepage desktop + mobile (spacing, typography, contrast, touch targets)
+- [x] Audit tournament wizard (quickstart + schedule) desktop + mobile
+- [x] Audit lobby/join page desktop + mobile
+- [x] Audit director dashboard (home, standings, players, settings tabs) desktop + mobile
+- [x] Audit player view / spectator page desktop + mobile
+- [x] Audit final standings / player reports desktop + mobile
+- [x] Audit clubs page desktop + mobile
+- [x] Document all findings into prioritized fix list
+- [x] Fix high-priority issues: contrast, touch targets, text overflow, responsive breakpoints
+- [x] Fix medium-priority issues: hover states, transitions, dark/light consistency, scroll behavior
+- [x] Re-audit all pages after fixes
+- [x] TypeScript: 0 errors confirmed

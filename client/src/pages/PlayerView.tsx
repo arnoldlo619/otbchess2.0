@@ -681,7 +681,7 @@ function MyBoardScreen({
 
       {/* Standings tab */}
       {activeTab === "standings" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe">
           <LiveStandingsPanel
             players={players}
             username={username}

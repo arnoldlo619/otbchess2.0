@@ -1354,7 +1354,7 @@ export default function TournamentPage() {
               )}
 
           {/* Main content */}
-          <div className="container py-4 sm:py-8">
+          <div className="container py-4 sm:py-8 animate-page-in">
 
             {/* ── Mobile tab bar (hidden on lg+) ─────────────────────────── */}
             <div className="flex lg:hidden mb-4 rounded-2xl overflow-hidden border p-1 gap-1"

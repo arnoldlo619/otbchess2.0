@@ -360,7 +360,7 @@ function BoardCard({
                   : "Draw";
                 toast.success(`Board ${game.board}: ${resultLabel} recorded`);
               }}
-              className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
+              className={`flex-1 py-3.5 px-2 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
                   ? opt.color === "green"
                     ? isDark
@@ -600,7 +600,7 @@ function HorizontalRoundTracker({
 }) {
   return (
     <div
-      className={`flex items-center gap-0 rounded-2xl px-4 py-3 overflow-x-auto ${
+      className={`flex items-center gap-0 rounded-2xl px-4 py-3 overflow-x-auto scrollbar-none ${
         isDark ? "bg-white/05 border border-white/08" : "bg-gray-50 border border-gray-200"
       }`}
     >
@@ -1210,7 +1210,7 @@ export default function Director() {
       )}
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-28">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-28 animate-page-in">
         <div className="flex gap-6 items-start">
 
           {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}
@@ -1337,7 +1337,7 @@ export default function Director() {
 
             {/* Unified tab bar */}
             <div
-              className={`flex rounded-2xl p-1 w-full overflow-x-auto ${
+              className={`flex rounded-2xl p-1 w-full overflow-x-auto scrollbar-none ${
                 isDark ? "bg-white/06 border border-white/06" : "bg-gray-100/80 border border-gray-200/60"
               }`}
             >
@@ -1350,7 +1350,7 @@ export default function Director() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                  className={`touch-target flex-1 min-w-[4.5rem] px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap ${
                     activeTab === tab.id
                       ? isDark
                         ? "bg-[oklch(0.32_0.09_145)] text-white shadow-[0_1px_4px_rgba(0,0,0,0.3)]"

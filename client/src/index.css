@@ -1232,3 +1232,98 @@
     animation: none !important;
   }
 }
+
+/* ── Global UI/UX Polish ───────────────────────────────────────────────────── */
+
+/* Focus-visible ring for keyboard accessibility — consistent chess-green */
+:focus-visible {
+  outline: 2px solid oklch(0.44 0.12 145);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+.dark :focus-visible {
+  outline-color: oklch(0.55 0.13 145);
+}
+
+/* Hide scrollbars on horizontal scroll containers while keeping scroll functional */
+.scrollbar-none,
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling globally (respects reduced-motion) */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Page content fade-in — subtle entrance for route transitions */
+@keyframes pageContentFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-in {
+  animation: pageContentFadeIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Board card staggered entrance */
+@keyframes boardCardEnter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-board-enter {
+  animation: boardCardEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Safe area bottom padding utility */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+}
+
+/* Ensure all buttons have cursor pointer and tap highlight disabled */
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Improved text selection color */
+::selection {
+  background: oklch(0.44 0.12 145 / 0.25);
+  color: inherit;
+}
+.dark ::selection {
+  background: oklch(0.55 0.13 145 / 0.35);
+}
+
+/* Prevent text size adjust on orientation change (iOS) */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Smooth backdrop-filter transitions for sticky headers */
+[class*="backdrop-blur"] {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-board-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
