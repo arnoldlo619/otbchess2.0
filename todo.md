@@ -2538,3 +2538,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] onBulkUpsert callback passes both new players and updates to Director.tsx
 - [x] Director.tsx updatePlayer handler applies field changes to existing players in state
 - [x] TypeScript: 0 errors
+
+## Director Dashboard — Editable Board Assignments
+
+- [x] Add swapBoards(gameIdA, gameIdB) action to directorState that swaps the two games' board positions
+- [x] Add "Edit Boards" toggle button in the Boards tab toolbar (only during active round, before results entered)
+- [x] In edit mode: each board card shows a drag handle and a clickable board number badge
+- [x] Clicking a board number badge opens a compact swap picker showing all other boards
+- [x] Selecting a target board swaps the two pairings (white/black players) while preserving any entered results
+- [x] Visual feedback: swapped boards briefly flash green to confirm the change (toast notification)
+- [x] Edit mode exits automatically when director clicks "Done Editing" button; result entry blocked in edit mode
+- [x] TypeScript: 0 errors

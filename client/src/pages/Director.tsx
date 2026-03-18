@@ -75,6 +75,9 @@ import {
   Undo2,
   Info,
   FileSpreadsheet,
+  ArrowLeftRight,
+  GripVertical,
+  Pencil,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -203,12 +206,21 @@ function BoardCard({
   onResult,
   onUndo,
   isDark,
+  editMode = false,
+  onSwapRequest,
+  isSwapSource = false,
 }: {
   game: import("@/lib/tournamentData").Game;
   players: import("@/lib/tournamentData").Player[];
   onResult: (gameId: string, result: Result) => void;
   onUndo?: () => void;
   isDark: boolean;
+  /** When true, shows swap controls on this card */
+  editMode?: boolean;
+  /** Called when director taps this card to initiate or confirm a swap */
+  onSwapRequest?: (gameId: string) => void;
+  /** Highlight this card as the selected swap source */
+  isSwapSource?: boolean;
 }) {
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
@@ -216,8 +228,17 @@ function BoardCard({
 
   return (
     <div
+      onClick={editMode && onSwapRequest ? () => onSwapRequest(game.id) : undefined}
       className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-        isDark
+        editMode
+          ? isSwapSource
+            ? isDark
+              ? "bg-[#4CAF50]/15 border-[#4CAF50]/60 shadow-[0_0_0_2px_rgba(76,175,80,0.4)] cursor-pointer"
+              : "bg-[#3D6B47]/08 border-[#3D6B47]/60 shadow-[0_0_0_2px_rgba(61,107,71,0.3)] cursor-pointer"
+            : isDark
+            ? "bg-[oklch(0.24_0.07_145)] border-white/25 hover:border-[#4CAF50]/50 cursor-pointer"
+            : "bg-white border-gray-300 hover:border-[#3D6B47]/50 cursor-pointer"
+          : isDark
           ? isComplete
             ? "bg-[oklch(0.22_0.06_145)] border-white/10"
             : "bg-[oklch(0.24_0.07_145)] border-[#4CAF50]/25 shadow-[0_2px_12px_rgba(0,0,0,0.25)]"
@@ -235,14 +256,21 @@ function BoardCard({
         }`}
       >
         <div className="flex items-center gap-2">
+          {editMode && (
+            <GripVertical className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/25" : "text-gray-300"}`} />
+          )}
           <span
             className={`text-[11px] font-black tracking-[0.12em] uppercase ${
-              isDark ? "text-white/35" : "text-gray-400"
+              editMode
+                ? isSwapSource
+                  ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                  : isDark ? "text-white/60" : "text-gray-600"
+                : isDark ? "text-white/35" : "text-gray-400"
             }`}
           >
             Board {game.board}
           </span>
-          {!isComplete && (
+          {!editMode && !isComplete && (
             <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
               isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
             }`}>
@@ -250,13 +278,29 @@ function BoardCard({
               Live
             </span>
           )}
+          {editMode && (
+            <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+              isSwapSource
+                ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                : isDark ? "bg-white/08 text-white/35" : "bg-gray-100 text-gray-400"
+            }`}>
+              {isSwapSource ? "Selected — tap another board" : "Tap to swap"}
+            </span>
+          )}
         </div>
-        {isComplete && (
+        {!editMode && isComplete && (
           <span
             className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${resultBadgeClass(game.result, isDark)}`}
           >
             {game.result}
           </span>
+        )}
+        {editMode && (
+          <ArrowLeftRight className={`w-3.5 h-3.5 flex-shrink-0 ${
+            isSwapSource
+              ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+              : isDark ? "text-white/25" : "text-gray-300"
+          }`} />
         )}
       </div>
 
@@ -369,7 +413,17 @@ function BoardCard({
         </div>
       </div>
 
-      {/* Result entry buttons — show player names instead of chess notation */}
+      {/* Result entry buttons — hidden in edit/swap mode */}
+      {editMode ? (
+        <div className={`px-4 pb-4 pt-2 flex items-center justify-center gap-2 ${
+          isDark ? "text-white/30" : "text-gray-400"
+        }`}>
+          <ArrowLeftRight className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">
+            {isSwapSource ? "Now tap another board to swap" : "Tap to select this board for swap"}
+          </span>
+        </div>
+      ) : (
       <div
         className={`px-4 pb-4 pt-1.5 flex gap-2 ${isComplete ? "opacity-55" : ""}`}
       >
@@ -452,6 +506,7 @@ function BoardCard({
           </>
         )}
       </div>
+      )}
     </div>
   );
 }
@@ -1008,6 +1063,7 @@ export default function Director() {
     addPlayer,
     updatePlayer,
     removePlayer,
+    swapBoards,
     startTournament,
     enterResult,
     generateNextRound,
@@ -1066,6 +1122,9 @@ export default function Director() {
   // Spectator URL — public live view, no auth required
   const spectatorUrl = `${window.location.origin}/tournament/${tournamentId}`;
   const [showOverflow, setShowOverflow] = useState(false);
+  // Board assignment editing state
+  const [editBoardsMode, setEditBoardsMode] = useState(false);
+  const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
   // For real tournaments use the stored invite code; for the demo fall back to
@@ -2132,14 +2191,38 @@ export default function Director() {
                       <AlertCircle className="w-4 h-4 flex-shrink-0" />
                       <p className="text-sm">Enter results for all boards to unlock next round pairing generation.</p>
                     </div>
-                  )}
-
-                  {/* ── Board cards grid ─────────────────────────────────────────── */}
+                  )}                  {/* ── Board cards grid ────────────────────────────────────────────── */}
                   <div>
-                    <h2 className={`text-xs font-bold uppercase tracking-widest mb-3 ${
-                      isDark ? "text-white/30" : "text-gray-400"
-                    }`}>Round {state.currentRound} Boards</h2>
-                    {currentRoundData ? (
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className={`text-xs font-bold uppercase tracking-widest ${
+                        isDark ? "text-white/30" : "text-gray-400"
+                      }`}>Round {state.currentRound} Boards</h2>
+                      {/* Edit Boards toggle — only for Swiss/RR formats (not Double Swiss) during active round */}
+                      {state.format !== "doubleswiss" && currentRoundData && !allResultsIn && (
+                        <button
+                          onClick={() => {
+                            setEditBoardsMode((prev) => !prev);
+                            setSwapSourceId(null);
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                            editBoardsMode
+                              ? isDark
+                                ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
+                                : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47]"
+                              : isDark
+                              ? "bg-white/06 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/80"
+                              : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                          }`}
+                          title={editBoardsMode ? "Exit board edit mode" : "Edit board assignments"}
+                        >
+                          {editBoardsMode ? (
+                            <><ArrowLeftRight className="w-3 h-3" /> Done Editing</>
+                          ) : (
+                            <><Pencil className="w-3 h-3" /> Edit Boards</>
+                          )}
+                        </button>
+                      )}
+                    </div>                    {currentRoundData ? (
                       state.format === "doubleswiss" ? (
                         // Double Swiss: group games by board number, show Game A + Game B per card
                         (() => {
@@ -2211,8 +2294,27 @@ export default function Director() {
                               <BoardCard
                                 game={game}
                                 players={state.players}
-                                onUndo={undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
+                                editMode={editBoardsMode}
+                                isSwapSource={swapSourceId === game.id}
+                                onSwapRequest={(clickedId) => {
+                                  if (!swapSourceId) {
+                                    // First tap: select this board as source
+                                    setSwapSourceId(clickedId);
+                                  } else if (swapSourceId === clickedId) {
+                                    // Tap same board: deselect
+                                    setSwapSourceId(null);
+                                  } else {
+                                    // Second tap: perform the swap
+                                    swapBoards(swapSourceId, clickedId);
+                                    setSwapSourceId(null);
+                                    const boardA = currentRoundData?.games.find((g) => g.id === swapSourceId)?.board;
+                                    const boardB = currentRoundData?.games.find((g) => g.id === clickedId)?.board;
+                                    toast.success(`Board ${boardA} ⇄ Board ${boardB} swapped`);
+                                  }
+                                }}
+                                onUndo={!editBoardsMode && undoPending ? () => { undoResult(); pushStandingsNow(); } : undefined}
                                 onResult={(gameId, newResult) => {
+                                  if (editBoardsMode) return; // block result entry in edit mode
                                   const prevResult = game.result;
                                   const white = state.players.find((p) => p.id === game.whiteId);
                                   const black = state.players.find((p) => p.id === game.blackId);

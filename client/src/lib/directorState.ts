@@ -377,6 +377,28 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     }));
   }, []);
 
+  // Swap two board pairings in the current round (by game id)
+  const swapBoards = useCallback((gameIdA: string, gameIdB: string) => {
+    setState((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) => {
+        if (r.number !== prev.currentRound) return r;
+        const gA = r.games.find((g) => g.id === gameIdA);
+        const gB = r.games.find((g) => g.id === gameIdB);
+        if (!gA || !gB) return r;
+        // Swap board numbers and player assignments; preserve results
+        return {
+          ...r,
+          games: r.games.map((g) => {
+            if (g.id === gameIdA) return { ...g, board: gB.board, whiteId: gB.whiteId, blackId: gB.blackId };
+            if (g.id === gameIdB) return { ...g, board: gA.board, whiteId: gA.whiteId, blackId: gA.blackId };
+            return g;
+          }),
+        };
+      }),
+    }));
+  }, []);
+
   // Update an existing player's mutable fields (name, elo, title) in the roster
   const updatePlayer = useCallback(
     (playerId: string, patch: Partial<Pick<Player, "name" | "elo" | "title">>) => {
@@ -428,6 +450,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     addPlayer,
     updatePlayer,
     removePlayer,
+    swapBoards,
     startTournament,
     enterResult,
     generateNextRound,
