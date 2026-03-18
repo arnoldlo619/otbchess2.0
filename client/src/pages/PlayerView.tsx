@@ -451,7 +451,7 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
       return;
     }
     if (snap.status === "expired") { setRemaining(0); return; }
-    // running
+    // running — tick every second
     const calc = () => {
       const elapsed = Math.round((Date.now() - snap.startWallMs + snap.elapsedAtPauseMs) / 1000);
       setRemaining(Math.max(0, snap.durationSec - elapsed));
@@ -463,6 +463,8 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
   if (!snap || snap.status === "idle") return null;
 
+  const total = snap.durationSec || 1;
+  const fraction = remaining / total; // 1 → 0
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
   const display = `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -470,30 +472,89 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
   const isExpired = snap.status === "expired" || remaining === 0;
   const isPaused = snap.status === "paused";
 
-  const bg = isExpired
-    ? isDark ? "bg-red-500/15 border border-red-500/30" : "bg-red-50 border border-red-200"
+  // ── Color system: green → amber → red ──
+  const strokeColor = isExpired
+    ? isDark ? "#ef4444" : "#dc2626"
     : isLow
-    ? isDark ? "bg-amber-500/15 border border-amber-500/30" : "bg-amber-50 border border-amber-200"
-    : isDark ? "bg-[#1a2e1e] border border-[#4CAF50]/20" : "bg-emerald-50 border border-emerald-200";
+    ? isDark ? "#f59e0b" : "#d97706"
+    : isDark ? "#4CAF50" : "#3D6B47";
   const textColor = isExpired
     ? isDark ? "text-red-400" : "text-red-600"
     : isLow
     ? isDark ? "text-amber-400" : "text-amber-700"
     : isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+  const bgCard = isExpired
+    ? isDark ? "bg-red-500/08 border border-red-500/20" : "bg-red-50/60 border border-red-200"
+    : isLow
+    ? isDark ? "bg-amber-500/08 border border-amber-500/20" : "bg-amber-50/60 border border-amber-200"
+    : isDark ? "bg-[#1a2e1e] border border-[#4CAF50]/15" : "bg-emerald-50/60 border border-emerald-200";
+  const trackColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+
+  // ── SVG circular progress ring ──
+  const size = 72;
+  const strokeW = 4;
+  const radius = (size - strokeW) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - fraction);
 
   return (
-    <div className={`mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center gap-3 ${bg}`}>
-      <Clock className={`w-4 h-4 flex-shrink-0 ${textColor}`} />
+    <div className={`mx-4 mt-3 rounded-2xl px-4 py-3.5 flex items-center gap-4 ${bgCard} transition-colors duration-500`}>
+      {/* Circular progress ring */}
+      <div className={`relative flex-shrink-0 ${isLow && !isExpired && !isPaused ? "animate-pulse" : ""}`}>
+        <svg width={size} height={size} className="-rotate-90">
+          {/* Track */}
+          <circle
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none" stroke={trackColor} strokeWidth={strokeW}
+          />
+          {/* Progress arc */}
+          <circle
+            cx={size / 2} cy={size / 2} r={radius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={strokeW}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            style={{ transition: "stroke-dashoffset 1s linear, stroke 0.5s ease" }}
+          />
+        </svg>
+        {/* Center icon */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {isExpired ? (
+            <X className={`w-5 h-5 ${textColor}`} />
+          ) : isPaused ? (
+            <div className="flex gap-0.5">
+              <div className={`w-1 h-4 rounded-full ${isDark ? "bg-white/40" : "bg-gray-400"}`} />
+              <div className={`w-1 h-4 rounded-full ${isDark ? "bg-white/40" : "bg-gray-400"}`} />
+            </div>
+          ) : (
+            <Clock className={`w-5 h-5 ${textColor}`} />
+          )}
+        </div>
+      </div>
+
+      {/* Time display */}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs font-bold uppercase tracking-wider ${textColor}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
           {isExpired ? "Time's Up" : isPaused ? "Round Timer — Paused" : "Round Timer"}
         </p>
-        <p className={`text-2xl font-black font-mono leading-tight ${textColor} ${isLow && !isExpired && !isPaused ? "animate-pulse" : ""}`}>
+        <p className={`text-3xl font-black font-mono leading-none tracking-tight ${textColor}`}>
           {isExpired ? "0:00" : display}
         </p>
+        {!isExpired && !isPaused && remaining > 0 && (
+          <p className={`text-[10px] mt-1 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            {Math.round(fraction * 100)}% remaining
+          </p>
+        )}
       </div>
+
+      {/* Status badge */}
       {isPaused && (
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500"}`}>Paused</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"}`}>Paused</span>
+      )}
+      {isExpired && (
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>Ended</span>
       )}
     </div>
   );

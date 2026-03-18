@@ -2385,3 +2385,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix medium-priority issues: hover states, transitions, dark/light consistency, scroll behavior
 - [x] Re-audit all pages after fixes
 - [x] TypeScript: 0 errors confirmed
+
+## Visual Countdown Timer on Player Screen (Mar 17 2026)
+- [x] Replace flat PlayerTimerBanner with a prominent visual countdown timer component
+- [x] Circular SVG progress ring that depletes as time runs down
+- [x] Color transitions: green → amber → red as time decreases
+- [x] Pulse animation when under 60 seconds
+- [x] Paused/expired states with distinct visual treatment
+- [x] Clean minimalist design consistent with Apple-inspired UI system
+- [x] TypeScript: 0 errors
