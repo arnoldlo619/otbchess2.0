@@ -834,10 +834,32 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
   const maxPoints = standingRows.length > 0 ? Math.max(...standingRows.map((r) => r.points)) : 1;
   const completedRounds = Math.max(1, currentRound - 1);
 
+  // Intersection Observer — bars grow from 0 → final width once section enters viewport
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   if (standingRows.length === 0) return null;
 
   return (
-    <div className={`rounded-2xl border p-5 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
+    <div
+      ref={sectionRef}
+      className={`rounded-2xl border p-5 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}
+    >
       <div className="flex items-center justify-between mb-4 gap-2">
         <h3 className="font-semibold text-foreground flex-shrink-0" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           Score Distribution
@@ -848,6 +870,8 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
       <div className="space-y-2.5">
         {standingRows.map((row, idx) => {
           const pct = maxPoints > 0 ? (row.points / maxPoints) * 100 : 0;
+          // Stagger: each bar waits 60ms × its index before growing
+          const delay = `${idx * 60}ms`;
           return (
             <div key={row.player.id} className="flex items-center gap-2 min-w-0">
               <span className="text-xs text-muted-foreground w-4 text-right flex-shrink-0">{idx + 1}</span>
@@ -858,9 +882,10 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
               <div className="flex-1 min-w-0 relative h-5 flex items-center overflow-hidden rounded-full">
                 <div className={`absolute inset-0 rounded-full ${isDark ? "bg-white/08" : "bg-[#EEEED2]"}`} />
                 <div
-                  className="absolute left-0 top-0 h-full rounded-full transition-all duration-700"
+                  className="absolute left-0 top-0 h-full rounded-full"
                   style={{
-                    width: `${pct}%`,
+                    width: visible ? `${pct}%` : "0%",
+                    transition: `width 700ms cubic-bezier(0.4, 0, 0.2, 1) ${delay}`,
                     background: idx === 0
                       ? "linear-gradient(90deg, oklch(0.44 0.12 145), oklch(0.60 0.15 145))"
                       : isDark
@@ -868,7 +893,13 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
                       : "oklch(0.55 0.10 145 / 0.5)",
                   }}
                 />
-                <span className="relative z-10 pl-2 text-xs font-mono font-bold text-white mix-blend-luminosity">
+                <span
+                  className="relative z-10 pl-2 text-xs font-mono font-bold text-white mix-blend-luminosity"
+                  style={{
+                    opacity: visible ? 1 : 0,
+                    transition: `opacity 400ms ease ${delay}`,
+                  }}
+                >
                   {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                 </span>
               </div>

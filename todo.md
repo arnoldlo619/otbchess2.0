@@ -2649,3 +2649,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Determine director status: check if current user's id/username matches tournament createdBy or directorId
 - [x] Conditionally render Director button only when isDirector is true
 - [x] TypeScript: 0 errors
+
+## Score Distribution Bar Animation
+
+- [x] Add Intersection Observer to PerformanceSection so bars animate from 0% to final width on first scroll into view
+- [x] Stagger each bar's animation with a small delay per row index
+- [ ] TypeScript: 0 errors
