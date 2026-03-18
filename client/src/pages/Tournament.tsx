@@ -134,7 +134,7 @@ function TournamentNav({ tournamentId }: { tournamentId: string }) {
 
   return (
     <nav
-      className={`sticky top-0 sm:top-[112px] z-40 border-b transition-colors duration-300 ${
+      className={`sticky top-[56px] z-40 border-b transition-colors duration-300 ${
         isDark
           ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/10"
           : "bg-white/95 backdrop-blur-md border-[#EEEED2]"
@@ -836,24 +836,25 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
   if (standingRows.length === 0) return null;
 
   return (
-    <div className={`rounded-2xl border p-6 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="font-semibold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+    <div className={`rounded-2xl border p-5 transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.23_0.07_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <h3 className="font-semibold text-foreground flex-shrink-0" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           Score Distribution
         </h3>
-        <span className="text-xs text-muted-foreground">After Round {completedRounds} · Max {maxPoints} pts</span>
+        <span className="text-xs text-muted-foreground text-right">After Round {completedRounds} · Max {maxPoints} pts</span>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {standingRows.map((row, idx) => {
-          const pct = completedRounds > 0 ? (row.points / completedRounds) * 100 : 0;
+          const pct = maxPoints > 0 ? (row.points / maxPoints) * 100 : 0;
           return (
-            <div key={row.player.id} className="flex items-center gap-3">
+            <div key={row.player.id} className="flex items-center gap-2 min-w-0">
               <span className="text-xs text-muted-foreground w-4 text-right flex-shrink-0">{idx + 1}</span>
-              <div className="w-20 sm:w-28 flex-shrink-0 truncate">
+              <div className="w-16 sm:w-24 flex-shrink-0 truncate">
                 <span className="text-xs font-medium text-foreground">{row.player.name.split(" ")[0]}</span>
               </div>
-              <div className="flex-1 relative h-5 flex items-center">
+              {/* Bar track — flex-1 with overflow-hidden so bars never escape */}
+              <div className="flex-1 min-w-0 relative h-5 flex items-center overflow-hidden rounded-full">
                 <div className={`absolute inset-0 rounded-full ${isDark ? "bg-white/08" : "bg-[#EEEED2]"}`} />
                 <div
                   className="absolute left-0 top-0 h-full rounded-full transition-all duration-700"
@@ -870,7 +871,9 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
                   {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                 </span>
               </div>
-              <ELOBadge elo={row.player.elo} />
+              <div className="flex-shrink-0">
+                <ELOBadge elo={row.player.elo} />
+              </div>
             </div>
           );
         })}

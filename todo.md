@@ -2617,3 +2617,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Pass Join QR + Project QR buttons as centerSlot from Director.tsx
 - [x] Join QR visible during registration and Round 1; Project QR visible during active/complete phases
 - [x] TypeScript: 0 errors
+
+## View Results Page — Layout Fixes
+
+- [ ] Fix Share/Director/Print action bar overlapping the tournament title header
+- [ ] Fix Score Distribution bars overflowing to the right of the container
+- [ ] TypeScript: 0 errors
+
+## View Results Page — Layout Fixes
+
+- [x] Fix TournamentNav (Share/Director/Print) sticky offset to top-[56px] so it no longer overlaps the tournament header title
+- [x] Fix Score Distribution bar overflow: use maxPoints as denominator, add overflow-hidden + min-w-0 to bar track, wrap ELO badge in flex-shrink-0
+- [x] TypeScript: 0 errors
