@@ -33,6 +33,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import {
@@ -1119,7 +1120,29 @@ export default function Director() {
 
   const [resetConfirm, setResetConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<"home" | "players" | "standings" | "settings">("home");
+  const [swipeFlash, setSwipeFlash] = useState<"left" | "right" | null>(null);
   const [showQR, setShowQR] = useState(false);
+
+  // Tab order for swipe navigation
+  const TAB_ORDER = ["home", "players", "standings", "settings"] as const;
+  type TabId = typeof TAB_ORDER[number];
+
+  const navigateTab = useCallback((direction: "prev" | "next") => {
+    const idx = TAB_ORDER.indexOf(activeTab as TabId);
+    const nextIdx = direction === "prev" ? idx - 1 : idx + 1;
+    if (nextIdx < 0 || nextIdx >= TAB_ORDER.length) return;
+    setActiveTab(TAB_ORDER[nextIdx]);
+    setSwipeFlash(direction === "prev" ? "right" : "left");
+    setTimeout(() => setSwipeFlash(null), 350);
+  }, [activeTab]);
+
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+  useSwipeGesture(swipeContainerRef, {
+    threshold: 60,
+    maxVerticalDrift: 80,
+    onSwipeRight: () => navigateTab("prev"),
+    onSwipeLeft: () => navigateTab("next"),
+  });
   const [showAnnounce, setShowAnnounce] = useState(false);
   const [showSpectatorShare, setShowSpectatorShare] = useState(false);
   const [showSpectatorQR, setShowSpectatorQR] = useState(false);
@@ -1544,9 +1567,22 @@ export default function Director() {
           </div>
         </div>
       )}
-
-      {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-6 animate-page-in">
+      {/* ── Body ───────────────────────────────────────────────────────────────────────── */}
+      {/* Swipe flash overlay — brief edge glow on gesture recognition (mobile only) */}
+      {swipeFlash && (
+        <div
+          className={`pointer-events-none fixed inset-y-0 z-50 w-16 transition-opacity duration-300 ${
+            swipeFlash === "right"
+              ? "left-0 bg-gradient-to-r from-[#4CAF50]/20 to-transparent"
+              : "right-0 bg-gradient-to-l from-[#4CAF50]/20 to-transparent"
+          }`}
+          aria-hidden
+        />
+      )}
+      <div
+        ref={swipeContainerRef}
+        className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-6 animate-page-in"
+      >
         <div className="flex gap-6 items-start">
 
           {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}

@@ -2584,3 +2584,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add a floating bottom-left back pill on Director sub-pages (Players, Standings, etc.) on mobile
 - [x] Ensure the Dashboard home page shows active/recent tournaments prominently for quick re-entry
 - [x] TypeScript: 0 errors
+
+## Director Dashboard — Swipe Gesture Navigation
+
+- [x] Create useSwipeGesture hook: tracks touchstart/touchend, fires onSwipeLeft/onSwipeRight with configurable threshold
+- [x] Wire swipe hook to the Director tab content area (the main scrollable div)
+- [x] Swipe-right navigates to previous tab (e.g. Players → Home, Standings → Players)
+- [x] Swipe-left navigates to next tab (e.g. Home → Players, Players → Standings)
+- [x] Visual feedback: brief edge flash/glow in the swipe direction on gesture recognition
+- [x] Guard: ignore swipes that start on horizontally scrollable children (board grid, table rows)
+- [x] TypeScript: 0 errors
