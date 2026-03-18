@@ -2399,3 +2399,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix global nav bar overlapping tournament title and QR code buttons on Director page
 - [x] Ensure proper top padding/margin so content clears the sticky nav (spacer div on Director + Tournament pages)
 - [x] TypeScript: 0 errors
+
+## Rapid vs Blitz Rating Type Selector (Mar 18 2026)
+- [x] Add rating type (Rapid/Blitz) selector to Quickstart Smart Defaults card
+- [x] Add rating type selector to Schedule wizard format step
+- [x] Auto-suggest rating type based on time control selection
+- [x] Store ratingType in tournament config and director state
+- [x] Wire chess.com API fetch to pull correct rating category (chess_rapid vs chess_blitz)
+- [x] Update pairing engine to use the selected rating type for ELO-based pairings
+- [x] Display correct rating label in Director, Tournament, and PlayerView pages
+- [x] TypeScript: 0 errors

@@ -21,6 +21,8 @@ export interface TournamentConfig {
   timeIncrement: number;  // seconds
   timePreset: string;     // display label, e.g. "10+5"
   ratingSystem: "chess.com" | "lichess" | "fide" | "unrated";
+  /** Which chess.com rating category to use for pairings: "rapid" or "blitz". Defaults to "rapid". */
+  ratingType?: "rapid" | "blitz";
   createdAt: string;
   /** Authenticated user ID of the director who created this tournament (undefined for anonymous). */
   ownerId?: number | null;

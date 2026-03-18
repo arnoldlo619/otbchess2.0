@@ -73,6 +73,8 @@ interface WizardData {
   timeIncrement: number;
   timePreset: string;
   ratingSystem: "chess.com" | "lichess" | "fide" | "unrated";
+  /** Which chess.com rating category to use for pairings */
+  ratingType: "rapid" | "blitz";
   inviteCode: string;
   /** Private director access code shown only to the tournament creator. */
   directorCode: string;
@@ -102,6 +104,7 @@ const DEFAULT_DATA: WizardData = {
   timeIncrement: 5,
   timePreset: "10+5",
   ratingSystem: "chess.com",
+  ratingType: "rapid",
   inviteCode: "",
   directorCode: "",
   clubId: null,
@@ -1007,7 +1010,14 @@ function QuickstartForm({
                       key={opt.preset}
                       type="button"
                       onClick={() => {
-                        onChange({ timePreset: opt.preset, timeBase: opt.base, timeIncrement: opt.inc });
+                        // Auto-suggest rating type based on time control category
+                        const isBlitzTime = opt.label === "Bullet" || opt.label === "Blitz";
+                        onChange({
+                          timePreset: opt.preset,
+                          timeBase: opt.base,
+                          timeIncrement: opt.inc,
+                          ratingType: isBlitzTime ? "blitz" : "rapid",
+                        });
                         setInlinePicker(null);
                       }}
                       className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
@@ -1032,12 +1042,41 @@ function QuickstartForm({
           )}
         </div>
 
-        {/* Rating row — static display (editable via separate toggle below) */}
+        {/* Rating Type row — Rapid vs Blitz toggle */}
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+          <div className="flex items-center justify-between px-5 lg:px-6 py-2.5">
+            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>ELO Rating</span>
+            <div className="flex items-center gap-1 rounded-lg overflow-hidden" style={{ border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}` }}>
+              {(["rapid", "blitz"] as const).map((rt) => {
+                const active = data.ratingType === rt;
+                return (
+                  <button
+                    key={rt}
+                    type="button"
+                    onClick={() => onChange({ ratingType: rt })}
+                    className="px-3 py-1 text-xs font-semibold transition-all duration-150"
+                    style={{
+                      background: active ? T.green : "transparent",
+                      color: active ? "#FFFFFF" : isDark ? T.dMuted : T.lMuted,
+                    }}
+                  >
+                    {rt === "rapid" ? "Rapid" : "Blitz"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <p className="px-5 lg:px-6 pb-2 text-[10px] leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.35)" : "#9CA3AF" }}>
+            Uses players' chess.com {data.ratingType === "rapid" ? "Rapid" : "Blitz"} rating for pairings. Auto-set by time control.
+          </p>
+        </div>
+
+        {/* Rating System row — static display (editable via separate toggle below) */}
         <div
           className="flex items-center justify-between px-5 lg:px-6 py-2.5"
           style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
         >
-          <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Rating</span>
+          <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Platform</span>
           <span
             className="text-xs lg:text-sm font-semibold"
             style={{ color: isNonDefaultRating ? T.green : isDark ? T.dText : T.lText }}
@@ -1364,7 +1403,9 @@ function StepTime({
     if (p.base === -1) {
       onChange({ timePreset: "custom" });
     } else {
-      onChange({ timePreset: p.sub, timeBase: p.base, timeIncrement: p.inc });
+      // Auto-suggest rating type based on time control category
+      const isBlitzTime = p.label === "Bullet" || p.label === "Blitz";
+      onChange({ timePreset: p.sub, timeBase: p.base, timeIncrement: p.inc, ratingType: isBlitzTime ? "blitz" : "rapid" });
     }
   };
 
@@ -1932,6 +1973,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       timeIncrement: data.timeIncrement,
       timePreset: data.timePreset,
       ratingSystem: data.ratingSystem,
+      ratingType: data.ratingType,
       createdAt: new Date().toISOString(),
       ownerId: user?.id ? parseInt(user.id, 10) : null,
       clubId: data.clubId ?? null,

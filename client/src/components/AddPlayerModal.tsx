@@ -33,6 +33,9 @@ interface LookupResult {
   name: string;
   username: string;
   elo: number;
+  rapid?: number;
+  blitz?: number;
+  bullet?: number;
   avatar?: string;
   country?: string;
   title?: string;
@@ -55,11 +58,16 @@ async function lookupChessCom(username: string): Promise<LookupResult> {
   if (!profileRes.ok) throw new Error("Player not found on chess.com");
   const profile = await profileRes.json();
   const stats = statsRes.ok ? await statsRes.json() : {};
-  const rapid = stats?.chess_rapid?.last?.rating ?? stats?.chess_blitz?.last?.rating ?? stats?.chess_bullet?.last?.rating ?? 1200;
+  const rapid = stats?.chess_rapid?.last?.rating ?? 0;
+  const blitz = stats?.chess_blitz?.last?.rating ?? 0;
+  const bullet = stats?.chess_bullet?.last?.rating ?? 0;
   return {
     name: profile.name || profile.username,
     username: profile.username,
-    elo: rapid,
+    rapid,
+    blitz,
+    bullet,
+    elo: rapid || blitz || bullet || 1200,
     avatar: profile.avatar,
     country: profile.country?.split("/").pop()?.toUpperCase(),
     title: profile.title,
@@ -120,9 +128,11 @@ interface AddPlayerModalProps {
   onClose: () => void;
   onAdd: (player: Player) => void;
   existingUsernames: string[];
+  /** Which chess.com rating category to use: "rapid" (default) or "blitz". */
+  ratingType?: "rapid" | "blitz";
 }
 
-export function AddPlayerModal({ open, onClose, onAdd, existingUsernames }: AddPlayerModalProps) {
+export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, ratingType = "rapid" }: AddPlayerModalProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -202,7 +212,9 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames }: AddP
       id: nanoid(),
       name: lookupResult.name || lookupResult.username,
       username: lookupResult.username,
-      elo: lookupResult.elo,
+      elo: platform === "chess.com" && ratingType === "blitz"
+        ? (lookupResult.blitz || lookupResult.rapid || lookupResult.bullet || lookupResult.elo)
+        : (lookupResult.rapid || lookupResult.blitz || lookupResult.bullet || lookupResult.elo),
       platform: platform === "chess.com" ? "chesscom" : "lichess",
       country: lookupResult.country ?? "Unknown",
       title: lookupResult.title as Player["title"],

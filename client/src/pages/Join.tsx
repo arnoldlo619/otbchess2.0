@@ -26,6 +26,18 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
 import { resolveTournament, registerTournament, makeSlug, type TournamentConfig } from "@/lib/tournamentRegistry";
+
+/**
+ * Pick the correct rating from a profile based on the tournament's ratingType.
+ * Falls back: preferred → other → bullet → 1200.
+ */
+function pickRating(
+  prof: { rapid: number; blitz: number; bullet: number; elo?: number },
+  ratingType: "rapid" | "blitz" = "rapid",
+): number {
+  if (ratingType === "blitz") return prof.blitz || prof.rapid || prof.bullet || 1200;
+  return prof.rapid || prof.blitz || prof.bullet || 1200;
+}
 import { addPlayerToTournament } from "@/lib/directorState";
 import {
   saveRegistration,
@@ -150,13 +162,16 @@ function EloStatBox({
 
 // --- Social Share Sheet -------------------------------------------------------
 function ShareSheet({
-  profile, tournament, onClose, isDark,
+  profile, tournament, onClose, isDark, ratingType,
 }: {
   profile: UnifiedProfile; tournament: typeof DEMO_TOURNAMENT;
-  onClose: () => void; isDark: boolean;
+  onClose: () => void; isDark: boolean; ratingType?: "rapid" | "blitz";
 }) {
   const [copied, setCopied] = useState(false);
-  const shareText = `Just registered for ${tournament.name} on OTB Chess! 🏆 Playing as @${profile.username} (${profile.rapid} Rapid ELO). See you at the board!`;
+  const rType = ratingType ?? "rapid";
+  const displayRating = rType === "blitz" ? profile.blitz : profile.rapid;
+  const ratingLabel = rType === "blitz" ? "Blitz" : "Rapid";
+  const shareText = `Just registered for ${tournament.name} on OTB Chess! 🏆 Playing as @${profile.username} (${displayRating} ${ratingLabel} ELO). See you at the board!`;
   const shareUrl = window.location.href;
 
   async function handleNativeShare() {
@@ -555,7 +570,7 @@ export default function JoinPage() {
           id: `player-${prof.username}-${Date.now()}`,
           name: playerName.trim() || prof.name || prof.username,
           username: prof.username,
-          elo: prof.elo ?? prof.rapid ?? prof.blitz ?? prof.bullet ?? 1200,
+          elo: pickRating(prof, config.ratingType ?? "rapid"),
           title: prof.title as Player["title"] | undefined,
           country: prof.country ?? "",
           points: 0, wins: 0, draws: 0, losses: 0, buchholz: 0,
@@ -593,7 +608,7 @@ export default function JoinPage() {
             id: `player-${prof.username}-${Date.now()}`,
             name: playerName.trim() || prof.name || prof.username,
             username: prof.username,
-            elo: prof.elo ?? prof.rapid ?? prof.blitz ?? prof.bullet ?? 1200,
+            elo: pickRating(prof, bootstrapped.ratingType ?? "rapid"),
             title: prof.title as Player["title"] | undefined,
             country: prof.country ?? "",
             points: 0, wins: 0, draws: 0, losses: 0, buchholz: 0,
@@ -650,7 +665,7 @@ export default function JoinPage() {
         id: `player-${profile.username}-${Date.now()}`,
         name: profile.name || profile.username,
         username: profile.username,
-        elo: profile.elo ?? profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
+        elo: pickRating(profile, resolvedConfig?.ratingType ?? "rapid"),
         title: profile.title as Player["title"] | undefined,
         country: profile.country ?? "",
         points: 0,
@@ -686,7 +701,7 @@ export default function JoinPage() {
         tournamentId: tournamentCode,
         username: profile.username,
         name: profile.name ?? profile.username,
-        rating: profile.elo ?? profile.rapid ?? profile.blitz ?? profile.bullet ?? 1200,
+        rating: pickRating(profile, resolvedConfig?.ratingType ?? "rapid"),
         tournamentName: tournamentDisplay.name,
         registeredAt: new Date().toISOString(),
       });
@@ -1202,8 +1217,8 @@ export default function JoinPage() {
                         </>
                       ) : (
                         <>
-                          <EloStatBox label="Rapid" target={profile.rapid} isPrimary={true} isDark={isDark} textMain={textMain} textMuted={textMuted} />
-                          <EloStatBox label="Blitz" target={profile.blitz} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Rapid" target={profile.rapid} isPrimary={resolvedConfig?.ratingType !== "blitz"} isDark={isDark} textMain={textMain} textMuted={textMuted} />
+                          <EloStatBox label="Blitz" target={profile.blitz} isPrimary={resolvedConfig?.ratingType === "blitz"} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                           <EloStatBox label="Bullet" target={profile.bullet} isPrimary={false} isDark={isDark} textMain={textMain} textMuted={textMuted} />
                         </>
                       )}
@@ -1212,7 +1227,8 @@ export default function JoinPage() {
 
                   {/* Tier badge */}
                   {(() => {
-                    const tier = isDark ? eloTierDark(profile.rapid) : eloTier(profile.rapid);
+                    const heroRating = resolvedConfig?.ratingType === "blitz" ? profile.blitz : profile.rapid;
+                    const tier = isDark ? eloTierDark(heroRating) : eloTier(heroRating);
                     return (
                       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${tier.bg} ${tier.color}`}>
                         <Star className="w-3 h-3" />{tier.label}
@@ -1330,9 +1346,9 @@ export default function JoinPage() {
                     <div className="text-right">
                       <p className={`text-xl font-bold tabular-nums ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
                         style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                        {profile.rapid}
+                        {resolvedConfig?.ratingType === "blitz" ? profile.blitz : profile.rapid}
                       </p>
-                      <p className={`text-xs ${textMuted}`}>Rapid ELO</p>
+                      <p className={`text-xs ${textMuted}`}>{resolvedConfig?.ratingType === "blitz" ? "Blitz" : "Rapid"} ELO</p>
                     </div>
                   </div>
 
@@ -1493,6 +1509,7 @@ export default function JoinPage() {
           tournament={tournament}
           onClose={() => setShowShare(false)}
           isDark={isDark}
+          ratingType={resolvedConfig?.ratingType}
         />
       )}
 

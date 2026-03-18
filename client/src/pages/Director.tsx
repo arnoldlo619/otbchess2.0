@@ -2885,6 +2885,7 @@ export default function Director() {
           toast.success(`${player.name} added to the tournament`);
         }}
         existingUsernames={existingUsernames}
+        ratingType={tournamentConfig?.ratingType}
       />
 
        {/* ── Instagram Carousel Modal ──────────────────────────────────────── */}
