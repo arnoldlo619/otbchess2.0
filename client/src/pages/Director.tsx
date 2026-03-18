@@ -1832,17 +1832,7 @@ export default function Director() {
                             <Copy className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <button
-                          onClick={() => setShowQR(true)}
-                          className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                            isDark
-                              ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50] hover:bg-[#4CAF50]/20"
-                              : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/15"
-                          }`}
-                        >
-                          <QrCode className="w-3.5 h-3.5" />
-                          QR Code
-                        </button>
+
                       </div>
                     </div>
 
