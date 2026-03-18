@@ -2527,3 +2527,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] CSV includes: name, username, elo, title, country, wins, draws, losses, points columns
 - [x] Filename: {tournament-name}-players-{date}.csv
 - [x] TypeScript: 0 errors
+
+## CSV Import — Intelligent Upsert
+
+- [x] Extend CsvRow type with status: 'add' | 'update' | 'error'
+- [x] parseCsv matches existing players by username (case-insensitive) and marks as 'update'
+- [x] Preview table shows green "NEW" badge for adds, amber "UPDATE" badge for updates, red for errors
+- [x] Update rows show diff: old ELO → new ELO, old name → new name (if changed)
+- [x] Bulk action button label changes to "Add X + Update Y players"
+- [x] onBulkUpsert callback passes both new players and updates to Director.tsx
+- [x] Director.tsx updatePlayer handler applies field changes to existing players in state
+- [x] TypeScript: 0 errors

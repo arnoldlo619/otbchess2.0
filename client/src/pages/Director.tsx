@@ -1006,6 +1006,7 @@ export default function Director() {
     liveStandings,
       lastSaved,
     addPlayer,
+    updatePlayer,
     removePlayer,
     startTournament,
     enterResult,
@@ -3282,6 +3283,10 @@ export default function Director() {
           addPlayer(player);
           toast.success(`${player.name} added to the tournament`);
         }}
+        onBulkUpsert={({ toUpdate }) => {
+          toUpdate.forEach(({ id, patch }) => updatePlayer(id, patch));
+        }}
+        existingPlayers={state.players.map((p) => ({ id: p.id, username: p.username, name: p.name, elo: p.elo }))}
         existingUsernames={existingUsernames}
         ratingType={tournamentConfig?.ratingType}
       />

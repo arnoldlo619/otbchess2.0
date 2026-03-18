@@ -377,6 +377,19 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     }));
   }, []);
 
+  // Update an existing player's mutable fields (name, elo, title) in the roster
+  const updatePlayer = useCallback(
+    (playerId: string, patch: Partial<Pick<Player, "name" | "elo" | "title">>) => {
+      setState((prev) => ({
+        ...prev,
+        players: prev.players.map((p) =>
+          p.id === playerId ? { ...p, ...patch } : p
+        ),
+      }));
+    },
+    []
+  );
+
   // Update mutable tournament settings (name, totalRounds) from the Settings panel
   const updateSettings = useCallback(
     (patch: { tournamentName?: string; totalRounds?: number }) => {
@@ -413,6 +426,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     liveStandings,
     lastSaved,
     addPlayer,
+    updatePlayer,
     removePlayer,
     startTournament,
     enterResult,

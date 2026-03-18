@@ -5,7 +5,12 @@
  *   chess.com  — enter username → auto-fetch rapid ELO from chess.com API
  *   lichess    — enter username → auto-fetch rating from Lichess API
  *   manual     — enter name + ELO directly (no API lookup)
- *   csv        — paste or drop a CSV file; preview + bulk-add valid rows
+ *   csv        — paste or drop a CSV file; intelligent upsert preview + bulk action
+ *
+ * CSV upsert logic:
+ *   • New username  → status "add"    (green NEW badge)
+ *   • Existing username → status "update" (amber UPDATE badge, shows ELO/name diff)
+ *   • Validation error → status "error"  (red, skipped)
  *
  * UX: pressing Enter at any point in the single-add flow adds the player and
  * resets the form so the director can immediately type the next player.
@@ -30,6 +35,8 @@ import {
   Download,
   ChevronRight,
   Trash2,
+  RefreshCw,
+  ArrowRight,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
 
@@ -49,14 +56,25 @@ interface LookupResult {
   title?: string;
 }
 
+/** A parsed CSV row with upsert classification. */
 interface CsvRow {
-  /** 1-based row index in the original CSV */
   rowNum: number;
   name: string;
   username: string;
   elo: number;
-  /** null = valid; string = error message */
+  /** "add" = new player, "update" = existing player to patch, "error" = validation failed */
+  status: "add" | "update" | "error";
   error: string | null;
+  /** For "update" rows: the current values in the roster before the patch */
+  existing?: { name: string; elo: number };
+}
+
+/** Payload delivered to the parent via onBulkUpsert */
+export interface BulkUpsertPayload {
+  /** Brand-new players to add */
+  toAdd: Player[];
+  /** Existing players to patch: id + fields to update */
+  toUpdate: { id: string; patch: Partial<Pick<Player, "name" | "elo">> }[];
 }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -64,6 +82,9 @@ interface CsvRow {
 const G = "#3D6B47";
 const G_RING = "rgba(61,107,71,0.25)";
 const G_BG = "rgba(61,107,71,0.08)";
+const AMBER = "#D97706";
+const AMBER_BG = "rgba(217,119,6,0.08)";
+const AMBER_RING = "rgba(217,119,6,0.25)";
 
 // ─── ELO lookup helpers ───────────────────────────────────────────────────────
 
@@ -105,7 +126,7 @@ async function lookupLichess(username: string): Promise<LookupResult> {
   };
 }
 
-// ─── CSV parser ───────────────────────────────────────────────────────────────
+// ─── CSV parser (upsert-aware) ────────────────────────────────────────────────
 //
 // Accepts:
 //   • Comma-separated or tab-separated
@@ -113,9 +134,15 @@ async function lookupLichess(username: string): Promise<LookupResult> {
 //   • Columns: name, username, elo  (in any order if header present)
 //   • Without header: col 0 = name, col 1 = username, col 2 = elo
 //
-// Returns one CsvRow per data row with validation applied.
+// Returns one CsvRow per data row.
+// Rows whose username matches an existing player are classified as "update".
+// Rows with a brand-new username are classified as "add".
+// Rows with validation errors are classified as "error".
 
-function parseCsv(raw: string, existingUsernames: string[]): CsvRow[] {
+function parseCsv(
+  raw: string,
+  existingPlayers: Pick<Player, "id" | "username" | "name" | "elo">[]
+): CsvRow[] {
   const lines = raw
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -123,13 +150,10 @@ function parseCsv(raw: string, existingUsernames: string[]): CsvRow[] {
 
   if (lines.length === 0) return [];
 
-  // Detect delimiter
   const delim = lines[0].includes("\t") ? "\t" : ",";
-
   const splitRow = (line: string) =>
     line.split(delim).map((c) => c.trim().replace(/^["']|["']$/g, ""));
 
-  // Detect header
   const firstCells = splitRow(lines[0]).map((c) => c.toLowerCase());
   let nameIdx = 0, usernameIdx = 1, eloIdx = 2;
   let dataStart = 0;
@@ -139,7 +163,6 @@ function parseCsv(raw: string, existingUsernames: string[]): CsvRow[] {
     firstCells.some((c) => ["username", "user", "handle", "id"].includes(c)) ||
     firstCells.some((c) => ["elo", "rating", "rank"].includes(c))
   ) {
-    // Header row detected — map column indices
     firstCells.forEach((c, i) => {
       if (["name", "player", "fullname", "full name"].includes(c)) nameIdx = i;
       if (["username", "user", "handle", "id"].includes(c)) usernameIdx = i;
@@ -148,7 +171,10 @@ function parseCsv(raw: string, existingUsernames: string[]): CsvRow[] {
     dataStart = 1;
   }
 
-  const existingSet = new Set(existingUsernames.map((u) => u.toLowerCase()));
+  // Build a lookup map: lowercase username → existing player
+  const existingMap = new Map(
+    existingPlayers.map((p) => [p.username.toLowerCase(), p])
+  );
   const seenInBatch = new Set<string>();
   const rows: CsvRow[] = [];
 
@@ -161,6 +187,7 @@ function parseCsv(raw: string, existingUsernames: string[]): CsvRow[] {
     const eloRaw = cells[eloIdx]?.trim() ?? "";
     const elo = parseInt(eloRaw, 10);
 
+    // Validation errors (apply to both add and update rows)
     let error: string | null = null;
 
     if (!name) {
@@ -171,15 +198,30 @@ function parseCsv(raw: string, existingUsernames: string[]): CsvRow[] {
       error = "ELO must be a number";
     } else if (elo < 100 || elo > 3500) {
       error = `ELO ${elo} out of range (100–3500)`;
-    } else if (existingSet.has(username.toLowerCase())) {
-      error = "Already in tournament";
     } else if (seenInBatch.has(username.toLowerCase())) {
       error = "Duplicate in CSV";
     }
 
-    if (!error) seenInBatch.add(username.toLowerCase());
+    if (error) {
+      rows.push({ rowNum, name, username, elo: isNaN(elo) ? 0 : elo, status: "error", error });
+      return;
+    }
 
-    rows.push({ rowNum, name, username, elo: isNaN(elo) ? 0 : elo, error });
+    seenInBatch.add(username.toLowerCase());
+
+    const existingPlayer = existingMap.get(username.toLowerCase());
+    if (existingPlayer) {
+      // Existing player — classify as update
+      rows.push({
+        rowNum, name, username, elo,
+        status: "update",
+        error: null,
+        existing: { name: existingPlayer.name, elo: existingPlayer.elo },
+      });
+    } else {
+      // New player
+      rows.push({ rowNum, name, username, elo, status: "add", error: null });
+    }
   });
 
   return rows;
@@ -244,11 +286,11 @@ function PlatformPill({
 
 interface CsvPanelProps {
   isDark: boolean;
-  existingUsernames: string[];
-  onBulkAdd: (players: Player[]) => void;
+  existingPlayers: Pick<Player, "id" | "username" | "name" | "elo">[];
+  onBulkUpsert: (payload: BulkUpsertPayload) => void;
 }
 
-function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
+function CsvPanel({ isDark, existingPlayers, onBulkUpsert }: CsvPanelProps) {
   const [rawText, setRawText] = useState("");
   const [rows, setRows] = useState<CsvRow[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -260,7 +302,7 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
       setRawText(text);
       if (!text.trim()) { setRows([]); setParseError(""); return; }
       try {
-        const parsed = parseCsv(text, existingUsernames);
+        const parsed = parseCsv(text, existingPlayers);
         setRows(parsed);
         setParseError("");
       } catch {
@@ -268,13 +310,13 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
         setRows([]);
       }
     },
-    [existingUsernames]
+    [existingPlayers]
   );
 
-  // Re-parse when existingUsernames changes (e.g. after adding some players)
+  // Re-parse when existingPlayers changes (e.g. after adding some players)
   useEffect(() => {
     if (rawText) processText(rawText);
-  }, [existingUsernames]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [existingPlayers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFile = (file: File) => {
     if (!file) return;
@@ -290,12 +332,17 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
     if (file) handleFile(file);
   };
 
-  const validRows = rows.filter((r) => r.error === null);
-  const invalidRows = rows.filter((r) => r.error !== null);
+  const addRows = rows.filter((r) => r.status === "add");
+  const updateRows = rows.filter((r) => r.status === "update");
+  const errorRows = rows.filter((r) => r.status === "error");
+  const actionableRows = [...addRows, ...updateRows];
 
-  const handleBulkAdd = () => {
-    if (validRows.length === 0) return;
-    const players: Player[] = validRows.map((r) => ({
+  const handleBulkUpsert = () => {
+    if (actionableRows.length === 0) return;
+
+    const existingMap = new Map(existingPlayers.map((p) => [p.username.toLowerCase(), p]));
+
+    const toAdd: Player[] = addRows.map((r) => ({
       id: nanoid(),
       name: r.name,
       username: r.username.toLowerCase().replace(/\s+/g, "_"),
@@ -305,9 +352,19 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
       points: 0, buchholz: 0,
       colorHistory: [],
     }));
-    onBulkAdd(players);
-    // Remove added rows from the list
-    setRows((prev) => prev.filter((r) => r.error !== null));
+
+    const toUpdate = updateRows.map((r) => {
+      const existing = existingMap.get(r.username.toLowerCase())!;
+      const patch: Partial<Pick<Player, "name" | "elo">> = {};
+      if (r.name !== existing.name) patch.name = r.name;
+      if (r.elo !== existing.elo) patch.elo = r.elo;
+      return { id: existing.id, patch };
+    }).filter((u) => Object.keys(u.patch).length > 0); // skip no-op updates
+
+    onBulkUpsert({ toAdd, toUpdate });
+
+    // Remove processed rows from the preview
+    setRows((prev) => prev.filter((r) => r.status === "error"));
   };
 
   const textAreaBorder = isDragging
@@ -406,15 +463,23 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
         <div>
           {/* Summary bar */}
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3 text-xs font-semibold">
-              <span style={{ color: G }}>
-                <CheckCircle2 className="inline w-3.5 h-3.5 mr-1" />
-                {validRows.length} valid
-              </span>
-              {invalidRows.length > 0 && (
+            <div className="flex items-center gap-3 text-xs font-semibold flex-wrap">
+              {addRows.length > 0 && (
+                <span style={{ color: G }}>
+                  <UserPlus className="inline w-3.5 h-3.5 mr-1" />
+                  {addRows.length} new
+                </span>
+              )}
+              {updateRows.length > 0 && (
+                <span style={{ color: AMBER }}>
+                  <RefreshCw className="inline w-3.5 h-3.5 mr-1" />
+                  {updateRows.length} update{updateRows.length !== 1 ? "s" : ""}
+                </span>
+              )}
+              {errorRows.length > 0 && (
                 <span style={{ color: isDark ? "#FCA5A5" : "#DC2626" }}>
                   <AlertCircle className="inline w-3.5 h-3.5 mr-1" />
-                  {invalidRows.length} skipped
+                  {errorRows.length} skipped
                 </span>
               )}
             </div>
@@ -435,15 +500,18 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
             className="rounded-xl border overflow-hidden"
             style={{ border: `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}` }}
           >
-            <div className="overflow-y-auto" style={{ maxHeight: 220 }}>
+            <div className="overflow-y-auto" style={{ maxHeight: 240 }}>
               <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB" }}>
-                    {["#", "Name", "Username", "ELO", "Status"].map((h) => (
+                    {["#", "Name", "Username", "ELO", "Action"].map((h) => (
                       <th
                         key={h}
                         className="text-left px-3 py-2 font-semibold"
-                        style={{ color: isDark ? "rgba(255,255,255,0.40)" : "#6B7280", borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}` }}
+                        style={{
+                          color: isDark ? "rgba(255,255,255,0.40)" : "#6B7280",
+                          borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#E5E7EB"}`,
+                        }}
                       >
                         {h}
                       </th>
@@ -452,36 +520,97 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
                 </thead>
                 <tbody>
                   {rows.map((row) => {
-                    const isValid = row.error === null;
-                    const rowBg = !isValid
+                    const isError = row.status === "error";
+                    const isUpdate = row.status === "update";
+                    const isAdd = row.status === "add";
+
+                    const rowBg = isError
                       ? isDark ? "rgba(239,68,68,0.06)" : "#FFF5F5"
+                      : isUpdate
+                      ? isDark ? "rgba(217,119,6,0.06)" : "#FFFBF0"
                       : "transparent";
+
+                    // Detect what changed for update rows
+                    const nameChanged = isUpdate && row.existing && row.name !== row.existing.name;
+                    const eloChanged = isUpdate && row.existing && row.elo !== row.existing.elo;
+
                     return (
                       <tr
                         key={row.rowNum}
-                        style={{ background: rowBg, borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6"}` }}
+                        style={{
+                          background: rowBg,
+                          borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6"}`,
+                        }}
                       >
+                        {/* Row number */}
                         <td className="px-3 py-2" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>
                           {row.rowNum}
                         </td>
-                        <td className="px-3 py-2 font-medium truncate max-w-[100px]" style={{ color: isDark ? "#FFFFFF" : "#1A1A1A" }}>
-                          {row.name || <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
+
+                        {/* Name — show diff for update rows */}
+                        <td className="px-3 py-2 max-w-[110px]">
+                          {isUpdate && nameChanged ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="line-through text-[10px]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>
+                                {row.existing?.name}
+                              </span>
+                              <span className="font-semibold truncate" style={{ color: AMBER }}>
+                                {row.name}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-medium truncate block" style={{ color: isDark ? "#FFFFFF" : "#1A1A1A" }}>
+                              {row.name || <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
+                            </span>
+                          )}
                         </td>
+
+                        {/* Username */}
                         <td className="px-3 py-2 font-mono truncate max-w-[90px]" style={{ color: isDark ? "rgba(255,255,255,0.65)" : "#374151" }}>
                           {row.username || <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
                         </td>
-                        <td className="px-3 py-2" style={{ color: isDark ? "rgba(255,255,255,0.65)" : "#374151" }}>
-                          {row.elo > 0 ? row.elo : <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
-                        </td>
+
+                        {/* ELO — show diff for update rows */}
                         <td className="px-3 py-2">
-                          {isValid ? (
-                            <span className="flex items-center gap-1 font-semibold" style={{ color: G }}>
-                              <CheckCircle2 className="w-3 h-3" /> OK
-                            </span>
+                          {isUpdate && eloChanged ? (
+                            <div className="flex items-center gap-1">
+                              <span className="line-through text-[10px]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>
+                                {row.existing?.elo}
+                              </span>
+                              <ArrowRight className="w-2.5 h-2.5 flex-shrink-0" style={{ color: AMBER }} />
+                              <span className="font-semibold" style={{ color: AMBER }}>
+                                {row.elo}
+                              </span>
+                            </div>
                           ) : (
+                            <span style={{ color: isDark ? "rgba(255,255,255,0.65)" : "#374151" }}>
+                              {row.elo > 0 ? row.elo : <span style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#D1D5DB" }}>—</span>}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Action badge */}
+                        <td className="px-3 py-2">
+                          {isAdd && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                              style={{ background: G_BG, color: G }}
+                            >
+                              <UserPlus className="w-2.5 h-2.5" /> NEW
+                            </span>
+                          )}
+                          {isUpdate && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                              style={{ background: AMBER_BG, color: AMBER }}
+                            >
+                              <RefreshCw className="w-2.5 h-2.5" /> UPDATE
+                            </span>
+                          )}
+                          {isError && (
                             <span className="flex items-center gap-1" style={{ color: isDark ? "#FCA5A5" : "#DC2626" }}>
                               <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate max-w-[80px]">{row.error}</span>
+                              <span className="truncate max-w-[70px] text-[10px]">{row.error}</span>
                             </span>
                           )}
                         </td>
@@ -495,16 +624,16 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
 
           {/* Column format hint */}
           <p className="mt-2 text-xs" style={{ color: isDark ? "rgba(255,255,255,0.25)" : "#9CA3AF" }}>
-            Expected columns: <span className="font-mono">name, username, elo</span> · comma or tab separated · header optional
+            Expected columns: <span className="font-mono">name, username, elo</span> · comma or tab separated · header optional · existing usernames are updated in place
           </p>
         </div>
       )}
 
-      {/* Bulk add button */}
-      {validRows.length > 0 && (
+      {/* Bulk upsert button */}
+      {actionableRows.length > 0 && (
         <button
           type="button"
-          onClick={handleBulkAdd}
+          onClick={handleBulkUpsert}
           className="w-full flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-all duration-200"
           style={{
             padding: "11px 22px",
@@ -514,7 +643,11 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
           }}
         >
           <UserPlus className="w-4 h-4" />
-          Add {validRows.length} player{validRows.length !== 1 ? "s" : ""} to Tournament
+          {addRows.length > 0 && updateRows.length > 0
+            ? `Add ${addRows.length} + Update ${updateRows.length} players`
+            : addRows.length > 0
+            ? `Add ${addRows.length} player${addRows.length !== 1 ? "s" : ""} to Tournament`
+            : `Update ${updateRows.length} player${updateRows.length !== 1 ? "s" : ""}`}
           <ChevronRight className="w-4 h-4 ml-auto opacity-60" />
         </button>
       )}
@@ -530,6 +663,9 @@ function CsvPanel({ isDark, existingUsernames, onBulkAdd }: CsvPanelProps) {
             </button>{" "}
             to get started.
           </p>
+          <p className="text-xs mt-1" style={{ color: isDark ? "rgba(255,255,255,0.20)" : "#C4C4C4" }}>
+            Existing players are updated in place — no duplicates created.
+          </p>
         </div>
       )}
     </div>
@@ -542,14 +678,34 @@ interface AddPlayerModalProps {
   open: boolean;
   onClose: () => void;
   onAdd: (player: Player) => void;
-  existingUsernames: string[];
+  onBulkUpsert?: (payload: BulkUpsertPayload) => void;
+  existingPlayers: Pick<Player, "id" | "username" | "name" | "elo">[];
+  /** @deprecated use existingPlayers instead */
+  existingUsernames?: string[];
   /** Which chess.com rating category to use: "rapid" (default) or "blitz". */
   ratingType?: "rapid" | "blitz";
 }
 
-export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, ratingType = "rapid" }: AddPlayerModalProps) {
+export function AddPlayerModal({
+  open,
+  onClose,
+  onAdd,
+  onBulkUpsert,
+  existingPlayers,
+  existingUsernames,
+  ratingType = "rapid",
+}: AddPlayerModalProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  // Merge existingPlayers and legacy existingUsernames
+  const resolvedExistingPlayers: Pick<Player, "id" | "username" | "name" | "elo">[] = [
+    ...existingPlayers,
+    ...(existingUsernames ?? [])
+      .filter((u) => !existingPlayers.some((p) => p.username.toLowerCase() === u.toLowerCase()))
+      .map((u) => ({ id: u, username: u, name: u, elo: 0 })),
+  ];
+  const resolvedExistingUsernames = resolvedExistingPlayers.map((p) => p.username);
 
   const [platform, setPlatform] = useState<Platform>("chess.com");
   const [username, setUsername] = useState("");
@@ -598,7 +754,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
   const handleLookup = useCallback(async () => {
     const u = username.trim();
     if (!u) return;
-    if (existingUsernames.map((x) => x.toLowerCase()).includes(u.toLowerCase())) {
+    if (resolvedExistingUsernames.map((x) => x.toLowerCase()).includes(u.toLowerCase())) {
       setLookupState("error");
       setLookupError("This player is already registered.");
       return;
@@ -614,7 +770,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
       setLookupState("error");
       setLookupError(err instanceof Error ? err.message : "Lookup failed. Check the username.");
     }
-  }, [username, platform, existingUsernames]);
+  }, [username, platform, resolvedExistingUsernames]);
 
   // ── Add single player ─────────────────────────────────────────────────────
 
@@ -659,13 +815,19 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
     }, 900);
   }, [platform, manualName, manualElo, lookupState, lookupResult, ratingType, onAdd, resetForm]);
 
-  // ── Bulk add (CSV) ────────────────────────────────────────────────────────
+  // ── Bulk upsert (CSV) ─────────────────────────────────────────────────────
 
-  const handleBulkAdd = useCallback((players: Player[]) => {
-    players.forEach((p) => onAdd(p));
-    setAddedCount((c) => c + players.length);
-    toast.success(`${players.length} player${players.length !== 1 ? "s" : ""} added to the tournament.`);
-  }, [onAdd]);
+  const handleBulkUpsert = useCallback((payload: BulkUpsertPayload) => {
+    const { toAdd, toUpdate } = payload;
+    toAdd.forEach((p) => onAdd(p));
+    if (onBulkUpsert) onBulkUpsert(payload);
+    const total = toAdd.length + toUpdate.length;
+    setAddedCount((c) => c + total);
+    const parts: string[] = [];
+    if (toAdd.length > 0) parts.push(`${toAdd.length} player${toAdd.length !== 1 ? "s" : ""} added`);
+    if (toUpdate.length > 0) parts.push(`${toUpdate.length} player${toUpdate.length !== 1 ? "s" : ""} updated`);
+    if (parts.length > 0) toast.success(parts.join(" · "));
+  }, [onAdd, onBulkUpsert]);
 
   // ── Enter key logic ───────────────────────────────────────────────────────
 
@@ -709,7 +871,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
       <div
         className="w-full rounded-2xl shadow-2xl overflow-hidden"
         style={{
-          maxWidth: isCsvMode ? 560 : 448,
+          maxWidth: isCsvMode ? 580 : 448,
           background: isDark ? "oklch(0.22 0.06 145)" : "#FFFFFF",
           border: `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`,
           animation: "modalIn 0.22s cubic-bezier(0.34,1.56,0.64,1) both",
@@ -730,14 +892,14 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                 className="text-sm font-bold"
                 style={{ fontFamily: "'Clash Display', sans-serif", color: isDark ? "#FFFFFF" : "#1A1A1A" }}
               >
-                Add Player{isCsvMode ? "s" : ""}
+                {isCsvMode ? "Import Players" : "Add Player"}
               </span>
               {addedCount > 0 && (
                 <span
                   className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
                   style={{ background: G_BG, color: G }}
                 >
-                  {addedCount} added
+                  {addedCount} processed
                 </span>
               )}
             </div>
@@ -773,7 +935,11 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
 
           {/* CSV mode */}
           {isCsvMode && (
-            <CsvPanel isDark={isDark} existingUsernames={existingUsernames} onBulkAdd={handleBulkAdd} />
+            <CsvPanel
+              isDark={isDark}
+              existingPlayers={resolvedExistingPlayers}
+              onBulkUpsert={handleBulkUpsert}
+            />
           )}
 
           {/* Single-add modes */}
@@ -970,7 +1136,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
           </div>
         )}
 
-        {/* CSV mode footer — just a close button */}
+        {/* CSV mode footer */}
         {isCsvMode && (
           <div
             className="flex items-center justify-end px-6 py-4 border-t"
@@ -984,7 +1150,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
             >
-              {addedCount > 0 ? `Done (${addedCount} added)` : "Close"}
+              {addedCount > 0 ? `Done (${addedCount} processed)` : "Close"}
             </button>
           </div>
         )}
