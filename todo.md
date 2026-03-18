@@ -2488,3 +2488,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Collapsible "Preview tournament structure" toggle below Smart Defaults card
 - [x] Preview updates live as format, rounds, and max players are changed
 - [x] Contextual footer shows total games per player for each format
+
+## Mascot Redesign — "!!" Checkerboard Logo
+
+- [x] Upload "!!" checkerboard logo image to CDN
+- [x] Replace MascotFace (white smiley circle) with MascotLogo ("!!" image) in AnimeNavBar
+- [x] Idle animations: scale pulse (power-up) and rotate wobble (excitement) replacing blink/tilt
+- [x] Hover: scale+rotate burst with sparkle/lightning emoji burst
+- [x] Lime-green drop-shadow glow on logo, intensifies on hover
+- [x] Outer glow ring expands on hover, matching platform green accent
+- [x] Downward triangle pin tail retained, pointing at active tab
+- [x] Spring layoutId transition preserved — logo springs between active tabs
+- [x] TypeScript: 0 errors

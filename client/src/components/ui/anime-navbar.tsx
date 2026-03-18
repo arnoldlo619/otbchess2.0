@@ -53,26 +53,30 @@ interface AnimeNavBarProps {
 }
 
 // ─── Mascot ───────────────────────────────────────────────────────────────────
-// Floating face that springs to the active tab via layoutId.
-// Idle animations: periodic eye-blink (every 4-7s) and head-tilt (every 6-10s)
-// both pause during hover interactions.
+// The OTB!! "!!" checkerboard logo floats above the active nav tab.
+//
+// Idle animations (logo-appropriate):
+//   - "pulse"  (60%): gentle scale breathe — like a power-up waiting to fire
+//   - "wobble" (40%): quick left-right tilt — exclamation mark excitement
+// Both pause while the user hovers any tab.
+// On hover: scale up + lime-green drop-shadow glow intensifies.
+// The downward triangle tail (pin) points to the active tab.
 
-type IdleState = "none" | "blink" | "tilt"
+const MASCOT_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-mascot-logo_9d33293f.png"
 
-function MascotFace({ isHovered }: { isHovered: boolean }) {
+type IdleState = "none" | "pulse" | "wobble"
+
+function MascotLogo({ isHovered }: { isHovered: boolean }) {
   const [idleAnim, setIdleAnim] = useState<IdleState>("none")
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Schedule the next idle animation at a random interval
   const scheduleNextIdle = () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    // Randomly pick blink (60%) or tilt (40%)
-    const delay = 4000 + Math.random() * 4000 // 4–8s
+    const delay = 3500 + Math.random() * 4000 // 3.5–7.5s
     idleTimerRef.current = setTimeout(() => {
-      const pick = Math.random() < 0.6 ? "blink" : "tilt"
+      const pick: IdleState = Math.random() < 0.6 ? "pulse" : "wobble"
       setIdleAnim(pick)
-      // Reset after the animation completes, then schedule next
-      const duration = pick === "blink" ? 300 : 700
+      const duration = pick === "pulse" ? 600 : 500
       setTimeout(() => {
         setIdleAnim("none")
         scheduleNextIdle()
@@ -85,94 +89,70 @@ function MascotFace({ isHovered }: { isHovered: boolean }) {
     return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current) }
   }, [])
 
-  // Suppress idle animations while hovered
-  const isBlinking = !isHovered && idleAnim === "blink"
-  const isTilting  = !isHovered && idleAnim === "tilt"
+  const isPulsing = !isHovered && idleAnim === "pulse"
+  const isWobbling = !isHovered && idleAnim === "wobble"
+
+  // Base float animation — gentle vertical bob
+  const floatAnim = { y: [0, -3, 0], transition: { duration: 2.2, repeat: Infinity, ease: "easeInOut" as const } }
+
+  // Idle overrides
+  const pulseAnim = { scale: [1, 1.14, 0.96, 1.06, 1], transition: { duration: 0.55, ease: "easeInOut" as const } }
+  const wobbleAnim = { rotate: [0, -10, 10, -6, 6, 0], transition: { duration: 0.48, ease: "easeInOut" as const } }
+
+  // Hover override
+  const hoverAnim = { scale: [1, 1.18, 1.08], rotate: [0, -5, 5, 0], transition: { duration: 0.45 } }
+
+  const logoAnimate = isHovered
+    ? hoverAnim
+    : isPulsing
+    ? pulseAnim
+    : isWobbling
+    ? wobbleAnim
+    : floatAnim
+
+  // Drop-shadow: lime-green glow, intensifies on hover
+  const glowNormal = "drop-shadow(0 0 6px rgba(76,175,80,0.55)) drop-shadow(0 2px 8px rgba(0,0,0,0.55))"
+  const glowHover  = "drop-shadow(0 0 12px rgba(76,175,80,0.90)) drop-shadow(0 0 24px rgba(76,175,80,0.45)) drop-shadow(0 2px 8px rgba(0,0,0,0.55))"
 
   return (
-    <div className="relative w-10 h-10">
-      {/* White circle face */}
+    <div className="relative" style={{ width: 40, height: 44 }}>
+      {/* Outer glow ring — expands on hover */}
       <motion.div
-        className="absolute inset-0 bg-white rounded-full shadow-lg"
-        animate={
-          isHovered
-            ? { scale: [1, 1.12, 1], rotate: [0, -6, 6, 0], transition: { duration: 0.5 } }
-            : isTilting
-            ? { rotate: [0, -8, 8, -4, 0], transition: { duration: 0.65, ease: "easeInOut" } }
-            : { y: [0, -3, 0], transition: { duration: 2, repeat: Infinity, ease: "easeInOut" } }
-        }
-      >
-        {/* Left eye */}
-        <motion.div
-          className="absolute w-1.5 h-1.5 bg-gray-900 rounded-full"
-          animate={
-            isHovered
-              ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } }
-              : isBlinking
-              ? { scaleY: [1, 0.08, 1], transition: { duration: 0.25, ease: "easeInOut" } }
-              : {}
-          }
-          style={{ left: "26%", top: "36%" }}
-        />
-        {/* Right eye */}
-        <motion.div
-          className="absolute w-1.5 h-1.5 bg-gray-900 rounded-full"
-          animate={
-            isHovered
-              ? { scaleY: [1, 0.1, 1], transition: { duration: 0.18 } }
-              : isBlinking
-              ? { scaleY: [1, 0.08, 1], transition: { duration: 0.25, ease: "easeInOut" } }
-              : {}
-          }
-          style={{ right: "26%", top: "36%" }}
-        />
-        {/* Left cheek — OTB green tint */}
-        <motion.div
-          className="absolute w-2 h-1.5 rounded-full"
-          style={{ background: `${OTB_GREEN_GLOW}0.55)`, left: "10%", top: "57%" }}
-          animate={{ opacity: isHovered ? 0.9 : 0.55 }}
-        />
-        {/* Right cheek */}
-        <motion.div
-          className="absolute w-2 h-1.5 rounded-full"
-          style={{ background: `${OTB_GREEN_GLOW}0.55)`, right: "10%", top: "57%" }}
-          animate={{ opacity: isHovered ? 0.9 : 0.55 }}
-        />
-        {/* Smile */}
-        <motion.div
-          className="absolute border-b-2 border-gray-900 rounded-full"
-          animate={isHovered ? { scaleY: 1.6, y: -1 } : { scaleY: 1, y: 0 }}
-          style={{ left: "30%", right: "30%", top: "58%", height: "6px" }}
-        />
-        {/* Sparkles on hover */}
-        <AnimatePresence>
-          {isHovered && (
-            <>
-              <motion.span
-                initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                animate={{ opacity: 1, scale: 1, x: 6, y: -6 }}
-                exit={{ opacity: 0, scale: 0 }}
-                className="absolute -top-1 -right-1 text-[10px] pointer-events-none"
-              >✨</motion.span>
-              <motion.span
-                initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                animate={{ opacity: 1, scale: 1, x: -6, y: -8 }}
-                exit={{ opacity: 0, scale: 0 }}
-                transition={{ delay: 0.08 }}
-                className="absolute -top-2 left-0 text-[10px] pointer-events-none"
-              >✨</motion.span>
-            </>
-          )}
-        </AnimatePresence>
-      </motion.div>
+        className="absolute inset-0 rounded-full pointer-events-none"
+        style={{ top: 2, left: 2, right: 2, bottom: 10 }}
+        animate={{
+          boxShadow: isHovered
+            ? "0 0 0 3px rgba(76,175,80,0.35), 0 0 18px rgba(76,175,80,0.25)"
+            : "0 0 0 0px rgba(76,175,80,0)",
+        }}
+        transition={{ duration: 0.3 }}
+      />
 
-      {/* Downward-pointing triangle tail */}
+      {/* The !! logo image */}
+      <motion.img
+        src={MASCOT_URL}
+        alt="OTB!!"
+        draggable={false}
+        className="absolute select-none"
+        style={{
+          width: 40,
+          height: 40,
+          top: 0,
+          left: 0,
+          objectFit: "contain",
+          filter: isHovered ? glowHover : glowNormal,
+          transition: "filter 0.3s ease",
+        }}
+        animate={logoAnimate}
+      />
+
+      {/* Downward-pointing triangle tail — white pin pointing at active tab */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2"
-        style={{ bottom: "-7px" }}
+        style={{ bottom: "-6px" }}
         animate={
           isHovered
-            ? { y: [0, -4, 0], transition: { duration: 0.3, repeat: Infinity, repeatType: "reverse" } }
+            ? { y: [0, -4, 0], transition: { duration: 0.28, repeat: Infinity, repeatType: "reverse" } }
             : { y: [0, 2, 0], transition: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 } }
         }
       >
@@ -182,13 +162,41 @@ function MascotFace({ isHovered }: { isHovered: boolean }) {
             height: 0,
             borderLeft: "7px solid transparent",
             borderRight: "7px solid transparent",
-            borderTop: "8px solid white",
+            borderTop: "8px solid rgba(255,255,255,0.85)",
+            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
           }}
         />
       </motion.div>
+
+      {/* Sparkle burst on hover */}
+      <AnimatePresence>
+        {isHovered && (
+          <>
+            <motion.span
+              key="spark1"
+              initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+              animate={{ opacity: 1, scale: 1.1, x: 8, y: -8 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 0.22 }}
+              className="absolute -top-1 -right-1 text-[11px] pointer-events-none select-none"
+            >✨</motion.span>
+            <motion.span
+              key="spark2"
+              initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+              animate={{ opacity: 1, scale: 1, x: -8, y: -10 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 0.22, delay: 0.07 }}
+              className="absolute -top-2 left-0 text-[11px] pointer-events-none select-none"
+            >⚡</motion.span>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
+
+// Keep old name as alias for the single usage site below
+const MascotFace = MascotLogo
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
