@@ -641,7 +641,7 @@ function QuickstartForm({
 }) {
   const [showRatingPicker, setShowRatingPicker] = useState(false);
   // inline pickers inside the Smart Defaults card
-  type InlinePicker = "rounds" | "cap" | "time" | null;
+  type InlinePicker = "rounds" | "cap" | "time" | "format" | null;
   const [inlinePicker, setInlinePicker] = useState<InlinePicker>(null);
   const toggleInline = (p: InlinePicker) =>
     setInlinePicker((prev) => (prev === p ? null : p));
@@ -752,13 +752,88 @@ function QuickstartForm({
           </span>
         </div>
 
-        {/* Format row — static, not editable */}
-        <div
-          className="flex items-center justify-between px-5 lg:px-6 py-2.5"
-          style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
-        >
-          <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
-          <span className="text-xs lg:text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>Swiss System</span>
+        {/* Format row — editable */}
+        <div style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}>
+          <button
+            type="button"
+            onClick={() => toggleInline("format")}
+            className="w-full flex items-center justify-between px-5 lg:px-6 py-2.5 transition-colors"
+            style={{
+              background: inlinePicker === "format"
+                ? isDark ? "rgba(61,107,71,0.18)" : "rgba(61,107,71,0.08)"
+                : "transparent",
+            }}
+          >
+            <span className="text-xs lg:text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>Format</span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className="text-xs lg:text-sm font-semibold"
+                style={{ color: data.format !== "swiss" ? T.green : isDark ? T.dText : T.lText }}
+              >
+                {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination"}
+              </span>
+              <ChevronDown
+                className="w-3.5 h-3.5 transition-transform duration-200"
+                style={{
+                  color: isDark ? T.dMuted : T.lMuted,
+                  transform: inlinePicker === "format" ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </div>
+          </button>
+          {inlinePicker === "format" && (
+            <div
+              className="px-5 lg:px-6 pb-4 space-y-3"
+              style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
+            >
+              <div className="grid grid-cols-2 gap-2 pt-3">
+                {([
+                  { value: "swiss",        label: "Swiss",       sub: "Optimal pairings" },
+                  { value: "doubleswiss",  label: "Double Swiss", sub: "Play both colors" },
+                  { value: "roundrobin",   label: "Round Robin",  sub: "Everyone plays all" },
+                  { value: "elimination",  label: "Elimination",  sub: "Single knockout" },
+                ] as { value: WizardData["format"]; label: string; sub: string }[]).map((f) => {
+                  const active = data.format === f.value;
+                  return (
+                    <button
+                      key={f.value}
+                      type="button"
+                      onClick={() => {
+                        onChange({ format: f.value });
+                        // For Round Robin, suggest n-1 rounds for n players
+                        if (f.value === "roundrobin") {
+                          const rrRounds = Math.max(3, data.maxPlayers - 1);
+                          if (rrRounds !== data.rounds) setRoundsSuggestion(rrRounds);
+                        } else if (f.value === "swiss" || f.value === "doubleswiss") {
+                          const suggested = recommendedRounds(data.maxPlayers);
+                          if (suggested !== data.rounds) setRoundsSuggestion(suggested);
+                        } else {
+                          setRoundsSuggestion(null);
+                        }
+                        setInlinePicker(null);
+                      }}
+                      className="flex flex-col items-start rounded-xl border transition-all duration-150 px-3 py-2.5"
+                      style={{
+                        background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                        border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                        boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                      }}
+                    >
+                      <span className="text-sm font-bold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
+                        {f.label}
+                      </span>
+                      <span className="text-[10px] mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                        {f.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: isDark ? T.dMuted : T.lSub }}>
+                {data.format === "doubleswiss" ? "Each round players play two games — once as White, once as Black." : data.format === "roundrobin" ? "Every player faces every other player. Rounds = players − 1." : data.format === "elimination" ? "Single-elimination bracket. Losers are out." : "Standard Swiss system — optimal pairings based on score and rating."}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Rounds suggestion banner — appears after Max Players change */}

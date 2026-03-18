@@ -2462,3 +2462,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Pass tournament name from Director.tsx (state.tournamentName)
 - [x] Pass tournament name from Tournament.tsx (displayName)
 - [x] TypeScript: 0 errors
+
+## Format Selector in Quickstart Smart Defaults (Mar 18 2026)
+- [ ] Add Format row to Quickstart Smart Defaults card with inline picker
+- [ ] Format options: Swiss, Double Swiss, Round Robin, Single Elimination
+- [ ] Inline picker matches existing Rounds/Max Players/Time Control pattern
+- [ ] Auto-update recommended rounds when format changes (e.g. Round Robin = n-1 rounds)
+- [ ] TypeScript: 0 errors
+
+## Format Selector in Quickstart Smart Defaults
+
+- [x] Add Format row to Smart Defaults card with inline 2×2 grid picker (Swiss, Double Swiss, Round Robin, Elimination)
+- [x] Format row follows same expand/collapse pattern as Rounds, Max Players, Time Control, Rating Type rows
+- [x] Format value highlighted green when non-default (non-Swiss) is selected
+- [x] Selecting Round Robin auto-suggests n-1 rounds; selecting Swiss/Double Swiss re-suggests optimal rounds
+- [x] Contextual description text updates based on selected format
