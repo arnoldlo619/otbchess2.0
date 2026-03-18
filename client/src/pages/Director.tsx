@@ -1371,7 +1371,7 @@ export default function Director() {
       }`}
     >
       {/* ── Minimal Tournament Nav (fixed, 56px tall) ─────────────────── */}
-      <MinimalTournamentNav />
+      <MinimalTournamentNav tournamentName={state.tournamentName} />
 
       {/* Spacer to push content below the fixed minimal nav */}
       <div style={{ height: 56 }} aria-hidden />

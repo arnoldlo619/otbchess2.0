@@ -1286,7 +1286,7 @@ export default function TournamentPage() {
   if (serverFetching && !tournamentState && tournamentId !== "otb-demo-2026") {
     return (
       <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-        <MinimalTournamentNav />
+        <MinimalTournamentNav tournamentName={displayName} />
         <div style={{ height: 56 }} aria-hidden />
         <TournamentNav tournamentId={tournamentId} />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 pt-28">
@@ -1299,7 +1299,7 @@ export default function TournamentPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-      <MinimalTournamentNav />
+      <MinimalTournamentNav tournamentName={displayName} />
       <div style={{ height: 56 }} aria-hidden />
       {/* New round flash notification */}
       {newRoundFlash !== null && (

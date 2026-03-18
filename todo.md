@@ -2455,3 +2455,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove the 168px spacer divs and replace with 56px spacers
 - [x] Ensure content clears the new minimal header height (56px) — sub-toolbar sticky at top-[56px], banner at top-[104px]
 - [x] TypeScript: 0 errors
+
+## Tournament Name in Minimal Nav (Mar 18 2026)
+- [x] Add tournamentName optional prop to MinimalTournamentNav
+- [x] Render centered tournament name label with truncation for long names
+- [x] Pass tournament name from Director.tsx (state.tournamentName)
+- [x] Pass tournament name from Tournament.tsx (displayName)
+- [x] TypeScript: 0 errors

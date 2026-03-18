@@ -3,6 +3,7 @@
  *
  * Shows only:
  *   - OTB!! logo (far left, links to home)
+ *   - Tournament name (centered, subtle, truncated)
  *   - Theme toggle + sign-in / user menu (far right)
  *
  * No animated nav pills, no Dashboard/Clubs/Battle/Analyze links.
@@ -21,9 +22,10 @@ const LOGO_URL =
 
 interface MinimalTournamentNavProps {
   onSignInClick?: () => void;
+  tournamentName?: string;
 }
 
-export function MinimalTournamentNav({ onSignInClick }: MinimalTournamentNavProps) {
+export function MinimalTournamentNav({ onSignInClick, tournamentName }: MinimalTournamentNavProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
@@ -31,24 +33,40 @@ export function MinimalTournamentNav({ onSignInClick }: MinimalTournamentNavProp
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[9999] h-14 flex items-center justify-between px-4 sm:px-6 border-b transition-colors ${
+      className={`fixed top-0 left-0 right-0 z-[9999] h-14 flex items-center px-4 sm:px-6 border-b transition-colors ${
         isDark
           ? "bg-[oklch(0.18_0.05_145)]/90 border-white/08 backdrop-blur-md"
           : "bg-white/90 border-black/08 backdrop-blur-md"
       }`}
     >
-      {/* Logo — far left */}
-      <Link href="/" className="flex items-center flex-shrink-0">
-        <img
-          src={LOGO_URL}
-          alt="OTB Chess"
-          className={`h-7 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
-          draggable={false}
-        />
-      </Link>
+      {/* Logo — far left (fixed width to balance layout) */}
+      <div className="flex-1 flex items-center">
+        <Link href="/" className="flex items-center flex-shrink-0">
+          <img
+            src={LOGO_URL}
+            alt="OTB Chess"
+            className={`h-7 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+            draggable={false}
+          />
+        </Link>
+      </div>
 
-      {/* Right slot — theme toggle + sign-in / user menu */}
-      <div className="flex items-center gap-2">
+      {/* Tournament name — centered */}
+      {tournamentName && (
+        <div className="flex-1 flex items-center justify-center min-w-0 px-2">
+          <span
+            className={`text-sm font-semibold tracking-tight truncate max-w-[200px] sm:max-w-xs text-center ${
+              isDark ? "text-white/60" : "text-black/50"
+            }`}
+            title={tournamentName}
+          >
+            {tournamentName}
+          </span>
+        </div>
+      )}
+
+      {/* Right slot — theme toggle + sign-in / user menu (fixed width to balance layout) */}
+      <div className="flex-1 flex items-center justify-end gap-2">
         <ThemeToggle />
 
         {!user && (
