@@ -991,6 +991,20 @@ export default function Director() {
   const standings = liveStandings.map((s) => s.player);
   const completedGames = currentRoundData?.games.filter((g) => g.result !== "*").length ?? 0;
   const totalGames = currentRoundData?.games.length ?? 0;
+  // Double Swiss: board-level completion (a board is complete when BOTH game A and game B have results)
+  const isDoubleSwiss = state.format === "doubleswiss";
+  const completedBoards = isDoubleSwiss
+    ? (() => {
+        const boardNums = Array.from(new Set((currentRoundData?.games ?? []).map((g) => g.board)));
+        return boardNums.filter((b) => {
+          const boardGames = (currentRoundData?.games ?? []).filter((g) => g.board === b);
+          return boardGames.every((g) => g.result !== "*");
+        }).length;
+      })()
+    : null;
+  const totalBoards = isDoubleSwiss
+    ? Array.from(new Set((currentRoundData?.games ?? []).map((g) => g.board))).length
+    : null;
   // Settings are locked once any round has been generated
   const isSettingsLocked = state.rounds.length > 0 || state.status !== "registration";
 
@@ -1757,7 +1771,9 @@ export default function Director() {
                             ? isDark ? "text-[#4CAF50]" : "text-green-700"
                             : isDark ? "text-white/40" : "text-gray-400"
                         }`}>
-                          {completedGames} / {totalGames}
+                          {isDoubleSwiss && totalBoards !== null
+                            ? `${completedBoards} / ${totalBoards} boards`
+                            : `${completedGames} / ${totalGames}`}
                         </span>
                         <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                           allResultsIn
@@ -1816,7 +1832,9 @@ export default function Director() {
                         <p className={`text-sm font-medium ${
                           isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
                         }`}>
-                          All {totalGames} result{totalGames !== 1 ? "s" : ""} for Round {state.currentRound} recorded — ready for Round {state.currentRound + 1}
+                          {isDoubleSwiss && totalBoards !== null
+                            ? `All ${totalBoards} board${totalBoards !== 1 ? "s" : ""} complete (both games per board) — ready for Round ${state.currentRound + 1}`
+                            : `All ${totalGames} result${totalGames !== 1 ? "s" : ""} for Round ${state.currentRound} recorded — ready for Round ${state.currentRound + 1}`}
                         </p>
                       </div>
                       <div className="px-4 py-3">

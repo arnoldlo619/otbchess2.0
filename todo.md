@@ -2422,3 +2422,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Double Swiss" label/badge in Director header and tournament display
 - [x] TypeScript: 0 errors
 - [x] Unit tests for Double Swiss pairing and scoring (8 tests, all passing)
+
+## Double Swiss Round Completion Gating (Mar 18 2026)
+- [x] Require both Game A and Game B results before "Generate Next Round" activates in Double Swiss mode
+- [x] Update allResultsIn / round-complete logic to check all gameIndex slots (already correct — iterates all Game objects)
+- [x] Update the "All Results In" banner to reflect partial completion in Double Swiss (board-level counter + contextual message)
+- [x] TypeScript: 0 errors
