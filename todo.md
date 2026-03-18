@@ -2622,10 +2622,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [ ] Fix Share/Director/Print action bar overlapping the tournament title header
 - [ ] Fix Score Distribution bars overflowing to the right of the container
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## View Results Page — Layout Fixes
 
 - [x] Fix TournamentNav (Share/Director/Print) sticky offset to top-[56px] so it no longer overlaps the tournament header title
 - [x] Fix Score Distribution bar overflow: use maxPoints as denominator, add overflow-hidden + min-w-0 to bar track, wrap ELO badge in flex-shrink-0
+- [x] TypeScript: 0 errors
+
+## Tournament Page — Merge TournamentNav into MinimalTournamentNav
+
+- [x] Pass Share/Director/Print buttons as centerSlot to MinimalTournamentNav in Tournament.tsx
+- [x] Remove standalone TournamentNav sticky bar and its spacer div
+- [x] Update both MinimalTournamentNav call sites (loading state + main render)
 - [x] TypeScript: 0 errors

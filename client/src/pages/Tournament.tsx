@@ -1280,9 +1280,49 @@ export default function TournamentPage() {
   if (serverFetching && !tournamentState && tournamentId !== "otb-demo-2026") {
     return (
       <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-        <MinimalTournamentNav tournamentName={displayName} backHref="/" backLabel="Home" />
+        <MinimalTournamentNav
+          tournamentName={displayName}
+          backHref="/"
+          backLabel="Home"
+          centerSlot={
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
+                className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                  isDark
+                    ? "border-white/15 text-white/70 hover:bg-white/08"
+                    : "border-black/15 text-black/60 hover:bg-black/05"
+                }`}
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:block">Share</span>
+              </button>
+              <Link
+                href={`/tournament/${tournamentId}/manage`}
+                className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                  isDark
+                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
+                    : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:block">Director</span>
+              </Link>
+              <Link
+                href={`/tournament/${tournamentId}/print`}
+                className={`hidden sm:flex touch-target items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                  isDark
+                    ? "border-white/15 text-white/70 hover:bg-white/08"
+                    : "border-black/15 text-black/60 hover:bg-black/05"
+                }`}
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print</span>
+              </Link>
+            </div>
+          }
+        />
         <div style={{ height: 56 }} aria-hidden />
-        <TournamentNav tournamentId={tournamentId} />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 pt-28">
           <div className="w-10 h-10 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground font-medium">Loading tournament…</p>
@@ -1293,13 +1333,53 @@ export default function TournamentPage() {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
-      <MinimalTournamentNav tournamentName={displayName} backHref="/" backLabel="Home" />
+      <MinimalTournamentNav
+        tournamentName={displayName}
+        backHref="/"
+        backLabel="Home"
+        centerSlot={
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied!"); }}
+              className={`touch-target flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                isDark
+                  ? "border-white/15 text-white/70 hover:bg-white/08"
+                  : "border-black/15 text-black/60 hover:bg-black/05"
+              }`}
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:block">Share</span>
+            </button>
+            <Link
+              href={`/tournament/${tournamentId}/manage`}
+              className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                isDark
+                  ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
+                  : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+              }`}
+            >
+              <Shield className="w-4 h-4" />
+              <span className="hidden sm:block">Director</span>
+            </Link>
+            <Link
+              href={`/tournament/${tournamentId}/print`}
+              className={`hidden sm:flex touch-target items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                isDark
+                  ? "border-white/15 text-white/70 hover:bg-white/08"
+                  : "border-black/15 text-black/60 hover:bg-black/05"
+              }`}
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print</span>
+            </Link>
+          </div>
+        }
+      />
       <div style={{ height: 56 }} aria-hidden />
       {/* New round flash notification */}
       {newRoundFlash !== null && (
         <NewRoundFlash round={newRoundFlash} onDismiss={dismissFlash} />
       )}
-      <TournamentNav tournamentId={tournamentId} />
       <TournamentHeader
         name={displayName}
         date={displayDate}
