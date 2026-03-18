@@ -2439,3 +2439,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Bold winner's name and add crown icon in tally pill when both games complete
 - [x] Handle draw (equal scores) — show no crown, neutral styling with "draw" badge
 - [x] TypeScript: 0 errors
+
+## Match W/D/L Column for Double Swiss Standings (Mar 18 2026)
+- [x] Add matchW, matchD, matchL fields to StandingRow type in swiss.ts
+- [x] Compute matchW/D/L in computeStandings for Double Swiss (pair games by board/round, score 2-0=W, 1-1=D, 0-2=L)
+- [x] Render Match W/D/L column in Director standings tab (visible only in Double Swiss mode)
+- [x] Render Match W/D/L column in Tournament spectator standings (visible only in Double Swiss mode)
+- [x] TypeScript: 0 errors
+- [x] Unit tests for matchW/D/L computation (8 doubleSwiss tests, all passing)

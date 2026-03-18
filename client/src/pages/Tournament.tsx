@@ -710,7 +710,8 @@ function PairingsPanel({ players, rounds, totalRounds, currentRound, myPlayerId 
 }
 
 // ─── Standings Panel ──────────────────────────────────────────────────────────
-function StandingsPanel({ players, rounds, myPlayerId }: { players: Player[]; rounds: Round[]; myPlayerId?: string }) {
+function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Player[]; rounds: Round[]; myPlayerId?: string; format?: string }) {
+  const isDoubleSwiss = format === "doubleswiss";
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
@@ -732,12 +733,13 @@ function StandingsPanel({ players, rounds, myPlayerId }: { players: Player[]; ro
       </div>
 
       {/* Header row */}
-      <div className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground uppercase tracking-wider ${
+      <div className={`grid ${isDoubleSwiss ? "grid-cols-[2rem_1fr_auto_auto_auto]" : "grid-cols-[2rem_1fr_auto_auto]"} gap-3 items-center px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground uppercase tracking-wider ${
         isDark ? "bg-white/05" : "bg-[#F0F5EE]"
       }`}>
         <span>#</span>
         <span>Player</span>
         <span className="text-center w-12">Pts</span>
+        {isDoubleSwiss && <span className="text-right w-14">Match</span>}
         <span className="text-right w-14">Buch.</span>
       </div>
 
@@ -749,7 +751,7 @@ function StandingsPanel({ players, rounds, myPlayerId }: { players: Player[]; ro
         return (
           <div
             key={row.player.id}
-            className={`grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] relative overflow-hidden ${
+            className={`grid ${isDoubleSwiss ? "grid-cols-[2rem_1fr_auto_auto_auto]" : "grid-cols-[2rem_1fr_auto_auto]"} gap-3 items-center px-4 py-4 rounded-2xl border transition-all duration-200 hover:scale-[1.01] relative overflow-hidden ${
               row.player.id === myPlayerId
                 ? isDark
                   ? "border-[#3D6B47]/50 bg-[#3D6B47]/10 ring-1 ring-[#3D6B47]/30"
@@ -791,6 +793,19 @@ function StandingsPanel({ players, rounds, myPlayerId }: { players: Player[]; ro
             <div className="w-12 flex justify-center">
               <ScorePill points={row.points} />
             </div>
+
+            {/* Match W/D/L — Double Swiss only */}
+            {isDoubleSwiss && (
+              <div className="w-14 text-right">
+                <span className={`text-sm font-mono font-semibold ${
+                  row.matchW > row.matchL
+                    ? isDark ? "text-emerald-400" : "text-emerald-600"
+                    : row.matchL > row.matchW
+                    ? isDark ? "text-red-400" : "text-red-500"
+                    : "text-muted-foreground"
+                }`}>{row.matchW}/{row.matchD}/{row.matchL}</span>
+              </div>
+            )}
 
             {/* Buchholz */}
             <div className="w-14 text-right">
@@ -1400,7 +1415,7 @@ export default function TournamentPage() {
                 />
               )}
               {mobileTab === "standings" && (
-                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} />
               )}
               {mobileTab === "players" && (
                 <div className="flex flex-col gap-3">
@@ -1453,7 +1468,7 @@ export default function TournamentPage() {
 
               {/* Right: Standings — desktop only */}
               <div>
-                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} />
+                <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} />
               </div>
             </div>
 

@@ -2280,7 +2280,9 @@ export default function Director() {
           )}
           {/* ── Standings Tab ───────────────────────────────────────────────────── */}
           {activeTab === "standings" && (() => {
-            const standingsData = getStandings(state.players);
+            // Use liveStandings (StandingRow[]) for full tiebreak + matchW/D/L data
+            const standingsData = liveStandings;
+            const isDoubleSwiss = state.format === "doubleswiss";
             const podiumOrder = [standingsData[1], standingsData[0], standingsData[2]].filter(Boolean);
             const podiumConfig = [
               { rank: 2, height: "h-20", labelColor: isDark ? "text-gray-300" : "text-gray-500", borderColor: isDark ? "border-gray-400/40" : "border-gray-300", bgColor: isDark ? "bg-gray-400/08" : "bg-gray-50", numColor: isDark ? "text-gray-300" : "text-gray-500" },
@@ -2310,10 +2312,11 @@ export default function Director() {
                     {/* Podium cards */}
                     <div className="px-4 pt-6 pb-4">
                       <div className="flex items-end justify-center gap-3">
-                        {podiumOrder.map((player, idx) => {
-                          if (!player) return null;
+                        {podiumOrder.map((row, idx) => {
+                          if (!row) return null;
                           const cfg = podiumConfig[idx];
                           const isFirst = cfg.rank === 1;
+                          const player = row.player;
                           return (
                             <div
                               key={player.id}
@@ -2361,7 +2364,7 @@ export default function Director() {
                                   }`}
                                   style={{ fontFamily: "'Clash Display', sans-serif" }}
                                 >
-                                  {player.points % 1 !== 0 ? `${Math.floor(player.points)}½` : player.points}
+                                  {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                                 </span>
                                 <span className={`text-[9px] font-bold ml-0.5 ${
                                   isDark ? "text-white/25" : "text-gray-400"
@@ -2370,7 +2373,7 @@ export default function Director() {
                               {/* W/D/L */}
                               <p className={`text-[10px] tabular-nums ${
                                 isDark ? "text-white/35" : "text-gray-400"
-                              }`}>{player.wins}W {player.draws}D {player.losses}L</p>
+                              }`}>{row.wins}W {row.draws}D {row.losses}L</p>
                             </div>
                           );
                         })}
@@ -2384,10 +2387,14 @@ export default function Director() {
                   isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
                 }`}>
                   {/* Table header */}
-                  <div className={`grid grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem] gap-x-2 px-4 py-2.5 border-b ${
+                  <div className={`grid ${
+                    isDoubleSwiss
+                      ? "grid-cols-[2rem_1fr_2.5rem_4.5rem_4.5rem_3rem]"
+                      : "grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem]"
+                  } gap-x-2 px-4 py-2.5 border-b ${
                     isDark ? "border-white/08 bg-white/02" : "border-gray-100 bg-gray-50/60"
                   }`}>
-                    {["#", "Player", "Pts", "W / D / L", "Buch."].map((col, ci) => (
+                    {["#", "Player", "Pts", "W / D / L", ...(isDoubleSwiss ? ["Match"] : []), "Buch."].map((col, ci) => (
                       <span key={ci} className={`text-[10px] font-black uppercase tracking-[0.1em] ${
                         ci === 0 ? "text-center" : ci >= 2 ? "text-right" : ""
                       } ${
@@ -2398,13 +2405,18 @@ export default function Director() {
 
                   {/* Rows */}
                   <div className="divide-y divide-transparent">
-                    {standingsData.map((p, i) => {
+                    {standingsData.map((row, i) => {
+                      const p = row.player;
                       const isLeader = i === 0;
                       const isPodium = i < 3;
                       return (
                         <div
                           key={p.id}
-                          className={`grid grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem] gap-x-2 items-center px-4 py-2.5 transition-colors ${
+                          className={`grid ${
+                            isDoubleSwiss
+                              ? "grid-cols-[2rem_1fr_2.5rem_4.5rem_4.5rem_3rem]"
+                              : "grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem]"
+                          } gap-x-2 items-center px-4 py-2.5 transition-colors ${
                             isLeader
                               ? isDark ? "bg-amber-500/06 hover:bg-amber-500/10" : "bg-amber-50/70 hover:bg-amber-50"
                               : isPodium
@@ -2457,18 +2469,31 @@ export default function Director() {
                               ? isDark ? "text-amber-400" : "text-amber-600"
                               : isDark ? "text-white" : "text-gray-900"
                           }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                            {p.points % 1 !== 0 ? `${Math.floor(p.points)}½` : p.points}
+                            {row.points % 1 !== 0 ? `${Math.floor(row.points)}½` : row.points}
                           </span>
 
-                          {/* W/D/L */}
+                          {/* W/D/L (individual games) */}
                           <span className={`text-[10px] tabular-nums text-right ${
                             isDark ? "text-white/40" : "text-gray-500"
-                          }`}>{p.wins}/{p.draws}/{p.losses}</span>
+                          }`}>{row.wins}/{row.draws}/{row.losses}</span>
+
+                          {/* Match W/D/L — Double Swiss only */}
+                          {isDoubleSwiss && (
+                            <span className={`text-[10px] tabular-nums text-right font-semibold ${
+                              row.matchW > row.matchL
+                                ? isDark ? "text-emerald-400" : "text-emerald-600"
+                                : row.matchL > row.matchW
+                                ? isDark ? "text-red-400" : "text-red-500"
+                                : isDark ? "text-white/40" : "text-gray-500"
+                            }`}>
+                              {row.matchW}/{row.matchD}/{row.matchL}
+                            </span>
+                          )}
 
                           {/* Buchholz */}
                           <span className={`text-[10px] tabular-nums text-right ${
                             isDark ? "text-white/30" : "text-gray-400"
-                          }`}>{p.buchholz.toFixed(1)}</span>
+                          }`}>{row.buchholz.toFixed(1)}</span>
                         </div>
                       );
                     })}

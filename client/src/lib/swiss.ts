@@ -24,6 +24,12 @@ export interface StandingRow {
   wins: number;
   draws: number;
   losses: number;
+  /** Double Swiss only: mini-match wins (2-0 or 1.5-0.5) */
+  matchW: number;
+  /** Double Swiss only: mini-match draws (1-1) */
+  matchD: number;
+  /** Double Swiss only: mini-match losses (0-2 or 0.5-1.5) */
+  matchL: number;
 }
 
 // ─── Tiebreak Computation ─────────────────────────────────────────────────────
@@ -38,12 +44,18 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
   const winsMap = new Map<string, number>();
   const drawsMap = new Map<string, number>();
   const lossesMap = new Map<string, number>();
+  const matchWMap = new Map<string, number>();
+  const matchDMap = new Map<string, number>();
+  const matchLMap = new Map<string, number>();
 
   for (const p of players) {
     pointsMap.set(p.id, 0);
     winsMap.set(p.id, 0);
     drawsMap.set(p.id, 0);
     lossesMap.set(p.id, 0);
+    matchWMap.set(p.id, 0);
+    matchDMap.set(p.id, 0);
+    matchLMap.set(p.id, 0);
   }
 
   for (const round of rounds) {
@@ -70,6 +82,45 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
         pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
         drawsMap.set(game.whiteId, (drawsMap.get(game.whiteId) ?? 0) + 1);
         drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
+      }
+    }
+  }
+
+  // ── Double Swiss: compute mini-match W/D/L per round ──────────────────────
+  // Games with gameIndex 0 and 1 sharing the same board number in a round form a mini-match.
+  const miniGameScore = (g: Game, forId: string): number => {
+    if (g.result === "½-½") return 0.5;
+    if (g.result === "1-0") return g.whiteId === forId ? 1 : 0;
+    if (g.result === "0-1") return g.blackId === forId ? 1 : 0;
+    return 0;
+  };
+  for (const round of rounds) {
+    // Group games by board number (game.board)
+    const byBoard = new Map<number, { gameA?: Game; gameB?: Game }>();
+    for (const game of round.games) {
+      if (game.gameIndex === undefined) continue; // not a Double Swiss round
+      const slot = byBoard.get(game.board) ?? {};
+      if (game.gameIndex === 0) slot.gameA = game;
+      else if (game.gameIndex === 1) slot.gameB = game;
+      byBoard.set(game.board, slot);
+    }
+    for (const { gameA, gameB } of Array.from(byBoard.values())) {
+      if (!gameA || !gameB) continue;
+      if (gameA.result === "*" || gameB.result === "*") continue;
+      const p1Id = gameA.whiteId;
+      const p2Id = gameA.blackId;
+      if (p1Id === "BYE" || p2Id === "BYE") continue;
+      const p1Total = miniGameScore(gameA, p1Id) + miniGameScore(gameB, p1Id);
+      const p2Total = miniGameScore(gameA, p2Id) + miniGameScore(gameB, p2Id);
+      if (p1Total > p2Total) {
+        matchWMap.set(p1Id, (matchWMap.get(p1Id) ?? 0) + 1);
+        matchLMap.set(p2Id, (matchLMap.get(p2Id) ?? 0) + 1);
+      } else if (p2Total > p1Total) {
+        matchWMap.set(p2Id, (matchWMap.get(p2Id) ?? 0) + 1);
+        matchLMap.set(p1Id, (matchLMap.get(p1Id) ?? 0) + 1);
+      } else {
+        matchDMap.set(p1Id, (matchDMap.get(p1Id) ?? 0) + 1);
+        matchDMap.set(p2Id, (matchDMap.get(p2Id) ?? 0) + 1);
       }
     }
   }
@@ -124,6 +175,9 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
       wins: winsMap.get(p.id) ?? 0,
       draws: drawsMap.get(p.id) ?? 0,
       losses: lossesMap.get(p.id) ?? 0,
+      matchW: matchWMap.get(p.id) ?? 0,
+      matchD: matchDMap.get(p.id) ?? 0,
+      matchL: matchLMap.get(p.id) ?? 0,
     };
   });
 
