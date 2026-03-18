@@ -2477,3 +2477,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Format value highlighted green when non-default (non-Swiss) is selected
 - [x] Selecting Round Robin auto-suggests n-1 rounds; selecting Swiss/Double Swiss re-suggests optimal rounds
 - [x] Contextual description text updates based on selected format
+
+## Tournament Structure Preview in Quickstart
+
+- [x] BracketPreview component with four format-specific visualizations
+- [x] Swiss: stacked round rows with player pills, results, and board numbers
+- [x] Double Swiss: same as Swiss with A/B game slot badges per board
+- [x] Round Robin: N×N cross-table grid with diagonal shading and completed results
+- [x] Elimination: SVG bracket tree with connector lines, round labels, and winner highlighting
+- [x] Collapsible "Preview tournament structure" toggle below Smart Defaults card
+- [x] Preview updates live as format, rounds, and max players are changed
+- [x] Contextual footer shows total games per player for each format

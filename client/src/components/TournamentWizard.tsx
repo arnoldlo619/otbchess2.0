@@ -18,6 +18,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { BracketPreview } from "@/components/tournament/BracketPreview";
 import { useAuthContext } from "@/context/AuthContext";
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
@@ -647,6 +648,7 @@ function QuickstartForm({
     setInlinePicker((prev) => (prev === p ? null : p));
   // rounds suggestion banner: shown after user picks a new cap that implies a different optimal rounds
   const [roundsSuggestion, setRoundsSuggestion] = useState<number | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
@@ -1159,6 +1161,41 @@ function QuickstartForm({
             {activeRating?.label ?? "chess.com"}
           </span>
         </div>
+      </div>
+
+      {/* Structure Preview — collapsible panel */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowPreview((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          style={{ color: showPreview ? T.green : isDark ? T.dMuted : T.lMuted }}
+        >
+          <Eye className="w-3.5 h-3.5" />
+          {showPreview ? "Hide structure preview" : "Preview tournament structure"}
+          <ChevronDown
+            className="w-3.5 h-3.5 transition-transform duration-200"
+            style={{ transform: showPreview ? "rotate(180deg)" : "rotate(0deg)" }}
+          />
+        </button>
+
+        {showPreview && (
+          <div
+            className="mt-3 rounded-2xl border overflow-hidden"
+            style={{
+              background: isDark ? "rgba(61,107,71,0.06)" : "#F4F8F3",
+              border: `1.5px solid ${isDark ? "rgba(61,107,71,0.20)" : "rgba(61,107,71,0.14)"}`,
+              padding: "16px 20px",
+            }}
+          >
+            <BracketPreview
+              format={data.format}
+              rounds={data.rounds}
+              maxPlayers={data.maxPlayers}
+              isDark={isDark}
+            />
+          </div>
+        )}
       </div>
 
       {/* Optional rating system toggle */}
