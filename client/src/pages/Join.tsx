@@ -13,7 +13,8 @@
  * - Social share sheet: native Web Share API with fallback
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { NotifyBell } from "@/components/NotifyBell";
 
@@ -398,41 +399,32 @@ export default function JoinPage() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Swipe-right to go back (native iOS/Android feel)
-  const swipeStartX = useRef<number | null>(null);
-  const swipeStartY = useRef<number | null>(null);
-  const [swipeProgress, setSwipeProgress] = useState(0); // 0-1 for edge indicator
+  const [swipeProgress, setSwipeProgress] = useState(0); // kept for the existing edge indicator
+  const [swipeFlash, setSwipeFlash] = useState(false);
 
-  function handleTouchStart(e: React.TouchEvent) {
-    const t = e.touches[0];
-    swipeStartX.current = t.clientX;
-    swipeStartY.current = t.clientY;
-    setSwipeProgress(0);
-  }
-
-  function handleTouchMove(e: React.TouchEvent) {
-    if (swipeStartX.current === null || swipeStartY.current === null) return;
-    const dx = e.touches[0].clientX - swipeStartX.current;
-    const dy = Math.abs(e.touches[0].clientY - swipeStartY.current);
-    // Only track horizontal-dominant rightward swipes starting from left edge
-    if (dx > 0 && dx > dy && swipeStartX.current < 40) {
-      setSwipeProgress(Math.min(dx / 80, 1));
+  const handleSwipeBack = useCallback(() => {
+    if (step === "username") {
+      haptic(30);
+      advanceStep("code");
+      setSwipeFlash(true);
+      setTimeout(() => setSwipeFlash(false), 350);
+    } else if (step === "confirm") {
+      haptic(30);
+      advanceStep("username");
+      active.reset();
+      setUnifiedProfile(null);
+      setSwipeFlash(true);
+      setTimeout(() => setSwipeFlash(false), 350);
     }
-  }
+  }, [step, active]);
 
-  function handleTouchEnd(e: React.TouchEvent) {
-    if (swipeStartX.current === null || swipeStartY.current === null) return;
-    const dx = e.changedTouches[0].clientX - swipeStartX.current;
-    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current);
-    setSwipeProgress(0);
-    swipeStartX.current = null;
-    swipeStartY.current = null;
-    // Trigger back if: rightward ≥ 60px, horizontal-dominant, started near left edge
-    const startedNearEdge = (e.changedTouches[0].clientX - dx) < 40;
-    if (dx >= 60 && dx > dy && startedNearEdge) {
-      if (step === "username") { haptic(30); advanceStep("code"); }
-      else if (step === "confirm") { haptic(30); advanceStep("username"); active.reset(); setUnifiedProfile(null); }
-    }
-  }
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+  useSwipeGesture(swipeContainerRef, {
+    threshold: 60,
+    maxVerticalDrift: 80,
+    // Only swipe-right (back) is meaningful in a linear registration flow
+    onSwipeRight: handleSwipeBack,
+  });
 
   // Already-registered detection — check localStorage on mount and whenever the code changes
   const [existingReg, setExistingReg] = useState<RegistrationEntry | null>(null);
@@ -820,13 +812,21 @@ export default function JoinPage() {
         />
       )}
 
+      {/* -- Swipe-back flash overlay ------------------------------------------ */}
+      {swipeFlash && (
+        <div
+          className="pointer-events-none fixed inset-y-0 left-0 z-50 w-16 bg-gradient-to-r from-[#4CAF50]/20 to-transparent transition-opacity duration-300"
+          aria-hidden
+        />
+      )}
+
       {/* -- Scrollable content ----------------------------------------------- */}
       <div
-        ref={contentRef}
+        ref={(el) => {
+          (contentRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          (swipeContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }}
         className="flex-1 overflow-y-auto overscroll-none"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         <div className="px-4 pt-5 pb-32 max-w-sm mx-auto space-y-4">
 

@@ -2601,3 +2601,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Swipe-right navigates to previous tab, swipe-left to next tab
 - [x] Same lime-green edge flash feedback as Director dashboard
 - [x] TypeScript: 0 errors
+
+## Join Page — Swipe-Back Gesture
+
+- [x] Wire useSwipeGesture (swipe-right only) to the Join page step content area
+- [x] Swipe-right navigates to the previous step (confirm → lookup, lookup → entry)
+- [x] Guard: only fire when there is a previous step to go back to (step > 0)
+- [x] Same lime-green edge flash feedback on the left edge
+- [x] TypeScript: 0 errors
