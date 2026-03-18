@@ -78,6 +78,37 @@ import {
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Download the current player roster as a CSV file. */
+function exportPlayersCSV(players: import("@/lib/tournamentData").Player[], tournamentName: string) {
+  const headers = ["name", "username", "elo", "title", "country", "wins", "draws", "losses", "points"];
+  const escape = (v: string | number | undefined) => {
+    const s = String(v ?? "");
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows = players.map((p) => [
+    escape(p.name),
+    escape(p.username),
+    escape(p.elo),
+    escape(p.title ?? ""),
+    escape(p.country ?? ""),
+    escape(p.wins),
+    escape(p.draws),
+    escape(p.losses),
+    escape(p.points),
+  ].join(","));
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const slug = tournamentName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const date = new Date().toISOString().slice(0, 10);
+  a.download = `${slug}-players-${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 const RESULT_OPTIONS: { value: Result; label: string; short: string }[] = [
   { value: "1-0",  label: "White wins",  short: "1-0" },
   { value: "½-½",  label: "Draw",        short: "½-½" },
@@ -2592,8 +2623,23 @@ export default function Director() {
                         showFilters ? "rotate-180" : ""
                       }`} />
                     </button>
+                    {/* Export players CSV — always visible when roster has players */}
+                    {state.players.length > 0 && (
+                      <button
+                        onClick={() => exportPlayersCSV(state.players, state.tournamentName)}
+                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all ${
+                          isDark
+                            ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
+                            : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        }`}
+                        title="Download player roster as CSV"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Export
+                      </button>
+                    )}
                     {/* Add Player + Upload RSVPs buttons — only during registration */}
-                    {isRegistration && (
+                  {isRegistration && (
                       <>
                         <button
                           onClick={() => setShowUploadRSVP(true)}

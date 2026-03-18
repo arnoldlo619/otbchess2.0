@@ -2520,3 +2520,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] "Add N valid players" bulk action button
 - [x] Download sample CSV template link
 - [x] TypeScript: 0 errors
+
+## Export Players CSV
+
+- [x] Add Export button to Players tab toolbar (next to Filters, always visible when roster has players)
+- [x] CSV includes: name, username, elo, title, country, wins, draws, losses, points columns
+- [x] Filename: {tournament-name}-players-{date}.csv
+- [x] TypeScript: 0 errors
