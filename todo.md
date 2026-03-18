@@ -2428,3 +2428,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update allResultsIn / round-complete logic to check all gameIndex slots (already correct — iterates all Game objects)
 - [x] Update the "All Results In" banner to reflect partial completion in Double Swiss (board-level counter + contextual message)
 - [x] TypeScript: 0 errors
+
+## Mini Match Score on DoubleSwissBoardCard (Mar 18 2026)
+- [x] Show running match tally (e.g. "1½ – ½") after Game A has a result
+- [x] Tally updates when Game B result is entered (shows final "1 – 1", "2 – 0", "1½ – ½", etc.)
+- [x] Clear visual design consistent with platform UI system (dark/light mode, amber=live, green=complete)
+- [x] TypeScript: 0 errors

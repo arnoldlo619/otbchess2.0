@@ -447,6 +447,24 @@ function DoubleSwissBoardCard({
   const p1 = players.find((p) => p.id === gameA.whiteId)!;
   const p2 = players.find((p) => p.id === gameA.blackId)!;
   const bothComplete = gameA.result !== "*" && gameB.result !== "*";
+  const gameADone = gameA.result !== "*";
+  const gameBDone = gameB.result !== "*";
+  const anyDone = gameADone || gameBDone;
+
+  // Running score: p1 is gameA.white (so p1 scores from white wins in A, black wins in B)
+  function scoreFor(game: import("@/lib/tournamentData").Game, forWhite: boolean): number {
+    if (game.result === "*") return 0;
+    if (game.result === "½-½") return 0.5;
+    if (forWhite) return game.result === "1-0" ? 1 : 0;
+    return game.result === "0-1" ? 1 : 0;
+  }
+  // p1 is white in gameA, black in gameB
+  const p1Score = scoreFor(gameA, true) + scoreFor(gameB, false);
+  const p2Score = scoreFor(gameA, false) + scoreFor(gameB, true);
+
+  function fmtScore(s: number): string {
+    return s === 0.5 ? "½" : s === 1.5 ? "1½" : String(s);
+  }
 
   function GameRow({ game, label }: { game: import("@/lib/tournamentData").Game; label: string }) {
     const white = players.find((p) => p.id === game.whiteId)!;
@@ -560,18 +578,29 @@ function DoubleSwissBoardCard({
             </span>
           )}
         </div>
-        {/* Mini score summary */}
-        {bothComplete && (
-          <div className="flex items-center gap-1 text-xs font-bold">
-            <span style={{ color: isDark ? "#4CAF50" : "#3D6B47" }}>{p1.name.split(" ")[0]}</span>
-            <span className={isDark ? "text-white/30" : "text-gray-400"}>
-              {(gameA.result === "1-0" ? 1 : gameA.result === "½-½" ? 0.5 : 0) +
-               (gameB.result === "0-1" ? 1 : gameB.result === "½-½" ? 0.5 : 0)}
-              –
-              {(gameA.result === "0-1" ? 1 : gameA.result === "½-½" ? 0.5 : 0) +
-               (gameB.result === "1-0" ? 1 : gameB.result === "½-½" ? 0.5 : 0)}
+        {/* Running match score tally — visible once any game has a result */}
+        {anyDone && (
+          <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl border ${
+            bothComplete
+              ? isDark
+                ? "bg-[#4CAF50]/10 border-[#4CAF50]/20 text-[#4CAF50]"
+                : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47]"
+              : isDark
+              ? "bg-amber-500/08 border-amber-500/20 text-amber-300"
+              : "bg-amber-50 border-amber-200 text-amber-700"
+          }`}>
+            <span className="truncate max-w-[48px]">{p1.name.split(" ")[0]}</span>
+            <span className="tabular-nums tracking-tight">
+              {fmtScore(p1Score)}
+              <span className={`mx-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>–</span>
+              {fmtScore(p2Score)}
             </span>
-            <span style={{ color: isDark ? "#4CAF50" : "#3D6B47" }}>{p2.name.split(" ")[0]}</span>
+            <span className="truncate max-w-[48px]">{p2.name.split(" ")[0]}</span>
+            {!bothComplete && (
+              <span className={`ml-0.5 text-[9px] font-black uppercase tracking-widest ${
+                isDark ? "text-amber-400/70" : "text-amber-600/70"
+              }`}>live</span>
+            )}
           </div>
         )}
       </div>
