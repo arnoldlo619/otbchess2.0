@@ -1062,6 +1062,7 @@ export default function Director() {
     liveStandings,
       lastSaved,
     addPlayer,
+    addLatePlayer,
     updatePlayer,
     removePlayer,
     swapBoards,
@@ -2191,6 +2192,29 @@ export default function Director() {
                     );
                   })()}
 
+                  {/* Late Registration banner — Round 1 only */}
+                  {state.currentRound === 1 && !allResultsIn && (
+                    <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border ${
+                      isDark
+                        ? "bg-amber-500/08 border-amber-500/25 text-amber-300"
+                        : "bg-amber-50 border-amber-200 text-amber-700"
+                    }`}>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <UserPlus className="w-4 h-4 flex-shrink-0" />
+                        <p className="text-sm font-medium">Late registration open — players added now will be paired or given a bye.</p>
+                      </div>
+                      <button
+                        onClick={() => setShowAddPlayer(true)}
+                        className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg transition-all active:scale-95 ${
+                          isDark
+                            ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300"
+                            : "bg-amber-100 hover:bg-amber-200 text-amber-800"
+                        }`}
+                      >
+                        + Add Player
+                      </button>
+                    </div>
+                  )}
                   {/* Pending results hint */}
                   {!allResultsIn && (
                     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
@@ -2751,7 +2775,7 @@ export default function Director() {
                         Export
                       </button>
                     )}
-                    {/* Add Player + Upload RSVPs buttons — only during registration */}
+                    {/* Add Player + Upload RSVPs buttons — registration phase */}
                   {isRegistration && (
                       <>
                         <button
@@ -2774,6 +2798,21 @@ export default function Director() {
                           Add Player
                         </button>
                       </>
+                    )}
+                    {/* Late Registration button — only during Round 1 */}
+                    {!isRegistration && state.currentRound === 1 && !allResultsIn && (
+                      <button
+                        onClick={() => setShowAddPlayer(true)}
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition-all active:scale-95 ${
+                          isDark
+                            ? "bg-amber-500/12 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                            : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                        }`}
+                        title="Late registration open — players added now will be paired or given a bye"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Late Registration
+                      </button>
                     )}
                   </div>
                 </div>
@@ -3456,8 +3495,22 @@ export default function Director() {
         open={showAddPlayer}
         onClose={() => setShowAddPlayer(false)}
         onAdd={(player) => {
-          addPlayer(player);
-          toast.success(`${player.name} added to the tournament`);
+          if (!isRegistration && state.currentRound === 1) {
+            // Late registration during Round 1
+            const outcome = addLatePlayer(player);
+            if ('duplicate' in outcome) {
+              toast.error(`${player.name} is already in the tournament`);
+            } else if ('locked' in outcome) {
+              toast.error("Late registration is only available during Round 1");
+            } else if ('paired' in outcome) {
+              toast.success(`${player.name} paired with ${outcome.opponentName} on Board ${outcome.board}`);
+            } else {
+              toast.success(`${player.name} added — assigned a bye this round (+½pt)`);
+            }
+          } else {
+            addPlayer(player);
+            toast.success(`${player.name} added to the tournament`);
+          }
         }}
         onBulkUpsert={({ toUpdate }) => {
           toUpdate.forEach(({ id, patch }) => updatePlayer(id, patch));

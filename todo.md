@@ -2558,3 +2558,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Players already assigned a bye this round show a "Bye" badge and a "Revoke Bye" option instead
 - [x] Bye assignment is only available during an active round (not during registration or after tournament completion)
 - [x] TypeScript: 0 errors
+
+## Late Player Registration (Round 1)
+
+- [x] addLatePlayer(player) action in directorState: adds player to roster during Round 1, then auto-pairs or assigns bye
+- [x] If another unpaired late player exists in Round 1, pair the two together on a new board
+- [x] If no unpaired late player exists, assign a bye to the new arrival
+- [x] Roster is locked from Round 2 onward: Add Player button hidden, join page shows "Registration closed"
+- [x] Director UI: show Add Player button during Round 1 with a "Late Registration open" amber banner
+- [x] Toast notification shows pairing result ("Magnus paired with Hikaru on Board 7" or "Magnus assigned a bye")
+- [x] TypeScript: 0 errors

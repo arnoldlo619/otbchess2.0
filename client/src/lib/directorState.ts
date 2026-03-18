@@ -269,6 +269,92 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
+  // Add a late-arriving player during Round 1
+  // Returns a descriptor of what happened: { paired: true, opponent: Player } | { bye: true } | { duplicate: true } | { locked: true }
+  const addLatePlayer = useCallback((player: Player): { paired: true; opponentName: string; board: number } | { bye: true } | { duplicate: true } | { locked: true } => {
+    let result: { paired: true; opponentName: string; board: number } | { bye: true } | { duplicate: true } | { locked: true } = { locked: true };
+    setState((prev) => {
+      // Only allowed during Round 1
+      if (prev.status !== "in_progress" || prev.currentRound !== 1) {
+        result = { locked: true };
+        return prev;
+      }
+      // Prevent duplicates
+      if (prev.players.some((p) => p.id === player.id || (p.username && p.username === player.username))) {
+        result = { duplicate: true };
+        return prev;
+      }
+      const round1 = prev.rounds.find((r) => r.number === 1);
+      if (!round1) { result = { locked: true }; return prev; }
+
+      // Find any existing late player who has a bye (whiteId === "BYE") in Round 1
+      // and whose bye game id starts with "late-bye-" (meaning they're waiting for a partner)
+      const waitingByeGame = round1.games.find(
+        (g) => g.whiteId === "BYE" && g.id.startsWith("late-bye-")
+      );
+
+      const maxBoard = Math.max(0, ...round1.games.map((g) => g.board));
+
+      if (waitingByeGame) {
+        // Pair the new player with the waiting player — remove the bye, add a real game
+        const waitingPlayerId = waitingByeGame.blackId;
+        const waitingPlayer = prev.players.find((p) => p.id === waitingPlayerId);
+        const newBoard = waitingByeGame.board; // reuse the same board slot
+        // Assign colors: waiting player gets white (arrived first), new player gets black
+        const newGame: Game = {
+          id: `late-pair-${waitingPlayerId}-${player.id}-r1`,
+          round: 1,
+          board: newBoard,
+          whiteId: waitingPlayerId,
+          blackId: player.id,
+          result: "*",
+        };
+        const updatedRound: Round = {
+          ...round1,
+          games: round1.games
+            .filter((g) => g.id !== waitingByeGame.id)
+            .concat(newGame),
+        };
+        // Reverse the ½ point that was awarded when the bye was created
+        const updatedPlayers = prev.players
+          .map((p) =>
+            p.id === waitingPlayerId
+              ? { ...p, points: Math.max(0, p.points - 0.5), draws: Math.max(0, p.draws - 1) }
+              : p
+          )
+          .concat(player);
+        result = { paired: true, opponentName: waitingPlayer?.name ?? "Unknown", board: newBoard };
+        return {
+          ...prev,
+          players: updatedPlayers,
+          rounds: prev.rounds.map((r) => r.number === 1 ? updatedRound : r),
+        };
+      } else {
+        // No waiting partner — assign a bye to the new player and mark it as a "late bye"
+        const byeGame: Game = {
+          id: `late-bye-${player.id}-r1`,
+          round: 1,
+          board: maxBoard + 1,
+          whiteId: "BYE",
+          blackId: player.id,
+          result: "½-½",
+        };
+        const updatedRound: Round = {
+          ...round1,
+          games: [...round1.games, byeGame],
+        };
+        const updatedPlayers = [...prev.players, { ...player, points: player.points + 0.5, draws: player.draws + 1 }];
+        result = { bye: true };
+        return {
+          ...prev,
+          players: updatedPlayers,
+          rounds: prev.rounds.map((r) => r.number === 1 ? updatedRound : r),
+        };
+      }
+    });
+    return result;
+  }, []);
+
   // Remove a player from the registration list (only during registration phase)
   const removePlayer = useCallback((playerId: string) => {
     setState((prev) => {
@@ -510,6 +596,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     liveStandings,
     lastSaved,
     addPlayer,
+    addLatePlayer,
     updatePlayer,
     removePlayer,
     swapBoards,
