@@ -4,16 +4,16 @@
  * Shows only:
  *   - Back-to-dashboard chevron (mobile only, left of logo) — when backHref is provided
  *   - OTB!! logo (far left, links to home)
- *   - Tournament name (centered, subtle, truncated)
+ *   - centerSlot (optional ReactNode, centered) — used for QR buttons, etc.
  *   - Theme toggle + sign-in / user menu (far right)
  *
  * No animated nav pills, no Dashboard/Clubs/Battle/Analyze links.
  * Used on Director.tsx and Tournament.tsx for a focused, distraction-free experience.
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
-import { LogIn, Ghost, Crown, X, ChevronLeft, LayoutDashboard } from "lucide-react";
+import { LogIn, Ghost, Crown, X, ChevronLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -23,23 +23,39 @@ const LOGO_URL =
 
 interface MinimalTournamentNavProps {
   onSignInClick?: () => void;
+  /** @deprecated Use centerSlot instead. Kept for backwards compat with Tournament.tsx */
   tournamentName?: string;
   /** If provided, shows a mobile-only back button on the left side of the nav */
   backHref?: string;
-  /** Label for the back button. Defaults to "Dashboard" */
+  /** Label for the back button. Defaults to "Home" */
   backLabel?: string;
+  /** Optional content to render in the center slot (e.g. QR buttons) */
+  centerSlot?: ReactNode;
 }
 
 export function MinimalTournamentNav({
   onSignInClick,
   tournamentName,
   backHref,
-  backLabel = "Dashboard",
+  backLabel = "Home",
+  centerSlot,
 }: MinimalTournamentNavProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Determine what to show in the center slot
+  const center = centerSlot ?? (tournamentName ? (
+    <span
+      className={`text-sm font-semibold tracking-tight truncate max-w-[160px] sm:max-w-xs text-center ${
+        isDark ? "text-white/60" : "text-black/50"
+      }`}
+      title={tournamentName}
+    >
+      {tournamentName}
+    </span>
+  ) : null);
 
   return (
     <header
@@ -79,17 +95,10 @@ export function MinimalTournamentNav({
         </Link>
       </div>
 
-      {/* Tournament name — centered */}
-      {tournamentName && (
-        <div className="flex-1 flex items-center justify-center min-w-0 px-2">
-          <span
-            className={`text-sm font-semibold tracking-tight truncate max-w-[160px] sm:max-w-xs text-center ${
-              isDark ? "text-white/60" : "text-black/50"
-            }`}
-            title={tournamentName}
-          >
-            {tournamentName}
-          </span>
+      {/* Center slot */}
+      {center && (
+        <div className="flex items-center justify-center gap-2 px-2">
+          {center}
         </div>
       )}
 

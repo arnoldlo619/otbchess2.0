@@ -2609,3 +2609,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Guard: only fire when there is a previous step to go back to (step > 0)
 - [x] Same lime-green edge flash feedback on the left edge
 - [x] TypeScript: 0 errors
+
+## MinimalTournamentNav — QR Buttons in Center Slot
+
+- [x] Remove centered tournament title from MinimalTournamentNav
+- [x] Add centerSlot prop (ReactNode) to MinimalTournamentNav for flexible center content
+- [x] Pass Join QR + Project QR buttons as centerSlot from Director.tsx
+- [x] Join QR visible during registration and Round 1; Project QR visible during active/complete phases
+- [x] TypeScript: 0 errors

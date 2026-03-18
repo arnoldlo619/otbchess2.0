@@ -1497,9 +1497,42 @@ export default function Director() {
     >
       {/* ── Minimal Tournament Nav (fixed, 56px tall) ───────────────── */}
       <MinimalTournamentNav
-        tournamentName={state.tournamentName}
         backHref="/"
         backLabel="Home"
+        centerSlot={
+          <div className="flex items-center gap-2">
+            {/* Join QR: visible during registration and Round 1 */}
+            {(isRegistration || state.currentRound === 1) && (
+              <button
+                onClick={() => setShowAnnounce(true)}
+                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+                  isDark
+                    ? "bg-[#4CAF50]/12 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/22"
+                    : "bg-[#3D6B47]/08 border-[#3D6B47]/25 text-[#3D6B47] hover:bg-[#3D6B47]/15"
+                }`}
+                title="Show join QR code full-screen for players to scan"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span>Join QR</span>
+              </button>
+            )}
+            {/* Project QR: visible when tournament is active or completed */}
+            {!isRegistration && (
+              <button
+                onClick={() => setShowSpectatorQR(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+                  isDark
+                    ? "bg-white/06 border-white/12 text-white/50 hover:bg-white/10 hover:text-white/70"
+                    : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                }`}
+                title="Project live standings QR on a screen or projector"
+              >
+                <QrCode className="w-3.5 h-3.5" />
+                <span>Project QR</span>
+              </button>
+            )}
+          </div>
+        }
       />
 
       {/* Spacer to push content below the fixed minimal nav */}
@@ -1656,39 +1689,7 @@ export default function Director() {
                   </span>
                 </div>
               </div>
-              {/* Join QR + Project QR — contextual icon buttons in the title row */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Join QR: visible during registration and Round 1 (while players can still join) */}
-                {(isRegistration || state.currentRound === 1) && (
-                  <button
-                    onClick={() => setShowAnnounce(true)}
-                    className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
-                      isDark
-                        ? "bg-[#4CAF50]/12 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/22"
-                        : "bg-[#3D6B47]/08 border-[#3D6B47]/25 text-[#3D6B47] hover:bg-[#3D6B47]/15"
-                    }`}
-                    title="Show join QR code full-screen for players to scan"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Join QR</span>
-                  </button>
-                )}
-                {/* Project QR: visible when tournament is active or completed — for projecting live standings */}
-                {!isRegistration && (
-                  <button
-                    onClick={() => setShowSpectatorQR(true)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
-                      isDark
-                        ? "bg-white/06 border-white/12 text-white/50 hover:bg-white/10 hover:text-white/70"
-                        : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                    }`}
-                    title="Project live standings QR on a screen or projector"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Project QR</span>
-                  </button>
-                )}
-              </div>
+
             </div>
 
             {/* Round progress pip widget — above tabs, only when tournament is active */}
