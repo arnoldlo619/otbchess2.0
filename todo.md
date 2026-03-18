@@ -2643,3 +2643,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director button: show label on sm+, hide on mobile (icon only)
 - [x] Print button: already hidden on mobile (hidden sm:flex) — keep as-is
 - [x] TypeScript: 0 errors
+
+## Tournament Nav — Conditional Director Button
+
+- [x] Determine director status: check if current user's id/username matches tournament createdBy or directorId
+- [x] Conditionally render Director button only when isDirector is true
+- [x] TypeScript: 0 errors

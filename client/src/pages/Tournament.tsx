@@ -32,7 +32,8 @@ import {
   type DirectorState,
 } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
-import { getTournamentConfig } from "@/lib/tournamentRegistry";
+import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { useAuthContext } from "@/context/AuthContext";
 import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
@@ -1203,6 +1204,17 @@ export default function TournamentPage() {
 
   // Build display data — prefer real state, fall back to DEMO_TOURNAMENT
   const isDemo = tournamentId === "otb-demo-2026" && !tournamentState;
+
+  // Determine if the current viewer is the tournament director.
+  // Two signals: (1) device has an active director session (covers anonymous directors),
+  // (2) authenticated user's id matches the config's ownerId.
+  const { user: authUser } = useAuthContext();
+  const isDirector = useMemo(() => {
+    if (isDemo) return false;
+    if (hasDirectorSession(tournamentId)) return true;
+    if (authUser && config?.ownerId != null && String(authUser.id) === String(config.ownerId)) return true;
+    return false;
+  }, [tournamentId, authUser, config?.ownerId, isDemo]);
   const displayState = tournamentState ?? {
     tournamentId: DEMO_TOURNAMENT.id,
     tournamentName: DEMO_TOURNAMENT.name,
@@ -1297,17 +1309,19 @@ export default function TournamentPage() {
                 <Share2 className="w-4 h-4" />
                 <span className="hidden sm:inline">Share</span>
               </button>
-              <Link
-                href={`/tournament/${tournamentId}/manage`}
-                className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
-                  isDark
-                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
-                    : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">Director</span>
-              </Link>
+              {isDirector && (
+                <Link
+                  href={`/tournament/${tournamentId}/manage`}
+                  className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                    isDark
+                      ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
+                      : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                  }`}
+                >
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden sm:inline">Director</span>
+                </Link>
+              )}
               <Link
                 href={`/tournament/${tournamentId}/print`}
                 className={`hidden sm:flex touch-target items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
@@ -1350,17 +1364,19 @@ export default function TournamentPage() {
               <Share2 className="w-4 h-4" />
               <span className="hidden sm:inline">Share</span>
             </button>
-            <Link
-              href={`/tournament/${tournamentId}/manage`}
-              className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
-                isDark
-                  ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
-                  : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Director</span>
-            </Link>
+            {isDirector && (
+              <Link
+                href={`/tournament/${tournamentId}/manage`}
+                className={`touch-target flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
+                  isDark
+                    ? "border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#3D6B47]/20"
+                    : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Director</span>
+              </Link>
+            )}
             <Link
               href={`/tournament/${tournamentId}/print`}
               className={`hidden sm:flex touch-target items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all active:scale-95 ${
