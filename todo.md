@@ -2468,7 +2468,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Format options: Swiss, Double Swiss, Round Robin, Single Elimination
 - [ ] Inline picker matches existing Rounds/Max Players/Time Control pattern
 - [ ] Auto-update recommended rounds when format changes (e.g. Round Robin = n-1 rounds)
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## Format Selector in Quickstart Smart Defaults
 
@@ -2508,3 +2508,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] After adding, reset form state and refocus the first input field (no need to click Add Player again)
 - [x] Show a brief "added" flash/confirmation in the modal instead of closing it
 - [x] Keep modal open after each add so director can batch-add multiple players
+
+## Add Player Modal — Bulk CSV Import
+
+- [x] Add "Import CSV" as a 4th mode tab alongside chess.com / Lichess / Manual
+- [x] File drop zone + click-to-browse accepting .csv and .txt files
+- [x] Paste textarea for raw CSV text input
+- [x] CSV parser supporting: name,username,elo columns (header optional); comma or tab delimited
+- [x] Per-row validation: missing name, invalid ELO range, duplicate username
+- [x] Preview table showing valid rows (green) and invalid rows (red) with error reason
+- [x] "Add N valid players" bulk action button
+- [x] Download sample CSV template link
+- [x] TypeScript: 0 errors
