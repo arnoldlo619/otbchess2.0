@@ -2636,3 +2636,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove standalone TournamentNav sticky bar and its spacer div
 - [x] Update both MinimalTournamentNav call sites (loading state + main render)
 - [x] TypeScript: 0 errors
+
+## Tournament Nav — Mobile Icon-Only Center Slot
+
+- [x] Share button: show label on sm+, hide on mobile (icon only)
+- [x] Director button: show label on sm+, hide on mobile (icon only)
+- [x] Print button: already hidden on mobile (hidden sm:flex) — keep as-is
+- [x] TypeScript: 0 errors

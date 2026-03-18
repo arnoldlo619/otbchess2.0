@@ -1295,7 +1295,7 @@ export default function TournamentPage() {
                 }`}
               >
                 <Share2 className="w-4 h-4" />
-                <span className="hidden sm:block">Share</span>
+                <span className="hidden sm:inline">Share</span>
               </button>
               <Link
                 href={`/tournament/${tournamentId}/manage`}
@@ -1306,7 +1306,7 @@ export default function TournamentPage() {
                 }`}
               >
                 <Shield className="w-4 h-4" />
-                <span className="hidden sm:block">Director</span>
+                <span className="hidden sm:inline">Director</span>
               </Link>
               <Link
                 href={`/tournament/${tournamentId}/print`}
@@ -1348,7 +1348,7 @@ export default function TournamentPage() {
               }`}
             >
               <Share2 className="w-4 h-4" />
-              <span className="hidden sm:block">Share</span>
+              <span className="hidden sm:inline">Share</span>
             </button>
             <Link
               href={`/tournament/${tournamentId}/manage`}
@@ -1359,7 +1359,7 @@ export default function TournamentPage() {
               }`}
             >
               <Shield className="w-4 h-4" />
-              <span className="hidden sm:block">Director</span>
+              <span className="hidden sm:inline">Director</span>
             </Link>
             <Link
               href={`/tournament/${tournamentId}/print`}
