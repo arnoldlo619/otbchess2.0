@@ -6,10 +6,15 @@
  *   lichess    — enter username → auto-fetch rating from Lichess API
  *   manual     — enter name + ELO directly (no API lookup)
  *
- * On confirm, calls onAdd(player) and closes.
+ * UX: pressing Enter at any point in the flow adds the player and resets the
+ * form so the director can immediately type the next player — no need to
+ * click "Add Player" again between entries.
+ *
+ * On confirm, calls onAdd(player) and stays open for the next entry.
+ * Modal closes only via Cancel / ✕ / Escape.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
@@ -21,7 +26,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  ChevronDown,
+  UserPlus,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
 
@@ -44,9 +49,8 @@ interface LookupResult {
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const G = "#3D6B47";
-const G_DARK = "#2A4A32";
-const G_BG = "rgba(61,107,71,0.08)";
 const G_RING = "rgba(61,107,71,0.25)";
+const G_BG = "rgba(61,107,71,0.08)";
 
 // ─── ELO lookup helpers ───────────────────────────────────────────────────────
 
@@ -143,20 +147,38 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
   const [lookupState, setLookupState] = useState<"idle" | "loading" | "found" | "error">("idle");
   const [lookupResult, setLookupResult] = useState<LookupResult | null>(null);
   const [lookupError, setLookupError] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  // Brief "added" flash shown after each successful add
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  // Running count of players added this session
+  const [addedCount, setAddedCount] = useState(0);
 
-  // Reset on open/platform change
+  const inputRef = useRef<HTMLInputElement>(null);
+  const eloRef = useRef<HTMLInputElement>(null);
+
+  // ── Reset helpers ─────────────────────────────────────────────────────────
+
+  const resetForm = useCallback(() => {
+    setUsername("");
+    setManualName("");
+    setManualElo("");
+    setLookupState("idle");
+    setLookupResult(null);
+    setLookupError("");
+  }, []);
+
+  // Reset on open / platform change
   useEffect(() => {
     if (open) {
-      setUsername("");
-      setManualName("");
-      setManualElo("");
-      setLookupState("idle");
-      setLookupResult(null);
-      setLookupError("");
+      resetForm();
+      setJustAdded(null);
       setTimeout(() => inputRef.current?.focus(), 80);
     }
-  }, [open, platform]);
+  }, [open, platform]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset count when modal closes
+  useEffect(() => {
+    if (!open) setAddedCount(0);
+  }, [open]);
 
   // Escape to close
   useEffect(() => {
@@ -165,7 +187,9 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  const handleLookup = async () => {
+  // ── Lookup ────────────────────────────────────────────────────────────────
+
+  const handleLookup = useCallback(async () => {
     const u = username.trim();
     if (!u) return;
     if (existingUsernames.map((x) => x.toLowerCase()).includes(u.toLowerCase())) {
@@ -184,15 +208,19 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
       setLookupState("error");
       setLookupError(err instanceof Error ? err.message : "Lookup failed. Check the username.");
     }
-  };
+  }, [username, platform, existingUsernames]);
 
-  const handleAdd = () => {
+  // ── Add player ────────────────────────────────────────────────────────────
+
+  const handleAdd = useCallback(() => {
+    let player: Player;
+
     if (platform === "manual") {
       const name = manualName.trim();
       const elo = parseInt(manualElo, 10);
       if (!name) { toast.error("Please enter a player name."); return; }
       if (isNaN(elo) || elo < 100 || elo > 3500) { toast.error("Please enter a valid ELO (100–3500)."); return; }
-      const player: Player = {
+      player = {
         id: nanoid(),
         name,
         username: name.toLowerCase().replace(/\s+/g, "_"),
@@ -202,31 +230,76 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
         points: 0, buchholz: 0,
         colorHistory: [],
       };
-      onAdd(player);
-      toast.success(`${name} added to the tournament.`);
-      onClose();
-      return;
-    }
-    if (lookupState !== "found" || !lookupResult) return;
-    const player: Player = {
-      id: nanoid(),
-      name: lookupResult.name || lookupResult.username,
-      username: lookupResult.username,
-      elo: platform === "chess.com" && ratingType === "blitz"
-        ? (lookupResult.blitz || lookupResult.rapid || lookupResult.bullet || lookupResult.elo)
-        : (lookupResult.rapid || lookupResult.blitz || lookupResult.bullet || lookupResult.elo),
-      platform: platform === "chess.com" ? "chesscom" : "lichess",
-      country: lookupResult.country ?? "Unknown",
-      title: lookupResult.title as Player["title"],
-      avatarUrl: lookupResult.avatar,
-      wins: 0, draws: 0, losses: 0,
+    } else {
+      if (lookupState !== "found" || !lookupResult) return;
+      player = {
+        id: nanoid(),
+        name: lookupResult.name || lookupResult.username,
+        username: lookupResult.username,
+        elo: platform === "chess.com" && ratingType === "blitz"
+          ? (lookupResult.blitz || lookupResult.rapid || lookupResult.bullet || lookupResult.elo)
+          : (lookupResult.rapid || lookupResult.blitz || lookupResult.bullet || lookupResult.elo),
+        platform: platform === "chess.com" ? "chesscom" : "lichess",
+        country: lookupResult.country ?? "Unknown",
+        title: lookupResult.title as Player["title"],
+        avatarUrl: lookupResult.avatar,
+        wins: 0, draws: 0, losses: 0,
         points: 0, buchholz: 0,
         colorHistory: [],
       };
-      onAdd(player);
-      toast.success(`${player.name} (${player.elo}) added to the tournament.`);
-    onClose();
+    }
+
+    onAdd(player);
+    setAddedCount((c) => c + 1);
+
+    // Flash "added" banner, then reset and refocus for the next entry
+    setJustAdded(player.name);
+    setTimeout(() => {
+      setJustAdded(null);
+      resetForm();
+      setTimeout(() => inputRef.current?.focus(), 40);
+    }, 900);
+  }, [platform, manualName, manualElo, lookupState, lookupResult, ratingType, onAdd, resetForm]);
+
+  // ── Enter key logic ───────────────────────────────────────────────────────
+  //
+  // Username field (chess.com / lichess):
+  //   • If lookup already succeeded → add player (same as clicking "Add to Tournament")
+  //   • Otherwise → trigger lookup (same as clicking "Look up")
+  //
+  // Manual name field:
+  //   • Tab to ELO field if ELO is empty; otherwise add if valid
+  //
+  // Manual ELO field:
+  //   • Add player if form is valid
+
+  const handleUsernameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (lookupState === "found") {
+      handleAdd();
+    } else {
+      handleLookup();
+    }
   };
+
+  const handleManualNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (!manualElo.trim()) {
+      eloRef.current?.focus();
+    } else if (canAdd) {
+      handleAdd();
+    }
+  };
+
+  const handleManualEloKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (canAdd) handleAdd();
+  };
+
+  // ── Derived state ─────────────────────────────────────────────────────────
 
   const canAdd =
     platform === "manual"
@@ -261,15 +334,25 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
             >
               <User className="w-3.5 h-3.5 text-white" />
             </div>
-            <span
-              className="text-sm font-bold"
-              style={{
-                fontFamily: "'Clash Display', sans-serif",
-                color: isDark ? "#FFFFFF" : "#1A1A1A",
-              }}
-            >
-              Add Player
-            </span>
+            <div>
+              <span
+                className="text-sm font-bold"
+                style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  color: isDark ? "#FFFFFF" : "#1A1A1A",
+                }}
+              >
+                Add Player
+              </span>
+              {addedCount > 0 && (
+                <span
+                  className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
+                  style={{ background: G_BG, color: G }}
+                >
+                  {addedCount} added
+                </span>
+              )}
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -309,6 +392,23 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
             </div>
           </div>
 
+          {/* "Just added" flash banner */}
+          {justAdded && (
+            <div
+              className="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold"
+              style={{
+                background: isDark ? G_BG : "#F0FDF4",
+                border: `1.5px solid ${isDark ? "rgba(61,107,71,0.35)" : "#BBF7D0"}`,
+                color: G,
+                animation: "fadeInUp 0.18s ease both",
+              }}
+            >
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{justAdded} added!</span>
+              <span className="ml-auto text-xs opacity-60 flex-shrink-0">Type next player ↵</span>
+            </div>
+          )}
+
           {/* Username lookup (chess.com / lichess) */}
           {platform !== "manual" && (
             <div>
@@ -329,7 +429,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                     type="text"
                     value={username}
                     onChange={(e) => { setUsername(e.target.value); setLookupState("idle"); setLookupResult(null); }}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleLookup(); }}
+                    onKeyDown={handleUsernameKeyDown}
                     placeholder={platform === "chess.com" ? "e.g. hikaru" : "e.g. DrNykterstein"}
                     className="w-full rounded-xl border outline-none transition-all duration-200"
                     style={{
@@ -351,7 +451,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                 </div>
                 <button
                   type="button"
-                  onClick={handleLookup}
+                  onClick={lookupState === "found" ? handleAdd : handleLookup}
                   disabled={!username.trim() || lookupState === "loading"}
                   className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
                   style={{
@@ -363,6 +463,8 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                 >
                   {lookupState === "loading" ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : lookupState === "found" ? (
+                    <><UserPlus className="w-4 h-4" /> Add</>
                   ) : (
                     "Look up"
                   )}
@@ -427,6 +529,19 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                   {lookupError}
                 </div>
               )}
+
+              {/* Enter hint — shown when lookup succeeded */}
+              {lookupState === "found" && !justAdded && (
+                <p
+                  className="mt-2 text-xs text-center"
+                  style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
+                >
+                  Press <kbd
+                    className="px-1 py-0.5 rounded text-[10px] font-mono"
+                    style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#F3F4F6" }}
+                  >Enter</kbd> to add · then type the next player
+                </p>
+              )}
             </div>
           )}
 
@@ -445,6 +560,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                   type="text"
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
+                  onKeyDown={handleManualNameKeyDown}
                   placeholder="e.g. Magnus Carlsen"
                   className="w-full rounded-xl border outline-none transition-all duration-200"
                   style={{
@@ -466,9 +582,11 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                   ELO Rating
                 </label>
                 <input
+                  ref={eloRef}
                   type="number"
                   value={manualElo}
                   onChange={(e) => setManualElo(e.target.value)}
+                  onKeyDown={handleManualEloKeyDown}
                   placeholder="e.g. 1500"
                   min={100}
                   max={3500}
@@ -484,6 +602,18 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
                   onBlur={(e) => { e.target.style.borderColor = isDark ? "rgba(255,255,255,0.12)" : "#D1D5DB"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
+              {/* Enter hint for manual mode */}
+              {canAdd && !justAdded && (
+                <p
+                  className="text-xs text-center"
+                  style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}
+                >
+                  Press <kbd
+                    className="px-1 py-0.5 rounded text-[10px] font-mono"
+                    style={{ background: isDark ? "rgba(255,255,255,0.08)" : "#F3F4F6" }}
+                  >Enter</kbd> to add · then type the next player
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -501,7 +631,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
           >
-            Cancel
+            {addedCount > 0 ? `Done (${addedCount} added)` : "Cancel"}
           </button>
           <button
             type="button"
@@ -516,6 +646,7 @@ export function AddPlayerModal({ open, onClose, onAdd, existingUsernames, rating
               boxShadow: canAdd ? `0 4px 14px ${G_RING}` : "none",
             }}
           >
+            <UserPlus className="w-4 h-4" />
             Add to Tournament
           </button>
         </div>

@@ -2500,3 +2500,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Downward triangle pin tail retained, pointing at active tab
 - [x] Spring layoutId transition preserved — logo springs between active tabs
 - [x] TypeScript: 0 errors
+
+## Add Player Modal — Enter-to-Add Optimization
+
+- [x] Enter key on username field: if lookup already found, add player and reset; otherwise trigger lookup
+- [x] Enter key on manual name/ELO fields: if form is valid, add player and reset
+- [x] After adding, reset form state and refocus the first input field (no need to click Add Player again)
+- [x] Show a brief "added" flash/confirmation in the modal instead of closing it
+- [x] Keep modal open after each add so director can batch-add multiple players
