@@ -1472,8 +1472,12 @@ export default function Director() {
         isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
       }`}
     >
-      {/* ── Minimal Tournament Nav (fixed, 56px tall) ─────────────────── */}
-      <MinimalTournamentNav tournamentName={state.tournamentName} />
+      {/* ── Minimal Tournament Nav (fixed, 56px tall) ───────────────── */}
+      <MinimalTournamentNav
+        tournamentName={state.tournamentName}
+        backHref="/"
+        backLabel="Home"
+      />
 
       {/* Spacer to push content below the fixed minimal nav */}
       <div style={{ height: 56 }} aria-hidden />
@@ -3628,13 +3632,34 @@ export default function Director() {
         </div>
       )}
 
-      {/* ── Undo Result Snackbar ──────────────────────────────────────────── */}
+            {/* ── Undo Result Snackbar ────────────────────────────────────── */}
       <UndoSnackbar
         pending={undoPending}
         onUndo={undoResult}
         onDismiss={dismissUndo}
         isDark={isDark}
       />
+
+      {/* ── Mobile floating "Back to Home" pill ─────────────────────────── */}
+      {/* Visible on mobile only when on a non-home tab, so the director can quickly jump back */}
+      {activeTab !== "home" && (
+        <div
+          className="sm:hidden fixed bottom-6 left-4 z-40"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <button
+            onClick={() => setActiveTab("home")}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all active:scale-95 border ${
+              isDark
+                ? "bg-[oklch(0.22_0.06_145)]/95 backdrop-blur-md border-white/12 text-white/70 hover:text-white shadow-black/40"
+                : "bg-white/95 backdrop-blur-md border-gray-200 text-gray-600 hover:text-gray-900 shadow-gray-200/80"
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4 -ml-0.5" />
+            Home
+          </button>
+        </div>
+      )}
     </div>
   );
 }

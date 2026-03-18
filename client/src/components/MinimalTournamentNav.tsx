@@ -2,6 +2,7 @@
  * MinimalTournamentNav — clean, minimal header for tournament dashboard pages.
  *
  * Shows only:
+ *   - Back-to-dashboard chevron (mobile only, left of logo) — when backHref is provided
  *   - OTB!! logo (far left, links to home)
  *   - Tournament name (centered, subtle, truncated)
  *   - Theme toggle + sign-in / user menu (far right)
@@ -12,7 +13,7 @@
 
 import { useState } from "react";
 import { Link } from "wouter";
-import { LogIn, Ghost, Crown, X } from "lucide-react";
+import { LogIn, Ghost, Crown, X, ChevronLeft, LayoutDashboard } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -23,9 +24,18 @@ const LOGO_URL =
 interface MinimalTournamentNavProps {
   onSignInClick?: () => void;
   tournamentName?: string;
+  /** If provided, shows a mobile-only back button on the left side of the nav */
+  backHref?: string;
+  /** Label for the back button. Defaults to "Dashboard" */
+  backLabel?: string;
 }
 
-export function MinimalTournamentNav({ onSignInClick, tournamentName }: MinimalTournamentNavProps) {
+export function MinimalTournamentNav({
+  onSignInClick,
+  tournamentName,
+  backHref,
+  backLabel = "Dashboard",
+}: MinimalTournamentNavProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
@@ -33,14 +43,32 @@ export function MinimalTournamentNav({ onSignInClick, tournamentName }: MinimalT
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[9999] h-14 flex items-center px-4 sm:px-6 border-b transition-colors ${
+      className={`fixed top-0 left-0 right-0 z-[9999] h-14 flex items-center px-3 sm:px-6 border-b transition-colors ${
         isDark
           ? "bg-[oklch(0.18_0.05_145)]/90 border-white/08 backdrop-blur-md"
           : "bg-white/90 border-black/08 backdrop-blur-md"
       }`}
     >
-      {/* Logo — far left (fixed width to balance layout) */}
-      <div className="flex-1 flex items-center">
+      {/* Left slot — back button (mobile) + logo */}
+      <div className="flex-1 flex items-center gap-1.5">
+        {/* Mobile back-to-dashboard button — only shown when backHref is provided */}
+        {backHref && (
+          <Link href={backHref}>
+            <button
+              className={`sm:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 border ${
+                isDark
+                  ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50] hover:bg-[#4CAF50]/22"
+                  : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/15"
+              }`}
+              title={`Back to ${backLabel}`}
+            >
+              <ChevronLeft className="w-3.5 h-3.5 -ml-0.5" />
+              <span>{backLabel}</span>
+            </button>
+          </Link>
+        )}
+
+        {/* Logo — always visible, links to home */}
         <Link href="/" className="flex items-center flex-shrink-0">
           <img
             src={LOGO_URL}
@@ -55,7 +83,7 @@ export function MinimalTournamentNav({ onSignInClick, tournamentName }: MinimalT
       {tournamentName && (
         <div className="flex-1 flex items-center justify-center min-w-0 px-2">
           <span
-            className={`text-sm font-semibold tracking-tight truncate max-w-[200px] sm:max-w-xs text-center ${
+            className={`text-sm font-semibold tracking-tight truncate max-w-[160px] sm:max-w-xs text-center ${
               isDark ? "text-white/60" : "text-black/50"
             }`}
             title={tournamentName}
@@ -65,7 +93,7 @@ export function MinimalTournamentNav({ onSignInClick, tournamentName }: MinimalT
         </div>
       )}
 
-      {/* Right slot — theme toggle + sign-in / user menu (fixed width to balance layout) */}
+      {/* Right slot — theme toggle + sign-in / user menu */}
       <div className="flex-1 flex items-center justify-end gap-2">
         <ThemeToggle />
 
@@ -81,7 +109,7 @@ export function MinimalTournamentNav({ onSignInClick, tournamentName }: MinimalT
               }`}
             >
               <LogIn className="w-3.5 h-3.5" />
-              <span>Sign In</span>
+              <span className="hidden sm:inline">Sign In</span>
             </button>
           </div>
         )}

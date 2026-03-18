@@ -2576,3 +2576,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Move Project QR to the Share Results section / tournament-complete banner
 - [x] Remove any duplicate or awkwardly placed QR buttons
 - [x] TypeScript: 0 errors
+
+## Mobile Back Navigation to Tournament Dashboard
+
+- [x] Audit all tournament sub-pages (Director, Spectator/Tournament, Report, Print) for current back-nav patterns
+- [x] Add a persistent back-to-dashboard button in the MinimalTournamentNav on mobile (left of logo)
+- [x] Add a floating bottom-left back pill on Director sub-pages (Players, Standings, etc.) on mobile
+- [x] Ensure the Dashboard home page shows active/recent tournaments prominently for quick re-entry
+- [x] TypeScript: 0 errors
