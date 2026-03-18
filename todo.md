@@ -2394,3 +2394,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Paused/expired states with distinct visual treatment
 - [x] Clean minimalist design consistent with Apple-inspired UI system
 - [x] TypeScript: 0 errors
+
+## Nav Bar Overlap Fix on Tournament Dashboard (Mar 18 2026)
+- [x] Fix global nav bar overlapping tournament title and QR code buttons on Director page
+- [x] Ensure proper top padding/margin so content clears the sticky nav (spacer div on Director + Tournament pages)
+- [x] TypeScript: 0 errors

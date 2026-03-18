@@ -1094,9 +1094,12 @@ export default function Director() {
       {/* ── Animated Nav Bar (fixed overlay, z-9999) ─────────────────────── */}
       <AppNavBar defaultActive="Dashboard" />
 
-      {/* ── Sub-toolbar: QR buttons (sits below the AnimeNavBar at top-[112px]) ── */}
+      {/* Spacer to push content below the fixed nav bar (hidden on mobile where nav is hidden) */}
+      <div className="hidden sm:block" style={{ height: 168 }} aria-hidden />
+
+      {/* ── Sub-toolbar: QR buttons (sits below the AnimeNavBar) ── */}
       <header
-        className={`sticky top-0 sm:top-[112px] z-40 border-b transition-colors duration-300 ${
+        className={`sticky top-0 sm:top-[168px] z-40 border-b transition-colors duration-300 ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
             : "bg-white/95 backdrop-blur-md border-gray-100"
@@ -1148,7 +1151,7 @@ export default function Director() {
       {/* ── Sticky "All Results In" Banner ──────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
         <div
-          className={`sticky top-[48px] sm:top-[160px] z-30 border-b transition-all duration-300 ${
+          className={`sticky top-[48px] sm:top-[216px] z-30 border-b transition-all duration-300 ${
             isDark
               ? "bg-[#1a3d22]/95 backdrop-blur-md border-[#4CAF50]/25"
               : "bg-[#f0f9f1]/95 backdrop-blur-md border-[#3D6B47]/20"
@@ -1210,7 +1213,7 @@ export default function Director() {
       )}
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-28 animate-page-in">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 pt-4 sm:pt-6 animate-page-in">
         <div className="flex gap-6 items-start">
 
           {/* ── Left Rail: Vertical Round Tracker (hidden on mobile, visible md+) ── */}

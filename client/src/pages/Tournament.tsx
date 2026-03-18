@@ -1268,6 +1268,7 @@ export default function TournamentPage() {
     return (
       <div className={`min-h-screen flex flex-col transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
         <AppNavBar defaultActive="Dashboard" />
+        <div className="hidden sm:block" style={{ height: 168 }} aria-hidden />
         <TournamentNav tournamentId={tournamentId} />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 pt-28">
           <div className="w-10 h-10 rounded-full border-2 border-[#3D6B47] border-t-transparent animate-spin" />
@@ -1280,6 +1281,7 @@ export default function TournamentPage() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       <AppNavBar defaultActive="Dashboard" />
+      <div className="hidden sm:block" style={{ height: 168 }} aria-hidden />
       {/* New round flash notification */}
       {newRoundFlash !== null && (
         <NewRoundFlash round={newRoundFlash} onDismiss={dismissFlash} />
