@@ -2568,3 +2568,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director UI: show Add Player button during Round 1 with a "Late Registration open" amber banner
 - [x] Toast notification shows pairing result ("Magnus paired with Hikaru on Board 7" or "Magnus assigned a bye")
 - [x] TypeScript: 0 errors
+
+## Director Dashboard — QR Button Repositioning
+
+- [x] Audit all current QR button placements (Join QR, Project QR) in Director.tsx
+- [x] Move Join QR to the tournament header area (alongside tournament name/date) — visible during registration and Round 1
+- [x] Move Project QR to the Share Results section / tournament-complete banner
+- [x] Remove any duplicate or awkwardly placed QR buttons
+- [x] TypeScript: 0 errors

@@ -1478,57 +1478,10 @@ export default function Director() {
       {/* Spacer to push content below the fixed minimal nav */}
       <div style={{ height: 56 }} aria-hidden />
 
-      {/* ── Sub-toolbar: QR buttons (sits below the AnimeNavBar) ── */}
-      <header
-        className={`sticky top-[56px] z-40 border-b transition-colors duration-300 ${
-          isDark
-            ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
-            : "bg-white/95 backdrop-blur-md border-gray-100"
-        }`}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-12 flex items-center justify-between gap-3">
-          {/* Right: QR button group */}
-          <div className="flex items-center gap-2">
-            <div className={`flex items-center rounded-xl border overflow-hidden ${
-              isDark ? "border-white/10 bg-white/04" : "border-gray-200 bg-gray-50"
-            }`}>
-              <button
-                onClick={() => setShowAnnounce(true)}
-                className={`touch-target flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 ${
-                  isDark
-                    ? "text-[#4CAF50] hover:bg-[#4CAF50]/12"
-                    : "text-[#3D6B47] hover:bg-green-50"
-                }`}
-                title="Show join QR code full-screen"
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Join QR</span>
-              </button>
-              <div className={`w-px h-5 flex-shrink-0 ${
-                isDark ? "bg-white/10" : "bg-gray-200"
-              }`} />
-              <button
-                onClick={() => setShowSpectatorQR(true)}
-                className={`touch-target flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 ${
-                  isDark
-                    ? "text-white/50 hover:bg-white/06 hover:text-white/70"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                }`}
-                title="Show spectator QR full-screen (for projector)"
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Project QR</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-      {/* ── Sticky "All Results In" Banner ──────────────────────────────────── */}
+      {/* QR sub-toolbar removed — Join QR moved to tournament header title row; Project QR moved to post-round action buttons */}      {/* ── Sticky "All Results In" Banner ────────────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
         <div
-          className={`sticky top-[104px] z-30 border-b transition-all duration-300 ${
-            isDark
+          className={`sticky top-[56px] z-30 border-b transition-all duration-300 ${        isDark
               ? "bg-[#1a3d22]/95 backdrop-blur-md border-[#4CAF50]/25"
               : "bg-[#f0f9f1]/95 backdrop-blur-md border-[#3D6B47]/20"
           }`}
@@ -1663,7 +1616,39 @@ export default function Director() {
                   </span>
                 </div>
               </div>
-              {/* generate button lives in Boards tab — nothing here */}
+              {/* Join QR + Project QR — contextual icon buttons in the title row */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Join QR: visible during registration and Round 1 (while players can still join) */}
+                {(isRegistration || state.currentRound === 1) && (
+                  <button
+                    onClick={() => setShowAnnounce(true)}
+                    className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+                      isDark
+                        ? "bg-[#4CAF50]/12 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/22"
+                        : "bg-[#3D6B47]/08 border-[#3D6B47]/25 text-[#3D6B47] hover:bg-[#3D6B47]/15"
+                    }`}
+                    title="Show join QR code full-screen for players to scan"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Join QR</span>
+                  </button>
+                )}
+                {/* Project QR: visible when tournament is active or completed — for projecting live standings */}
+                {!isRegistration && (
+                  <button
+                    onClick={() => setShowSpectatorQR(true)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+                      isDark
+                        ? "bg-white/06 border-white/12 text-white/50 hover:bg-white/10 hover:text-white/70"
+                        : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    }`}
+                    title="Project live standings QR on a screen or projector"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Project QR</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Round progress pip widget — above tabs, only when tournament is active */}
@@ -2186,6 +2171,16 @@ export default function Director() {
                               <svg viewBox="0 0 24 24" fill="white" className="w-2.5 h-2.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="white" strokeWidth="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1" fill="white"/></svg>
                             </div>
                             Create Recap
+                          </button>
+                          {/* Project QR — project live standings on a screen */}
+                          <button
+                            onClick={() => setShowSpectatorQR(true)}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                              isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            <QrCode className="w-4 h-4" />
+                            Project QR
                           </button>
                         </div>
                       </div>
