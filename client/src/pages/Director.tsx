@@ -579,30 +579,75 @@ function DoubleSwissBoardCard({
           )}
         </div>
         {/* Running match score tally — visible once any game has a result */}
-        {anyDone && (
-          <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl border ${
-            bothComplete
-              ? isDark
-                ? "bg-[#4CAF50]/10 border-[#4CAF50]/20 text-[#4CAF50]"
-                : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47]"
-              : isDark
-              ? "bg-amber-500/08 border-amber-500/20 text-amber-300"
-              : "bg-amber-50 border-amber-200 text-amber-700"
-          }`}>
-            <span className="truncate max-w-[48px]">{p1.name.split(" ")[0]}</span>
-            <span className="tabular-nums tracking-tight">
-              {fmtScore(p1Score)}
-              <span className={`mx-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>–</span>
-              {fmtScore(p2Score)}
-            </span>
-            <span className="truncate max-w-[48px]">{p2.name.split(" ")[0]}</span>
-            {!bothComplete && (
-              <span className={`ml-0.5 text-[9px] font-black uppercase tracking-widest ${
-                isDark ? "text-amber-400/70" : "text-amber-600/70"
-              }`}>live</span>
-            )}
-          </div>
-        )}
+        {anyDone && (() => {
+          // Determine winner when both games are done
+          const p1Wins = bothComplete && p1Score > p2Score;
+          const p2Wins = bothComplete && p2Score > p1Score;
+          const isDraw = bothComplete && p1Score === p2Score;
+          return (
+            <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-xl border ${
+              bothComplete
+                ? isDark
+                  ? "bg-[#4CAF50]/10 border-[#4CAF50]/20"
+                  : "bg-[#3D6B47]/08 border-[#3D6B47]/20"
+                : isDark
+                ? "bg-amber-500/08 border-amber-500/20 text-amber-300"
+                : "bg-amber-50 border-amber-200 text-amber-700"
+            }`}>
+              {/* P1 name */}
+              <span className={`flex items-center gap-0.5 truncate max-w-[56px] ${
+                bothComplete
+                  ? p1Wins
+                    ? isDark ? "text-[#4CAF50] font-black" : "text-[#3D6B47] font-black"
+                    : isDraw
+                    ? isDark ? "text-white/60" : "text-gray-500"
+                    : isDark ? "text-white/35" : "text-gray-400"
+                  : ""
+              }`}>
+                {p1Wins && <span className="text-[11px] leading-none">&#x1F451;</span>}
+                {p1.name.split(" ")[0]}
+              </span>
+              {/* Score */}
+              <span className={`tabular-nums tracking-tight ${
+                bothComplete
+                  ? isDraw
+                    ? isDark ? "text-white/50" : "text-gray-400"
+                    : isDark ? "text-white/70" : "text-gray-600"
+                  : ""
+              }`}>
+                {fmtScore(p1Score)}
+                <span className={`mx-0.5 ${
+                  isDark ? "text-white/25" : "text-gray-300"
+                }`}>–</span>
+                {fmtScore(p2Score)}
+              </span>
+              {/* P2 name */}
+              <span className={`flex items-center gap-0.5 truncate max-w-[56px] ${
+                bothComplete
+                  ? p2Wins
+                    ? isDark ? "text-[#4CAF50] font-black" : "text-[#3D6B47] font-black"
+                    : isDraw
+                    ? isDark ? "text-white/60" : "text-gray-500"
+                    : isDark ? "text-white/35" : "text-gray-400"
+                  : ""
+              }`}>
+                {p2.name.split(" ")[0]}
+                {p2Wins && <span className="text-[11px] leading-none">&#x1F451;</span>}
+              </span>
+              {/* Live badge (while pending) or Draw badge */}
+              {!bothComplete && (
+                <span className={`ml-0.5 text-[9px] font-black uppercase tracking-widest ${
+                  isDark ? "text-amber-400/70" : "text-amber-600/70"
+                }`}>live</span>
+              )}
+              {isDraw && (
+                <span className={`ml-0.5 text-[9px] font-black uppercase tracking-widest ${
+                  isDark ? "text-white/40" : "text-gray-400"
+                }`}>draw</span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Player names row */}

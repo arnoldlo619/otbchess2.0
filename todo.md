@@ -2434,3 +2434,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tally updates when Game B result is entered (shows final "1 – 1", "2 – 0", "1½ – ½", etc.)
 - [x] Clear visual design consistent with platform UI system (dark/light mode, amber=live, green=complete)
 - [x] TypeScript: 0 errors
+
+## DoubleSwissBoardCard Winner Highlight (Mar 18 2026)
+- [x] Bold winner's name and add crown icon in tally pill when both games complete
+- [x] Handle draw (equal scores) — show no crown, neutral styling with "draw" badge
+- [x] TypeScript: 0 errors
