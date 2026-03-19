@@ -615,6 +615,25 @@ export default function ClubProfile() {
     setClubEvents(listClubEvents(found.id).filter((e) => e.isPublished));
   }, [params.id, user]);
 
+  // Poll-close + scheduled-publish interval: check every 30 seconds
+  // MUST be declared before any early return to comply with Rules of Hooks
+  const clubId = club?.id ?? null;
+  useEffect(() => {
+    if (!clubId) return;
+    // Run once on mount
+    const didPublish = publishScheduledPolls(clubId);
+    const didClose = checkAndCloseExpiredPolls(clubId);
+    if (didPublish || didClose) {
+      setFeedEvents(listFeedEvents(clubId));
+    }
+    const timer = setInterval(() => {
+      const p = publishScheduledPolls(clubId);
+      const c = checkAndCloseExpiredPolls(clubId);
+      if (p || c) setFeedEvents(listFeedEvents(clubId));
+    }, 30_000);
+    return () => clearInterval(timer);
+  }, [clubId]);
+
   if (!club) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center gap-6 ${isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]"}`}>
@@ -693,23 +712,6 @@ export default function ClubProfile() {
     checkAndCloseExpiredPolls(club.id);
     setFeedEvents(listFeedEvents(club.id));
   };
-
-  // Poll-close + scheduled-publish interval: check every 30 seconds
-  useEffect(() => {
-    if (!club) return;
-    // Run once on mount
-    const didPublish = publishScheduledPolls(club.id);
-    const didClose = checkAndCloseExpiredPolls(club.id);
-    if (didPublish || didClose) {
-      setFeedEvents(listFeedEvents(club.id));
-    }
-    const timer = setInterval(() => {
-      const p = publishScheduledPolls(club.id);
-      const c = checkAndCloseExpiredPolls(club.id);
-      if (p || c) setFeedEvents(listFeedEvents(club.id));
-    }, 30_000);
-    return () => clearInterval(timer);
-  }, [club?.id]);
 
   const handleFollow = async () => {
     if (!user) {
