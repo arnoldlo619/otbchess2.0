@@ -2767,3 +2767,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build RsvpAvatarStack component (overlapping circles, +N overflow label)
 - [x] Wire into EventCard in ClubDashboard Events tab (already present)
 - [x] Wire into UpcomingEventCard in MyClubs Upcoming Events tab
+
+## Event Edit/Delete Flow
+
+- [x] Add three-dot MoreVertical menu to EventCard (directors only)
+- [x] Build EditEventModal reusing CreateEventModal pre-filled with existing event data
+- [x] Add delete confirmation dialog with event title
+- [x] Wire updateClubEvent and deleteClubEvent from clubEventRegistry
+- [x] Refresh events list after edit or delete

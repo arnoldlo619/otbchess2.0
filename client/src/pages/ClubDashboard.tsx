@@ -35,6 +35,7 @@ import {
   postComment,
   deleteComment,
   createClubEvent,
+  updateClubEvent,
   deleteClubEvent,
   seedClubEventsIfEmpty,
   type ClubEvent,
@@ -75,6 +76,9 @@ import {
   UserCheck,
   ArrowRight,
   Lock,
+  MoreVertical,
+  Pencil,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -242,6 +246,7 @@ function EventCard({
   avatarUrl,
   isOwner,
   onDeleted,
+  onEdited,
 }: {
   event: ClubEvent;
   userId: string;
@@ -249,13 +254,26 @@ function EventCard({
   avatarUrl?: string | null;
   isOwner: boolean;
   onDeleted: () => void;
+  onEdited: (updated: ClubEvent) => void;
 }) {
   const [rsvps, setRsvps] = useState<ClubEventRSVP[]>(() => getEventRSVPs(event.id));
   const [comments, setComments] = useState<ClubEventComment[]>(() => getEventComments(event.id));
   const [showComments, setShowComments] = useState(false);
   const [commentInput, setCommentInput] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const upcoming = isUpcoming(event);
   const counts = countRSVPs(event.id);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   function refreshRSVPs() {
     setRsvps(getEventRSVPs(event.id));
@@ -276,7 +294,7 @@ function EventCard({
 
   const accent = event.accentColor ?? "#4CAF50";
 
-  return (
+  return (<>
     <div
       className="rounded-3xl overflow-hidden border border-white/08 transition-all hover:border-white/15"
       style={{ background: "oklch(0.15 0.05 240)" }}
@@ -306,20 +324,39 @@ function EventCard({
           </div>
         )}
 
-        {/* Delete button (owner only) */}
+        {/* Three-dot menu (owner only) */}
         {isOwner && (
-          <button
-            onClick={() => {
-              if (confirm("Delete this event?")) {
-                deleteClubEvent(event.id);
-                onDeleted();
-              }
-            }}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95"
-            style={{ background: "rgba(0,0,0,0.45)" }}
-          >
-            <Trash2 className="w-3.5 h-3.5 text-white/60" />
-          </button>
+          <div className="absolute top-4 right-4" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 hover:bg-white/20"
+              style={{ background: "rgba(0,0,0,0.45)" }}
+              aria-label="Event options"
+            >
+              <MoreVertical className="w-4 h-4 text-white/80" />
+            </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 top-full mt-1.5 z-50 rounded-2xl overflow-hidden shadow-2xl border border-white/10 min-w-[160px]"
+                style={{ background: "oklch(0.16 0.04 240)" }}
+              >
+                <button
+                  onClick={() => { setMenuOpen(false); setShowEditModal(true); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-white/70 hover:bg-white/08 hover:text-white transition-colors text-left"
+                >
+                  <Pencil className="w-4 h-4 text-[#4CAF50]" />
+                  Edit Event
+                </button>
+                <button
+                  onClick={() => { setMenuOpen(false); setShowDeleteConfirm(true); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors text-left"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Event
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Date pill */}
@@ -470,7 +507,65 @@ function EventCard({
         )}
       </div>
     </div>
-  );
+
+    {/* Delete confirmation dialog */}
+    {showDeleteConfirm && (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+        <div
+          className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4"
+          style={{ background: "oklch(0.16 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-red-500/15">
+              <AlertTriangle className="w-5 h-5 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-base">Delete Event</h3>
+              <p className="text-white/40 text-xs mt-0.5">This cannot be undone</p>
+            </div>
+          </div>
+          <p className="text-white/60 text-sm">
+            Are you sure you want to delete <span className="text-white font-semibold">"{event.title}"</span>? All RSVPs and comments will be permanently removed.
+          </p>
+          <div className="flex gap-3 pt-1">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white transition-colors"
+              style={{ background: "rgba(255,255,255,0.07)" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                deleteClubEvent(event.id);
+                setShowDeleteConfirm(false);
+                toast.success("Event deleted");
+                onDeleted();
+              }}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors active:scale-95"
+            >
+              Delete Event
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Edit Event modal */}
+    {showEditModal && (
+      <EditEventModal
+        event={event}
+        clubAccent={accent}
+        onSaved={(updated) => {
+          setShowEditModal(false);
+          onEdited(updated);
+          toast.success("Event updated!");
+        }}
+        onClose={() => setShowEditModal(false)}
+      />
+    )}
+  </>);
 }
 
 /** Create Event modal */
@@ -669,6 +764,174 @@ function CreateEventModal({
             style={{ background: accentColor }}
           >
             {submitting ? "Creating…" : "Publish Event"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/** Edit Event modal — pre-fills all fields from existing event */
+function EditEventModal({
+  event,
+  clubAccent,
+  onSaved,
+  onClose,
+}: {
+  event: ClubEvent;
+  clubAccent?: string;
+  onSaved: (updated: ClubEvent) => void;
+  onClose: () => void;
+}) {
+  const initDate = event.startAt ? new Date(event.startAt).toISOString().slice(0, 10) : "";
+  const initStart = event.startAt ? new Date(event.startAt).toTimeString().slice(0, 5) : "19:00";
+  const initEnd = event.endAt ? new Date(event.endAt).toTimeString().slice(0, 5) : "";
+
+  const [title, setTitle] = useState(event.title);
+  const [description, setDescription] = useState(event.description ?? "");
+  const [date, setDate] = useState(initDate);
+  const [startTime, setStartTime] = useState(initStart);
+  const [endTime, setEndTime] = useState(initEnd);
+  const [venue, setVenue] = useState(event.venue ?? "");
+  const [address, setAddress] = useState(event.address ?? "");
+  const [admissionNote, setAdmissionNote] = useState(event.admissionNote ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState(event.coverImageUrl ?? "");
+  const [accentColor, setAccentColor] = useState(event.accentColor ?? clubAccent ?? "#4CAF50");
+  const [submitting, setSubmitting] = useState(false);
+
+  const previewValid = coverImageUrl.startsWith("http");
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() || !date) return;
+    setSubmitting(true);
+    const startAt = new Date(`${date}T${startTime}`).toISOString();
+    const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
+    const updated = updateClubEvent(event.id, {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      startAt,
+      endAt,
+      venue: venue.trim() || undefined,
+      address: address.trim() || undefined,
+      admissionNote: admissionNote.trim() || undefined,
+      coverImageUrl: previewValid ? coverImageUrl.trim() : undefined,
+      accentColor,
+    });
+    setSubmitting(false);
+    if (updated) onSaved(updated);
+    onClose();
+  }
+
+  const inputCls = "w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors";
+  const labelCls = "block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5";
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: "oklch(0.14 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/08"
+          style={{ background: `linear-gradient(135deg, ${accentColor}22 0%, transparent 100%)` }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: accentColor }}>
+              <Pencil className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-white font-bold text-lg">Edit Event</h2>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/08 hover:bg-white/15 transition-colors">
+            <X className="w-4 h-4 text-white/60" />
+          </button>
+        </div>
+
+        <form onSubmit={submit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {previewValid && (
+            <div className="relative w-full h-32 rounded-2xl overflow-hidden">
+              <img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <span className="absolute bottom-2 left-3 text-white/70 text-xs font-semibold">Cover Preview</span>
+            </div>
+          )}
+
+          <div>
+            <label className={labelCls}>Event Title *</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-1">
+              <label className={labelCls}>Date *</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Start</label>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>End</label>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Venue</label>
+              <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Admission</label>
+              <input value={admissionNote} onChange={(e) => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Address</label>
+            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} />
+          </div>
+
+          <div>
+            <label className={labelCls}>Cover Image URL</label>
+            <input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://…" className={inputCls} />
+          </div>
+
+          <div>
+            <label className={labelCls}>Event Color</label>
+            <div className="flex items-center gap-2 flex-wrap">
+              {ACCENT_PRESETS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setAccentColor(c)}
+                  className="w-7 h-7 rounded-full transition-all"
+                  style={{
+                    background: c,
+                    outline: accentColor === c ? `3px solid ${c}` : "none",
+                    outlineOffset: "2px",
+                    transform: accentColor === c ? "scale(1.2)" : "scale(1)",
+                  }}
+                />
+              ))}
+              <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="w-7 h-7 rounded-full cursor-pointer border-0 bg-transparent" title="Custom color" />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tell members what to expect…" rows={3} className={`${inputCls} resize-none`} />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || !title.trim() || !date}
+            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-98 disabled:opacity-50"
+            style={{ background: accentColor }}
+          >
+            {submitting ? "Saving…" : "Save Changes"}
           </button>
         </form>
       </div>
@@ -984,6 +1247,7 @@ export default function ClubDashboard() {
                       avatarUrl={user?.avatarUrl}
                       isOwner={!!isOwnerOrDirector}
                       onDeleted={refreshEvents}
+                      onEdited={refreshEvents}
                     />
                   ))}
                 </div>
@@ -1006,6 +1270,7 @@ export default function ClubDashboard() {
                       avatarUrl={user?.avatarUrl}
                       isOwner={!!isOwnerOrDirector}
                       onDeleted={refreshEvents}
+                      onEdited={refreshEvents}
                     />
                   ))}
                 </div>
