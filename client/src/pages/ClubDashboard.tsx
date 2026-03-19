@@ -474,16 +474,22 @@ function EventCard({
 }
 
 /** Create Event modal */
+const ACCENT_PRESETS = [
+  "#4CAF50", "#2196F3", "#9C27B0", "#FF5722", "#FF9800", "#E91E63", "#00BCD4", "#795548",
+];
+
 function CreateEventModal({
   clubId,
   userId,
   displayName,
+  clubAccent,
   onCreated,
   onClose,
 }: {
   clubId: string;
   userId: string;
   displayName: string;
+  clubAccent?: string;
   onCreated: () => void;
   onClose: () => void;
 }) {
@@ -495,7 +501,12 @@ function CreateEventModal({
   const [venue, setVenue] = useState("");
   const [address, setAddress] = useState("");
   const [admissionNote, setAdmissionNote] = useState("Free for members");
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [accentColor, setAccentColor] = useState(clubAccent ?? "#4CAF50");
   const [submitting, setSubmitting] = useState(false);
+
+  // Live preview of cover image
+  const previewValid = coverImageUrl.startsWith("http");
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -512,7 +523,8 @@ function CreateEventModal({
       venue: venue.trim() || undefined,
       address: address.trim() || undefined,
       admissionNote: admissionNote.trim() || undefined,
-      accentColor: "#4CAF50",
+      coverImageUrl: previewValid ? coverImageUrl.trim() : undefined,
+      accentColor,
       creatorId: userId,
       creatorName: displayName,
       isPublished: true,
@@ -523,6 +535,9 @@ function CreateEventModal({
     onClose();
   }
 
+  const inputCls = "w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors";
+  const labelCls = "block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5";
+
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
@@ -531,89 +546,129 @@ function CreateEventModal({
         style={{ background: "oklch(0.14 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/08">
-          <h2 className="text-white font-bold text-lg">Create Event</h2>
+        <div
+          className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/08"
+          style={{ background: `linear-gradient(135deg, ${accentColor}22 0%, transparent 100%)` }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: accentColor }}>
+              <Calendar className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-white font-bold text-lg">Create Event</h2>
+          </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/08 hover:bg-white/15 transition-colors">
             <X className="w-4 h-4 text-white/60" />
           </button>
         </div>
 
-        <form onSubmit={submit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={submit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+
+          {/* Cover image preview */}
+          {previewValid && (
+            <div className="relative w-full h-32 rounded-2xl overflow-hidden">
+              <img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <span className="absolute bottom-2 left-3 text-white/70 text-xs font-semibold">Cover Preview</span>
+            </div>
+          )}
+
+          {/* Title */}
           <div>
-            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Event Title *</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Thursday Night Blitz"
-              required
-              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
-            />
+            <label className={labelCls}>Event Title *</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
           </div>
+
+          {/* Date + Start + End */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-1">
+              <label className={labelCls}>Date *</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Start</label>
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>End</label>
+              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+
+          {/* Venue + Address */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Date *</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[#4CAF50]/60 transition-colors"
-              />
+              <label className={labelCls}>Venue</label>
+              <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
             </div>
             <div>
-              <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Time</label>
+              <label className={labelCls}>Admission</label>
+              <input value={admissionNote} onChange={(e) => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Address</label>
+            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} />
+          </div>
+
+          {/* Cover image URL */}
+          <div>
+            <label className={labelCls}>Cover Image URL</label>
+            <input
+              value={coverImageUrl}
+              onChange={(e) => setCoverImageUrl(e.target.value)}
+              placeholder="https://… (paste an image link)"
+              className={inputCls}
+            />
+          </div>
+
+          {/* Accent color */}
+          <div>
+            <label className={labelCls}>Event Color</label>
+            <div className="flex items-center gap-2 flex-wrap">
+              {ACCENT_PRESETS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setAccentColor(c)}
+                  className="w-7 h-7 rounded-full transition-all"
+                  style={{
+                    background: c,
+                    outline: accentColor === c ? `3px solid ${c}` : "none",
+                    outlineOffset: "2px",
+                    transform: accentColor === c ? "scale(1.2)" : "scale(1)",
+                  }}
+                />
+              ))}
               <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[#4CAF50]/60 transition-colors"
+                type="color"
+                value={accentColor}
+                onChange={(e) => setAccentColor(e.target.value)}
+                className="w-7 h-7 rounded-full cursor-pointer border-0 bg-transparent"
+                title="Custom color"
               />
             </div>
           </div>
+
+          {/* Description */}
           <div>
-            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Venue</label>
-            <input
-              value={venue}
-              onChange={(e) => setVenue(e.target.value)}
-              placeholder="e.g. The Chess Lounge"
-              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Address</label>
-            <input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Full address"
-              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Admission</label>
-            <input
-              value={admissionNote}
-              onChange={(e) => setAdmissionNote(e.target.value)}
-              placeholder="e.g. Free for members · $5 at door"
-              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Description</label>
+            <label className={labelCls}>Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Tell members what to expect…"
               rows={3}
-              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors resize-none"
+              className={`${inputCls} resize-none`}
             />
           </div>
+
           <button
             type="submit"
             disabled={submitting || !title.trim() || !date}
             className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-98 disabled:opacity-50"
-            style={{ background: "#4CAF50" }}
+            style={{ background: accentColor }}
           >
-            {submitting ? "Creating…" : "Create Event"}
+            {submitting ? "Creating…" : "Publish Event"}
           </button>
         </form>
       </div>
@@ -1130,6 +1185,7 @@ export default function ClubDashboard() {
           clubId={club.id}
           userId={user.id}
           displayName={user.displayName}
+          clubAccent={club.accentColor}
           onCreated={refreshEvents}
           onClose={() => setShowCreateEvent(false)}
         />

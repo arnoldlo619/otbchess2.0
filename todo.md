@@ -2752,3 +2752,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build UpcomingEventCard with club attribution, date, RSVP status, and cover art
 - [x] Group events by date (Today / This Week / This Month / Later)
 - [x] Show empty state when no upcoming events exist
+
+## Create Event Modal (Club Dashboard)
+
+- [x] Audit ClubDashboard and clubEventRegistry create API
+- [x] Build CreateEventModal component with title, date/time, venue, description, cover image, end time, accent color fields
+- [x] Wire modal into ClubDashboard with director-only "Create Event" button
+- [x] Refresh events list on successful submit
+- [x] Write unit tests for event creation validation (19 tests passing)
