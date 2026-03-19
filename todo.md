@@ -2760,3 +2760,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire modal into ClubDashboard with director-only "Create Event" button
 - [x] Refresh events list on successful submit
 - [x] Write unit tests for event creation validation (19 tests passing)
+
+## RSVP Avatar Stack on EventCards
+
+- [x] Audit EventCard RSVP data structure in ClubDashboard
+- [x] Build RsvpAvatarStack component (overlapping circles, +N overflow label)
+- [x] Wire into EventCard in ClubDashboard Events tab (already present)
+- [x] Wire into UpcomingEventCard in MyClubs Upcoming Events tab

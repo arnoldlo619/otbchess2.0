@@ -30,7 +30,9 @@ import {
   getUserRSVP,
   upsertRSVP,
   countRSVPs,
+  getEventRSVPs,
   type ClubEvent,
+  type ClubEventRSVP,
   type RSVPStatus,
 } from "@/lib/clubEventRegistry";
 import {
@@ -402,6 +404,64 @@ function UpcomingEventsTab({
   );
 }
 
+/** Stacked overlapping avatar circles for RSVP'd attendees */
+function RsvpAvatarStack({
+  rsvps,
+  accentColor,
+  isDark,
+  max = 6,
+}: {
+  rsvps: ClubEventRSVP[];
+  accentColor?: string;
+  isDark: boolean;
+  max?: number;
+}) {
+  const going = rsvps.filter((r) => r.status === "going");
+  if (!going.length) return null;
+  const shown = going.slice(0, max);
+  const extra = going.length - shown.length;
+  const accent = accentColor ?? "#4CAF50";
+  return (
+    <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+      <div className="flex -space-x-2">
+        {shown.map((r, i) => (
+          <div
+            key={r.userId}
+            className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0 overflow-hidden"
+            style={{
+              borderColor: isDark ? "#1a2e1d" : "#f9fafb",
+              background: r.avatarUrl ? undefined : `hsl(${(i * 47 + 120) % 360}, 55%, 45%)`,
+              zIndex: shown.length - i,
+            }}
+            title={r.displayName}
+          >
+            {r.avatarUrl ? (
+              <img src={r.avatarUrl} alt={r.displayName} className="w-full h-full object-cover" />
+            ) : (
+              r.displayName.slice(0, 1).toUpperCase()
+            )}
+          </div>
+        ))}
+        {extra > 0 && (
+          <div
+            className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+            style={{
+              borderColor: isDark ? "#1a2e1d" : "#f9fafb",
+              background: isDark ? "rgba(255,255,255,0.12)" : "#e5e7eb",
+              color: isDark ? "rgba(255,255,255,0.6)" : "#6b7280",
+            }}
+          >
+            +{extra}
+          </div>
+        )}
+      </div>
+      <span className="text-xs font-semibold" style={{ color: accent }}>
+        {going.length} going
+      </span>
+    </div>
+  );
+}
+
 function EventCard({
   event,
   userId,
@@ -423,10 +483,11 @@ function EventCard({
 }) {
   const { day, month, weekday, time } = formatEventDate(event.startAt);
   const rsvp = getUserRSVP(event.id, userId);
-  const counts = countRSVPs(event.id);
+  const [rsvps, setRsvps] = useState<ClubEventRSVP[]>(() => getEventRSVPs(event.id));
 
   const handleRSVP = (status: RSVPStatus) => {
     upsertRSVP(event.id, event.clubId, userId, "Me", status);
+    setRsvps(getEventRSVPs(event.id));
     onRsvpChange();
   };
 
@@ -502,11 +563,11 @@ function EventCard({
                 {opt.label}
               </button>
             ))}
-            {counts.going > 0 && (
-              <span className={`ml-auto text-xs ${textMuted}`}>
-                {counts.going} going
-              </span>
-            )}
+            <RsvpAvatarStack
+              rsvps={rsvps}
+              accentColor={event.clubAccent}
+              isDark={isDark}
+            />
           </div>
         </div>
       </div>
