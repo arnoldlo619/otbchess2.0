@@ -1336,6 +1336,187 @@ function RoleBadge({ role }: { role: ClubMember["role"] }) {
   return null;
 }
 
+// ── Player of the Month ─────────────────────────────────────────────────────
+
+interface PotmEntry {
+  memberId: string;
+  memberName: string;
+  avatarUrl?: string | null;
+  battleWins: number;
+  winRate: number;
+  eventsAttended: number;
+  score: number;
+}
+
+function computePlayerOfMonth(
+  members: ClubMember[],
+  battles: ClubBattle[],
+  events: ClubEvent[]
+): PotmEntry[] {
+  const now = Date.now();
+  const windowMs = 30 * 24 * 60 * 60 * 1000;
+  const cutoff = now - windowMs;
+
+  // Battles completed in the last 30 days
+  const recentBattles = battles.filter(
+    (b) => b.status === "completed" && b.completedAt && new Date(b.completedAt).getTime() >= cutoff
+  );
+
+  // Past events in the last 30 days
+  const recentEvents = events.filter(
+    (e) => e.startAt && new Date(e.startAt).getTime() >= cutoff && new Date(e.startAt).getTime() <= now
+  );
+
+  return members
+    .map((m) => {
+      const myBattles = recentBattles.filter(
+        (b) => b.playerAId === m.userId || b.playerBId === m.userId
+      );
+      const wins = myBattles.filter(
+        (b) =>
+          (b.result === "player_a" && b.playerAId === m.userId) ||
+          (b.result === "player_b" && b.playerBId === m.userId)
+      ).length;
+      const winRate = myBattles.length > 0 ? Math.round((wins / myBattles.length) * 100) : 0;
+
+      // Count events where this member RSVPed "going" (we approximate via localStorage)
+      const eventsAttended = recentEvents.filter((ev) => {
+        try {
+          const raw = localStorage.getItem("otb-club-rsvps-v1");
+          if (!raw) return false;
+          const rsvps = JSON.parse(raw) as Array<{ eventId: string; userId: string; status: string }>;
+          return rsvps.some((r) => r.eventId === ev.id && r.userId === m.userId && r.status === "going");
+        } catch { return false; }
+      }).length;
+
+      // Scoring: battle wins × 3 + win rate × 0.5 + events attended × 2
+      const score = wins * 3 + winRate * 0.5 + eventsAttended * 2;
+
+      return {
+        memberId: m.userId,
+        memberName: m.displayName,
+        avatarUrl: m.avatarUrl,
+        battleWins: wins,
+        winRate,
+        eventsAttended,
+        score,
+      } satisfies PotmEntry;
+    })
+    .filter((e) => e.score > 0)
+    .sort((a, b) => b.score - a.score);
+}
+
+function PlayerOfMonthWidget({
+  members,
+  battles,
+  events,
+  isDark,
+}: {
+  members: ClubMember[];
+  battles: ClubBattle[];
+  events: ClubEvent[];
+  isDark: boolean;
+}) {
+  const ranked = computePlayerOfMonth(members, battles, events);
+  if (ranked.length === 0) return null;
+
+  const [top, second, third] = ranked;
+  const podium = [second, third].filter(Boolean) as PotmEntry[];
+
+  const card = isDark ? "bg-white/4 border-white/10" : "bg-white border-gray-200";
+  const textMuted = isDark ? "text-white/40" : "text-gray-400";
+
+  // Initials fallback
+  function initials(name: string) {
+    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  }
+
+  return (
+    <div className={`rounded-3xl border ${card} overflow-hidden`}>
+      {/* Header */}
+      <div className="px-5 py-3.5 border-b border-white/8 flex items-center gap-2">
+        <Crown className="w-4 h-4 text-amber-400" />
+        <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/50" : "text-gray-500"}`}>
+          Player of the Month
+        </span>
+        <span className={`ml-auto text-[10px] ${textMuted}`}>Rolling 30 days</span>
+      </div>
+
+      {/* Spotlight — #1 */}
+      <div
+        className="relative px-5 py-6 flex items-center gap-4"
+        style={{
+          background: isDark
+            ? "linear-gradient(135deg, oklch(0.22 0.08 145 / 0.9) 0%, oklch(0.18 0.06 145 / 0.6) 100%)"
+            : "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+        }}
+      >
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-amber-400/60 flex items-center justify-center bg-amber-500/20">
+            {top.avatarUrl ? (
+              <img src={top.avatarUrl} alt={top.memberName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xl font-black text-amber-400">{initials(top.memberName)}</span>
+            )}
+          </div>
+          {/* Crown badge */}
+          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center shadow-lg">
+            <Crown className="w-3.5 h-3.5 text-amber-900" />
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className={`text-lg font-black truncate ${isDark ? "text-white" : "text-gray-900"}`}>{top.memberName}</p>
+          <p className="text-xs text-amber-400 font-bold mb-2">#1 This Month</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
+              <Swords className="w-3 h-3" />
+              {top.battleWins}W · {top.winRate}% win rate
+            </span>
+            {top.eventsAttended > 0 && (
+              <span className={`flex items-center gap-1 text-[11px] font-semibold ${textMuted}`}>
+                <Calendar className="w-3 h-3" />
+                {top.eventsAttended} event{top.eventsAttended !== 1 ? "s" : ""}
+              </span>
+            )}
+            <span className="flex items-center gap-1 text-[11px] font-bold text-amber-400">
+              <Star className="w-3 h-3" />
+              {top.score.toFixed(0)} pts
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Podium — #2 and #3 */}
+      {podium.length > 0 && (
+        <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+          {podium.map((entry, i) => (
+            <div key={entry.memberId} className="flex items-center gap-3 px-5 py-3">
+              <span className={`text-xs font-black w-4 text-center ${i === 0 ? "text-slate-400" : "text-orange-400/70"}`}>
+                #{i + 2}
+              </span>
+              <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center bg-white/8 flex-shrink-0">
+                {entry.avatarUrl ? (
+                  <img src={entry.avatarUrl} alt={entry.memberName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xs font-black text-white/50">{initials(entry.memberName)}</span>
+                )}
+              </div>
+              <span className={`flex-1 text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                {entry.memberName}
+              </span>
+              <span className="text-[11px] text-emerald-400 font-bold">{entry.battleWins}W</span>
+              <span className={`text-[11px] ${textMuted} ml-2`}>{entry.score.toFixed(0)} pts</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Skeleton loader ──────────────────────────────────────────────────────────
 
 function SkeletonBlock({ className }: { className?: string }) {
@@ -1794,6 +1975,14 @@ export default function ClubDashboard() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20" style={{ background: "oklch(0.20 0.06 145)" }}>   {/* ── EVENTS TAB ────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
+            {/* Player of the Month */}
+            <PlayerOfMonthWidget
+              members={members}
+              battles={battles}
+              events={events}
+              isDark={isDark}
+            />
+
             {/* Create event CTA */}
             {isOwnerOrDirector && (
               <button

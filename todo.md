@@ -2931,3 +2931,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Battle History: completed battles with winner highlighted
 - [x] Empty state when no battles exist
 - [x] MemberRow in ClubProfile shows inline W/D/L battle record (Swords icon) when battles > 0
+
+## Player of the Month Widget
+
+- [x] computePlayerOfMonth scoring helper (battle wins × 3 + win rate × 0.5 + events attended × 2, rolling 30-day window)
+- [x] PlayerOfMonthWidget component — spotlight card with amber crown badge, avatar, name, score breakdown
+- [x] Integrated into ClubDashboard Events tab above the event list
+- [x] Podium rows for #2 and #3 below the spotlight card
+- [x] Returns null (no render) when no scored members exist — no empty state clutter
