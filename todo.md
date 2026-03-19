@@ -2784,3 +2784,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show "Join to RSVP" CTA on event cards for non-members
 - [x] Members see full Going/Maybe/Can't Go RSVP buttons
 - [x] Hide section when no published upcoming events exist (empty state shown)
+
+## Club Pages UI Redesign — Checkered Pattern + OTB Design System
+
+- [x] Replace Partiful-style colorful gradient hero in ClubDashboard with chess-board-bg checkered pattern + OTB green/dark palette
+- [x] Replace Partiful-style colorful gradient hero in ClubProfile with chess-board-bg checkered pattern + OTB green/dark palette
+- [x] Unify card surfaces, tab bars, and body backgrounds to match OTB Chess design system (deep forest green dark, white light)
+- [x] Keep club avatar, name, stats row, and CTA buttons — just restyle backgrounds/surfaces
+
+## Club Feed — Polls & RSVP Forms
+
+- [x] Add Poll post type to clubFeedRegistry (question, options, votes per user, expiry)
+- [x] Add RSVP Form post type to clubFeedRegistry (event title, date, going/maybe/not going per user)
+- [x] Director-only tabbed composer in Feed tab: Announce / Poll / RSVP Form
+- [x] FeedCard component: poll question, vote options with animated progress bars, vote count, expiry badge
+- [x] FeedCard component: RSVP event title, date, venue, inline Going/Maybe/Can't Go buttons, attendee stack
+- [x] Voting and RSVP persists to localStorage, updates live
+- [x] Show polls and RSVP forms in ClubDashboard Feed tab (interactive for members)
+- [x] Show polls and RSVP forms in ClubProfile Feed tab (interactive for members, read-only for non-members)

@@ -5,12 +5,14 @@
  * Events are persisted in localStorage under a per-club key.
  *
  * Event types:
- *   - member_join       — a user joined the club
- *   - member_leave      — a user left the club
- *   - tournament_created — owner created a new tournament for the club
+ *   - member_join          — a user joined the club
+ *   - member_leave         — a user left the club
+ *   - tournament_created   — owner created a new tournament for the club
  *   - tournament_completed — a linked tournament finished
- *   - announcement      — owner/director posted a text announcement
- *   - club_founded      — the club was created (always the oldest event)
+ *   - announcement         — owner/director posted a text announcement
+ *   - club_founded         — the club was created (always the oldest event)
+ *   - poll                 — owner/director posted a poll with options
+ *   - rsvp_form            — owner/director posted an event RSVP form
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -21,7 +23,25 @@ export type FeedEventType =
   | "tournament_created"
   | "tournament_completed"
   | "announcement"
-  | "club_founded";
+  | "club_founded"
+  | "poll"
+  | "rsvp_form";
+
+/** A single option in a Poll */
+export interface PollOption {
+  id: string;
+  text: string;
+  /** userId → true for each voter */
+  votes: Record<string, true>;
+}
+
+/** Inline RSVP response for an rsvp_form feed post */
+export interface FeedRSVPEntry {
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  status: "going" | "maybe" | "not_going";
+}
 
 export interface FeedEvent {
   /** Unique event ID */
@@ -42,6 +62,26 @@ export interface FeedEvent {
   linkHref?: string;
   /** Optional link label */
   linkLabel?: string;
+
+  // ── Poll fields ──────────────────────────────────────────────────────────
+  /** Poll question text (type === "poll") */
+  pollQuestion?: string;
+  /** Poll options with vote tracking */
+  pollOptions?: PollOption[];
+  /** ISO expiry — after this time voting is closed */
+  pollExpiresAt?: string;
+  /** Whether multiple options can be selected */
+  pollMultiple?: boolean;
+
+  // ── RSVP Form fields ─────────────────────────────────────────────────────
+  /** Event title shown on the RSVP form (type === "rsvp_form") */
+  rsvpTitle?: string;
+  /** ISO date of the event */
+  rsvpDate?: string;
+  /** Venue / location text */
+  rsvpVenue?: string;
+  /** Collected RSVP responses */
+  rsvpEntries?: FeedRSVPEntry[];
 }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
@@ -109,6 +149,117 @@ export function postAnnouncement(
     description: `${actorName} posted an announcement`,
     detail: body,
   });
+}
+
+/** Post a poll from an owner or director. */
+export function postPoll(
+  clubId: string,
+  actorName: string,
+  question: string,
+  options: string[],
+  expiresInHours: number,
+  multiple: boolean,
+  actorAvatarUrl?: string | null
+): FeedEvent {
+  const pollOptions: PollOption[] = options.map((text) => ({
+    id: generateId(),
+    text,
+    votes: {},
+  }));
+  const expiresAt = new Date(Date.now() + expiresInHours * 3600 * 1000).toISOString();
+  return addFeedEvent({
+    clubId,
+    type: "poll",
+    createdAt: new Date().toISOString(),
+    actorName,
+    actorAvatarUrl,
+    description: `${actorName} posted a poll`,
+    pollQuestion: question,
+    pollOptions,
+    pollExpiresAt: expiresAt,
+    pollMultiple: multiple,
+  });
+}
+
+/** Cast a vote on a poll option. Removes previous vote if single-choice. */
+export function castPollVote(
+  clubId: string,
+  feedEventId: string,
+  optionId: string,
+  userId: string,
+  multiple: boolean
+): void {
+  const events = loadFeed(clubId);
+  const ev = events.find((e) => e.id === feedEventId);
+  if (!ev || !ev.pollOptions) return;
+
+  // Check if poll is expired
+  if (ev.pollExpiresAt && new Date(ev.pollExpiresAt) < new Date()) return;
+
+  ev.pollOptions = ev.pollOptions.map((opt) => {
+    const newVotes = { ...opt.votes };
+    if (opt.id === optionId) {
+      // Toggle this option
+      if (newVotes[userId]) {
+        delete newVotes[userId];
+      } else {
+        newVotes[userId] = true;
+      }
+    } else if (!multiple) {
+      // Single-choice: remove vote from all other options
+      delete newVotes[userId];
+    }
+    return { ...opt, votes: newVotes };
+  });
+
+  saveFeed(clubId, events);
+}
+
+/** Post an RSVP form from an owner or director. */
+export function postRsvpForm(
+  clubId: string,
+  actorName: string,
+  title: string,
+  date: string,
+  venue: string,
+  actorAvatarUrl?: string | null
+): FeedEvent {
+  return addFeedEvent({
+    clubId,
+    type: "rsvp_form",
+    createdAt: new Date().toISOString(),
+    actorName,
+    actorAvatarUrl,
+    description: `${actorName} posted an RSVP form`,
+    rsvpTitle: title,
+    rsvpDate: date,
+    rsvpVenue: venue,
+    rsvpEntries: [],
+  });
+}
+
+/** Upsert a user's RSVP response on an rsvp_form feed post. */
+export function upsertFeedRSVP(
+  clubId: string,
+  feedEventId: string,
+  userId: string,
+  displayName: string,
+  status: FeedRSVPEntry["status"],
+  avatarUrl?: string | null
+): void {
+  const events = loadFeed(clubId);
+  const ev = events.find((e) => e.id === feedEventId);
+  if (!ev) return;
+
+  const entries = ev.rsvpEntries ?? [];
+  const idx = entries.findIndex((r) => r.userId === userId);
+  if (idx >= 0) {
+    entries[idx] = { userId, displayName, avatarUrl, status };
+  } else {
+    entries.push({ userId, displayName, avatarUrl, status });
+  }
+  ev.rsvpEntries = entries;
+  saveFeed(clubId, events);
 }
 
 /** Record a member joining the club. */

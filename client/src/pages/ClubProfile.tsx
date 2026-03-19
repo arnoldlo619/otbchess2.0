@@ -45,7 +45,10 @@ import {
   recordMemberJoin,
   recordMemberLeave,
   recordTournamentCreated,
+  castPollVote,
+  upsertFeedRSVP,
   type FeedEvent,
+  type FeedRSVPEntry,
 } from "@/lib/clubFeedRegistry";
 import {
   listClubEvents,
@@ -83,6 +86,8 @@ import {
   Trash2,
   Bell,
   BellOff,
+  BarChart2,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -238,6 +243,16 @@ const FEED_EVENT_CONFIG: Record<
     accent: "text-[#3D6B47] bg-[#3D6B47]/10",
     darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
   },
+  poll: {
+    icon: <BarChart2 className="w-4 h-4" />,
+    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
+  },
+  rsvp_form: {
+    icon: <ClipboardList className="w-4 h-4" />,
+    accent: "text-blue-600 bg-blue-50",
+    darkAccent: "text-blue-400 bg-blue-500/15",
+  },
 };
 
 function FeedEventCard({
@@ -247,64 +262,231 @@ function FeedEventCard({
   textMuted,
   canDelete,
   onDelete,
+  userId,
+  displayName,
+  avatarUrl,
+  clubId,
+  isMemberUser,
+  onVoted,
+  onRsvped,
 }: {
-  event: import("@/lib/clubFeedRegistry").FeedEvent;
+  event: FeedEvent;
   isDark: boolean;
   textMain: string;
   textMuted: string;
   canDelete: boolean;
   onDelete: (id: string) => void;
+  userId?: string;
+  displayName?: string;
+  avatarUrl?: string | null;
+  clubId: string;
+  isMemberUser: boolean;
+  onVoted?: () => void;
+  onRsvped?: () => void;
 }) {
   const cfg = FEED_EVENT_CONFIG[event.type];
   const accentCls = isDark ? cfg.darkAccent : cfg.accent;
+  const isPoll = event.type === "poll";
+  const isRsvp = event.type === "rsvp_form";
+  const pollExpired = isPoll && event.pollExpiresAt ? new Date(event.pollExpiresAt) < new Date() : false;
+  const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
+  const userVotedOptions = userId ? (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id) : [];
+  const userRsvp = userId ? (event.rsvpEntries ?? []).find((r) => r.userId === userId) : undefined;
+  const accent = isDark ? "#4CAF50" : "#3D6B47";
+
+  function handleVote(optionId: string) {
+    if (pollExpired || !userId || !isMemberUser) return;
+    castPollVote(clubId, event.id, optionId, userId, event.pollMultiple ?? false);
+    onVoted?.();
+  }
+
+  function handleRsvp(status: FeedRSVPEntry["status"]) {
+    if (!userId || !isMemberUser) return;
+    upsertFeedRSVP(clubId, event.id, userId, displayName ?? "", status, avatarUrl ?? null);
+    onRsvped?.();
+  }
 
   return (
-    <div className="flex items-start gap-3 px-5 py-4 group">
-      {/* Icon */}
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>
-        {cfg.icon}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${textMain} leading-snug`}>
-          {event.description}
-        </p>
-        {event.detail && (
-          <p className={`text-sm mt-1 leading-relaxed ${
-            event.type === "announcement"
-              ? isDark ? "text-white/70" : "text-gray-600"
-              : textMuted
-          }`}>
-            {event.detail}
-          </p>
-        )}
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className={`text-xs ${textMuted}`}>{relativeTime(event.createdAt)}</span>
-          {event.linkHref && (
-            <a
-              href={event.linkHref}
-              className={`text-xs font-semibold transition-colors ${
-                isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#3D6B47] hover:text-[#2d5236]"
+    <div className={`group ${ (isPoll || isRsvp) ? "px-5 py-4" : "flex items-start gap-3 px-5 py-4" }`}>
+      {/* Standard activity row (non-poll, non-rsvp) */}
+      {!isPoll && !isRsvp && (
+        <>
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>
+            {cfg.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-medium ${textMain} leading-snug`}>{event.description}</p>
+            {event.detail && (
+              <p className={`text-sm mt-1 leading-relaxed ${
+                event.type === "announcement" ? (isDark ? "text-white/70" : "text-gray-600") : textMuted
+              }`}>{event.detail}</p>
+            )}
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className={`text-xs ${textMuted}`}>{relativeTime(event.createdAt)}</span>
+              {event.linkHref && (
+                <a href={event.linkHref} className={`text-xs font-semibold transition-colors ${
+                  isDark ? "text-[#4CAF50] hover:text-[#66BB6A]" : "text-[#3D6B47] hover:text-[#2d5236]"
+                }`}>{event.linkLabel ?? "View"} &rarr;</a>
+              )}
+            </div>
+          </div>
+          {canDelete && (
+            <button
+              onClick={() => onDelete(event.id)}
+              className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
               }`}
+              title="Remove from feed"
             >
-              {event.linkLabel ?? "View"} &rarr;
-            </a>
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </>
+      )}
+
+      {/* Poll card */}
+      {isPoll && event.pollOptions && (
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>{cfg.icon}</div>
+              <div>
+                <p className={`text-xs ${textMuted}`}>{event.actorName} &middot; {relativeTime(event.createdAt)}</p>
+                <p className={`text-sm font-semibold ${textMain} mt-0.5`}>{event.pollQuestion}</p>
+              </div>
+            </div>
+            {canDelete && (
+              <button onClick={() => onDelete(event.id)} className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+              }`}><Trash2 className="w-3.5 h-3.5" /></button>
+            )}
+          </div>
+          <div className="space-y-2">
+            {event.pollOptions.map((opt) => {
+              const voteCount = Object.keys(opt.votes).length;
+              const pct = totalPollVotes > 0 ? Math.round((voteCount / totalPollVotes) * 100) : 0;
+              const voted = userVotedOptions.includes(opt.id);
+              const showResults = pollExpired || userVotedOptions.length > 0 || !isMemberUser;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleVote(opt.id)}
+                  disabled={pollExpired || !isMemberUser}
+                  className={`w-full text-left rounded-xl overflow-hidden border transition-all relative ${
+                    voted ? "border-[#4CAF50]/50" : isDark ? "border-white/10 hover:border-white/25" : "border-gray-200 hover:border-gray-300"
+                  } ${(pollExpired || !isMemberUser) ? "cursor-default" : "cursor-pointer"}`}
+                >
+                  {showResults && (
+                    <div className="absolute inset-0 rounded-xl transition-all duration-500" style={{
+                      width: `${pct}%`,
+                      background: voted ? "oklch(0.44 0.12 145 / 0.20)" : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)"
+                    }} />
+                  )}
+                  <div className="relative flex items-center justify-between px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        voted ? "border-[#4CAF50] bg-[#4CAF50]" : isDark ? "border-white/30" : "border-gray-300"
+                      }`}>
+                        {voted && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
+                      </div>
+                      <span className={`text-sm font-medium ${voted ? (isDark ? "text-white" : "text-gray-900") : textMuted}`}>{opt.text}</span>
+                    </div>
+                    {showResults && <span className={`text-xs font-semibold ${textMuted}`}>{pct}%</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className={`flex items-center justify-between text-xs ${textMuted}`}>
+            <span>{totalPollVotes} vote{totalPollVotes !== 1 ? "s" : ""}</span>
+            {!isMemberUser && <span className="italic">Join to vote</span>}
+            {event.pollExpiresAt && (
+              <span className={pollExpired ? "text-red-500/60" : ""}>{pollExpired ? "Closed" : `Closes ${relativeTime(event.pollExpiresAt)}`}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* RSVP Form card */}
+      {isRsvp && (
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>{cfg.icon}</div>
+              <div>
+                <p className={`text-xs ${textMuted}`}>{event.actorName} &middot; {relativeTime(event.createdAt)}</p>
+                <p className={`text-sm font-semibold ${textMain} mt-0.5`}>{event.rsvpTitle}</p>
+              </div>
+            </div>
+            {canDelete && (
+              <button onClick={() => onDelete(event.id)} className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+              }`}><Trash2 className="w-3.5 h-3.5" /></button>
+            )}
+          </div>
+          <div className={`rounded-xl p-3 border ${ isDark ? "border-white/08 bg-white/4" : "border-gray-100 bg-gray-50" }`}>
+            <div className="flex items-center gap-3 flex-wrap">
+              {event.rsvpDate && (
+                <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
+                  <Calendar className="w-3 h-3" />
+                  {new Date(event.rsvpDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </span>
+              )}
+              {event.rsvpVenue && (
+                <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
+                  <MapPin className="w-3 h-3" />
+                  {event.rsvpVenue}
+                </span>
+              )}
+            </div>
+          </div>
+          {isMemberUser && userId ? (
+            <div className="flex gap-2">
+              {(["going", "maybe", "not_going"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleRsvp(s)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                    userRsvp?.status === s
+                      ? s === "going" ? "bg-[#4CAF50] text-white" : s === "maybe" ? "bg-amber-500 text-white" : isDark ? "bg-white/15 text-white/60" : "bg-gray-200 text-gray-500"
+                      : isDark ? "bg-white/07 text-white/50 hover:bg-white/12 hover:text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                  }`}
+                >
+                  {s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go"}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className={`text-xs italic ${textMuted}`}>Join the club to RSVP</p>
+          )}
+          {(event.rsvpEntries ?? []).length > 0 && (
+            <div className="space-y-1">
+              {["going", "maybe", "not_going"].map((s) => {
+                const group = (event.rsvpEntries ?? []).filter((r) => r.status === s);
+                if (!group.length) return null;
+                return (
+                  <div key={s} className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold w-16 ${s === "going" ? "text-[#4CAF50]" : s === "maybe" ? "text-amber-500" : textMuted}`}>
+                      {s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go"} ({group.length})
+                    </span>
+                    <div className="flex -space-x-1.5">
+                      {group.slice(0, 5).map((r) => (
+                        <div key={r.userId} className="w-6 h-6 rounded-full border border-white/10 overflow-hidden" title={r.displayName}>
+                          <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={24} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                      {group.length > 5 && (
+                        <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[9px] font-bold ${ isDark ? "border-white/10 text-white/50 bg-white/08" : "border-gray-200 text-gray-400 bg-gray-100" }`}>
+                          +{group.length - 5}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
-      </div>
-
-      {/* Delete button (owner/director only) */}
-      {canDelete && (
-        <button
-          onClick={() => onDelete(event.id)}
-          className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
-            isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
-          }`}
-          title="Remove from feed"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
       )}
     </div>
   );
@@ -445,6 +627,11 @@ export default function ClubProfile() {
     setFeedEvents(listFeedEvents(club.id));
   };
 
+  const refreshFeed = () => {
+    if (!club) return;
+    setFeedEvents(listFeedEvents(club.id));
+  };
+
   const handleFollow = async () => {
     if (!user) {
       toast.error("Sign in to follow clubs");
@@ -536,31 +723,32 @@ export default function ClubProfile() {
         </div>
       </header>
 
-      {/* ── Hero banner ────────────────────────────────────────────────────── */}
+      {/* ── Hero banner ─────────────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden">
-        {/* Banner: custom image or gradient */}
+        {/* Chess-board pattern hero — matches landing page */}
         <div className="h-44 sm:h-56 w-full relative">
-          {club.bannerUrl ? (
+          {/* Base dark-green background */}
+          <div className={`absolute inset-0 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[oklch(0.28_0.07_145)]"}`} />
+          {/* Micro-grid checkered pattern */}
+          <div className="absolute inset-0 chess-board-bg opacity-40" />
+          {/* Radial glow */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.44 0.12 145 / 0.22) 0%, transparent 70%)" }}
+          />
+          {/* Custom banner overlay (if set) */}
+          {club.bannerUrl && (
             <img
               src={club.bannerUrl}
               alt=""
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover opacity-25"
             />
-          ) : (
-            <div
-              className="w-full h-full"
-              style={{
-                background: `linear-gradient(135deg, ${club.accentColor}cc 0%, ${club.accentColor}44 50%, ${isDark ? "#0d1a0f" : "#F0F5EE"} 100%)`,
-              }}
-            >
-              {/* Subtle chess board texture overlay */}
-              <div className="absolute inset-0 chess-board-bg opacity-10" />
-            </div>
           )}
-          {/* Dark scrim over custom banner for text legibility */}
-          {club.bannerUrl && (
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
-          )}
+          {/* Gradient fade to card below */}
+          <div
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(to bottom, transparent 30%, ${isDark ? "oklch(0.20 0.06 145)" : "oklch(0.28 0.07 145)"} 100%)` }}
+          />
         </div>
 
         {/* Club identity card — overlaps banner */}
@@ -916,6 +1104,13 @@ export default function ClubProfile() {
                       textMuted={textMuted}
                       canDelete={isOwner || isDirector}
                       onDelete={handleDeleteFeedEvent}
+                      userId={user?.id}
+                      displayName={user?.displayName}
+                      avatarUrl={user?.avatarUrl}
+                      clubId={club.id}
+                      isMemberUser={joined}
+                      onVoted={refreshFeed}
+                      onRsvped={refreshFeed}
                     />
                   ))}
                 </div>

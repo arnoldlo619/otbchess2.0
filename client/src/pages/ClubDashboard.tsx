@@ -47,7 +47,14 @@ import {
   listFeedEvents,
   seedFeedIfEmpty,
   postAnnouncement,
+  postPoll,
+  postRsvpForm,
+  castPollVote,
+  upsertFeedRSVP,
+  deleteFeedEvent,
   type FeedEvent,
+  type PollOption,
+  type FeedRSVPEntry,
 } from "@/lib/clubFeedRegistry";
 import {
   Users,
@@ -79,6 +86,8 @@ import {
   MoreVertical,
   Pencil,
   AlertTriangle,
+  BarChart2,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -941,6 +950,188 @@ function EditEventModal({
 
 // ── Feed event icon ───────────────────────────────────────────────────────────
 
+// ── FeedCard (rich interactive card for poll / rsvp_form / announcement) ──────
+
+function FeedCard({
+  event,
+  accent,
+  userId,
+  displayName,
+  avatarUrl,
+  clubId,
+  canDelete,
+  onDelete,
+  onVoted,
+  onRsvped,
+}: {
+  event: FeedEvent;
+  accent: string;
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  clubId: string;
+  canDelete: boolean;
+  onDelete: (id: string) => void;
+  onVoted: () => void;
+  onRsvped: () => void;
+}) {
+  const isPoll = event.type === "poll";
+  const isRsvp = event.type === "rsvp_form";
+  const pollExpired = isPoll && event.pollExpiresAt ? new Date(event.pollExpiresAt) < new Date() : false;
+  const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
+  const userVotedOptions = (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id);
+  const userRsvp = (event.rsvpEntries ?? []).find((r) => r.userId === userId);
+
+  function handleVote(optionId: string) {
+    if (pollExpired || !userId) return;
+    castPollVote(clubId, event.id, optionId, userId, event.pollMultiple ?? false);
+    onVoted();
+  }
+
+  function handleRsvp(status: FeedRSVPEntry["status"]) {
+    if (!userId) return;
+    upsertFeedRSVP(clubId, event.id, userId, displayName, status, avatarUrl ?? null);
+    onRsvped();
+  }
+
+  return (
+    <div
+      className="rounded-2xl border border-white/08 overflow-hidden group"
+      style={{ background: "oklch(0.16 0.05 145)" }}
+    >
+      <div className="flex items-start gap-3 p-4 pb-3">
+        <FeedIcon type={event.type} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
+            <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
+          </div>
+          <p className="text-white/50 text-xs mt-0.5">{event.description}</p>
+        </div>
+        {canDelete && (
+          <button
+            onClick={() => onDelete(event.id)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10 text-white/20 hover:text-red-400"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      {!isPoll && !isRsvp && event.detail && (
+        <div className="px-4 pb-4">
+          <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
+          {event.linkHref && (
+            <a href={event.linkHref} className="inline-flex items-center gap-1 text-xs font-semibold mt-2 transition-colors hover:opacity-80" style={{ color: accent }}>
+              {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+      )}
+      {isPoll && event.pollOptions && (
+        <div className="px-4 pb-4 space-y-3">
+          <p className="text-white font-semibold text-sm">{event.pollQuestion}</p>
+          <div className="space-y-2">
+            {event.pollOptions.map((opt) => {
+              const voteCount = Object.keys(opt.votes).length;
+              const pct = totalPollVotes > 0 ? Math.round((voteCount / totalPollVotes) * 100) : 0;
+              const voted = userVotedOptions.includes(opt.id);
+              const showResults = pollExpired || userVotedOptions.length > 0;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleVote(opt.id)}
+                  disabled={pollExpired}
+                  className={`w-full text-left rounded-xl overflow-hidden border transition-all relative ${voted ? "border-[#4CAF50]/50" : "border-white/10 hover:border-white/25"} ${pollExpired ? "cursor-default" : "cursor-pointer"}`}
+                >
+                  {showResults && (
+                    <div className="absolute inset-0 rounded-xl transition-all duration-500" style={{ width: `${pct}%`, background: voted ? "oklch(0.44 0.12 145 / 0.25)" : "rgba(255,255,255,0.05)" }} />
+                  )}
+                  <div className="relative flex items-center justify-between px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${voted ? "border-[#4CAF50] bg-[#4CAF50]" : "border-white/30"}`}>
+                        {voted && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
+                      </div>
+                      <span className={`text-sm font-medium ${voted ? "text-white" : "text-white/70"}`}>{opt.text}</span>
+                    </div>
+                    {showResults && <span className="text-xs text-white/40 font-semibold">{pct}%</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-between text-xs text-white/30">
+            <span>{totalPollVotes} vote{totalPollVotes !== 1 ? "s" : ""}</span>
+            {event.pollExpiresAt && (
+              <span className={pollExpired ? "text-red-400/60" : ""}>{pollExpired ? "Closed" : `Closes ${timeAgo(event.pollExpiresAt)}`}</span>
+            )}
+          </div>
+        </div>
+      )}
+      {isRsvp && (
+        <div className="px-4 pb-4 space-y-3">
+          <div className="rounded-xl p-3 border border-white/08" style={{ background: "oklch(0.20 0.06 145)" }}>
+            <p className="text-white font-semibold text-sm">{event.rsvpTitle}</p>
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              {event.rsvpDate && (
+                <span className="flex items-center gap-1 text-xs text-white/50">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(event.rsvpDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </span>
+              )}
+              {event.rsvpVenue && (
+                <span className="flex items-center gap-1 text-xs text-white/50">
+                  <MapPin className="w-3 h-3" />
+                  {event.rsvpVenue}
+                </span>
+              )}
+            </div>
+          </div>
+          {userId && (
+            <div className="flex gap-2">
+              {(["going", "maybe", "not_going"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleRsvp(s)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${userRsvp?.status === s ? s === "going" ? "bg-[#4CAF50] text-white" : s === "maybe" ? "bg-amber-500 text-white" : "bg-white/15 text-white/60" : "bg-white/07 text-white/50 hover:bg-white/12 hover:text-white"}`}
+                >
+                  {s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go"}
+                </button>
+              ))}
+            </div>
+          )}
+          {(event.rsvpEntries ?? []).length > 0 && (
+            <div className="space-y-1">
+              {["going", "maybe", "not_going"].map((s) => {
+                const group = (event.rsvpEntries ?? []).filter((r) => r.status === s);
+                if (!group.length) return null;
+                return (
+                  <div key={s} className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold w-16 ${s === "going" ? "text-[#4CAF50]" : s === "maybe" ? "text-amber-400" : "text-white/30"}`}>
+                      {s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Can't Go"} ({group.length})
+                    </span>
+                    <div className="flex -space-x-1.5">
+                      {group.slice(0, 5).map((r) => (
+                        <div key={r.userId} className="w-6 h-6 rounded-full border border-white/10 overflow-hidden" title={r.displayName}>
+                          <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={24} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                      {group.length > 5 && (
+                        <div className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center text-[9px] font-bold text-white/50" style={{ background: "rgba(255,255,255,0.08)" }}>
+                          +{group.length - 5}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FeedIcon({ type }: { type: FeedEvent["type"] }) {
   const map: Record<FeedEvent["type"], React.ReactNode> = {
     member_join:           <UserCheck className="w-4 h-4 text-[#4CAF50]" />,
@@ -949,6 +1140,8 @@ function FeedIcon({ type }: { type: FeedEvent["type"] }) {
     tournament_completed:  <Star className="w-4 h-4 text-amber-400" />,
     announcement:          <Megaphone className="w-4 h-4 text-blue-400" />,
     club_founded:          <PartyPopper className="w-4 h-4 text-purple-400" />,
+    poll:                  <BarChart2 className="w-4 h-4 text-[#4CAF50]" />,
+    rsvp_form:             <ClipboardList className="w-4 h-4 text-blue-400" />,
   };
   return (
     <div
@@ -999,6 +1192,17 @@ export default function ClubDashboard() {
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
+  // Post-type composer
+  const [composerMode, setComposerMode] = useState<"announcement" | "poll" | "rsvp">("announcement");
+  // Poll composer state
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["Yes", "No"]);
+  const [pollHours, setPollHours] = useState(48);
+  const [pollMultiple, setPollMultiple] = useState(false);
+  // RSVP form composer state
+  const [rsvpTitle, setRsvpTitle] = useState("");
+  const [rsvpDate, setRsvpDate] = useState("");
+  const [rsvpVenue, setRsvpVenue] = useState("");
 
   // Seed and load
   useEffect(() => {
@@ -1042,6 +1246,33 @@ export default function ClubDashboard() {
     toast.success("Announcement posted!");
   }
 
+  function submitPoll(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pollQuestion.trim() || !club || !user) return;
+    const opts = pollOptions.filter((o) => o.trim());
+    if (opts.length < 2) { toast.error("Add at least 2 options"); return; }
+    postPoll(club.id, user.displayName, pollQuestion.trim(), opts, pollHours, pollMultiple, user.avatarUrl ?? null);
+    setPollQuestion("");
+    setPollOptions(["Yes", "No"]);
+    refreshFeed();
+    toast.success("Poll posted!");
+  }
+
+  function submitRsvpForm(e: React.FormEvent) {
+    e.preventDefault();
+    if (!rsvpTitle.trim() || !rsvpDate || !club || !user) return;
+    postRsvpForm(club.id, user.displayName, rsvpTitle.trim(), rsvpDate, rsvpVenue.trim(), user.avatarUrl ?? null);
+    setRsvpTitle(""); setRsvpDate(""); setRsvpVenue("");
+    refreshFeed();
+    toast.success("RSVP form posted!");
+  }
+
+  function handleDeleteFeedEvent(eventId: string) {
+    if (!club) return;
+    deleteFeedEvent(club.id, eventId);
+    refreshFeed();
+  }
+
   const isOwnerOrDirector =
     user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
 
@@ -1068,10 +1299,10 @@ export default function ClubDashboard() {
   const accent = club.accentColor ?? "#4CAF50";
 
   return (
-    <div className="min-h-screen" style={{ background: "oklch(0.10 0.06 240)" }}>
+    <div className="min-h-screen bg-[oklch(0.20_0.06_145)] dark:bg-[oklch(0.20_0.06_145)]">
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/06"
-        style={{ background: "oklch(0.10 0.06 240 / 0.92)", backdropFilter: "blur(12px)" }}
+      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08"
+        style={{ background: "oklch(0.20 0.06 145 / 0.92)", backdropFilter: "blur(12px)" }}
       >
         <div className="flex items-center gap-3">
           <Link href="/clubs">
@@ -1096,23 +1327,30 @@ export default function ClubDashboard() {
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden"
-        style={{
-          background: club.bannerUrl
-            ? `url(${club.bannerUrl}) center/cover no-repeat`
-            : `linear-gradient(135deg, ${accent}22 0%, ${accent}08 40%, oklch(0.10 0.06 240) 100%)`,
-          minHeight: "280px",
-        }}
+        style={{ minHeight: "280px" }}
       >
-        {/* Dark overlay */}
+        {/* Chess board texture background — same as landing page hero */}
+        <div className="absolute inset-0 bg-[oklch(0.20_0.06_145)]" />
+        <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
+
+        {/* Subtle green radial glow */}
         <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, oklch(0.10 0.06 240) 100%)" }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[60vh] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.44 0.12 145 / 0.18) 0%, transparent 70%)" }}
         />
 
-        {/* Decorative glow */}
+        {/* Banner image overlay (if set) */}
+        {club.bannerUrl && (
+          <div
+            className="absolute inset-0"
+            style={{ background: `url(${club.bannerUrl}) center/cover no-repeat`, opacity: 0.25 }}
+          />
+        )}
+
+        {/* Gradient fade to body */}
         <div
-          className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-20"
-          style={{ background: accent }}
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, transparent 40%, oklch(0.20 0.06 145) 100%)" }}
         />
 
         <div className="relative z-10 px-5 sm:px-8 pt-10 pb-8 max-w-4xl mx-auto">
@@ -1182,10 +1420,10 @@ export default function ClubDashboard() {
         </div>
       </div>
 
-      {/* ── Sticky tab nav ───────────────────────────────────────────────────── */}
+      {/* ── Sticky tab nav ─────────────────────────────────────────────────────────────── */}
       <div
         className="sticky top-[57px] z-30 border-b border-white/08"
-        style={{ background: "oklch(0.10 0.06 240 / 0.95)", backdropFilter: "blur(12px)" }}
+        style={{ background: "oklch(0.20 0.06 145 / 0.95)", backdropFilter: "blur(12px)" }}
       >
         <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
           {(["events", "members", "feed"] as Tab[]).map((t) => (
@@ -1214,10 +1452,8 @@ export default function ClubDashboard() {
         </div>
       </div>
 
-      {/* ── Tab content ──────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20">
-
-        {/* ── EVENTS TAB ────────────────────────────────────────────────────── */}
+      {/* ── Tab content ─────────────────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20" style={{ background: "oklch(0.20 0.06 145)" }}>   {/* ── EVENTS TAB ────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
             {/* Create event CTA */}
@@ -1368,69 +1604,201 @@ export default function ClubDashboard() {
         {/* ── FEED TAB ──────────────────────────────────────────────────────── */}
         {tab === "feed" && (
           <div className="space-y-5">
-            {/* Announcement composer (owner/director) */}
+
+            {/* ── Composer (owner/director only) ────────────────────────────── */}
             {isOwnerOrDirector && (
-              <form
-                onSubmit={submitAnnouncement}
-                className="flex gap-3 p-4 rounded-2xl border border-white/08"
-                style={{ background: "oklch(0.14 0.04 240)" }}
+              <div
+                className="rounded-2xl border border-white/08 overflow-hidden"
+                style={{ background: "oklch(0.16 0.05 145)" }}
               >
-                <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
-                  <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={36} className="w-full h-full object-cover" />
+                {/* Mode selector */}
+                <div className="flex border-b border-white/08">
+                  {(["announcement", "poll", "rsvp"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setComposerMode(mode)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+                        composerMode === mode
+                          ? "text-[#4CAF50] border-b-2 border-[#4CAF50]"
+                          : "text-white/40 hover:text-white/70"
+                      }`}
+                    >
+                      {mode === "announcement" && <Megaphone className="w-3.5 h-3.5" />}
+                      {mode === "poll" && <BarChart2 className="w-3.5 h-3.5" />}
+                      {mode === "rsvp" && <ClipboardList className="w-3.5 h-3.5" />}
+                      {mode === "announcement" ? "Announce" : mode === "poll" ? "Poll" : "RSVP Form"}
+                    </button>
+                  ))}
                 </div>
-                <div className="flex-1 flex gap-2">
-                  <input
-                    value={announcementText}
-                    onChange={(e) => setAnnouncementText(e.target.value)}
-                    placeholder="Post an announcement to the club…"
-                    maxLength={500}
-                    className="flex-1 bg-transparent text-white text-sm placeholder-white/30 outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!announcementText.trim() || postingAnnouncement}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
-                    style={{ background: accent }}
-                  >
-                    <Megaphone className="w-3.5 h-3.5" />
-                    Post
-                  </button>
-                </div>
-              </form>
+
+                {/* Announcement composer */}
+                {composerMode === "announcement" && (
+                  <form onSubmit={submitAnnouncement} className="p-4 flex gap-3">
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                      <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={36} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 flex gap-2">
+                      <input
+                        value={announcementText}
+                        onChange={(e) => setAnnouncementText(e.target.value)}
+                        placeholder="Post an announcement to the club…"
+                        maxLength={500}
+                        className="flex-1 bg-transparent text-white text-sm placeholder-white/30 outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!announcementText.trim() || postingAnnouncement}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
+                        style={{ background: accent }}
+                      >
+                        <Megaphone className="w-3.5 h-3.5" />
+                        Post
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Poll composer */}
+                {composerMode === "poll" && (
+                  <form onSubmit={submitPoll} className="p-4 space-y-3">
+                    <input
+                      value={pollQuestion}
+                      onChange={(e) => setPollQuestion(e.target.value)}
+                      placeholder="Ask the club a question…"
+                      maxLength={200}
+                      className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/50 transition-colors"
+                    />
+                    <div className="space-y-2">
+                      {pollOptions.map((opt, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <input
+                            value={opt}
+                            onChange={(e) => {
+                              const next = [...pollOptions];
+                              next[idx] = e.target.value;
+                              setPollOptions(next);
+                            }}
+                            placeholder={`Option ${idx + 1}`}
+                            maxLength={100}
+                            className="flex-1 bg-white/07 border border-white/12 rounded-xl px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/50 transition-colors"
+                          />
+                          {pollOptions.length > 2 && (
+                            <button
+                              type="button"
+                              onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {pollOptions.length < 6 && (
+                        <button
+                          type="button"
+                          onClick={() => setPollOptions([...pollOptions, ""])}
+                          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-[#4CAF50] transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Add option
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <label className="flex items-center gap-2 text-xs text-white/50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={pollMultiple}
+                          onChange={(e) => setPollMultiple(e.target.checked)}
+                          className="accent-[#4CAF50]"
+                        />
+                        Allow multiple choices
+                      </label>
+                      <div className="flex items-center gap-2 text-xs text-white/50">
+                        <Clock className="w-3.5 h-3.5" />
+                        <select
+                          value={pollHours}
+                          onChange={(e) => setPollHours(Number(e.target.value))}
+                          className="bg-white/07 border border-white/12 rounded-lg px-2 py-1 text-white text-xs outline-none"
+                        >
+                          <option value={24}>24 hours</option>
+                          <option value={48}>48 hours</option>
+                          <option value={72}>3 days</option>
+                          <option value={168}>1 week</option>
+                        </select>
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2}
+                      className="w-full py-2.5 rounded-xl text-sm font-bold text-black transition-all active:scale-98 disabled:opacity-40"
+                      style={{ background: accent }}
+                    >
+                      Post Poll
+                    </button>
+                  </form>
+                )}
+
+                {/* RSVP Form composer */}
+                {composerMode === "rsvp" && (
+                  <form onSubmit={submitRsvpForm} className="p-4 space-y-3">
+                    <input
+                      value={rsvpTitle}
+                      onChange={(e) => setRsvpTitle(e.target.value)}
+                      placeholder="Event title (e.g. Thursday Night Blitz)"
+                      maxLength={120}
+                      className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/50 transition-colors"
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-white/40 text-xs mb-1">Date</label>
+                        <input
+                          type="date"
+                          value={rsvpDate}
+                          onChange={(e) => setRsvpDate(e.target.value)}
+                          required
+                          className="w-full bg-white/07 border border-white/12 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-[#4CAF50]/50 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white/40 text-xs mb-1">Venue</label>
+                        <input
+                          value={rsvpVenue}
+                          onChange={(e) => setRsvpVenue(e.target.value)}
+                          placeholder="Location"
+                          className="w-full bg-white/07 border border-white/12 rounded-xl px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/50 transition-colors"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!rsvpTitle.trim() || !rsvpDate}
+                      className="w-full py-2.5 rounded-xl text-sm font-bold text-black transition-all active:scale-98 disabled:opacity-40"
+                      style={{ background: accent }}
+                    >
+                      Post RSVP Form
+                    </button>
+                  </form>
+                )}
+              </div>
             )}
 
             {/* Feed list */}
             {feedEvents.length > 0 ? (
-              <div className="space-y-1">
-                {feedEvents.map((event, i) => (
-                  <div key={event.id}>
-                    <div className="flex gap-3 py-3">
-                      <FeedIcon type={event.type} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
-                          <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
-                        </div>
-                        <p className="text-white/55 text-sm mt-0.5">{event.description}</p>
-                        {event.detail && (
-                          <p
-                            className="text-sm mt-1.5 px-3 py-2 rounded-xl border border-white/08"
-                            style={{ background: "oklch(0.14 0.04 240)", color: "rgba(255,255,255,0.70)" }}
-                          >
-                            {event.detail}
-                          </p>
-                        )}
-                        {event.linkHref && (
-                          <Link href={event.linkHref}>
-                            <a className="inline-flex items-center gap-1 text-xs font-semibold mt-1.5 transition-colors hover:opacity-80" style={{ color: accent }}>
-                              {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
-                            </a>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                    {i < feedEvents.length - 1 && <div className="h-px bg-white/04 ml-11" />}
-                  </div>
+              <div className="space-y-3">
+                {feedEvents.map((ev) => (
+                  <FeedCard
+                    key={ev.id}
+                    event={ev}
+                    accent={accent}
+                    userId={user?.id ?? ""}
+                    displayName={user?.displayName ?? ""}
+                    avatarUrl={user?.avatarUrl}
+                    clubId={club.id}
+                    canDelete={!!isOwnerOrDirector}
+                    onDelete={handleDeleteFeedEvent}
+                    onVoted={refreshFeed}
+                    onRsvped={refreshFeed}
+                  />
                 ))}
               </div>
             ) : (
