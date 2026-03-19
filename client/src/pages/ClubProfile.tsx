@@ -47,6 +47,7 @@ import {
   recordTournamentCreated,
   castPollVote,
   upsertFeedRSVP,
+  checkAndCloseExpiredPolls,
   type FeedEvent,
   type FeedRSVPEntry,
 } from "@/lib/clubFeedRegistry";
@@ -88,6 +89,7 @@ import {
   BellOff,
   BarChart2,
   ClipboardList,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -253,6 +255,11 @@ const FEED_EVENT_CONFIG: Record<
     accent: "text-blue-600 bg-blue-50",
     darkAccent: "text-blue-400 bg-blue-500/15",
   },
+  poll_result: {
+    icon: <Award className="w-4 h-4" />,
+    accent: "text-amber-600 bg-amber-50",
+    darkAccent: "text-amber-400 bg-amber-500/15",
+  },
 };
 
 function FeedEventCard({
@@ -288,6 +295,7 @@ function FeedEventCard({
   const accentCls = isDark ? cfg.darkAccent : cfg.accent;
   const isPoll = event.type === "poll";
   const isRsvp = event.type === "rsvp_form";
+  const isPollResult = event.type === "poll_result";
   const pollExpired = isPoll && event.pollExpiresAt ? new Date(event.pollExpiresAt) < new Date() : false;
   const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
   const userVotedOptions = userId ? (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id) : [];
@@ -408,6 +416,57 @@ function FeedEventCard({
       )}
 
       {/* RSVP Form card */}
+      {isPollResult && event.pollResultBreakdown && (
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${accentCls}`}>{cfg.icon}</div>
+              <div>
+                <p className={`text-xs ${textMuted}`}>{event.actorName} &middot; {relativeTime(event.createdAt)}</p>
+                <p className={`text-sm font-semibold ${textMain} mt-0.5`}>{event.description}</p>
+              </div>
+            </div>
+            {canDelete && (
+              <button onClick={() => onDelete(event.id)} className={`opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg ${
+                isDark ? "hover:bg-white/8 text-white/30 hover:text-white/60" : "hover:bg-gray-100 text-gray-300 hover:text-gray-500"
+              }`}><Trash2 className="w-3.5 h-3.5" /></button>
+            )}
+          </div>
+          <div className={`rounded-xl p-3 border ${ isDark ? "border-amber-500/20 bg-amber-500/5" : "border-amber-200 bg-amber-50" }`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Award className={`w-4 h-4 flex-shrink-0 ${ isDark ? "text-amber-400" : "text-amber-600" }`} />
+              <span className={`text-sm font-bold ${ isDark ? "text-amber-300" : "text-amber-700" }`}>
+                {event.pollResultTotalVotes === 0 ? "No votes cast" : `Winner: ${event.pollResultWinner}`}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {event.pollResultBreakdown.map((opt, i) => (
+                <div key={i} className="relative rounded-lg overflow-hidden">
+                  <div
+                    className="absolute inset-0 rounded-lg transition-all"
+                    style={{
+                      width: `${opt.pct}%`,
+                      background: i === 0 && opt.votes > 0
+                        ? isDark ? "oklch(0.55 0.15 80 / 0.25)" : "oklch(0.80 0.12 80 / 0.35)"
+                        : isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                    }}
+                  />
+                  <div className="relative flex items-center justify-between px-2.5 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      {i === 0 && opt.votes > 0 && <Award className={`w-3 h-3 flex-shrink-0 ${ isDark ? "text-amber-400" : "text-amber-600" }`} />}
+                      <span className={`text-xs font-medium ${ i === 0 && opt.votes > 0 ? (isDark ? "text-amber-200" : "text-amber-700") : textMuted }`}>{opt.text}</span>
+                    </div>
+                    <span className={`text-xs font-bold tabular-nums ${ i === 0 && opt.votes > 0 ? (isDark ? "text-amber-300" : "text-amber-600") : textMuted }`}>
+                      {opt.votes}v &middot; {opt.pct}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className={`text-xs mt-2 ${textMuted}`}>{event.pollResultTotalVotes} total vote{event.pollResultTotalVotes !== 1 ? "s" : ""}</p>
+          </div>
+        </div>
+      )}
       {isRsvp && (
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-2">
@@ -629,8 +688,25 @@ export default function ClubProfile() {
 
   const refreshFeed = () => {
     if (!club) return;
+    // Auto-close any expired polls before refreshing
+    checkAndCloseExpiredPolls(club.id);
     setFeedEvents(listFeedEvents(club.id));
   };
+
+  // Poll-close interval: check every 30 seconds for expired polls
+  useEffect(() => {
+    if (!club) return;
+    // Run once on mount
+    if (checkAndCloseExpiredPolls(club.id)) {
+      setFeedEvents(listFeedEvents(club.id));
+    }
+    const timer = setInterval(() => {
+      if (checkAndCloseExpiredPolls(club.id)) {
+        setFeedEvents(listFeedEvents(club.id));
+      }
+    }, 30_000);
+    return () => clearInterval(timer);
+  }, [club?.id]);
 
   const handleFollow = async () => {
     if (!user) {

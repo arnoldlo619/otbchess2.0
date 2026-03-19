@@ -52,6 +52,7 @@ import {
   castPollVote,
   upsertFeedRSVP,
   deleteFeedEvent,
+  checkAndCloseExpiredPolls,
   type FeedEvent,
   type PollOption,
   type FeedRSVPEntry,
@@ -88,6 +89,7 @@ import {
   AlertTriangle,
   BarChart2,
   ClipboardList,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -977,6 +979,7 @@ function FeedCard({
 }) {
   const isPoll = event.type === "poll";
   const isRsvp = event.type === "rsvp_form";
+  const isPollResult = event.type === "poll_result";
   const pollExpired = isPoll && event.pollExpiresAt ? new Date(event.pollExpiresAt) < new Date() : false;
   const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
   const userVotedOptions = (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id);
@@ -1067,6 +1070,42 @@ function FeedCard({
           </div>
         </div>
       )}
+      {isPollResult && event.pollResultBreakdown && (
+        <div className="px-4 pb-4 space-y-3">
+          <div className="rounded-xl p-3 border border-amber-500/20" style={{ background: "oklch(0.18 0.06 80 / 0.25)" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Award className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <span className="text-sm font-bold text-amber-300">
+                {event.pollResultTotalVotes === 0 ? "No votes cast" : `Winner: ${event.pollResultWinner}`}
+              </span>
+            </div>
+            <p className="text-xs text-white/50 font-medium mb-2 truncate">{event.description.replace("Poll closed: ", "").replace(/^"|"$/g, "")}</p>
+            <div className="space-y-1.5">
+              {event.pollResultBreakdown.map((opt, i) => (
+                <div key={i} className="relative rounded-lg overflow-hidden">
+                  <div
+                    className="absolute inset-0 rounded-lg transition-all"
+                    style={{
+                      width: `${opt.pct}%`,
+                      background: i === 0 && opt.votes > 0 ? "oklch(0.55 0.15 80 / 0.30)" : "rgba(255,255,255,0.05)",
+                    }}
+                  />
+                  <div className="relative flex items-center justify-between px-2.5 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      {i === 0 && opt.votes > 0 && <Award className="w-3 h-3 text-amber-400 flex-shrink-0" />}
+                      <span className={`text-xs font-medium ${i === 0 && opt.votes > 0 ? "text-amber-200" : "text-white/50"}`}>{opt.text}</span>
+                    </div>
+                    <span className={`text-xs font-bold tabular-nums ${i === 0 && opt.votes > 0 ? "text-amber-300" : "text-white/30"}`}>
+                      {opt.votes} vote{opt.votes !== 1 ? "s" : ""} &middot; {opt.pct}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-white/30 mt-2">{event.pollResultTotalVotes} total vote{event.pollResultTotalVotes !== 1 ? "s" : ""}</p>
+          </div>
+        </div>
+      )}
       {isRsvp && (
         <div className="px-4 pb-4 space-y-3">
           <div className="rounded-xl p-3 border border-white/08" style={{ background: "oklch(0.20 0.06 145)" }}>
@@ -1142,6 +1181,7 @@ function FeedIcon({ type }: { type: FeedEvent["type"] }) {
     club_founded:          <PartyPopper className="w-4 h-4 text-purple-400" />,
     poll:                  <BarChart2 className="w-4 h-4 text-[#4CAF50]" />,
     rsvp_form:             <ClipboardList className="w-4 h-4 text-blue-400" />,
+    poll_result:           <Award className="w-4 h-4 text-amber-400" />,
   };
   return (
     <div
@@ -1232,8 +1272,25 @@ export default function ClubDashboard() {
 
   function refreshFeed() {
     if (!club) return;
+    // Check for newly expired polls and auto-post results before refreshing
+    checkAndCloseExpiredPolls(club.id);
     setFeedEvents(listFeedEvents(club.id, 50));
   }
+
+  // Poll-close interval: every 30 seconds, check for expired polls
+  useEffect(() => {
+    if (!club) return;
+    // Run once immediately on mount
+    if (checkAndCloseExpiredPolls(club.id)) {
+      setFeedEvents(listFeedEvents(club.id, 50));
+    }
+    const timer = setInterval(() => {
+      if (checkAndCloseExpiredPolls(club.id)) {
+        setFeedEvents(listFeedEvents(club.id, 50));
+      }
+    }, 30_000);
+    return () => clearInterval(timer);
+  }, [club?.id]);
 
   function submitAnnouncement(e: React.FormEvent) {
     e.preventDefault();

@@ -2802,3 +2802,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Voting and RSVP persists to localStorage, updates live
 - [x] Show polls and RSVP forms in ClubDashboard Feed tab (interactive for members)
 - [x] Show polls and RSVP forms in ClubProfile Feed tab (interactive for members, read-only for non-members)
+
+## Poll Auto-Close Results Feed Post
+
+- [x] Add poll_result FeedEventType to clubFeedRegistry
+- [x] Add checkAndCloseExpiredPolls(clubId) helper — scans for expired polls without a result post, posts winner summary
+- [x] Wire checkAndCloseExpiredPolls into ClubDashboard useEffect interval (every 30s) and on-vote callback
+- [x] Wire checkAndCloseExpiredPolls into ClubProfile useEffect interval (every 30s) and on-vote callback
+- [x] Render poll_result cards in FeedEventCard (both pages) with amber Award icon, winner option, and full vote breakdown

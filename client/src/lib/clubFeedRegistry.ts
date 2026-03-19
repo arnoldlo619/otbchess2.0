@@ -25,7 +25,8 @@ export type FeedEventType =
   | "announcement"
   | "club_founded"
   | "poll"
-  | "rsvp_form";
+  | "rsvp_form"
+  | "poll_result";
 
 /** A single option in a Poll */
 export interface PollOption {
@@ -82,6 +83,16 @@ export interface FeedEvent {
   rsvpVenue?: string;
   /** Collected RSVP responses */
   rsvpEntries?: FeedRSVPEntry[];
+
+  // ── Poll Result fields ───────────────────────────────────────────────────
+  /** ID of the poll feed event this result summarises (type === "poll_result") */
+  pollResultForId?: string;
+  /** The winning option text(s), comma-separated when tied */
+  pollResultWinner?: string;
+  /** Ordered breakdown: [{text, votes, pct}] sorted by votes desc */
+  pollResultBreakdown?: Array<{ text: string; votes: number; pct: number }>;
+  /** Total votes cast */
+  pollResultTotalVotes?: number;
 }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
@@ -328,6 +339,75 @@ export function recordTournamentCompleted(
     linkHref: `/tournament/${tournamentId}`,
     linkLabel: "View results",
   });
+}
+
+/**
+ * Check for expired polls that don't yet have a result post, and automatically
+ * post a poll_result summary for each one. Returns true if any polls were closed.
+ */
+export function checkAndCloseExpiredPolls(clubId: string): boolean {
+  const events = loadFeed(clubId);
+  const now = new Date();
+  let changed = false;
+
+  // Collect IDs of polls that already have a result post
+  const closedPollIds = new Set(
+    events.filter((e) => e.type === "poll_result" && e.pollResultForId).map((e) => e.pollResultForId!)
+  );
+
+  const newResults: FeedEvent[] = [];
+
+  for (const ev of events) {
+    if (ev.type !== "poll" || !ev.pollExpiresAt || !ev.pollOptions) continue;
+    if (new Date(ev.pollExpiresAt) >= now) continue; // not yet expired
+    if (closedPollIds.has(ev.id)) continue; // already has a result post
+
+    // Compute vote totals per option
+    const totalVotes = ev.pollOptions.reduce(
+      (s, o) => s + Object.keys(o.votes).length,
+      0
+    );
+
+    const breakdown = ev.pollOptions
+      .map((o) => ({
+        text: o.text,
+        votes: Object.keys(o.votes).length,
+        pct: totalVotes > 0 ? Math.round((Object.keys(o.votes).length / totalVotes) * 100) : 0,
+      }))
+      .sort((a, b) => b.votes - a.votes);
+
+    const maxVotes = breakdown[0]?.votes ?? 0;
+    const winners = breakdown.filter((o) => o.votes === maxVotes && o.votes > 0);
+    const winnerText =
+      winners.length === 0
+        ? "No votes cast"
+        : winners.map((w) => w.text).join(" & ");
+
+    const resultEvent: FeedEvent = {
+      id: generateId(),
+      clubId,
+      type: "poll_result",
+      createdAt: ev.pollExpiresAt, // post-dated to the exact close time
+      actorName: ev.actorName,
+      actorAvatarUrl: ev.actorAvatarUrl,
+      description: `Poll closed: "${ev.pollQuestion ?? "Poll"}"`,
+      detail: totalVotes === 0 ? "No votes were cast." : `Winner: ${winnerText}`,
+      pollResultForId: ev.id,
+      pollResultWinner: winnerText,
+      pollResultBreakdown: breakdown,
+      pollResultTotalVotes: totalVotes,
+    };
+
+    newResults.push(resultEvent);
+    closedPollIds.add(ev.id);
+    changed = true;
+  }
+
+  if (changed) {
+    saveFeed(clubId, [...events, ...newResults]);
+  }
+
+  return changed;
 }
 
 /** Delete a specific feed event (owner/director moderation). */
