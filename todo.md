@@ -2986,3 +2986,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Pin/Unpin icon button to FeedCard for directors (visible on hover, next to delete)
 - [x] Pinned card has amber border, amber background tint, and "Pinned Post" banner strip at top
 - [x] Clicking Pin button on a new post automatically unpins the previous one (single-pin rule)
+
+## Instagram Carousel — Host Logo Branding
+
+- [x] Add hostLogoUrl state to InstagramCarouselModal (base64 data URL from file upload)
+- [x] Add logo upload UI section in modal: drag-and-drop / click-to-upload, preview thumbnail, remove button
+- [x] Pass hostLogoUrl through SlideProps to all slide components
+- [x] Update OTBBrand component to render host logo image (left side) + divider + OTB!! label (right side) when logo is provided
+- [x] Update Slide5CTA bottom brand bar to use shared OTBBrand component (also shows host logo)
+- [x] Logo stored as base64 data URL — renders correctly in html2canvas PNG export (crossOrigin set)

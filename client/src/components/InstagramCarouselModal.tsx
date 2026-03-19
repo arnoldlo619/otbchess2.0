@@ -80,6 +80,8 @@ interface SlideProps {
   tournamentName: string;
   totalRounds: number;
   scale?: number;
+  /** Base64 data URL of the host's custom logo (optional) */
+  hostLogoUrl?: string | null;
 }
 
 /** Shared slide wrapper — dark green background with chess board texture */
@@ -130,22 +132,51 @@ function SlideWrapper({ children, scale = 1 }: { children: React.ReactNode; scal
   );
 }
 
-/** OTB logo mark — bottom of every slide */
-function OTBBrand({ scale = 1, clubName }: { scale?: number; clubName?: string | null }) {
+/** OTB logo mark — bottom of every slide. When hostLogoUrl is provided, the host logo
+ * appears on the left separated by a divider from the OTB!! wordmark on the right.
+ */
+function OTBBrand({
+  scale = 1,
+  clubName,
+  hostLogoUrl,
+}: {
+  scale?: number;
+  clubName?: string | null;
+  hostLogoUrl?: string | null;
+}) {
   const s = scale;
+  const logoSize = 36 * s; // height of host logo
   return (
     <div
       style={{
         position: "absolute",
-        bottom: 36 * s,
+        bottom: 28 * s,
         left: 0,
         right: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 10 * s,
+        gap: 12 * s,
       }}
     >
+      {/* Host logo — shown when provided */}
+      {hostLogoUrl && (
+        <>
+          <img
+            src={hostLogoUrl}
+            alt="Host logo"
+            style={{
+              height: logoSize,
+              maxWidth: 120 * s,
+              objectFit: "contain",
+              borderRadius: 4 * s,
+            }}
+            crossOrigin="anonymous"
+          />
+          <div style={{ width: 1, height: 28 * s, background: "rgba(255,255,255,0.2)" }} />
+        </>
+      )}
+      {/* OTB!! wordmark */}
       <div
         style={{
           fontFamily: "'Inter', sans-serif",
@@ -158,7 +189,8 @@ function OTBBrand({ scale = 1, clubName }: { scale?: number; clubName?: string |
       >
         OTB!!
       </div>
-      {clubName && (
+      {/* Club name — shown when no host logo (avoid crowding) */}
+      {!hostLogoUrl && clubName && (
         <>
           <div style={{ width: 1, height: 18 * s, background: "rgba(255,255,255,0.2)" }} />
           <div
@@ -178,7 +210,7 @@ function OTBBrand({ scale = 1, clubName }: { scale?: number; clubName?: string |
 }
 
 /** Slide 1 — Cover */
-function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1 }: SlideProps) {
+function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
   const s = scale;
   const champion = rows[0]?.player;
   const clubName = config?.clubName;
@@ -311,13 +343,13 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1 }: S
         </div>
       </div>
 
-      <OTBBrand scale={scale} clubName={null} />
+      <OTBBrand scale={scale} clubName={null} hostLogoUrl={hostLogoUrl} />
     </SlideWrapper>
   );
 }
 
 /** Slide 2 — Podium */
-function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1 }: SlideProps) {
+function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
   const s = scale;
   const top3 = rows.slice(0, 3);
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean); // 2nd, 1st, 3rd
@@ -411,13 +443,13 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1 }: 
         })}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} />
     </SlideWrapper>
   );
 }
 
 /** Slide 3 — Full Standings */
-function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1 }: SlideProps) {
+function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
   const s = scale;
   const displayRows = rows.slice(0, 8); // Show top 8
 
@@ -508,13 +540,13 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1 
         </div>
       )}
 
-      <OTBBrand scale={scale} clubName={config?.clubName} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} />
     </SlideWrapper>
   );
 }
 
 /** Slide 4 — Tournament Stats */
-function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1 }: SlideProps) {
+function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
   const s = scale;
   const totalGames = totalRounds * Math.floor(rows.length / 2);
   const topPerformer = rows.reduce((best, r) => (r.wins > best.wins ? r : best), rows[0] ?? { wins: 0, player: { name: "—", username: "" } } as StandingRow);
@@ -620,13 +652,13 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1 }: S
         )}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} />
     </SlideWrapper>
   );
 }
 
 /** Slide 5 — CTA */
-function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1 }: SlideProps) {
+function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
   const s = scale;
   const clubName = config?.clubName;
   const inviteCode = config?.inviteCode;
@@ -718,36 +750,7 @@ function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1 }: Sli
         )}
       </div>
 
-      {/* OTB!! logo */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 36 * s,
-          left: 0,
-          right: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10 * s,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'Inter', sans-serif",
-            fontWeight: 900,
-            fontStyle: "italic",
-            fontSize: 22 * s,
-            color: BRAND.greenLight,
-            letterSpacing: "0.02em",
-          }}
-        >
-          OTB!!
-        </div>
-        <div style={{ width: 1, height: 18 * s, background: "rgba(255,255,255,0.2)" }} />
-        <div style={{ fontSize: 13 * s, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
-          Over The Board Chess
-        </div>
-      </div>
+      <OTBBrand scale={scale} clubName={clubName} hostLogoUrl={hostLogoUrl} />
     </SlideWrapper>
   );
 }
@@ -770,9 +773,23 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const [activeSlide, setActiveSlide] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [hostLogoUrl, setHostLogoUrl] = useState<string | null>(null);
+  const [logoDragging, setLogoDragging] = useState(false);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const slideProps: SlideProps = { rows, config, tournamentName, totalRounds, scale: 1 };
+  const slideProps: SlideProps = { rows, config, tournamentName, totalRounds, scale: 1, hostLogoUrl };
+
+  // ── Logo upload handler ──────────────────────────────────────────────────────
+  const handleLogoFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result;
+      if (typeof result === "string") setHostLogoUrl(result);
+    };
+    reader.readAsDataURL(file);
+  }, []);
 
   // ── Export single slide ──────────────────────────────────────────────────────
   const exportSlide = useCallback(async (idx: number): Promise<Blob | null> => {
@@ -972,6 +989,99 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             {/* Slide info */}
             <div className={`text-center text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
               Slide {activeSlide + 1} of {SLIDES.length} · {SLIDES[activeSlide].label}
+            </div>
+
+            {/* ── Host Logo Upload Panel ────────────────────────────────────── */}
+            <div className={`w-full rounded-2xl border p-4 ${
+              isDark ? "border-white/08 bg-white/03" : "border-gray-200 bg-gray-50"
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                    Club / Host Logo
+                  </p>
+                  <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    Appears on every slide alongside the OTB!! mark
+                  </p>
+                </div>
+                {hostLogoUrl && (
+                  <button
+                    onClick={() => setHostLogoUrl(null)}
+                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                      isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50"
+                    }`}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              {hostLogoUrl ? (
+                /* Logo preview */
+                <div className="flex items-center gap-3">
+                  <div className={`rounded-xl overflow-hidden border p-2 flex items-center justify-center ${
+                    isDark ? "border-white/10 bg-white/05" : "border-gray-200 bg-white"
+                  }`} style={{ width: 72, height: 48 }}>
+                    <img src={hostLogoUrl} alt="Host logo" className="max-w-full max-h-full object-contain" />
+                  </div>
+                  <div>
+                    <p className={`text-xs font-semibold ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                      Logo uploaded
+                    </p>
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      className={`text-[10px] mt-0.5 ${
+                        isDark ? "text-[#769656] hover:text-[#4CAF50]" : "text-[#3D6B47] hover:text-[#2A4A32]"
+                      }`}
+                    >
+                      Change image
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Drop zone */
+                <button
+                  onClick={() => logoInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setLogoDragging(true); }}
+                  onDragLeave={() => setLogoDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setLogoDragging(false);
+                    const file = e.dataTransfer.files[0];
+                    if (file) handleLogoFile(file);
+                  }}
+                  className={`w-full rounded-xl border-2 border-dashed py-4 flex flex-col items-center gap-1.5 transition-colors ${
+                    logoDragging
+                      ? isDark ? "border-[#769656] bg-[#769656]/10" : "border-[#3D6B47] bg-[#3D6B47]/05"
+                      : isDark ? "border-white/10 hover:border-white/20" : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isDark ? "text-white/30" : "text-gray-400"}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span className={`text-xs font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    Upload logo (PNG, SVG, JPG)
+                  </span>
+                  <span className={`text-[10px] ${isDark ? "text-white/20" : "text-gray-300"}`}>
+                    Click or drag &amp; drop
+                  </span>
+                </button>
+              )}
+
+              {/* Hidden file input */}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleLogoFile(file);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </div>
         </div>
