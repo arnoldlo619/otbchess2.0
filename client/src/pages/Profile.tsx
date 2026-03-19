@@ -23,6 +23,8 @@ import {
   Trash2,
   AlertTriangle,
   Swords,
+  Camera,
+  Link2,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
@@ -32,6 +34,8 @@ interface EditState {
   displayName: string;
   chesscomUsername: string;
   lichessUsername: string;
+  fideId: string;
+  avatarDataUrl: string | null; // base64 preview before upload
 }
 
 function StatBadge({
@@ -132,6 +136,8 @@ export default function ProfilePage() {
     displayName: "",
     chesscomUsername: "",
     lichessUsername: "",
+    fideId: "",
+    avatarDataUrl: null,
   });
 
   // Detect dark mode from html element class
@@ -156,6 +162,8 @@ export default function ProfilePage() {
         displayName: user.displayName,
         chesscomUsername: user.chesscomUsername ?? "",
         lichessUsername: user.lichessUsername ?? "",
+        fideId: user.fideId ?? "",
+        avatarDataUrl: null,
       });
     }
   }, [user]);
@@ -250,6 +258,8 @@ export default function ProfilePage() {
         displayName: editState.displayName,
         chesscomUsername: editState.chesscomUsername || undefined,
         lichessUsername: editState.lichessUsername || undefined,
+        fideId: editState.fideId || undefined,
+        avatarUrl: editState.avatarDataUrl || undefined,
       });
       setEditing(false);
     } catch (err) {
@@ -257,6 +267,17 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setEditState((s) => ({ ...s, avatarDataUrl: dataUrl }));
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleLogout() {
@@ -324,9 +345,9 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4">
               {/* Avatar */}
               <div className="relative">
-                {user.avatarUrl ? (
+                {(editState.avatarDataUrl ?? user.avatarUrl) ? (
                   <img
-                    src={user.avatarUrl}
+                    src={editState.avatarDataUrl ?? user.avatarUrl!}
                     alt={user.displayName}
                     className="w-16 h-16 rounded-2xl object-cover"
                   />
@@ -335,9 +356,16 @@ export default function ProfilePage() {
                     <span className="text-white text-xl font-bold">{initials}</span>
                   </div>
                 )}
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#4ade80] border-2 border-white flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 text-[#0d1f12]" />
-                </div>
+                {editing ? (
+                  <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#2d6a4f] border-2 border-white flex items-center justify-center cursor-pointer hover:bg-[#245a41] transition">
+                    <Camera className="w-3 h-3 text-white" />
+                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                  </label>
+                ) : (
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#4ade80] border-2 border-white flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-[#0d1f12]" />
+                  </div>
+                )}
               </div>
               <div>
                 <h1 className={`text-xl font-bold ${text}`}>{user.displayName}</h1>
@@ -431,6 +459,20 @@ export default function ProfilePage() {
                   className={inputCls}
                 />
               </div>
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${muted}`}>
+                  FIDE ID
+                </label>
+                <input
+                  type="text"
+                  value={editState.fideId}
+                  onChange={(e) =>
+                    setEditState((s) => ({ ...s, fideId: e.target.value }))
+                  }
+                  placeholder="e.g. 1503014"
+                  className={inputCls}
+                />
+              </div>
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={handleSave}
@@ -515,7 +557,26 @@ export default function ProfilePage() {
                   </div>
                 </a>
               )}
-              {!user.chesscomUsername && !user.lichessUsername && (
+              {user.fideId && (
+                <a
+                  href={`https://ratings.fide.com/profile/${user.fideId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl transition ${
+                    isDark ? "bg-white/5 hover:bg-white/10" : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Link2 className="w-5 h-5 text-[#2d6a4f]" />
+                    <div>
+                      <p className={`text-sm font-medium ${text}`}>FIDE Profile</p>
+                      <p className={`text-xs ${muted}`}>ID: {user.fideId}</p>
+                    </div>
+                  </div>
+                  <ExternalLink className={`w-3.5 h-3.5 ${muted}`} />
+                </a>
+              )}
+              {!user.chesscomUsername && !user.lichessUsername && !user.fideId && (
                 <p className={`text-sm text-center py-3 ${muted}`}>
                   No chess platform linked yet.{" "}
                   <button

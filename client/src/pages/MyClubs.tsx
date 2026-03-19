@@ -109,6 +109,8 @@ function ClubCard({
   const cardBorder = isDark ? "border-white/8" : "border-gray-100";
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-white/50" : "text-gray-400";
+  // Showcase clubs seeded as seed-club-7 through seed-club-11
+  const isTrending = /^seed-club-(7|8|9|10|11)$/.test(club.id);
 
   return (
     <Link href={toDashboard ? `/clubs/${club.id}/home` : `/clubs/${club.id}`}>
@@ -135,6 +137,13 @@ function ClubCard({
           )}
           {/* Dark scrim for text legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          {/* Trending badge */}
+          {isTrending && (
+            <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/90 text-black backdrop-blur-sm">
+              <Zap className="w-3 h-3" />
+              Trending
+            </div>
+          )}
         </div>
 
         {/* Avatar — overlaps banner bottom edge, raised above banner via z-index */}

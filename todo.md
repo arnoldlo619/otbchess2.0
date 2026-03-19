@@ -2842,3 +2842,76 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build SkeletonBlock primitive with animate-pulse and OTB dark-green fill
 - [x] Build ClubDashboardSkeleton: nav bar, hero (avatar + identity + stats), tab bar (3 tabs), 3 event card placeholders
 - [x] Replace bare spinner with ClubDashboardSkeleton in the loading state
+
+## Goal 1 — Expanded Player Cards
+
+- [ ] Add `roundHistory` field to `PlayerPerformance` (array of per-round: round#, opponent name/elo, color, result, points)
+- [ ] Build `PlayerCardExpandedModal` component: full-screen overlay with round-by-round game log, opponent avatars, result chips, running score
+- [ ] Add "View Full Card" / expand button on each PlayerStatsCard in Report page
+- [ ] Show performance rating trend, color balance chart, and head-to-head summary in expanded view
+
+## Goal 2 — Profile Page Enhancements
+
+- [ ] Add profile photo upload (base64 stored in localStorage via AuthContext)
+- [ ] Add FIDE ID field to profile edit form
+- [ ] Add Lichess account link with verification badge
+- [ ] Add chess.com account link with verification badge
+- [ ] Show linked accounts section with external profile links
+
+## Goal 3 — Club Direct Messaging & Turn-Based Chess
+
+- [ ] Create `clubMessagingRegistry.ts` with DM thread types, message types, and chess game state
+- [ ] Build `/clubs/:id/messages` route and `ClubMessages` page
+- [ ] Member list sidebar with unread badge counts
+- [ ] Chat thread view with message bubbles and timestamps
+- [ ] "Challenge to Chess" button in DM thread that starts a turn-based chess game
+- [ ] Chess board component for turn-based game (FEN state, move input, result detection)
+- [ ] Add Messages nav item to ClubDashboard tab bar
+
+## Goal 4a — Club Host Tools & Buy-In Payments
+
+- [ ] Create `clubPaymentRegistry.ts` with buy-in tournament data model (Stripe-ready stub)
+- [ ] Add buy-in amount field to CreateEventModal in ClubDashboard
+- [ ] Build `TournamentBuyInPanel` in ClubDashboard: collected amount, participant list, payout allocation
+- [ ] Add engagement analytics section to ClubDashboard: member activity heatmap, RSVP trends, poll participation rates
+- [ ] Player of the Month highlight: auto-computed from club matchup records
+
+## Goal 4b — New Casual Event Types
+
+- [ ] Add `eventType` field to ClubEvent: "tournament" | "speed_dating" | "trivia" | "puzzle_relay" | "casual" | "lecture"
+- [ ] Chess Speed Dating event: timed 5-min mini-games, rotating partners, social matching UI
+- [ ] Trivia Night event: question rounds, team scoring, live leaderboard
+- [ ] Puzzle Relay Race event: team-based puzzle solving, relay handoff, timer
+- [ ] Event type picker in CreateEventModal with icons and descriptions
+- [ ] Event type badge on event cards
+
+## Goal 5 — Discover Clubs Page with Trending Showcase Clubs
+
+- [ ] Research 5 real trending/notable chess clubs worldwide
+- [ ] Build `/clubs/discover` route and `DiscoverClubs` page
+- [ ] Create custom showcase profile pages for each of the 5 clubs
+- [ ] Add "Discover" link to MyClubs page and nav
+- [ ] Each showcase club has: custom hero, description, recent activity feed, CTA to claim/join
+
+## Big Goals Sprint — Completed
+
+- [x] Goal 1: Expanded Player Cards — PlayerCardExpandedModal with round-by-round game record, opponent history, result badges, rating delta
+- [x] Goal 1: roundHistory added to PlayerPerformance type and populated in computeAllPerformances
+- [x] Goal 1: "Expand" button on each ExportableCard in Report.tsx opens the modal
+- [x] Goal 2: Profile photo upload (base64 avatar stored in localStorage + DB)
+- [x] Goal 2: FIDE ID field added to profile edit form and schema (fide_id column migrated)
+- [x] Goal 2: FIDE profile link shown in read-only platform links section
+- [x] Goal 2: fideId added to AuthUser, UpdateProfileFields, safeUser, and PATCH /api/auth/me
+- [x] Goal 3: club_conversations, club_messages, club_chess_games DB tables created
+- [x] Goal 3: server/clubMessaging.ts — full REST API for conversations, messages, and chess games
+- [x] Goal 3: ClubMessages.tsx — conversation list, chat view, turn-based chess board (chess.js + react-chessboard)
+- [x] Goal 3: Route /clubs/:clubId/messages added to App.tsx
+- [x] Goal 3: Messages button added to ClubDashboard nav bar
+- [x] Goal 4: Analytics tab in ClubDashboard — member growth, poll engagement, event attendance, top members
+- [x] Goal 4: Payments tab in ClubDashboard — buy-in payment UX, Stripe-ready stub, winner payout allocation
+- [x] Goal 4 (events): eventType field added to ClubEvent (tournament / speed_dating / trivia / puzzle_relay / casual)
+- [x] Goal 4 (events): Event type selector in CreateEventModal with icons and descriptions
+- [x] Goal 5: 5 real trending US chess clubs added to SEED_CLUBS (Pawn Chess Club, Club Chess NYC, Marshall Chess Club, Saint Louis Chess Club, Charlotte Chess Center)
+- [x] Goal 5: Full member data, tournament history, stats, and rich descriptions for each showcase club
+- [x] Goal 5: Seed key bumped to v2 so all users see the new clubs
+- [x] Goal 5: Trending badge (amber Zap) on showcase club cards in Discover page

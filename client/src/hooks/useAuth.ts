@@ -24,6 +24,7 @@ export interface AuthUser {
   chesscomElo: number | null;
   lichessElo: number | null;
   avatarUrl: string | null;
+  fideId: string | null;
   /** True for ephemeral guest sessions created via POST /api/auth/guest */
   isGuest: boolean;
   createdAt: string;
@@ -35,6 +36,7 @@ export interface UpdateProfileFields {
   chesscomUsername?: string;
   lichessUsername?: string;
   avatarUrl?: string;
+  fideId?: string;
 }
 
 async function apiFetch<T>(

@@ -45,6 +45,23 @@ export interface ClubEvent {
   admissionNote?: string;
   /** Whether the event is published (visible to members) */
   isPublished: boolean;
+  /**
+   * Optional event type for special formats.
+   * Omit for standard chess night / tournament.
+   */
+  eventType?: "standard" | "speed_dating" | "trivia_night" | "puzzle_relay";
+  /** Speed Dating: number of rounds */
+  speedDatingRounds?: number;
+  /** Speed Dating: minutes per round */
+  speedDatingMinutes?: number;
+  /** Trivia Night: list of trivia categories */
+  triviaCategories?: string[];
+  /** Trivia Night: number of questions */
+  triviaQuestionCount?: number;
+  /** Puzzle Relay: number of teams */
+  puzzleRelayTeams?: number;
+  /** Puzzle Relay: puzzle difficulty */
+  puzzleRelayDifficulty?: "beginner" | "intermediate" | "advanced";
   createdAt: string;
   updatedAt: string;
 }

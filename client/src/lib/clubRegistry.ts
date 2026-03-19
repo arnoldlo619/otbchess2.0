@@ -479,6 +479,92 @@ const SEED_CLUBS: Omit<Club, "id" | "slug" | "memberCount" | "tournamentCount" |
     ownerName: "Priya Sharma",
     isPublic: true,
   },
+  // ── Trending US Showcase Clubs ────────────────────────────────────────────
+  {
+    name: "Pawn Chess Club",
+    tagline: "NYC's most vibrant chess nightlife — all levels welcome.",
+    description:
+      "Born in New York City with a simple goal: create a space where strangers and friends could play chess without intimidation. Pawn Chess Club hosts weekly evening events across Manhattan and Brooklyn with live DJ sets, speed-dating chess rounds, and casual open play. With 7,800+ Instagram followers and sold-out events every week, Pawn is redefining what a chess club looks and feels like. Founded by @ismuisamu and @simone_nr.",
+    location: "New York, NY",
+    country: "US",
+    category: "community",
+    avatarUrl: null,
+    bannerUrl: null,
+    accentColor: "#E8C547",
+    ownerId: "seed",
+    ownerName: "Ismu Isamu",
+    isPublic: true,
+    website: "https://www.instagram.com/pawnchessclub/",
+    announcement: "🎉 Speed Dating Chess Night — every Friday 7–9pm. All levels welcome. Limited tickets.",
+  },
+  {
+    name: "Club Chess NYC",
+    tagline: "Where chess meets nightlife — est. 2023.",
+    description:
+      "Club Chess is a New York City-based chess collective founded in 2023 by @quietluke and @corrineciani. With 8,700+ Instagram followers, Club Chess has become one of the most talked-about chess experiences in the city — blending competitive play with DJ sets, art, and community. Monthly residencies at venues like The Monroe and Tawny NYC. Part of a growing movement bringing chess into cultural nightlife spaces.",
+    location: "New York, NY",
+    country: "US",
+    category: "club",
+    avatarUrl: null,
+    bannerUrl: null,
+    accentColor: "#9B59B6",
+    ownerId: "seed",
+    ownerName: "Luke Quietman",
+    isPublic: true,
+    website: "https://www.instagram.com/clubchess.club/",
+    announcement: "♟️ Next event: Chess Night at The Monroe — live DJ, all levels. RSVP via Instagram.",
+  },
+  {
+    name: "Marshall Chess Club",
+    tagline: "The heart of American chess since 1915.",
+    description:
+      "Founded in 1915 by U.S. Chess Champion Frank J. Marshall, the Marshall Chess Club is one of the oldest and most prestigious chess clubs in the world. Located in the heart of Greenwich Village, New York City, the Marshall has hosted legends including Bobby Fischer, Fabiano Caruana, and Hikaru Nakamura. A gold affiliate of the United States Chess Federation, the club offers daily open play, USCF-rated tournaments, simultaneous exhibitions, and a world-class chess library.",
+    location: "New York, NY",
+    country: "US",
+    category: "club",
+    avatarUrl: null,
+    bannerUrl: null,
+    accentColor: "#1A3A5C",
+    ownerId: "seed",
+    ownerName: "Marshall Chess Club",
+    isPublic: true,
+    website: "https://www.marshallchessclub.org",
+    announcement: "🏛️ The Marshall Chess Club Library is now open to members. Visit the club office for more info.",
+  },
+  {
+    name: "Saint Louis Chess Club",
+    tagline: "World-class chess in the heart of America.",
+    description:
+      "The Saint Louis Chess Club is widely regarded as the premier chess club in the United States. Founded in 2008, it has hosted the U.S. Championship, U.S. Women's Championship, Sinquefield Cup, and numerous world-class invitationals. The club offers beginner classes, advanced training, group lessons, and weekly tournaments for all ages and abilities. A member-based community center that has transformed Saint Louis into the chess capital of North America.",
+    location: "Saint Louis, MO",
+    country: "US",
+    category: "professional",
+    avatarUrl: null,
+    bannerUrl: null,
+    accentColor: "#C41E3A",
+    ownerId: "seed",
+    ownerName:"Saint Louis Chess Club",
+    isPublic: true,
+    website: "https://saintlouischessclub.org",
+    announcement: "🏆 2025 U.S. National Championships — registrations open now. FIDE-rated. All levels.",
+  },
+  {
+    name: "Charlotte Chess Center",
+    tagline: "The nation's award-winning chess hub.",
+    description:
+      "The Charlotte Chess Center (CCC) is a US award-winning chess club serving the Charlotte, NC community. With 600+ members, 50+ weekly students, and 2,500+ community members reached, CCC is one of the fastest-growing chess clubs in America. The club offers weekly Sunday Action Quads for youth, Monday Adult Casual nights, USCF and FIDE-rated tournaments, school programs, summer camps, and private lessons. Named one of the top chess institutes in the nation.",
+    location: "Charlotte, NC",
+    country: "US",
+    category: "professional",
+    avatarUrl: null,
+    bannerUrl: null,
+    accentColor: "#0066CC",
+    ownerId: "seed",
+    ownerName: "Charlotte Chess Center",
+    isPublic: true,
+    website: "https://www.charlottechesscenter.org",
+    announcement: "📅 Sunday Action Quads — every Sunday afternoon. Youth USCF-rated. Register online.",
+  },
 ];
 
 const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
@@ -518,10 +604,44 @@ const SEED_MEMBERS_PER_CLUB: Omit<ClubMember, "clubId">[][] = [
     { userId: "seed-m17", displayName: "Arjun Mehta", chesscomUsername: "arjunm", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2023-09-01T10:00:00Z", tournamentsPlayed: 12, bestFinish: 2 },
     { userId: "seed-m18", displayName: "Riya Gupta", chesscomUsername: null, lichessUsername: "riyag", avatarUrl: null, role: "member", joinedAt: "2023-10-15T10:00:00Z", tournamentsPlayed: 7, bestFinish: 3 },
   ],
+  // Pawn Chess Club
+  [
+    { userId: "seed-m19", displayName: "Ismu Isamu", chesscomUsername: "ismuisamu", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2022-09-01T10:00:00Z", tournamentsPlayed: 38, bestFinish: 1 },
+    { userId: "seed-m20", displayName: "Simone N.", chesscomUsername: "simonenr", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2022-09-01T10:00:00Z", tournamentsPlayed: 32, bestFinish: 1 },
+    { userId: "seed-m21", displayName: "Jordan Lee", chesscomUsername: null, lichessUsername: "jordanlee", avatarUrl: null, role: "member", joinedAt: "2023-01-10T10:00:00Z", tournamentsPlayed: 14, bestFinish: 2 },
+    { userId: "seed-m22", displayName: "Mia Torres", chesscomUsername: "miatorres", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2023-04-20T10:00:00Z", tournamentsPlayed: 9, bestFinish: 3 },
+  ],
+  // Club Chess NYC
+  [
+    { userId: "seed-m23", displayName: "Luke Quietman", chesscomUsername: "quietluke", lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2023-03-01T10:00:00Z", tournamentsPlayed: 29, bestFinish: 1 },
+    { userId: "seed-m24", displayName: "Corrine C.", chesscomUsername: "corrineciani", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2023-03-01T10:00:00Z", tournamentsPlayed: 24, bestFinish: 2 },
+    { userId: "seed-m25", displayName: "Dante Rivera", chesscomUsername: null, lichessUsername: "drivera", avatarUrl: null, role: "member", joinedAt: "2023-06-15T10:00:00Z", tournamentsPlayed: 11, bestFinish: 2 },
+  ],
+  // Marshall Chess Club
+  [
+    { userId: "seed-m26", displayName: "Marshall Chess Club", chesscomUsername: null, lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "1915-01-01T10:00:00Z", tournamentsPlayed: 110, bestFinish: 1 },
+    { userId: "seed-m27", displayName: "FM David Brodsky", chesscomUsername: "davidbrodsky", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2020-01-01T10:00:00Z", tournamentsPlayed: 45, bestFinish: 1 },
+    { userId: "seed-m28", displayName: "GM Aleksandr Lenderman", chesscomUsername: "lenderman", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2018-06-01T10:00:00Z", tournamentsPlayed: 60, bestFinish: 1 },
+    { userId: "seed-m29", displayName: "Sarah Chiang", chesscomUsername: "sarahchiang", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2022-09-01T10:00:00Z", tournamentsPlayed: 18, bestFinish: 3 },
+  ],
+  // Saint Louis Chess Club
+  [
+    { userId: "seed-m30", displayName: "Saint Louis Chess Club", chesscomUsername: null, lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2008-08-01T10:00:00Z", tournamentsPlayed: 47, bestFinish: 1 },
+    { userId: "seed-m31", displayName: "GM Fabiano Caruana", chesscomUsername: "fabianocaruana", lichessUsername: "fabianocaruana", avatarUrl: null, role: "member", joinedAt: "2015-01-01T10:00:00Z", tournamentsPlayed: 12, bestFinish: 1 },
+    { userId: "seed-m32", displayName: "GM Hikaru Nakamura", chesscomUsername: "hikaru", lichessUsername: "hikaru", avatarUrl: null, role: "member", joinedAt: "2014-01-01T10:00:00Z", tournamentsPlayed: 10, bestFinish: 1 },
+    { userId: "seed-m33", displayName: "IM Joshua Ruiz", chesscomUsername: "joshuaruiz", lichessUsername: null, avatarUrl: null, role: "director", joinedAt: "2019-06-01T10:00:00Z", tournamentsPlayed: 28, bestFinish: 1 },
+  ],
+  // Charlotte Chess Center
+  [
+    { userId: "seed-m34", displayName: "Charlotte Chess Center", chesscomUsername: null, lichessUsername: null, avatarUrl: null, role: "owner", joinedAt: "2014-06-01T10:00:00Z", tournamentsPlayed: 52, bestFinish: 1 },
+    { userId: "seed-m35", displayName: "FM Eric Yuhan Li", chesscomUsername: "ericyuhanli", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2020-01-01T10:00:00Z", tournamentsPlayed: 22, bestFinish: 1 },
+    { userId: "seed-m36", displayName: "Aiden Park", chesscomUsername: "aidenpark", lichessUsername: null, avatarUrl: null, role: "member", joinedAt: "2021-09-01T10:00:00Z", tournamentsPlayed: 15, bestFinish: 1 },
+    { userId: "seed-m37", displayName: "Coach Raj Patel", chesscomUsername: null, lichessUsername: "rajpatel", avatarUrl: null, role: "director", joinedAt: "2016-01-01T10:00:00Z", tournamentsPlayed: 30, bestFinish: 2 },
+  ],
 ];
 
-const SEED_MEMBER_COUNTS = [142, 89, 34, 218, 67, 156];
-const SEED_TOURNAMENT_COUNTS = [24, 18, 9, 31, 12, 22];
+const SEED_MEMBER_COUNTS = [142, 89, 34, 218, 67, 156, 312, 274, 520, 890, 640];
+const SEED_TOURNAMENT_COUNTS = [24, 18, 9, 31, 12, 22, 38, 29, 110, 47, 52];
 const SEED_FOUNDED_DATES = [
   "2024-01-15T10:00:00Z",
   "2024-06-01T10:00:00Z",
@@ -529,6 +649,12 @@ const SEED_FOUNDED_DATES = [
   "2023-11-01T10:00:00Z",
   "2024-02-01T10:00:00Z",
   "2023-08-01T10:00:00Z",
+  // Trending US clubs
+  "2022-09-01T10:00:00Z", // Pawn Chess Club
+  "2023-03-01T10:00:00Z", // Club Chess NYC
+  "1915-01-01T10:00:00Z", // Marshall Chess Club
+  "2008-08-01T10:00:00Z", // Saint Louis Chess Club
+  "2014-06-01T10:00:00Z", // Charlotte Chess Center
 ];
 
 const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
@@ -566,9 +692,42 @@ const SEED_TOURNAMENTS: Omit<ClubTournament, "clubId">[][] = [
     { tournamentId: "mumbai-youth-2025", name: "Youth Championship 2025", date: "2025-11-30", format: "Swiss", playerCount: 48, rounds: 7, status: "completed", winnerName: "Arjun Mehta" },
     { tournamentId: "mumbai-rapid-2025", name: "Academy Rapid Cup", date: "2025-09-14", format: "Swiss", playerCount: 36, rounds: 6, status: "completed", winnerName: "Priya Sharma" },
   ],
+  // Pawn Chess Club
+  [
+    { tournamentId: "pawn-speed-dating-apr-2026", name: "Speed Dating Chess Night April", date: "2026-04-04", format: "Swiss", playerCount: 0, rounds: 8, status: "upcoming" },
+    { tournamentId: "pawn-speed-dating-mar-2026", name: "Speed Dating Chess Night March", date: "2026-03-07", format: "Swiss", playerCount: 42, rounds: 8, status: "completed", winnerName: "Ismu Isamu" },
+    { tournamentId: "pawn-blitz-feb-2026", name: "Pawn Blitz February", date: "2026-02-14", format: "Swiss", playerCount: 38, rounds: 5, status: "completed", winnerName: "Simone N." },
+  ],
+  // Club Chess NYC
+  [
+    { tournamentId: "clubchess-monroe-apr-2026", name: "Chess Night at The Monroe — April", date: "2026-04-09", format: "Swiss", playerCount: 0, rounds: 5, status: "upcoming" },
+    { tournamentId: "clubchess-tawny-mar-2026", name: "Tawny NYC Residency March", date: "2026-03-05", format: "Swiss", playerCount: 56, rounds: 5, status: "completed", winnerName: "Luke Quietman" },
+    { tournamentId: "clubchess-beimax-2026", name: "Beimax x Club Chess Collab", date: "2026-02-22", format: "Swiss", playerCount: 30, rounds: 4, status: "completed", winnerName: "Corrine C." },
+  ],
+  // Marshall Chess Club
+  [
+    { tournamentId: "marshall-open-apr-2026", name: "Marshall Open April 2026", date: "2026-04-20", format: "Swiss", playerCount: 0, rounds: 7, status: "upcoming" },
+    { tournamentId: "marshall-rapid-mar-2026", name: "Marshall Rapid March", date: "2026-03-15", format: "Swiss", playerCount: 48, rounds: 6, status: "completed", winnerName: "FM David Brodsky" },
+    { tournamentId: "marshall-blitz-2026", name: "Winter Blitz Championship", date: "2026-01-18", format: "Swiss", playerCount: 64, rounds: 7, status: "completed", winnerName: "GM Aleksandr Lenderman" },
+    { tournamentId: "marshall-simul-2025", name: "GM Simultaneous Exhibition", date: "2025-12-07", format: "Round Robin", playerCount: 20, rounds: 1, status: "completed", winnerName: "GM Hikaru Nakamura" },
+  ],
+  // Saint Louis Chess Club
+  [
+    { tournamentId: "stlcc-us-champ-2025", name: "2025 U.S. Championship", date: "2025-10-05", format: "Round Robin", playerCount: 12, rounds: 11, status: "completed", winnerName: "GM Fabiano Caruana" },
+    { tournamentId: "stlcc-sinquefield-2025", name: "Sinquefield Cup 2025", date: "2025-08-31", format: "Round Robin", playerCount: 10, rounds: 9, status: "completed", winnerName: "GM Magnus Carlsen" },
+    { tournamentId: "stlcc-spring-open-2026", name: "Spring Open 2026", date: "2026-04-12", format: "Swiss", playerCount: 0, rounds: 9, status: "upcoming" },
+    { tournamentId: "stlcc-rapid-2026", name: "Club Rapid Championship 2026", date: "2026-03-08", format: "Swiss", playerCount: 72, rounds: 7, status: "completed", winnerName: "IM Joshua Ruiz" },
+  ],
+  // Charlotte Chess Center
+  [
+    { tournamentId: "ccc-sunday-quads-apr-2026", name: "Sunday Action Quads April", date: "2026-04-06", format: "Swiss", playerCount: 0, rounds: 3, status: "upcoming" },
+    { tournamentId: "ccc-adult-casual-apr-2026", name: "Monday Adult Casual April", date: "2026-04-07", format: "Swiss", playerCount: 0, rounds: 4, status: "upcoming" },
+    { tournamentId: "ccc-open-2026", name: "CCC Spring Open 2026", date: "2026-03-29", format: "Swiss", playerCount: 88, rounds: 6, status: "completed", winnerName: "FM Eric Yuhan Li" },
+    { tournamentId: "ccc-youth-2025", name: "Youth Championship 2025", date: "2025-11-23", format: "Swiss", playerCount: 64, rounds: 6, status: "completed", winnerName: "Aiden Park" },
+  ],
 ];
 
-const SEED_KEY = "otb-clubs-seeded-v1";
+const SEED_KEY = "otb-clubs-seeded-v2";
 
 /** Seed mock clubs into localStorage if not already done. */
 export function seedClubsIfEmpty(): void {

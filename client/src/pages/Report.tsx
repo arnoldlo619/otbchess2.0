@@ -28,6 +28,7 @@ import PlayerStatsCard, {
 import CrossTable from "@/components/CrossTable";
 import RoundTimeline from "@/components/RoundTimeline";
 import { ShareResultsModal, useShareModal } from "@/components/ShareResultsModal";
+import PlayerCardExpandedModal from "@/components/PlayerCardExpandedModal";
 import {
   ChevronLeft,
   Download,
@@ -418,6 +419,7 @@ function ExportableCard({
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [showExpanded, setShowExpanded] = useState(false);
 
   const handleExport = useCallback(async () => {
     // Prefer the hidden high-res forExport card; fall back to visible card
@@ -475,8 +477,24 @@ function ExportableCard({
         accentColor={accentColor}
       />
 
+      {showExpanded && (
+        <PlayerCardExpandedModal
+          perf={perf}
+          accentColor={accentColor}
+          onClose={() => setShowExpanded(false)}
+        />
+      )}
+
       {/* Overlay controls — appear on hover (desktop shortcut) */}
       <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2.5">
+        <button
+          onClick={() => setShowExpanded(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors border border-white/20 text-white hover:bg-white/10"
+          style={{ background: accentColor + "22" }}
+        >
+          <BarChart3 className="w-4 h-4" />
+          View Full Card
+        </button>
         <button
           onClick={handleExport}
           disabled={exporting}

@@ -31,6 +31,7 @@ const GameRecorder = lazy(() => import("./pages/GameRecorder"));
 const GameAnalysis = lazy(() => import("./pages/GameAnalysis"));
 const VideoRecorder = lazy(() => import("./pages/VideoRecorder"));
 const Battle = lazy(() => import("./pages/Battle"));
+const ClubMessages = lazy(() => import("./pages/ClubMessages"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -64,6 +65,7 @@ function Router() {
         <Route path={"/profile"} component={ProfilePage} />
         <Route path={"/clubs"} component={MyClubs} />
         <Route path={"/clubs/:id/home"} component={ClubDashboard} />
+        <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/record"} component={GameRecorder} />
         <Route path={"/record/camera"} component={VideoRecorder} />

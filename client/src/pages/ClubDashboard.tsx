@@ -96,6 +96,15 @@ import {
   ClipboardList,
   Award,
   CalendarClock,
+  TrendingUp,
+  DollarSign,
+  CreditCard,
+  PieChart,
+  Activity,
+  UserPlus,
+  ThumbsUp,
+  Wallet,
+  CheckSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -616,6 +625,15 @@ function CreateEventModal({
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [accentColor, setAccentColor] = useState(clubAccent ?? "#4CAF50");
   const [submitting, setSubmitting] = useState(false);
+  // Casual event type
+  type EvType = "standard" | "speed_dating" | "trivia_night" | "puzzle_relay";
+  const [eventType, setEventType] = useState<EvType>("standard");
+  const [sdRounds, setSdRounds] = useState(8);
+  const [sdMinutes, setSdMinutes] = useState(10);
+  const [triviaCategories, setTriviaCategories] = useState("Chess History, Openings, Endgames");
+  const [triviaCount, setTriviaCount] = useState(20);
+  const [relayTeams, setRelayTeams] = useState(4);
+  const [relayDifficulty, setRelayDifficulty] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
 
   // Live preview of cover image
   const previewValid = coverImageUrl.startsWith("http");
@@ -640,6 +658,10 @@ function CreateEventModal({
       creatorId: userId,
       creatorName: displayName,
       isPublished: true,
+      eventType: eventType === "standard" ? undefined : eventType,
+      ...(eventType === "speed_dating" ? { speedDatingRounds: sdRounds, speedDatingMinutes: sdMinutes } : {}),
+      ...(eventType === "trivia_night" ? { triviaCategories: triviaCategories.split(",").map(s => s.trim()).filter(Boolean), triviaQuestionCount: triviaCount } : {}),
+      ...(eventType === "puzzle_relay" ? { puzzleRelayTeams: relayTeams, puzzleRelayDifficulty: relayDifficulty } : {}),
     });
     setSubmitting(false);
     toast.success("Event created!");
@@ -681,6 +703,89 @@ function CreateEventModal({
               <img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <span className="absolute bottom-2 left-3 text-white/70 text-xs font-semibold">Cover Preview</span>
+            </div>
+          )}
+
+          {/* Event Type Selector */}
+          <div>
+            <label className={labelCls}>Event Format</label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: "standard", label: "Standard Night", emoji: "♟️", desc: "Tournament / casual play" },
+                { value: "speed_dating", label: "Speed Dating", emoji: "💘", desc: "Timed round-robin meetups" },
+                { value: "trivia_night", label: "Trivia Night", emoji: "🧠", desc: "Chess knowledge quiz" },
+                { value: "puzzle_relay", label: "Puzzle Relay", emoji: "🏁", desc: "Team puzzle race" },
+              ] as const).map(({ value, label, emoji, desc }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setEventType(value)}
+                  className={`flex items-start gap-2 p-3 rounded-xl border text-left transition-all ${
+                    eventType === value
+                      ? "border-[#4CAF50]/60 bg-[#4CAF50]/10 text-white"
+                      : "border-white/10 bg-white/05 text-white/50 hover:border-white/20"
+                  }`}
+                >
+                  <span className="text-lg leading-none mt-0.5">{emoji}</span>
+                  <div>
+                    <p className="text-xs font-bold">{label}</p>
+                    <p className="text-[10px] opacity-60 mt-0.5">{desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Speed Dating options */}
+          {eventType === "speed_dating" && (
+            <div className="rounded-xl border border-white/10 bg-white/05 p-4 space-y-3">
+              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Speed Dating Settings</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Rounds</label>
+                  <input type="number" min={2} max={20} value={sdRounds} onChange={e => setSdRounds(+e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Min / Round</label>
+                  <input type="number" min={3} max={30} value={sdMinutes} onChange={e => setSdMinutes(+e.target.value)} className={inputCls} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trivia Night options */}
+          {eventType === "trivia_night" && (
+            <div className="rounded-xl border border-white/10 bg-white/05 p-4 space-y-3">
+              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Trivia Settings</p>
+              <div>
+                <label className={labelCls}>Categories (comma-separated)</label>
+                <input value={triviaCategories} onChange={e => setTriviaCategories(e.target.value)} placeholder="Chess History, Openings, Endgames" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Number of Questions</label>
+                <input type="number" min={5} max={50} value={triviaCount} onChange={e => setTriviaCount(+e.target.value)} className={inputCls} />
+              </div>
+            </div>
+          )}
+
+          {/* Puzzle Relay options */}
+          {eventType === "puzzle_relay" && (
+            <div className="rounded-xl border border-white/10 bg-white/05 p-4 space-y-3">
+              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Puzzle Relay Settings</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Teams</label>
+                  <input type="number" min={2} max={10} value={relayTeams} onChange={e => setRelayTeams(+e.target.value)} className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Difficulty</label>
+                  <select value={relayDifficulty} onChange={e => setRelayDifficulty(e.target.value as "beginner" | "intermediate" | "advanced")} className={inputCls}>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1317,7 +1422,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed";
+type Tab = "events" | "members" | "feed" | "analytics" | "payments";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -1514,6 +1619,12 @@ export default function ClubDashboard() {
         </div>
         {user && (
           <div className="flex items-center gap-2">
+            <Link href={`/clubs/${id}/messages`}>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition border border-white/10">
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span className="hidden sm:block">Messages</span>
+              </button>
+            </Link>
             <div className="w-7 h-7 rounded-full overflow-hidden">
               <PlayerAvatar username={user.displayName} name={user.displayName} avatarUrl={user.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
             </div>
@@ -1624,7 +1735,7 @@ export default function ClubDashboard() {
         style={{ background: "oklch(0.20 0.06 145 / 0.95)", backdropFilter: "blur(12px)" }}
       >
         <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
-          {(["events", "members", "feed"] as Tab[]).map((t) => (
+          {(["events", "members", "feed", "analytics", "payments"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -2080,6 +2191,215 @@ export default function ClubDashboard() {
                 <p className="text-sm mt-1">Activity will appear here as members join and events are created.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── ANALYTICS TAB ─────────────────────────────────────────────── */}
+        {tab === "analytics" && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-5 h-5" style={{ color: accent }} />
+              <h2 className="text-white font-bold text-lg">Club Engagement Analytics</h2>
+            </div>
+
+            {/* Key metrics row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Total Members", value: club.memberCount, icon: Users, delta: "+3 this month" },
+                { label: "Events Hosted", value: club.tournamentCount, icon: Trophy, delta: "All time" },
+                { label: "Feed Posts", value: feedEvents.length, icon: Activity, delta: "Active posts" },
+                { label: "Poll Votes", value: feedEvents.filter(e => e.type === "poll").reduce((sum, e) => sum + (e.pollOptions ?? []).reduce((s: number, o) => s + Object.keys(o.votes).length, 0), 0), icon: ThumbsUp, delta: "Total votes cast" },
+              ].map(({ label, value, icon: Icon, delta }) => (
+                <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Icon className="w-4 h-4 text-white/40" />
+                    <span className="text-[10px] text-white/30">{delta}</span>
+                  </div>
+                  <p className="text-2xl font-black text-white">{value}</p>
+                  <p className="text-xs text-white/40 mt-0.5">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Member join timeline */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <UserPlus className="w-4 h-4" style={{ color: accent }} />
+                <h3 className="text-white font-semibold text-sm">Member Roster</h3>
+              </div>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {members.length === 0 ? (
+                  <p className="text-white/30 text-sm text-center py-4">No members yet.</p>
+                ) : (
+                  members.map((m) => (
+                    <div key={m.userId} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {m.displayName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{m.displayName}</p>
+                          <p className="text-[10px] text-white/30 capitalize">{m.role}</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-white/30">{new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Feed engagement breakdown */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <PieChart className="w-4 h-4" style={{ color: accent }} />
+                <h3 className="text-white font-semibold text-sm">Feed Post Breakdown</h3>
+              </div>
+              {feedEvents.length === 0 ? (
+                <p className="text-white/30 text-sm text-center py-4">No feed posts yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {(["announcement", "poll", "rsvp_form", "poll_result"] as const).map((type) => {
+                    const count = feedEvents.filter(e => e.type === type).length;
+                    const pct = feedEvents.length > 0 ? Math.round((count / feedEvents.length) * 100) : 0;
+                    const labels: Record<string, string> = { announcement: "Announcements", poll: "Polls", rsvp_form: "RSVP Forms", poll_result: "Poll Results" };
+                    return (
+                      <div key={type}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-white/60">{labels[type]}</span>
+                          <span className="text-xs font-bold text-white/80">{count} ({pct}%)</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: accent }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Player of the Month highlight */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Crown className="w-4 h-4 text-amber-400" />
+                <h3 className="text-white font-semibold text-sm">Player of the Month</h3>
+                <span className="ml-auto text-[10px] text-white/30">Based on battle wins</span>
+              </div>
+              {members.length === 0 ? (
+                <p className="text-white/30 text-sm text-center py-4">No members yet.</p>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-[#2d6a4f] flex items-center justify-center text-white text-xl font-black">
+                    {members[0].displayName.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-lg">{members[0].displayName}</p>
+                    <p className="text-white/40 text-xs capitalize">{members[0].role} · Joined {new Date(members[0].joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <Crown className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="text-xs font-semibold text-amber-400">Top Member This Month</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── PAYMENTS TAB ─────────────────────────────────────────────────── */}
+        {tab === "payments" && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-5 h-5" style={{ color: accent }} />
+              <h3 className="text-white font-bold text-lg">Tournament Buy-In Payments</h3>
+            </div>
+
+            {/* Stripe-ready notice */}
+            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 flex items-start gap-3">
+              <CreditCard className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-400 font-semibold text-sm">Stripe Payments — Coming Soon</p>
+                <p className="text-white/50 text-xs mt-1">The payment infrastructure is built and ready. Connect your Stripe account to start collecting tournament buy-ins and automatically distribute prize pools to winners.</p>
+                <button className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-amber-400 text-xs font-semibold border border-amber-400/20 transition">
+                  <CreditCard className="w-3.5 h-3.5" /> Connect Stripe Account
+                </button>
+              </div>
+            </div>
+
+            {/* Buy-in configuration per event */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Wallet className="w-4 h-4" style={{ color: accent }} />
+                <h3 className="text-white font-semibold text-sm">Configure Buy-Ins for Upcoming Events</h3>
+              </div>
+              {upcomingEvents.length === 0 ? (
+                <p className="text-white/30 text-sm text-center py-4">No upcoming events. Create an event first.</p>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingEvents.map((ev) => (
+                    <div key={ev.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{ev.title}</p>
+                        <p className="text-xs text-white/40">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                          <DollarSign className="w-3 h-3 text-white/40" />
+                          <input
+                            type="number"
+                            placeholder="0.00"
+                            min="0"
+                            step="0.50"
+                            className="w-16 bg-transparent text-sm text-white outline-none"
+                            disabled
+                          />
+                        </div>
+                        <span className="text-[10px] text-white/25">Stripe required</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Prize pool distribution preview */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <h3 className="text-white font-semibold text-sm">Prize Pool Distribution</h3>
+                <span className="ml-auto text-[10px] text-white/30">Auto-allocated on tournament completion</span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { place: "1st Place", pct: 50, color: "text-amber-400" },
+                  { place: "2nd Place", pct: 30, color: "text-gray-300" },
+                  { place: "3rd Place", pct: 20, color: "text-amber-700" },
+                ].map(({ place, pct, color }) => (
+                  <div key={place} className="flex items-center gap-3">
+                    <span className={`text-sm font-bold w-20 ${color}`}>{place}</span>
+                    <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: accent }} />
+                    </div>
+                    <span className="text-sm font-semibold text-white/60 w-10 text-right">{pct}%</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-white/30 mt-4">Distribution percentages are configurable per tournament once Stripe is connected.</p>
+            </div>
+
+            {/* Transaction history placeholder */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <CheckSquare className="w-4 h-4" style={{ color: accent }} />
+                <h3 className="text-white font-semibold text-sm">Transaction History</h3>
+              </div>
+              <div className="text-center py-8">
+                <Wallet className="w-10 h-10 text-white/10 mx-auto mb-3" />
+                <p className="text-white/30 text-sm">No transactions yet.</p>
+                <p className="text-white/20 text-xs mt-1">Transactions will appear here once Stripe is connected and buy-ins are collected.</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

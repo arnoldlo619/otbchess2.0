@@ -49,6 +49,9 @@ export const users = mysqlTable(
     chesscomElo: int("chesscom_elo"),
     lichessElo: int("lichess_elo"),
 
+    // FIDE ID (optional, for linking to official FIDE profile)
+    fideId: varchar("fide_id", { length: 20 }),
+
     // Avatar URL (chess.com avatar or custom upload)
     avatarUrl: text("avatar_url"),
 
@@ -392,3 +395,87 @@ export const battleRooms = mysqlTable(
 
 export type BattleRoom = typeof battleRooms.$inferSelect;
 export type NewBattleRoom = typeof battleRooms.$inferInsert;
+
+// ─── club_conversations ───────────────────────────────────────────────────────
+// One row per direct-message thread between two members of the same club.
+// The pair (clubId, userAId, userBId) is unique (userAId < userBId by convention).
+export const clubConversations = mysqlTable(
+  "club_conversations",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    clubId: varchar("club_id", { length: 36 }).notNull(),
+    userAId: varchar("user_a_id", { length: 36 }).notNull(),
+    userBId: varchar("user_b_id", { length: 36 }).notNull(),
+    // ISO timestamp of the last message (for sorting)
+    lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    clubIdx: index("cc_club_id_idx").on(table.clubId),
+    userAIdx: index("cc_user_a_idx").on(table.userAId),
+    userBIdx: index("cc_user_b_idx").on(table.userBId),
+  })
+);
+
+export type ClubConversation = typeof clubConversations.$inferSelect;
+export type NewClubConversation = typeof clubConversations.$inferInsert;
+
+// ─── club_messages ────────────────────────────────────────────────────────────
+// One row per message in a club_conversations thread.
+// type: 'text' | 'chess_invite' | 'chess_move'
+export const clubMessages = mysqlTable(
+  "club_messages",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    conversationId: varchar("conversation_id", { length: 36 }).notNull(),
+    senderId: varchar("sender_id", { length: 36 }).notNull(),
+    // 'text' | 'chess_invite' | 'chess_move'
+    type: varchar("type", { length: 20 }).notNull().default("text"),
+    body: text("body"),
+    // For chess_invite / chess_move: reference to club_chess_games.id
+    chessGameId: varchar("chess_game_id", { length: 36 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    convIdx: index("cm_conversation_id_idx").on(table.conversationId),
+    senderIdx: index("cm_sender_id_idx").on(table.senderId),
+  })
+);
+
+export type ClubMessage = typeof clubMessages.$inferSelect;
+export type NewClubMessage = typeof clubMessages.$inferInsert;
+
+// ─── club_chess_games ─────────────────────────────────────────────────────────
+// One row per turn-based chess game initiated via club DMs.
+// pgn stores the full game PGN string (updated after each move).
+export const clubChessGames = mysqlTable(
+  "club_chess_games",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    conversationId: varchar("conversation_id", { length: 36 }).notNull(),
+    // The player who sent the invite (plays White)
+    whiteId: varchar("white_id", { length: 36 }).notNull(),
+    // The player who accepted (plays Black)
+    blackId: varchar("black_id", { length: 36 }).notNull(),
+    // 'pending' | 'active' | 'completed' | 'declined'
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    // Full PGN string (updated on each move)
+    pgn: text("pgn").default(""),
+    // FEN of current position
+    currentFen: text("current_fen").default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
+    // 'white' | 'black' — whose turn it is
+    turn: varchar("turn", { length: 10 }).notNull().default("white"),
+    // 'white_wins' | 'black_wins' | 'draw' | null
+    result: varchar("result", { length: 20 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    convIdx: index("ccg_conversation_id_idx").on(table.conversationId),
+    whiteIdx: index("ccg_white_id_idx").on(table.whiteId),
+    blackIdx: index("ccg_black_id_idx").on(table.blackId),
+  })
+);
+
+export type ClubChessGame = typeof clubChessGames.$inferSelect;
+export type NewClubChessGame = typeof clubChessGames.$inferInsert;

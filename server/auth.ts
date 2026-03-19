@@ -293,11 +293,13 @@ export function createAuthRouter(): Router {
       chesscomUsername,
       lichessUsername,
       avatarUrl,
+      fideId,
     } = req.body as {
       displayName?: string;
       chesscomUsername?: string;
       lichessUsername?: string;
       avatarUrl?: string;
+      fideId?: string;
     };
 
     try {
@@ -313,6 +315,7 @@ export function createAuthRouter(): Router {
       if (lichessUsername !== undefined)
         updateData.lichessUsername = lichessUsername.toLowerCase().trim() || null;
       if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
+      if (fideId !== undefined) updateData.fideId = fideId.trim() || null;
 
       // If chess.com username changed, fetch fresh ELO
       if (chesscomUsername && chesscomUsername.trim()) {

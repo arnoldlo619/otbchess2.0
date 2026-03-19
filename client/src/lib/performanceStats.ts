@@ -18,6 +18,16 @@ import { computeStandings } from "./swiss";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface RoundHistoryEntry {
+  roundNumber: number;
+  opponent: Player;
+  color: "W" | "B";
+  result: "win" | "draw" | "loss";
+  gameResult: string; // "1-0" | "0-1" | "½-½"
+  pointsEarned: number; // 1, 0.5, or 0
+  runningScore: number; // cumulative score after this round
+}
+
 export interface PlayerPerformance {
   player: Player;
   rank: number;
@@ -36,6 +46,7 @@ export interface PlayerPerformance {
   buchholz: number;
   badge: AchievementBadge;
   badgeLabel: string;
+  roundHistory: RoundHistoryEntry[];
 }
 
 export type AchievementBadge =
@@ -265,6 +276,35 @@ export function computeAllPerformances(
       p.id
     );
 
+    // Round-by-round history
+    const completedRounds = rounds.filter((r) => r.status === "completed");
+    let runningScore = 0;
+    const roundHistory: RoundHistoryEntry[] = [];
+    for (let ri = 0; ri < completedRounds.length; ri++) {
+      const round = completedRounds[ri];
+      const game = round.games.find(
+        (g) => (g.whiteId === p.id || g.blackId === p.id) && g.result !== "*"
+      );
+      if (!game) continue;
+      const isWhite = game.whiteId === p.id;
+      const oppId = isWhite ? game.blackId : game.whiteId;
+      const opp = playerMap.get(oppId);
+      if (!opp) continue;
+      const won = (isWhite && game.result === "1-0") || (!isWhite && game.result === "0-1");
+      const drew = game.result === "½-½";
+      const pts = won ? 1 : drew ? 0.5 : 0;
+      runningScore += pts;
+      roundHistory.push({
+        roundNumber: ri + 1,
+        opponent: opp,
+        color: isWhite ? "W" : "B",
+        result: won ? "win" : drew ? "draw" : "loss",
+        gameResult: game.result,
+        pointsEarned: pts,
+        runningScore,
+      });
+    }
+
     return {
       player: p,
       rank: row.rank,
@@ -283,6 +323,7 @@ export function computeAllPerformances(
       buchholz: row.buchholz,
       badge,
       badgeLabel,
+      roundHistory,
     };
   });
 }
