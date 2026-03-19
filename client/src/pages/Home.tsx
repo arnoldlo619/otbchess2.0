@@ -494,7 +494,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
               <ArrowRight className="w-4 h-4" />
             </SpinBorderButton>
             <SpinBorderButton
-              variant="glass"
+              variant="outline"
               onClick={() => window.location.href = "/join"}
             >
               Join a Tournament

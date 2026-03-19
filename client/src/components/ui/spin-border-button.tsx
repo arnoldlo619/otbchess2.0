@@ -125,7 +125,7 @@ export const SpinBorderButton = React.forwardRef<
           "transition-all duration-200",
           isSolid
             ? "bg-[oklch(0.44_0.12_145)] text-white group-hover:bg-[oklch(0.40_0.12_145)]"
-            : "bg-[oklch(0.18_0.05_145)/0.85] text-[oklch(0.75_0.14_145)] backdrop-blur-sm group-hover:bg-[oklch(0.22_0.06_145)/0.90] dark:bg-[oklch(0.18_0.05_145)/0.85] dark:text-[oklch(0.78_0.15_145)]"
+            : "bg-white text-[#2A4A32] group-hover:bg-[oklch(0.97_0.01_145)] dark:bg-[oklch(0.20_0.06_145)] dark:text-white dark:group-hover:bg-[oklch(0.22_0.06_145)]"
         )}
       >
         {children}

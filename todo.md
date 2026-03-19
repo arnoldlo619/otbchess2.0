@@ -2669,3 +2669,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Ensure nav pill stays centered, right actions stay right on all breakpoints
 - [x] Verify mobile hamburger / icon-only layout is still correct
 - [x] TypeScript: 0 errors
+
+## Hero Button Polish
+
+- [x] Refine "Join a Tournament" hero button — switch from glass to outline variant with spinning conic-gradient border matching "Host Tournament" design language
+- [x] Fix outline variant inner surface to use hero background color (dark: oklch(0.20_0.06_145), light: white) for correct primary/secondary hierarchy
+- [x] Verify both dark and light mode button pair rendering
