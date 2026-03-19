@@ -49,6 +49,8 @@ export interface Club {
   memberCount: number;
   /** Total tournaments hosted */
   tournamentCount: number;
+  /** Total number of followers (non-member watchers) */
+  followerCount?: number;
   /** ISO date string of founding */
   foundedAt: string;
   /** Whether the club is publicly discoverable */
@@ -96,6 +98,7 @@ export interface ClubTournament {
 const CLUBS_KEY = "otb-clubs-v1";
 const MEMBERS_KEY = "otb-club-members-v1";
 const CLUB_TOURNAMENTS_KEY = "otb-club-tournaments-v1";
+const FOLLOWS_KEY = "otb-club-follows-v1";
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -173,6 +176,7 @@ export function createClub(
     slug,
     memberCount: 1,
     tournamentCount: 0,
+    followerCount: 0,
     foundedAt: new Date().toISOString(),
   };
   const clubs = loadClubs();
@@ -309,6 +313,63 @@ export function syncClubTournamentCount(clubId: string): number | null {
 
   const updated = updateClub(clubId, { tournamentCount: count });
   return updated ? count : null;
+}
+
+// ── Follow API ───────────────────────────────────────────────────────────────
+
+interface ClubFollow {
+  clubId: string;
+  userId: string;
+  followedAt: string;
+}
+
+function loadFollows(): ClubFollow[] {
+  try {
+    const raw = localStorage.getItem(FOLLOWS_KEY);
+    return raw ? (JSON.parse(raw) as ClubFollow[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFollows(follows: ClubFollow[]): void {
+  try {
+    localStorage.setItem(FOLLOWS_KEY, JSON.stringify(follows));
+  } catch { /* localStorage full */ }
+}
+
+/** Follow a club. No-ops if already following or a member. */
+export function followClub(clubId: string, userId: string): void {
+  const follows = loadFollows();
+  if (follows.some((f) => f.clubId === clubId && f.userId === userId)) return;
+  saveFollows([...follows, { clubId, userId, followedAt: new Date().toISOString() }]);
+  // Increment followerCount
+  const clubs = loadClubs();
+  saveClubs(clubs.map((c) =>
+    c.id === clubId ? { ...c, followerCount: (c.followerCount ?? 0) + 1 } : c
+  ));
+}
+
+/** Unfollow a club. */
+export function unfollowClub(clubId: string, userId: string): void {
+  const follows = loadFollows();
+  const existed = follows.some((f) => f.clubId === clubId && f.userId === userId);
+  if (!existed) return;
+  saveFollows(follows.filter((f) => !(f.clubId === clubId && f.userId === userId)));
+  const clubs = loadClubs();
+  saveClubs(clubs.map((c) =>
+    c.id === clubId ? { ...c, followerCount: Math.max(0, (c.followerCount ?? 1) - 1) } : c
+  ));
+}
+
+/** Check whether a user is following a club. */
+export function isFollowing(clubId: string, userId: string): boolean {
+  return loadFollows().some((f) => f.clubId === clubId && f.userId === userId);
+}
+
+/** Get the total follower count for a club. */
+export function getFollowerCount(clubId: string): number {
+  return loadFollows().filter((f) => f.clubId === clubId).length;
 }
 
 /** Clear all club data (test helper). */
@@ -525,6 +586,7 @@ export function seedClubsIfEmpty(): void {
       slug: slugify(c.name),
       memberCount: SEED_MEMBER_COUNTS[i],
       tournamentCount: SEED_TOURNAMENT_COUNTS[i],
+      followerCount: 0,
       foundedAt: SEED_FOUNDED_DATES[i],
     }));
     saveClubs(clubs);

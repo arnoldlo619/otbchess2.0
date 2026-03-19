@@ -25,6 +25,10 @@ import {
   updateClub,
   syncClubTournamentCount,
   seedClubsIfEmpty,
+  followClub,
+  unfollowClub,
+  isFollowing,
+  getFollowerCount,
   type Club,
   type ClubMember,
   type ClubTournament,
@@ -69,6 +73,8 @@ import {
   Lock,
   Rss,
   Trash2,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -320,6 +326,9 @@ export default function ClubProfile() {
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [announcementDraft, setAnnouncementDraft] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [followingLoading, setFollowingLoading] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
 
   // Seed and load
   useEffect(() => {
@@ -333,7 +342,11 @@ export default function ClubProfile() {
     setMembers(clubMembers);
     setTournaments(getClubTournaments(found.id));
     setLiveTournaments(listTournamentsByClub(found.id));
-    if (user) setJoined(isMember(found.id, user.id));
+    if (user) {
+      setJoined(isMember(found.id, user.id));
+      setFollowing(isFollowing(found.id, user.id));
+    }
+    setFollowerCount(getFollowerCount(found.id));
     // Seed and load feed
     seedFeedIfEmpty(
       found.id,
@@ -419,6 +432,27 @@ export default function ClubProfile() {
     if (!club) return;
     deleteFeedEvent(club.id, eventId);
     setFeedEvents(listFeedEvents(club.id));
+  };
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error("Sign in to follow clubs");
+      return;
+    }
+    setFollowingLoading(true);
+    await new Promise((r) => setTimeout(r, 300));
+    if (following) {
+      unfollowClub(club.id, user.id);
+      setFollowing(false);
+      setFollowerCount((n) => Math.max(0, n - 1));
+      toast("Unfollowed " + club.name);
+    } else {
+      followClub(club.id, user.id);
+      setFollowing(true);
+      setFollowerCount((n) => n + 1);
+      toast.success("Following " + club.name + "!");
+    }
+    setFollowingLoading(false);
   };
 
   const handleShare = () => {
@@ -570,6 +604,7 @@ export default function ClubProfile() {
             {/* Stats row */}
             <div className="flex gap-3 mt-5 overflow-x-auto pb-1 scrollbar-hide">
               <StatPill icon={<Users className="w-4 h-4" />} value={club.memberCount} label="Members" isDark={isDark} />
+              <StatPill icon={<Bell className="w-4 h-4" />} value={followerCount} label="Followers" isDark={isDark} />
               <StatPill icon={<Trophy className="w-4 h-4" />} value={club.tournamentCount} label="Tournaments" isDark={isDark} />
               <StatPill icon={<CheckCircle2 className="w-4 h-4" />} value={completedTournaments.length} label="Completed" isDark={isDark} />
               <StatPill icon={<Zap className="w-4 h-4" />} value={upcomingTournaments.length} label="Upcoming" isDark={isDark} />
@@ -634,6 +669,31 @@ export default function ClubProfile() {
                 <span className={`text-xs font-medium ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
                   ✓ Member
                 </span>
+              )}
+              {/* Following button — shown for non-members (or logged-out users) */}
+              {!joined && !isOwner && (
+                <button
+                  onClick={handleFollow}
+                  disabled={followingLoading}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all active:scale-95 disabled:opacity-60 ${
+                    following
+                      ? isDark
+                        ? "bg-[#4CAF50]/15 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
+                        : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47] hover:bg-red-50 hover:border-red-200 hover:text-red-500"
+                      : isDark
+                        ? "bg-white/6 border-white/15 text-white/70 hover:bg-white/10 hover:text-white"
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  }`}
+                >
+                  {followingLoading ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  ) : following ? (
+                    <BellOff className="w-4 h-4" />
+                  ) : (
+                    <Bell className="w-4 h-4" />
+                  )}
+                  {following ? "Following" : "Follow"}
+                </button>
               )}
             </div>
           </div>

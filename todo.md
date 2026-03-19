@@ -2729,3 +2729,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build Activity Feed: RSVP updates, comments, social stream
 - [x] Wire routing from MyClubs page to ClubDashboard (/clubs/:id/home)
 - [x] Write unit tests for new club features (19 tests — events, RSVPs, comments)
+
+## Club Following Feature
+
+- [x] Add follower tracking to clubRegistry (followers array, followClub, unfollowClub, isFollowing)
+- [x] Add follower count display to ClubProfile hero section
+- [x] Add Following/Follow toggle button to ClubProfile hero (non-members only)
+- [x] Persist follow state in localStorage
+- [x] Write unit tests for follow/unfollow logic (11 tests)
