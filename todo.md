@@ -2915,3 +2915,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Goal 5: Full member data, tournament history, stats, and rich descriptions for each showcase club
 - [x] Goal 5: Seed key bumped to v2 so all users see the new clubs
 - [x] Goal 5: Trending badge (amber Zap) on showcase club cards in Discover page
+
+## Battle Feature — Head-to-Head Matchup Records (rebuilt after sandbox reset)
+
+- [x] clubBattleRegistry.ts — ClubBattle, BattleLeaderboardEntry, HeadToHeadRecord, PlayerBattleSummary types
+- [x] createBattle, startBattle, recordBattleResult, deleteBattle helpers (localStorage)
+- [x] getBattleLeaderboard — ranked by wins, win rate, streak
+- [x] getHeadToHeadRecords — per-player opponent breakdown
+- [x] getPlayerBattleSummary — W/D/L/total/winRate for a player in a club
+- [x] club_battles table added to shared/schema.ts and created via SQL
+- [x] Battles tab added to ClubDashboard (after Feed, before Analytics)
+- [x] Create Battle form (director-only): Player A / Player B dropdowns + notes
+- [x] Active Battles section: Start / Record Result (Win A / Draw / Win B) / Cancel buttons
+- [x] Battle Leaderboard: ranked list with W/D/L, win rate, streak badge
+- [x] Battle History: completed battles with winner highlighted
+- [x] Empty state when no battles exist
+- [x] MemberRow in ClubProfile shows inline W/D/L battle record (Swords icon) when battles > 0

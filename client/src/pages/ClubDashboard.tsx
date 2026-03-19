@@ -44,6 +44,17 @@ import {
   type RSVPStatus,
 } from "@/lib/clubEventRegistry";
 import {
+  listBattles,
+  createBattle,
+  startBattle,
+  recordBattleResult,
+  deleteBattle,
+  getBattleLeaderboard,
+  type ClubBattle,
+  type BattleResult,
+  type BattleLeaderboardEntry,
+} from "@/lib/clubBattleRegistry";
+import {
   listFeedEvents,
   seedFeedIfEmpty,
   postAnnouncement,
@@ -105,6 +116,9 @@ import {
   ThumbsUp,
   Wallet,
   CheckSquare,
+  Swords,
+  Medal,
+  Flame,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1422,7 +1436,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed" | "analytics" | "payments";
+type Tab = "events" | "members" | "feed" | "analytics" | "payments" | "battles";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -1457,6 +1471,13 @@ export default function ClubDashboard() {
   const [rsvpTitle, setRsvpTitle] = useState("");
   const [rsvpDate, setRsvpDate] = useState("");
   const [rsvpVenue, setRsvpVenue] = useState("");
+  // Battle state
+  const [battles, setBattles] = useState<ClubBattle[]>([]);
+  const [battleLeaderboard, setBattleLeaderboard] = useState<BattleLeaderboardEntry[]>([]);
+  const [battlePlayerA, setBattlePlayerA] = useState("");
+  const [battlePlayerB, setBattlePlayerB] = useState("");
+  const [battleNotes, setBattleNotes] = useState("");
+  const [battleResultId, setBattleResultId] = useState<string | null>(null);
 
   // Seed and load
   useEffect(() => {
@@ -1476,6 +1497,8 @@ export default function ClubDashboard() {
     setMembers(getClubMembers(found.id));
     setEvents(listClubEvents(found.id, true));
     setFeedEvents(listFeedEvents(found.id, 50));
+    setBattles(listBattles(found.id));
+    setBattleLeaderboard(getBattleLeaderboard(found.id));
     setLoading(false);
   }, [id, user]);
 
@@ -1503,6 +1526,12 @@ export default function ClubDashboard() {
   function refreshEvents() {
     if (!club) return;
     setEvents(listClubEvents(club.id, true));
+  }
+
+  function refreshBattles() {
+    if (!club) return;
+    setBattles(listBattles(club.id));
+    setBattleLeaderboard(getBattleLeaderboard(club.id));
   }
 
   function refreshFeed() {
@@ -1735,7 +1764,7 @@ export default function ClubDashboard() {
         style={{ background: "oklch(0.20 0.06 145 / 0.95)", backdropFilter: "blur(12px)" }}
       >
         <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
-          {(["events", "members", "feed", "analytics", "payments"] as Tab[]).map((t) => (
+          {(["events", "members", "feed", "battles", "analytics", "payments"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -2400,6 +2429,218 @@ export default function ClubDashboard() {
                 <p className="text-white/20 text-xs mt-1">Transactions will appear here once Stripe is connected and buy-ins are collected.</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── BATTLES TAB ─────────────────────────────────────────────────── */}
+        {tab === "battles" && (
+          <div className="space-y-6">
+            {/* Challenge creator (director only) */}
+            {isOwnerOrDirector && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Swords className="w-4 h-4" style={{ color: accent }} />
+                  <h3 className="text-white font-semibold text-sm">Create Battle</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="text-white/40 text-xs mb-1 block">Player A</label>
+                    <select
+                      value={battlePlayerA}
+                      onChange={(e) => setBattlePlayerA(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+                    >
+                      <option value="">Select member…</option>
+                      {members.map((m) => (
+                        <option key={m.userId} value={m.userId}>{m.displayName}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-white/40 text-xs mb-1 block">Player B</label>
+                    <select
+                      value={battlePlayerB}
+                      onChange={(e) => setBattlePlayerB(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+                    >
+                      <option value="">Select member…</option>
+                      {members.filter((m) => m.userId !== battlePlayerA).map((m) => (
+                        <option key={m.userId} value={m.userId}>{m.displayName}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Notes (optional)"
+                  value={battleNotes}
+                  onChange={(e) => setBattleNotes(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 mb-3"
+                />
+                <button
+                  disabled={!battlePlayerA || !battlePlayerB}
+                  onClick={() => {
+                    if (!club || !battlePlayerA || !battlePlayerB) return;
+                    const nameA = members.find((m) => m.userId === battlePlayerA)?.displayName ?? battlePlayerA;
+                    const nameB = members.find((m) => m.userId === battlePlayerB)?.displayName ?? battlePlayerB;
+                    createBattle(club.id, { playerAId: battlePlayerA, playerAName: nameA, playerBId: battlePlayerB, playerBName: nameB, notes: battleNotes || undefined });
+                    setBattlePlayerA(""); setBattlePlayerB(""); setBattleNotes("");
+                    refreshBattles();
+                    toast.success("Battle created!");
+                  }}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
+                  style={{ background: accent, color: "#0a1a0f" }}
+                >
+                  Create Battle
+                </button>
+              </div>
+            )}
+
+            {/* Active & pending battles */}
+            {battles.filter((b) => b.status !== "completed").length > 0 && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Flame className="w-4 h-4 text-orange-400" />
+                  <h3 className="text-white font-semibold text-sm">Active Battles</h3>
+                </div>
+                <div className="space-y-3">
+                  {battles.filter((b) => b.status !== "completed").map((battle) => (
+                    <div key={battle.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-white font-semibold text-sm">{battle.playerAName}</span>
+                          <span className="text-white/30 text-xs font-bold">VS</span>
+                          <span className="text-white font-semibold text-sm">{battle.playerBName}</span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          battle.status === "active" ? "bg-orange-500/20 text-orange-400" : "bg-white/10 text-white/40"
+                        }`}>
+                          {battle.status.toUpperCase()}
+                        </span>
+                      </div>
+                      {battle.notes && <p className="text-white/30 text-xs mb-3">{battle.notes}</p>}
+                      {isOwnerOrDirector && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {battle.status === "pending" && (
+                            <button
+                              onClick={() => { startBattle(club.id, battle.id); refreshBattles(); }}
+                              className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition"
+                            >
+                              Start
+                            </button>
+                          )}
+                          {battle.status === "active" && (
+                            <>
+                              <button
+                                onClick={() => { recordBattleResult(club.id, battle.id, "player_a"); refreshBattles(); toast.success(`${battle.playerAName} wins!`); }}
+                                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
+                                style={{ background: accent + "33", color: accent }}
+                              >
+                                {battle.playerAName} Wins
+                              </button>
+                              <button
+                                onClick={() => { recordBattleResult(club.id, battle.id, "draw"); refreshBattles(); toast.success("Draw recorded!"); }}
+                                className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition"
+                              >
+                                Draw
+                              </button>
+                              <button
+                                onClick={() => { recordBattleResult(club.id, battle.id, "player_b"); refreshBattles(); toast.success(`${battle.playerBName} wins!`); }}
+                                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
+                                style={{ background: accent + "33", color: accent }}
+                              >
+                                {battle.playerBName} Wins
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={() => { deleteBattle(club.id, battle.id); refreshBattles(); }}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition ml-auto"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Leaderboard */}
+            {battleLeaderboard.length > 0 && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Medal className="w-4 h-4" style={{ color: accent }} />
+                  <h3 className="text-white font-semibold text-sm">Battle Leaderboard</h3>
+                </div>
+                <div className="space-y-2">
+                  {battleLeaderboard.map((entry, idx) => (
+                    <div key={entry.playerId} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5">
+                      <span className={`text-sm font-bold w-5 text-center ${
+                        idx === 0 ? "text-yellow-400" : idx === 1 ? "text-slate-300" : idx === 2 ? "text-amber-600" : "text-white/30"
+                      }`}>{idx + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{entry.playerName}</p>
+                        <p className="text-white/30 text-xs">{entry.total} battles · {entry.winRate}% win rate</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-bold flex-shrink-0">
+                        <span className="text-emerald-400">{entry.wins}W</span>
+                        <span className="text-white/30">{entry.draws}D</span>
+                        <span className="text-red-400">{entry.losses}L</span>
+                      </div>
+                      {entry.streak !== 0 && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                          entry.streak > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                        }`}>
+                          {entry.streak > 0 ? `🔥 ${entry.streak}W` : `${Math.abs(entry.streak)}L`}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Completed battle history */}
+            {battles.filter((b) => b.status === "completed").length > 0 && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy className="w-4 h-4" style={{ color: accent }} />
+                  <h3 className="text-white font-semibold text-sm">Battle History</h3>
+                </div>
+                <div className="space-y-2">
+                  {battles.filter((b) => b.status === "completed").slice(0, 20).map((battle) => {
+                    const winnerName = battle.result === "player_a" ? battle.playerAName : battle.result === "player_b" ? battle.playerBName : null;
+                    return (
+                      <div key={battle.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm">
+                            <span className={battle.result === "player_a" ? "font-bold" : "text-white/60"}>{battle.playerAName}</span>
+                            <span className="text-white/30 mx-2">vs</span>
+                            <span className={battle.result === "player_b" ? "font-bold" : "text-white/60"}>{battle.playerBName}</span>
+                          </p>
+                          {battle.notes && <p className="text-white/30 text-xs truncate">{battle.notes}</p>}
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                          battle.result === "draw" ? "bg-white/10 text-white/40" : "bg-emerald-500/20 text-emerald-400"
+                        }`}>
+                          {battle.result === "draw" ? "DRAW" : `${winnerName} wins`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {battles.length === 0 && (
+              <div className="flex flex-col items-center gap-3 py-16 text-white/30">
+                <Swords className="w-12 h-12 opacity-20" />
+                <p className="text-sm text-center">No battles yet.<br />Create a battle between two members to start tracking records.</p>
+              </div>
+            )}
           </div>
         )}
       </div>

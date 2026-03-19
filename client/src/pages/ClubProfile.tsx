@@ -61,6 +61,10 @@ import {
   type RSVPStatus,
 } from "@/lib/clubEventRegistry";
 import {
+  getPlayerBattleSummary,
+  type PlayerBattleSummary,
+} from "@/lib/clubBattleRegistry";
+import {
   Users,
   Trophy,
   Calendar,
@@ -91,6 +95,7 @@ import {
   BarChart2,
   ClipboardList,
   Award,
+  Swords,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1108,7 +1113,7 @@ export default function ClubProfile() {
             </div>
             <div className="divide-y divide-white/5">
               {members.map((member) => (
-                <MemberRow key={member.userId} member={member} isDark={isDark} textMuted={textMuted} />
+                <MemberRow key={member.userId} member={member} clubId={club.id} isDark={isDark} textMuted={textMuted} />
               ))}
               {members.length === 0 && (
                 <div className={`py-12 text-center text-sm ${textMuted}`}>No members yet</div>
@@ -1533,15 +1538,18 @@ function DetailRow({
 
 function MemberRow({
   member,
+  clubId,
   isDark,
   textMuted,
 }: {
   member: ClubMember;
+  clubId: string;
   isDark: boolean;
   textMuted: string;
 }) {
   const platform: "chesscom" | "lichess" | undefined = member.chesscomUsername ? "chesscom" : member.lichessUsername ? "lichess" : undefined;
   const username = member.chesscomUsername ?? member.lichessUsername ?? undefined;
+  const battleSummary: PlayerBattleSummary = getPlayerBattleSummary(clubId, member.userId);
 
   return (
     <div className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
@@ -1563,6 +1571,15 @@ function MemberRow({
           <p className={`text-xs mt-0.5 ${textMuted}`}>
             {member.chesscomUsername ? "chess.com" : "lichess"} · {username}
           </p>
+        )}
+        {battleSummary.total > 0 && (
+          <div className="flex items-center gap-1.5 mt-1">
+            <Swords className={`w-3 h-3 ${textMuted}`} />
+            <span className="text-[11px] text-emerald-400 font-bold">{battleSummary.wins}W</span>
+            <span className={`text-[11px] ${textMuted}`}>{battleSummary.draws}D</span>
+            <span className="text-[11px] text-red-400">{battleSummary.losses}L</span>
+            <span className={`text-[10px] ${textMuted}`}>· {battleSummary.winRate}% win rate</span>
+          </div>
         )}
       </div>
       <div className="text-right flex-shrink-0">
