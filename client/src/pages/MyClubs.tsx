@@ -18,6 +18,9 @@ import {
   listAllClubs,
   listMyClubs,
   seedClubsIfEmpty,
+  unfollowClub,
+  joinClub,
+  isFollowing,
   type Club,
   type ClubCategory,
 } from "@/lib/clubRegistry";
@@ -35,6 +38,9 @@ import {
   GraduationCap,
   Building2,
   Filter,
+  Bell,
+  BellOff,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
@@ -182,6 +188,108 @@ function ClubCard({
   );
 }
 
+// ── Followed club card (with Unfollow + Join actions) ───────────────────────
+
+function FollowedClubCard({
+  club,
+  isDark,
+  onUnfollow,
+  onJoin,
+}: {
+  club: Club;
+  isDark: boolean;
+  onUnfollow: () => void;
+  onJoin: () => void;
+}) {
+  const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
+  const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
+  const cardBorder = isDark ? "border-white/8" : "border-gray-100";
+  const textMain = isDark ? "text-white" : "text-gray-900";
+  const textMuted = isDark ? "text-white/50" : "text-gray-400";
+
+  return (
+    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+      {/* Banner */}
+      <Link href={`/clubs/${club.id}`}>
+        <div
+          className="h-28 relative overflow-hidden cursor-pointer"
+          style={{
+            background: club.bannerUrl
+              ? undefined
+              : `linear-gradient(135deg, ${club.accentColor}dd 0%, ${club.accentColor}55 100%)`,
+          }}
+        >
+          {club.bannerUrl ? (
+            <img src={club.bannerUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 chess-board-bg opacity-15" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        </div>
+      </Link>
+
+      {/* Avatar */}
+      <div className="px-4 relative z-10">
+        <div
+          className="-mt-7 w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-xl border-2 border-white/30 overflow-hidden"
+          style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
+        >
+          {club.avatarUrl ? (
+            <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+          ) : (
+            <span>{flag}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 pt-2 pb-4">
+        <Link href={`/clubs/${club.id}`}>
+          <h3 className={`text-base font-bold leading-tight truncate cursor-pointer hover:underline ${textMain}`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            {club.name}
+          </h3>
+        </Link>
+        <p className={`text-xs mt-1 line-clamp-2 leading-relaxed ${textMuted}`}>{club.tagline}</p>
+
+        {/* Stats row */}
+        <div className={`flex items-center gap-4 mt-3 pt-3 border-t ${isDark ? "border-white/6" : "border-gray-100"}`}>
+          <span className={`flex items-center gap-1 text-xs font-semibold ${textMuted}`}>
+            <Users className="w-3.5 h-3.5" />
+            {club.memberCount.toLocaleString()}
+          </span>
+          <span className={`flex items-center gap-1 text-xs font-semibold ${textMuted}`}>
+            <Trophy className="w-3.5 h-3.5" />
+            {club.tournamentCount}
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={onJoin}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors active:scale-95"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Join
+          </button>
+          <button
+            onClick={onUnfollow}
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors active:scale-95 ${
+              isDark
+                ? "border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 bg-white/4"
+                : "border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 bg-white"
+            }`}
+          >
+            <BellOff className="w-3.5 h-3.5" />
+            Unfollow
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function MyClubs() {
@@ -192,16 +300,26 @@ export default function MyClubs() {
 
   const [allClubs, setAllClubs] = useState<Club[]>([]);
   const [myClubs, setMyClubs] = useState<Club[]>([]);
+  const [followedClubs, setFollowedClubs] = useState<Club[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ClubCategory | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
 
-  useEffect(() => {
+  const refreshClubs = () => {
     seedClubsIfEmpty();
     const all = listAllClubs();
     setAllClubs(all);
-    if (user) setMyClubs(listMyClubs(user.id));
+    if (user) {
+      const joined = listMyClubs(user.id);
+      setMyClubs(joined);
+      const joinedIds = new Set(joined.map((c) => c.id));
+      setFollowedClubs(all.filter((c) => !joinedIds.has(c.id) && isFollowing(c.id, user.id)));
+    }
+  };
+
+  useEffect(() => {
+    refreshClubs();
   }, [user, showWizard]); // re-fetch after wizard closes
 
   const myClubIds = useMemo(() => new Set(myClubs.map((c) => c.id)), [myClubs]);
@@ -292,6 +410,41 @@ export default function MyClubs() {
               Sign In
             </button>
           </div>
+        )}
+
+        {/* ── Following section (signed-in, non-empty) ─────────────────── */}
+        {user && followedClubs.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Bell className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>
+                  Following
+                </h2>
+              </div>
+              <span className={`text-xs font-medium ${textMuted}`}>{followedClubs.length}</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {followedClubs.map((club) => (
+                <FollowedClubCard
+                  key={club.id}
+                  club={club}
+                  isDark={isDark}
+                  onUnfollow={() => {
+                    unfollowClub(club.id, user.id);
+                    refreshClubs();
+                    toast(`Unfollowed ${club.name}`);
+                  }}
+                  onJoin={() => {
+                    joinClub(club.id, { userId: user.id, displayName: user.displayName, chesscomUsername: user.chesscomUsername, lichessUsername: user.lichessUsername, avatarUrl: user.avatarUrl });
+                    refreshClubs();
+                    toast.success(`Joined ${club.name}!`);
+                  }}
+                />
+              ))}
+            </div>
+          </section>
         )}
 
         {/* ── My Clubs section (signed-in only) ───────────────────────────── */}

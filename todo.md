@@ -2737,3 +2737,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Following/Follow toggle button to ClubProfile hero (non-members only)
 - [x] Persist follow state in localStorage
 - [x] Write unit tests for follow/unfollow logic (11 tests)
+
+## My Clubs — Following Section
+
+- [x] Add getFollowedClubs(userId) helper to clubRegistry
+- [x] Add "Following" section to MyClubs page below "My Clubs"
+- [x] Show club cards with Unfollow and Join CTAs for followed clubs
+- [x] Hide section when user follows no clubs
