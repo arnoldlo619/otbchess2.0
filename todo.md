@@ -2718,3 +2718,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Find the projection/live stream view and enlarge the timer display
 - [x] Make timer hero-sized (scoreboard style) for visibility across the room
+
+## Club Dashboard (Partiful-inspired)
+
+- [x] Audit existing club infrastructure (DB schema, API routes, ClubProfile page)
+- [x] Extend data model: clubEventRegistry with ClubEvent, RSVP, Comment types
+- [x] Build ClubDashboard page shell with hero banner, gradient bg, tab nav
+- [x] Build Events tab: upcoming event cards with cover art, date/time, RSVP button
+- [x] Build Members tab: roster with avatars, ELO badges, role labels
+- [x] Build Activity Feed: RSVP updates, comments, social stream
+- [x] Wire routing from MyClubs page to ClubDashboard (/clubs/:id/home)
+- [x] Write unit tests for new club features (19 tests — events, RSVPs, comments)

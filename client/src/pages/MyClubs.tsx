@@ -74,10 +74,12 @@ function ClubCard({
   club,
   isDark,
   compact = false,
+  toDashboard = false,
 }: {
   club: Club;
   isDark: boolean;
   compact?: boolean;
+  toDashboard?: boolean;
 }) {
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
@@ -86,7 +88,7 @@ function ClubCard({
   const textMuted = isDark ? "text-white/50" : "text-gray-400";
 
   return (
-    <Link href={`/clubs/${club.id}`}>
+    <Link href={toDashboard ? `/clubs/${club.id}/home` : `/clubs/${club.id}`}>
       <div
         className={`group rounded-3xl border ${cardBorder} ${card} overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
       >
@@ -311,7 +313,7 @@ export default function MyClubs() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {myClubs.map((club) => (
-                  <ClubCard key={club.id} club={club} isDark={isDark} />
+                  <ClubCard key={club.id} club={club} isDark={isDark} toDashboard={true} />
                 ))}
               </div>
             )}

@@ -1,0 +1,1139 @@
+/**
+ * ClubDashboard — /clubs/:id/home
+ *
+ * Member-only internal club home page, inspired by Partiful's event-first UI.
+ * Layout:
+ *   • Immersive full-bleed hero with club identity + gradient
+ *   • Sticky tab nav: Events | Members | Feed
+ *   • Events tab  — upcoming & past event cards with RSVP
+ *   • Members tab — roster with avatars, ELO, roles
+ *   • Feed tab    — chronological activity stream
+ */
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useLocation, Link } from "wouter";
+import { NavLogo } from "@/components/NavLogo";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { useAuthContext } from "@/context/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import {
+  getClub,
+  getClubBySlug,
+  getClubMembers,
+  isMember,
+  seedClubsIfEmpty,
+  type Club,
+  type ClubMember,
+} from "@/lib/clubRegistry";
+import {
+  listClubEvents,
+  getEventRSVPs,
+  getUserRSVP,
+  countRSVPs,
+  upsertRSVP,
+  getEventComments,
+  postComment,
+  deleteComment,
+  createClubEvent,
+  deleteClubEvent,
+  seedClubEventsIfEmpty,
+  type ClubEvent,
+  type ClubEventRSVP,
+  type ClubEventComment,
+  type RSVPStatus,
+} from "@/lib/clubEventRegistry";
+import {
+  listFeedEvents,
+  seedFeedIfEmpty,
+  postAnnouncement,
+  type FeedEvent,
+} from "@/lib/clubFeedRegistry";
+import {
+  Users,
+  Trophy,
+  Calendar,
+  MapPin,
+  ChevronLeft,
+  Crown,
+  Shield,
+  CheckCircle2,
+  Clock,
+  Zap,
+  Star,
+  MessageSquare,
+  Send,
+  Plus,
+  Trash2,
+  ExternalLink,
+  Share2,
+  ChevronDown,
+  ChevronUp,
+  Globe,
+  X,
+  Megaphone,
+  PartyPopper,
+  UserCheck,
+  ArrowRight,
+  Lock,
+} from "lucide-react";
+import { toast } from "sonner";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function timeAgo(iso: string): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatEventDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatEventTime(startIso: string, endIso?: string): string {
+  const fmt = (d: string) =>
+    new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return endIso ? `${fmt(startIso)} – ${fmt(endIso)}` : fmt(startIso);
+}
+
+function isUpcoming(event: ClubEvent): boolean {
+  return new Date(event.startAt) > new Date();
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+/** Pill RSVP button with animated state */
+function RSVPButton({
+  eventId,
+  clubId,
+  userId,
+  displayName,
+  avatarUrl,
+  onChanged,
+}: {
+  eventId: string;
+  clubId: string;
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  onChanged?: () => void;
+}) {
+  const [status, setStatus] = useState<RSVPStatus | null>(
+    () => getUserRSVP(eventId, userId)?.status ?? null
+  );
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function choose(s: RSVPStatus) {
+    upsertRSVP(eventId, clubId, userId, displayName, s, avatarUrl);
+    setStatus(s);
+    setOpen(false);
+    onChanged?.();
+    toast.success(
+      s === "going" ? "You're going! 🎉" : s === "maybe" ? "Marked as maybe" : "Marked as not going"
+    );
+  }
+
+  const label = status === "going" ? "Going" : status === "maybe" ? "Maybe" : status === "not_going" ? "Not Going" : "RSVP";
+  const bgClass =
+    status === "going"
+      ? "bg-[#4CAF50] text-white"
+      : status === "maybe"
+      ? "bg-amber-500/90 text-white"
+      : status === "not_going"
+      ? "bg-white/10 text-white/60"
+      : "bg-white/15 text-white hover:bg-white/25";
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all active:scale-95 ${bgClass}`}
+      >
+        {status === "going" && <CheckCircle2 className="w-3.5 h-3.5" />}
+        {status === "maybe" && <Clock className="w-3.5 h-3.5" />}
+        {label}
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-1.5 z-50 rounded-2xl overflow-hidden shadow-2xl border border-white/10 min-w-[160px]"
+          style={{ background: "oklch(0.16 0.04 240)" }}
+        >
+          {(["going", "maybe", "not_going"] as RSVPStatus[]).map((s) => (
+            <button
+              key={s}
+              onClick={() => choose(s)}
+              className={`w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold transition-colors text-left ${
+                status === s ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/08 hover:text-white"
+              }`}
+            >
+              {s === "going" && <CheckCircle2 className="w-4 h-4 text-[#4CAF50]" />}
+              {s === "maybe" && <Clock className="w-4 h-4 text-amber-400" />}
+              {s === "not_going" && <X className="w-4 h-4 text-white/40" />}
+              {s === "going" ? "Going" : s === "maybe" ? "Maybe" : "Not Going"}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Stacked avatar row showing RSVP attendees */
+function AttendeeAvatars({ rsvps, max = 7 }: { rsvps: ClubEventRSVP[]; max?: number }) {
+  const going = rsvps.filter((r) => r.status === "going");
+  const shown = going.slice(0, max);
+  const extra = going.length - shown.length;
+  if (!going.length) return null;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex -space-x-2">
+        {shown.map((r) => (
+          <div
+            key={r.userId}
+            className="w-7 h-7 rounded-full border-2 border-[oklch(0.13_0.06_240)] overflow-hidden flex-shrink-0"
+            title={r.displayName}
+          >
+            <PlayerAvatar
+              username={r.displayName}
+              name={r.displayName}
+              avatarUrl={r.avatarUrl ?? undefined}
+              size={28}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+        {extra > 0 && (
+          <div
+            className="w-7 h-7 rounded-full border-2 border-[oklch(0.13_0.06_240)] flex items-center justify-center text-[10px] font-bold text-white/70 flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.12)" }}
+          >
+            +{extra}
+          </div>
+        )}
+      </div>
+      <span className="text-white/50 text-xs font-medium">{going.length} going</span>
+    </div>
+  );
+}
+
+/** Full event card — Partiful-style with cover art, date, RSVP */
+function EventCard({
+  event,
+  userId,
+  displayName,
+  avatarUrl,
+  isOwner,
+  onDeleted,
+}: {
+  event: ClubEvent;
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  isOwner: boolean;
+  onDeleted: () => void;
+}) {
+  const [rsvps, setRsvps] = useState<ClubEventRSVP[]>(() => getEventRSVPs(event.id));
+  const [comments, setComments] = useState<ClubEventComment[]>(() => getEventComments(event.id));
+  const [showComments, setShowComments] = useState(false);
+  const [commentInput, setCommentInput] = useState("");
+  const upcoming = isUpcoming(event);
+  const counts = countRSVPs(event.id);
+
+  function refreshRSVPs() {
+    setRsvps(getEventRSVPs(event.id));
+  }
+
+  function submitComment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!commentInput.trim()) return;
+    postComment(event.id, event.clubId, userId, displayName, commentInput, avatarUrl);
+    setComments(getEventComments(event.id));
+    setCommentInput("");
+  }
+
+  function handleDeleteComment(commentId: string) {
+    deleteComment(commentId);
+    setComments(getEventComments(event.id));
+  }
+
+  const accent = event.accentColor ?? "#4CAF50";
+
+  return (
+    <div
+      className="rounded-3xl overflow-hidden border border-white/08 transition-all hover:border-white/15"
+      style={{ background: "oklch(0.15 0.05 240)" }}
+    >
+      {/* Cover image / gradient header */}
+      <div
+        className="relative h-48 sm:h-56 flex flex-col justify-end p-5"
+        style={{
+          background: event.coverImageUrl
+            ? `url(${event.coverImageUrl}) center/cover no-repeat`
+            : `linear-gradient(135deg, ${accent}33 0%, ${accent}11 50%, oklch(0.10 0.06 240) 100%)`,
+        }}
+      >
+        {/* Gradient overlay for readability */}
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to top, oklch(0.15 0.05 240) 0%, transparent 60%)" }}
+        />
+
+        {/* Past badge */}
+        {!upcoming && (
+          <div
+            className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+            style={{ background: "rgba(0,0,0,0.55)", color: "rgba(255,255,255,0.55)" }}
+          >
+            Past Event
+          </div>
+        )}
+
+        {/* Delete button (owner only) */}
+        {isOwner && (
+          <button
+            onClick={() => {
+              if (confirm("Delete this event?")) {
+                deleteClubEvent(event.id);
+                onDeleted();
+              }
+            }}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95"
+            style={{ background: "rgba(0,0,0,0.45)" }}
+          >
+            <Trash2 className="w-3.5 h-3.5 text-white/60" />
+          </button>
+        )}
+
+        {/* Date pill */}
+        <div className="relative z-10 flex items-center gap-2 mb-2">
+          <div
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+            style={{ background: accent + "33", color: accent, border: `1px solid ${accent}44` }}
+          >
+            <Calendar className="w-3 h-3" />
+            {formatEventDate(event.startAt)}
+          </div>
+        </div>
+
+        {/* Title */}
+        <h3
+          className="relative z-10 text-white font-black text-2xl sm:text-3xl leading-tight"
+          style={{ fontFamily: "'Clash Display', sans-serif" }}
+        >
+          {event.title}
+        </h3>
+      </div>
+
+      {/* Body */}
+      <div className="p-5 space-y-4">
+        {/* Time + venue */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-white/60 text-sm">
+            <Clock className="w-4 h-4 flex-shrink-0" style={{ color: accent }} />
+            <span>{formatEventTime(event.startAt, event.endAt)}</span>
+          </div>
+          {event.venue && (
+            <div className="flex items-start gap-2 text-white/60 text-sm">
+              <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: accent }} />
+              <div>
+                <span className="text-white/80 font-medium">{event.venue}</span>
+                {event.address && <p className="text-white/40 text-xs mt-0.5">{event.address}</p>}
+              </div>
+            </div>
+          )}
+          {event.parkingNote && (
+            <div className="flex items-center gap-2 text-white/40 text-xs">
+              <span className="text-base">🚗</span>
+              {event.parkingNote}
+            </div>
+          )}
+          {event.admissionNote && (
+            <div className="flex items-center gap-2 text-white/40 text-xs">
+              <span className="text-base">🎟️</span>
+              {event.admissionNote}
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        {event.description && (
+          <p className="text-white/55 text-sm leading-relaxed whitespace-pre-line line-clamp-3">
+            {event.description}
+          </p>
+        )}
+
+        {/* Attendee row + RSVP */}
+        <div className="flex items-center justify-between pt-1">
+          <AttendeeAvatars rsvps={rsvps} />
+          {upcoming && (
+            <RSVPButton
+              eventId={event.id}
+              clubId={event.clubId}
+              userId={userId}
+              displayName={displayName}
+              avatarUrl={avatarUrl}
+              onChanged={refreshRSVPs}
+            />
+          )}
+          {!upcoming && (
+            <div className="flex items-center gap-3 text-white/30 text-xs">
+              <span>{counts.going} went</span>
+            </div>
+          )}
+        </div>
+
+        {/* Comments toggle */}
+        <button
+          onClick={() => setShowComments((v) => !v)}
+          className="flex items-center gap-2 text-white/40 text-xs font-medium hover:text-white/60 transition-colors"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          {comments.length > 0 ? `${comments.length} comment${comments.length > 1 ? "s" : ""}` : "Add a comment"}
+          {comments.length > 0 && (
+            showComments ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+          )}
+        </button>
+
+        {/* Comments section */}
+        {showComments && (
+          <div className="space-y-3 pt-1">
+            {/* Comment list */}
+            {comments.map((c) => (
+              <div key={c.id} className="flex gap-2.5">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden">
+                  <PlayerAvatar
+                    username={c.displayName}
+                    name={c.displayName}
+                    avatarUrl={c.avatarUrl ?? undefined}
+                    size={28}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-white/80 text-xs font-bold">{c.displayName}</span>
+                    <span className="text-white/30 text-[10px]">{timeAgo(c.createdAt)}</span>
+                  </div>
+                  <p className="text-white/60 text-sm mt-0.5 break-words">{c.body}</p>
+                </div>
+                {c.userId === userId && (
+                  <button
+                    onClick={() => handleDeleteComment(c.id)}
+                    className="flex-shrink-0 text-white/20 hover:text-red-400 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {/* Comment input */}
+            <form onSubmit={submitComment} className="flex gap-2 items-center">
+              <div className="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden">
+                <PlayerAvatar username={displayName} name={displayName} avatarUrl={avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
+              </div>
+              <input
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                placeholder="Add a comment…"
+                maxLength={500}
+                className="flex-1 bg-white/07 border border-white/10 rounded-full px-4 py-1.5 text-sm text-white placeholder-white/30 outline-none focus:border-white/25 transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={!commentInput.trim()}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 disabled:opacity-30"
+                style={{ background: accent }}
+              >
+                <Send className="w-3.5 h-3.5 text-white" />
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Create Event modal */
+function CreateEventModal({
+  clubId,
+  userId,
+  displayName,
+  onCreated,
+  onClose,
+}: {
+  clubId: string;
+  userId: string;
+  displayName: string;
+  onCreated: () => void;
+  onClose: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("19:00");
+  const [endTime, setEndTime] = useState("22:00");
+  const [venue, setVenue] = useState("");
+  const [address, setAddress] = useState("");
+  const [admissionNote, setAdmissionNote] = useState("Free for members");
+  const [submitting, setSubmitting] = useState(false);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() || !date) return;
+    setSubmitting(true);
+    const startAt = new Date(`${date}T${startTime}`).toISOString();
+    const endAt = endTime ? new Date(`${date}T${endTime}`).toISOString() : undefined;
+    createClubEvent({
+      clubId,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      startAt,
+      endAt,
+      venue: venue.trim() || undefined,
+      address: address.trim() || undefined,
+      admissionNote: admissionNote.trim() || undefined,
+      accentColor: "#4CAF50",
+      creatorId: userId,
+      creatorName: displayName,
+      isPublished: true,
+    });
+    setSubmitting(false);
+    toast.success("Event created!");
+    onCreated();
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: "oklch(0.14 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/08">
+          <h2 className="text-white font-bold text-lg">Create Event</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/08 hover:bg-white/15 transition-colors">
+            <X className="w-4 h-4 text-white/60" />
+          </button>
+        </div>
+
+        <form onSubmit={submit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div>
+            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Event Title *</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Thursday Night Blitz"
+              required
+              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Date *</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[#4CAF50]/60 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Time</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-[#4CAF50]/60 transition-colors"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Venue</label>
+            <input
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              placeholder="e.g. The Chess Lounge"
+              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Address</label>
+            <input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Full address"
+              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Admission</label>
+            <input
+              value={admissionNote}
+              onChange={(e) => setAdmissionNote(e.target.value)}
+              placeholder="e.g. Free for members · $5 at door"
+              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Tell members what to expect…"
+              rows={3}
+              className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors resize-none"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting || !title.trim() || !date}
+            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-98 disabled:opacity-50"
+            style={{ background: "#4CAF50" }}
+          >
+            {submitting ? "Creating…" : "Create Event"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Feed event icon ───────────────────────────────────────────────────────────
+
+function FeedIcon({ type }: { type: FeedEvent["type"] }) {
+  const map: Record<FeedEvent["type"], React.ReactNode> = {
+    member_join:           <UserCheck className="w-4 h-4 text-[#4CAF50]" />,
+    member_leave:          <X className="w-4 h-4 text-red-400" />,
+    tournament_created:    <Trophy className="w-4 h-4 text-amber-400" />,
+    tournament_completed:  <Star className="w-4 h-4 text-amber-400" />,
+    announcement:          <Megaphone className="w-4 h-4 text-blue-400" />,
+    club_founded:          <PartyPopper className="w-4 h-4 text-purple-400" />,
+  };
+  return (
+    <div
+      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+      style={{ background: "rgba(255,255,255,0.07)" }}
+    >
+      {map[type]}
+    </div>
+  );
+}
+
+// ── Role badge ────────────────────────────────────────────────────────────────
+
+function RoleBadge({ role }: { role: ClubMember["role"] }) {
+  if (role === "owner")
+    return (
+      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25">
+        <Crown className="w-2.5 h-2.5" /> Owner
+      </span>
+    );
+  if (role === "director")
+    return (
+      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25">
+        <Shield className="w-2.5 h-2.5" /> Director
+      </span>
+    );
+  return null;
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
+type Tab = "events" | "members" | "feed";
+
+export default function ClubDashboard() {
+  const { id } = useParams<{ id: string }>();
+  const [, navigate] = useLocation();
+  const { user } = useAuthContext();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  const [club, setClub] = useState<Club | null>(null);
+  const [members, setMembers] = useState<ClubMember[]>([]);
+  const [events, setEvents] = useState<ClubEvent[]>([]);
+  const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
+  const [tab, setTab] = useState<Tab>("events");
+  const [loading, setLoading] = useState(true);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [announcementText, setAnnouncementText] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+
+  // Seed and load
+  useEffect(() => {
+    seedClubsIfEmpty();
+    seedClubEventsIfEmpty();
+
+    const found = id ? (getClub(id) ?? getClubBySlug(id)) : null;
+    if (!found) { navigate("/clubs"); return; }
+
+    // Guard: must be a member or owner
+    if (user && !isMember(found.id, user.id) && found.ownerId !== user.id) {
+      navigate(`/clubs/${id}`);
+      return;
+    }
+
+    setClub(found);
+    setMembers(getClubMembers(found.id));
+    setEvents(listClubEvents(found.id, true));
+    setFeedEvents(listFeedEvents(found.id, 50));
+    setLoading(false);
+  }, [id, user]);
+
+  function refreshEvents() {
+    if (!club) return;
+    setEvents(listClubEvents(club.id, true));
+  }
+
+  function refreshFeed() {
+    if (!club) return;
+    setFeedEvents(listFeedEvents(club.id, 50));
+  }
+
+  function submitAnnouncement(e: React.FormEvent) {
+    e.preventDefault();
+    if (!announcementText.trim() || !club || !user) return;
+    setPostingAnnouncement(true);
+    postAnnouncement(club.id, user.displayName, announcementText.trim(), user.avatarUrl ?? undefined);
+    setAnnouncementText("");
+    setPostingAnnouncement(false);
+    refreshFeed();
+    toast.success("Announcement posted!");
+  }
+
+  const isOwnerOrDirector =
+    user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
+
+  const upcomingEvents = events.filter(isUpcoming);
+  const pastEvents = events.filter((e) => !isUpcoming(e));
+
+  const filteredMembers = members.filter(
+    (m) =>
+      !memberSearch ||
+      m.displayName.toLowerCase().includes(memberSearch.toLowerCase()) ||
+      (m.chesscomUsername ?? "").toLowerCase().includes(memberSearch.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.10 0.06 240)" }}>
+        <div className="w-8 h-8 border-2 border-[#4CAF50] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!club) return null;
+
+  const accent = club.accentColor ?? "#4CAF50";
+
+  return (
+    <div className="min-h-screen" style={{ background: "oklch(0.10 0.06 240)" }}>
+      {/* ── Nav ──────────────────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/06"
+        style={{ background: "oklch(0.10 0.06 240 / 0.92)", backdropFilter: "blur(12px)" }}
+      >
+        <div className="flex items-center gap-3">
+          <Link href="/clubs">
+            <button className="flex items-center gap-1.5 text-white/50 hover:text-white/80 transition-colors text-sm">
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:block">My Clubs</span>
+            </button>
+          </Link>
+          <div className="w-px h-4 bg-white/15" />
+          <NavLogo />
+        </div>
+        {user && (
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full overflow-hidden">
+              <PlayerAvatar username={user.displayName} name={user.displayName} avatarUrl={user.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
+            </div>
+            <span className="hidden sm:block text-white/60 text-sm font-medium">{user.displayName}</span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          background: club.bannerUrl
+            ? `url(${club.bannerUrl}) center/cover no-repeat`
+            : `linear-gradient(135deg, ${accent}22 0%, ${accent}08 40%, oklch(0.10 0.06 240) 100%)`,
+          minHeight: "280px",
+        }}
+      >
+        {/* Dark overlay */}
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, oklch(0.10 0.06 240) 100%)" }}
+        />
+
+        {/* Decorative glow */}
+        <div
+          className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-20"
+          style={{ background: accent }}
+        />
+
+        <div className="relative z-10 px-5 sm:px-8 pt-10 pb-8 max-w-4xl mx-auto">
+          {/* Club avatar + identity */}
+          <div className="flex items-end gap-5 mb-6">
+            <div
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 flex-shrink-0"
+              style={{ borderColor: accent + "66" }}
+            >
+              <PlayerAvatar
+                username={club.name}
+                name={club.name}
+                avatarUrl={club.avatarUrl ?? undefined}
+                size={96}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0 pb-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                  style={{ background: accent + "22", color: accent, border: `1px solid ${accent}33` }}
+                >
+                  {club.category}
+                </span>
+                {club.isPublic && (
+                  <span className="flex items-center gap-1 text-white/30 text-[10px]">
+                    <Globe className="w-3 h-3" /> Public
+                  </span>
+                )}
+              </div>
+              <h1
+                className="text-white font-black text-3xl sm:text-4xl leading-tight truncate"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                {club.name}
+              </h1>
+              {club.tagline && (
+                <p className="text-white/50 text-sm mt-1 truncate">{club.tagline}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div className="flex items-center gap-5 flex-wrap">
+            <div className="flex items-center gap-1.5 text-white/60 text-sm">
+              <Users className="w-4 h-4" style={{ color: accent }} />
+              <span className="font-semibold text-white/80">{club.memberCount}</span>
+              <span>members</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-white/60 text-sm">
+              <Trophy className="w-4 h-4" style={{ color: accent }} />
+              <span className="font-semibold text-white/80">{club.tournamentCount}</span>
+              <span>tournaments</span>
+            </div>
+            {club.location && (
+              <div className="flex items-center gap-1.5 text-white/60 text-sm">
+                <MapPin className="w-4 h-4" />
+                {club.location}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 text-white/60 text-sm">
+              <Calendar className="w-4 h-4" />
+              <span>Since {new Date(club.foundedAt).getFullYear()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Sticky tab nav ───────────────────────────────────────────────────── */}
+      <div
+        className="sticky top-[57px] z-30 border-b border-white/08"
+        style={{ background: "oklch(0.10 0.06 240 / 0.95)", backdropFilter: "blur(12px)" }}
+      >
+        <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
+          {(["events", "members", "feed"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`relative px-5 py-4 text-sm font-semibold capitalize transition-colors ${
+                tab === t ? "text-white" : "text-white/40 hover:text-white/70"
+              }`}
+            >
+              {t === "events" && upcomingEvents.length > 0 && (
+                <span
+                  className="absolute top-3 right-2 w-1.5 h-1.5 rounded-full"
+                  style={{ background: accent }}
+                />
+              )}
+              {t}
+              {tab === t && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
+                  style={{ background: accent }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Tab content ──────────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20">
+
+        {/* ── EVENTS TAB ────────────────────────────────────────────────────── */}
+        {tab === "events" && (
+          <div className="space-y-8">
+            {/* Create event CTA */}
+            {isOwnerOrDirector && (
+              <button
+                onClick={() => setShowCreateEvent(true)}
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold text-white/60 border border-dashed border-white/15 hover:border-white/30 hover:text-white/80 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Create New Event
+              </button>
+            )}
+
+            {/* Upcoming */}
+            {upcomingEvents.length > 0 && (
+              <div>
+                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">
+                  Upcoming · {upcomingEvents.length}
+                </h2>
+                <div className="space-y-4">
+                  {upcomingEvents.map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      userId={user?.id ?? "guest"}
+                      displayName={user?.displayName ?? "Guest"}
+                      avatarUrl={user?.avatarUrl}
+                      isOwner={!!isOwnerOrDirector}
+                      onDeleted={refreshEvents}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Past */}
+            {pastEvents.length > 0 && (
+              <div>
+                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">
+                  Past Events · {pastEvents.length}
+                </h2>
+                <div className="space-y-4 opacity-70">
+                  {pastEvents.map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      userId={user?.id ?? "guest"}
+                      displayName={user?.displayName ?? "Guest"}
+                      avatarUrl={user?.avatarUrl}
+                      isOwner={!!isOwnerOrDirector}
+                      onDeleted={refreshEvents}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {upcomingEvents.length === 0 && pastEvents.length === 0 && (
+              <div className="text-center py-16 text-white/30">
+                <Calendar className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p className="font-semibold">No events yet</p>
+                {isOwnerOrDirector && (
+                  <p className="text-sm mt-1">Create the first event for your club!</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MEMBERS TAB ───────────────────────────────────────────────────── */}
+        {tab === "members" && (
+          <div className="space-y-5">
+            {/* Search */}
+            <div className="relative">
+              <input
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                placeholder={`Search ${members.length} members…`}
+                className="w-full bg-white/07 border border-white/10 rounded-xl pl-4 pr-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/25 transition-colors"
+              />
+            </div>
+
+            {/* Owner / directors first */}
+            {["owner", "director", "member"].map((role) => {
+              const group = filteredMembers.filter((m) => m.role === role);
+              if (!group.length) return null;
+              return (
+                <div key={role}>
+                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">
+                    {role === "owner" ? "Owner" : role === "director" ? `Directors · ${group.length}` : `Members · ${group.length}`}
+                  </h3>
+                  <div className="space-y-2">
+                    {group.map((m) => (
+                      <div
+                        key={m.userId}
+                        className="flex items-center gap-3 p-3 rounded-2xl border border-white/06 hover:border-white/12 transition-colors"
+                        style={{ background: "oklch(0.14 0.04 240)" }}
+                      >
+                        <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                          <PlayerAvatar
+                            username={m.displayName}
+                            name={m.displayName}
+                            avatarUrl={m.avatarUrl ?? undefined}
+                            size={40}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-white font-semibold text-sm truncate">{m.displayName}</span>
+                            <RoleBadge role={m.role} />
+                          </div>
+                          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                            {m.chesscomUsername && (
+                              <span className="text-white/40 text-xs">♟ {m.chesscomUsername}</span>
+                            )}
+                            {m.tournamentsPlayed > 0 && (
+                              <span className="text-white/40 text-xs">{m.tournamentsPlayed} tournaments</span>
+                            )}
+                            {m.bestFinish && (
+                              <span className="text-amber-400/70 text-xs flex items-center gap-1">
+                                <Star className="w-2.5 h-2.5" /> #{m.bestFinish} best
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-white/20 text-xs flex-shrink-0">
+                          {new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {filteredMembers.length === 0 && (
+              <div className="text-center py-16 text-white/30">
+                <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p className="font-semibold">No members found</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── FEED TAB ──────────────────────────────────────────────────────── */}
+        {tab === "feed" && (
+          <div className="space-y-5">
+            {/* Announcement composer (owner/director) */}
+            {isOwnerOrDirector && (
+              <form
+                onSubmit={submitAnnouncement}
+                className="flex gap-3 p-4 rounded-2xl border border-white/08"
+                style={{ background: "oklch(0.14 0.04 240)" }}
+              >
+                <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                  <PlayerAvatar username={user?.displayName ?? ""} name={user?.displayName ?? ""} avatarUrl={user?.avatarUrl ?? undefined} size={36} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 flex gap-2">
+                  <input
+                    value={announcementText}
+                    onChange={(e) => setAnnouncementText(e.target.value)}
+                    placeholder="Post an announcement to the club…"
+                    maxLength={500}
+                    className="flex-1 bg-transparent text-white text-sm placeholder-white/30 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!announcementText.trim() || postingAnnouncement}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-30"
+                    style={{ background: accent }}
+                  >
+                    <Megaphone className="w-3.5 h-3.5" />
+                    Post
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Feed list */}
+            {feedEvents.length > 0 ? (
+              <div className="space-y-1">
+                {feedEvents.map((event, i) => (
+                  <div key={event.id}>
+                    <div className="flex gap-3 py-3">
+                      <FeedIcon type={event.type} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className="text-white/80 text-sm font-semibold">{event.actorName}</span>
+                          <span className="text-white/40 text-xs">{timeAgo(event.createdAt)}</span>
+                        </div>
+                        <p className="text-white/55 text-sm mt-0.5">{event.description}</p>
+                        {event.detail && (
+                          <p
+                            className="text-sm mt-1.5 px-3 py-2 rounded-xl border border-white/08"
+                            style={{ background: "oklch(0.14 0.04 240)", color: "rgba(255,255,255,0.70)" }}
+                          >
+                            {event.detail}
+                          </p>
+                        )}
+                        {event.linkHref && (
+                          <Link href={event.linkHref}>
+                            <a className="inline-flex items-center gap-1 text-xs font-semibold mt-1.5 transition-colors hover:opacity-80" style={{ color: accent }}>
+                              {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
+                            </a>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                    {i < feedEvents.length - 1 && <div className="h-px bg-white/04 ml-11" />}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 text-white/30">
+                <Zap className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p className="font-semibold">No activity yet</p>
+                <p className="text-sm mt-1">Activity will appear here as members join and events are created.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Create Event Modal ───────────────────────────────────────────────── */}
+      {showCreateEvent && user && (
+        <CreateEventModal
+          clubId={club.id}
+          userId={user.id}
+          displayName={user.displayName}
+          onCreated={refreshEvents}
+          onClose={() => setShowCreateEvent(false)}
+        />
+      )}
+    </div>
+  );
+}

@@ -26,6 +26,7 @@ const FinalStandings = lazy(() => import("./pages/FinalStandings"));
 const ChessClock = lazy(() => import("./pages/ChessClock"));
 const MyClubs = lazy(() => import("./pages/MyClubs"));
 const ClubProfile = lazy(() => import("./pages/ClubProfile"));
+const ClubDashboard = lazy(() => import("./pages/ClubDashboard"));
 const GameRecorder = lazy(() => import("./pages/GameRecorder"));
 const GameAnalysis = lazy(() => import("./pages/GameAnalysis"));
 const VideoRecorder = lazy(() => import("./pages/VideoRecorder"));
@@ -62,6 +63,7 @@ function Router() {
         <Route path={"/clock"} component={ChessClock} />
         <Route path={"/profile"} component={ProfilePage} />
         <Route path={"/clubs"} component={MyClubs} />
+        <Route path={"/clubs/:id/home"} component={ClubDashboard} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/record"} component={GameRecorder} />
         <Route path={"/record/camera"} component={VideoRecorder} />
