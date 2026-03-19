@@ -84,6 +84,10 @@ export interface FeedEvent {
   /** Collected RSVP responses */
   rsvpEntries?: FeedRSVPEntry[];
 
+  // ── Pin field ────────────────────────────────────────────────────────────
+  /** True when a director/owner has pinned this post to the top of the feed */
+  isPinned?: boolean;
+
   // ── Poll Result fields ───────────────────────────────────────────────────
   /** ID of the poll feed event this result summarises (type === "poll_result") */
   pollResultForId?: string;
@@ -533,6 +537,26 @@ export function publishScheduledPolls(clubId: string): boolean {
 /** Delete a specific feed event (owner/director moderation). */
 export function deleteFeedEvent(clubId: string, eventId: string): void {
   const events = loadFeed(clubId).filter((e) => e.id !== eventId);
+  saveFeed(clubId, events);
+}
+
+/**
+ * Pin a feed event to the top of the club feed.
+ * Only one post can be pinned at a time — any previously pinned post is unpinned first.
+ */
+export function pinFeedEvent(clubId: string, eventId: string): void {
+  const events = loadFeed(clubId).map((e) => ({
+    ...e,
+    isPinned: e.id === eventId ? true : undefined,
+  }));
+  saveFeed(clubId, events);
+}
+
+/** Unpin the currently pinned feed event for a club. */
+export function unpinFeedEvent(clubId: string, eventId: string): void {
+  const events = loadFeed(clubId).map((e) =>
+    e.id === eventId ? { ...e, isPinned: undefined } : e
+  );
   saveFeed(clubId, events);
 }
 

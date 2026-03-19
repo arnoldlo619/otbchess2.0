@@ -2977,3 +2977,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build invite UI in ClubDashboard Members tab: collapsible Invite Members panel with email input, send button, link copy, pending invites list with revoke
 - [x] Build /invite/:token landing page (InviteAccept.tsx): shows invite details, prompts sign-up or login, auto-joins club on accept
 - [x] Auto-join club when user registers/logs in via invite link — joinClub() called after POST /api/invite/:token/accept succeeds
+
+## Pin Post Feature (Club Feed)
+
+- [x] Add isPinned field to FeedEvent type in clubFeedRegistry.ts
+- [x] Add pinFeedEvent / unpinFeedEvent helpers (only one post can be pinned per club at a time)
+- [x] Feed list sorted: pinned post always floats to top, then newest-first
+- [x] Add Pin/Unpin icon button to FeedCard for directors (visible on hover, next to delete)
+- [x] Pinned card has amber border, amber background tint, and "Pinned Post" banner strip at top
+- [x] Clicking Pin button on a new post automatically unpins the previous one (single-pin rule)

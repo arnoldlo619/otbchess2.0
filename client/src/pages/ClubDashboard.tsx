@@ -68,6 +68,8 @@ import {
   castPollVote,
   upsertFeedRSVP,
   deleteFeedEvent,
+  pinFeedEvent,
+  unpinFeedEvent,
   checkAndCloseExpiredPolls,
   schedulePoll,
   publishScheduledPolls,
@@ -128,6 +130,8 @@ import {
   Link2,
   Copy,
   RefreshCw,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1096,7 +1100,10 @@ function FeedCard({
   avatarUrl,
   clubId,
   canDelete,
+  canPin,
   onDelete,
+  onPin,
+  onUnpin,
   onVoted,
   onRsvped,
 }: {
@@ -1107,7 +1114,10 @@ function FeedCard({
   avatarUrl?: string | null;
   clubId: string;
   canDelete: boolean;
+  canPin: boolean;
   onDelete: (id: string) => void;
+  onPin: (id: string) => void;
+  onUnpin: (id: string) => void;
   onVoted: () => void;
   onRsvped: () => void;
 }) {
@@ -1133,9 +1143,20 @@ function FeedCard({
 
   return (
     <div
-      className="rounded-2xl border border-white/08 overflow-hidden group"
-      style={{ background: "oklch(0.16 0.05 145)" }}
+      className={`rounded-2xl border overflow-hidden group transition-all ${
+        event.isPinned
+          ? "border-amber-500/30 shadow-[0_0_0_1px_oklch(0.78_0.15_80_/_0.15)]"
+          : "border-white/08"
+      }`}
+      style={{ background: event.isPinned ? "oklch(0.17 0.06 80 / 0.4)" : "oklch(0.16 0.05 145)" }}
     >
+      {/* Pinned banner strip */}
+      {event.isPinned && (
+        <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-amber-500/20" style={{ background: "oklch(0.22 0.08 80 / 0.5)" }}>
+          <Pin className="w-3 h-3 text-amber-400" />
+          <span className="text-amber-400 text-[10px] font-bold uppercase tracking-widest">Pinned Post</span>
+        </div>
+      )}
       <div className="flex items-start gap-3 p-4 pb-3">
         <FeedIcon type={event.type} />
         <div className="flex-1 min-w-0">
@@ -1145,14 +1166,31 @@ function FeedCard({
           </div>
           <p className="text-white/50 text-xs mt-0.5">{event.description}</p>
         </div>
-        {canDelete && (
-          <button
-            onClick={() => onDelete(event.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-500/10 text-white/20 hover:text-red-400"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
+        {/* Director action buttons — visible on hover */}
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {canPin && (
+            <button
+              onClick={() => event.isPinned ? onUnpin(event.id) : onPin(event.id)}
+              title={event.isPinned ? "Unpin post" : "Pin to top"}
+              className={`p-1.5 rounded-lg transition-colors ${
+                event.isPinned
+                  ? "text-amber-400 hover:bg-amber-500/10"
+                  : "text-white/20 hover:text-amber-400 hover:bg-amber-500/10"
+              }`}
+            >
+              {event.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => onDelete(event.id)}
+              className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/20 hover:text-red-400 transition-colors"
+              title="Delete post"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
       {!isPoll && !isRsvp && event.detail && (
         <div className="px-4 pb-4">
@@ -1951,6 +1989,20 @@ export default function ClubDashboard() {
     refreshFeed();
   }
 
+  function handlePinFeedEvent(eventId: string) {
+    if (!club) return;
+    pinFeedEvent(club.id, eventId);
+    refreshFeed();
+    toast.success("Post pinned to top of feed");
+  }
+
+  function handleUnpinFeedEvent(eventId: string) {
+    if (!club) return;
+    unpinFeedEvent(club.id, eventId);
+    refreshFeed();
+    toast.success("Post unpinned");
+  }
+
   const isOwnerOrDirector =
     user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
 
@@ -2699,24 +2751,33 @@ export default function ClubDashboard() {
               </div>
             )}
 
-            {/* Feed list */}
+            {/* Feed list — pinned post always first, then newest */}
             {feedEvents.length > 0 ? (
               <div className="space-y-3">
-                {feedEvents.map((ev) => (
-                  <FeedCard
-                    key={ev.id}
-                    event={ev}
-                    accent={accent}
-                    userId={user?.id ?? ""}
-                    displayName={user?.displayName ?? ""}
-                    avatarUrl={user?.avatarUrl}
-                    clubId={club.id}
-                    canDelete={!!isOwnerOrDirector}
-                    onDelete={handleDeleteFeedEvent}
-                    onVoted={refreshFeed}
-                    onRsvped={refreshFeed}
-                  />
-                ))}
+                {[...feedEvents]
+                  .sort((a, b) => {
+                    if (a.isPinned && !b.isPinned) return -1;
+                    if (!a.isPinned && b.isPinned) return 1;
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                  })
+                  .map((ev) => (
+                    <FeedCard
+                      key={ev.id}
+                      event={ev}
+                      accent={accent}
+                      userId={user?.id ?? ""}
+                      displayName={user?.displayName ?? ""}
+                      avatarUrl={user?.avatarUrl}
+                      clubId={club.id}
+                      canDelete={!!isOwnerOrDirector}
+                      canPin={!!isOwnerOrDirector}
+                      onDelete={handleDeleteFeedEvent}
+                      onPin={handlePinFeedEvent}
+                      onUnpin={handleUnpinFeedEvent}
+                      onVoted={refreshFeed}
+                      onRsvped={refreshFeed}
+                    />
+                  ))}
               </div>
             ) : (
               <div className="text-center py-16 text-white/30">
