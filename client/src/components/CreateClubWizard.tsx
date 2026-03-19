@@ -936,10 +936,10 @@ function Step5Share({
       <div className="w-full space-y-3">
         <button
           onClick={onViewClub}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
+          className="group w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
         >
           View Club Page
-          <ArrowRight className="w-5 h-5" />
+          <ArrowRight className="w-5 h-5 transition-transform duration-200 ease-out group-hover:translate-x-1" />
         </button>
         <button
           onClick={onShare}

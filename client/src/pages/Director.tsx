@@ -1587,7 +1587,7 @@ export default function Director() {
                   } catch { /* ignore */ }
                 }, 150);
               }}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+              className={`group flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                 isDark
                   ? "bg-[#4CAF50] text-white hover:bg-[#3d9e42] shadow-[0_2px_10px_rgba(76,175,80,0.35)]"
                   : "bg-[#3D6B47] text-white hover:bg-[#2d5235] shadow-[0_2px_10px_rgba(61,107,71,0.25)]"
@@ -1595,7 +1595,7 @@ export default function Director() {
             >
               <Zap className="w-3.5 h-3.5" />
               Generate Round {state.currentRound + 1}
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
             </button>
           </div>
         </div>
@@ -2050,12 +2050,12 @@ export default function Director() {
                               } catch { /* ignore */ }
                             }, 150);
                           }}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                          className="group w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
                           style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
                         >
                           <Zap className="w-4 h-4" />
                           Generate Round {state.currentRound + 1} — {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} Pairings
-                          <ArrowRight className="w-4 h-4" />
+                          <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
                         </button>
                       </div>
                     </div>

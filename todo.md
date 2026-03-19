@@ -2675,3 +2675,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Refine "Join a Tournament" hero button — switch from glass to outline variant with spinning conic-gradient border matching "Host Tournament" design language
 - [x] Fix outline variant inner surface to use hero background color (dark: oklch(0.20_0.06_145), light: white) for correct primary/secondary hierarchy
 - [x] Verify both dark and light mode button pair rendering
+
+## Arrow Micro-Interaction
+
+- [x] Add translate-x hover micro-interaction to ArrowRight icon in SpinBorderButton (solid + outline + glass variants)
+- [x] Add translate-x hover micro-interaction to ArrowRight icon in Join page "Look up my ELO" button
+- [x] Add translate-x hover micro-interaction to ArrowRight icon in CreateClubWizard "View Club Page" button
+- [x] Add translate-x hover micro-interaction to ArrowRight icon in Director "Generate Round" buttons

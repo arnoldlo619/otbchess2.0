@@ -9,6 +9,9 @@
  * The conic gradient (solid/outline) spins continuously and speeds up on hover.
  * The glass variant uses a static border with a shimmer sweep on hover.
  *
+ * All variants: the last SVG child (arrow icon) slides 4px right on hover via
+ * the `[&>svg:last-child]` group-hover selector — no JSX changes needed at call sites.
+ *
  * Light mode glass:  white/cream fill, subtle gray border, dark green text
  * Dark mode glass:   dark fill, white/20 border, white text
  */
@@ -23,6 +26,10 @@ export interface SpinBorderButtonProps
   children?: React.ReactNode;
   className?: string;
 }
+
+/** Tailwind classes shared by all variants to animate the last SVG (arrow icon) */
+const ARROW_SLIDE =
+  "[&>svg:last-child]:transition-transform [&>svg:last-child]:duration-200 [&>svg:last-child]:ease-out group-hover:[&>svg:last-child]:translate-x-1";
 
 export const SpinBorderButton = React.forwardRef<
   HTMLButtonElement,
@@ -57,6 +64,9 @@ export const SpinBorderButton = React.forwardRef<
           "dark:hover:bg-white/14 dark:hover:border-white/35",
           "dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]",
           "dark:focus-visible:ring-white/40",
+
+          // ── Arrow micro-interaction ────────────────────────────────────────
+          ARROW_SLIDE,
 
           className
         )}
@@ -117,12 +127,14 @@ export const SpinBorderButton = React.forwardRef<
         )}
       />
 
-      {/* Inner content surface */}
+      {/* Inner content surface — arrow slide applied here so the selector targets the SVG inside this span */}
       <span
         className={cn(
           "relative z-10 inline-flex w-full items-center justify-center gap-2 rounded-[5px]",
           "px-6 py-3 text-sm font-semibold tracking-wide",
           "transition-all duration-200",
+          // Arrow micro-interaction
+          ARROW_SLIDE,
           isSolid
             ? "bg-[oklch(0.44_0.12_145)] text-white group-hover:bg-[oklch(0.40_0.12_145)]"
             : "bg-white text-[#2A4A32] group-hover:bg-[oklch(0.97_0.01_145)] dark:bg-[oklch(0.20_0.06_145)] dark:text-white dark:group-hover:bg-[oklch(0.22_0.06_145)]"

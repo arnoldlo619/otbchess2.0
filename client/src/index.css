@@ -507,6 +507,14 @@
     box-shadow: 0 6px 20px oklch(0.44 0.12 145 / 0.35);
   }
 
+  .mobile-cta svg:last-child {
+    transition: transform 0.2s ease-out;
+  }
+
+  .mobile-cta:not(:disabled):hover svg:last-child {
+    transform: translateX(4px);
+  }
+
   .mobile-cta:disabled {
     opacity: 0.38;
     cursor: not-allowed;
