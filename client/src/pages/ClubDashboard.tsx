@@ -50,9 +50,11 @@ import {
   recordBattleResult,
   deleteBattle,
   getBattleLeaderboard,
+  getHeadToHeadRecords,
   type ClubBattle,
   type BattleResult,
   type BattleLeaderboardEntry,
+  type HeadToHeadRecord,
 } from "@/lib/clubBattleRegistry";
 import {
   listFeedEvents,
@@ -1659,6 +1661,7 @@ export default function ClubDashboard() {
   const [battlePlayerB, setBattlePlayerB] = useState("");
   const [battleNotes, setBattleNotes] = useState("");
   const [battleResultId, setBattleResultId] = useState<string | null>(null);
+  const [expandedLeaderboardId, setExpandedLeaderboardId] = useState<string | null>(null);
 
   // Seed and load
   useEffect(() => {
@@ -2783,30 +2786,87 @@ export default function ClubDashboard() {
                   <Medal className="w-4 h-4" style={{ color: accent }} />
                   <h3 className="text-white font-semibold text-sm">Battle Leaderboard</h3>
                 </div>
-                <div className="space-y-2">
-                  {battleLeaderboard.map((entry, idx) => (
-                    <div key={entry.playerId} className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5">
-                      <span className={`text-sm font-bold w-5 text-center ${
-                        idx === 0 ? "text-yellow-400" : idx === 1 ? "text-slate-300" : idx === 2 ? "text-amber-600" : "text-white/30"
-                      }`}>{idx + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-semibold truncate">{entry.playerName}</p>
-                        <p className="text-white/30 text-xs">{entry.total} battles · {entry.winRate}% win rate</p>
+                <div className="space-y-1.5">
+                  {battleLeaderboard.map((entry, idx) => {
+                    const isExpanded = expandedLeaderboardId === entry.playerId;
+                    const h2h: HeadToHeadRecord[] = club ? getHeadToHeadRecords(club.id, entry.playerId) : [];
+                    return (
+                      <div key={entry.playerId} className="rounded-xl overflow-hidden">
+                        {/* Leaderboard row — clickable */}
+                        <button
+                          onClick={() => setExpandedLeaderboardId(isExpanded ? null : entry.playerId)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 bg-white/5 hover:bg-white/10 transition-colors text-left"
+                        >
+                          <span className={`text-sm font-bold w-5 text-center flex-shrink-0 ${
+                            idx === 0 ? "text-yellow-400" : idx === 1 ? "text-slate-300" : idx === 2 ? "text-amber-600" : "text-white/30"
+                          }`}>{idx + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-semibold truncate">{entry.playerName}</p>
+                            <p className="text-white/30 text-xs">{entry.total} battles · {entry.winRate}% win rate</p>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs font-bold flex-shrink-0">
+                            <span className="text-emerald-400">{entry.wins}W</span>
+                            <span className="text-white/30">{entry.draws}D</span>
+                            <span className="text-red-400">{entry.losses}L</span>
+                          </div>
+                          {entry.streak !== 0 && (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                              entry.streak > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                            }`}>
+                              {entry.streak > 0 ? `🔥 ${entry.streak}W` : `${Math.abs(entry.streak)}L`}
+                            </span>
+                          )}
+                          <ChevronDown className={`w-3.5 h-3.5 text-white/30 flex-shrink-0 transition-transform duration-200 ${
+                            isExpanded ? "rotate-180" : ""
+                          }`} />
+                        </button>
+
+                        {/* Head-to-head detail panel */}
+                        {isExpanded && (
+                          <div className="bg-white/[0.03] border-t border-white/5 px-4 py-3 space-y-2">
+                            <p className="text-white/40 text-[11px] uppercase tracking-wider font-semibold mb-2">Head-to-Head Breakdown</p>
+                            {h2h.length === 0 ? (
+                              <p className="text-white/20 text-xs">No completed battles yet.</p>
+                            ) : (
+                              h2h.map((rec) => {
+                                const total = rec.wins + rec.draws + rec.losses;
+                                const winPct = total > 0 ? Math.round((rec.wins / total) * 100) : 0;
+                                return (
+                                  <div key={rec.opponentId} className="flex items-center gap-3">
+                                    {/* Avatar stub */}
+                                    <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white/60"
+                                      style={{ background: "oklch(0.3 0.08 145)" }}>
+                                      {rec.opponentName.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-white/80 text-xs font-semibold truncate">{rec.opponentName}</p>
+                                      {/* Win-rate bar */}
+                                      <div className="mt-0.5 h-1 rounded-full bg-white/10 overflow-hidden w-full">
+                                        <div
+                                          className="h-full rounded-full transition-all duration-500"
+                                          style={{
+                                            width: `${winPct}%`,
+                                            background: winPct >= 60 ? "oklch(0.65 0.2 145)" : winPct >= 40 ? "oklch(0.7 0.15 80)" : "oklch(0.55 0.18 25)"
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold flex-shrink-0">
+                                      <span className="text-emerald-400">{rec.wins}W</span>
+                                      <span className="text-white/20">/</span>
+                                      <span className="text-white/40">{rec.draws}D</span>
+                                      <span className="text-white/20">/</span>
+                                      <span className="text-red-400">{rec.losses}L</span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-xs font-bold flex-shrink-0">
-                        <span className="text-emerald-400">{entry.wins}W</span>
-                        <span className="text-white/30">{entry.draws}D</span>
-                        <span className="text-red-400">{entry.losses}L</span>
-                      </div>
-                      {entry.streak !== 0 && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                          entry.streak > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
-                        }`}>
-                          {entry.streak > 0 ? `🔥 ${entry.streak}W` : `${Math.abs(entry.streak)}L`}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

@@ -2946,3 +2946,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Clicking Challenge pre-fills Player A as current user and Player B as the target member
 - [x] Auto-switches to the Battles tab and smooth-scrolls to the create-battle form
 - [x] Button hidden for own row and for non-director/owner users
+
+## Head-to-Head Detail Panel (Battles Tab)
+
+- [x] Add expand toggle (ChevronDown) to each leaderboard row in the Battles tab
+- [x] Clicking a row reveals an inline panel with per-opponent W/D/L breakdown
+- [x] Each opponent row shows initial avatar, name, W/D/L record, and colour-coded win-rate bar
+- [x] ChevronDown rotates 180° when expanded (CSS transition)
+- [x] Panel collapses when the same row is clicked again (accordion behaviour)
