@@ -48,6 +48,7 @@ import {
   castPollVote,
   upsertFeedRSVP,
   checkAndCloseExpiredPolls,
+  publishScheduledPolls,
   type FeedEvent,
   type FeedRSVPEntry,
 } from "@/lib/clubFeedRegistry";
@@ -693,17 +694,19 @@ export default function ClubProfile() {
     setFeedEvents(listFeedEvents(club.id));
   };
 
-  // Poll-close interval: check every 30 seconds for expired polls
+  // Poll-close + scheduled-publish interval: check every 30 seconds
   useEffect(() => {
     if (!club) return;
     // Run once on mount
-    if (checkAndCloseExpiredPolls(club.id)) {
+    const didPublish = publishScheduledPolls(club.id);
+    const didClose = checkAndCloseExpiredPolls(club.id);
+    if (didPublish || didClose) {
       setFeedEvents(listFeedEvents(club.id));
     }
     const timer = setInterval(() => {
-      if (checkAndCloseExpiredPolls(club.id)) {
-        setFeedEvents(listFeedEvents(club.id));
-      }
+      const p = publishScheduledPolls(club.id);
+      const c = checkAndCloseExpiredPolls(club.id);
+      if (p || c) setFeedEvents(listFeedEvents(club.id));
     }, 30_000);
     return () => clearInterval(timer);
   }, [club?.id]);

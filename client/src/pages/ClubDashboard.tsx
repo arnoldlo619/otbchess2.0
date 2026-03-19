@@ -53,9 +53,14 @@ import {
   upsertFeedRSVP,
   deleteFeedEvent,
   checkAndCloseExpiredPolls,
+  schedulePoll,
+  publishScheduledPolls,
+  listScheduledPolls,
+  cancelScheduledPoll,
   type FeedEvent,
   type PollOption,
   type FeedRSVPEntry,
+  type ScheduledPoll,
 } from "@/lib/clubFeedRegistry";
 import {
   Users,
@@ -90,6 +95,7 @@ import {
   BarChart2,
   ClipboardList,
   Award,
+  CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1239,6 +1245,11 @@ export default function ClubDashboard() {
   const [pollOptions, setPollOptions] = useState(["Yes", "No"]);
   const [pollHours, setPollHours] = useState(48);
   const [pollMultiple, setPollMultiple] = useState(false);
+  // Schedule toggle
+  const [pollScheduled, setPollScheduled] = useState(false);
+  const [pollScheduledAt, setPollScheduledAt] = useState("");
+  // Scheduled polls queue
+  const [scheduledPolls, setScheduledPolls] = useState<ScheduledPoll[]>([]);
   // RSVP form composer state
   const [rsvpTitle, setRsvpTitle] = useState("");
   const [rsvpDate, setRsvpDate] = useState("");
@@ -1272,22 +1283,28 @@ export default function ClubDashboard() {
 
   function refreshFeed() {
     if (!club) return;
-    // Check for newly expired polls and auto-post results before refreshing
+    // Publish any due scheduled polls, then close expired ones, then refresh
+    publishScheduledPolls(club.id);
     checkAndCloseExpiredPolls(club.id);
     setFeedEvents(listFeedEvents(club.id, 50));
+    setScheduledPolls(listScheduledPolls(club.id));
   }
 
-  // Poll-close interval: every 30 seconds, check for expired polls
+  // Poll-close + scheduled-publish interval: every 30 seconds
   useEffect(() => {
     if (!club) return;
     // Run once immediately on mount
-    if (checkAndCloseExpiredPolls(club.id)) {
+    const didPublish = publishScheduledPolls(club.id);
+    const didClose = checkAndCloseExpiredPolls(club.id);
+    if (didPublish || didClose) {
       setFeedEvents(listFeedEvents(club.id, 50));
     }
+    setScheduledPolls(listScheduledPolls(club.id));
     const timer = setInterval(() => {
-      if (checkAndCloseExpiredPolls(club.id)) {
-        setFeedEvents(listFeedEvents(club.id, 50));
-      }
+      const p = publishScheduledPolls(club.id);
+      const c = checkAndCloseExpiredPolls(club.id);
+      if (p || c) setFeedEvents(listFeedEvents(club.id, 50));
+      setScheduledPolls(listScheduledPolls(club.id));
     }, 30_000);
     return () => clearInterval(timer);
   }, [club?.id]);
@@ -1308,11 +1325,39 @@ export default function ClubDashboard() {
     if (!pollQuestion.trim() || !club || !user) return;
     const opts = pollOptions.filter((o) => o.trim());
     if (opts.length < 2) { toast.error("Add at least 2 options"); return; }
-    postPoll(club.id, user.displayName, pollQuestion.trim(), opts, pollHours, pollMultiple, user.avatarUrl ?? null);
+
+    if (pollScheduled) {
+      if (!pollScheduledAt) { toast.error("Choose a publish date and time"); return; }
+      const scheduledDate = new Date(pollScheduledAt);
+      if (scheduledDate <= new Date()) { toast.error("Scheduled time must be in the future"); return; }
+      schedulePoll(
+        club.id,
+        user.displayName,
+        pollQuestion.trim(),
+        opts,
+        pollHours,
+        pollMultiple,
+        scheduledDate.toISOString(),
+        user.avatarUrl ?? null
+      );
+      toast.success("Poll scheduled!");
+    } else {
+      postPoll(club.id, user.displayName, pollQuestion.trim(), opts, pollHours, pollMultiple, user.avatarUrl ?? null);
+      toast.success("Poll posted!");
+    }
+
     setPollQuestion("");
     setPollOptions(["Yes", "No"]);
+    setPollScheduled(false);
+    setPollScheduledAt("");
     refreshFeed();
-    toast.success("Poll posted!");
+  }
+
+  function handleCancelScheduledPoll(draftId: string) {
+    if (!club) return;
+    cancelScheduledPoll(club.id, draftId);
+    setScheduledPolls(listScheduledPolls(club.id));
+    toast("Scheduled poll cancelled");
   }
 
   function submitRsvpForm(e: React.FormEvent) {
@@ -1784,13 +1829,48 @@ export default function ClubDashboard() {
                         </select>
                       </div>
                     </div>
+
+                    {/* Schedule toggle */}
+                    <div className="rounded-xl border border-white/08 overflow-hidden" style={{ background: "oklch(0.18 0.05 145)" }}>
+                      <button
+                        type="button"
+                        onClick={() => setPollScheduled(!pollScheduled)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-xs transition-colors hover:bg-white/04"
+                      >
+                        <span className="flex items-center gap-2 text-white/60">
+                          <CalendarClock className="w-3.5 h-3.5 text-[#4CAF50]" />
+                          Schedule for later
+                        </span>
+                        <div className={`w-8 h-4 rounded-full transition-colors relative ${ pollScheduled ? "bg-[#4CAF50]" : "bg-white/15" }`}>
+                          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${ pollScheduled ? "left-4.5" : "left-0.5" }`} />
+                        </div>
+                      </button>
+                      {pollScheduled && (
+                        <div className="px-3 pb-3">
+                          <label className="block text-white/40 text-xs mb-1.5">Publish at</label>
+                          <input
+                            type="datetime-local"
+                            value={pollScheduledAt}
+                            onChange={(e) => setPollScheduledAt(e.target.value)}
+                            min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                            required={pollScheduled}
+                            className="w-full bg-white/07 border border-white/12 rounded-xl px-3 py-2 text-white text-xs outline-none focus:border-[#4CAF50]/50 transition-colors [color-scheme:dark]"
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       type="submit"
-                      disabled={!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2}
-                      className="w-full py-2.5 rounded-xl text-sm font-bold text-black transition-all active:scale-98 disabled:opacity-40"
+                      disabled={!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2 || (pollScheduled && !pollScheduledAt)}
+                      className="w-full py-2.5 rounded-xl text-sm font-bold text-black transition-all active:scale-98 disabled:opacity-40 flex items-center justify-center gap-2"
                       style={{ background: accent }}
                     >
-                      Post Poll
+                      {pollScheduled ? (
+                        <><CalendarClock className="w-4 h-4" /> Schedule Poll</>
+                      ) : (
+                        "Post Poll"
+                      )}
                     </button>
                   </form>
                 )}
@@ -1836,6 +1916,45 @@ export default function ClubDashboard() {
                     </button>
                   </form>
                 )}
+              </div>
+            )}
+
+            {/* Scheduled polls queue (director-only) */}
+            {isOwnerOrDirector && scheduledPolls.length > 0 && (
+              <div className="rounded-2xl border border-[#4CAF50]/20 overflow-hidden mb-1" style={{ background: "oklch(0.15 0.05 145)" }}>
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/06">
+                  <CalendarClock className="w-4 h-4 text-[#4CAF50]" />
+                  <span className="text-sm font-semibold text-white/80">Scheduled Polls</span>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "oklch(0.44 0.12 145 / 0.3)", color: "#4CAF50" }}>
+                    {scheduledPolls.length}
+                  </span>
+                </div>
+                <div className="divide-y divide-white/05">
+                  {scheduledPolls.map((draft) => (
+                    <div key={draft.id} className="flex items-start gap-3 px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white/80 truncate">{draft.question}</p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          <span className="flex items-center gap-1 text-xs text-[#4CAF50]/80">
+                            <CalendarClock className="w-3 h-3" />
+                            {new Date(draft.scheduledAt).toLocaleString("en-US", {
+                              month: "short", day: "numeric",
+                              hour: "numeric", minute: "2-digit",
+                            })}
+                          </span>
+                          <span className="text-xs text-white/30">{draft.options.length} options &middot; {draft.expiresInHours}h poll</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleCancelScheduledPoll(draft.id)}
+                        className="flex-shrink-0 p-1.5 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        title="Cancel scheduled poll"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

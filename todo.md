@@ -2810,3 +2810,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire checkAndCloseExpiredPolls into ClubDashboard useEffect interval (every 30s) and on-vote callback
 - [x] Wire checkAndCloseExpiredPolls into ClubProfile useEffect interval (every 30s) and on-vote callback
 - [x] Render poll_result cards in FeedEventCard (both pages) with amber Award icon, winner option, and full vote breakdown
+
+## Scheduled Polls Feature
+
+- [x] Add ScheduledPoll type and draft storage to clubFeedRegistry (scheduledKey, loadScheduled, saveScheduled)
+- [x] Add schedulePoll, listScheduledPolls, cancelScheduledPoll helpers
+- [x] Add publishScheduledPolls(clubId) helper — moves due scheduled polls to live feed
+- [x] Add "Schedule for later" toggle to ClubDashboard poll composer with datetime-local picker
+- [x] Submit button changes to "Schedule Poll" when toggle is on
+- [x] Wire publishScheduledPolls into ClubDashboard 30s interval and on-mount
+- [x] Show scheduled polls queue panel in ClubDashboard feed tab (director-only, above live feed)
+- [x] Allow directors to cancel a scheduled poll from the queue panel
+- [x] Wire publishScheduledPolls into ClubProfile 30s interval so public page also triggers publish

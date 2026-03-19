@@ -410,6 +410,126 @@ export function checkAndCloseExpiredPolls(clubId: string): boolean {
   return changed;
 }
 
+// ── Scheduled Polls ─────────────────────────────────────────────────────────
+
+/** A poll that has been queued but not yet published to the live feed. */
+export interface ScheduledPoll {
+  id: string;
+  clubId: string;
+  actorName: string;
+  actorAvatarUrl?: string | null;
+  question: string;
+  options: string[];
+  expiresInHours: number;
+  multiple: boolean;
+  /** ISO datetime when this poll should be published */
+  scheduledAt: string;
+  /** ISO datetime when this draft was created */
+  createdAt: string;
+}
+
+function scheduledKey(clubId: string): string {
+  return `otb-club-scheduled-polls-v1-${clubId}`;
+}
+
+function loadScheduled(clubId: string): ScheduledPoll[] {
+  try {
+    const raw = localStorage.getItem(scheduledKey(clubId));
+    if (!raw) return [];
+    return JSON.parse(raw) as ScheduledPoll[];
+  } catch {
+    return [];
+  }
+}
+
+function saveScheduled(clubId: string, polls: ScheduledPoll[]): void {
+  try {
+    localStorage.setItem(scheduledKey(clubId), JSON.stringify(polls));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Save a poll as a scheduled draft (not yet in the live feed). */
+export function schedulePoll(
+  clubId: string,
+  actorName: string,
+  question: string,
+  options: string[],
+  expiresInHours: number,
+  multiple: boolean,
+  scheduledAt: string,
+  actorAvatarUrl?: string | null
+): ScheduledPoll {
+  const draft: ScheduledPoll = {
+    id: generateId(),
+    clubId,
+    actorName,
+    actorAvatarUrl: actorAvatarUrl ?? null,
+    question,
+    options,
+    expiresInHours,
+    multiple,
+    scheduledAt,
+    createdAt: new Date().toISOString(),
+  };
+  const existing = loadScheduled(clubId);
+  saveScheduled(clubId, [...existing, draft]);
+  return draft;
+}
+
+/** List all scheduled (pending) polls for a club, sorted by scheduledAt ascending. */
+export function listScheduledPolls(clubId: string): ScheduledPoll[] {
+  return loadScheduled(clubId).sort(
+    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+  );
+}
+
+/** Cancel and remove a scheduled poll before it publishes. */
+export function cancelScheduledPoll(clubId: string, draftId: string): void {
+  const remaining = loadScheduled(clubId).filter((p) => p.id !== draftId);
+  saveScheduled(clubId, remaining);
+}
+
+/**
+ * Publish any scheduled polls whose scheduledAt time has passed.
+ * Returns true if at least one poll was published.
+ */
+export function publishScheduledPolls(clubId: string): boolean {
+  const now = new Date();
+  const drafts = loadScheduled(clubId);
+  const due = drafts.filter((p) => new Date(p.scheduledAt) <= now);
+  if (due.length === 0) return false;
+
+  for (const draft of due) {
+    const pollOptions: PollOption[] = draft.options.map((text) => ({
+      id: generateId(),
+      text,
+      votes: {},
+    }));
+    const expiresAt = new Date(
+      new Date(draft.scheduledAt).getTime() + draft.expiresInHours * 3600 * 1000
+    ).toISOString();
+    addFeedEvent({
+      clubId,
+      type: "poll",
+      createdAt: draft.scheduledAt, // use scheduled time as the post timestamp
+      actorName: draft.actorName,
+      actorAvatarUrl: draft.actorAvatarUrl,
+      description: `${draft.actorName} posted a poll`,
+      pollQuestion: draft.question,
+      pollOptions,
+      pollExpiresAt: expiresAt,
+      pollMultiple: draft.multiple,
+    });
+  }
+
+  // Remove published drafts
+  const remaining = drafts.filter((p) => new Date(p.scheduledAt) > now);
+  saveScheduled(clubId, remaining);
+  return true;
+}
+
 /** Delete a specific feed event (owner/director moderation). */
 export function deleteFeedEvent(clubId: string, eventId: string): void {
   const events = loadFeed(clubId).filter((e) => e.id !== eventId);
