@@ -2775,3 +2775,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add delete confirmation dialog with event title
 - [x] Wire updateClubEvent and deleteClubEvent from clubEventRegistry
 - [x] Refresh events list after edit or delete
+
+## Public ClubProfile — Upcoming Events
+
+- [x] Audit ClubProfile page structure and tab system
+- [x] Add Events tab to ClubProfile with badge count of upcoming events
+- [x] Show event cards with date, title, venue, RSVP count (read-only for non-members)
+- [x] Show "Join to RSVP" CTA on event cards for non-members
+- [x] Members see full Going/Maybe/Can't Go RSVP buttons
+- [x] Hide section when no published upcoming events exist (empty state shown)

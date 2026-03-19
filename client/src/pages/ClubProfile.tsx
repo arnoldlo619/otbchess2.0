@@ -48,6 +48,14 @@ import {
   type FeedEvent,
 } from "@/lib/clubFeedRegistry";
 import {
+  listClubEvents,
+  countRSVPs,
+  getUserRSVP,
+  upsertRSVP,
+  type ClubEvent,
+  type RSVPStatus,
+} from "@/lib/clubEventRegistry";
+import {
   Users,
   Trophy,
   Calendar,
@@ -315,7 +323,7 @@ export default function ClubProfile() {
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "members" | "tournaments" | "feed">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed">("about");
   const [joining, setJoining] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
@@ -329,6 +337,7 @@ export default function ClubProfile() {
   const [following, setFollowing] = useState(false);
   const [followingLoading, setFollowingLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
+  const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
 
   // Seed and load
   useEffect(() => {
@@ -360,6 +369,8 @@ export default function ClubProfile() {
       }))
     );
     setFeedEvents(listFeedEvents(found.id));
+    // Load published club events
+    setClubEvents(listClubEvents(found.id).filter((e) => e.isPublished));
   }, [params.id, user]);
 
   if (!club) {
@@ -717,7 +728,7 @@ export default function ClubProfile() {
       {/* ── Tab navigation ──────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
         <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-white/5" : "bg-black/5"}`}>
-          {(["about", "feed", "members", "tournaments"] as const).map((tab) => (
+          {(["about", "events", "feed", "members", "tournaments"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -726,6 +737,11 @@ export default function ClubProfile() {
               }`}
             >
               {tab}
+              {tab === "events" && clubEvents.length > 0 && (
+                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
+                  {clubEvents.length}
+                </span>
+              )}
               {tab === "members" && (
                 <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
                   {club.memberCount}
