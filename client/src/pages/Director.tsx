@@ -3460,6 +3460,7 @@ export default function Director() {
         onClose={() => setShowSpectatorQR(false)}
         tournamentName={state.tournamentName}
         spectatorUrl={spectatorUrl}
+        tournamentId={state.tournamentId}
       />
 
       {/* ── QR Modal ────────────────────────────────────────────────────── */}

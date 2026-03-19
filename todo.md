@@ -2713,3 +2713,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit SSE broadcast system and spectator view
 - [x] Lift timer state to Director page and broadcast via SSE
 - [x] Display live countdown on spectator/live stream view
+
+## Live Stream Large Timer
+
+- [x] Find the projection/live stream view and enlarge the timer display
+- [x] Make timer hero-sized (scoreboard style) for visibility across the room

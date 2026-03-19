@@ -6,21 +6,190 @@
  * coaches, parents, and spectators can scan the QR code to open the
  * live tournament spectator view on their phones.
  *
- * Design language mirrors AnnounceModal (dark green bg, white text,
- * Escape-to-close) but uses a blue accent to distinguish the spectator
- * flow from the player-join flow.
+ * When a round timer is active the overlay shows a large hero-style
+ * scoreboard clock so players at the boards can read it from across
+ * the room. Timer state is fetched on open and updated via SSE.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Maximize2, Copy, Check, Tv2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
+// ─── Timer types (mirrors server TimerSnapshot) ───────────────────────────────
+interface TimerSnap {
+  status: "idle" | "running" | "paused" | "expired";
+  durationSec: number;
+  startWallMs: number;
+  elapsedAtPauseMs: number;
+  savedAt: number;
+}
+
+function calcRemaining(snap: TimerSnap): number {
+  if (snap.status === "paused" || snap.status === "expired") {
+    return Math.max(0, snap.durationSec - snap.elapsedAtPauseMs / 1000);
+  }
+  if (snap.status === "running") {
+    const elapsed = (Date.now() - snap.startWallMs) / 1000 + snap.elapsedAtPauseMs / 1000;
+    return Math.max(0, snap.durationSec - elapsed);
+  }
+  return snap.durationSec;
+}
+
+function fmtMmSs(sec: number): { mm: string; ss: string } {
+  const s = Math.max(0, Math.ceil(sec));
+  return {
+    mm: String(Math.floor(s / 60)).padStart(2, "0"),
+    ss: String(s % 60).padStart(2, "0"),
+  };
+}
+
+// ─── Hero clock component ─────────────────────────────────────────────────────
+function HeroClock({ snap }: { snap: TimerSnap }) {
+  const [remaining, setRemaining] = useState(() => calcRemaining(snap));
+  const rafRef = useRef<number | null>(null);
+  const snapRef = useRef(snap);
+
+  useEffect(() => {
+    snapRef.current = snap;
+    setRemaining(calcRemaining(snap));
+  }, [snap]);
+
+  useEffect(() => {
+    const tick = () => {
+      if (snapRef.current?.status === "running") {
+        setRemaining(calcRemaining(snapRef.current));
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  const progress = snap.durationSec > 0 ? Math.max(0, remaining / snap.durationSec) : 0;
+  const isExpired = snap.status === "expired" || remaining <= 0;
+  const isPaused  = snap.status === "paused";
+  const isLow     = !isExpired && !isPaused && remaining <= 60;
+  const isNear    = !isExpired && !isPaused && remaining <= 300;
+
+  // Colour palette
+  const accentHex = isExpired ? "#EF4444" : isLow ? "#F87171" : isNear || isPaused ? "#F59E0B" : "#4CAF50";
+  const accentClass = isExpired
+    ? "text-red-400"
+    : isLow
+    ? "text-red-400"
+    : isNear || isPaused
+    ? "text-amber-400"
+    : "text-[#4CAF50]";
+
+  const { mm, ss } = fmtMmSs(remaining);
+
+  // SVG ring
+  const SIZE = 220;
+  const STROKE = 10;
+  const R = (SIZE - STROKE) / 2;
+  const CIRC = 2 * Math.PI * R;
+  const dashOffset = CIRC * (1 - progress);
+
+  const statusLabel = isExpired
+    ? "Time's Up"
+    : isPaused
+    ? "Paused"
+    : isLow
+    ? "Final Minute"
+    : isNear
+    ? "Time Running Out"
+    : "Round Timer";
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      {/* Status label */}
+      <p
+        className="text-xs font-bold uppercase tracking-[0.3em] select-none"
+        style={{ color: accentHex + "99" }}
+      >
+        {statusLabel}
+      </p>
+
+      {/* Ring + clock */}
+      <div className="relative" style={{ width: SIZE, height: SIZE }}>
+        {/* Glow */}
+        <div
+          className="absolute inset-0 rounded-full blur-3xl scale-75 pointer-events-none"
+          style={{ background: accentHex + "22" }}
+        />
+
+        {/* SVG ring */}
+        <svg width={SIZE} height={SIZE} className="rotate-[-90deg] absolute inset-0">
+          {/* Track */}
+          <circle
+            cx={SIZE / 2} cy={SIZE / 2} r={R}
+            fill="none"
+            stroke="rgba(255,255,255,0.07)"
+            strokeWidth={STROKE}
+          />
+          {/* Progress arc */}
+          <circle
+            cx={SIZE / 2} cy={SIZE / 2} r={R}
+            fill="none"
+            stroke={accentHex}
+            strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeDasharray={CIRC}
+            strokeDashoffset={dashOffset}
+            style={{ transition: "stroke-dashoffset 0.5s linear, stroke 0.3s" }}
+          />
+        </svg>
+
+        {/* Clock digits */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0">
+          <div
+            className={`flex items-baseline gap-1 tabular-nums leading-none font-black ${accentClass} ${
+              (isExpired || isLow) && !isPaused ? "animate-pulse" : ""
+            }`}
+            style={{ fontFamily: "'Clash Display', monospace" }}
+          >
+            <span style={{ fontSize: "clamp(3.5rem, 8vw, 5.5rem)" }}>{mm}</span>
+            <span
+              className="opacity-50"
+              style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)" }}
+            >:</span>
+            <span style={{ fontSize: "clamp(3.5rem, 8vw, 5.5rem)" }}>{ss}</span>
+          </div>
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.25em] mt-1 select-none"
+            style={{ color: "rgba(255,255,255,0.25)" }}
+          >
+            {Math.round(progress * 100)}% remaining
+          </p>
+        </div>
+      </div>
+
+      {/* Paused / expired badge */}
+      {(isPaused || isExpired) && (
+        <div
+          className="px-5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest"
+          style={{
+            background: accentHex + "22",
+            border: `1px solid ${accentHex}44`,
+            color: accentHex,
+          }}
+        >
+          {isExpired ? "⏰ Time's Up" : "⏸ Paused"}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 interface SpectatorQRScreenProps {
   open: boolean;
   onClose: () => void;
   tournamentName: string;
   spectatorUrl: string;
+  /** Tournament slug used to fetch timer state */
+  tournamentId?: string;
 }
 
 export function SpectatorQRScreen({
@@ -28,29 +197,46 @@ export function SpectatorQRScreen({
   onClose,
   tournamentName,
   spectatorUrl,
+  tournamentId,
 }: SpectatorQRScreenProps) {
   const [copied, setCopied] = useState(false);
+  const [timerSnap, setTimerSnap] = useState<TimerSnap | null>(null);
+  const esRef = useRef<EventSource | null>(null);
 
   // ── Keyboard / scroll lock ──────────────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  // ── Timer: fetch on open + subscribe to SSE ─────────────────────────────────
+  useEffect(() => {
+    if (!open || !tournamentId) return;
+
+    // Catch-up fetch
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/timer`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((snap) => { if (snap && snap.status !== "idle") setTimerSnap(snap); })
+      .catch(() => {});
+
+    // SSE subscription
+    const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/events`);
+    esRef.current = es;
+    es.addEventListener("timer_update", (e: MessageEvent) => {
+      try {
+        const snap: TimerSnap = JSON.parse(e.data);
+        setTimerSnap(snap.status === "idle" ? null : snap);
+      } catch { /* ignore */ }
+    });
+    return () => { es.close(); esRef.current = null; };
+  }, [open, tournamentId]);
 
   if (!open) return null;
 
@@ -71,10 +257,12 @@ export function SpectatorQRScreen({
     setTimeout(() => setCopied(false), 2500);
   }
 
+  const showTimer = timerSnap && timerSnap.status !== "idle";
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-[110] flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[110] flex flex-col items-center justify-center overflow-auto"
       style={{ background: "oklch(0.13 0.06 240)" }}
       role="dialog"
       aria-modal="true"
@@ -98,9 +286,21 @@ export function SpectatorQRScreen({
         <span className="hidden sm:block">Press Escape to close</span>
       </div>
 
-      {/* ── Main content ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 px-6 py-10 w-full max-w-5xl text-center lg:text-left">
+      {/* ── Hero timer (shown when timer is active) ───────────────────────────── */}
+      {showTimer && (
+        <div className="w-full flex flex-col items-center pt-16 pb-6 px-6">
+          <HeroClock snap={timerSnap!} />
+          {/* Divider */}
+          <div className="mt-8 w-full max-w-2xl h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+        </div>
+      )}
 
+      {/* ── Main content ─────────────────────────────────────────────────────── */}
+      <div
+        className={`flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 px-6 py-8 w-full max-w-5xl text-center lg:text-left ${
+          showTimer ? "" : "mt-0"
+        }`}
+      >
         {/* Left column: title + live badge + instructions */}
         <div className="flex flex-col items-center lg:items-start gap-5 lg:max-w-xs">
           {/* Live badge */}
@@ -195,7 +395,7 @@ export function SpectatorQRScreen({
             />
           </div>
 
-          {/* Blue corner accent marks (mirrors AnnounceModal green accents) */}
+          {/* Blue corner accent marks */}
           {(["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"] as const).map((pos) => (
             <div
               key={pos}
