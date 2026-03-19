@@ -2661,3 +2661,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Reset `visible` to false briefly when `currentRound` changes, then set it back to true after a short delay so bars re-animate with new scores
 - [x] Update unit tests to cover the round-change re-trigger logic
 - [x] TypeScript: 0 errors
+
+## Header Nav Compaction
+
+- [x] Audit current header layout: mascot logo drop-down animation + nav pill + right actions
+- [x] Inline the OTB!! logo into the single nav bar row (left slot) — remove the separate top-center floating logo area
+- [x] Ensure nav pill stays centered, right actions stay right on all breakpoints
+- [x] Verify mobile hamburger / icon-only layout is still correct
+- [x] TypeScript: 0 errors
