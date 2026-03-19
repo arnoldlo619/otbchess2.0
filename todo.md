@@ -2962,3 +2962,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Render "Past Winners" hall-of-fame section below the podium in PlayerOfMonthWidget
 - [x] Each past winner row shows month/year label, amber avatar initial, name, score, and crown icon
 - [x] Collapses to 3 rows with "Show all N winners" / "Show less" toggle when more than 3 entries exist
+
+## H2H Panel — Real Member Avatars
+
+- [x] Add opponentAvatarUrl to HeadToHeadRecord type in clubBattleRegistry
+- [x] getHeadToHeadRecords now accepts optional members array and populates opponentAvatarUrl from it
+- [x] H2H breakdown panel renders real avatar image (with onError fallback to initials) for each opponent row

@@ -35,6 +35,7 @@ export interface BattleLeaderboardEntry {
 export interface HeadToHeadRecord {
   opponentId: string;
   opponentName: string;
+  opponentAvatarUrl?: string | null;
   wins: number;
   draws: number;
   losses: number;
@@ -168,7 +169,11 @@ export function getBattleLeaderboard(clubId: string): BattleLeaderboardEntry[] {
   return entries.sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
 }
 
-export function getHeadToHeadRecords(clubId: string, playerId: string): HeadToHeadRecord[] {
+export function getHeadToHeadRecords(
+  clubId: string,
+  playerId: string,
+  members?: Array<{ userId: string; avatarUrl?: string | null }>
+): HeadToHeadRecord[] {
   const completed = loadBattles(clubId).filter(
     (b) => b.status === "completed" && b.result && (b.playerAId === playerId || b.playerBId === playerId)
   );
@@ -186,11 +191,18 @@ export function getHeadToHeadRecords(clubId: string, playerId: string): HeadToHe
     else if ((battle.result === "player_a" && isA) || (battle.result === "player_b" && !isA)) entry.wins++;
     else entry.losses++;
   }
-  return Array.from(map.entries()).map(([opponentId, stats]) => ({
-    opponentId, opponentName: stats.name,
-    wins: stats.wins, draws: stats.draws, losses: stats.losses,
-    total: stats.wins + stats.draws + stats.losses,
-  })).sort((a, b) => b.total - a.total);
+  return Array.from(map.entries()).map(([opponentId, stats]) => {
+    const member = members?.find((m) => m.userId === opponentId);
+    return {
+      opponentId,
+      opponentName: stats.name,
+      opponentAvatarUrl: member?.avatarUrl ?? null,
+      wins: stats.wins,
+      draws: stats.draws,
+      losses: stats.losses,
+      total: stats.wins + stats.draws + stats.losses,
+    };
+  }).sort((a, b) => b.total - a.total);
 }
 
 export function getPlayerBattleSummary(clubId: string, playerId: string): PlayerBattleSummary {

@@ -2882,7 +2882,7 @@ export default function ClubDashboard() {
                 <div className="space-y-1.5">
                   {battleLeaderboard.map((entry, idx) => {
                     const isExpanded = expandedLeaderboardId === entry.playerId;
-                    const h2h: HeadToHeadRecord[] = club ? getHeadToHeadRecords(club.id, entry.playerId) : [];
+                    const h2h: HeadToHeadRecord[] = club ? getHeadToHeadRecords(club.id, entry.playerId, members) : [];
                     return (
                       <div key={entry.playerId} className="rounded-xl overflow-hidden">
                         {/* Leaderboard row — clickable */}
@@ -2926,10 +2926,19 @@ export default function ClubDashboard() {
                                 const winPct = total > 0 ? Math.round((rec.wins / total) * 100) : 0;
                                 return (
                                   <div key={rec.opponentId} className="flex items-center gap-3">
-                                    {/* Avatar stub */}
-                                    <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white/60"
+                                    {/* Avatar — real image or initials fallback */}
+                                    <div className="w-7 h-7 rounded-full flex-shrink-0 overflow-hidden flex items-center justify-center text-[10px] font-bold text-white/60"
                                       style={{ background: "oklch(0.3 0.08 145)" }}>
-                                      {rec.opponentName.charAt(0).toUpperCase()}
+                                      {rec.opponentAvatarUrl ? (
+                                        <img
+                                          src={rec.opponentAvatarUrl}
+                                          alt={rec.opponentName}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                                        />
+                                      ) : (
+                                        rec.opponentName.charAt(0).toUpperCase()
+                                      )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <p className="text-white/80 text-xs font-semibold truncate">{rec.opponentName}</p>
