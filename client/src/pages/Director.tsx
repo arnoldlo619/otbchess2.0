@@ -1643,6 +1643,7 @@ export default function Director() {
               <RoundTimer
                 isDark={isDark}
                 defaultMinutes={state.roundMinutes ?? 25}
+                tournamentId={state.tournamentId}
                 onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
               />
             </div>
@@ -1698,6 +1699,7 @@ export default function Director() {
               <RoundTimer
                 isDark={isDark}
                 defaultMinutes={state.roundMinutes ?? 25}
+                tournamentId={state.tournamentId}
                 onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
               />
             )}

@@ -2707,3 +2707,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Default round duration: 25 minutes, editable by director
 - [x] Replace horizontal RR/TT widget with RoundTimer
 - [x] Persist round duration setting in tournament state/settings
+
+## Live Stream Round Timer
+
+- [x] Audit SSE broadcast system and spectator view
+- [x] Lift timer state to Director page and broadcast via SSE
+- [x] Display live countdown on spectator/live stream view
