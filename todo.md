@@ -2830,3 +2830,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace pill-container tab bar with slim underline-style tab row (green active indicator) below header row
 - [x] Action buttons reduced to icon-only (Share2, Download) with title tooltips — no text labels
 - [x] Header stays sticky, glassmorphic, matches OTB dark/green design system
+
+## Rules of Hooks Audit
+
+- [x] ClubProfile: move poll-close useEffect above `if (!club) return` early return (fixed in prev checkpoint)
+- [x] ClubDashboard: move poll-close useEffect above `if (loading) return` and `if (!club) return null` early returns
+- [x] Both components now guard the useEffect internally with `if (!clubId) return` instead of relying on component-level early returns

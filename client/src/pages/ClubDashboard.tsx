@@ -1276,6 +1276,27 @@ export default function ClubDashboard() {
     setLoading(false);
   }, [id, user]);
 
+  // Poll-close + scheduled-publish interval: every 30 seconds
+  // MUST be declared before any early return to comply with Rules of Hooks
+  const clubId = club?.id ?? null;
+  useEffect(() => {
+    if (!clubId) return;
+    // Run once immediately on mount
+    const didPublish = publishScheduledPolls(clubId);
+    const didClose = checkAndCloseExpiredPolls(clubId);
+    if (didPublish || didClose) {
+      setFeedEvents(listFeedEvents(clubId, 50));
+    }
+    setScheduledPolls(listScheduledPolls(clubId));
+    const timer = setInterval(() => {
+      const p = publishScheduledPolls(clubId);
+      const c = checkAndCloseExpiredPolls(clubId);
+      if (p || c) setFeedEvents(listFeedEvents(clubId, 50));
+      setScheduledPolls(listScheduledPolls(clubId));
+    }, 30_000);
+    return () => clearInterval(timer);
+  }, [clubId]);
+
   function refreshEvents() {
     if (!club) return;
     setEvents(listClubEvents(club.id, true));
@@ -1289,25 +1310,6 @@ export default function ClubDashboard() {
     setFeedEvents(listFeedEvents(club.id, 50));
     setScheduledPolls(listScheduledPolls(club.id));
   }
-
-  // Poll-close + scheduled-publish interval: every 30 seconds
-  useEffect(() => {
-    if (!club) return;
-    // Run once immediately on mount
-    const didPublish = publishScheduledPolls(club.id);
-    const didClose = checkAndCloseExpiredPolls(club.id);
-    if (didPublish || didClose) {
-      setFeedEvents(listFeedEvents(club.id, 50));
-    }
-    setScheduledPolls(listScheduledPolls(club.id));
-    const timer = setInterval(() => {
-      const p = publishScheduledPolls(club.id);
-      const c = checkAndCloseExpiredPolls(club.id);
-      if (p || c) setFeedEvents(listFeedEvents(club.id, 50));
-      setScheduledPolls(listScheduledPolls(club.id));
-    }, 30_000);
-    return () => clearInterval(timer);
-  }, [club?.id]);
 
   function submitAnnouncement(e: React.FormEvent) {
     e.preventDefault();
