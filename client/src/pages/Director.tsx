@@ -1507,8 +1507,8 @@ export default function Director() {
                 onClick={() => setShowAnnounce(true)}
                 className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
                   isDark
-                    ? "bg-[#4CAF50]/12 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-[#4CAF50]/22"
-                    : "bg-[#3D6B47]/08 border-[#3D6B47]/25 text-[#3D6B47] hover:bg-[#3D6B47]/15"
+                    ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-white hover:bg-[#4CAF50]/30"
+                    : "bg-[#3D6B47]/15 border-[#3D6B47]/35 text-white hover:bg-[#3D6B47]/25"
                 }`}
                 title="Show join QR code full-screen for players to scan"
               >
@@ -1522,13 +1522,13 @@ export default function Director() {
                 onClick={() => setShowSpectatorQR(true)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
                   isDark
-                    ? "bg-white/06 border-white/12 text-white/50 hover:bg-white/10 hover:text-white/70"
-                    : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    ? "bg-white/10 border-white/20 text-white hover:bg-white/18"
+                    : "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-white hover:bg-[#3D6B47]/25"
                 }`}
                 title="Project live standings QR on a screen or projector"
               >
                 <QrCode className="w-3.5 h-3.5" />
-                <span>Project QR</span>
+                <span>Live Stream</span>
               </button>
             )}
           </div>
@@ -2203,15 +2203,15 @@ export default function Director() {
                             </div>
                             Create Recap
                           </button>
-                          {/* Project QR — project live standings on a screen */}
+                          {/* Live Stream — project live standings on a screen */}
                           <button
                             onClick={() => setShowSpectatorQR(true)}
                             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                              isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                              isDark ? "bg-white/10 text-white hover:bg-white/15" : "bg-[#3D6B47]/15 border border-[#3D6B47]/30 text-white hover:bg-[#3D6B47]/25"
                             }`}
                           >
                             <QrCode className="w-4 h-4" />
-                            Project QR
+                            Live Stream
                           </button>
                         </div>
                       </div>

@@ -2682,3 +2682,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add translate-x hover micro-interaction to ArrowRight icon in Join page "Look up my ELO" button
 - [x] Add translate-x hover micro-interaction to ArrowRight icon in CreateClubWizard "View Club Page" button
 - [x] Add translate-x hover micro-interaction to ArrowRight icon in Director "Generate Round" buttons
+
+## Director Nav Button Polish
+
+- [x] Rename "Project QR" nav header button to "Live Stream"
+- [x] Set "Live Stream" button text color to white in both dark and light mode
+- [x] Set "Join QR" button text color to white in both dark and light mode
+- [x] Rename "Project QR" in the post-round action buttons section to "Live Stream" also
