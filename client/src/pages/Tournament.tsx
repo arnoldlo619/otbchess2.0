@@ -837,6 +837,8 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
   // Intersection Observer — bars grow from 0 → final width once section enters viewport
   const sectionRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+
+  // Initial visibility: fire once when the section first scrolls into view
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -852,6 +854,18 @@ function PerformanceSection({ players, rounds, currentRound }: { players: Player
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  // Re-trigger animation on round change: collapse bars briefly, then re-expand
+  const prevRoundRef = useRef(currentRound);
+  useEffect(() => {
+    if (prevRoundRef.current === currentRound) return;
+    prevRoundRef.current = currentRound;
+    // Collapse bars to 0 immediately
+    setVisible(false);
+    // After a short pause (enough for the collapse transition to register), re-expand
+    const t = setTimeout(() => setVisible(true), 80);
+    return () => clearTimeout(t);
+  }, [currentRound]);
 
   if (standingRows.length === 0) return null;
 

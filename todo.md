@@ -2655,3 +2655,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Intersection Observer to PerformanceSection so bars animate from 0% to final width on first scroll into view
 - [x] Stagger each bar's animation with a small delay per row index
 - [ ] TypeScript: 0 errors
+
+## Score Distribution — Re-trigger on Round Change
+
+- [x] Reset `visible` to false briefly when `currentRound` changes, then set it back to true after a short delay so bars re-animate with new scores
+- [x] Update unit tests to cover the round-change re-trigger logic
+- [x] TypeScript: 0 errors

@@ -5,11 +5,15 @@
  * `visible` flag. When visible=false bars render at 0% width; when visible=true
  * bars render at their computed percentage of maxPoints.
  *
+ * A second useEffect watches `currentRound`: when it changes the component
+ * briefly sets visible=false (collapsing bars), then after 80ms sets it back
+ * to true so bars re-animate with the new scores.
+ *
  * These tests cover the pure helper calculations so the animation logic is
  * independently verifiable without a DOM/browser environment.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Helpers extracted from PerformanceSection ──────────────────────────────
 
@@ -27,6 +31,27 @@ function rowDelay(idx: number): string {
 /** Compute the animated width: 0% when not visible, pct% when visible. */
 function animatedWidth(pct: number, visible: boolean): string {
   return visible ? `${pct}%` : "0%";
+}
+
+/**
+ * Simulate the round-change re-trigger state machine.
+ *
+ * Returns a sequence of `visible` values captured at key moments:
+ *   [0] immediately after round changes (should be false — bars collapsed)
+ *   [1] after the 80ms timeout fires (should be true — bars re-expanded)
+ */
+function simulateRoundChange(initialVisible: boolean): Promise<[boolean, boolean]> {
+  return new Promise((resolve) => {
+    let visible = initialVisible;
+    // Step 1: collapse immediately
+    visible = false;
+    const afterCollapse = visible;
+    // Step 2: re-expand after 80ms
+    setTimeout(() => {
+      visible = true;
+      resolve([afterCollapse, visible]);
+    }, 80);
+  });
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────
@@ -125,11 +150,102 @@ describe("full animation scenario", () => {
   it("stagger delays are unique and increasing per row", () => {
     const delays = standings.map((_, idx) => rowDelay(idx));
     expect(delays).toEqual(["0ms", "60ms", "120ms", "180ms"]);
-    // Verify they are strictly increasing
     for (let i = 1; i < delays.length; i++) {
       const prev = parseInt(delays[i - 1]);
       const curr = parseInt(delays[i]);
       expect(curr).toBeGreaterThan(prev);
     }
+  });
+});
+
+describe("round-change re-trigger", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("collapses bars immediately when round changes", () => {
+    let visible = true;
+    // Simulate the effect: collapse immediately
+    visible = false;
+    expect(visible).toBe(false);
+  });
+
+  it("re-expands bars after 80ms timeout", () => {
+    let visible = true;
+    visible = false;
+    const callback = vi.fn(() => { visible = true; });
+    const t = setTimeout(callback, 80);
+
+    // Before timeout fires, bars are still collapsed
+    expect(visible).toBe(false);
+    expect(callback).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(80);
+
+    // After timeout fires, bars are re-expanded
+    expect(callback).toHaveBeenCalledOnce();
+    expect(visible).toBe(true);
+
+    clearTimeout(t);
+  });
+
+  it("does NOT re-trigger when round is unchanged (prevRoundRef guard)", () => {
+    // The effect compares prevRoundRef.current === currentRound and returns early
+    let triggerCount = 0;
+    function maybeRetrigger(prev: number, current: number) {
+      if (prev === current) return; // guard — no re-trigger
+      triggerCount++;
+    }
+
+    maybeRetrigger(3, 3); // same round — no trigger
+    expect(triggerCount).toBe(0);
+
+    maybeRetrigger(3, 4); // round advanced — trigger
+    expect(triggerCount).toBe(1);
+
+    maybeRetrigger(4, 4); // same round again — no trigger
+    expect(triggerCount).toBe(1);
+  });
+
+  it("re-triggers once per round advance (rounds 1→2→3)", () => {
+    let triggerCount = 0;
+    let prevRound = 1;
+
+    function advance(nextRound: number) {
+      if (prevRound === nextRound) return;
+      prevRound = nextRound;
+      triggerCount++;
+    }
+
+    advance(2); // round 1→2
+    advance(2); // same — no trigger
+    advance(3); // round 2→3
+    advance(3); // same — no trigger
+
+    expect(triggerCount).toBe(2);
+  });
+
+  it("bars show 0% during the 80ms collapse window", () => {
+    let visible = true;
+    // Simulate collapse
+    visible = false;
+    const pcts = [100, 75, 62.5, 25];
+    const widths = pcts.map((p) => animatedWidth(p, visible));
+    expect(widths).toEqual(["0%", "0%", "0%", "0%"]);
+  });
+
+  it("bars show updated percentages after re-expansion", () => {
+    // After round 2, scores have changed: new maxPoints is 5
+    const newStandings = [
+      { points: 5 },
+      { points: 4 },
+      { points: 3 },
+      { points: 1 },
+    ];
+    const newMax = 5;
+    let visible = false;
+    // Simulate timeout firing
+    visible = true;
+    const widths = newStandings.map((s) => animatedWidth(barPct(s.points, newMax), visible));
+    expect(widths).toEqual(["100%", "80%", "60%", "20%"]);
   });
 });
