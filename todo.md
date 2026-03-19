@@ -2939,3 +2939,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Integrated into ClubDashboard Events tab above the event list
 - [x] Podium rows for #2 and #3 below the spotlight card
 - [x] Returns null (no render) when no scored members exist — no empty state clutter
+
+## Challenge Button on Member Rows
+
+- [x] Add Challenge button to each member row in ClubDashboard Members tab (director-only)
+- [x] Clicking Challenge pre-fills Player A as current user and Player B as the target member
+- [x] Auto-switches to the Battles tab and smooth-scrolls to the create-battle form
+- [x] Button hidden for own row and for non-director/owner users

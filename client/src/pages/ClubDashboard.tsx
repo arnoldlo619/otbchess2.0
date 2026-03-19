@@ -2109,8 +2109,28 @@ export default function ClubDashboard() {
                             )}
                           </div>
                         </div>
-                        <div className="text-white/20 text-xs flex-shrink-0">
-                          {new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-white/20 text-xs">
+                            {new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                          </span>
+                          {isOwnerOrDirector && m.userId !== user?.id && (
+                            <button
+                              title={`Challenge ${m.displayName}`}
+                              onClick={() => {
+                                setBattlePlayerA(user?.id ?? "");
+                                setBattlePlayerB(m.userId);
+                                setTab("battles");
+                                setTimeout(() => {
+                                  document.getElementById("create-battle-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }, 80);
+                              }}
+                              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                              style={{ background: "oklch(0.35 0.12 145 / 0.25)", color: "oklch(0.75 0.18 145)", border: "1px solid oklch(0.55 0.15 145 / 0.3)" }}
+                            >
+                              <Swords className="w-3 h-3" />
+                              Challenge
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -2626,7 +2646,7 @@ export default function ClubDashboard() {
           <div className="space-y-6">
             {/* Challenge creator (director only) */}
             {isOwnerOrDirector && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div id="create-battle-form" className="rounded-2xl border border-white/10 bg-white/5 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Swords className="w-4 h-4" style={{ color: accent }} />
                   <h3 className="text-white font-semibold text-sm">Create Battle</h3>
