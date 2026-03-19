@@ -80,6 +80,7 @@ import {
   GripVertical,
   Pencil,
   Coffee,
+  Cast,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1527,7 +1528,7 @@ export default function Director() {
                 }`}
                 title="Project live standings QR on a screen or projector"
               >
-                <QrCode className="w-3.5 h-3.5" />
+                <Cast className="w-3.5 h-3.5" />
                 <span>Live Stream</span>
               </button>
             )}
@@ -2210,7 +2211,7 @@ export default function Director() {
                               isDark ? "bg-white/10 text-white hover:bg-white/15" : "bg-[#3D6B47]/15 border border-[#3D6B47]/30 text-white hover:bg-[#3D6B47]/25"
                             }`}
                           >
-                            <QrCode className="w-4 h-4" />
+                            <Cast className="w-4 h-4" />
                             Live Stream
                           </button>
                         </div>

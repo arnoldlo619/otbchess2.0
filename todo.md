@@ -2689,3 +2689,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Set "Live Stream" button text color to white in both dark and light mode
 - [x] Set "Join QR" button text color to white in both dark and light mode
 - [x] Rename "Project QR" in the post-round action buttons section to "Live Stream" also
+
+## Live Stream Button Icon
+
+- [x] Replace QrCode icon with Cast icon on "Live Stream" button in Director header nav
+- [x] Replace QrCode icon with Cast icon on "Live Stream" button in post-round action buttons
+- [x] Ensure Cast is imported from lucide-react in Director.tsx
