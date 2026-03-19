@@ -124,6 +124,10 @@ import {
   Swords,
   Medal,
   Flame,
+  Mail,
+  Link2,
+  Copy,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1755,6 +1759,13 @@ export default function ClubDashboard() {
   const [battleResultId, setBattleResultId] = useState<string | null>(null);
   const [expandedLeaderboardId, setExpandedLeaderboardId] = useState<string | null>(null);
 
+  // Invite state
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteSending, setInviteSending] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>>([]);
+  const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
+  const [showInvitePanel, setShowInvitePanel] = useState(false);
+
   // Seed and load
   useEffect(() => {
     seedClubsIfEmpty();
@@ -1817,6 +1828,61 @@ export default function ClubDashboard() {
     checkAndCloseExpiredPolls(club.id);
     setFeedEvents(listFeedEvents(club.id, 50));
     setScheduledPolls(listScheduledPolls(club.id));
+  }
+
+  async function fetchPendingInvites() {
+    if (!club) return;
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/invites`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json() as Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>;
+        setPendingInvites(data.filter((i) => i.status === "pending"));
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function sendInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!club || !inviteEmail.trim()) return;
+    setInviteSending(true);
+    setInviteLink(null);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/invites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: inviteEmail.trim() }),
+      });
+      const data = await res.json() as { inviteUrl?: string; error?: string };
+      if (!res.ok) {
+        toast.error(data.error ?? "Failed to create invite");
+      } else {
+        setInviteLink({ email: inviteEmail.trim(), url: data.inviteUrl ?? "" });
+        setInviteEmail("");
+        toast.success("Invite link created!");
+        fetchPendingInvites();
+      }
+    } catch {
+      toast.error("Network error — could not send invite");
+    } finally {
+      setInviteSending(false);
+    }
+  }
+
+  async function revokeInvite(token: string) {
+    if (!club) return;
+    try {
+      await fetch(`/api/clubs/${club.id}/invites/${token}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      fetchPendingInvites();
+      toast.success("Invite revoked");
+    } catch {
+      toast.error("Could not revoke invite");
+    }
   }
 
   function submitAnnouncement(e: React.FormEvent) {
@@ -1887,6 +1953,14 @@ export default function ClubDashboard() {
 
   const isOwnerOrDirector =
     user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
+
+  // Load pending invites when Members tab is opened (owner/director only)
+  useEffect(() => {
+    if (tab === "members" && isOwnerOrDirector) {
+      fetchPendingInvites();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, isOwnerOrDirector]);
 
   const upcomingEvents = events.filter(isUpcoming);
   const pastEvents = events.filter((e) => !isUpcoming(e));
@@ -2151,6 +2225,132 @@ export default function ClubDashboard() {
         {/* ── MEMBERS TAB ───────────────────────────────────────────────────── */}
         {tab === "members" && (
           <div className="space-y-5">
+
+            {/* ── Invite Members panel (owner/director only) ─────────────────── */}
+            {isOwnerOrDirector && (
+              <div
+                className="rounded-2xl border border-white/08 overflow-hidden"
+                style={{ background: "oklch(0.16 0.05 145)" }}
+              >
+                {/* Panel header */}
+                <button
+                  onClick={() => { setShowInvitePanel((v) => !v); if (!showInvitePanel) fetchPendingInvites(); }}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/04 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" style={{ color: accent }} />
+                    <span className="text-white font-semibold text-sm">Invite Members</span>
+                    {pendingInvites.length > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: `${accent}33`, color: accent }}>
+                        {pendingInvites.length} pending
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${showInvitePanel ? "rotate-180" : ""}`} />
+                </button>
+
+                {showInvitePanel && (
+                  <div className="px-4 pb-4 space-y-4 border-t border-white/08">
+
+                    {/* Email input form */}
+                    <form onSubmit={sendInvite} className="flex gap-2 pt-4">
+                      <div className="flex-1 relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                        <input
+                          type="email"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          placeholder="member@email.com"
+                          required
+                          className="w-full bg-white/07 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/25 transition-colors"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={inviteSending || !inviteEmail.trim()}
+                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ background: accent, color: "white" }}
+                      >
+                        {inviteSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {inviteSending ? "Sending…" : "Send Invite"}
+                      </button>
+                    </form>
+
+                    {/* Generated invite link */}
+                    {inviteLink && (
+                      <div className="rounded-xl border border-white/10 p-3 space-y-2" style={{ background: "oklch(0.14 0.04 145 / 0.6)" }}>
+                        <p className="text-white/50 text-xs">Invite link for <span className="text-white/80 font-semibold">{inviteLink.email}</span> — share this link:</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 flex items-center gap-2 bg-white/05 border border-white/10 rounded-lg px-3 py-2 min-w-0">
+                            <Link2 className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                            <span className="text-white/60 text-xs truncate font-mono">{inviteLink.url}</span>
+                          </div>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(inviteLink.url); toast.success("Link copied!"); }}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                            style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copy
+                          </button>
+                        </div>
+                        <p className="text-white/30 text-[10px]">Expires in 7 days. The invitee will be auto-joined to this club when they sign up or log in via this link.</p>
+                      </div>
+                    )}
+
+                    {/* Pending invites list */}
+                    {pendingInvites.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Pending Invites · {pendingInvites.length}</h4>
+                          <button onClick={fetchPendingInvites} className="text-white/30 hover:text-white/60 transition-colors">
+                            <RefreshCw className="w-3 h-3" />
+                          </button>
+                        </div>
+                        {pendingInvites.map((inv) => (
+                          <div
+                            key={inv.id}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/06"
+                            style={{ background: "oklch(0.14 0.04 240)" }}
+                          >
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
+                              <Mail className="w-3.5 h-3.5" style={{ color: accent }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-medium truncate">{inv.email}</p>
+                              <p className="text-white/30 text-[10px]">
+                                Expires {new Date(inv.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.token}`); toast.success("Link copied!"); }}
+                                title="Copy invite link"
+                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
+                              >
+                                <Copy className="w-3.5 h-3.5 text-white/40" />
+                              </button>
+                              <button
+                                onClick={() => revokeInvite(inv.token)}
+                                title="Revoke invite"
+                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-red-500/20"
+                              >
+                                <X className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {pendingInvites.length === 0 && !inviteLink && (
+                      <p className="text-white/25 text-xs text-center py-2">No pending invites. Enter an email above to invite someone.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Search */}
             <div className="relative">
               <input

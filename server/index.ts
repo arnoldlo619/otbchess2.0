@@ -12,6 +12,7 @@ import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import clubMessagingRouter from "./clubMessaging.js";
+import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -268,6 +269,8 @@ export function createApp() {
 
   // ── Club Messaging (DMs + turn-based chess) ───────────────────────────────
   app.use("/api/clubs/:clubId/conversations", clubMessagingRouter);
+  app.use("/api/clubs/:clubId/invites", clubInvitesRouter);
+  app.use("/api/invite", createInviteRouter());
 
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.

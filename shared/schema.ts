@@ -479,3 +479,31 @@ export const clubChessGames = mysqlTable(
 
 export type ClubChessGame = typeof clubChessGames.$inferSelect;
 export type NewClubChessGame = typeof clubChessGames.$inferInsert;
+
+// ─── club_invites ─────────────────────────────────────────────────────────────
+// One row per pending or accepted email invite to a club.
+export const clubInvites = mysqlTable(
+  "club_invites",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    clubId: varchar("club_id", { length: 36 }).notNull(),
+    // Email address the invite was sent to
+    email: varchar("email", { length: 255 }).notNull(),
+    // Unique token embedded in the invite link
+    token: varchar("token", { length: 64 }).notNull().unique(),
+    // User ID of the director who sent the invite
+    invitedBy: varchar("invited_by", { length: 36 }).notNull(),
+    // 'pending' | 'accepted' | 'revoked'
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    acceptedAt: timestamp("accepted_at"),
+  },
+  (table) => ({
+    clubIdx: index("ci_club_id_idx").on(table.clubId),
+    tokenIdx: index("ci_token_idx").on(table.token),
+    emailIdx: index("ci_email_idx").on(table.email),
+  })
+);
+export type ClubInvite = typeof clubInvites.$inferSelect;
+export type NewClubInvite = typeof clubInvites.$inferInsert;

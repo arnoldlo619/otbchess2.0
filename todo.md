@@ -2968,3 +2968,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add opponentAvatarUrl to HeadToHeadRecord type in clubBattleRegistry
 - [x] getHeadToHeadRecords now accepts optional members array and populates opponentAvatarUrl from it
 - [x] H2H breakdown panel renders real avatar image (with onError fallback to initials) for each opponent row
+
+## Club Email Invite System
+
+- [x] Add club_invites table to schema (id, clubId, email, token, invitedBy, status, expiresAt, createdAt) — created via SQL
+- [x] Create invite API routes: POST /api/clubs/:id/invites, GET /api/clubs/:id/invites, DELETE /api/clubs/:id/invites/:token, GET /api/invite/:token, POST /api/invite/:token/accept
+- [x] Invite link generated and returned in API response (copy-paste in dev; email service can be wired in production)
+- [x] Build invite UI in ClubDashboard Members tab: collapsible Invite Members panel with email input, send button, link copy, pending invites list with revoke
+- [x] Build /invite/:token landing page (InviteAccept.tsx): shows invite details, prompts sign-up or login, auto-joins club on accept
+- [x] Auto-join club when user registers/logs in via invite link — joinClub() called after POST /api/invite/:token/accept succeeds
