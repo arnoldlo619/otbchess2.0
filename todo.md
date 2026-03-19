@@ -2744,3 +2744,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Following" section to MyClubs page below "My Clubs"
 - [x] Show club cards with Unfollow and Join CTAs for followed clubs
 - [x] Hide section when user follows no clubs
+
+## My Clubs — Upcoming Events Tab
+
+- [x] Add "Upcoming Events" tab to My Clubs page tab navigation
+- [x] Aggregate events from all joined + followed clubs in chronological order
+- [x] Build UpcomingEventCard with club attribution, date, RSVP status, and cover art
+- [x] Group events by date (Today / This Week / This Month / Later)
+- [x] Show empty state when no upcoming events exist

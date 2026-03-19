@@ -25,6 +25,15 @@ import {
   type ClubCategory,
 } from "@/lib/clubRegistry";
 import {
+  listClubEvents,
+  seedClubEventsIfEmpty,
+  getUserRSVP,
+  upsertRSVP,
+  countRSVPs,
+  type ClubEvent,
+  type RSVPStatus,
+} from "@/lib/clubEventRegistry";
+import {
   Users,
   Trophy,
   MapPin,
@@ -41,6 +50,12 @@ import {
   Bell,
   BellOff,
   UserPlus,
+  CalendarDays,
+  Clock,
+  CheckCircle2,
+  Circle,
+  MinusCircle,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
@@ -290,6 +305,215 @@ function FollowedClubCard({
   );
 }
 
+// ── Upcoming Events tab component ────────────────────────────────────────────
+
+type EnrichedEvent = ClubEvent & { clubName: string; clubAccent: string; isJoined: boolean };
+
+function formatEventDate(iso: string): { day: string; month: string; weekday: string; time: string } {
+  const d = new Date(iso);
+  return {
+    day: d.toLocaleDateString("en-US", { day: "2-digit" }),
+    month: d.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+    weekday: d.toLocaleDateString("en-US", { weekday: "short" }),
+    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+  };
+}
+
+function getDateGroup(iso: string): string {
+  const now = new Date();
+  const d = new Date(iso);
+  const diffDays = Math.floor((d.getTime() - now.getTime()) / 86400000);
+  if (diffDays < 1) return "Today";
+  if (diffDays < 7) return "This Week";
+  if (diffDays < 30) return "This Month";
+  return "Later";
+}
+
+const RSVP_OPTIONS: Array<{ status: RSVPStatus; label: string; icon: React.ReactNode; activeClass: string }> = [
+  { status: "going", label: "Going", icon: <CheckCircle2 className="w-3.5 h-3.5" />, activeClass: "bg-[#3D6B47] text-white" },
+  { status: "maybe", label: "Maybe", icon: <MinusCircle className="w-3.5 h-3.5" />, activeClass: "bg-amber-500/20 text-amber-400" },
+  { status: "not_going", label: "Can't Go", icon: <Circle className="w-3.5 h-3.5" />, activeClass: "bg-red-500/15 text-red-400" },
+];
+
+function UpcomingEventsTab({
+  events,
+  userId,
+  isDark,
+  textMain,
+  textMuted,
+  card,
+  cardBorder,
+  onRsvpChange,
+}: {
+  events: EnrichedEvent[];
+  userId: string;
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  card: string;
+  cardBorder: string;
+  onRsvpChange: () => void;
+}) {
+  if (events.length === 0) {
+    return (
+      <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
+        <CalendarDays className={`w-12 h-12 mx-auto mb-3 ${textMuted}`} />
+        <p className={`text-base font-semibold ${textMain}`}>No upcoming events</p>
+        <p className={`text-sm mt-1 ${textMuted}`}>Events from your joined and followed clubs will appear here</p>
+      </div>
+    );
+  }
+
+  // Group by date bucket
+  const groups: Record<string, EnrichedEvent[]> = {};
+  const ORDER = ["Today", "This Week", "This Month", "Later"];
+  for (const ev of events) {
+    const g = getDateGroup(ev.startAt);
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(ev);
+  }
+
+  return (
+    <div className="space-y-8">
+      {ORDER.filter((g) => groups[g]?.length).map((group) => (
+        <section key={group}>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>{group}</h2>
+            <div className={`flex-1 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+          </div>
+          <div className="space-y-3">
+            {groups[group].map((ev) => (
+              <EventCard
+                key={ev.id}
+                event={ev}
+                userId={userId}
+                isDark={isDark}
+                textMain={textMain}
+                textMuted={textMuted}
+                card={card}
+                cardBorder={cardBorder}
+                onRsvpChange={onRsvpChange}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function EventCard({
+  event,
+  userId,
+  isDark,
+  textMain,
+  textMuted,
+  card,
+  cardBorder,
+  onRsvpChange,
+}: {
+  event: EnrichedEvent;
+  userId: string;
+  isDark: boolean;
+  textMain: string;
+  textMuted: string;
+  card: string;
+  cardBorder: string;
+  onRsvpChange: () => void;
+}) {
+  const { day, month, weekday, time } = formatEventDate(event.startAt);
+  const rsvp = getUserRSVP(event.id, userId);
+  const counts = countRSVPs(event.id);
+
+  const handleRSVP = (status: RSVPStatus) => {
+    upsertRSVP(event.id, event.clubId, userId, "Me", status);
+    onRsvpChange();
+  };
+
+  return (
+    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden flex`}>
+      {/* Cover image or gradient strip */}
+      {event.coverImageUrl ? (
+        <div className="w-24 sm:w-32 flex-shrink-0 relative overflow-hidden">
+          <img src={event.coverImageUrl} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
+        </div>
+      ) : (
+        <div
+          className="w-3 flex-shrink-0"
+          style={{ background: `linear-gradient(180deg, ${event.clubAccent}cc, ${event.clubAccent}44)` }}
+        />
+      )}
+
+      {/* Main content */}
+      <div className="flex flex-1 min-w-0 gap-4 p-4">
+        {/* Date block */}
+        <div className="flex-shrink-0 text-center w-12">
+          <div className={`text-xs font-bold uppercase tracking-wider`} style={{ color: event.clubAccent }}>{month}</div>
+          <div className={`text-2xl font-black leading-none ${textMain}`}>{day}</div>
+          <div className={`text-xs ${textMuted} mt-0.5`}>{weekday}</div>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className={`text-sm font-bold truncate ${textMain}`}>{event.title}</p>
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
+                  <Clock className="w-3 h-3" />{time}
+                </span>
+                {event.venue && (
+                  <span className={`flex items-center gap-1 text-xs ${textMuted}`}>
+                    <MapPin className="w-3 h-3" />{event.venue}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Link href={`/clubs/${event.clubId}/home`}>
+              <span
+                className={`flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-colors ${
+                  event.isJoined
+                    ? isDark ? "bg-[#4CAF50]/12 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                    : isDark ? "bg-white/6 text-white/50" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {event.isJoined ? <Users className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
+                {event.clubName}
+              </span>
+            </Link>
+          </div>
+
+          {/* RSVP row */}
+          <div className="flex items-center gap-2 mt-3">
+            {RSVP_OPTIONS.map((opt) => (
+              <button
+                key={opt.status}
+                onClick={() => handleRSVP(opt.status)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all active:scale-95 ${
+                  rsvp?.status === opt.status
+                    ? `${opt.activeClass} border-transparent`
+                    : isDark
+                    ? "border-white/8 text-white/40 hover:text-white hover:border-white/20 bg-white/3"
+                    : "border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300 bg-white"
+                }`}
+              >
+                {opt.icon}
+                {opt.label}
+              </button>
+            ))}
+            {counts.going > 0 && (
+              <span className={`ml-auto text-xs ${textMuted}`}>
+                {counts.going} going
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function MyClubs() {
@@ -298,29 +522,51 @@ export default function MyClubs() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  const [activeTab, setActiveTab] = useState<"clubs" | "events">("clubs");
   const [allClubs, setAllClubs] = useState<Club[]>([]);
   const [myClubs, setMyClubs] = useState<Club[]>([]);
   const [followedClubs, setFollowedClubs] = useState<Club[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Array<ClubEvent & { clubName: string; clubAccent: string; isJoined: boolean }>>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ClubCategory | "all">("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [rsvpRefresh, setRsvpRefresh] = useState(0);
 
   const refreshClubs = () => {
     seedClubsIfEmpty();
+    seedClubEventsIfEmpty();
     const all = listAllClubs();
     setAllClubs(all);
     if (user) {
       const joined = listMyClubs(user.id);
       setMyClubs(joined);
       const joinedIds = new Set(joined.map((c) => c.id));
-      setFollowedClubs(all.filter((c) => !joinedIds.has(c.id) && isFollowing(c.id, user.id)));
+      const followed = all.filter((c) => !joinedIds.has(c.id) && isFollowing(c.id, user.id));
+      setFollowedClubs(followed);
+
+      // Aggregate upcoming events from joined + followed clubs
+      const relevantClubIds = [...joined.map((c) => c.id), ...followed.map((c) => c.id)];
+      const uniqueClubIds = Array.from(new Set(relevantClubIds));
+      const clubMap = new Map(all.map((c) => [c.id, c]));
+      const now = new Date().toISOString();
+      const events: Array<ClubEvent & { clubName: string; clubAccent: string; isJoined: boolean }> = [];
+      for (const clubId of uniqueClubIds) {
+        const club = clubMap.get(clubId);
+        if (!club) continue;
+        const clubEvents = listClubEvents(clubId).filter((e) => e.isPublished && e.startAt >= now);
+        for (const ev of clubEvents) {
+          events.push({ ...ev, clubName: club.name, clubAccent: club.accentColor, isJoined: joinedIds.has(clubId) });
+        }
+      }
+      events.sort((a, b) => a.startAt.localeCompare(b.startAt));
+      setUpcomingEvents(events);
     }
   };
 
   useEffect(() => {
     refreshClubs();
-  }, [user, showWizard]); // re-fetch after wizard closes
+  }, [user, showWizard, rsvpRefresh]); // re-fetch after wizard closes or RSVP changes
 
   const myClubIds = useMemo(() => new Set(myClubs.map((c) => c.id)), [myClubs]);
 
@@ -378,7 +624,7 @@ export default function MyClubs() {
 
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
 
-        {/* ── Page title ───────────────────────────────────────────────────── */}
+        {/* ── Page title + tab bar ─────────────────────────────────────── */}
         <div>
           <h1
             className={`text-2xl sm:text-3xl font-bold ${textMain}`}
@@ -391,7 +637,67 @@ export default function MyClubs() {
               ? "Your chess communities and clubs you follow"
               : "Find and join chess clubs from around the world"}
           </p>
+
+          {/* Tab bar — only for signed-in users */}
+          {user && (
+            <div className={`flex gap-1 mt-5 p-1 rounded-2xl w-fit ${isDark ? "bg-white/6" : "bg-black/5"}`}>
+              <button
+                onClick={() => setActiveTab("clubs")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === "clubs"
+                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-gray-900 shadow-sm"
+                    : isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                Clubs
+                {myClubs.length > 0 && (
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === "clubs"
+                      ? "bg-[#3D6B47]/20 text-[#4CAF50]"
+                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-gray-500"
+                  }`}>{myClubs.length}</span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("events")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === "events"
+                    ? isDark ? "bg-[#1a2e1d] text-white shadow-sm" : "bg-white text-gray-900 shadow-sm"
+                    : isDark ? "text-white/50 hover:text-white" : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                <CalendarDays className="w-4 h-4" />
+                Upcoming Events
+                {upcomingEvents.length > 0 && (
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === "events"
+                      ? "bg-[#3D6B47]/20 text-[#4CAF50]"
+                      : isDark ? "bg-white/10 text-white/40" : "bg-black/8 text-gray-500"
+                  }`}>{upcomingEvents.length}</span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* ── Upcoming Events tab ──────────────────────────────────────────── */}
+        {user && activeTab === "events" && (
+          <UpcomingEventsTab
+            events={upcomingEvents}
+            userId={user.id}
+            isDark={isDark}
+            textMain={textMain}
+            textMuted={textMuted}
+            card={card}
+            cardBorder={cardBorder}
+            onRsvpChange={() => setRsvpRefresh((n) => n + 1)}
+          />
+        )}
+
+        {/* ── Clubs tab content (hidden when events tab active) ─────────── */}
+        {(!user || activeTab === "clubs") && (
+          <>
 
         {/* ── Guest sign-in prompt ─────────────────────────────────────────── */}
         {!user && (
@@ -563,6 +869,9 @@ export default function MyClubs() {
             </p>
           </div>
         </section>
+
+          </>
+        )}
 
       </div>
 
