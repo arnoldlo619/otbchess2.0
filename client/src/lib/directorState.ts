@@ -33,6 +33,8 @@ export interface DirectorState {
   rounds: Round[];
   currentRound: number;
   status: "registration" | "in_progress" | "completed" | "paused";
+  /** Minutes allocated per round (default 25). Used by the round timer. */
+  roundMinutes: number;
 }
 
 interface PersistedState {
@@ -55,6 +57,7 @@ function getDemoInitialState(): DirectorState {
     })),
     currentRound: DEMO_TOURNAMENT.currentRound,
     status: "in_progress",
+    roundMinutes: 25,
   };
 }
 
@@ -68,6 +71,7 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
     rounds: [],
     currentRound: 0,
     status: "registration",
+    roundMinutes: 25,
   };
 }
 
@@ -79,6 +83,10 @@ function loadFromStorage(tournamentId: string): DirectorState | null {
     if (parsed.schemaVersion !== SCHEMA_VERSION) {
       localStorage.removeItem(storageKey(tournamentId));
       return null;
+    }
+    // Migrate: add roundMinutes if missing from older persisted state
+    if (typeof parsed.state.roundMinutes !== "number") {
+      parsed.state.roundMinutes = 25;
     }
     return parsed.state;
   } catch {
@@ -560,9 +568,9 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
-  // Update mutable tournament settings (name, totalRounds) from the Settings panel
+  // Update mutable tournament settings (name, totalRounds, roundMinutes) from the Settings panel
   const updateSettings = useCallback(
-    (patch: { tournamentName?: string; totalRounds?: number }) => {
+    (patch: { tournamentName?: string; totalRounds?: number; roundMinutes?: number }) => {
       setState((prev) => ({ ...prev, ...patch }));
     },
     []

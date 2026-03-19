@@ -15,6 +15,7 @@ import confetti from "canvas-confetti";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { UploadRSVPModal } from "@/components/UploadRSVPModal";
 import { QRModal } from "@/components/QRModal";
+import { RoundTimer } from "@/components/RoundTimer";
 import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
@@ -1636,14 +1637,13 @@ export default function Director() {
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
           <main className="flex-1 min-w-0 space-y-5">
-                {/* ── Mobile Horizontal Round Tracker (md:hidden) ──────────────────── */}
+                {/* ── Mobile Round Timer (md:hidden) ──────────────────────────────── */}
           {!isRegistration && (
             <div className="md:hidden">
-              <HorizontalRoundTracker
-                rounds={state.rounds}
-                currentRound={state.currentRound}
-                totalRounds={state.totalRounds}
+              <RoundTimer
                 isDark={isDark}
+                defaultMinutes={state.roundMinutes ?? 25}
+                onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
               />
             </div>
           )}
@@ -1693,54 +1693,13 @@ export default function Director() {
 
             </div>
 
-            {/* Round progress — digital clock display */}
+            {/* Round Timer — digital countdown clock */}
             {!isRegistration && (
-              <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border ${
-                isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
-              }`}>
-                {/* Left label */}
-                <div className={`text-[9px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                  Round
-                </div>
-
-                {/* Digital clock readout: RR / TT */}
-                <div className="flex items-center gap-0 flex-1 justify-center">
-                  {/* Current round digits */}
-                  <span
-                    className={`text-3xl font-black tabular-nums leading-none tracking-tight ${
-                      isDark ? "text-[#4CAF50]" : "text-[#2D6A35]"
-                    }`}
-                    style={{ fontFamily: "'Clash Display', monospace" }}
-                  >
-                    {String(state.currentRound).padStart(2, "0")}
-                  </span>
-                  {/* Separator */}
-                  <span
-                    className={`text-2xl font-black mx-2 leading-none select-none ${
-                      isDark ? "text-white/20" : "text-gray-300"
-                    }`}
-                    style={{ fontFamily: "'Clash Display', monospace" }}
-                  >
-                    /
-                  </span>
-                  {/* Total rounds digits */}
-                  <span
-                    className={`text-3xl font-black tabular-nums leading-none tracking-tight ${
-                      isDark ? "text-white/35" : "text-gray-400"
-                    }`}
-                    style={{ fontFamily: "'Clash Display', monospace" }}
-                  >
-                    {String(state.totalRounds).padStart(2, "0")}
-                  </span>
-                </div>
-
-                {/* Right label */}
-                <div className={`text-[9px] font-bold uppercase tracking-widest ${
-                  isDark ? "text-white/30" : "text-gray-400"
-                }`}>
-                  Total
-                </div>
-              </div>
+              <RoundTimer
+                isDark={isDark}
+                defaultMinutes={state.roundMinutes ?? 25}
+                onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
+              />
             )}
 
             {/* Unified tab bar */}
