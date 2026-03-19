@@ -2954,3 +2954,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Each opponent row shows initial avatar, name, W/D/L record, and colour-coded win-rate bar
 - [x] ChevronDown rotates 180° when expanded (CSS transition)
 - [x] Panel collapses when the same row is clicked again (accordion behaviour)
+
+## POTM Past Winners Archive
+
+- [x] Add POTM archive storage helpers to clubBattleRegistry (snapshotPotmWinner, loadPotmArchive, savePotmArchive)
+- [x] Auto-snapshot previous calendar month's winner on widget mount (idempotent — skips if already stored)
+- [x] Render "Past Winners" hall-of-fame section below the podium in PlayerOfMonthWidget
+- [x] Each past winner row shows month/year label, amber avatar initial, name, score, and crown icon
+- [x] Collapses to 3 rows with "Show all N winners" / "Show less" toggle when more than 3 entries exist

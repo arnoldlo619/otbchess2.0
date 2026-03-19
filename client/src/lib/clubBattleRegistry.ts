@@ -201,3 +201,58 @@ export function getPlayerBattleSummary(clubId: string, playerId: string): Player
   const total = wins + draws + losses;
   return { wins, draws, losses, total, winRate: total > 0 ? Math.round((wins / total) * 100) : 0 };
 }
+
+// ── Player of the Month Archive ───────────────────────────────────────────────
+
+export interface PotmArchiveEntry {
+  clubId: string;
+  monthKey: string;   // "YYYY-MM"
+  memberId: string;
+  memberName: string;
+  avatarUrl?: string;
+  battleWins: number;
+  winRate: number;
+  eventsAttended: number;
+  score: number;
+  savedAt: string;
+}
+
+function potmArchiveKey(clubId: string): string {
+  return `otb-potm-archive-${clubId}`;
+}
+
+export function loadPotmArchive(clubId: string): PotmArchiveEntry[] {
+  try {
+    const raw = localStorage.getItem(potmArchiveKey(clubId));
+    return raw ? (JSON.parse(raw) as PotmArchiveEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function savePotmArchive(clubId: string, entries: PotmArchiveEntry[]): void {
+  localStorage.setItem(potmArchiveKey(clubId), JSON.stringify(entries));
+}
+
+/**
+ * Snapshot the current POTM winner for the given month if not already stored.
+ * Returns the updated archive.
+ */
+export function snapshotPotmWinner(
+  clubId: string,
+  monthKey: string,
+  winner: Omit<PotmArchiveEntry, "clubId" | "monthKey" | "savedAt">
+): PotmArchiveEntry[] {
+  const archive = loadPotmArchive(clubId);
+  const alreadyStored = archive.some((e) => e.monthKey === monthKey);
+  if (alreadyStored) return archive;
+  const entry: PotmArchiveEntry = {
+    clubId,
+    monthKey,
+    savedAt: new Date().toISOString(),
+    ...winner,
+  };
+  const updated = [entry, ...archive];
+  savePotmArchive(clubId, updated);
+  return updated;
+}

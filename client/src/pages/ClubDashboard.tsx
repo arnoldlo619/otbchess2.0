@@ -51,10 +51,13 @@ import {
   deleteBattle,
   getBattleLeaderboard,
   getHeadToHeadRecords,
+  loadPotmArchive,
+  snapshotPotmWinner,
   type ClubBattle,
   type BattleResult,
   type BattleLeaderboardEntry,
   type HeadToHeadRecord,
+  type PotmArchiveEntry,
 } from "@/lib/clubBattleRegistry";
 import {
   listFeedEvents,
@@ -1409,18 +1412,48 @@ function computePlayerOfMonth(
 }
 
 function PlayerOfMonthWidget({
+  clubId,
   members,
   battles,
   events,
   isDark,
 }: {
+  clubId: string;
   members: ClubMember[];
   battles: ClubBattle[];
   events: ClubEvent[];
   isDark: boolean;
 }) {
   const ranked = computePlayerOfMonth(members, battles, events);
-  if (ranked.length === 0) return null;
+  const [archive, setArchive] = useState<PotmArchiveEntry[]>(() => loadPotmArchive(clubId));
+  const [showAllArchive, setShowAllArchive] = useState(false);
+
+  // Auto-snapshot: when we have a winner, store them for the PREVIOUS completed month
+  // (we snapshot at the start of a new month for the month just passed).
+  useEffect(() => {
+    if (!clubId || ranked.length === 0) return;
+    const now = new Date();
+    // Snapshot the previous calendar month
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
+    // Only snapshot if we're past the 1st of the current month (i.e., a new month has started)
+    if (now.getDate() >= 1) {
+      const top = ranked[0];
+      const updated = snapshotPotmWinner(clubId, prevKey, {
+        memberId: top.memberId,
+        memberName: top.memberName,
+        avatarUrl: top.avatarUrl ?? undefined,
+        battleWins: top.battleWins,
+        winRate: top.winRate,
+        eventsAttended: top.eventsAttended,
+        score: top.score,
+      });
+      if (updated.length !== archive.length) setArchive(updated);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId, ranked.length]);
+
+  if (ranked.length === 0 && archive.length === 0) return null;
 
   const [top, second, third] = ranked;
   const podium = [second, third].filter(Boolean) as PotmEntry[];
@@ -1431,6 +1464,12 @@ function PlayerOfMonthWidget({
   // Initials fallback
   function initials(name: string) {
     return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  }
+
+  // Month label formatter
+  function monthLabel(key: string): string {
+    const [y, m] = key.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
   }
 
   return (
@@ -1513,6 +1552,59 @@ function PlayerOfMonthWidget({
               <span className={`text-[11px] ${textMuted} ml-2`}>{entry.score.toFixed(0)} pts</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Past Winners Hall of Fame */}
+      {archive.length > 0 && (
+        <div className={`border-t ${isDark ? "border-white/8" : "border-gray-100"}`}>
+          {/* Section header */}
+          <div className="px-5 py-3 flex items-center gap-2">
+            <Medal className="w-3.5 h-3.5 text-amber-400/70" />
+            <span className={`text-[11px] font-bold uppercase tracking-widest ${textMuted}`}>Past Winners</span>
+          </div>
+          {/* Archive rows */}
+          <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+            {(showAllArchive ? archive : archive.slice(0, 3)).map((entry) => (
+              <div key={entry.monthKey} className="flex items-center gap-3 px-5 py-2.5">
+                {/* Month label */}
+                <span className={`text-[10px] font-bold w-20 shrink-0 ${textMuted}`}>
+                  {monthLabel(entry.monthKey)}
+                </span>
+                {/* Avatar */}
+                <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-amber-500/15 flex-shrink-0">
+                  {entry.avatarUrl ? (
+                    <img src={entry.avatarUrl} alt={entry.memberName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-[10px] font-black text-amber-400">{initials(entry.memberName)}</span>
+                  )}
+                </div>
+                {/* Name */}
+                <span className={`flex-1 text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-gray-800"}`}>
+                  {entry.memberName}
+                </span>
+                {/* Score */}
+                <span className={`text-[10px] font-bold ${textMuted}`}>
+                  {entry.score.toFixed(0)} pts
+                </span>
+                {/* Crown */}
+                <Crown className="w-3 h-3 text-amber-400/60 flex-shrink-0" />
+              </div>
+            ))}
+          </div>
+          {/* Show all / collapse toggle */}
+          {archive.length > 3 && (
+            <button
+              onClick={() => setShowAllArchive((v) => !v)}
+              className={`w-full py-2.5 text-[11px] font-semibold ${textMuted} hover:text-white/70 transition-colors flex items-center justify-center gap-1`}
+            >
+              {showAllArchive ? (
+                <><ChevronUp className="w-3 h-3" /> Show less</>
+              ) : (
+                <><ChevronDown className="w-3 h-3" /> Show all {archive.length} winners</>
+              )}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -1980,6 +2072,7 @@ export default function ClubDashboard() {
           <div className="space-y-8">
             {/* Player of the Month */}
             <PlayerOfMonthWidget
+              clubId={club.id}
               members={members}
               battles={battles}
               events={events}
