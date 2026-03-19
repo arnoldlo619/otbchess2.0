@@ -31,19 +31,106 @@ interface Props {
 // ─── Design tokens (OTB brand) ────────────────────────────────────────────────
 
 const BRAND = {
-  green: "#3D6B47",
-  greenDark: "#2A4A32",
-  greenLight: "#769656",
-  greenBright: "#4CAF50",
   white: "#FFFFFF",
   offWhite: "#F0F5EE",
-  black: "#0A1A0E",
   gold: "#F5C842",
   silver: "#C0C8D0",
   bronze: "#CD7F32",
 };
 
 const SLIDE_SIZE = 1080; // px — Instagram square
+
+// ─── Slide colour themes ──────────────────────────────────────────────────────
+
+export interface SlideTheme {
+  id: string;
+  label: string;
+  /** Background gradient start colour */
+  bg: string;
+  /** Background gradient end colour (darkest) */
+  bgDark: string;
+  /** Primary accent (badge backgrounds, borders) */
+  accent: string;
+  /** Light accent (headings, OTB!! wordmark) */
+  accentLight: string;
+  /** Bright accent (CTA pill, highlights) */
+  accentBright: string;
+  /** Radial glow colour (top-right decoration) */
+  glow: string;
+  /** Swatch colour shown in the picker */
+  swatch: string;
+}
+
+export const SLIDE_THEMES: SlideTheme[] = [
+  {
+    id: "classic-green",
+    label: "Classic",
+    bg: "#2A4A32",
+    bgDark: "#0A1A0E",
+    accent: "#3D6B47",
+    accentLight: "#769656",
+    accentBright: "#4CAF50",
+    glow: "#3D6B47",
+    swatch: "#3D6B47",
+  },
+  {
+    id: "midnight-blue",
+    label: "Midnight",
+    bg: "#1A2A4A",
+    bgDark: "#080E1A",
+    accent: "#2A4A7A",
+    accentLight: "#5B8DD9",
+    accentBright: "#4A90E2",
+    glow: "#2A4A7A",
+    swatch: "#2A4A7A",
+  },
+  {
+    id: "crimson",
+    label: "Crimson",
+    bg: "#4A1A1A",
+    bgDark: "#1A0808",
+    accent: "#7A2A2A",
+    accentLight: "#D95B5B",
+    accentBright: "#E24A4A",
+    glow: "#7A2A2A",
+    swatch: "#7A2A2A",
+  },
+  {
+    id: "gold-rush",
+    label: "Gold",
+    bg: "#3A2A0A",
+    bgDark: "#1A1205",
+    accent: "#7A5A0A",
+    accentLight: "#D4A017",
+    accentBright: "#F5C842",
+    glow: "#7A5A0A",
+    swatch: "#7A5A0A",
+  },
+  {
+    id: "monochrome",
+    label: "Mono",
+    bg: "#2A2A2A",
+    bgDark: "#0A0A0A",
+    accent: "#4A4A4A",
+    accentLight: "#B0B0B0",
+    accentBright: "#E0E0E0",
+    glow: "#4A4A4A",
+    swatch: "#4A4A4A",
+  },
+  {
+    id: "purple-reign",
+    label: "Purple",
+    bg: "#2A1A4A",
+    bgDark: "#0E0818",
+    accent: "#4A2A7A",
+    accentLight: "#9B5BD9",
+    accentBright: "#8B4AE2",
+    glow: "#4A2A7A",
+    swatch: "#4A2A7A",
+  },
+];
+
+const DEFAULT_THEME = SLIDE_THEMES[0];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -82,17 +169,27 @@ interface SlideProps {
   scale?: number;
   /** Base64 data URL of the host's custom logo (optional) */
   hostLogoUrl?: string | null;
+  /** Active colour theme — defaults to Classic Green */
+  theme?: SlideTheme;
 }
 
-/** Shared slide wrapper — dark green background with chess board texture */
-function SlideWrapper({ children, scale = 1 }: { children: React.ReactNode; scale?: number }) {
+/** Shared slide wrapper — themed background with chess board texture */
+function SlideWrapper({
+  children,
+  scale = 1,
+  theme = DEFAULT_THEME,
+}: {
+  children: React.ReactNode;
+  scale?: number;
+  theme?: SlideTheme;
+}) {
   const size = SLIDE_SIZE * scale;
   return (
     <div
       style={{
         width: size,
         height: size,
-        background: `linear-gradient(135deg, ${BRAND.greenDark} 0%, ${BRAND.black} 100%)`,
+        background: `linear-gradient(135deg, ${theme.bg} 0%, ${theme.bgDark} 100%)`,
         position: "relative",
         overflow: "hidden",
         fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
@@ -113,7 +210,7 @@ function SlideWrapper({ children, scale = 1 }: { children: React.ReactNode; scal
           zIndex: 0,
         }}
       />
-      {/* Green gradient glow top-right */}
+      {/* Accent gradient glow top-right */}
       <div
         style={{
           position: "absolute",
@@ -121,7 +218,7 @@ function SlideWrapper({ children, scale = 1 }: { children: React.ReactNode; scal
           right: -SLIDE_SIZE * scale * 0.2,
           width: SLIDE_SIZE * scale * 0.8,
           height: SLIDE_SIZE * scale * 0.8,
-          background: `radial-gradient(circle, ${BRAND.green}55 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${theme.glow}55 0%, transparent 70%)`,
           zIndex: 0,
         }}
       />
@@ -139,10 +236,12 @@ function OTBBrand({
   scale = 1,
   clubName,
   hostLogoUrl,
+  theme = DEFAULT_THEME,
 }: {
   scale?: number;
   clubName?: string | null;
   hostLogoUrl?: string | null;
+  theme?: SlideTheme;
 }) {
   const s = scale;
   const logoSize = 36 * s; // height of host logo
@@ -183,7 +282,7 @@ function OTBBrand({
           fontWeight: 900,
           fontStyle: "italic",
           fontSize: 22 * s,
-          color: BRAND.greenLight,
+          color: theme.accentLight,
           letterSpacing: "0.02em",
         }}
       >
@@ -210,14 +309,14 @@ function OTBBrand({
 }
 
 /** Slide 1 — Cover */
-function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
+function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME }: SlideProps) {
   const s = scale;
   const champion = rows[0]?.player;
   const clubName = config?.clubName;
   const date = formatDate(config?.date);
 
   return (
-    <SlideWrapper scale={scale}>
+    <SlideWrapper scale={scale} theme={theme}>
       {/* Slide number */}
       <div style={{ position: "absolute", top: 32 * s, right: 36 * s, fontSize: 11 * s, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", fontWeight: 600 }}>
         1 / 5
@@ -237,12 +336,12 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
         >
           <div
             style={{
-              background: `${BRAND.green}33`,
-              border: `1px solid ${BRAND.green}66`,
+              background: `${theme.accent}33`,
+              border: `1px solid ${theme.accent}66`,
               borderRadius: 100 * s,
               padding: `${6 * s}px ${18 * s}px`,
               fontSize: 11 * s,
-              color: BRAND.greenLight,
+              color: theme.accentLight,
               fontWeight: 700,
               letterSpacing: "0.15em",
               textTransform: "uppercase" as const,
@@ -312,7 +411,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
           <div style={{ fontSize: 52 * s, fontWeight: 900, color: BRAND.white, letterSpacing: "-0.02em", textAlign: "center", padding: `0 ${40 * s}px` }}>
             {champion.name}
           </div>
-          <div style={{ fontSize: 18 * s, color: BRAND.greenLight, fontWeight: 600 }}>
+          <div style={{ fontSize: 18 * s, color: theme.accentLight, fontWeight: 600 }}>
             @{champion.username} · {champion.elo} ELO
           </div>
           <div style={{ fontSize: 14 * s, color: "rgba(255,255,255,0.4)", marginTop: 4 * s }}>
@@ -343,13 +442,13 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
         </div>
       </div>
 
-      <OTBBrand scale={scale} clubName={null} hostLogoUrl={hostLogoUrl} />
+      <OTBBrand scale={scale} clubName={null} hostLogoUrl={hostLogoUrl} theme={theme} />
     </SlideWrapper>
   );
 }
 
 /** Slide 2 — Podium */
-function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
+function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME }: SlideProps) {
   const s = scale;
   const top3 = rows.slice(0, 3);
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean); // 2nd, 1st, 3rd
@@ -359,7 +458,7 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1, ho
   const ranks = [2, 1, 3];
 
   return (
-    <SlideWrapper scale={scale}>
+    <SlideWrapper scale={scale} theme={theme}>
       {/* Slide number */}
       <div style={{ position: "absolute", top: 32 * s, right: 36 * s, fontSize: 11 * s, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", fontWeight: 600 }}>
         2 / 5
@@ -409,7 +508,7 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1, ho
                 <div style={{ fontSize: isFirst ? 22 * s : 17 * s, fontWeight: 800, color: BRAND.white, marginTop: 8 * s, lineHeight: 1.1 }}>
                   {row.player.name}
                 </div>
-                <div style={{ fontSize: isFirst ? 14 * s : 12 * s, color: BRAND.greenLight, fontWeight: 600, marginTop: 4 * s }}>
+                <div style={{ fontSize: isFirst ? 14 * s : 12 * s, color: theme.accentLight, fontWeight: 600, marginTop: 4 * s }}>
                   @{row.player.username}
                 </div>
                 <div style={{ fontSize: isFirst ? 28 * s : 22 * s, fontWeight: 900, color: medalColors[idx], marginTop: 8 * s }}>
@@ -443,18 +542,18 @@ function Slide2Podium({ rows, config, tournamentName, totalRounds, scale = 1, ho
         })}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
     </SlideWrapper>
   );
 }
 
 /** Slide 3 — Full Standings */
-function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
+function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME }: SlideProps) {
   const s = scale;
   const displayRows = rows.slice(0, 8); // Show top 8
 
   return (
-    <SlideWrapper scale={scale}>
+    <SlideWrapper scale={scale} theme={theme}>
       {/* Slide number */}
       <div style={{ position: "absolute", top: 32 * s, right: 36 * s, fontSize: 11 * s, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", fontWeight: 600 }}>
         3 / 5
@@ -514,7 +613,7 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1,
               <div style={{ fontSize: 15 * s, fontWeight: 700, color: BRAND.white, lineHeight: 1.2 }}>
                 {row.player.name}
                 {row.player.title && (
-                  <span style={{ marginLeft: 6 * s, fontSize: 10 * s, color: BRAND.greenLight, fontWeight: 700, background: `${BRAND.green}44`, padding: `${2 * s}px ${5 * s}px`, borderRadius: 3 * s }}>
+                  <span style={{ marginLeft: 6 * s, fontSize: 10 * s, color: theme.accentLight, fontWeight: 700, background: `${theme.accent}44`, padding: `${2 * s}px ${5 * s}px`, borderRadius: 3 * s }}>
                     {row.player.title}
                   </span>
                 )}
@@ -540,13 +639,13 @@ function Slide3Standings({ rows, config, tournamentName, totalRounds, scale = 1,
         </div>
       )}
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
     </SlideWrapper>
   );
 }
 
 /** Slide 4 — Tournament Stats */
-function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
+function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME }: SlideProps) {
   const s = scale;
   const totalGames = totalRounds * Math.floor(rows.length / 2);
   const topPerformer = rows.reduce((best, r) => (r.wins > best.wins ? r : best), rows[0] ?? { wins: 0, player: { name: "—", username: "" } } as StandingRow);
@@ -560,7 +659,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
   ];
 
   return (
-    <SlideWrapper scale={scale}>
+    <SlideWrapper scale={scale} theme={theme}>
       {/* Slide number */}
       <div style={{ position: "absolute", top: 32 * s, right: 36 * s, fontSize: 11 * s, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", fontWeight: 600 }}>
         4 / 5
@@ -597,7 +696,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: 10 * s, color: BRAND.greenLight, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" as const, marginBottom: 8 * s }}>
+            <div style={{ fontSize: 10 * s, color: theme.accentLight, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase" as const, marginBottom: 8 * s }}>
               {stat.label}
             </div>
             <div style={{ fontSize: 56 * s, fontWeight: 900, color: BRAND.white, lineHeight: 1, letterSpacing: "-0.02em" }}>
@@ -614,8 +713,8 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
       <div style={{ padding: `0 ${60 * s}px`, display: "flex", flexDirection: "column" as const, gap: 12 * s }}>
         <div
           style={{
-            background: `${BRAND.green}22`,
-            border: `1px solid ${BRAND.green}44`,
+            background: `${theme.accent}22`,
+            border: `1px solid ${theme.accent}44`,
             borderRadius: 12 * s,
             padding: `${14 * s}px ${20 * s}px`,
             display: "flex",
@@ -627,7 +726,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
             Most Wins
           </div>
           <div style={{ fontSize: 16 * s, fontWeight: 800, color: BRAND.white }}>
-            {topPerformer?.player.name} <span style={{ color: BRAND.greenLight }}>({topPerformer?.wins}W)</span>
+            {topPerformer?.player.name} <span style={{ color: theme.accentLight }}>({topPerformer?.wins}W)</span>
           </div>
         </div>
         {highestElo && (
@@ -652,19 +751,19 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
         )}
       </div>
 
-      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} />
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
     </SlideWrapper>
   );
 }
 
 /** Slide 5 — CTA */
-function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl }: SlideProps) {
+function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME }: SlideProps) {
   const s = scale;
   const clubName = config?.clubName;
   const inviteCode = config?.inviteCode;
 
   return (
-    <SlideWrapper scale={scale}>
+    <SlideWrapper scale={scale} theme={theme}>
       {/* Slide number */}
       <div style={{ position: "absolute", top: 32 * s, right: 36 * s, fontSize: 11 * s, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", fontWeight: 600 }}>
         5 / 5
@@ -680,7 +779,7 @@ function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1, hostL
           fontSize: 320 * s,
           fontWeight: 900,
           fontStyle: "italic",
-          color: `${BRAND.green}18`,
+          color: `${theme.accent}18`,
           letterSpacing: "-0.05em",
           userSelect: "none",
           lineHeight: 1,
@@ -731,7 +830,7 @@ function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1, hostL
         <div
           style={{
             marginTop: 16 * s,
-            background: BRAND.green,
+            background: theme.accent,
             borderRadius: 100 * s,
             padding: `${16 * s}px ${40 * s}px`,
             fontSize: 18 * s,
@@ -745,12 +844,12 @@ function Slide5CTA({ rows, config, tournamentName, totalRounds, scale = 1, hostL
 
         {inviteCode && (
           <div style={{ fontSize: 13 * s, color: "rgba(255,255,255,0.3)", marginTop: 4 * s }}>
-            Tournament code: <span style={{ color: BRAND.greenLight, fontWeight: 700 }}>{inviteCode}</span>
+            Tournament code: <span style={{ color: theme.accentLight, fontWeight: 700 }}>{inviteCode}</span>
           </div>
         )}
       </div>
 
-      <OTBBrand scale={scale} clubName={clubName} hostLogoUrl={hostLogoUrl} />
+      <OTBBrand scale={scale} clubName={clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
     </SlideWrapper>
   );
 }
@@ -775,10 +874,11 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const [exportProgress, setExportProgress] = useState(0);
   const [hostLogoUrl, setHostLogoUrl] = useState<string | null>(null);
   const [logoDragging, setLogoDragging] = useState(false);
+  const [activeTheme, setActiveTheme] = useState<SlideTheme>(DEFAULT_THEME);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const slideProps: SlideProps = { rows, config, tournamentName, totalRounds, scale: 1, hostLogoUrl };
+  const slideProps: SlideProps = { rows, config, tournamentName, totalRounds, scale: 1, hostLogoUrl, theme: activeTheme };
 
   // ── Logo upload handler ──────────────────────────────────────────────────────
   const handleLogoFile = useCallback((file: File) => {
@@ -1082,6 +1182,70 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
                   e.target.value = "";
                 }}
               />
+            </div>
+
+            {/* ── Slide Colour Theme Picker ─────────────────────────────────── */}
+            <div className={`w-full rounded-2xl border p-4 ${
+              isDark ? "border-white/08 bg-white/03" : "border-gray-200 bg-gray-50"
+            }`}>
+              <p className={`text-xs font-bold mb-3 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                Slide Colour Theme
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {SLIDE_THEMES.map((t) => {
+                  const isActive = activeTheme.id === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTheme(t)}
+                      title={t.label}
+                      className="flex flex-col items-center gap-1.5 group"
+                    >
+                      {/* Swatch circle */}
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: "50%",
+                          background: `linear-gradient(135deg, ${t.bg} 0%, ${t.bgDark} 100%)`,
+                          border: isActive
+                            ? `2.5px solid ${t.accentLight}`
+                            : isDark
+                            ? "2px solid rgba(255,255,255,0.12)"
+                            : "2px solid rgba(0,0,0,0.10)",
+                          boxShadow: isActive ? `0 0 0 2px ${t.accentLight}44` : "none",
+                          transition: "all 0.15s ease",
+                          position: "relative",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {/* Inner accent dot */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 7,
+                            right: 7,
+                            width: 10,
+                            height: 10,
+                            borderRadius: "50%",
+                            background: t.accentLight,
+                          }}
+                        />
+                      </div>
+                      {/* Label */}
+                      <span
+                        className={`text-[10px] font-semibold leading-none transition-colors ${
+                          isActive
+                            ? isDark ? "text-white/80" : "text-gray-800"
+                            : isDark ? "text-white/35" : "text-gray-400"
+                        }`}
+                      >
+                        {t.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

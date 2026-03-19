@@ -2995,3 +2995,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update OTBBrand component to render host logo image (left side) + divider + OTB!! label (right side) when logo is provided
 - [x] Update Slide5CTA bottom brand bar to use shared OTBBrand component (also shows host logo)
 - [x] Logo stored as base64 data URL — renders correctly in html2canvas PNG export (crossOrigin set)
+
+## Instagram Carousel — Slide Colour Theme Picker
+
+- [x] Define SLIDE_THEMES array: Classic Green, Midnight Blue, Crimson, Gold Rush, Monochrome, Purple Reign
+- [x] Add SlideTheme type with bg, bgDark, accent, accentLight, accentBright, glow tokens
+- [x] Add activeTheme to SlideProps and thread through all slide components
+- [x] Update SlideWrapper to use theme.bg / theme.bgDark / theme.glow instead of hardcoded BRAND tokens
+- [x] Update OTBBrand wordmark to use theme.accentLight colour
+- [x] Update all accent colour usages in Slide1–5 to use theme tokens
+- [x] Build theme picker UI: gradient swatch circles with inner accent dot + label, active ring indicator
+- [x] Wire activeTheme state to slideProps so preview updates live on click
