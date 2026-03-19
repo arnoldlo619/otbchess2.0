@@ -2822,3 +2822,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show scheduled polls queue panel in ClubDashboard feed tab (director-only, above live feed)
 - [x] Allow directors to cancel a scheduled poll from the queue panel
 - [x] Wire publishScheduledPolls into ClubProfile 30s interval so public page also triggers publish
+
+## Performance Report Header Redesign
+
+- [x] Audit current PerformanceReport header: logo row + title/subtitle + action buttons + tab bar
+- [x] Consolidate into single-row header: back arrow | OTB!! logo | divider | title + muted tournament name inline | spacer | icon-only actions | theme toggle
+- [x] Replace pill-container tab bar with slim underline-style tab row (green active indicator) below header row
+- [x] Action buttons reduced to icon-only (Share2, Download) with title tooltips — no text labels
+- [x] Header stays sticky, glassmorphic, matches OTB dark/green design system

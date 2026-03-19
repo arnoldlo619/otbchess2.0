@@ -66,25 +66,30 @@ function TabBar({
     { id: "rounds",     label: "Rounds",        icon: ListOrdered },
   ];
   return (
-    <div className={`flex gap-1 p-1 rounded-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`}>
-      {tabs.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          onClick={() => onTabChange(id)}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-            activeTab === id
-              ? isDark
-                ? "bg-[#3D6B47] text-white shadow-sm"
-                : "bg-white text-[#3D6B47] shadow-sm"
-              : isDark
-              ? "text-white/50 hover:text-white/80"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
+    <div className={`flex border-b ${ isDark ? "border-white/08" : "border-gray-100" }`}>
+      {tabs.map(({ id, label, icon: Icon }) => {
+        const isActive = activeTab === id;
+        return (
+          <button
+            key={id}
+            onClick={() => onTabChange(id)}
+            className={`relative flex items-center gap-1.5 px-5 py-3 text-xs font-semibold transition-all ${
+              isActive
+                ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{label}</span>
+            {isActive && (
+              <span
+                className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
+                style={{ background: isDark ? "#4CAF50" : "#3D6B47" }}
+              />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -677,76 +682,93 @@ export default function ReportPage() {
     >
       {/* ── Header ── */}
       <header
-        className={`sticky top-0 z-40 border-b backdrop-blur-xl ${
+        className={`sticky top-0 z-40 backdrop-blur-xl ${
           isDark
-            ? "bg-[oklch(0.18_0.05_145/0.92)] border-white/08"
-            : "bg-white/90 border-gray-100"
+            ? "bg-[oklch(0.18_0.05_145/0.94)] border-b border-white/06"
+            : "bg-white/92 border-b border-gray-100"
         }`}
       >
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link href={`/tournament/${tournamentId}/manage`}>
+        {/* Single consolidated row */}
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
+          {/* Back */}
+          <Link href={`/tournament/${tournamentId}/manage`}>
+            <button
+              title="Back to dashboard"
+              className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
+                isDark ? "text-white/40 hover:text-white/80 hover:bg-white/06" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </Link>
+
+          {/* Logo */}
+          <NavLogo />
+
+          {/* Divider */}
+          <div className={`w-px h-4 flex-shrink-0 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+
+          {/* Title + tournament badge */}
+          <div className="flex items-baseline gap-2 min-w-0">
+            <span
+              className={`text-sm font-bold leading-none flex-shrink-0 ${
+                isDark ? "text-white/90" : "text-gray-900"
+              }`}
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              Performance Report
+            </span>
+            <span
+              className={`text-[11px] font-medium truncate ${
+                isDark ? "text-white/35" : "text-gray-400"
+              }`}
+            >
+              {tournamentName}
+            </span>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Action buttons — icon-only, compact */}
+          {activeTab === "cards" && (
+            <div className="flex items-center gap-1">
               <button
-                className={`p-2 rounded-xl transition-colors ${
-                  isDark ? "hover:bg-white/08 text-white/60" : "hover:bg-gray-100 text-gray-500"
+                onClick={shareModal.openBroadcast}
+                title="Share results"
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark
+                    ? "text-[#4CAF50]/80 hover:text-[#4CAF50] hover:bg-[#4CAF50]/10"
+                    : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
                 }`}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <Share2 className="w-4 h-4" />
               </button>
-            </Link>
-            <NavLogo />
-            <div className={`w-px h-5 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-            <div>
-              <p
-                className={`text-sm font-black leading-none ${isDark ? "text-white" : "text-gray-900"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              <button
+                onClick={handleDownloadAll}
+                disabled={downloadingAll}
+                title="Download all cards"
+                className={`p-2 rounded-lg transition-colors disabled:opacity-40 ${
+                  isDark
+                    ? "text-[#4CAF50]/80 hover:text-[#4CAF50] hover:bg-[#4CAF50]/10"
+                    : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                }`}
               >
-                Performance Report
-              </p>
-              <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                {tournamentName}
-              </p>
+                {downloadingAll ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="flex items-center gap-2">
-            {activeTab === "cards" && (
-              <>
-                <button
-                  onClick={shareModal.openBroadcast}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                    isDark
-                      ? "bg-[#25D366]/15 text-[#25D366] hover:bg-[#25D366]/25"
-                      : "bg-[#25D366]/10 text-[#1a9e4e] hover:bg-[#25D366]/20 border border-[#25D366]/30"
-                  }`}
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Share Results</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadAll}
-                  disabled={downloadingAll}
-                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                    isDark
-                      ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30"
-                      : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-                  } disabled:opacity-60`}
-                >
-                  {downloadingAll ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Download className="w-3.5 h-3.5" />
-                  )}
-                  Download All
-                </button>
-              </>
-            )}
-            <ThemeToggle />
-          </div>
+          {/* Theme toggle */}
+          <ThemeToggle />
         </div>
-        {/* Tab bar */}
-        <div className="max-w-6xl mx-auto px-4 pb-3">
+
+        {/* Tab bar — slim underline style, sits flush below the row */}
+        <div className="max-w-6xl mx-auto px-4">
           <TabBar activeTab={activeTab} onTabChange={setActiveTab} isDark={isDark} />
         </div>
       </header>
