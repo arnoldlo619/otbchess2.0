@@ -1217,6 +1217,104 @@ function RoleBadge({ role }: { role: ClubMember["role"] }) {
   return null;
 }
 
+// ── Skeleton loader ──────────────────────────────────────────────────────────
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div
+      className={`rounded-lg animate-pulse ${className ?? ""}`}
+      style={{ background: "oklch(0.26 0.05 145 / 0.7)" }}
+    />
+  );
+}
+
+function ClubDashboardSkeleton() {
+  return (
+    <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
+      {/* Nav bar */}
+      <div
+        className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08"
+        style={{ background: "oklch(0.20 0.06 145 / 0.92)", backdropFilter: "blur(12px)" }}
+      >
+        <div className="flex items-center gap-3">
+          <SkeletonBlock className="w-16 h-4" />
+          <div className="w-px h-4 bg-white/10" />
+          <SkeletonBlock className="w-10 h-5" />
+        </div>
+        <SkeletonBlock className="w-24 h-5" />
+      </div>
+
+      {/* Hero */}
+      <div className="relative overflow-hidden" style={{ minHeight: "280px" }}>
+        <div className="absolute inset-0" style={{ background: "oklch(0.20 0.06 145)" }} />
+        <div className="absolute inset-0 chess-board-bg opacity-20 pointer-events-none" />
+        <div className="relative z-10 px-5 sm:px-8 pt-10 pb-8 max-w-4xl mx-auto">
+          {/* Avatar + identity */}
+          <div className="flex items-end gap-5 mb-6">
+            <SkeletonBlock className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0" />
+            <div className="flex-1 min-w-0 pb-1 space-y-2">
+              <SkeletonBlock className="w-20 h-4" />
+              <SkeletonBlock className="w-56 h-8" />
+              <SkeletonBlock className="w-40 h-4" />
+            </div>
+          </div>
+          {/* Stats row */}
+          <div className="flex items-center gap-5 flex-wrap">
+            <SkeletonBlock className="w-24 h-4" />
+            <SkeletonBlock className="w-28 h-4" />
+            <SkeletonBlock className="w-20 h-4" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <div
+        className="sticky top-[57px] z-30 border-b border-white/08"
+        style={{ background: "oklch(0.20 0.06 145 / 0.95)", backdropFilter: "blur(12px)" }}
+      >
+        <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
+          {["w-16", "w-20", "w-12"].map((w, i) => (
+            <div key={i} className="px-5 py-4">
+              <SkeletonBlock className={`${w} h-4`} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20" style={{ background: "oklch(0.20 0.06 145)" }}>
+        {/* Section label */}
+        <SkeletonBlock className="w-32 h-3 mb-5" />
+
+        {/* Event card skeletons */}
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl p-5 mb-4 border border-white/06"
+            style={{ background: "oklch(0.24 0.05 145 / 0.6)" }}
+          >
+            <div className="flex gap-4">
+              {/* Date block */}
+              <div className="flex-shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center" style={{ background: "oklch(0.28 0.06 145)" }}>
+                <SkeletonBlock className="w-8 h-3 mb-1" />
+                <SkeletonBlock className="w-6 h-5" />
+              </div>
+              {/* Text */}
+              <div className="flex-1 space-y-2 py-1">
+                <SkeletonBlock className="w-3/4 h-5" />
+                <SkeletonBlock className="w-1/2 h-3" />
+                <SkeletonBlock className="w-2/3 h-3" />
+              </div>
+              {/* Action button */}
+              <SkeletonBlock className="w-20 h-8 rounded-xl flex-shrink-0 self-center" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 type Tab = "events" | "members" | "feed";
@@ -1391,11 +1489,7 @@ export default function ClubDashboard() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.10 0.06 240)" }}>
-        <div className="w-8 h-8 border-2 border-[#4CAF50] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <ClubDashboardSkeleton />;
   }
 
   if (!club) return null;

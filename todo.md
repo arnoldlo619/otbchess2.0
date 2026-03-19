@@ -2836,3 +2836,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] ClubProfile: move poll-close useEffect above `if (!club) return` early return (fixed in prev checkpoint)
 - [x] ClubDashboard: move poll-close useEffect above `if (loading) return` and `if (!club) return null` early returns
 - [x] Both components now guard the useEffect internally with `if (!clubId) return` instead of relying on component-level early returns
+
+## ClubDashboard Skeleton Loader
+
+- [x] Build SkeletonBlock primitive with animate-pulse and OTB dark-green fill
+- [x] Build ClubDashboardSkeleton: nav bar, hero (avatar + identity + stats), tab bar (3 tabs), 3 event card placeholders
+- [x] Replace bare spinner with ClubDashboardSkeleton in the loading state
