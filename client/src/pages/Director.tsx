@@ -1693,50 +1693,52 @@ export default function Director() {
 
             </div>
 
-            {/* Round progress pip widget — above tabs, only when tournament is active */}
+            {/* Round progress — digital clock display */}
             {!isRegistration && (
-              <div className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border ${
+              <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border ${
                 isDark ? "bg-white/05 border-white/10" : "bg-gray-50 border-gray-200"
               }`}>
-                <div className="text-center min-w-[1.5rem]">
-                  <div className={`text-2xl font-black tabular-nums leading-none ${isDark ? "text-white" : "text-gray-900"}`}
-                    style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {state.currentRound}
-                  </div>
-                  <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                    Round
-                  </div>
+                {/* Left label */}
+                <div className={`text-[9px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                  Round
                 </div>
-                {/* Pip dots */}
-                <div className="flex items-center gap-1.5 flex-1 justify-center">
-                  {Array.from({ length: state.totalRounds }).map((_, i) => {
-                    const roundNum = i + 1;
-                    const isComplete = roundNum < state.currentRound;
-                    const isCurrent = roundNum === state.currentRound;
-                    return (
-                      <div
-                        key={i}
-                        className={`rounded-full transition-all duration-300 ${
-                          isComplete
-                            ? "w-3 h-3 bg-[#4CAF50]"
-                            : isCurrent
-                            ? "w-3 h-3 bg-[#4CAF50]/50 ring-2 ring-[#4CAF50]/40"
-                            : isDark
-                            ? "w-2.5 h-2.5 bg-white/12"
-                            : "w-2.5 h-2.5 bg-gray-200"
-                        }`}
-                      />
-                    );
-                  })}
+
+                {/* Digital clock readout: RR / TT */}
+                <div className="flex items-center gap-0 flex-1 justify-center">
+                  {/* Current round digits */}
+                  <span
+                    className={`text-3xl font-black tabular-nums leading-none tracking-tight ${
+                      isDark ? "text-[#4CAF50]" : "text-[#2D6A35]"
+                    }`}
+                    style={{ fontFamily: "'Clash Display', monospace" }}
+                  >
+                    {String(state.currentRound).padStart(2, "0")}
+                  </span>
+                  {/* Separator */}
+                  <span
+                    className={`text-2xl font-black mx-2 leading-none select-none ${
+                      isDark ? "text-white/20" : "text-gray-300"
+                    }`}
+                    style={{ fontFamily: "'Clash Display', monospace" }}
+                  >
+                    /
+                  </span>
+                  {/* Total rounds digits */}
+                  <span
+                    className={`text-3xl font-black tabular-nums leading-none tracking-tight ${
+                      isDark ? "text-white/35" : "text-gray-400"
+                    }`}
+                    style={{ fontFamily: "'Clash Display', monospace" }}
+                  >
+                    {String(state.totalRounds).padStart(2, "0")}
+                  </span>
                 </div>
-                <div className="text-center min-w-[1.5rem]">
-                  <div className={`text-2xl font-black tabular-nums leading-none ${isDark ? "text-white/40" : "text-gray-400"}`}
-                    style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {state.totalRounds}
-                  </div>
-                  <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${isDark ? "text-white/25" : "text-gray-300"}`}>
-                    Total
-                  </div>
+
+                {/* Right label */}
+                <div className={`text-[9px] font-bold uppercase tracking-widest ${
+                  isDark ? "text-white/30" : "text-gray-400"
+                }`}>
+                  Total
                 </div>
               </div>
             )}

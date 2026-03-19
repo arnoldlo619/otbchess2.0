@@ -2695,3 +2695,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace QrCode icon with Cast icon on "Live Stream" button in Director header nav
 - [x] Replace QrCode icon with Cast icon on "Live Stream" button in post-round action buttons
 - [x] Ensure Cast is imported from lucide-react in Director.tsx
+
+## Round Progress Digital Clock
+
+- [x] Replace circle pip indicators with digital clock-style round display (RR / TT format)
