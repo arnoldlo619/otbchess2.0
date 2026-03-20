@@ -170,6 +170,8 @@ export const userTournaments = mysqlTable(
     inviteCode: varchar("invite_code", { length: 20 }),
     // Tournament lifecycle status: registration | in_progress | completed | paused
     status: varchar("status", { length: 20 }).default("registration"),
+    /** Optional host-chosen short URL slug, e.g. "ThursdayOTBNight" */
+    customSlug: varchar("custom_slug", { length: 80 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({

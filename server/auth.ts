@@ -471,5 +471,67 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── PATCH /api/user/tournaments/:tournamentId/custom-slug ──────────────────
+  // Saves or updates the host-chosen custom short URL slug for a tournament.
+  // Only the tournament owner may change the slug.
+  router.patch("/user/tournaments/:tournamentId/custom-slug", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+    const { tournamentId } = req.params;
+    const { customSlug } = req.body as { customSlug?: string };
+    if (!tournamentId) return res.status(400).json({ error: "tournamentId is required" });
+    // Sanitise: letters, numbers, hyphens, underscores only, max 80 chars
+    const slug = (customSlug ?? "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
+    try {
+      const db = await getDb();
+      // Verify ownership
+      const existing = await db
+        .select({ id: userTournaments.id, userId: userTournaments.userId })
+        .from(userTournaments)
+        .where(eq(userTournaments.tournamentId, tournamentId))
+        .limit(1);
+      if (existing.length === 0) return res.status(404).json({ error: "Tournament not found" });
+      if (existing[0].userId !== payload.sub) return res.status(403).json({ error: "Not authorised" });
+      await db
+        .update(userTournaments)
+        .set({ customSlug: slug || null })
+        .where(eq(userTournaments.tournamentId, tournamentId));
+      return res.json({ ok: true, customSlug: slug || null });
+    } catch (err) {
+      console.error("[auth] patch custom-slug error:", err);
+      return res.status(500).json({ error: "Failed to update custom slug" });
+    }
+  });
+
+  // ── GET /api/tournament/:tournamentId/meta ────────────────────────────────
+  // Public endpoint: returns lightweight tournament metadata including customSlug.
+  // Used by clients on any device to hydrate localStorage with the latest slug.
+  router.get("/tournament/:tournamentId/meta", async (req, res) => {
+    const { tournamentId } = req.params;
+    if (!tournamentId) return res.status(400).json({ error: "tournamentId is required" });
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select({
+          tournamentId: userTournaments.tournamentId,
+          name: userTournaments.name,
+          customSlug: userTournaments.customSlug,
+          inviteCode: userTournaments.inviteCode,
+        })
+        .from(userTournaments)
+        .where(eq(userTournaments.tournamentId, tournamentId))
+        .limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Tournament not found" });
+      return res.json(rows[0]);
+    } catch (err) {
+      console.error("[auth] get tournament meta error:", err);
+      return res.status(500).json({ error: "Failed to fetch tournament meta" });
+    }
+  });
+
   return router;
 }

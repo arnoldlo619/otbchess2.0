@@ -29,7 +29,7 @@ import { useDirectorState } from "@/lib/directorState";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
-import { getTournamentConfig, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { getTournamentConfig, hasDirectorSession, updateTournamentConfig } from "@/lib/tournamentRegistry";
 import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
 import { UndoSnackbar } from "@/components/UndoSnackbar";
@@ -1276,6 +1276,22 @@ export default function Director() {
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
+
+  // ── Server-side customSlug hydration ────────────────────────────────────────
+  // On mount, fetch the tournament meta from the server and sync the customSlug
+  // into localStorage so it is available across devices.
+  useEffect(() => {
+    if (tournamentId === "otb-demo-2026") return;
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/meta`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((meta: { customSlug?: string | null } | null) => {
+        if (meta?.customSlug) {
+          updateTournamentConfig(tournamentId, { customSlug: meta.customSlug });
+        }
+      })
+      .catch(() => { /* non-critical */ });
+  }, [tournamentId]);
+
   // For real tournaments use the stored invite code; for the demo fall back to
   // the tournament slug so /join/otb-demo-2026 is used (never the "OTB2026" demo
   // placeholder which resolves to the NYC demo tournament on the Join page).

@@ -1835,10 +1835,11 @@ function SpectatorShareSection({ data, isDark }: { data: WizardData; isDark: boo
 
 // ─── Step 4 / Quickstart final: Share ────────────────────────────────────────
 
-function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
+function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: boolean; tournamentId?: string }) {
   const [copied, setCopied] = useState(false);
   const [customSlugInput, setCustomSlugInput] = useState(data.customSlug || "");
   const [slugSaved, setSlugSaved] = useState(false);
+  const [slugSaving, setSlugSaving] = useState(false);
 
   // Build the invite URL — prefer custom slug when set, else inviteCode
   const activeSlug = customSlugInput.trim() || data.inviteCode;
@@ -1874,7 +1875,24 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
     data.customSlug = clean;
   };
 
-  const saveSlug = () => {
+  const saveSlug = async () => {
+    const clean = customSlugInput.trim();
+    data.customSlug = clean;
+    setSlugSaving(true);
+    // Persist to server if we have a tournament ID (user is signed in)
+    if (tournamentId) {
+      try {
+        await fetch(`/api/user/tournaments/${encodeURIComponent(tournamentId)}/custom-slug`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ customSlug: clean }),
+        });
+      } catch {
+        // Non-critical — localStorage already has the slug
+      }
+    }
+    setSlugSaving(false);
     setSlugSaved(true);
     toast.success("Custom URL saved!");
     setTimeout(() => setSlugSaved(false), 2000);
@@ -2078,7 +2096,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
           <button
             type="button"
             onClick={saveSlug}
-            disabled={!customSlugInput.trim()}
+            disabled={!customSlugInput.trim() || slugSaving}
             className="flex items-center gap-1.5 rounded-2xl text-sm font-semibold transition-all duration-200 flex-shrink-0 disabled:opacity-40"
             style={{
               padding: "13px 18px",
@@ -2087,7 +2105,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
             }}
           >
             {slugSaved ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <ArrowRight className="w-4 h-4" />}
-            {slugSaved ? "Saved!" : "Set"}
+            {slugSaving ? "Saving..." : slugSaved ? "Saved!" : "Set"}
           </button>
         </div>
         {customSlugInput.trim() && (
@@ -2446,13 +2464,13 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
 
             {/* Quickstart path */}
             {mode === "quickstart" && step === 0 && <QuickstartForm data={data} onChange={patch} isDark={isDark} onSubmit={canAdvance ? handleNext : undefined} />}
-            {mode === "quickstart" && step === 1 && <StepShare data={data} isDark={isDark} />}
+            {mode === "quickstart" && step === 1 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
 
             {/* Schedule path */}
             {mode === "schedule" && step === 0 && <StepDetails data={data} onChange={patch} isDark={isDark} />}
             {mode === "schedule" && step === 1 && <StepFormat data={data} onChange={patch} isDark={isDark} />}
             {mode === "schedule" && step === 2 && <StepTime data={data} onChange={patch} isDark={isDark} />}
-            {mode === "schedule" && step === 3 && <StepShare data={data} isDark={isDark} />}
+            {mode === "schedule" && step === 3 && <StepShare data={data} isDark={isDark} tournamentId={makeSlug(data.name, data.date)} />}
           </div>
         </div>
 

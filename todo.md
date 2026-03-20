@@ -3016,3 +3016,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove Spectator Code section from StepShare
 - [x] Move Director Code (with show/hide toggle) + Spectator Code (with copy + open) to Director Dashboard Settings tab
 - [x] Clean up StepShare layout: summary strip, how-it-works, QR, invite link, custom URL, optional club badge
+
+## Custom URL Slug — Server-Side Persistence
+
+- [x] Add custom_slug column to user_tournaments table (nullable) — applied via SQL ALTER TABLE
+- [x] Add PATCH /api/user/tournaments/:id/custom-slug route — saves slug server-side (owner-only)
+- [x] Add GET /api/tournament/:id/meta route — returns tournamentId, name, customSlug, inviteCode
+- [x] Update client StepShare: saveSlug() calls PATCH API when tournamentId is available; shows Saving... state
+- [x] Update Director.tsx: on mount fetches /api/tournament/:id/meta and syncs customSlug to localStorage via updateTournamentConfig
+- [x] resolveTournament unchanged — works with both localStorage and server-fetched slug seamlessly
