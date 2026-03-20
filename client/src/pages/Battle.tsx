@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import ChessNotationRace from "../components/ChessNotationRace";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -978,6 +979,16 @@ export default function Battle() {
                     </motion.button>
                   </div>
                 </motion.div>
+              )}
+
+              {/* Chess Notation Race */}
+              {room.guest && (
+                <ChessNotationRace
+                  hostPlayer={room.host}
+                  guestPlayer={room.guest}
+                  isHost={user?.id === room.hostId}
+                  opponentElo={user?.id === room.hostId ? room.guest?.chesscomElo : room.host?.chesscomElo}
+                />
               )}
 
               {/* Guest view — waiting for host to report */}

@@ -3103,3 +3103,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Root cause 2: goNext/goLast depended on `[data]`, causing the useEffect to re-register the listener every polling cycle — fixed by storing `analysesLengthRef` in a ref so all four nav callbacks are stable with empty dep arrays
 - [x] Keydown useEffect now registers exactly once for the lifetime of the component
 - [x] TypeScript: 0 errors
+
+## Chess Notation Race Component (Battle Page)
+
+- [x] Created ChessNotationRace component (client/src/components/ChessNotationRace.tsx)
+- [x] 8 realistic chess opening sequences as the move pool (Ruy Lopez, Sicilian, French, KID, etc.)
+- [x] Character-level highlighting: green for correct, red for error, dim for untyped, bright white cursor
+- [x] WPM and accuracy stat badges in header row
+- [x] Progress bar per panel (green for you, amber for opponent)
+- [x] Opponent panel simulates progress at ~30 WPM with interval-based partial-char animation
+- [x] Input field at bottom styled as terminal prompt (monospace, green caret, ChevronRight icon)
+- [x] Integrated below player cards in battle_room screen (only shows when both players are present)
+- [x] OTB design system: dark glass morphism panel, green accents, OKLCH colours, divide-white/10
+- [x] Entrance animation: fade-up with delay 0.9s consistent with battle_room stagger
+- [x] TypeScript: 0 errors
