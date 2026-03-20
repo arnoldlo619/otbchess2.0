@@ -1853,7 +1853,10 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     timePreset: data.timePreset,
     inviteCode: data.inviteCode,
   };
-  const tParam = btoa(JSON.stringify(embeddedMeta));
+  // Use encodeURIComponent to make the base64 URL-safe.
+  // btoa can produce +, /, = which URLSearchParams decodes incorrectly on Android
+  // (+ is treated as a space, corrupting the JSON and breaking the join flow).
+  const tParam = encodeURIComponent(btoa(JSON.stringify(embeddedMeta)));
   const inviteUrl = `${window.location.origin}/join/${encodeURIComponent(activeSlug)}?t=${tParam}`;
 
   const copyLink = () => {

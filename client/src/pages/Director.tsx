@@ -1312,7 +1312,10 @@ export default function Director() {
         timePreset: tournamentConfig.timePreset,
         inviteCode: tournamentConfig.inviteCode,
       };
-      return `${joinUrlBase}?t=${btoa(JSON.stringify(meta))}`;
+      // Use encodeURIComponent to make the base64 URL-safe.
+      // Standard btoa can produce +, /, = which URLSearchParams decodes incorrectly
+      // on some Android browsers (+ is decoded as space, corrupting the JSON).
+      return `${joinUrlBase}?t=${encodeURIComponent(btoa(JSON.stringify(meta)))}`;
     } catch {
       return joinUrlBase;
     }

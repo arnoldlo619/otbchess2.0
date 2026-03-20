@@ -3025,3 +3025,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update client StepShare: saveSlug() calls PATCH API when tournamentId is available; shows Saving... state
 - [x] Update Director.tsx: on mount fetches /api/tournament/:id/meta and syncs customSlug to localStorage via updateTournamentConfig
 - [x] resolveTournament unchanged — works with both localStorage and server-fetched slug seamlessly
+
+## QR Code Join Flow — Cross-Device Fix
+
+- [x] Audited URL construction in Director.tsx joinUrl and StepShare inviteUrl — found raw btoa without encodeURIComponent
+- [x] Audited Join page: ?t= base64 param parsing, custom slug resolution, inviteCode fallback
+- [x] Fixed btoa encoding: Director.tsx and TournamentWizard.tsx now use encodeURIComponent(btoa(...))
+- [x] Fixed custom slug resolution: /join/:slug now fetches from /api/auth/join/resolve/:codeOrSlug on fresh devices
+- [x] Fixed ?t= decoding: decodeEmbeddedMeta handles both URL-encoded and raw base64 (backward compat)
+- [x] Added server fallback: Join.tsx useEffect fetches from /api/auth/join/resolve/:codeOrSlug when localStorage empty
+- [x] Added serverResolved state: join button shows "Loading tournament…" spinner until bootstrap completes
+- [x] setServerResolved(true) called in both bootstrap paths (?t= param and server fetch)

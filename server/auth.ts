@@ -507,6 +507,43 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── GET /api/join/resolve/:codeOrSlug ──────────────────────────────────────
+  // Public endpoint: resolves a tournament by its inviteCode OR customSlug.
+  // Called by the Join page on Android/fresh devices when localStorage is empty
+  // and there is no ?t= param in the URL (e.g. someone shared the short URL).
+  // Returns enough metadata to bootstrap the tournament registry client-side.
+  router.get("/join/resolve/:codeOrSlug", async (req, res) => {
+    const { codeOrSlug } = req.params;
+    if (!codeOrSlug) return res.status(400).json({ error: "codeOrSlug is required" });
+    try {
+      const db = await getDb();
+      const { or, eq: eqOp } = await import("drizzle-orm");
+      const rows = await db
+        .select({
+          tournamentId: userTournaments.tournamentId,
+          name: userTournaments.name,
+          venue: userTournaments.venue,
+          format: userTournaments.format,
+          rounds: userTournaments.rounds,
+          inviteCode: userTournaments.inviteCode,
+          customSlug: userTournaments.customSlug,
+        })
+        .from(userTournaments)
+        .where(
+          or(
+            eqOp(userTournaments.inviteCode, codeOrSlug.toUpperCase()),
+            eqOp(userTournaments.customSlug, codeOrSlug)
+          )
+        )
+        .limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Tournament not found" });
+      return res.json(rows[0]);
+    } catch (err) {
+      console.error("[auth] join resolve error:", err);
+      return res.status(500).json({ error: "Failed to resolve tournament" });
+    }
+  });
+
   // ── GET /api/tournament/:tournamentId/meta ────────────────────────────────
   // Public endpoint: returns lightweight tournament metadata including customSlug.
   // Used by clients on any device to hydrate localStorage with the latest slug.

@@ -301,7 +301,23 @@ function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
     const params = new URLSearchParams(search);
     const t = params.get("t");
     if (!t) return null;
-    const json = atob(t);
+    // The ?t= value may be URL-encoded (new format) or raw base64 (old format).
+    // URLSearchParams.get() already decodes %xx sequences, but + is decoded as
+    // a space in application/x-www-form-urlencoded — which corrupts raw base64.
+    // We try the value as-is first; if atob fails, we try decodeURIComponent.
+    let b64 = t;
+    let json: string;
+    try {
+      json = atob(b64);
+    } catch {
+      // Fallback: the value may still have %xx sequences (e.g. from some QR scanners)
+      try {
+        b64 = decodeURIComponent(t);
+        json = atob(b64);
+      } catch {
+        return null;
+      }
+    }
     return JSON.parse(json) as EmbeddedTournamentMeta;
   } catch {
     return null;
@@ -309,7 +325,8 @@ function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
 }
 
 export function encodeEmbeddedMeta(meta: EmbeddedTournamentMeta): string {
-  return btoa(JSON.stringify(meta));
+  // Use encodeURIComponent so the base64 is URL-safe in all browsers.
+  return encodeURIComponent(btoa(JSON.stringify(meta)));
 }
 
 // --- Main Page ----------------------------------------------------------------
@@ -333,7 +350,10 @@ export default function JoinPage() {
   useEffect(() => {
     if (!embeddedMeta) return;
     const existing = resolveTournament(embeddedMeta.inviteCode);
-    if (existing) return; // already in registry — no-op
+    if (existing) {
+      setServerResolved(true); // already in registry
+      return;
+    }
     registerTournament({
       id: embeddedMeta.id,
       inviteCode: embeddedMeta.inviteCode,
@@ -342,7 +362,7 @@ export default function JoinPage() {
       venue: embeddedMeta.venue ?? "",
       date: "",
       description: "",
-      format: embeddedMeta.format,
+      format: embeddedMeta.format as TournamentConfig["format"],
       rounds: embeddedMeta.rounds,
       maxPlayers: embeddedMeta.maxPlayers,
       timeBase: 10,
@@ -351,6 +371,58 @@ export default function JoinPage() {
       ratingSystem: "chess.com",
       createdAt: new Date().toISOString(),
     });
+    setServerResolved(true); // bootstrapped from ?t= param
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Server-side fallback bootstrap: when there is no ?t= param (e.g. someone
+  // shared the short custom URL like /join/ThursdayOTBNight) and the tournament
+  // is not in localStorage (fresh device / Android), fetch from the server and
+  // register it locally so the join flow can proceed.
+  useEffect(() => {
+    if (!urlCode) return;
+    // If already resolved locally (from ?t= bootstrap or existing localStorage), skip
+    if (resolveTournament(urlCode)) return;
+    // Fetch from server by inviteCode or customSlug
+    fetch(`/api/auth/join/resolve/${encodeURIComponent(urlCode)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: {
+        tournamentId: string;
+        name: string;
+        venue?: string | null;
+        format?: string | null;
+        rounds?: number | null;
+        inviteCode?: string | null;
+        customSlug?: string | null;
+      } | null) => {
+        if (!data) { setServerResolved(true); return; } // 404 — not in server DB, proceed anyway
+        // Don’t re-register if it arrived via the ?t= bootstrap above
+        if (!resolveTournament(data.inviteCode ?? urlCode)) {
+          registerTournament({
+            id: data.tournamentId,
+            inviteCode: data.inviteCode ?? urlCode,
+            directorCode: "",
+            name: data.name,
+            venue: data.venue ?? "",
+            date: "",
+            description: "",
+            format: (data.format ?? "swiss") as TournamentConfig["format"],
+            rounds: data.rounds ?? 5,
+            maxPlayers: 64,
+            timeBase: 10,
+            timeIncrement: 0,
+            timePreset: "10+5",
+            ratingSystem: "chess.com",
+            customSlug: data.customSlug ?? undefined,
+            createdAt: new Date().toISOString(),
+          });
+        }
+        setServerResolved(true);
+      })
+      .catch(() => {
+        // Non-critical — player can still type the code manually
+        setServerResolved(true);
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -366,6 +438,14 @@ export default function JoinPage() {
     navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(urlUsername)}`);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Tracks whether the server-side tournament bootstrap has completed.
+  // On Android / fresh devices without localStorage, the join button should
+  // wait until this is true (or the ?t= bootstrap has already resolved it).
+  const [serverResolved, setServerResolved] = useState(() => {
+    // Already resolved if the tournament is in localStorage right now
+    return urlCode ? Boolean(resolveTournament(urlCode)) : false;
+  });
 
   const [step, setStep] = useState<Step>(urlCode ? "username" : "code");
   const [tournamentCode, setTournamentCode] = useState(urlCode ?? "");
@@ -1424,11 +1504,13 @@ export default function JoinPage() {
         {step === "username" && isQrMode && (
           <button
             onClick={handleQrJoin}
-            disabled={!username.trim() || confirming}
+            disabled={!username.trim() || confirming || !serverResolved}
             className="mobile-cta disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {confirming ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Joining…</>
+            ) : !serverResolved ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Loading tournament…</>
             ) : (
               <><CheckCircle2 className="w-4 h-4" /> Join Tournament</>
             )}
