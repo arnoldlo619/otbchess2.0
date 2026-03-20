@@ -76,6 +76,7 @@ import {
   listScheduledPolls,
   cancelScheduledPoll,
   postBattleResult,
+  postLeaderboardSnapshot,
   type FeedEvent,
   type PollOption,
   type FeedRSVPEntry,
@@ -1340,6 +1341,70 @@ function FeedCard({
           )}
         </div>
       )}
+      {event.type === "leaderboard_snapshot" && event.leaderboardEntries && event.leaderboardEntries.length > 0 && (
+        <div className="px-4 pb-4">
+          <div
+            className="rounded-2xl border overflow-hidden"
+            style={{ background: "oklch(0.14 0.05 80)", border: "1px solid oklch(0.30 0.08 80 / 0.5)" }}
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 py-2.5 border-b"
+              style={{ background: "oklch(0.20 0.06 80 / 0.5)", borderColor: "oklch(0.30 0.08 80 / 0.4)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-xs font-bold tracking-widest uppercase text-amber-400">Leaderboard</span>
+              </div>
+              <span
+                className="text-[10px] font-mono px-2 py-0.5 rounded-full"
+                style={{ background: "oklch(0.28 0.07 80 / 0.4)", color: "#d4a96a" }}
+              >
+                After {event.leaderboardBattleCount} battles
+              </span>
+            </div>
+            {/* Podium rows */}
+            <div className="divide-y" style={{ borderColor: "oklch(0.22 0.05 80 / 0.3)" }}>
+              {event.leaderboardEntries.map((entry) => {
+                const medalColour =
+                  entry.rank === 1 ? { bg: "oklch(0.35 0.10 80 / 0.25)", border: "#d4a96a", text: "#d4a96a", medal: "🥇" }
+                  : entry.rank === 2 ? { bg: "oklch(0.28 0.05 220 / 0.20)", border: "#94a3b8", text: "#94a3b8", medal: "🥈" }
+                  : { bg: "oklch(0.25 0.06 40 / 0.20)", border: "#b87333", text: "#b87333", medal: "🥉" };
+                return (
+                  <div
+                    key={entry.playerId}
+                    className="flex items-center gap-3 px-4 py-2.5"
+                    style={{ background: medalColour.bg }}
+                  >
+                    {/* Rank badge */}
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                      style={{ border: `2px solid ${medalColour.border}`, color: medalColour.text, background: "oklch(0.18 0.04 80 / 0.4)" }}
+                    >
+                      {entry.rank}
+                    </div>
+                    {/* Player name */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-white/90 truncate">{entry.playerName}</span>
+                        {entry.rank === 1 && <span className="text-xs">{medalColour.medal}</span>}
+                      </div>
+                      <div className="text-[10px] text-white/35 font-mono">
+                        {entry.wins}W · {entry.draws}D · {entry.losses}L
+                      </div>
+                    </div>
+                    {/* Win rate */}
+                    <div className="flex flex-col items-end flex-shrink-0">
+                      <span className="text-sm font-bold" style={{ color: medalColour.text }}>{entry.winRate}%</span>
+                      <span className="text-[10px] text-white/30">win rate</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       {event.type === "battle_result" && event.battlePlayerA && event.battlePlayerB && (
         <div className="px-4 pb-4">
           <div
@@ -1443,6 +1508,7 @@ function FeedIcon({ type }: { type: FeedEvent["type"] }) {
     rsvp_form:             <ClipboardList className="w-4 h-4 text-blue-400" />,
     poll_result:           <Award className="w-4 h-4 text-amber-400" />,
     battle_result:         <Swords className="w-4 h-4 text-orange-400" />,
+    leaderboard_snapshot:  <Trophy className="w-4 h-4 text-amber-400" />,
   };
   return (
     <div
@@ -3187,20 +3253,20 @@ export default function ClubDashboard() {
                           {battle.status === "active" && (
                             <>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "player_a"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_a", directorName: user?.displayName }); refreshBattles(); toast.success(`${battle.playerAName} wins!`); }}
+                                onClick={() => { recordBattleResult(club.id, battle.id, "player_a"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_a", directorName: user?.displayName }); const completedCount = listBattles(club.id).filter(b => b.status === "completed").length; postLeaderboardSnapshot(club.id, completedCount); refreshBattles(); toast.success(`${battle.playerAName} wins!`); }}
                                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
                                 style={{ background: accent + "33", color: accent }}
                               >
                                 {battle.playerAName} Wins
                               </button>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "draw"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "draw", directorName: user?.displayName }); refreshBattles(); toast.success("Draw recorded!"); }}
+                                onClick={() => { recordBattleResult(club.id, battle.id, "draw"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "draw", directorName: user?.displayName }); const completedCount = listBattles(club.id).filter(b => b.status === "completed").length; postLeaderboardSnapshot(club.id, completedCount); refreshBattles(); toast.success("Draw recorded!"); }}
                                 className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition"
                               >
                                 Draw
                               </button>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "player_b"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_b", directorName: user?.displayName }); refreshBattles(); toast.success(`${battle.playerBName} wins!`); }}
+                                onClick={() => { recordBattleResult(club.id, battle.id, "player_b"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_b", directorName: user?.displayName }); const completedCount = listBattles(club.id).filter(b => b.status === "completed").length; postLeaderboardSnapshot(club.id, completedCount); refreshBattles(); toast.success(`${battle.playerBName} wins!`); }}
                                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
                                 style={{ background: accent + "33", color: accent }}
                               >

@@ -3060,3 +3060,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added battle_result config entry to FEED_EVENT_CONFIG in ClubProfile.tsx (Swords, orange)
 - [x] Built BattleResultCard inline in FeedCard: Victory/Draw header with score badge, two player columns with avatar initials, ELO, Crown Winner label, loser faded to 40% opacity
 - [x] Deduplication: postBattleResult skips if a feed event with the same battleId already exists
+
+## Mini-Leaderboard Auto-Post to Club Feed
+
+- [x] Added leaderboard_snapshot to FeedEventType in clubFeedRegistry.ts
+- [x] Added leaderboard-specific fields to FeedEvent: leaderboardEntries (rank, playerId, playerName, wins, draws, losses, total, winRate), leaderboardBattleCount, leaderboardMilestone
+- [x] Added postLeaderboardSnapshot() helper: reads battles from localStorage, aggregates W/D/L per player, ranks by win rate (ties broken by total wins), deduplicates by milestone
+- [x] Requires ≥3 unique players before posting; triggers every 5 battles by default
+- [x] Wired postLeaderboardSnapshot() in ClubDashboard after every battle result button (Player A wins, Draw, Player B wins)
+- [x] Added leaderboard_snapshot icon entry to FeedIcon map in ClubDashboard (Trophy icon, amber)
+- [x] Added leaderboard_snapshot config entry to FEED_EVENT_CONFIG in ClubProfile.tsx (Trophy, amber)
+- [x] Built LeaderboardSnapshotCard inline in FeedCard: amber header with battle count badge, 3 podium rows with gold/silver/bronze rank circles, player name, W·D·L record, win rate % — TypeScript: 0 errors

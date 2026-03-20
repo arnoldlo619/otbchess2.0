@@ -271,6 +271,11 @@ const FEED_EVENT_CONFIG: Record<
     accent: "text-orange-600 bg-orange-50",
     darkAccent: "text-orange-400 bg-orange-500/15",
   },
+  leaderboard_snapshot: {
+    icon: <Trophy className="w-4 h-4" />,
+    accent: "text-amber-600 bg-amber-50",
+    darkAccent: "text-amber-400 bg-amber-500/15",
+  },
 };
 
 function FeedEventCard({

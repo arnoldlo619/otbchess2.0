@@ -27,7 +27,8 @@ export type FeedEventType =
   | "poll"
   | "rsvp_form"
   | "poll_result"
-  | "battle_result";
+  | "battle_result"
+  | "leaderboard_snapshot";
 
 /** A single option in a Poll */
 export interface PollOption {
@@ -102,6 +103,23 @@ export interface FeedEvent {
   battlePlayerBElo?: number;
   /** Deduplication key: battleId so we don't double-post */
   battleId?: string;
+
+  // ── Leaderboard Snapshot fields ──────────────────────────────────────────
+  /** Top-N leaderboard entries (type === "leaderboard_snapshot") */
+  leaderboardEntries?: Array<{
+    rank: number;
+    playerId: string;
+    playerName: string;
+    wins: number;
+    draws: number;
+    losses: number;
+    total: number;
+    winRate: number;
+  }>;
+  /** Total completed battles at the time of the snapshot */
+  leaderboardBattleCount?: number;
+  /** Milestone that triggered this snapshot (e.g. 5, 10, 15…) */
+  leaderboardMilestone?: number;
 
   // ── Poll Result fields ───────────────────────────────────────────────────
   /** ID of the poll feed event this result summarises (type === "poll_result") */
@@ -616,6 +634,95 @@ export function postBattleResult(params: {
     battleOutcome: params.outcome,
     battlePlayerAElo: params.playerAElo,
     battlePlayerBElo: params.playerBElo,
+  });
+}
+
+/**
+ * Auto-post a mini-leaderboard snapshot after every LEADERBOARD_MILESTONE battles.
+ * Deduplicates by milestone number — only one snapshot per milestone.
+ * Requires at least 3 unique players with completed battles.
+ *
+ * @param clubId  - the club to post to
+ * @param totalCompleted - the current count of completed battles (after recording the latest result)
+ * @param milestone - how many battles between snapshots (default: 5)
+ */
+export function postLeaderboardSnapshot(
+  clubId: string,
+  totalCompleted: number,
+  milestone: number = 5
+): FeedEvent | null {
+  // Only trigger on exact milestones (5, 10, 15 …)
+  if (totalCompleted === 0 || totalCompleted % milestone !== 0) return null;
+
+  // Deduplication: skip if we already posted a snapshot for this milestone
+  const existing = loadFeed(clubId);
+  if (existing.some((e) => e.leaderboardMilestone === totalCompleted)) return null;
+
+  // Build leaderboard from clubBattleRegistry data stored in localStorage
+  const storageKey = `otb_battles_${clubId}`;
+  let battles: Array<{
+    status: string;
+    result?: string;
+    playerAId: string;
+    playerAName: string;
+    playerBId: string;
+    playerBName: string;
+  }> = [];
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) battles = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+
+  const completed = battles.filter((b) => b.status === "completed" && b.result);
+  const map = new Map<string, { name: string; wins: number; draws: number; losses: number }>();
+
+  function ensure(id: string, name: string) {
+    if (!map.has(id)) map.set(id, { name, wins: 0, draws: 0, losses: 0 });
+  }
+
+  for (const battle of completed) {
+    ensure(battle.playerAId, battle.playerAName);
+    ensure(battle.playerBId, battle.playerBName);
+    const a = map.get(battle.playerAId)!;
+    const b = map.get(battle.playerBId)!;
+    if (battle.result === "player_a") { a.wins++; b.losses++; }
+    else if (battle.result === "player_b") { b.wins++; a.losses++; }
+    else { a.draws++; b.draws++; }
+  }
+
+  // Require at least 3 unique players
+  if (map.size < 3) return null;
+
+  const entries = Array.from(map.entries())
+    .map(([playerId, stats]) => {
+      const total = stats.wins + stats.draws + stats.losses;
+      return {
+        playerId,
+        playerName: stats.name,
+        wins: stats.wins,
+        draws: stats.draws,
+        losses: stats.losses,
+        total,
+        winRate: total > 0 ? Math.round((stats.wins / total) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
+    .slice(0, 3)
+    .map((e, i) => ({ ...e, rank: i + 1 }));
+
+  const top = entries[0];
+  return addFeedEvent({
+    clubId,
+    type: "leaderboard_snapshot",
+    createdAt: new Date().toISOString(),
+    actorName: "Club",
+    description: `Leaderboard update after ${totalCompleted} battles`,
+    detail: `Top player: ${top.playerName} (${top.winRate}% win rate)`,
+    leaderboardEntries: entries,
+    leaderboardBattleCount: totalCompleted,
+    leaderboardMilestone: totalCompleted,
   });
 }
 
