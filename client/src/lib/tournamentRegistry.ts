@@ -30,6 +30,10 @@ export interface TournamentConfig {
   clubId?: string | null;
   /** Display name of the linked club (denormalised for fast rendering). */
   clubName?: string | null;
+  /** Optional custom short URL slug chosen by the host, e.g. "ThursdayOTBNight".
+   *  When set, the join URL becomes /join/<customSlug> in addition to /join/<inviteCode>.
+   */
+  customSlug?: string | null;
 }
 
 const REGISTRY_KEY = "otb-tournament-registry-v1";
@@ -90,7 +94,12 @@ export function resolveTournament(codeOrSlug: string): TournamentConfig | null {
   // Try invite code first (short uppercase codes like "ABCD1234")
   const byCode = registry.find((c) => c.inviteCode.toUpperCase() === codeOrSlug.toUpperCase());
   if (byCode) return byCode;
-  // Fall back to slug lookup
+  // Try custom slug (case-insensitive)
+  const byCustomSlug = registry.find(
+    (c) => c.customSlug && c.customSlug.toLowerCase() === codeOrSlug.toLowerCase()
+  );
+  if (byCustomSlug) return byCustomSlug;
+  // Fall back to URL slug lookup
   return registry.find((c) => c.id === codeOrSlug) ?? null;
 }
 

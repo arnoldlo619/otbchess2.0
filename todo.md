@@ -3006,3 +3006,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update all accent colour usages in Slide1–5 to use theme tokens
 - [x] Build theme picker UI: gradient swatch circles with inner accent dot + label, active ring indicator
 - [x] Wire activeTheme state to slideProps so preview updates live on click
+
+## Host Tournament Share Page Redesign
+
+- [x] Add "Welcome!" section header with tournament name subtitle and venue
+- [x] Add 3-step how-it-works flow: Scan QR → Enter chess.com username → Play (icon cards)
+- [x] Add custom short URL slug generator with editable input (e.g. /join/ThursdayOTBNight), sanitised and saved to TournamentConfig
+- [x] Remove Director Code section from StepShare
+- [x] Remove Spectator Code section from StepShare
+- [x] Move Director Code (with show/hide toggle) + Spectator Code (with copy + open) to Director Dashboard Settings tab
+- [x] Clean up StepShare layout: summary strip, how-it-works, QR, invite link, custom URL, optional club badge

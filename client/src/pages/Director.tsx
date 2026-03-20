@@ -82,6 +82,9 @@ import {
   Pencil,
   Coffee,
   Cast,
+  Eye,
+  EyeOff,
+  ExternalLink,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1029,6 +1032,123 @@ function HorizontalRoundTracker({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Settings Tab Helper Cards ──────────────────────────────────────────────
+
+function DirectorCodeCard({ directorCode, isDark }: { directorCode: string; isDark: boolean }) {
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(directorCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${
+      isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+    }`}>
+      <div className={`px-5 py-3 border-b flex items-center justify-between ${
+        isDark ? "border-white/06" : "border-gray-100"
+      }`}>
+        <div className="flex items-center gap-2">
+          <Shield className={`w-3.5 h-3.5 ${ isDark ? "text-[#4CAF50]/70" : "text-[#3D6B47]/70" }`} />
+          <h2 className={`text-xs font-bold uppercase tracking-widest ${ isDark ? "text-white/35" : "text-gray-400" }`}>Director Code</h2>
+        </div>
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+          isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
+        }`}>Private</span>
+      </div>
+      <div className="px-5 py-4 space-y-2">
+        <p className={`text-xs ${ isDark ? "text-white/35" : "text-gray-400" }`}>
+          Use this code to access the Director Dashboard from any device. Keep it private.
+        </p>
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 flex items-center rounded-xl border px-4 py-2.5 font-mono text-sm ${
+            isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10 text-white/80" : "bg-gray-50 border-gray-200 text-gray-800"
+          }`}>
+            {visible ? directorCode : "•".repeat(directorCode.length)}
+          </div>
+          <button
+            onClick={() => setVisible((v) => !v)}
+            className={`p-2.5 rounded-xl border transition-colors ${
+              isDark ? "border-white/10 hover:bg-white/08 text-white/50" : "border-gray-200 hover:bg-gray-50 text-gray-500"
+            }`}
+          >
+            {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={copy}
+            className={`p-2.5 rounded-xl border transition-colors ${
+              copied
+                ? isDark ? "border-[#4CAF50]/40 bg-[#4CAF50]/15 text-[#4CAF50]" : "border-green-300 bg-green-50 text-green-700"
+                : isDark ? "border-white/10 hover:bg-white/08 text-white/50" : "border-gray-200 hover:bg-gray-50 text-gray-500"
+            }`}
+          >
+            {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpectatorCodeCard({ spectatorUrl, isDark }: { spectatorUrl: string; isDark: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(spectatorUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${
+      isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+    }`}>
+      <div className={`px-5 py-3 border-b flex items-center justify-between ${
+        isDark ? "border-white/06" : "border-gray-100"
+      }`}>
+        <div className="flex items-center gap-2">
+          <Tv2 className={`w-3.5 h-3.5 ${ isDark ? "text-[#4CAF50]/70" : "text-[#3D6B47]/70" }`} />
+          <h2 className={`text-xs font-bold uppercase tracking-widest ${ isDark ? "text-white/35" : "text-gray-400" }`}>Spectator View</h2>
+        </div>
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+          isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-green-50 text-green-600"
+        }`}>● Live</span>
+      </div>
+      <div className="px-5 py-4 space-y-2">
+        <p className={`text-xs ${ isDark ? "text-white/35" : "text-gray-400" }`}>
+          Share with coaches, parents &amp; spectators — no account needed.
+        </p>
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono text-xs truncate ${
+            isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10 text-white/60" : "bg-gray-50 border-gray-200 text-gray-600"
+          }`}>
+            <span className="truncate">{spectatorUrl}</span>
+          </div>
+          <button
+            onClick={copy}
+            className={`p-2.5 rounded-xl border transition-colors ${
+              copied
+                ? isDark ? "border-[#4CAF50]/40 bg-[#4CAF50]/15 text-[#4CAF50]" : "border-green-300 bg-green-50 text-green-700"
+                : isDark ? "border-white/10 hover:bg-white/08 text-white/50" : "border-gray-200 hover:bg-gray-50 text-gray-500"
+            }`}
+          >
+            {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </button>
+          <a
+            href={spectatorUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`p-2.5 rounded-xl border transition-colors ${
+              isDark ? "border-white/10 hover:bg-white/08 text-white/50" : "border-gray-200 hover:bg-gray-50 text-gray-500"
+            }`}
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -3356,6 +3476,20 @@ export default function Director() {
                   </div>
                 </div>
               )}
+
+              {/* ── Director Code ─────────────────────────────────────────── */}
+              {tournamentConfig?.directorCode && (
+                <DirectorCodeCard
+                  directorCode={tournamentConfig.directorCode}
+                  isDark={isDark}
+                />
+              )}
+
+              {/* ── Spectator / Watch Live ────────────────────────────────────── */}
+              <SpectatorCodeCard
+                spectatorUrl={spectatorUrl}
+                isDark={isDark}
+              />
 
               {/* Danger zone */}
               <div

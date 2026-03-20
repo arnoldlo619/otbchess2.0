@@ -83,6 +83,8 @@ interface WizardData {
   clubId: string | null;
   /** Display name of the linked club. */
   clubName: string | null;
+  /** Optional custom short URL slug chosen by the host, e.g. "ThursdayOTBNight" */
+  customSlug: string;
 }
 
 function todayIso(): string {
@@ -110,6 +112,7 @@ const DEFAULT_DATA: WizardData = {
   directorCode: "",
   clubId: null,
   clubName: null,
+  customSlug: "",
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -1834,11 +1837,11 @@ function SpectatorShareSection({ data, isDark }: { data: WizardData; isDark: boo
 
 function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
-  const [dirCopied, setDirCopied] = useState(false);
-  const [showDirCode, setShowDirCode] = useState(false);
-  // Build the invite URL with embedded tournament metadata as ?t=<base64json>.
-  // This allows players on other devices to resolve the tournament without needing
-  // the director's localStorage registry.
+  const [customSlugInput, setCustomSlugInput] = useState(data.customSlug || "");
+  const [slugSaved, setSlugSaved] = useState(false);
+
+  // Build the invite URL — prefer custom slug when set, else inviteCode
+  const activeSlug = customSlugInput.trim() || data.inviteCode;
   const embeddedMeta = {
     id: makeSlug(data.name, data.date),
     name: data.name,
@@ -1850,7 +1853,7 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
     inviteCode: data.inviteCode,
   };
   const tParam = btoa(JSON.stringify(embeddedMeta));
-  const inviteUrl = `${window.location.origin}/join/${data.inviteCode}?t=${tParam}`;
+  const inviteUrl = `${window.location.origin}/join/${encodeURIComponent(activeSlug)}?t=${tParam}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(inviteUrl);
@@ -1858,59 +1861,164 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
     toast.success("Invite link copied!");
     setTimeout(() => setCopied(false), 2000);
   };
-  const copyDirCode = () => {
-    navigator.clipboard.writeText(data.directorCode);
-    setDirCopied(true);
-    toast.success("Director code copied!");
-    setTimeout(() => setDirCopied(false), 2000);
+
+  // Sanitise slug: letters, numbers, hyphens, underscores only
+  const sanitiseSlug = (v: string) =>
+    v.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
+
+  const handleSlugChange = (v: string) => {
+    const clean = sanitiseSlug(v);
+    setCustomSlugInput(clean);
+    setSlugSaved(false);
+    // Propagate to wizard data so registerTournamentNow picks it up
+    data.customSlug = clean;
+  };
+
+  const saveSlug = () => {
+    setSlugSaved(true);
+    toast.success("Custom URL saved!");
+    setTimeout(() => setSlugSaved(false), 2000);
   };
 
   const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination";
   const timeLabel = data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (
-    <div className="space-y-6">
-      {/* Club badge — shown when tournament is linked to a club */}
-      {data.clubId && data.clubName && (
-        <div
-          className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
-          style={{ background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE", border: `1.5px solid ${isDark ? "rgba(61,107,71,0.30)" : "#C6D9C9"}` }}
-        >
-          <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
-          <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>
-            Linked to club:
-          </span>
-          <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
-            {data.clubName}
-          </span>
-        </div>
-      )}
+    <div className="space-y-7">
 
-      {/* Summary strip */}
+      {/* ── Welcome header ──────────────────────────────────────────────── */}
+      <div className="text-center space-y-1.5">
+        <p
+          className="text-xs font-bold tracking-[0.18em] uppercase"
+          style={{ color: T.green }}
+        >
+          Welcome!
+        </p>
+        <h2
+          className="text-2xl font-black leading-tight tracking-tight"
+          style={{ color: isDark ? T.dText : T.lText }}
+        >
+          {data.name}
+        </h2>
+        {data.venue && (
+          <p className="text-sm" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            {data.venue}
+          </p>
+        )}
+      </div>
+
+      {/* ── Summary strip ───────────────────────────────────────────────── */}
       <div
-        className="grid grid-cols-3 gap-4 rounded-2xl border p-5"
-        style={{ background: isDark ? T.dCard : "#F9FAF8", border: `2px solid ${isDark ? T.dBorder : "#EEEED2"}` }}
+        className="grid grid-cols-3 gap-3 rounded-2xl border p-4"
+        style={{
+          background: isDark ? T.dCard : "#F9FAF8",
+          border: `1.5px solid ${isDark ? T.dBorder : "#EEEED2"}`,
+        }}
       >
         {[
           { icon: Shuffle, label: formatLabel, sub: `${data.rounds} rounds` },
           { icon: Clock, label: timeLabel, sub: "time control" },
           { icon: Users, label: `${data.maxPlayers}`, sub: "max players" },
         ].map(({ icon: Icon, label, sub }) => (
-          <div key={label} className="flex flex-col items-center gap-1.5 text-center">
-            <Icon className="w-5 h-5" style={{ color: T.green }} strokeWidth={1.8} />
-            <span className="text-base font-bold" style={{ color: isDark ? T.dText : T.lText }}>{label}</span>
-            <span className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>{sub}</span>
+          <div key={label} className="flex flex-col items-center gap-1 text-center">
+            <Icon className="w-4 h-4" style={{ color: T.green }} strokeWidth={1.8} />
+            <span className="text-sm font-bold" style={{ color: isDark ? T.dText : T.lText }}>{label}</span>
+            <span className="text-[11px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>{sub}</span>
           </div>
         ))}
       </div>
 
-      {/* Invite link */}
-      <div>
-        <Label isDark={isDark}>Player Invite Link</Label>
+      {/* ── How it works — 3-step flow ──────────────────────────────────── */}
+      <div className="space-y-2">
+        <p
+          className="text-[11px] font-bold tracking-[0.14em] uppercase mb-3"
+          style={{ color: isDark ? T.dMuted : T.lMuted }}
+        >
+          How it works
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            {
+              step: "1",
+              icon: (
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h3v3h-3z" />
+                </svg>
+              ),
+              title: "Scan QR",
+              body: "Players scan the code with their phone",
+            },
+            {
+              step: "2",
+              icon: (
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+              ),
+              title: "Enter Username",
+              body: "chess.com username — ELO fetched automatically",
+            },
+            {
+              step: "3",
+              icon: (
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              ),
+              title: "Play",
+              body: "Pairings generated when you start Round 1",
+            },
+          ].map(({ step, icon, title, body }) => (
+            <div
+              key={step}
+              className="flex flex-col items-center text-center gap-2 rounded-2xl p-3"
+              style={{
+                background: isDark ? "rgba(61,107,71,0.08)" : "#F0F5EE",
+                border: `1.5px solid ${isDark ? "rgba(61,107,71,0.18)" : "#D4E6D8"}`,
+              }}
+            >
+              {/* Step number + icon */}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: isDark ? "rgba(61,107,71,0.20)" : "#FFFFFF", color: T.green }}
+              >
+                {icon}
+              </div>
+              <div>
+                <p className="text-xs font-bold" style={{ color: isDark ? T.dText : T.lText }}>{title}</p>
+                <p className="text-[10px] leading-snug mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── QR code — prominent ─────────────────────────────────────────── */}
+      <AnimatedQR inviteUrl={inviteUrl} isDark={isDark} />
+
+      {/* ── Player Invite Link ──────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <p
+          className="text-[11px] font-bold tracking-[0.14em] uppercase"
+          style={{ color: isDark ? T.dMuted : T.lMuted }}
+        >
+          Player Invite Link
+        </p>
         <div className="flex gap-2">
           <div
             className="flex-1 flex items-center gap-2 rounded-2xl border text-sm font-mono truncate"
-            style={{ padding: "14px 18px", background: isDark ? T.dCard : "#FAFAFA", border: `2px solid ${isDark ? T.dBorder : T.lBorder}`, color: isDark ? T.dSub : T.lSub }}
+            style={{
+              padding: "13px 16px",
+              background: isDark ? T.dCard : "#FAFAFA",
+              border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+              color: isDark ? T.dSub : T.lSub,
+            }}
           >
             <Link2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.green }} />
             <span className="truncate">{inviteUrl}</span>
@@ -1918,8 +2026,12 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
           <button
             type="button"
             onClick={copyLink}
-            className="flex items-center gap-1.5 rounded-2xl text-base font-semibold transition-all duration-200 flex-shrink-0"
-            style={{ padding: "14px 20px", background: copied ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE", color: copied ? "#FFFFFF" : isDark ? T.dText : "#374151" }}
+            className="flex items-center gap-1.5 rounded-2xl text-sm font-semibold transition-all duration-200 flex-shrink-0"
+            style={{
+              padding: "13px 18px",
+              background: copied ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE",
+              color: copied ? "#FFFFFF" : isDark ? T.dText : "#374151",
+            }}
           >
             {copied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
             {copied ? "Copied!" : "Copy"}
@@ -1927,66 +2039,80 @@ function StepShare({ data, isDark }: { data: WizardData; isDark: boolean }) {
         </div>
       </div>
 
-      {/* QR */}
-      <AnimatedQR inviteUrl={inviteUrl} isDark={isDark} />
-
-      {/* Director Code */}
-      <div
-        className="rounded-2xl border p-5 space-y-3"
-        style={{ background: isDark ? "rgba(245,158,11,0.08)" : "#FFFBEB", border: `2px solid ${isDark ? "rgba(245,158,11,0.25)" : "#FDE68A"}` }}
-      >
-        <div className="flex items-center gap-2 mb-1">
-          <Shield className="w-4 h-4" style={{ color: isDark ? "#FBBF24" : "#D97706" }} strokeWidth={1.8} />
-          <span className="text-sm font-bold" style={{ color: isDark ? "#FBBF24" : "#92400E" }}>Your Director Code</span>
-          <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7", color: isDark ? "#FBBF24" : "#92400E" }}>
-            Private
-          </span>
-        </div>
-        <p className="text-xs leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.45)" : "#78350F" }}>
-          Use this code to access the Director Dashboard from any device. Keep it private — anyone with this code can manage your tournament.
+      {/* ── Custom short URL ────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <p
+          className="text-[11px] font-bold tracking-[0.14em] uppercase"
+          style={{ color: isDark ? T.dMuted : T.lMuted }}
+        >
+          Custom URL  <span className="font-normal normal-case tracking-normal" style={{ color: isDark ? T.dMuted : T.lMuted }}>— optional</span>
+        </p>
+        <p className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+          Create a memorable link for your event, e.g.{" "}
+          <span style={{ color: T.green, fontWeight: 600 }}>chessotb.club/join/ThursdayOTBNight</span>
         </p>
         <div className="flex gap-2 items-center">
           <div
-            className="flex-1 flex items-center gap-2 rounded-xl border font-mono font-bold tracking-widest text-base"
-            style={{ padding: "12px 16px", background: isDark ? "rgba(0,0,0,0.25)" : "#FFFFFF", border: `1.5px solid ${isDark ? "rgba(245,158,11,0.20)" : "#FDE68A"}`, color: isDark ? "#FBBF24" : "#92400E", letterSpacing: "0.15em" }}
+            className="flex-1 flex items-center gap-0 rounded-2xl border overflow-hidden"
+            style={{
+              background: isDark ? T.dCard : "#FAFAFA",
+              border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+            }}
           >
-            <span>{showDirCode ? data.directorCode : data.directorCode.replace(/[A-Z0-9]/g, "•")}</span>
+            <span
+              className="text-xs font-mono flex-shrink-0 pl-4 pr-1 select-none"
+              style={{ color: isDark ? T.dMuted : T.lMuted }}
+            >
+              /join/
+            </span>
+            <input
+              type="text"
+              value={customSlugInput}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              placeholder="ThursdayOTBNight"
+              className="flex-1 bg-transparent outline-none text-sm font-mono py-3 pr-3"
+              style={{ color: isDark ? T.dText : T.lText }}
+              maxLength={40}
+            />
           </div>
           <button
             type="button"
-            onClick={() => setShowDirCode((v) => !v)}
-            className="rounded-xl p-3 transition-colors"
-            style={{ background: isDark ? "rgba(245,158,11,0.12)" : "#FEF3C7", color: isDark ? "#FBBF24" : "#D97706" }}
-            title={showDirCode ? "Hide code" : "Reveal code"}
+            onClick={saveSlug}
+            disabled={!customSlugInput.trim()}
+            className="flex items-center gap-1.5 rounded-2xl text-sm font-semibold transition-all duration-200 flex-shrink-0 disabled:opacity-40"
+            style={{
+              padding: "13px 18px",
+              background: slugSaved ? T.green : isDark ? "rgba(255,255,255,0.10)" : "#F0F5EE",
+              color: slugSaved ? "#FFFFFF" : isDark ? T.dText : "#374151",
+            }}
           >
-            {showDirCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={copyDirCode}
-            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold transition-all duration-200"
-            style={{ padding: "12px 16px", background: dirCopied ? "#D97706" : isDark ? "rgba(245,158,11,0.15)" : "#FEF3C7", color: dirCopied ? "#FFFFFF" : isDark ? "#FBBF24" : "#92400E" }}
-          >
-            {dirCopied ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Copy className="w-4 h-4" />}
-            {dirCopied ? "Copied!" : "Copy"}
+            {slugSaved ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <ArrowRight className="w-4 h-4" />}
+            {slugSaved ? "Saved!" : "Set"}
           </button>
         </div>
+        {customSlugInput.trim() && (
+          <p className="text-[11px]" style={{ color: T.green }}>
+            Your link: {window.location.origin}/join/{customSlugInput.trim()}
+          </p>
+        )}
       </div>
 
-      <div
-        className="flex items-start gap-3 rounded-2xl px-5 py-4 text-sm"
-        style={{ background: isDark ? "rgba(61,107,71,0.12)" : "#F0F5EE", color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}
-      >
-        <BarChart3 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: T.green }} />
-        <span>
-          Players join with their{"\ "}
-          <strong style={{ color: isDark ? "rgba(255,255,255,0.80)" : "#374151" }}>{data.ratingSystem}</strong>{"\ "}
-          username. ELO is fetched automatically and pairings are generated when you start Round 1.
-        </span>
-      </div>
-
-      {/* ── Spectator / Watch Live section ─────────────────────────────────── */}
-      <SpectatorShareSection data={data} isDark={isDark} />
+      {/* ── Club badge ──────────────────────────────────────────────────── */}
+      {data.clubId && data.clubName && (
+        <div
+          className="flex items-center gap-2.5 rounded-2xl border px-4 py-3"
+          style={{
+            background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
+            border: `1.5px solid ${isDark ? "rgba(61,107,71,0.30)" : "#C6D9C9"}`,
+          }}
+        >
+          <Trophy className="w-4 h-4 flex-shrink-0" style={{ color: T.green }} strokeWidth={1.8} />
+          <span className="text-sm" style={{ color: isDark ? T.dSub : T.lSub }}>Linked to club:</span>
+          <span className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+            {data.clubName}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -2093,6 +2219,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       ownerId: user?.id ? parseInt(user.id, 10) : null,
       clubId: data.clubId ?? null,
       clubName: data.clubName ?? null,
+      customSlug: data.customSlug.trim() || null,
     });
     grantDirectorSession(slug);
     // If signed in, persist to server so My Tournaments history is cross-device
