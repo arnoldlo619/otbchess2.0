@@ -3071,3 +3071,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added leaderboard_snapshot icon entry to FeedIcon map in ClubDashboard (Trophy icon, amber)
 - [x] Added leaderboard_snapshot config entry to FEED_EVENT_CONFIG in ClubProfile.tsx (Trophy, amber)
 - [x] Built LeaderboardSnapshotCard inline in FeedCard: amber header with battle count badge, 3 podium rows with gold/silver/bronze rank circles, player name, W·D·L record, win rate % — TypeScript: 0 errors
+
+## Battle Arena UI Redesign
+
+- [x] Redesigned PlayerCard: w-28 h-28 avatar, animated glow ring, ELO badge, role pill badge at top
+- [x] Cinematic landing animations: host slides from left (delay 0.15s), guest from right (delay 0.3s), both spring-damped
+- [x] VS element: 7xl font with pulsing green text-shadow glow animation, swords icon with pulse ring
+- [x] Player cards: glass morphism with OKLCH side-specific accent (green for host, slate for guest)
+- [x] Result buttons: full-width stacked layout, I Won (green), Opponent Won (slate), Draw (amber) — each with hover glow boxShadow
+- [x] Hover scale 1.025 + ambient radial glow on player cards (opacity 0 → 1 on hover)
+- [x] Background: fixed ambient radial blurs behind each player card for depth
+- [x] Time control badge: centered under VS header with delay animation
+- [x] Guest waiting state: animated ? with pulsing opacity dots
+- [x] TypeScript: 0 errors

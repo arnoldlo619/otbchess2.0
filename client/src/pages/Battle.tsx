@@ -84,87 +84,138 @@ function PlayerCard({
   isReady: boolean;
 }) {
   const isLeft = side === "left";
+  const accentColor = isLeft ? "#4ade80" : "#94a3b8";
+  const glowColor = isLeft ? "oklch(0.55 0.18 142 / 0.35)" : "oklch(0.50 0.04 240 / 0.25)";
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: isLeft ? -60 : 60 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", stiffness: 200, damping: 22, delay: 0.1 }}
-      className={`relative flex flex-col items-center gap-4 p-6 rounded-2xl border backdrop-blur-md w-full max-w-xs
-        ${isLeft
-          ? "bg-gradient-to-br from-green-900/40 to-green-950/60 border-green-500/30"
-          : "bg-gradient-to-bl from-slate-800/60 to-slate-900/80 border-white/10"
-        }`}
+      initial={{ opacity: 0, x: isLeft ? -80 : 80, scale: 0.92 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 180, damping: 24, delay: isLeft ? 0.15 : 0.3 }}
+      whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
+      className="relative flex flex-col items-center gap-5 p-7 rounded-3xl border backdrop-blur-xl w-full max-w-[260px] cursor-default group"
+      style={{
+        background: isLeft
+          ? "oklch(0.18 0.06 142 / 0.7)"
+          : "oklch(0.16 0.02 240 / 0.7)",
+        borderColor: isLeft ? "oklch(0.45 0.15 142 / 0.45)" : "oklch(0.40 0.03 240 / 0.35)",
+        boxShadow: `0 0 40px ${glowColor}, inset 0 1px 0 oklch(1 0 0 / 0.06)`,
+      }}
     >
-      {/* Crown for host */}
-      {isLeft && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Crown className="w-5 h-5 text-yellow-400 drop-shadow" />
-        </div>
-      )}
+      {/* Ambient glow behind card */}
+      <div
+        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 50% 0%, ${glowColor}, transparent 70%)` }}
+      />
 
-      {/* Avatar */}
-      <div className="relative">
+      {/* Crown / role badge at top */}
+      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full border backdrop-blur-sm"
+        style={{
+          background: isLeft ? "oklch(0.22 0.08 142 / 0.9)" : "oklch(0.20 0.03 240 / 0.9)",
+          borderColor: isLeft ? "oklch(0.45 0.15 142 / 0.5)" : "oklch(0.35 0.03 240 / 0.4)",
+        }}
+      >
+        {isLeft && <Crown className="w-3 h-3 text-yellow-400" />}
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+          {isLeft ? "Host" : "Challenger"}
+        </span>
+      </div>
+
+      {/* Avatar with glow ring */}
+      <div className="relative mt-2">
+        {/* Animated glow ring */}
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          animate={{ opacity: isReady ? [0.5, 1, 0.5] : 0.3 }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            boxShadow: `0 0 0 3px ${accentColor}55, 0 0 20px ${accentColor}33`,
+            borderRadius: "50%",
+          }}
+        />
         {player?.avatarUrl ? (
           <img
             src={player.avatarUrl}
             alt={player.displayName}
-            className="w-24 h-24 rounded-full object-cover border-2 border-white/20 shadow-lg"
+            className="w-28 h-28 rounded-full object-cover relative z-10"
+            style={{ border: `2.5px solid ${accentColor}66` }}
           />
         ) : (
           <div
-            className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold border-2 shadow-lg
-              ${isLeft ? "bg-green-700/60 border-green-500/40 text-white" : "bg-slate-700/60 border-white/20 text-white/80"}`}
+            className="w-28 h-28 rounded-full flex items-center justify-center text-3xl font-black relative z-10"
+            style={{
+              background: isLeft ? "oklch(0.25 0.10 142 / 0.8)" : "oklch(0.22 0.04 240 / 0.8)",
+              border: `2.5px solid ${accentColor}55`,
+              color: accentColor,
+            }}
           >
-            {player ? avatarFallback(player.displayName) : "?"}
+            {player ? avatarFallback(player.displayName) : (
+              <motion.span
+                animate={{ opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ?
+              </motion.span>
+            )}
           </div>
         )}
+        {/* Online dot */}
         {isReady && (
-          <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-black" />
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.5 }}
+            className="absolute bottom-1.5 right-1.5 w-4 h-4 rounded-full bg-green-400 border-2 z-20"
+            style={{ borderColor: isLeft ? "oklch(0.18 0.06 142)" : "oklch(0.16 0.02 240)" }}
+          />
         )}
       </div>
 
-      {/* Name & ELO */}
+      {/* Name & username */}
       {player ? (
-        <>
-          <div className="text-center">
-            <p className="text-white font-semibold text-lg leading-tight">
-              {player.displayName}
+        <div className="text-center space-y-1">
+          <p className="text-white font-bold text-xl leading-tight tracking-tight">
+            {player.displayName}
+          </p>
+          {player.chesscomUsername && (
+            <p className="text-white/40 text-xs font-mono">
+              @{player.chesscomUsername}
             </p>
-            {player.chesscomUsername && (
-              <p className="text-white/50 text-xs mt-0.5">
-                @{player.chesscomUsername}
-              </p>
-            )}
-          </div>
-          {player.chesscomElo && (
-            <div className="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-white/80 text-sm font-mono">
-              {player.chesscomElo} ELO
-            </div>
           )}
-        </>
+        </div>
       ) : (
         <div className="text-center">
-          <p className="text-white/30 text-sm">Waiting for opponent…</p>
-          <div className="mt-2 flex gap-1 justify-center">
+          <p className="text-white/25 text-sm">Waiting…</p>
+          <div className="mt-2 flex gap-1.5 justify-center">
             {[0, 1, 2].map((i) => (
               <motion.span
                 key={i}
-                className="w-1.5 h-1.5 rounded-full bg-white/30"
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: accentColor + "66" }}
+                animate={{ opacity: [0.2, 0.8, 0.2] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.25 }}
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* Role label */}
-      <span
-        className={`text-xs font-medium uppercase tracking-widest px-2 py-0.5 rounded
-          ${isLeft ? "text-green-400" : "text-white/40"}`}
-      >
-        {isLeft ? "Host" : "Challenger"}
-      </span>
+      {/* ELO badge */}
+      {player?.chesscomElo && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: isLeft ? 0.5 : 0.65 }}
+          className="px-4 py-1.5 rounded-full text-sm font-mono font-bold"
+          style={{
+            background: isLeft ? "oklch(0.25 0.10 142 / 0.5)" : "oklch(0.22 0.04 240 / 0.5)",
+            border: `1px solid ${accentColor}33`,
+            color: accentColor,
+          }}
+        >
+          {player.chesscomElo} ELO
+        </motion.div>
+      )}
     </motion.div>
   );
 }
@@ -713,106 +764,178 @@ export default function Battle() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="w-full max-w-2xl"
+              className="w-full max-w-3xl flex flex-col items-center"
             >
-              {/* VS Header */}
-              <div className="text-center mb-8">
-                <motion.h2
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="text-5xl font-black tracking-tight text-white"
-                >
-                  <span className="text-green-400">VS</span>
-                </motion.h2>
-                <p className="text-white/30 text-sm mt-1">
-                  Both players are ready — let the battle begin!
-                </p>
-                {room.timeControl && (
-                  <div className="flex items-center justify-center gap-1.5 mt-3">
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-900/40 border border-green-500/20 text-green-400 text-xs font-bold">
-                      <Clock className="w-3 h-3" />
-                      {room.timeControl}
-                    </span>
-                  </div>
-                )}
+              {/* Ambient background glows */}
+              <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                <div className="absolute left-[15%] top-1/2 -translate-y-1/2 w-72 h-72 rounded-full opacity-20 blur-3xl"
+                  style={{ background: "oklch(0.55 0.18 142)" }} />
+                <div className="absolute right-[15%] top-1/2 -translate-y-1/2 w-72 h-72 rounded-full opacity-12 blur-3xl"
+                  style={{ background: "oklch(0.50 0.04 240)" }} />
               </div>
 
-              {/* Player cards */}
-              <div className="flex items-center justify-center gap-4 mb-10">
-                <PlayerCard
-                  player={room.host}
-                  side="left"
-                  isReady={!!room.host}
-                />
-
-                {/* VS divider */}
-                <div className="flex flex-col items-center gap-2 shrink-0">
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-12 h-12 rounded-full bg-green-900/60 border border-green-500/30 flex items-center justify-center"
+              {/* VS Header */}
+              <div className="text-center mb-10 relative z-10">
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.6, ease: "easeOut" }}
+                >
+                  <motion.h2
+                    className="text-7xl font-black tracking-tight leading-none"
+                    style={{
+                      color: "#4ade80",
+                      textShadow: "0 0 40px oklch(0.55 0.18 142 / 0.6), 0 0 80px oklch(0.55 0.18 142 / 0.3)",
+                    }}
+                    animate={{ textShadow: [
+                      "0 0 40px oklch(0.55 0.18 142 / 0.6), 0 0 80px oklch(0.55 0.18 142 / 0.3)",
+                      "0 0 60px oklch(0.55 0.18 142 / 0.9), 0 0 120px oklch(0.55 0.18 142 / 0.5)",
+                      "0 0 40px oklch(0.55 0.18 142 / 0.6), 0 0 80px oklch(0.55 0.18 142 / 0.3)",
+                    ]}}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <Swords className="w-6 h-6 text-green-400" />
+                    VS
+                  </motion.h2>
+                  <p className="text-white/30 text-sm mt-2 tracking-wide">
+                    Both players are ready — let the battle begin
+                  </p>
+                  {room.timeControl && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.7 }}
+                      className="flex items-center justify-center gap-1.5 mt-3"
+                    >
+                      <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold font-mono"
+                        style={{
+                          background: "oklch(0.22 0.08 142 / 0.5)",
+                          borderColor: "oklch(0.45 0.15 142 / 0.4)",
+                          color: "#4ade80",
+                        }}
+                      >
+                        <Clock className="w-3 h-3" />
+                        {room.timeControl}
+                      </span>
+                    </motion.div>
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Player cards + VS divider */}
+              <div className="flex items-center justify-center gap-6 mb-12 w-full relative z-10">
+                <PlayerCard player={room.host} side="left" isReady={!!room.host} />
+
+                {/* Central VS divider */}
+                <div className="flex flex-col items-center gap-3 shrink-0">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, delay: 0.45 }}
+                    className="relative"
+                  >
+                    {/* Pulse ring */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+                      style={{ background: "oklch(0.55 0.18 142 / 0.3)" }}
+                    />
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center relative z-10"
+                      style={{
+                        background: "oklch(0.20 0.08 142 / 0.8)",
+                        border: "1.5px solid oklch(0.45 0.15 142 / 0.5)",
+                        boxShadow: "0 0 20px oklch(0.55 0.18 142 / 0.3)",
+                      }}
+                    >
+                      <Swords className="w-6 h-6 text-green-400" />
+                    </div>
                   </motion.div>
-                  <span className="text-white/20 text-xs font-mono">
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="text-white/20 text-[10px] font-mono tracking-widest"
+                  >
                     #{room.code}
-                  </span>
+                  </motion.span>
                 </div>
 
-                <PlayerCard
-                  player={room.guest}
-                  side="right"
-                  isReady={!!room.guest}
-                />
+                <PlayerCard player={room.guest} side="right" isReady={!!room.guest} />
               </div>
 
               {/* Result reporting (host only) */}
               {user?.id === room.hostId && room.guest && (
-                <div className="text-center">
-                  <p className="text-white/40 text-sm mb-4">
-                    Report the result when the game is over:
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="w-full max-w-md relative z-10"
+                >
+                  <p className="text-white/30 text-xs text-center uppercase tracking-widest mb-5 font-medium">
+                    Report result when the game is over
                   </p>
-                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <div className="flex flex-col gap-3">
                     <motion.button
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 24px oklch(0.55 0.18 142 / 0.4)" }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => handleResult("host_win")}
                       disabled={loading}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-700/60 hover:bg-green-600/80 border border-green-500/30 font-semibold text-sm transition-all disabled:opacity-40"
+                      className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: "oklch(0.30 0.12 142 / 0.7)",
+                        border: "1.5px solid oklch(0.45 0.15 142 / 0.5)",
+                        color: "#4ade80",
+                      }}
                     >
-                      <Trophy className="w-4 h-4 text-yellow-400" />I Won
+                      <Trophy className="w-5 h-5 text-yellow-400" />
+                      I Won
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 24px oklch(0.50 0.04 240 / 0.3)" }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => handleResult("guest_win")}
                       disabled={loading}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold text-sm transition-all disabled:opacity-40"
+                      className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-base transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: "oklch(0.18 0.03 240 / 0.6)",
+                        border: "1.5px solid oklch(0.40 0.03 240 / 0.4)",
+                        color: "#94a3b8",
+                      }}
                     >
-                      <Trophy className="w-4 h-4 text-white/40" />
+                      <Trophy className="w-5 h-5 text-white/40" />
                       Opponent Won
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 20px oklch(0.75 0.12 80 / 0.25)" }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => handleResult("draw")}
                       disabled={loading}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold text-sm transition-all disabled:opacity-40"
+                      className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: "oklch(0.18 0.04 80 / 0.5)",
+                        border: "1.5px solid oklch(0.40 0.06 80 / 0.35)",
+                        color: "oklch(0.75 0.12 80)",
+                      }}
                     >
-                      <Handshake className="w-4 h-4 text-white/60" />
+                      <Handshake className="w-4 h-4" />
                       Draw
                     </motion.button>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* Guest view — waiting for host to report */}
               {user?.id !== room.hostId && (
-                <div className="text-center text-white/30 text-sm flex items-center justify-center gap-2">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex items-center gap-2 text-white/25 text-sm relative z-10"
+                >
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   Waiting for host to report the result…
-                </div>
+                </motion.div>
               )}
             </motion.div>
           )}
