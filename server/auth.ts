@@ -570,5 +570,52 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── GET /api/join/check-slug/:slug ───────────────────────────────────────
+  // Public endpoint: checks whether a custom slug is already taken.
+  // Accepts an optional ?exclude=<tournamentId> query param so a director
+  // editing their own slug doesn't get a false "taken" result.
+  // Returns: { available: boolean, conflict: string | null }
+  router.get("/join/check-slug/:slug", async (req, res) => {
+    const { slug } = req.params;
+    const exclude = (req.query.exclude as string | undefined) ?? "";
+
+    // Basic validation — same rules as the client sanitiser
+    if (!slug || slug.length < 2 || slug.length > 60) {
+      return res.json({ available: false, conflict: "Slug must be 2–60 characters" });
+    }
+    const slugRe = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+    if (!slugRe.test(slug)) {
+      return res.json({ available: false, conflict: "Only lowercase letters, numbers, and hyphens allowed" });
+    }
+
+    try {
+      const db = await getDb();
+      const { and, ne } = await import("drizzle-orm");
+      const whereClause = exclude
+        ? and(
+            eq(userTournaments.customSlug, slug),
+            ne(userTournaments.tournamentId, exclude)
+          )
+        : eq(userTournaments.customSlug, slug);
+
+      const rows = await db
+        .select({ tournamentId: userTournaments.tournamentId, name: userTournaments.name })
+        .from(userTournaments)
+        .where(whereClause)
+        .limit(1);
+
+      if (rows.length === 0) {
+        return res.json({ available: true, conflict: null });
+      }
+      return res.json({
+        available: false,
+        conflict: `Already used by "${rows[0].name ?? "another tournament"}"`
+      });
+    } catch (err) {
+      console.error("[auth] check-slug error:", err);
+      return res.status(500).json({ error: "Failed to check slug availability" });
+    }
+  });
+
   return router;
 }

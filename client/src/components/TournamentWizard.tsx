@@ -56,6 +56,10 @@ import {
   ChevronDown,
   Tv2,
   ExternalLink,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1840,6 +1844,11 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
   const [customSlugInput, setCustomSlugInput] = useState(data.customSlug || "");
   const [slugSaved, setSlugSaved] = useState(false);
   const [slugSaving, setSlugSaving] = useState(false);
+  // Real-time availability state
+  type SlugStatus = "idle" | "checking" | "available" | "taken" | "invalid";
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>("idle");
+  const [slugConflict, setSlugConflict] = useState<string | null>(null);
+  const slugDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Build the invite URL — prefer custom slug when set, else inviteCode
   const activeSlug = customSlugInput.trim() || data.inviteCode;
@@ -1866,20 +1875,59 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Sanitise slug: letters, numbers, hyphens, underscores only
+  // Sanitise slug: lowercase letters, numbers, hyphens only (no underscores, no uppercase)
   const sanitiseSlug = (v: string) =>
-    v.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
+    v.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 60);
+
+  // Validate slug format (must start and end with alphanumeric, no consecutive hyphens)
+  const isValidSlugFormat = (s: string): boolean => {
+    if (s.length < 2) return false;
+    return /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(s);
+  };
+
+  const checkSlugAvailability = (slug: string) => {
+    if (!slug || slug.length < 2) { setSlugStatus("idle"); setSlugConflict(null); return; }
+    if (!isValidSlugFormat(slug)) {
+      setSlugStatus("invalid");
+      setSlugConflict("Must start and end with a letter or number, no consecutive hyphens");
+      return;
+    }
+    // Skip check if it's the same as the already-saved value
+    if (slug === data.customSlug && slugSaved) { setSlugStatus("available"); setSlugConflict(null); return; }
+    setSlugStatus("checking");
+    setSlugConflict(null);
+    const excludeParam = tournamentId ? `?exclude=${encodeURIComponent(tournamentId)}` : "";
+    fetch(`/api/auth/join/check-slug/${encodeURIComponent(slug)}${excludeParam}`)
+      .then((r) => r.json())
+      .then((result: { available: boolean; conflict: string | null }) => {
+        setSlugStatus(result.available ? "available" : "taken");
+        setSlugConflict(result.conflict);
+      })
+      .catch(() => {
+        // Network error — don't block the user, just reset to idle
+        setSlugStatus("idle");
+        setSlugConflict(null);
+      });
+  };
 
   const handleSlugChange = (v: string) => {
     const clean = sanitiseSlug(v);
     setCustomSlugInput(clean);
     setSlugSaved(false);
+    setSlugStatus("idle");
+    setSlugConflict(null);
     // Propagate to wizard data so registerTournamentNow picks it up
     data.customSlug = clean;
+    // Debounce the availability check
+    if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+    if (clean.length >= 2) {
+      slugDebounceRef.current = setTimeout(() => checkSlugAvailability(clean), 400);
+    }
   };
 
   const saveSlug = async () => {
     const clean = customSlugInput.trim();
+    if (!clean || slugStatus === "taken" || slugStatus === "checking" || slugStatus === "invalid") return;
     data.customSlug = clean;
     setSlugSaving(true);
     // Persist to server if we have a tournament ID (user is signed in)
@@ -1897,6 +1945,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     }
     setSlugSaving(false);
     setSlugSaved(true);
+    setSlugStatus("available"); // mark as confirmed available after save
     toast.success("Custom URL saved!");
     setTimeout(() => setSlugSaved(false), 2000);
   };
@@ -2074,10 +2123,14 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
         </p>
         <div className="flex gap-2 items-center">
           <div
-            className="flex-1 flex items-center gap-0 rounded-2xl border overflow-hidden"
+            className="flex-1 flex items-center gap-0 rounded-2xl border overflow-hidden transition-all duration-200"
             style={{
               background: isDark ? T.dCard : "#FAFAFA",
-              border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`,
+              border: `1.5px solid ${
+                slugStatus === "available" ? T.green
+                : slugStatus === "taken" || slugStatus === "invalid" ? "#ef4444"
+                : isDark ? T.dBorder : T.lBorder
+              }`,
             }}
           >
             <span
@@ -2090,16 +2143,28 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
               type="text"
               value={customSlugInput}
               onChange={(e) => handleSlugChange(e.target.value)}
-              placeholder="ThursdayOTBNight"
-              className="flex-1 bg-transparent outline-none text-sm font-mono py-3 pr-3"
+              placeholder="thursday-otb-night"
+              className="flex-1 bg-transparent outline-none text-sm font-mono py-3 pr-1"
               style={{ color: isDark ? T.dText : T.lText }}
-              maxLength={40}
+              maxLength={60}
             />
+            {/* Inline status icon */}
+            <span className="pr-3 flex-shrink-0">
+              {slugStatus === "checking" && (
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: isDark ? T.dMuted : T.lMuted }} />
+              )}
+              {slugStatus === "available" && (
+                <CheckCircle2 className="w-4 h-4" style={{ color: T.green }} />
+              )}
+              {(slugStatus === "taken" || slugStatus === "invalid") && (
+                <XCircle className="w-4 h-4" style={{ color: "#ef4444" }} />
+              )}
+            </span>
           </div>
           <button
             type="button"
             onClick={saveSlug}
-            disabled={!customSlugInput.trim() || slugSaving}
+            disabled={!customSlugInput.trim() || slugSaving || slugStatus === "taken" || slugStatus === "checking" || slugStatus === "invalid"}
             className="flex items-center gap-1.5 rounded-2xl text-sm font-semibold transition-all duration-200 flex-shrink-0 disabled:opacity-40"
             style={{
               padding: "13px 18px",
@@ -2111,9 +2176,24 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
             {slugSaving ? "Saving..." : slugSaved ? "Saved!" : "Set"}
           </button>
         </div>
-        {customSlugInput.trim() && (
-          <p className="text-[11px]" style={{ color: T.green }}>
-            Your link: {window.location.origin}/join/{customSlugInput.trim()}
+        {/* Availability status message */}
+        {customSlugInput.trim() && slugStatus !== "idle" && (
+          <p
+            className="text-[11px] flex items-center gap-1"
+            style={{
+              color: slugStatus === "available" ? T.green
+                : slugStatus === "taken" || slugStatus === "invalid" ? "#ef4444"
+                : isDark ? T.dMuted : T.lMuted,
+            }}
+          >
+            {slugStatus === "checking" && <><Loader2 className="w-3 h-3 animate-spin" /> Checking availability…</>}
+            {slugStatus === "available" && <><CheckCircle2 className="w-3 h-3" /> Available — your link: {window.location.origin}/join/{customSlugInput.trim()}</>}
+            {(slugStatus === "taken" || slugStatus === "invalid") && <><AlertCircle className="w-3 h-3" /> {slugConflict ?? "This URL is not available"}</>}
+          </p>
+        )}
+        {customSlugInput.trim() && slugStatus === "idle" && (
+          <p className="text-[11px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            {window.location.origin}/join/{customSlugInput.trim()}
           </p>
         )}
       </div>

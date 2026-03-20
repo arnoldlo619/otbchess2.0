@@ -3036,3 +3036,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added server fallback: Join.tsx useEffect fetches from /api/auth/join/resolve/:codeOrSlug when localStorage empty
 - [x] Added serverResolved state: join button shows "Loading tournament…" spinner until bootstrap completes
 - [x] setServerResolved(true) called in both bootstrap paths (?t= param and server fetch)
+
+## Custom URL Slug — Real-Time Availability Checker
+
+- [x] Added GET /api/auth/join/check-slug/:slug endpoint: returns { available: bool, conflict: string|null }
+- [x] Endpoint accepts ?exclude=<tournamentId> to skip conflict check for the current tournament's own slug
+- [x] Added slugStatus state ("idle" | "checking" | "available" | "taken" | "invalid") to StepShare
+- [x] Debounced slug input (400ms) before firing the availability check
+- [x] Inline status icon inside the input border: spinner (checking), green CheckCircle2 (available), red XCircle (taken/invalid)
+- [x] Input border changes colour: green (available), red (taken/invalid), neutral (idle/checking)
+- [x] Status message below input: "Checking availability…", "Available — your link: …", or error reason
+- [x] Set button disabled when slugStatus is "taken", "checking", or "invalid"
+- [x] Sanitised slug input: lowercase, alphanumeric + hyphens only, max 60 chars
+- [x] Skips check if slug is empty; marks as available after successful save
