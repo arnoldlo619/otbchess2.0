@@ -26,7 +26,8 @@ export type FeedEventType =
   | "club_founded"
   | "poll"
   | "rsvp_form"
-  | "poll_result";
+  | "poll_result"
+  | "battle_result";
 
 /** A single option in a Poll */
 export interface PollOption {
@@ -87,6 +88,20 @@ export interface FeedEvent {
   // ── Pin field ────────────────────────────────────────────────────────────
   /** True when a director/owner has pinned this post to the top of the feed */
   isPinned?: boolean;
+
+  // ── Battle Result fields ─────────────────────────────────────────────────
+  /** White/Player A name (type === "battle_result") */
+  battlePlayerA?: string;
+  /** Black/Player B name */
+  battlePlayerB?: string;
+  /** "player_a" | "player_b" | "draw" */
+  battleOutcome?: "player_a" | "player_b" | "draw";
+  /** Optional ELO of player A */
+  battlePlayerAElo?: number;
+  /** Optional ELO of player B */
+  battlePlayerBElo?: number;
+  /** Deduplication key: battleId so we don't double-post */
+  battleId?: string;
 
   // ── Poll Result fields ───────────────────────────────────────────────────
   /** ID of the poll feed event this result summarises (type === "poll_result") */
@@ -558,6 +573,50 @@ export function unpinFeedEvent(clubId: string, eventId: string): void {
     e.id === eventId ? { ...e, isPinned: undefined } : e
   );
   saveFeed(clubId, events);
+}
+
+/** Auto-post a battle result card to the club feed. Deduplicates by battleId. */
+export function postBattleResult(params: {
+  clubId: string;
+  battleId: string;
+  playerAName: string;
+  playerBName: string;
+  outcome: "player_a" | "player_b" | "draw";
+  playerAElo?: number;
+  playerBElo?: number;
+  directorName?: string;
+}): FeedEvent | null {
+  // Deduplication: skip if a feed event with this battleId already exists
+  const existing = loadFeed(params.clubId);
+  if (existing.some((e) => e.battleId === params.battleId)) return null;
+
+  const winnerName =
+    params.outcome === "player_a" ? params.playerAName
+    : params.outcome === "player_b" ? params.playerBName
+    : null;
+
+  const description =
+    params.outcome === "draw"
+      ? `${params.playerAName} vs ${params.playerBName} — Draw`
+      : `${winnerName} defeated ${params.outcome === "player_a" ? params.playerBName : params.playerAName}`;
+
+  const resultBadge =
+    params.outcome === "draw" ? "½–½" : params.outcome === "player_a" ? "1–0" : "0–1";
+
+  return addFeedEvent({
+    clubId: params.clubId,
+    type: "battle_result",
+    createdAt: new Date().toISOString(),
+    actorName: params.directorName ?? "Director",
+    description,
+    detail: resultBadge,
+    battleId: params.battleId,
+    battlePlayerA: params.playerAName,
+    battlePlayerB: params.playerBName,
+    battleOutcome: params.outcome,
+    battlePlayerAElo: params.playerAElo,
+    battlePlayerBElo: params.playerBElo,
+  });
 }
 
 /** Clear all feed events for a club (test helper). */

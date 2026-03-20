@@ -75,6 +75,7 @@ import {
   publishScheduledPolls,
   listScheduledPolls,
   cancelScheduledPoll,
+  postBattleResult,
   type FeedEvent,
   type PollOption,
   type FeedRSVPEntry,
@@ -1339,6 +1340,93 @@ function FeedCard({
           )}
         </div>
       )}
+      {event.type === "battle_result" && event.battlePlayerA && event.battlePlayerB && (
+        <div className="px-4 pb-4">
+          <div
+            className="rounded-2xl border overflow-hidden"
+            style={{ background: "oklch(0.14 0.04 145)", border: "1px solid oklch(0.28 0.06 145 / 0.5)" }}
+          >
+            {/* Result badge header */}
+            <div
+              className="flex items-center justify-center gap-2 py-2 border-b"
+              style={{
+                background: event.battleOutcome === "draw"
+                  ? "oklch(0.22 0.04 80 / 0.4)"
+                  : "oklch(0.22 0.08 145 / 0.4)",
+                borderColor: "oklch(0.28 0.06 145 / 0.4)",
+              }}
+            >
+              <Swords className="w-3.5 h-3.5 text-orange-400" />
+              <span
+                className="text-xs font-bold tracking-widest uppercase"
+                style={{ color: event.battleOutcome === "draw" ? "#d4a96a" : "#4CAF50" }}
+              >
+                {event.battleOutcome === "draw" ? "Draw" : "Victory"}
+              </span>
+              <span
+                className="text-xs font-mono font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  background: event.battleOutcome === "draw" ? "oklch(0.30 0.06 80 / 0.4)" : "oklch(0.30 0.10 145 / 0.4)",
+                  color: event.battleOutcome === "draw" ? "#d4a96a" : "#81C784",
+                }}
+              >
+                {event.detail}
+              </span>
+            </div>
+            {/* Players row */}
+            <div className="flex items-center px-4 py-3 gap-3">
+              {/* Player A */}
+              <div className={`flex-1 flex flex-col items-center gap-1 ${
+                event.battleOutcome === "player_a" ? "opacity-100" : event.battleOutcome === "draw" ? "opacity-80" : "opacity-40"
+              }`}>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{
+                    background: event.battleOutcome === "player_a" ? "oklch(0.40 0.12 145 / 0.4)" : "oklch(0.22 0.04 145 / 0.4)",
+                    border: event.battleOutcome === "player_a" ? "2px solid #4CAF50" : "2px solid oklch(0.30 0.05 145 / 0.5)",
+                    color: event.battleOutcome === "player_a" ? "#81C784" : "#ffffff80",
+                  }}
+                >
+                  {event.battlePlayerA.slice(0, 2).toUpperCase()}
+                </div>
+                <span className="text-xs font-semibold text-white/80 text-center truncate max-w-[80px]">{event.battlePlayerA}</span>
+                {event.battlePlayerAElo && (
+                  <span className="text-[10px] text-white/35 font-mono">{event.battlePlayerAElo}</span>
+                )}
+                {event.battleOutcome === "player_a" && (
+                  <span className="text-[10px] font-bold text-[#4CAF50] flex items-center gap-0.5"><Crown className="w-2.5 h-2.5" /> Winner</span>
+                )}
+              </div>
+              {/* VS divider */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <span className="text-white/20 text-xs font-bold">VS</span>
+              </div>
+              {/* Player B */}
+              <div className={`flex-1 flex flex-col items-center gap-1 ${
+                event.battleOutcome === "player_b" ? "opacity-100" : event.battleOutcome === "draw" ? "opacity-80" : "opacity-40"
+              }`}>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{
+                    background: event.battleOutcome === "player_b" ? "oklch(0.40 0.12 145 / 0.4)" : "oklch(0.22 0.04 145 / 0.4)",
+                    border: event.battleOutcome === "player_b" ? "2px solid #4CAF50" : "2px solid oklch(0.30 0.05 145 / 0.5)",
+                    color: event.battleOutcome === "player_b" ? "#81C784" : "#ffffff80",
+                  }}
+                >
+                  {event.battlePlayerB.slice(0, 2).toUpperCase()}
+                </div>
+                <span className="text-xs font-semibold text-white/80 text-center truncate max-w-[80px]">{event.battlePlayerB}</span>
+                {event.battlePlayerBElo && (
+                  <span className="text-[10px] text-white/35 font-mono">{event.battlePlayerBElo}</span>
+                )}
+                {event.battleOutcome === "player_b" && (
+                  <span className="text-[10px] font-bold text-[#4CAF50] flex items-center gap-0.5"><Crown className="w-2.5 h-2.5" /> Winner</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1354,6 +1442,7 @@ function FeedIcon({ type }: { type: FeedEvent["type"] }) {
     poll:                  <BarChart2 className="w-4 h-4 text-[#4CAF50]" />,
     rsvp_form:             <ClipboardList className="w-4 h-4 text-blue-400" />,
     poll_result:           <Award className="w-4 h-4 text-amber-400" />,
+    battle_result:         <Swords className="w-4 h-4 text-orange-400" />,
   };
   return (
     <div
@@ -3098,20 +3187,20 @@ export default function ClubDashboard() {
                           {battle.status === "active" && (
                             <>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "player_a"); refreshBattles(); toast.success(`${battle.playerAName} wins!`); }}
+                                onClick={() => { recordBattleResult(club.id, battle.id, "player_a"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_a", directorName: user?.displayName }); refreshBattles(); toast.success(`${battle.playerAName} wins!`); }}
                                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
                                 style={{ background: accent + "33", color: accent }}
                               >
                                 {battle.playerAName} Wins
                               </button>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "draw"); refreshBattles(); toast.success("Draw recorded!"); }}
+                                onClick={() => { recordBattleResult(club.id, battle.id, "draw"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "draw", directorName: user?.displayName }); refreshBattles(); toast.success("Draw recorded!"); }}
                                 className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition"
                               >
                                 Draw
                               </button>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "player_b"); refreshBattles(); toast.success(`${battle.playerBName} wins!`); }}
+                                onClick={() => { recordBattleResult(club.id, battle.id, "player_b"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_b", directorName: user?.displayName }); refreshBattles(); toast.success(`${battle.playerBName} wins!`); }}
                                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
                                 style={{ background: accent + "33", color: accent }}
                               >

@@ -3049,3 +3049,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Set button disabled when slugStatus is "taken", "checking", or "invalid"
 - [x] Sanitised slug input: lowercase, alphanumeric + hyphens only, max 60 chars
 - [x] Skips check if slug is empty; marks as available after successful save
+
+## Battle Result Auto-Post to Club Feed
+
+- [x] Added battle_result to FeedEventType in clubFeedRegistry.ts
+- [x] Added battle-specific fields to FeedEvent: battlePlayerA, battlePlayerB, battleOutcome, battlePlayerAElo, battlePlayerBElo, battleId
+- [x] Added postBattleResult() helper in clubFeedRegistry.ts: deduplicates by battleId, builds description and result badge
+- [x] Imported postBattleResult in ClubDashboard and wired into all 3 result buttons (Player A wins, Draw, Player B wins)
+- [x] Added battle_result icon entry to FeedIcon map in ClubDashboard (Swords icon, orange)
+- [x] Added battle_result config entry to FEED_EVENT_CONFIG in ClubProfile.tsx (Swords, orange)
+- [x] Built BattleResultCard inline in FeedCard: Victory/Draw header with score badge, two player columns with avatar initials, ELO, Crown Winner label, loser faded to 40% opacity
+- [x] Deduplication: postBattleResult skips if a feed event with the same battleId already exists
