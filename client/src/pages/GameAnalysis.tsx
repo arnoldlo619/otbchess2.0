@@ -715,25 +715,35 @@ export default function GameAnalysis() {
   }, [data, currentMoveIndex, selectedFenEntry]);
 
   // ── Keyboard navigation ─────────────────────────────────────────────────
+  // Use functional setState so these callbacks never need to close over `data`
+  // or `currentMoveIndex` — they always see the latest state via the updater fn.
   const goFirst = useCallback(() => setCurrentMoveIndex(-1), []);
   const goPrev = useCallback(
     () => setCurrentMoveIndex((i) => Math.max(-1, i - 1)),
     []
   );
+  // Store the analyses length in a ref so goNext/goLast are stable (no data dep)
+  const analysesLengthRef = useRef(0);
+  useEffect(() => {
+    analysesLengthRef.current = data?.analyses.length ?? 0;
+  }, [data]);
   const goNext = useCallback(
     () =>
       setCurrentMoveIndex((i) =>
-        data ? Math.min(data.analyses.length - 1, i + 1) : i
+        Math.min(analysesLengthRef.current - 1, i + 1)
       ),
-    [data]
+    []
   );
   const goLast = useCallback(
-    () => setCurrentMoveIndex(data ? data.analyses.length - 1 : -1),
-    [data]
+    () => setCurrentMoveIndex(analysesLengthRef.current - 1),
+    []
   );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Ignore key-repeat events (fired when key is held down) — each press
+      // should advance exactly one move.
+      if (e.repeat) return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         goPrev();
@@ -752,6 +762,8 @@ export default function GameAnalysis() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+    // goFirst/goPrev/goNext/goLast are now all stable (no data dependency),
+    // so this effect registers exactly once and never re-registers.
   }, [goFirst, goPrev, goNext, goLast]);
 
   // ── Handle key moment click ─────────────────────────────────────────────

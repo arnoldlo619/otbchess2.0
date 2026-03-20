@@ -3095,3 +3095,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Winner name: fade-up entrance (delay 0.3s), green glow text-shadow on win, slate on draw
 - [x] Player avatars: winner gets green border + glow, loser fades to 40% opacity; Crown spring-bounces in at delay 0.6s
 - [x] confettiFired useRef guard prevents duplicate bursts on re-render; reset on New Battle click
+
+## Analyze Page — Arrow Key Navigation Fix
+
+- [x] Found keydown listener in GameAnalysis.tsx — two root causes identified
+- [x] Root cause 1: browser key-repeat fires keydown multiple times when key is briefly held — fixed with `if (e.repeat) return;` guard
+- [x] Root cause 2: goNext/goLast depended on `[data]`, causing the useEffect to re-register the listener every polling cycle — fixed by storing `analysesLengthRef` in a ref so all four nav callbacks are stable with empty dep arrays
+- [x] Keydown useEffect now registers exactly once for the lifetime of the component
+- [x] TypeScript: 0 errors
