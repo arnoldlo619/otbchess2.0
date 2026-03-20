@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
@@ -256,6 +257,46 @@ export default function Battle() {
     }
   }
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControlOption | null>(null);
+  const [victoryFlash, setVictoryFlash] = useState(false);
+  const confettiFired = useRef(false);
+
+  // ── Victory confetti & flash ───────────────────────────────────────────────
+  useEffect(() => {
+    if (screen !== "result" || !room?.result || confettiFired.current) return;
+    confettiFired.current = true;
+
+    if (room.result === "draw") {
+      // Soft single-centre burst for draw
+      confetti({
+        particleCount: 60,
+        spread: 70,
+        origin: { x: 0.5, y: 0.6 },
+        colors: ["#e2e8f0", "#94a3b8", "#cbd5e1", "#f8fafc"],
+        scalar: 0.9,
+        gravity: 0.8,
+      });
+    } else {
+      // Win: two-cannon burst from bottom corners
+      setVictoryFlash(true);
+      setTimeout(() => setVictoryFlash(false), 600);
+
+      const fire = (originX: number, angle: number) =>
+        confetti({
+          particleCount: 80,
+          angle,
+          spread: 55,
+          origin: { x: originX, y: 0.95 },
+          colors: ["#4ade80", "#22c55e", "#facc15", "#fbbf24", "#ffffff", "#86efac"],
+          scalar: 1.1,
+          gravity: 0.9,
+          drift: 0.1,
+        });
+
+      fire(0.15, 65);
+      setTimeout(() => fire(0.85, 115), 150);
+      setTimeout(() => fire(0.5, 90), 400);
+    }
+  }, [screen, room?.result]);
 
   // ── Time control presets ───────────────────────────────────────────────────
   const TIME_CONTROLS: TimeControlOption[] = [
@@ -414,7 +455,21 @@ export default function Battle() {
 
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0a1a0e] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0a1a0e] text-white flex flex-col relative overflow-hidden">
+      {/* Victory flash overlay */}
+      <AnimatePresence>
+        {victoryFlash && (
+          <motion.div
+            key="flash"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.18 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 pointer-events-none z-50"
+            style={{ background: "oklch(0.55 0.18 142)" }}
+          />
+        )}
+      </AnimatePresence>
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
         <Link href="/">
@@ -944,89 +999,193 @@ export default function Battle() {
           {screen === "result" && room && (
             <motion.div
               key="result"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="w-full max-w-md text-center"
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="w-full max-w-md text-center relative z-10"
             >
-              {/* Trophy animation */}
+              {/* Trophy icon — spring bounce entrance */}
               <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.15 }}
                 className="flex justify-center mb-6"
               >
-                <div className="w-20 h-20 rounded-full bg-yellow-900/30 border border-yellow-500/30 flex items-center justify-center">
-                  <Trophy className="w-10 h-10 text-yellow-400" />
+                <div
+                  className="w-24 h-24 rounded-full flex items-center justify-center relative"
+                  style={{
+                    background: room.result === "draw"
+                      ? "oklch(0.22 0.04 240 / 0.6)"
+                      : "oklch(0.28 0.10 80 / 0.5)",
+                    border: room.result === "draw"
+                      ? "1.5px solid oklch(0.45 0.04 240 / 0.4)"
+                      : "1.5px solid oklch(0.65 0.15 80 / 0.5)",
+                    boxShadow: room.result === "draw"
+                      ? "0 0 30px oklch(0.50 0.04 240 / 0.2)"
+                      : "0 0 40px oklch(0.75 0.15 80 / 0.4)",
+                  }}
+                >
+                  {/* Pulse ring on win */}
+                  {room.result !== "draw" && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                      style={{ background: "oklch(0.75 0.15 80 / 0.25)" }}
+                    />
+                  )}
+                  <Trophy
+                    className="w-11 h-11 relative z-10"
+                    style={{ color: room.result === "draw" ? "#94a3b8" : "#facc15" }}
+                  />
                 </div>
               </motion.div>
 
-              <h2 className="text-3xl font-black mb-2">
+              {/* Winner name */}
+              <motion.h2
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-4xl font-black mb-2 tracking-tight"
+                style={{
+                  color: room.result === "draw" ? "#e2e8f0" : "#4ade80",
+                  textShadow: room.result !== "draw"
+                    ? "0 0 30px oklch(0.55 0.18 142 / 0.5)"
+                    : "none",
+                }}
+              >
                 {room.result === "draw"
                   ? "It's a Draw!"
                   : room.result === "host_win"
                   ? `${room.host?.displayName ?? "Host"} Wins!`
                   : `${room.guest?.displayName ?? "Challenger"} Wins!`}
-              </h2>
-              <p className="text-white/40 text-sm mb-8">
-                This battle has been recorded on both player profiles.
-              </p>
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.45 }}
+                className="text-white/30 text-sm mb-10"
+              >
+                Battle recorded on both player profiles.
+              </motion.p>
 
               {/* Mini player cards */}
-              <div className="flex items-center justify-center gap-4 mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="flex items-center justify-center gap-6 mb-10"
+              >
+                {/* Host */}
                 <div className="flex flex-col items-center gap-2">
+                  {room.result === "host_win" && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.6 }}
+                    >
+                      <Crown className="w-5 h-5 text-yellow-400 mb-0.5" />
+                    </motion.div>
+                  )}
                   {room.host?.avatarUrl ? (
                     <img
                       src={room.host.avatarUrl}
-                      className="w-14 h-14 rounded-full border-2 border-green-500/40"
+                      className="w-16 h-16 rounded-full object-cover"
+                      style={{
+                        border: room.result === "host_win"
+                          ? "2.5px solid #4ade80"
+                          : "2px solid oklch(0.40 0.05 142 / 0.3)",
+                        boxShadow: room.result === "host_win"
+                          ? "0 0 16px oklch(0.55 0.18 142 / 0.5)"
+                          : "none",
+                        opacity: room.result === "guest_win" ? 0.4 : 1,
+                      }}
                       alt=""
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-green-800/60 border-2 border-green-500/40 flex items-center justify-center font-bold text-lg">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-lg"
+                      style={{
+                        background: "oklch(0.22 0.08 142 / 0.7)",
+                        border: room.result === "host_win" ? "2.5px solid #4ade80" : "2px solid oklch(0.40 0.05 142 / 0.3)",
+                        color: "#4ade80",
+                        opacity: room.result === "guest_win" ? 0.4 : 1,
+                      }}
+                    >
                       {avatarFallback(room.host?.displayName ?? "H")}
                     </div>
                   )}
-                  <span className="text-xs text-white/60">
-                    {room.host?.displayName}
-                  </span>
-                  {room.result === "host_win" && (
-                    <Crown className="w-4 h-4 text-yellow-400" />
-                  )}
+                  <span className="text-xs text-white/50">{room.host?.displayName}</span>
                 </div>
 
-                <span className="text-white/20 font-bold">vs</span>
+                <span className="text-white/15 font-bold text-sm">vs</span>
 
+                {/* Guest */}
                 <div className="flex flex-col items-center gap-2">
+                  {room.result === "guest_win" && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.6 }}
+                    >
+                      <Crown className="w-5 h-5 text-yellow-400 mb-0.5" />
+                    </motion.div>
+                  )}
                   {room.guest?.avatarUrl ? (
                     <img
                       src={room.guest.avatarUrl}
-                      className="w-14 h-14 rounded-full border-2 border-white/20"
+                      className="w-16 h-16 rounded-full object-cover"
+                      style={{
+                        border: room.result === "guest_win"
+                          ? "2.5px solid #4ade80"
+                          : "2px solid oklch(0.35 0.03 240 / 0.3)",
+                        boxShadow: room.result === "guest_win"
+                          ? "0 0 16px oklch(0.55 0.18 142 / 0.5)"
+                          : "none",
+                        opacity: room.result === "host_win" ? 0.4 : 1,
+                      }}
                       alt=""
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-slate-700/60 border-2 border-white/20 flex items-center justify-center font-bold text-lg">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center font-bold text-lg"
+                      style={{
+                        background: "oklch(0.20 0.03 240 / 0.7)",
+                        border: room.result === "guest_win" ? "2.5px solid #4ade80" : "2px solid oklch(0.35 0.03 240 / 0.3)",
+                        color: "#94a3b8",
+                        opacity: room.result === "host_win" ? 0.4 : 1,
+                      }}
+                    >
                       {avatarFallback(room.guest?.displayName ?? "G")}
                     </div>
                   )}
-                  <span className="text-xs text-white/60">
-                    {room.guest?.displayName}
-                  </span>
-                  {room.result === "guest_win" && (
-                    <Crown className="w-4 h-4 text-yellow-400" />
-                  )}
+                  <span className="text-xs text-white/50">{room.guest?.displayName}</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="flex gap-3 justify-center">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65 }}
+                className="flex gap-3 justify-center"
+              >
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.03, boxShadow: "0 0 20px oklch(0.55 0.18 142 / 0.3)" }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => {
+                    confettiFired.current = false;
                     setScreen("mode_select");
                     setRoom(null);
                     setError(null);
                   }}
-                  className="px-6 py-2.5 rounded-xl bg-green-700/60 hover:bg-green-600/80 border border-green-500/30 font-semibold text-sm transition-all"
+                  className="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                  style={{
+                    background: "oklch(0.28 0.10 142 / 0.7)",
+                    border: "1.5px solid oklch(0.45 0.15 142 / 0.4)",
+                    color: "#4ade80",
+                  }}
                 >
                   New Battle
                 </motion.button>
@@ -1037,7 +1196,7 @@ export default function Battle() {
                   <ArrowLeft className="w-4 h-4" />
                   Back to Home
                 </SpinBorderButton>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

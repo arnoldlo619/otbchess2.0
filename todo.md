@@ -3084,3 +3084,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Time control badge: centered under VS header with delay animation
 - [x] Guest waiting state: animated ? with pulsing opacity dots
 - [x] TypeScript: 0 errors
+
+## Battle Victory Confetti Animation
+
+- [x] canvas-confetti already installed — imported and wired
+- [x] On win: three-cannon confetti burst (bottom-left at 65°, bottom-right at 115°, centre at 90°) with green + gold + white particles, staggered 0/150/400ms
+- [x] On draw: single gentle centre burst with silver/slate particles
+- [x] Full-screen green flash overlay (AnimatePresence, opacity 0 → 0.18 → 0, 600ms) on win only
+- [x] Trophy icon: spring-bounce entrance (scale 0 → 1, stiffness 260, damping 16, delay 0.15s), gold glow ring, pulsing amber ring on win
+- [x] Winner name: fade-up entrance (delay 0.3s), green glow text-shadow on win, slate on draw
+- [x] Player avatars: winner gets green border + glow, loser fades to 40% opacity; Crown spring-bounces in at delay 0.6s
+- [x] confettiFired useRef guard prevents duplicate bursts on re-render; reset on New Battle click
