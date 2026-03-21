@@ -3247,3 +3247,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Client-side fallback: derive chess.com avatar URL from chesscomUsername if avatarUrl is null
 - [x] Show chess.com avatar in PlayerCard (battle room VS screen)
 - [x] Show chess.com avatar in result screen player cards
+
+## Mobile Hamburger Menu
+
+- [x] Remove hidden sm:block from nav outer wrapper so nav shows on all screen sizes
+- [x] Show hamburger button on mobile (< 768px) instead of only < 320px
+- [x] Show full nav pill only on desktop (>= 768px)
+- [x] Slide-in drawer shows all nav items on mobile

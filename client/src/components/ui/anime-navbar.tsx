@@ -10,7 +10,7 @@
  *   - Right slot (theme toggle + user avatar)
  *   - Glassmorphic scroll background (intensifies on scroll)
  *   - IntersectionObserver scroll-aware active tab
- *   - Hamburger drawer for ultra-small (< 320 px) screens with swipe-to-close
+ *   - Hamburger drawer for mobile (< 768 px) with swipe-to-close
  *   - Animated hamburger → X icon transition
  *
  * Design tokens:
@@ -53,15 +53,6 @@ interface AnimeNavBarProps {
 }
 
 // ─── Mascot ───────────────────────────────────────────────────────────────────
-// The OTB!! "!!" checkerboard logo floats above the active nav tab.
-//
-// Idle animations (logo-appropriate):
-//   - "pulse"  (60%): gentle scale breathe — like a power-up waiting to fire
-//   - "wobble" (40%): quick left-right tilt — exclamation mark excitement
-// Both pause while the user hovers any tab.
-// On hover: scale up + lime-green drop-shadow glow intensifies.
-// The downward triangle tail (pin) points to the active tab.
-
 const MASCOT_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-mascot-logo_9d33293f.png"
 
 type IdleState = "none" | "pulse" | "wobble"
@@ -72,7 +63,7 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
 
   const scheduleNextIdle = () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    const delay = 3500 + Math.random() * 4000 // 3.5–7.5s
+    const delay = 3500 + Math.random() * 4000
     idleTimerRef.current = setTimeout(() => {
       const pick: IdleState = Math.random() < 0.6 ? "pulse" : "wobble"
       setIdleAnim(pick)
@@ -89,34 +80,21 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
     return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current) }
   }, [])
 
-  const isPulsing = !isHovered && idleAnim === "pulse"
+  const isPulsing  = !isHovered && idleAnim === "pulse"
   const isWobbling = !isHovered && idleAnim === "wobble"
 
-  // Base float animation — gentle vertical bob
-  const floatAnim = { y: [0, -3, 0], transition: { duration: 2.2, repeat: Infinity, ease: "easeInOut" as const } }
-
-  // Idle overrides
-  const pulseAnim = { scale: [1, 1.14, 0.96, 1.06, 1], transition: { duration: 0.55, ease: "easeInOut" as const } }
+  const floatAnim  = { y: [0, -3, 0], transition: { duration: 2.2, repeat: Infinity, ease: "easeInOut" as const } }
+  const pulseAnim  = { scale: [1, 1.14, 0.96, 1.06, 1], transition: { duration: 0.55, ease: "easeInOut" as const } }
   const wobbleAnim = { rotate: [0, -10, 10, -6, 6, 0], transition: { duration: 0.48, ease: "easeInOut" as const } }
+  const hoverAnim  = { scale: [1, 1.18, 1.08], rotate: [0, -5, 5, 0], transition: { duration: 0.45 } }
 
-  // Hover override
-  const hoverAnim = { scale: [1, 1.18, 1.08], rotate: [0, -5, 5, 0], transition: { duration: 0.45 } }
+  const logoAnimate = isHovered ? hoverAnim : isPulsing ? pulseAnim : isWobbling ? wobbleAnim : floatAnim
 
-  const logoAnimate = isHovered
-    ? hoverAnim
-    : isPulsing
-    ? pulseAnim
-    : isWobbling
-    ? wobbleAnim
-    : floatAnim
-
-  // Drop-shadow: lime-green glow, intensifies on hover
   const glowNormal = "drop-shadow(0 0 6px rgba(76,175,80,0.55)) drop-shadow(0 2px 8px rgba(0,0,0,0.55))"
   const glowHover  = "drop-shadow(0 0 12px rgba(76,175,80,0.90)) drop-shadow(0 0 24px rgba(76,175,80,0.45)) drop-shadow(0 2px 8px rgba(0,0,0,0.55))"
 
   return (
     <div className="relative" style={{ width: 40, height: 44 }}>
-      {/* Outer glow ring — expands on hover */}
       <motion.div
         className="absolute inset-0 rounded-full pointer-events-none"
         style={{ top: 2, left: 2, right: 2, bottom: 10 }}
@@ -127,26 +105,19 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
         }}
         transition={{ duration: 0.3 }}
       />
-
-      {/* The !! logo image */}
       <motion.img
         src={MASCOT_URL}
         alt="OTB!!"
         draggable={false}
         className="absolute select-none"
         style={{
-          width: 40,
-          height: 40,
-          top: 0,
-          left: 0,
+          width: 40, height: 40, top: 0, left: 0,
           objectFit: "contain",
           filter: isHovered ? glowHover : glowNormal,
           transition: "filter 0.3s ease",
         }}
         animate={logoAnimate}
       />
-
-      {/* Downward-pointing triangle tail — white pin pointing at active tab */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2"
         style={{ bottom: "-6px" }}
@@ -156,32 +127,25 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
             : { y: [0, 2, 0], transition: { duration: 1.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 } }
         }
       >
-        <div
-          style={{
-            width: 0,
-            height: 0,
-            borderLeft: "7px solid transparent",
-            borderRight: "7px solid transparent",
-            borderTop: "8px solid rgba(255,255,255,0.85)",
-            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
-          }}
-        />
+        <div style={{
+          width: 0, height: 0,
+          borderLeft: "7px solid transparent",
+          borderRight: "7px solid transparent",
+          borderTop: "8px solid rgba(255,255,255,0.85)",
+          filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+        }} />
       </motion.div>
-
-      {/* Sparkle burst on hover */}
       <AnimatePresence>
         {isHovered && (
           <>
-            <motion.span
-              key="spark1"
+            <motion.span key="spark1"
               initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
               animate={{ opacity: 1, scale: 1.1, x: 8, y: -8 }}
               exit={{ opacity: 0, scale: 0 }}
               transition={{ duration: 0.22 }}
               className="absolute -top-1 -right-1 text-[11px] pointer-events-none select-none"
             >✨</motion.span>
-            <motion.span
-              key="spark2"
+            <motion.span key="spark2"
               initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
               animate={{ opacity: 1, scale: 1, x: -8, y: -10 }}
               exit={{ opacity: 0, scale: 0 }}
@@ -195,7 +159,6 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
   )
 }
 
-// Keep old name as alias for the single usage site below
 const MascotFace = MascotLogo
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -208,14 +171,13 @@ export function AnimeNavBar({
   rightSlot,
   onActiveChange,
 }: AnimeNavBarProps) {
-  const [mounted, setMounted]           = useState(false)
-  const [hoveredTab, setHoveredTab]     = useState<string | null>(null)
-  const [activeTab, setActiveTab]       = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
+  const [mounted, setMounted]               = useState(false)
+  const [hoveredTab, setHoveredTab]         = useState<string | null>(null)
+  const [activeTab, setActiveTab]           = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
   const [scrollProgress, setScrollProgress] = useState(0)
-  const [isDesktop, setIsDesktop]       = useState(false)
-  const [isUltraSmall, setIsUltraSmall] = useState(false)
-  const [hamburgerOpen, setHamburgerOpen] = useState(false)
-  const [drawerSwipeY, setDrawerSwipeY] = useState(0)
+  const [isDesktop, setIsDesktop]           = useState(false)
+  const [hamburgerOpen, setHamburgerOpen]   = useState(false)
+  const [drawerSwipeY, setDrawerSwipeY]     = useState(0)
 
   const manualOverrideRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchStartYRef     = useRef<number>(0)
@@ -223,13 +185,13 @@ export function AnimeNavBar({
 
   useEffect(() => {
     setMounted(true)
+    // Desktop = md breakpoint (768px+)
     setIsDesktop(window.innerWidth >= 768)
-    setIsUltraSmall(window.innerWidth < 320)
 
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768)
-      setIsUltraSmall(window.innerWidth < 320)
-      if (window.innerWidth >= 320) setHamburgerOpen(false)
+      const desktop = window.innerWidth >= 768
+      setIsDesktop(desktop)
+      if (desktop) setHamburgerOpen(false)
     }
     const handleScroll = () => {
       setScrollProgress(Math.min(1, window.scrollY / 100))
@@ -299,12 +261,13 @@ export function AnimeNavBar({
   const blurPx   = (4 + scrollProgress * 12).toFixed(1)
 
   return (
-    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible hidden sm:block", className)}>
+    // Visible on ALL screen sizes (removed hidden sm:block)
+    <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
       <motion.div
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
-        className="w-full px-3 md:px-6 pt-10 pb-2 overflow-visible"
+        className="w-full px-3 md:px-6 pt-3 md:pt-10 pb-2 overflow-visible"
         style={{
           background: `linear-gradient(to bottom, rgba(10,31,10,${bgAlpha1}) 0%, rgba(10,31,10,${bgAlpha2}) 100%)`,
           backdropFilter: `blur(${blurPx}px)`,
@@ -320,42 +283,9 @@ export function AnimeNavBar({
             </motion.div>
           )}
 
-          {/* ── Nav items (or hamburger on ultra-small) ── */}
-          {isUltraSmall ? (
-            /* Hamburger toggle button */
-            <div className="flex-1 flex items-center justify-center">
-              <button
-                onClick={() => setHamburgerOpen(!hamburgerOpen)}
-                className="relative cursor-pointer text-white/80 hover:text-white p-2"
-                aria-label="Toggle menu"
-              >
-                <motion.div
-                  animate={{ rotate: hamburgerOpen ? 90 : 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="w-6 h-6"
-                >
-                  <AnimatePresence mode="wait">
-                    {hamburgerOpen ? (
-                      <motion.div key="close"
-                        initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}
-                      >
-                        <X className="w-6 h-6" />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="menu"
-                        initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}
-                      >
-                        <Menu className="w-6 h-6" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </button>
-            </div>
-          ) : (
-            /* Full nav pill — absolutely centred on viewport, independent of logo/user-menu widths */
+          {/* ── Nav items (desktop: full pill | mobile: hamburger button) ── */}
+          {isDesktop ? (
+            /* Full nav pill — absolutely centred on viewport */
             <div className="absolute left-1/2 -translate-x-1/2">
               <motion.div
                 className="flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 py-1.5 relative"
@@ -367,7 +297,6 @@ export function AnimeNavBar({
                   boxShadow: "0 0 18px rgba(61,107,71,0.22), 0 0 6px rgba(76,175,80,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
                 }}
               >
-                {/* Mascot — springs between active tabs via layoutId */}
                 {items.map((item) => {
                   const isActive  = activeTab === item.name
                   const isHovered = hoveredTab === item.name
@@ -387,8 +316,8 @@ export function AnimeNavBar({
                       {/* ── Floating mascot above active tab ── */}
                       {isActive && (
                         <motion.div
-          layoutId="anime-mascot"
-          className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none"
+                          layoutId="anime-mascot"
+                          className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none"
                           initial={false}
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         >
@@ -404,7 +333,6 @@ export function AnimeNavBar({
                           animate={{ opacity: [0.35, 0.55, 0.35], scale: [1, 1.03, 1] }}
                           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
                         >
-                          {/* Inner glow layers */}
                           <div className="absolute inset-0 rounded-full blur-md"
                             style={{ background: `${OTB_GREEN_GLOW}0.28)` }} />
                           <div className="absolute rounded-full blur-xl"
@@ -413,7 +341,6 @@ export function AnimeNavBar({
                             style={{ inset: "-8px", background: `${OTB_GREEN_GLOW}0.12)` }} />
                           <div className="absolute rounded-full blur-3xl"
                             style={{ inset: "-12px", background: `${OTB_GREEN_GLOW}0.06)` }} />
-                          {/* Shine sweep */}
                           <div
                             className="absolute inset-0 rounded-full"
                             style={{
@@ -449,24 +376,17 @@ export function AnimeNavBar({
                         )}
                       </AnimatePresence>
 
-                      {/* ── Label: text on desktop, icon on mobile ── */}
+                      {/* ── Label ── */}
                       <motion.span
-                        className="hidden md:inline relative z-10"
+                        className="relative z-10"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.2 }}
                       >
                         {item.name}
                       </motion.span>
-                      <motion.span
-                        className="md:hidden relative z-10"
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <item.icon size={16} strokeWidth={2.5} />
-                      </motion.span>
 
-                      {/* ── Dropdown panel (shown on hover when dropdown is provided) ── */}
+                      {/* ── Dropdown panel ── */}
                       <AnimatePresence>
                         {isHovered && item.dropdown && (
                           <motion.div
@@ -477,7 +397,6 @@ export function AnimeNavBar({
                             className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[10000]"
                             style={{ pointerEvents: "auto" }}
                           >
-                            {/* Arrow */}
                             <div className="flex justify-center mb-0.5">
                               <div
                                 className="w-2.5 h-2.5 rotate-45 border-t border-l border-white/12"
@@ -489,7 +408,7 @@ export function AnimeNavBar({
                         )}
                       </AnimatePresence>
 
-                      {/* ── Tooltip (shown on hover when tooltip text is provided and no dropdown) ── */}
+                      {/* ── Tooltip ── */}
                       <AnimatePresence>
                         {isHovered && item.tooltip && !item.dropdown && (
                           <motion.div
@@ -523,9 +442,43 @@ export function AnimeNavBar({
                 })}
               </motion.div>
             </div>
+          ) : (
+            /* ── Mobile: hamburger toggle button ── */
+            <div className="flex-1 flex items-center justify-center">
+              <button
+                onClick={() => setHamburgerOpen(!hamburgerOpen)}
+                className="relative cursor-pointer text-white/80 hover:text-white p-2 rounded-lg transition-colors hover:bg-white/10"
+                aria-label="Toggle menu"
+                aria-expanded={hamburgerOpen}
+              >
+                <motion.div
+                  animate={{ rotate: hamburgerOpen ? 90 : 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="w-6 h-6"
+                >
+                  <AnimatePresence mode="wait">
+                    {hamburgerOpen ? (
+                      <motion.div key="close"
+                        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.7 }} transition={{ duration: 0.18 }}
+                      >
+                        <X className="w-6 h-6" />
+                      </motion.div>
+                    ) : (
+                      <motion.div key="menu"
+                        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.7 }} transition={{ duration: 0.18 }}
+                      >
+                        <Menu className="w-6 h-6" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              </button>
+            </div>
           )}
 
-          {/* ── Right slot ── */}
+          {/* ── Right slot (theme toggle + user avatar) ── */}
           {rightSlot && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="flex-none min-w-0">
               {rightSlot}
@@ -533,20 +486,23 @@ export function AnimeNavBar({
           )}
         </div>
 
-        {/* ── Hamburger drawer (ultra-small screens only) ── */}
+        {/* ── Mobile hamburger drawer ── */}
         <AnimatePresence>
-          {isUltraSmall && hamburgerOpen && (
+          {!isDesktop && hamburgerOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto", y: drawerSwipeY }}
-              exit={{ opacity: 0, height: 0, y: -100 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
               onTouchStart={handleDrawerTouchStart}
               onTouchMove={handleDrawerTouchMove}
               onTouchEnd={handleDrawerTouchEnd}
-              className="overflow-hidden border-t border-white/10 cursor-grab active:cursor-grabbing"
+              className="overflow-hidden mt-2 cursor-grab active:cursor-grabbing"
             >
-              <div className="flex flex-col gap-1 px-3 py-3">
+              {/* Divider */}
+              <div className="h-px mx-3 mb-2" style={{ background: "rgba(61,107,71,0.25)" }} />
+
+              <div className="flex flex-col gap-1 px-3 pb-3">
                 {items.map((item) => {
                   const isActive = activeTab === item.name
                   return (
@@ -555,15 +511,29 @@ export function AnimeNavBar({
                       href={item.url}
                       onClick={handleNavClick(item)}
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
+                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold",
                         isActive
-                          ? "text-white border border-[#4CAF50]/30"
-                          : "text-white/70 hover:bg-white/10 hover:text-white"
+                          ? "text-white"
+                          : "text-white/65 hover:text-white hover:bg-white/[0.07]"
                       )}
-                      style={isActive ? { background: `${OTB_GREEN_GLOW}0.35)` } : {}}
+                      style={isActive ? {
+                        background: `${OTB_GREEN_GLOW}0.22)`,
+                        border: `1px solid ${OTB_GREEN_GLOW}0.30)`,
+                        boxShadow: `0 0 12px ${OTB_GREEN_GLOW}0.15)`,
+                      } : {}}
                     >
-                      <item.icon className="w-4 h-4" />
+                      <item.icon
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: isActive ? OTB_GREEN : undefined }}
+                      />
                       <span>{item.name}</span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="mobile-active-dot"
+                          className="ml-auto w-1.5 h-1.5 rounded-full"
+                          style={{ background: OTB_GREEN }}
+                        />
+                      )}
                     </a>
                   )
                 })}
