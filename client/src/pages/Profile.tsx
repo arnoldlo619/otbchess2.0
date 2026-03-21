@@ -25,6 +25,7 @@ import {
   Swords,
   Camera,
   Link2,
+  TrendingUp,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
@@ -65,7 +66,7 @@ function StatBadge({
   );
 }
 
-/** Compact W/D/L badge shown in the stat row while battle history is loading or loaded. */
+/** Compact W/D/L + win-rate badge shown in the stat row. */
 function BattleStatBadge({
   wins,
   draws,
@@ -79,20 +80,32 @@ function BattleStatBadge({
   loading: boolean;
   isDark: boolean;
 }) {
+  const total = wins + draws + losses;
+  const winRate = total > 0 ? Math.round((wins / total) * 100) : null;
   return (
     <div
-      className={`flex flex-col items-center gap-1 px-3 py-4 rounded-2xl ${
+      className={`flex flex-col items-center gap-1.5 px-3 py-4 rounded-2xl ${
         isDark ? "bg-white/5" : "bg-gray-50"
       }`}
     >
       {loading ? (
         <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>—</span>
+      ) : total === 0 ? (
+        <span className={`text-2xl font-bold ${isDark ? "text-white/30" : "text-gray-300"}`}>—</span>
       ) : (
-        <div className="flex items-center gap-1.5">
-          <span className="text-base font-bold text-[#4ade80]">{wins}W</span>
-          <span className={`text-base font-bold ${isDark ? "text-white/40" : "text-gray-400"}`}>{draws}D</span>
-          <span className="text-base font-bold text-red-400">{losses}L</span>
-        </div>
+        <>
+          <div className="flex items-center gap-1.5">
+            <span className="text-base font-bold text-[#4ade80]">{wins}W</span>
+            <span className={`text-base font-bold ${isDark ? "text-white/40" : "text-gray-400"}`}>{draws}D</span>
+            <span className="text-base font-bold text-red-400">{losses}L</span>
+          </div>
+          {winRate !== null && (
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-[#4ade80]" />
+              <span className="text-xs font-bold text-[#4ade80]">{winRate}%</span>
+            </div>
+          )}
+        </>
       )}
       <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
         Battles
@@ -699,19 +712,65 @@ export default function ProfilePage() {
 
         {/* Battle History */}
         <div className={`rounded-3xl border p-6 ${card}`}>
-          <div className="flex items-center justify-between mb-5">
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Swords className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
               <h2 className={`text-base font-bold ${text}`}>Battle History</h2>
             </div>
-            {battleHistory && battleHistory.length > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-emerald-500">{battleWins}W</span>
-                <span className={`text-xs font-semibold ${muted}`}>{battleDraws}D</span>
-                <span className="text-xs font-semibold text-red-400">{battleLosses}L</span>
-              </div>
-            )}
+            <a
+              href="/battle/history"
+              className={`flex items-center gap-1 text-xs font-medium transition ${
+                isDark ? "text-[#4CAF50]/70 hover:text-[#4CAF50]" : "text-[#3D6B47]/70 hover:text-[#3D6B47]"
+              }`}
+            >
+              View all
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
+
+          {/* Win/Loss/Draw summary + win-rate bar */}
+          {battleHistory && battleHistory.length > 0 && (() => {
+            const total = battleWins + battleDraws + battleLosses;
+            const winRate = total > 0 ? Math.round((battleWins / total) * 100) : 0;
+            return (
+              <div className={`rounded-2xl p-4 mb-5 ${
+                isDark ? "bg-white/5" : "bg-gray-50"
+              }`}>
+                {/* W / D / L counts */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  {[
+                    { label: "Wins",   value: battleWins,   color: "text-emerald-400", bg: isDark ? "bg-emerald-900/30" : "bg-emerald-50" },
+                    { label: "Draws",  value: battleDraws,  color: muted,              bg: isDark ? "bg-white/5"        : "bg-gray-100"   },
+                    { label: "Losses", value: battleLosses, color: "text-red-400",     bg: isDark ? "bg-red-900/20"     : "bg-red-50"     },
+                  ].map(({ label, value, color, bg }) => (
+                    <div key={label} className={`flex flex-col items-center py-2.5 rounded-xl ${bg}`}>
+                      <span className={`text-xl font-black ${color}`}>{value}</span>
+                      <span className={`text-[10px] font-medium ${muted}`}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Win-rate bar */}
+                <div className="flex items-center gap-2">
+                  <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${
+                    isDark ? "bg-white/10" : "bg-gray-200"
+                  }`}>
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-700"
+                      style={{ width: `${winRate}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <TrendingUp className="w-3 h-3 text-emerald-400" />
+                    <span className="text-xs font-bold text-emerald-400">{winRate}%</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Spacer when no data yet */}
+          {(!battleHistory || battleHistory.length === 0) && <div className="mb-2" />}
 
           {battleHistoryLoading ? (
             <div className="flex items-center justify-center py-8">

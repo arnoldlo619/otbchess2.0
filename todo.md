@@ -3226,3 +3226,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Route /battle/history registered in App.tsx
 - [x] "View Battle History" link on Battle landing screen (signed-in users only)
 - [x] TypeScript: 0 errors
+
+## Battle Stats on Profile Page
+
+- [x] Enhance BattleStatBadge to show win rate percentage
+- [x] Add animated win-rate progress bar to the Battle History card header
+- [x] Add "View Full History" link in the Battle History card header
