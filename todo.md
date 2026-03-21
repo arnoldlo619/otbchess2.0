@@ -3165,3 +3165,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Flag-fall buzz when time hits 0
 - [x] Sounds respect user gesture requirement (AudioContext unlocked on first tap)
 - [x] TypeScript: 0 errors
+
+## Chess Clock — Full-Screen Landscape Mode
+
+- [x] Full-screen overlay component (fixed inset-0, z-50, dark background)
+- [x] Two half-screen tap panels side by side filling 100vw × 100vh
+- [x] Host panel (left half) rotated 180° so host reads their time upright from left side
+- [x] Guest panel (right half) normal orientation so guest reads from right side
+- [x] Giant time display (responsive font, fills the panel)
+- [x] Tap your half to switch turns (same logic as inline clock)
+- [x] Centre strip: pause/resume + exit full-screen button
+- [x] All sounds (click, warning tick, flag alarm) work in full-screen mode
+- [x] Fullscreen API used when available (document.requestFullscreen)
+- [x] Entry button on inline ChessClock header
+- [x] Screen wake-lock requested to prevent phone sleeping during game
+- [x] TypeScript: 0 errors
