@@ -984,6 +984,7 @@ export default function Battle() {
               {/* Chess Notation Race */}
               {room.guest && (
                 <ChessNotationRace
+                  battleCode={room.code}
                   hostPlayer={room.host}
                   guestPlayer={room.guest}
                   isHost={user?.id === room.hostId}

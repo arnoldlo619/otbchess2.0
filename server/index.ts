@@ -1072,6 +1072,32 @@ export function createApp() {
     res.json({ ok: true });
   });
 
+  // ─── Notation Race State Store ───────────────────────────────────────────────────────
+// Maps battleCode → { host: RaceState, guest: RaceState }
+// Lightweight in-memory store; auto-cleaned when battle completes.
+interface RacePlayerState {
+  moveIdx: number;      // how many moves completed
+  wpm: number;         // last reported WPM
+  finished: boolean;   // true when all moves typed
+  updatedAt: number;   // Date.now() of last update
+  openingIdx: number;  // which opening sequence (0-7) was chosen for this room
+}
+interface RaceRoomState {
+  host: RacePlayerState | null;
+  guest: RacePlayerState | null;
+  openingIdx: number; // canonical opening for this room (set by first player to join)
+}
+const raceStore = new Map<string, RaceRoomState>();
+
+function getRaceRoom(code: string): RaceRoomState {
+  let room = raceStore.get(code);
+  if (!room) {
+    room = { host: null, guest: null, openingIdx: Math.floor(Math.random() * 8) };
+    raceStore.set(code, room);
+  }
+  return room;
+}
+
   // ─── Battle Rooms API ────────────────────────────────────────────────────────────────
   // POST /api/battles — Create a new battle room (requires full account, not guest)
   app.post("/api/battles", requireFullAuth, async (req, res) => {
@@ -1223,6 +1249,52 @@ export function createApp() {
     } catch (err) {
       console.error("[battles] history error:", err);
       res.status(500).json({ error: "Failed to fetch battle history" });
+    }
+  });
+
+  // GET /api/battles/:code/race — Get both players' race state (public)
+  app.get("/api/battles/:code/race", (req, res) => {
+    const code = req.params.code.toUpperCase();
+    const room = getRaceRoom(code);
+    res.json({
+      openingIdx: room.openingIdx,
+      host: room.host,
+      guest: room.guest,
+    });
+  });
+
+  // PATCH /api/battles/:code/race — Push own race progress (requires auth)
+  app.patch("/api/battles/:code/race", requireAuth, async (req, res) => {
+    const { battleRooms } = await import("../shared/schema.js");
+    const userId = (req as import("express").Request & { userId: string }).userId;
+    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    const code = req.params.code.toUpperCase();
+    const { moveIdx, wpm, finished } = req.body as { moveIdx: number; wpm: number; finished: boolean };
+    try {
+      const db = await getDb();
+      const rows = await db.select({ hostId: battleRooms.hostId, guestId: battleRooms.guestId })
+        .from(battleRooms).where(eq(battleRooms.code, code)).limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Battle room not found" });
+      const { hostId, guestId } = rows[0];
+      const room = getRaceRoom(code);
+      const state: RacePlayerState = {
+        moveIdx: typeof moveIdx === "number" ? moveIdx : 0,
+        wpm: typeof wpm === "number" ? wpm : 0,
+        finished: Boolean(finished),
+        updatedAt: Date.now(),
+        openingIdx: room.openingIdx,
+      };
+      if (userId === hostId) {
+        room.host = state;
+      } else if (userId === guestId) {
+        room.guest = state;
+      } else {
+        return res.status(403).json({ error: "Not a participant in this battle" });
+      }
+      res.json({ ok: true, openingIdx: room.openingIdx });
+    } catch (err) {
+      console.error("[race] update error:", err);
+      res.status(500).json({ error: "Failed to update race state" });
     }
   });
 

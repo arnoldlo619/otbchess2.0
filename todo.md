@@ -3117,3 +3117,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] OTB design system: dark glass morphism panel, green accents, OKLCH colours, divide-white/10
 - [x] Entrance animation: fade-up with delay 0.9s consistent with battle_room stagger
 - [x] TypeScript: 0 errors
+
+## Real-Time Notation Race Sync
+
+- [x] Added in-memory raceStore (Map<code, RaceRoomState>) to server/index.ts
+- [x] Added GET /api/battles/:code/race — returns openingIdx + host/guest state (public)
+- [x] Added PATCH /api/battles/:code/race — player pushes moveIdx/wpm/finished (requires auth)
+- [x] Server assigns a canonical openingIdx per room so both players type the same sequence
+- [x] ChessNotationRace: polls GET /race every 800ms, updates opponent panel with real moveIdx + WPM
+- [x] ChessNotationRace: pushes own progress to PATCH /race on every move commit
+- [x] Removed simulation interval entirely — opponent panel now shows real player data
+- [x] Added live/offline/connecting sync status indicator (Wifi icon) in component header
+- [x] Added "Opponent finished — keep going!" amber banner when opponent completes first
+- [x] battleCode prop added to ChessNotationRace and wired in Battle.tsx
+- [x] TypeScript: 0 errors

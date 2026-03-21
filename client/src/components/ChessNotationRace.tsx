@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Keyboard, Zap, Target, ChevronRight } from "lucide-react";
+import { Keyboard, Zap, Target, ChevronRight, Wifi, WifiOff } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,10 +12,26 @@ interface RacePlayer {
 }
 
 interface ChessNotationRaceProps {
+  battleCode: string;       // e.g. "ABC123" — used to sync via API
   hostPlayer: RacePlayer | null;
   guestPlayer: RacePlayer | null;
   isHost: boolean;
   opponentElo?: number | null;
+}
+
+// Server-side race state shape (mirrors RacePlayerState in server/index.ts)
+interface RemotePlayerState {
+  moveIdx: number;
+  wpm: number;
+  finished: boolean;
+  updatedAt: number;
+  openingIdx: number;
+}
+
+interface RemoteRaceState {
+  openingIdx: number;
+  host: RemotePlayerState | null;
+  guest: RemotePlayerState | null;
 }
 
 // ─── Chess move pools ─────────────────────────────────────────────────────────
@@ -31,11 +47,6 @@ const OPENINGS = [
   "d4 f5 g3 Nf6 Bg2 e6 Nf3 Be7 O-O O-O c4 d6 Nc3 Qe8 b3 a5",
 ];
 
-function generateMoveSequence(): string[] {
-  const opening = OPENINGS[Math.floor(Math.random() * OPENINGS.length)];
-  return opening.split(" ");
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function avatarFallback(name: string) {
@@ -50,7 +61,6 @@ function avatarFallback(name: string) {
 function calcWpm(charsTyped: number, elapsedMs: number): number {
   if (elapsedMs < 1000) return 0;
   const minutes = elapsedMs / 60000;
-  // Average word = 5 chars; chess moves avg ~3 chars + space = 4
   return Math.round(charsTyped / 4 / minutes);
 }
 
@@ -139,9 +149,7 @@ function MoveDisplay({
   typedSoFar: string;
   currentMoveIdx: number;
 }) {
-  // Build a flat string of "move1 move2 move3 ..."
   const fullText = moves.join(" ");
-  // How many chars have been correctly committed (completed moves)
   const committedChars = moves.slice(0, currentMoveIdx).join(" ").length + (currentMoveIdx > 0 ? 1 : 0);
 
   return (
@@ -152,17 +160,13 @@ function MoveDisplay({
       {fullText.split("").map((char, i) => {
         let color: string;
         if (i < committedChars) {
-          // Already completed move — green
           color = "#4ade80";
         } else if (i < committedChars + typedSoFar.length) {
-          // Currently being typed
           const typedChar = typedSoFar[i - committedChars];
           color = typedChar === char ? "#4ade80" : "#f87171";
         } else if (i === committedChars + typedSoFar.length) {
-          // Cursor position — bright white
           color = "#ffffff";
         } else {
-          // Untyped — dim
           color = "oklch(0.65 0.04 240 / 0.5)";
         }
         return (
@@ -175,21 +179,20 @@ function MoveDisplay({
   );
 }
 
-// ─── Opponent simulated progress display ─────────────────────────────────────
+// ─── Opponent real-time progress display ─────────────────────────────────────
 
 function OpponentMoveDisplay({
   moves,
   completedMoves,
-  partialProgress,
+  opponentWpm,
 }: {
   moves: string[];
   completedMoves: number;
-  partialProgress: number; // 0-1 fraction through current move
+  opponentWpm: number;
 }) {
   const fullText = moves.join(" ");
-  const committedChars = moves.slice(0, completedMoves).join(" ").length + (completedMoves > 0 ? 1 : 0);
-  const currentMoveLen = moves[completedMoves]?.length ?? 0;
-  const partialChars = Math.floor(partialProgress * currentMoveLen);
+  const committedChars =
+    moves.slice(0, completedMoves).join(" ").length + (completedMoves > 0 ? 1 : 0);
 
   return (
     <div
@@ -200,19 +203,22 @@ function OpponentMoveDisplay({
         let color: string;
         if (i < committedChars) {
           color = "oklch(0.75 0.12 80)"; // amber for opponent
-        } else if (i < committedChars + partialChars) {
-          color = "oklch(0.75 0.12 80 / 0.7)";
-        } else if (i === committedChars + partialChars) {
-          color = "oklch(0.85 0.14 80)";
+        } else if (i === committedChars) {
+          color = "oklch(0.85 0.14 80)"; // cursor
         } else {
           color = "oklch(0.65 0.04 240 / 0.4)";
         }
         return (
-          <span key={i} style={{ color, transition: "color 0.1s" }}>
+          <span key={i} style={{ color, transition: "color 0.15s" }}>
             {char}
           </span>
         );
       })}
+      {opponentWpm > 0 && (
+        <span className="ml-2 text-[10px] font-mono opacity-40">
+          {opponentWpm} WPM
+        </span>
+      )}
     </div>
   );
 }
@@ -220,12 +226,17 @@ function OpponentMoveDisplay({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ChessNotationRace({
+  battleCode,
   hostPlayer,
   guestPlayer,
   isHost,
 }: ChessNotationRaceProps) {
-  const [moves] = useState<string[]>(() => generateMoveSequence());
-  const [typedSoFar, setTypedSoFar] = useState(""); // current move being typed
+  // ── Opening sequence — determined by server on first GET /race ────────────
+  const [openingIdx, setOpeningIdx] = useState<number | null>(null);
+  const moves = openingIdx !== null ? OPENINGS[openingIdx].split(" ") : [];
+
+  // ── My typing state ───────────────────────────────────────────────────────
+  const [typedSoFar, setTypedSoFar] = useState("");
   const [currentMoveIdx, setCurrentMoveIdx] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [totalKeystrokes, setTotalKeystrokes] = useState(0);
@@ -233,79 +244,127 @@ export default function ChessNotationRace({
   const [elapsedMs, setElapsedMs] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  // Opponent simulation
+  // ── Opponent real-time state ──────────────────────────────────────────────
   const [opponentMoveIdx, setOpponentMoveIdx] = useState(0);
-  const [opponentPartial, setOpponentPartial] = useState(0);
-  const opponentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [opponentWpm, setOpponentWpm] = useState(0);
+  const [opponentFinished, setOpponentFinished] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"connecting" | "live" | "offline">("connecting");
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastPushedMoveIdx = useRef(-1);
 
-  // Focus input on mount
+  // ── Focus input on mount ──────────────────────────────────────────────────
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  // Elapsed timer
+  // ── Elapsed timer ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!startTime || finished) return;
     const id = setInterval(() => setElapsedMs(Date.now() - startTime), 200);
     return () => clearInterval(id);
   }, [startTime, finished]);
 
-  // Opponent simulation — advances at ~30 WPM (avg chess move ~3 chars → ~10 moves/min)
+  // ── Fetch race state from server (poll every 800ms) ───────────────────────
   useEffect(() => {
-    if (finished) {
-      if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
-      return;
-    }
-    // Tick every 400ms, advance partial progress
-    opponentIntervalRef.current = setInterval(() => {
-      setOpponentPartial((prev) => {
-        const next = prev + 0.18; // fraction per tick
-        if (next >= 1) {
-          setOpponentMoveIdx((mi) => {
-            const nextMi = mi + 1;
-            if (nextMi >= moves.length) {
-              if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
-            }
-            return Math.min(nextMi, moves.length);
-          });
-          return 0;
-        }
-        return next;
-      });
-    }, 400);
-    return () => {
-      if (opponentIntervalRef.current) clearInterval(opponentIntervalRef.current);
-    };
-  }, [moves.length, finished]);
+    if (!battleCode) return;
 
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const res = await fetch(`/api/battles/${battleCode}/race`);
+        if (!res.ok) throw new Error("non-ok");
+        const data: RemoteRaceState = await res.json();
+        if (cancelled) return;
+
+        // On first successful fetch, lock in the opening sequence
+        setOpeningIdx((prev) => (prev === null ? data.openingIdx : prev));
+        setSyncStatus("live");
+
+        // Update opponent state
+        const opp = isHost ? data.guest : data.host;
+        if (opp) {
+          setOpponentMoveIdx(opp.moveIdx);
+          setOpponentWpm(opp.wpm);
+          setOpponentFinished(opp.finished);
+        }
+      } catch {
+        if (!cancelled) setSyncStatus("offline");
+      }
+    }
+
+    // Initial fetch immediately
+    poll();
+    const id = setInterval(poll, 800);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [battleCode, isHost]);
+
+  // ── Push my progress to server whenever moveIdx changes ──────────────────
+  const pushProgress = useCallback(
+    async (moveIdx: number, wpm: number, isFinished: boolean) => {
+      if (!battleCode) return;
+      try {
+        await fetch(`/api/battles/${battleCode}/race`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moveIdx, wpm, finished: isFinished }),
+        });
+      } catch {
+        // silently ignore push errors — poll will catch up
+      }
+    },
+    [battleCode]
+  );
+
+  // ── Derived stats ─────────────────────────────────────────────────────────
+  const wpm = calcWpm(
+    moves.slice(0, currentMoveIdx).join(" ").length + typedSoFar.length,
+    elapsedMs
+  );
+  const accuracy = calcAccuracy(totalKeystrokes - errorCount, totalKeystrokes);
+  const myProgress = moves.length > 0 ? (currentMoveIdx / moves.length) * 100 : 0;
+  const opponentProgress = moves.length > 0 ? (opponentMoveIdx / moves.length) * 100 : 0;
+
+  const myPlayer = isHost ? hostPlayer : guestPlayer;
+  const oppPlayer = isHost ? guestPlayer : hostPlayer;
+
+  // ── Input handler ─────────────────────────────────────────────────────────
   const handleInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
-      if (finished || currentMoveIdx >= moves.length) return;
+      if (finished || currentMoveIdx >= moves.length || moves.length === 0) return;
 
-      // Start timer on first keystroke
       if (!startTime) setStartTime(Date.now());
 
       const targetMove = moves[currentMoveIdx];
       setTotalKeystrokes((t) => t + 1);
 
-      // Check for space — attempt to commit current move
       if (val.endsWith(" ")) {
         const typed = val.trimEnd();
         if (typed === targetMove) {
-          // Correct — advance
           const nextIdx = currentMoveIdx + 1;
           setCurrentMoveIdx(nextIdx);
           setTypedSoFar("");
           e.target.value = "";
-          if (nextIdx >= moves.length) {
+          const isFinished = nextIdx >= moves.length;
+          if (isFinished) {
             setFinished(true);
             setElapsedMs(Date.now() - (startTime ?? Date.now()));
           }
+          // Push to server on every move commit (debounced by only pushing when idx changes)
+          if (nextIdx !== lastPushedMoveIdx.current) {
+            lastPushedMoveIdx.current = nextIdx;
+            const newWpm = calcWpm(
+              moves.slice(0, nextIdx).join(" ").length,
+              startTime ? Date.now() - startTime : 0
+            );
+            pushProgress(nextIdx, newWpm, isFinished);
+          }
         } else {
-          // Wrong — count error, keep typed
           setErrorCount((c) => c + 1);
           setTypedSoFar(typed);
           e.target.value = typed;
@@ -313,7 +372,6 @@ export default function ChessNotationRace({
         return;
       }
 
-      // Validate partial typing — count errors for wrong chars
       const prevTyped = typedSoFar;
       if (val.length > prevTyped.length) {
         const newChar = val[val.length - 1];
@@ -325,19 +383,36 @@ export default function ChessNotationRace({
 
       setTypedSoFar(val);
     },
-    [currentMoveIdx, moves, startTime, typedSoFar, finished]
+    [currentMoveIdx, moves, startTime, typedSoFar, finished, pushProgress]
   );
 
-  const wpm = calcWpm(
-    moves.slice(0, currentMoveIdx).join(" ").length + typedSoFar.length,
-    elapsedMs
-  );
-  const accuracy = calcAccuracy(totalKeystrokes - errorCount, totalKeystrokes);
-  const myProgress = moves.length > 0 ? (currentMoveIdx / moves.length) * 100 : 0;
-  const opponentProgress = moves.length > 0 ? (opponentMoveIdx / moves.length) * 100 : 0;
-
-  const myPlayer = isHost ? hostPlayer : guestPlayer;
-  const oppPlayer = isHost ? guestPlayer : hostPlayer;
+  // ── Loading state while opening is being fetched ──────────────────────────
+  if (openingIdx === null) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-3xl relative z-10 mt-2"
+      >
+        <div
+          className="rounded-2xl px-6 py-8 flex items-center justify-center gap-3"
+          style={{
+            background: "oklch(0.12 0.03 240 / 0.85)",
+            border: "1px solid oklch(0.30 0.04 240 / 0.4)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+            className="w-4 h-4 rounded-full border-2 border-green-400/30 border-t-green-400"
+          />
+          <span className="text-white/40 text-sm font-mono">Syncing race…</span>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -353,6 +428,34 @@ export default function ChessNotationRace({
           <span className="text-white/40 text-xs font-mono uppercase tracking-widest">
             Notation Race
           </span>
+          {/* Sync status indicator */}
+          <div className="flex items-center gap-1">
+            {syncStatus === "live" ? (
+              <Wifi className="w-3 h-3 text-green-400/60" />
+            ) : syncStatus === "offline" ? (
+              <WifiOff className="w-3 h-3 text-red-400/60" />
+            ) : (
+              <motion.div
+                animate={{ opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              >
+                <Wifi className="w-3 h-3 text-white/30" />
+              </motion.div>
+            )}
+            <span
+              className="text-[10px] font-mono"
+              style={{
+                color:
+                  syncStatus === "live"
+                    ? "oklch(0.65 0.15 142 / 0.7)"
+                    : syncStatus === "offline"
+                    ? "oklch(0.65 0.15 25 / 0.7)"
+                    : "oklch(0.65 0.04 240 / 0.5)",
+              }}
+            >
+              {syncStatus === "live" ? "live" : syncStatus === "offline" ? "offline" : "…"}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <StatBadge label="WPM" value={String(wpm)} accent />
@@ -390,15 +493,28 @@ export default function ChessNotationRace({
           </div>
           {/* Opponent */}
           <div className="flex items-center justify-between px-4 py-3">
-            <div
-              className="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
-              style={{
-                background: "oklch(0.20 0.05 80 / 0.4)",
-                color: "oklch(0.75 0.12 80)",
-                border: "1px solid oklch(0.40 0.08 80 / 0.3)",
-              }}
-            >
-              OPP
+            <div className="flex items-center gap-2">
+              <div
+                className="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
+                style={{
+                  background: "oklch(0.20 0.05 80 / 0.4)",
+                  color: "oklch(0.75 0.12 80)",
+                  border: "1px solid oklch(0.40 0.08 80 / 0.3)",
+                }}
+              >
+                OPP
+              </div>
+              {/* Live dot when opponent is active */}
+              {opponentMoveIdx > 0 && !opponentFinished && (
+                <motion.span
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                  className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                />
+              )}
+              {opponentFinished && (
+                <span className="text-[10px] font-mono text-amber-400/70">Done</span>
+              )}
             </div>
             <PlayerAvatar player={oppPlayer} side="right" />
           </div>
@@ -437,7 +553,7 @@ export default function ChessNotationRace({
             <OpponentMoveDisplay
               moves={moves}
               completedMoves={opponentMoveIdx}
-              partialProgress={opponentPartial}
+              opponentWpm={opponentWpm}
             />
             {/* Progress */}
             <div className="flex items-center gap-2 mt-4">
@@ -463,7 +579,7 @@ export default function ChessNotationRace({
             ref={inputRef}
             type="text"
             onChange={handleInput}
-            disabled={finished}
+            disabled={finished || moves.length === 0}
             placeholder={finished ? "Race complete!" : "Type the next move…"}
             autoComplete="off"
             autoCorrect="off"
@@ -478,7 +594,7 @@ export default function ChessNotationRace({
               <span className="text-yellow-400 text-xs font-mono font-bold">Done!</span>
             </div>
           )}
-          {!finished && (
+          {!finished && moves.length > 0 && (
             <div className="flex items-center gap-1 text-white/20 text-[10px] font-mono">
               <Target className="w-3 h-3" />
               <span>{moves[currentMoveIdx] ?? "—"}</span>
@@ -506,6 +622,24 @@ export default function ChessNotationRace({
             <StatBadge label="WPM" value={String(wpm)} accent />
             <StatBadge label="ACC" value={`${accuracy}%`} accent />
           </div>
+        </motion.div>
+      )}
+
+      {/* Opponent finished banner */}
+      {opponentFinished && !finished && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 rounded-xl px-4 py-2.5 flex items-center gap-2"
+          style={{
+            background: "oklch(0.18 0.05 80 / 0.5)",
+            border: "1px solid oklch(0.40 0.08 80 / 0.4)",
+          }}
+        >
+          <Zap className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-amber-400/80 text-xs font-mono">
+            {(isHost ? guestPlayer : hostPlayer)?.displayName ?? "Opponent"} finished — keep going!
+          </span>
         </motion.div>
       )}
     </motion.div>
