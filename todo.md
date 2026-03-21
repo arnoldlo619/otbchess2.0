@@ -3131,3 +3131,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added "Opponent finished — keep going!" amber banner when opponent completes first
 - [x] battleCode prop added to ChessNotationRace and wired in Battle.tsx
 - [x] TypeScript: 0 errors
+
+## Battle Room — Notation Visual Fix
+
+- [x] Converted ChessNotationRace from interactive typing game to purely decorative ambient ticker
+- [x] Ambient ticker: auto-scrolling horizontal move rows + vertical cascade columns (pointer-events-none, aria-hidden)
+- [x] Opening name derived deterministically from battleCode — both players see the same opening label
+- [x] All real OTB battle flow (VS header, player cards, result buttons, guest waiting state) unchanged
+- [x] Removed all server polling / PATCH race calls from the component (no network traffic)
+- [x] TypeScript: 0 errors
