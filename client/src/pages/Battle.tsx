@@ -26,6 +26,7 @@ import {
   Share2,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { useChesscomAvatar } from "../hooks/useChesscomAvatar";
 import AuthModal from "../components/AuthModal";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
@@ -91,6 +92,8 @@ function PlayerCard({
   const isLeft = side === "left";
   const accentColor = isLeft ? "#4ade80" : "#94a3b8";
   const glowColor = isLeft ? "oklch(0.55 0.18 142 / 0.35)" : "oklch(0.50 0.04 240 / 0.25)";
+  // Resolve avatar: stored URL → chess.com fetch → null (initials)
+  const resolvedAvatar = useChesscomAvatar(player);
 
   return (
     <motion.div
@@ -138,12 +141,13 @@ function PlayerCard({
             borderRadius: "50%",
           }}
         />
-        {player?.avatarUrl ? (
+        {resolvedAvatar ? (
           <img
-            src={player.avatarUrl}
-            alt={player.displayName}
+            src={resolvedAvatar}
+            alt={player?.displayName ?? ""}
             className="w-28 h-28 rounded-full object-cover relative z-10"
             style={{ border: `2.5px solid ${accentColor}66` }}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
           />
         ) : (
           <div
@@ -231,6 +235,9 @@ export default function Battle() {
   const { user } = useAuth();
   const [screen, setScreen] = useState<Screen>("mode_select");
   const [room, setRoom] = useState<BattleRoom | null>(null);
+  // Resolve chess.com avatars for both players
+  const hostAvatar = useChesscomAvatar(room?.host ?? null);
+  const guestAvatar = useChesscomAvatar(room?.guest ?? null);
   const [joinCode, setJoinCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1300,9 +1307,9 @@ export default function Battle() {
                       <Crown className="w-5 h-5 text-yellow-400 mb-0.5" />
                     </motion.div>
                   )}
-                  {room.host?.avatarUrl ? (
+                  {hostAvatar ? (
                     <img
-                      src={room.host.avatarUrl}
+                      src={hostAvatar}
                       className="w-16 h-16 rounded-full object-cover"
                       style={{
                         border: room.result === "host_win"
@@ -1314,6 +1321,7 @@ export default function Battle() {
                         opacity: room.result === "guest_win" ? 0.4 : 1,
                       }}
                       alt=""
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                     />
                   ) : (
                     <div
@@ -1344,9 +1352,9 @@ export default function Battle() {
                       <Crown className="w-5 h-5 text-yellow-400 mb-0.5" />
                     </motion.div>
                   )}
-                  {room.guest?.avatarUrl ? (
+                  {guestAvatar ? (
                     <img
-                      src={room.guest.avatarUrl}
+                      src={guestAvatar}
                       className="w-16 h-16 rounded-full object-cover"
                       style={{
                         border: room.result === "guest_win"
@@ -1358,6 +1366,7 @@ export default function Battle() {
                         opacity: room.result === "host_win" ? 0.4 : 1,
                       }}
                       alt=""
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                     />
                   ) : (
                     <div

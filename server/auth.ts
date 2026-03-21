@@ -317,13 +317,22 @@ export function createAuthRouter(): Router {
       if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl || null;
       if (fideId !== undefined) updateData.fideId = fideId.trim() || null;
 
-      // If chess.com username changed, fetch fresh ELO
+      // If chess.com username changed, fetch fresh ELO + avatar
       if (chesscomUsername && chesscomUsername.trim()) {
         try {
-          const statsRes = await fetch(
-            `https://api.chess.com/pub/player/${chesscomUsername.toLowerCase().trim()}/stats`,
-            { headers: { "User-Agent": "OTBChess/1.0 (https://chessotb.club)" } }
-          );
+          const key = chesscomUsername.toLowerCase().trim();
+          const ccHeaders = { "User-Agent": "OTBChess/1.0 (https://chessotb.club)" };
+          const [profileRes, statsRes] = await Promise.all([
+            fetch(`https://api.chess.com/pub/player/${key}`, { headers: ccHeaders }),
+            fetch(`https://api.chess.com/pub/player/${key}/stats`, { headers: ccHeaders }),
+          ]);
+          // Auto-populate avatarUrl from chess.com if user hasn't set a custom one
+          if (profileRes.ok) {
+            const profile = await profileRes.json() as Record<string, unknown>;
+            if (!avatarUrl && typeof profile.avatar === "string" && profile.avatar) {
+              updateData.avatarUrl = profile.avatar;
+            }
+          }
           if (statsRes.ok) {
             const stats = await statsRes.json() as Record<string, unknown>;
             const rapid = (stats.chess_rapid as Record<string, unknown> | undefined)?.last as Record<string, unknown> | undefined;
@@ -333,7 +342,7 @@ export function createAuthRouter(): Router {
             if (elo) updateData.chesscomElo = elo;
           }
         } catch {
-          // ELO fetch failed — don't block the profile save
+          // chess.com fetch failed — don't block the profile save
         }
       }
 

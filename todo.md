@@ -3240,3 +3240,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build ranked rows with win-rate bars and streak badges
 - [x] Add sub-nav toggle (Leaderboard / Battles) at top of battles tab
 - [x] Keep existing battle management below the leaderboard view
+
+## Chess.com Avatar in Battle Room
+
+- [x] Auto-fetch chess.com avatar when chesscomUsername is saved in profile update
+- [x] Client-side fallback: derive chess.com avatar URL from chesscomUsername if avatarUrl is null
+- [x] Show chess.com avatar in PlayerCard (battle room VS screen)
+- [x] Show chess.com avatar in result screen player cards
