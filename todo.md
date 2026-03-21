@@ -3190,3 +3190,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Display move counter under each player's name in full-screen overlay
 - [x] Reset move counters on clock reset
 - [x] TypeScript: 0 errors
+
+## Chess Clock — Flag-Fall Result Suggestion
+
+- [x] Add onFlagFall prop to ChessClock (receives "host" | "guest")
+- [x] Pass onFlagFall through to FullScreenClock
+- [x] Add clockFlagFallen state in Battle.tsx
+- [x] Render animated result suggestion banner when flag falls (host only)
+- [x] One-tap confirm button calls handleResult with correct winner
+- [x] Dismiss button hides the banner without submitting
+- [x] Banner visible to host only; guest sees a neutral "Time's up" notice
+- [ ] TypeScript: 0 errors

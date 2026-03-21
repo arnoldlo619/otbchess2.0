@@ -22,6 +22,7 @@ import {
   LogIn,
   Clock,
   Ghost,
+  Flag,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
@@ -261,6 +262,16 @@ export default function Battle() {
   const [selectedTimeControl, setSelectedTimeControl] = useState<TimeControlOption | null>(null);
   const [victoryFlash, setVictoryFlash] = useState(false);
   const confettiFired = useRef(false);
+
+  // ── Clock flag-fall suggestion ─────────────────────────────────────────────
+  // Stores which side ran out of time so we can surface a result suggestion.
+  const [clockFlagFallen, setClockFlagFallen] = useState<"host" | "guest" | null>(null);
+  const [flagSuggestionDismissed, setFlagSuggestionDismissed] = useState(false);
+
+  function handleClockFlagFall(side: "host" | "guest") {
+    setClockFlagFallen(side);
+    setFlagSuggestionDismissed(false);
+  }
 
   // ── Victory confetti & flash ───────────────────────────────────────────────
   useEffect(() => {
@@ -930,9 +941,86 @@ export default function Battle() {
                     guestName={room.guest?.displayName ?? "Guest"}
                     hostAvatarUrl={room.host?.avatarUrl}
                     guestAvatarUrl={room.guest?.avatarUrl}
+                    onFlagFall={handleClockFlagFall}
                   />
                 </div>
               )}
+
+              {/* ── Flag-fall result suggestion banner ──────────────────────── */}
+              <AnimatePresence>
+                {clockFlagFallen && !flagSuggestionDismissed && room.guest && (
+                  <motion.div
+                    key="flag-suggestion"
+                    initial={{ opacity: 0, y: -16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                    className="w-full max-w-md relative z-20 mb-4"
+                  >
+                    <div
+                      className="rounded-2xl p-5"
+                      style={{
+                        background: "oklch(0.14 0.06 25 / 0.95)",
+                        border: "1.5px solid oklch(0.50 0.18 25 / 0.55)",
+                        boxShadow: "0 0 32px oklch(0.45 0.18 25 / 0.25)",
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Flag className="w-4 h-4 text-red-400 shrink-0" />
+                        <p className="text-sm font-bold text-red-300">
+                          {clockFlagFallen === "host"
+                            ? `${room.host?.displayName ?? "Host"}'s flag fell — ${room.guest?.displayName ?? "Guest"} wins on time`
+                            : `${room.guest?.displayName ?? "Guest"}'s flag fell — ${room.host?.displayName ?? "Host"} wins on time`
+                          }
+                        </p>
+                      </div>
+                      <p className="text-xs text-white/40 mb-4">
+                        Confirm the result or dismiss to record it manually.
+                      </p>
+                      <div className="flex gap-2">
+                        {user?.id === room.hostId ? (
+                          <motion.button
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.96 }}
+                            disabled={loading}
+                            onClick={() => {
+                              handleResult(clockFlagFallen === "host" ? "guest_win" : "host_win");
+                              setFlagSuggestionDismissed(true);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
+                            style={{
+                              background: "oklch(0.28 0.14 25 / 0.8)",
+                              border: "1.5px solid oklch(0.50 0.18 25 / 0.6)",
+                              color: "#fca5a5",
+                            }}
+                          >
+                            <Trophy className="w-4 h-4 text-yellow-400" />
+                            Confirm Result
+                          </motion.button>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-center py-3 rounded-xl text-xs text-white/30"
+                            style={{ background: "oklch(0.12 0.02 240 / 0.5)", border: "1px solid oklch(0.25 0.03 240 / 0.3)" }}>
+                            Waiting for host to confirm…
+                          </div>
+                        )}
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setFlagSuggestionDismissed(true)}
+                          className="px-4 py-3 rounded-xl text-xs font-medium"
+                          style={{
+                            background: "oklch(0.16 0.02 240 / 0.6)",
+                            border: "1px solid oklch(0.30 0.03 240 / 0.4)",
+                            color: "oklch(0.55 0.04 240)",
+                          }}
+                        >
+                          Dismiss
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Result reporting (host only) */}
               {user?.id === room.hostId && room.guest && (

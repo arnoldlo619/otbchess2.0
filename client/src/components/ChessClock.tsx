@@ -24,6 +24,8 @@ interface ChessClockProps {
   guestName: string;
   hostAvatarUrl?: string | null;
   guestAvatarUrl?: string | null;
+  /** Called once when a player's time reaches zero. Receives the side whose flag fell. */
+  onFlagFall?: (side: "host" | "guest") => void;
 }
 
 type ActiveSide = "host" | "guest" | null;
@@ -62,6 +64,7 @@ export default function ChessClock({
   guestName,
   hostAvatarUrl,
   guestAvatarUrl,
+  onFlagFall,
 }: ChessClockProps) {
   const { minutes, increment } = parseTimeControl(timeControl);
   const initialMs = minutes * 60_000;
@@ -140,14 +143,15 @@ export default function ChessClock({
     }
   }, [fullScreen, active, paused, flagFallen, hostMs, guestMs, warningTick]);
 
-  // ── Flag alarm ────────────────────────────────────────────────────────────────
+  // ── Flag alarm + external callback ─────────────────────────────────────────────
   useEffect(() => {
     if (flagFallen && !flagAlarmFiredRef.current) {
       flagAlarmFiredRef.current = true;
       flagAlarm();
+      onFlagFall?.(flagFallen);
     }
     if (!flagFallen) flagAlarmFiredRef.current = false;
-  }, [flagFallen, flagAlarm]);
+  }, [flagFallen, flagAlarm, onFlagFall]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────────
   function handleTap(side: "host" | "guest") {
