@@ -3180,3 +3180,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Entry button on inline ChessClock header
 - [x] Screen wake-lock requested to prevent phone sleeping during game
 - [x] TypeScript: 0 errors
+
+## Chess Clock — Move Counter
+
+- [x] hostMoves / guestMoves state in ChessClock (inline)
+- [x] Increment on every successful tap (not first-tap-to-start)
+- [x] Display "Move N" label under each player's name in inline clock
+- [x] Pass move counts into FullScreenClock and sync back via onStateChange
+- [x] Display move counter under each player's name in full-screen overlay
+- [x] Reset move counters on clock reset
+- [x] TypeScript: 0 errors

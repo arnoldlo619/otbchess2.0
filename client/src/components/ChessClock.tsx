@@ -73,6 +73,10 @@ export default function ChessClock({
   const [paused, setPaused] = useState(false);
   const [flagFallen, setFlagFallen] = useState<"host" | "guest" | null>(null);
 
+  // ── Move counters ─────────────────────────────────────────────────────────────
+  const [hostMoves, setHostMoves] = useState(0);
+  const [guestMoves, setGuestMoves] = useState(0);
+
   // ── Full-screen overlay visibility ────────────────────────────────────────────
   const [fullScreen, setFullScreen] = useState(false);
 
@@ -157,9 +161,11 @@ export default function ChessClock({
     tap();
     if (side === "host") {
       setHostMs((p) => p + increment * 1000);
+      setHostMoves((m) => m + 1);
       setActive("guest");
     } else {
       setGuestMs((p) => p + increment * 1000);
+      setGuestMoves((m) => m + 1);
       setActive("host");
     }
   }
@@ -176,6 +182,8 @@ export default function ChessClock({
     setActive(null);
     setPaused(false);
     setFlagFallen(null);
+    setHostMoves(0);
+    setGuestMoves(0);
     lastTickRef.current = null;
     lastWarnSecRef.current = -1;
     flagAlarmFiredRef.current = false;
@@ -188,12 +196,16 @@ export default function ChessClock({
     active: ActiveSide;
     paused: boolean;
     flagFallen: "host" | "guest" | null;
+    hostMoves: number;
+    guestMoves: number;
   }) {
     setHostMs(state.hostMs);
     setGuestMs(state.guestMs);
     setActive(state.active);
     setPaused(state.paused);
     setFlagFallen(state.flagFallen);
+    setHostMoves(state.hostMoves);
+    setGuestMoves(state.guestMoves);
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────────
@@ -227,6 +239,8 @@ export default function ChessClock({
               initialGuestMs={guestMs}
               initialActive={active}
               initialPaused={paused}
+              initialHostMoves={hostMoves}
+              initialGuestMoves={guestMoves}
               onStateChange={handleFsStateChange}
             />
           </motion.div>
@@ -346,10 +360,24 @@ export default function ChessClock({
                 )}
               </div>
 
-              <p className="text-xs font-semibold tracking-wide"
-                style={{ color: active === "host" && !paused ? "#4ade80" : "oklch(0.60 0.04 240)" }}>
-                {hostName}
-              </p>
+              <div className="flex flex-col items-center gap-0.5">
+                <p className="text-xs font-semibold tracking-wide"
+                  style={{ color: active === "host" && !paused ? "#4ade80" : "oklch(0.60 0.04 240)" }}>
+                  {hostName}
+                </p>
+                {hostMoves > 0 && (
+                  <motion.span
+                    key={hostMoves}
+                    initial={{ scale: 1.4, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-[10px] font-mono tabular-nums"
+                    style={{ color: "oklch(0.50 0.04 240)" }}
+                  >
+                    move {hostMoves}
+                  </motion.span>
+                )}
+              </div>
 
               <div className="text-center">
                 <span className="font-mono font-black tabular-nums leading-none"
@@ -458,10 +486,24 @@ export default function ChessClock({
                 )}
               </div>
 
-              <p className="text-xs font-semibold tracking-wide"
-                style={{ color: active === "guest" && !paused ? "#94a3b8" : "oklch(0.60 0.04 240)" }}>
-                {guestName}
-              </p>
+              <div className="flex flex-col items-center gap-0.5">
+                <p className="text-xs font-semibold tracking-wide"
+                  style={{ color: active === "guest" && !paused ? "#94a3b8" : "oklch(0.60 0.04 240)" }}>
+                  {guestName}
+                </p>
+                {guestMoves > 0 && (
+                  <motion.span
+                    key={guestMoves}
+                    initial={{ scale: 1.4, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-[10px] font-mono tabular-nums"
+                    style={{ color: "oklch(0.50 0.04 240)" }}
+                  >
+                    move {guestMoves}
+                  </motion.span>
+                )}
+              </div>
 
               <div className="text-center">
                 <span className="font-mono font-black tabular-nums leading-none"

@@ -41,6 +41,8 @@ export interface FullScreenClockProps {
   initialGuestMs?: number;
   initialActive?: "host" | "guest" | null;
   initialPaused?: boolean;
+  initialHostMoves?: number;
+  initialGuestMoves?: number;
   /** Called on every state change so the inline clock stays in sync */
   onStateChange?: (state: {
     hostMs: number;
@@ -48,6 +50,8 @@ export interface FullScreenClockProps {
     active: "host" | "guest" | null;
     paused: boolean;
     flagFallen: "host" | "guest" | null;
+    hostMoves: number;
+    guestMoves: number;
   }) => void;
 }
 
@@ -88,6 +92,8 @@ export default function FullScreenClock({
   initialGuestMs,
   initialActive = null,
   initialPaused = false,
+  initialHostMoves = 0,
+  initialGuestMoves = 0,
   onStateChange,
 }: FullScreenClockProps) {
   const { increment } = parseTimeControl(timeControl);
@@ -98,6 +104,10 @@ export default function FullScreenClock({
   const [active, setActive] = useState<ActiveSide>(initialActive);
   const [paused, setPaused] = useState(initialPaused);
   const [flagFallen, setFlagFallen] = useState<"host" | "guest" | null>(null);
+
+  // ── Move counters ─────────────────────────────────────────────────────────────
+  const [hostMoves, setHostMoves] = useState(initialHostMoves);
+  const [guestMoves, setGuestMoves] = useState(initialGuestMoves);
 
   const { tap, warningTick, flagAlarm, muted, toggleMute } = useClockSounds();
 
@@ -203,10 +213,10 @@ export default function FullScreenClock({
     if (!flagFallen) flagAlarmFiredRef.current = false;
   }, [flagFallen, flagAlarm]);
 
-  // ── Sync state back to parent ─────────────────────────────────────────────────
+  // ── Sync state back to parent ───────────────────────────────────────────────────
   useEffect(() => {
-    onStateChange?.({ hostMs, guestMs, active, paused, flagFallen });
-  }, [hostMs, guestMs, active, paused, flagFallen, onStateChange]);
+    onStateChange?.({ hostMs, guestMs, active, paused, flagFallen, hostMoves, guestMoves });
+  }, [hostMs, guestMs, active, paused, flagFallen, hostMoves, guestMoves, onStateChange]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────────
   function handleTap(side: "host" | "guest") {
@@ -220,9 +230,11 @@ export default function FullScreenClock({
     tap();
     if (side === "host") {
       setHostMs((p) => p + increment * 1000);
+      setHostMoves((m) => m + 1);
       setActive("guest");
     } else {
       setGuestMs((p) => p + increment * 1000);
+      setGuestMoves((m) => m + 1);
       setActive("host");
     }
   }
@@ -240,6 +252,8 @@ export default function FullScreenClock({
     setActive(null);
     setPaused(false);
     setFlagFallen(null);
+    setHostMoves(0);
+    setGuestMoves(0);
     lastTickRef.current = null;
     lastWarnSecRef.current = -1;
     flagAlarmFiredRef.current = false;
@@ -326,13 +340,27 @@ export default function FullScreenClock({
           )}
         </AnimatePresence>
 
-        {/* Player name */}
-        <p
-          className="text-sm font-bold tracking-widest uppercase"
-          style={{ color: active === "host" && !paused ? accentColor("host") : "oklch(0.45 0.04 240)" }}
-        >
-          {hostName}
-        </p>
+        {/* Player name + move counter */}
+        <div className="flex flex-col items-center gap-1">
+          <p
+            className="text-sm font-bold tracking-widest uppercase"
+            style={{ color: active === "host" && !paused ? accentColor("host") : "oklch(0.45 0.04 240)" }}
+          >
+            {hostName}
+          </p>
+          {hostMoves > 0 && (
+            <motion.span
+              key={hostMoves}
+              initial={{ scale: 1.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="text-xs font-mono tabular-nums"
+              style={{ color: "oklch(0.45 0.04 240)" }}
+            >
+              move {hostMoves}
+            </motion.span>
+          )}
+        </div>
 
         {/* Big time */}
         <span
@@ -505,13 +533,27 @@ export default function FullScreenClock({
           )}
         </AnimatePresence>
 
-        {/* Player name */}
-        <p
-          className="text-sm font-bold tracking-widest uppercase"
-          style={{ color: active === "guest" && !paused ? accentColor("guest") : "oklch(0.45 0.04 240)" }}
-        >
-          {guestName}
-        </p>
+        {/* Player name + move counter */}
+        <div className="flex flex-col items-center gap-1">
+          <p
+            className="text-sm font-bold tracking-widest uppercase"
+            style={{ color: active === "guest" && !paused ? accentColor("guest") : "oklch(0.45 0.04 240)" }}
+          >
+            {guestName}
+          </p>
+          {guestMoves > 0 && (
+            <motion.span
+              key={guestMoves}
+              initial={{ scale: 1.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="text-xs font-mono tabular-nums"
+              style={{ color: "oklch(0.45 0.04 240)" }}
+            >
+              move {guestMoves}
+            </motion.span>
+          )}
+        </div>
 
         {/* Big time */}
         <span
