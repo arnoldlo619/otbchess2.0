@@ -3201,3 +3201,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Dismiss button hides the banner without submitting
 - [x] Banner visible to host only; guest sees a neutral "Time's up" notice
 - [ ] TypeScript: 0 errors
+
+## Battle Result — Rematch Button
+
+- [x] Add handleRematch async function (host only): creates new room with same timeControl, navigates to host_waiting
+- [x] Add rematchLoading state to show spinner on button
+- [x] Add Rematch button to result screen (host only), between "New Battle" and "Back to Home"
+- [x] Guest sees "Ask host for a rematch" hint text instead of the button
+- [x] Reset confettiFired, clockFlagFallen, flagSuggestionDismissed on rematch
+- [ ] TypeScript: 0 errors

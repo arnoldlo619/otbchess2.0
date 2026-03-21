@@ -435,7 +435,9 @@ export default function Battle() {
     }
   }
 
-  // ── Report result ──────────────────────────────────────────────────────────
+  // ── Report result ─────────────────────────────────────────────────────────────
+  const [rematchLoading, setRematchLoading] = useState(false);
+
   async function handleResult(result: "host_win" | "guest_win" | "draw") {
     if (!room) return;
     setLoading(true);
@@ -454,7 +456,40 @@ export default function Battle() {
     }
   }
 
-  // ── Copy code ──────────────────────────────────────────────────────────────
+   // ── Rematch ───────────────────────────────────────────────────────────────────
+  // Creates a new battle room with the same time control and navigates to host_waiting.
+  async function handleRematch() {
+    if (!room?.timeControl) return;
+    setRematchLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/battles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeControl: room.timeControl }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error ?? "Failed to create rematch room");
+      }
+      const { code } = await res.json();
+      const roomRes = await fetch(`/api/battles/${code}`);
+      const roomData: BattleRoom = await roomRes.json();
+      // Reset transient state
+      confettiFired.current = false;
+      setClockFlagFallen(null);
+      setFlagSuggestionDismissed(false);
+      setError(null);
+      setRoom(roomData);
+      setScreen("host_waiting");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setRematchLoading(false);
+    }
+  }
+
+  // ── Copy code ─────────────────────────────────────────────────────────────
   function copyCode() {
     if (!room?.code) return;
     navigator.clipboard.writeText(room.code);
@@ -1279,12 +1314,48 @@ export default function Battle() {
                 </div>
               </motion.div>
 
+              {/* Rematch hint for guest */}
+              {user?.id !== room.hostId && room.guest && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="text-xs text-white/30 mb-4 text-center"
+                >
+                  Ask the host to start a rematch.
+                </motion.p>
+              )}
+
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.65 }}
-                className="flex gap-3 justify-center"
+                className="flex flex-wrap gap-3 justify-center"
               >
+                {/* Rematch — host only */}
+                {user?.id === room.hostId && room.timeControl && (
+                  <motion.button
+                    whileHover={{ scale: 1.03, boxShadow: "0 0 24px oklch(0.55 0.18 142 / 0.45)" }}
+                    whileTap={{ scale: 0.97 }}
+                    disabled={rematchLoading}
+                    onClick={handleRematch}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: "oklch(0.22 0.12 142 / 0.85)",
+                      border: "1.5px solid oklch(0.50 0.18 142 / 0.6)",
+                      color: "#4ade80",
+                      boxShadow: "0 0 16px oklch(0.45 0.15 142 / 0.25)",
+                    }}
+                  >
+                    {rematchLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    Rematch
+                  </motion.button>
+                )}
+
                 <motion.button
                   whileHover={{ scale: 1.03, boxShadow: "0 0 20px oklch(0.55 0.18 142 / 0.3)" }}
                   whileTap={{ scale: 0.97 }}
