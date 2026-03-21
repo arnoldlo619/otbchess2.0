@@ -3140,3 +3140,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] All real OTB battle flow (VS header, player cards, result buttons, guest waiting state) unchanged
 - [x] Removed all server polling / PATCH race calls from the component (no network traffic)
 - [x] TypeScript: 0 errors
+
+## Chess Clock in Battle Room
+
+- [x] Created ChessClock component (client/src/components/ChessClock.tsx)
+- [x] Parses timeControl string (e.g. "5+3" → 5 min + 3s increment) from BattleRoom
+- [x] Dual-panel layout: host (left, green accent) and guest (right, slate accent)
+- [x] requestAnimationFrame tick loop for accurate sub-second countdown
+- [x] Tap either panel to start; tap your own side after each move to switch turns
+- [x] Increment added to the moving player's clock on each tap
+- [x] Pause / Resume button in centre column
+- [x] Reset button restores both clocks to initial time
+- [x] Flag-fall: panel turns red, clock stops, banner shows which player ran out
+- [x] Low-time warning: orange colour + tenths-of-second display below 10s
+- [x] Active side shown with top indicator bar + pulse ring on avatar
+- [x] Integrated into battle_room screen below player cards (only shown when both players present and timeControl set)
+- [x] TypeScript: 0 errors

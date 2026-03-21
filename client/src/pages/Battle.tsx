@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import ChessNotationRace from "../components/ChessNotationRace";
+import ChessClock from "../components/ChessClock";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -878,7 +879,7 @@ export default function Battle() {
               </div>
 
               {/* Player cards + VS divider */}
-              <div className="flex items-center justify-center gap-6 mb-12 w-full relative z-10">
+              <div className="flex items-center justify-center gap-6 mb-8 w-full relative z-10">
                 <PlayerCard player={room.host} side="left" isReady={!!room.host} />
 
                 {/* Central VS divider */}
@@ -919,6 +920,19 @@ export default function Battle() {
 
                 <PlayerCard player={room.guest} side="right" isReady={!!room.guest} />
               </div>
+
+              {/* Chess Clock */}
+              {room.guest && room.timeControl && (
+                <div className="w-full relative z-10 mb-8">
+                  <ChessClock
+                    timeControl={room.timeControl}
+                    hostName={room.host?.displayName ?? "Host"}
+                    guestName={room.guest?.displayName ?? "Guest"}
+                    hostAvatarUrl={room.host?.avatarUrl}
+                    guestAvatarUrl={room.guest?.avatarUrl}
+                  />
+                </div>
+              )}
 
               {/* Result reporting (host only) */}
               {user?.id === room.hostId && room.guest && (
