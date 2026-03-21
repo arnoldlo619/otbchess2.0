@@ -1944,6 +1944,7 @@ export default function ClubDashboard() {
   const [rsvpDate, setRsvpDate] = useState("");
   const [rsvpVenue, setRsvpVenue] = useState("");
   // Battle state
+  const [battleView, setBattleView] = useState<"leaderboard" | "battles">("leaderboard");
   const [battles, setBattles] = useState<ClubBattle[]>([]);
   const [battleLeaderboard, setBattleLeaderboard] = useState<BattleLeaderboardEntry[]>([]);
   const [battlePlayerA, setBattlePlayerA] = useState("");
@@ -3156,6 +3157,197 @@ export default function ClubDashboard() {
         {/* ── BATTLES TAB ─────────────────────────────────────────────────── */}
         {tab === "battles" && (
           <div className="space-y-6">
+            {/* ── Sub-nav: Leaderboard | Battles ─────────────────────────────── */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
+              {(["leaderboard", "battles"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setBattleView(v)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    battleView === v
+                      ? "bg-white/10 text-white"
+                      : "text-white/40 hover:text-white/70"
+                  }`}
+                >
+                  {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
+                  {v === "leaderboard" ? "Leaderboard" : "Battles"}
+                </button>
+              ))}
+            </div>
+
+            {/* ── LEADERBOARD VIEW ────────────────────────────────────────────── */}
+            {battleView === "leaderboard" && (
+              <div className="space-y-4">
+                {battleLeaderboard.length === 0 ? (
+                  <div className="flex flex-col items-center gap-3 py-16 text-white/30">
+                    <Trophy className="w-12 h-12 opacity-20" />
+                    <p className="text-sm text-center">No battles recorded yet.<br />Complete some battles to see the leaderboard.</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Podium — top 3 */}
+                    {battleLeaderboard.length >= 1 && (
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                        <div className="flex items-end justify-center gap-3 mb-4">
+                          {/* 2nd place */}
+                          {battleLeaderboard[1] && (
+                            <div className="flex flex-col items-center gap-2 flex-1">
+                              <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-black text-white/70 border-2 border-white/20"
+                                style={{ background: "oklch(0.22 0.05 240)" }}>
+                                {battleLeaderboard[1].playerName.charAt(0).toUpperCase()}
+                              </div>
+                              <p className="text-white/70 text-xs font-semibold text-center truncate w-full">{battleLeaderboard[1].playerName}</p>
+                              <div className="w-full rounded-t-xl flex flex-col items-center py-3" style={{ background: "oklch(0.28 0.06 240)", minHeight: 56 }}>
+                                <span className="text-white/40 text-[10px] font-bold">2nd</span>
+                                <span className="text-white font-black text-sm">{battleLeaderboard[1].wins}W</span>
+                                <span className="text-white/40 text-[10px]">{battleLeaderboard[1].winRate}%</span>
+                              </div>
+                            </div>
+                          )}
+                          {/* 1st place */}
+                          <div className="flex flex-col items-center gap-2 flex-1">
+                            <Crown className="w-5 h-5 text-amber-400" />
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-black text-white border-2 border-amber-400/60"
+                              style={{ background: "oklch(0.26 0.08 80)" }}>
+                              {battleLeaderboard[0].playerName.charAt(0).toUpperCase()}
+                            </div>
+                            <p className="text-white text-xs font-bold text-center truncate w-full">{battleLeaderboard[0].playerName}</p>
+                            <div className="w-full rounded-t-xl flex flex-col items-center py-4" style={{ background: "oklch(0.32 0.1 80)", minHeight: 72 }}>
+                              <span className="text-amber-400 text-[10px] font-bold">1st</span>
+                              <span className="text-white font-black text-base">{battleLeaderboard[0].wins}W</span>
+                              <span className="text-amber-400/70 text-[10px]">{battleLeaderboard[0].winRate}%</span>
+                            </div>
+                          </div>
+                          {/* 3rd place */}
+                          {battleLeaderboard[2] && (
+                            <div className="flex flex-col items-center gap-2 flex-1">
+                              <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black text-white/60 border-2 border-white/10"
+                                style={{ background: "oklch(0.2 0.04 240)" }}>
+                                {battleLeaderboard[2].playerName.charAt(0).toUpperCase()}
+                              </div>
+                              <p className="text-white/60 text-xs font-semibold text-center truncate w-full">{battleLeaderboard[2].playerName}</p>
+                              <div className="w-full rounded-t-xl flex flex-col items-center py-2.5" style={{ background: "oklch(0.24 0.05 240)", minHeight: 48 }}>
+                                <span className="text-white/30 text-[10px] font-bold">3rd</span>
+                                <span className="text-white/70 font-black text-sm">{battleLeaderboard[2].wins}W</span>
+                                <span className="text-white/30 text-[10px]">{battleLeaderboard[2].winRate}%</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Full ranked list */}
+                    <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+                      {battleLeaderboard.map((entry, idx) => {
+                        const isExpanded = expandedLeaderboardId === entry.playerId;
+                        const h2h = getHeadToHeadRecords(club!.id, entry.playerId);
+                        const medalColor = idx === 0 ? "text-amber-400" : idx === 1 ? "text-white/60" : idx === 2 ? "text-orange-400" : "text-white/20";
+                        return (
+                          <div key={entry.playerId} className={`border-b border-white/5 last:border-0 ${
+                            idx < 3 ? "bg-white/[0.02]" : ""
+                          }`}>
+                            <button
+                              onClick={() => setExpandedLeaderboardId(isExpanded ? null : entry.playerId)}
+                              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 transition text-left"
+                            >
+                              {/* Rank */}
+                              <span className={`w-5 text-center text-xs font-black flex-shrink-0 ${medalColor}`}>
+                                {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`}
+                              </span>
+                              {/* Avatar */}
+                              <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white/60"
+                                style={{ background: "oklch(0.25 0.07 145)" }}>
+                                {entry.playerName.charAt(0).toUpperCase()}
+                              </div>
+                              {/* Name + stats */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-semibold truncate">{entry.playerName}</p>
+                                <div className="mt-1 h-1 rounded-full bg-white/10 overflow-hidden w-full">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{
+                                      width: `${entry.winRate}%`,
+                                      background: entry.winRate >= 60
+                                        ? "oklch(0.65 0.2 145)"
+                                        : entry.winRate >= 40
+                                        ? "oklch(0.7 0.15 80)"
+                                        : "oklch(0.55 0.18 25)"
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              {/* W/D/L */}
+                              <div className="flex items-center gap-1.5 text-xs font-bold flex-shrink-0">
+                                <span className="text-emerald-400">{entry.wins}W</span>
+                                <span className="text-white/20">·</span>
+                                <span className="text-white/40">{entry.draws}D</span>
+                                <span className="text-white/20">·</span>
+                                <span className="text-red-400">{entry.losses}L</span>
+                              </div>
+                              {/* Streak */}
+                              {entry.streak !== 0 && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                                  entry.streak > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                                }`}>
+                                  {entry.streak > 0 ? `🔥${entry.streak}W` : `${Math.abs(entry.streak)}L`}
+                                </span>
+                              )}
+                              <ChevronDown className={`w-3.5 h-3.5 text-white/30 flex-shrink-0 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`} />
+                            </button>
+                            {/* H2H drill-down */}
+                            {isExpanded && (
+                              <div className="bg-white/[0.02] border-t border-white/5 px-4 py-3 space-y-2">
+                                <p className="text-white/40 text-[11px] uppercase tracking-wider font-semibold mb-2">Head-to-Head</p>
+                                {h2h.length === 0 ? (
+                                  <p className="text-white/20 text-xs">No completed battles yet.</p>
+                                ) : (
+                                  h2h.map((rec) => {
+                                    const total = rec.wins + rec.draws + rec.losses;
+                                    const winPct = total > 0 ? Math.round((rec.wins / total) * 100) : 0;
+                                    return (
+                                      <div key={rec.opponentId} className="flex items-center gap-3">
+                                        <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white/60"
+                                          style={{ background: "oklch(0.3 0.08 145)" }}>
+                                          {rec.opponentAvatarUrl ? (
+                                            <img src={rec.opponentAvatarUrl} alt={rec.opponentName} className="w-full h-full object-cover rounded-full"
+                                              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                                          ) : rec.opponentName.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-white/80 text-xs font-semibold truncate">{rec.opponentName}</p>
+                                          <div className="mt-0.5 h-1 rounded-full bg-white/10 overflow-hidden w-full">
+                                            <div className="h-full rounded-full transition-all duration-500"
+                                              style={{ width: `${winPct}%`, background: winPct >= 60 ? "oklch(0.65 0.2 145)" : winPct >= 40 ? "oklch(0.7 0.15 80)" : "oklch(0.55 0.18 25)" }} />
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-[11px] font-bold flex-shrink-0">
+                                          <span className="text-emerald-400">{rec.wins}W</span>
+                                          <span className="text-white/20">/</span>
+                                          <span className="text-white/40">{rec.draws}D</span>
+                                          <span className="text-white/20">/</span>
+                                          <span className="text-red-400">{rec.losses}L</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── BATTLES VIEW ────────────────────────────────────────────────── */}
+            {battleView === "battles" && (
+              <div className="space-y-6">
             {/* Challenge creator (director only) */}
             {isOwnerOrDirector && (
               <div id="create-battle-form" className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -3426,6 +3618,8 @@ export default function ClubDashboard() {
               <div className="flex flex-col items-center gap-3 py-16 text-white/30">
                 <Swords className="w-12 h-12 opacity-20" />
                 <p className="text-sm text-center">No battles yet.<br />Create a battle between two members to start tracking records.</p>
+              </div>
+            )}
               </div>
             )}
           </div>

@@ -3232,3 +3232,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Enhance BattleStatBadge to show win rate percentage
 - [x] Add animated win-rate progress bar to the Battle History card header
 - [x] Add "View Full History" link in the Battle History card header
+
+## Club Battle Leaderboard
+
+- [x] Add battleView state (leaderboard | battles) to battles tab
+- [x] Build premium podium section for top 3 players
+- [x] Build ranked rows with win-rate bars and streak badges
+- [x] Add sub-nav toggle (Leaderboard / Battles) at top of battles tab
+- [x] Keep existing battle management below the leaderboard view
