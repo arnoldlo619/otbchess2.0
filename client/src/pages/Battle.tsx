@@ -635,6 +635,16 @@ export default function Battle() {
                 </div>
               )}
 
+              {/* History link — only shown to signed-in non-guest users */}
+              {user && !user.isGuest && (
+                <Link href="/battle/history">
+                  <button className="w-full flex items-center justify-center gap-2 text-xs text-white/30 hover:text-green-400 transition-colors mb-6">
+                    <Trophy className="w-3.5 h-3.5" />
+                    View Battle History
+                  </button>
+                </Link>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Host */}
                 <motion.button

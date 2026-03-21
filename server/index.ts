@@ -1234,6 +1234,7 @@ function getRaceRoom(code: string): RaceRoomState {
           outcome,
           result: r.result,
           isHost,
+          timeControl: r.timeControl ?? null,
           opponent: opponent ? {
             id: opponentId,
             displayName: opponent.displayName,

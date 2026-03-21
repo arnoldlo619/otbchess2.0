@@ -3218,3 +3218,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Import Share2 icon from lucide-react
 - [x] Show "Copied link!" toast feedback when clipboard fallback is used
 - [ ] TypeScript: 0 errors
+
+## Battle History Page
+
+- [x] Server: timeControl added to /api/battles/history response
+- [x] BattleHistory page component with W/D/L stats, win-rate bar, and game list
+- [x] Route /battle/history registered in App.tsx
+- [x] "View Battle History" link on Battle landing screen (signed-in users only)
+- [x] TypeScript: 0 errors

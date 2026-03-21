@@ -31,6 +31,7 @@ const GameRecorder = lazy(() => import("./pages/GameRecorder"));
 const GameAnalysis = lazy(() => import("./pages/GameAnalysis"));
 const VideoRecorder = lazy(() => import("./pages/VideoRecorder"));
 const Battle = lazy(() => import("./pages/Battle"));
+const BattleHistory = lazy(() => import("./pages/BattleHistory"));
 const ClubMessages = lazy(() => import("./pages/ClubMessages"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 
@@ -72,6 +73,7 @@ function Router() {
         <Route path={"/record/camera"} component={VideoRecorder} />
         <Route path={"/game/:gameId/analysis"} component={GameAnalysis} />
         <Route path={"/battle"} component={Battle} />
+        <Route path={"/battle/history"} component={BattleHistory} />
         <Route path={"/invite/:token"} component={InviteAccept} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
