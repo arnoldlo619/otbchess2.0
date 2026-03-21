@@ -2654,7 +2654,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Add Intersection Observer to PerformanceSection so bars animate from 0% to final width on first scroll into view
 - [x] Stagger each bar's animation with a small delay per row index
-- [ ] TypeScript: 0 errors
+- [x] TypeScript: 0 errors
 
 ## Score Distribution — Re-trigger on Round Change
 
@@ -3155,4 +3155,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Low-time warning: orange colour + tenths-of-second display below 10s
 - [x] Active side shown with top indicator bar + pulse ring on avatar
 - [x] Integrated into battle_room screen below player cards (only shown when both players present and timeControl set)
+- [x] TypeScript: 0 errors
+
+## Chess Clock — Sound Effects
+
+- [x] Web Audio API hook (useClockSounds) — no external files, synthesised in-browser
+- [x] Sharp mechanical click on each move tap (noise burst + low thud)
+- [x] Low-time alert: rapid ticking beep every second when clock < 10s
+- [x] Flag-fall buzz when time hits 0
+- [x] Sounds respect user gesture requirement (AudioContext unlocked on first tap)
 - [x] TypeScript: 0 errors

@@ -7,12 +7,15 @@
  * - Pause / Resume button in the centre
  * - Reset button restores both clocks to the initial time
  * - Flag-fall: when a player's time hits 0 the panel turns red and the clock stops
+ * - Sound effects: click on tap, warning ticks below 10 s, flag-fall alarm
+ * - Mute toggle persisted in localStorage
  * - Minimalist design aligned with the chess.com clock app aesthetic
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pause, Play, RotateCcw, Flag } from "lucide-react";
+import { Pause, Play, RotateCcw, Flag, Volume2, VolumeX } from "lucide-react";
+import { useClockSounds } from "../hooks/useClockSounds";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,9 +81,17 @@ export default function ChessClock({
   const [paused, setPaused] = useState(false);
   const [flagFallen, setFlagFallen] = useState<"host" | "guest" | null>(null);
 
+  // Sound effects
+  const { tap, warningTick, flagAlarm, muted, toggleMute } = useClockSounds();
+
   // Track last tick time for accurate countdown
   const lastTickRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
+
+  // Track last second for warning tick (fire once per second, not every frame)
+  const lastWarnSecRef = useRef<number>(-1);
+  // Track whether flag alarm has already fired (avoid repeat)
+  const flagAlarmFiredRef = useRef(false);
 
   // ── Tick loop ────────────────────────────────────────────────────────────────
   const tick = useCallback(() => {
@@ -94,13 +105,13 @@ export default function ChessClock({
     if (active === "host") {
       setHostMs((prev) => {
         const next = Math.max(0, prev - delta);
-        if (next === 0) setFlagFallen("host");
+        if (next === 0 && prev > 0) setFlagFallen("host");
         return next;
       });
     } else if (active === "guest") {
       setGuestMs((prev) => {
         const next = Math.max(0, prev - delta);
-        if (next === 0) setFlagFallen("guest");
+        if (next === 0 && prev > 0) setFlagFallen("guest");
         return next;
       });
     }
@@ -121,6 +132,32 @@ export default function ChessClock({
     };
   }, [active, paused, flagFallen, tick]);
 
+  // ── Warning tick: fire once per second when active player is below 10 s ──────
+  useEffect(() => {
+    if (!active || paused || flagFallen) return;
+    const activeMs = active === "host" ? hostMs : guestMs;
+    if (activeMs <= 0 || activeMs >= 10_000) {
+      lastWarnSecRef.current = -1;
+      return;
+    }
+    const currentSec = Math.ceil(activeMs / 1000);
+    if (currentSec !== lastWarnSecRef.current) {
+      lastWarnSecRef.current = currentSec;
+      warningTick();
+    }
+  }, [active, paused, flagFallen, hostMs, guestMs, warningTick]);
+
+  // ── Flag-fall alarm: fire once when flag drops ────────────────────────────────
+  useEffect(() => {
+    if (flagFallen && !flagAlarmFiredRef.current) {
+      flagAlarmFiredRef.current = true;
+      flagAlarm();
+    }
+    if (!flagFallen) {
+      flagAlarmFiredRef.current = false;
+    }
+  }, [flagFallen, flagAlarm]);
+
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
   /** Tap your own panel → end your turn, add increment, start opponent's clock */
@@ -128,10 +165,10 @@ export default function ChessClock({
     if (flagFallen) return;
     if (paused) return;
 
-    // First tap starts the clock — the side that taps first is "moving first"
-    // so we start the *opponent's* clock (they move next)
+    // First tap starts the clock — the tapper has just "moved",
+    // so the opponent's clock starts
     if (active === null) {
-      // Tap to start: the tapper has just "moved", opponent's clock starts
+      tap(); // click sound
       if (side === "host") {
         setActive("guest");
       } else {
@@ -142,6 +179,8 @@ export default function ChessClock({
 
     // Can only tap your own side to end your turn
     if (active !== side) return;
+
+    tap(); // click sound
 
     // Add increment to the side that just moved
     if (side === "host") {
@@ -155,7 +194,7 @@ export default function ChessClock({
 
   function handlePauseResume() {
     if (flagFallen) return;
-    if (active === null) return; // not started yet
+    if (active === null) return;
     setPaused((p) => !p);
   }
 
@@ -167,6 +206,8 @@ export default function ChessClock({
     setPaused(false);
     setFlagFallen(null);
     lastTickRef.current = null;
+    lastWarnSecRef.current = -1;
+    flagAlarmFiredRef.current = false;
   }
 
   // ── Derived state ─────────────────────────────────────────────────────────────
@@ -186,13 +227,30 @@ export default function ChessClock({
       transition={{ delay: 0.85, duration: 0.5, ease: "easeOut" }}
       className="w-full max-w-3xl relative z-10"
     >
-      {/* Section label */}
+      {/* Section label + mute toggle */}
       <div className="flex items-center justify-center gap-2 mb-4">
         <div className="h-px flex-1" style={{ background: "oklch(0.35 0.04 240 / 0.3)" }} />
         <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/25">
           Chess Clock · {timeControl}
         </span>
         <div className="h-px flex-1" style={{ background: "oklch(0.35 0.04 240 / 0.3)" }} />
+        {/* Mute toggle */}
+        <motion.button
+          onClick={toggleMute}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.88 }}
+          title={muted ? "Unmute sounds" : "Mute sounds"}
+          className="ml-1 p-1.5 rounded-full transition-colors"
+          style={{
+            background: muted ? "oklch(0.20 0.04 240 / 0.5)" : "oklch(0.22 0.08 142 / 0.4)",
+            border: `1px solid ${muted ? "oklch(0.30 0.04 240 / 0.4)" : "oklch(0.40 0.12 142 / 0.35)"}`,
+          }}
+        >
+          {muted
+            ? <VolumeX className="w-3 h-3 text-white/30" />
+            : <Volume2 className="w-3 h-3 text-green-400/70" />
+          }
+        </motion.button>
       </div>
 
       {/* Main clock body */}
@@ -209,7 +267,7 @@ export default function ChessClock({
           {/* ── Host panel (left) ──────────────────────────────────────────── */}
           <motion.button
             onClick={() => handleTap("host")}
-            disabled={!!flagFallen || (active === "guest" && !paused ? false : active !== null && active !== "host")}
+            disabled={!!flagFallen || (active !== null && active !== "host" && !paused)}
             whileTap={active === "host" && !paused ? { scale: 0.97 } : {}}
             className="relative flex flex-col items-center justify-center gap-3 p-8 transition-colors duration-200 select-none focus:outline-none"
             style={{
@@ -232,6 +290,19 @@ export default function ChessClock({
                   exit={{ scaleX: 0 }}
                   className="absolute top-0 left-0 right-0 h-0.5 origin-left"
                   style={{ background: "oklch(0.55 0.18 142)" }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Low-time pulse overlay */}
+            <AnimatePresence>
+              {hostLow && active === "host" && !paused && (
+                <motion.div
+                  key="host-low-pulse"
+                  className="absolute inset-0 pointer-events-none"
+                  animate={{ opacity: [0, 0.12, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "oklch(0.65 0.18 40)" }}
                 />
               )}
             </AnimatePresence>
@@ -283,7 +354,7 @@ export default function ChessClock({
             {/* Time display */}
             <div className="text-center">
               <motion.span
-                key={Math.floor(hostMs / 100)} // re-animate on each 100ms tick
+                key={Math.floor(hostMs / 100)}
                 className="font-mono font-black tabular-nums leading-none"
                 style={{
                   fontSize: hostMs < 60_000 ? "3.5rem" : "3rem",
@@ -326,7 +397,8 @@ export default function ChessClock({
           </motion.button>
 
           {/* ── Centre controls ────────────────────────────────────────────── */}
-          <div className="flex flex-col items-center justify-center gap-3 px-3 py-6"
+          <div
+            className="flex flex-col items-center justify-center gap-3 px-3 py-6"
             style={{ borderLeft: "1px solid oklch(0.20 0.03 240 / 0.4)" }}
           >
             {/* Pause / Resume */}
@@ -385,7 +457,7 @@ export default function ChessClock({
           {/* ── Guest panel (right) ────────────────────────────────────────── */}
           <motion.button
             onClick={() => handleTap("guest")}
-            disabled={!!flagFallen || (active === "host" && !paused ? false : active !== null && active !== "guest")}
+            disabled={!!flagFallen || (active !== null && active !== "guest" && !paused)}
             whileTap={active === "guest" && !paused ? { scale: 0.97 } : {}}
             className="relative flex flex-col items-center justify-center gap-3 p-8 transition-colors duration-200 select-none focus:outline-none"
             style={{
@@ -407,6 +479,19 @@ export default function ChessClock({
                   exit={{ scaleX: 0 }}
                   className="absolute top-0 left-0 right-0 h-0.5 origin-right"
                   style={{ background: "oklch(0.65 0.04 240)" }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Low-time pulse overlay */}
+            <AnimatePresence>
+              {guestLow && active === "guest" && !paused && (
+                <motion.div
+                  key="guest-low-pulse"
+                  className="absolute inset-0 pointer-events-none"
+                  animate={{ opacity: [0, 0.12, 0] }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "oklch(0.65 0.18 40)" }}
                 />
               )}
             </AnimatePresence>
