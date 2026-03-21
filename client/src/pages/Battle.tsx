@@ -23,6 +23,7 @@ import {
   Clock,
   Ghost,
   Flag,
+  Share2,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
@@ -497,6 +498,30 @@ export default function Battle() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  // ── Native share / clipboard fallback ───────────────────────────────────────────
+  const [shared, setShared] = useState(false);
+
+  async function handleShare() {
+    if (!joinUrl) return;
+    const shareData = {
+      title: "Chess Battle Challenge",
+      text: `Join my OTB chess battle! Code: ${room?.code}`,
+      url: joinUrl,
+    };
+    try {
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy the link to clipboard
+        await navigator.clipboard.writeText(joinUrl);
+        setShared(true);
+        setTimeout(() => setShared(false), 2500);
+      }
+    } catch {
+      // User cancelled share or clipboard failed — silently ignore
+    }
+  }
+
   const joinUrl = room
     ? `${window.location.origin}/battle?join=${room.code}`
     : "";
@@ -783,12 +808,39 @@ export default function Battle() {
               )}
 
               {/* Waiting indicator */}
-              <div className="flex items-center justify-center gap-2 text-white/40 text-sm">
+              <div className="flex items-center justify-center gap-2 text-white/40 text-sm mb-6">
                 {polling && (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 )}
                 <span>Waiting for opponent to join…</span>
               </div>
+
+              {/* Share / copy link button */}
+              <motion.button
+                whileHover={{ scale: 1.03, boxShadow: "0 0 20px oklch(0.55 0.18 142 / 0.3)" }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleShare}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all mx-auto"
+                style={{
+                  background: shared
+                    ? "oklch(0.22 0.12 142 / 0.9)"
+                    : "oklch(0.18 0.08 142 / 0.7)",
+                  border: "1.5px solid oklch(0.45 0.15 142 / 0.5)",
+                  color: shared ? "#4ade80" : "oklch(0.70 0.12 142)",
+                }}
+              >
+                {shared ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4" />
+                    Share Invite Link
+                  </>
+                )}
+              </motion.button>
             </motion.div>
           )}
 

@@ -3210,3 +3210,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Guest sees "Ask host for a rematch" hint text instead of the button
 - [x] Reset confettiFired, clockFlagFallen, flagSuggestionDismissed on rematch
 - [ ] TypeScript: 0 errors
+
+## Battle Host Waiting — Native Share Button
+
+- [x] Add handleShare function using Web Share API with clipboard fallback
+- [x] Add Share button below the waiting indicator in host_waiting screen
+- [x] Import Share2 icon from lucide-react
+- [x] Show "Copied link!" toast feedback when clipboard fallback is used
+- [ ] TypeScript: 0 errors
