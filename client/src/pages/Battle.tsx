@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { NavLogo } from "../components/NavLogo";
 import ChessNotationRace from "../components/ChessNotationRace";
 import ChessClock from "../components/ChessClock";
 import confetti from "canvas-confetti";
@@ -552,11 +553,7 @@ export default function Battle() {
       </AnimatePresence>
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <Link href="/">
-          <span className="text-xl font-black italic text-green-400 tracking-tight cursor-pointer hover:opacity-80 transition-opacity">
-            OTB!!
-          </span>
-        </Link>
+        <NavLogo />
         <div className="flex items-center gap-2 text-white/50 text-sm">
           <Swords className="w-4 h-4" />
           <span>Battle</span>

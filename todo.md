@@ -3285,3 +3285,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add gold Crown icon next to "Board 1" in ByeCard header
 - [x] Add gold Crown icon next to "Board 1" in BoardCard header
 - [x] Add gold Crown icon next to "Board 1" in DoubleSwissBoardCard header
+
+## Battle Page Logo Consistency
+- [x] Import NavLogo in Battle.tsx and replace text "OTB!!" logo with NavLogo component
