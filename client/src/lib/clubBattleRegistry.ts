@@ -24,6 +24,7 @@ export interface ClubBattle {
 export interface BattleLeaderboardEntry {
   playerId: string;
   playerName: string;
+  avatarUrl?: string | null;
   wins: number;
   draws: number;
   losses: number;
@@ -124,7 +125,10 @@ export function deleteBattle(clubId: string, battleId: string): void {
   saveBattles(clubId, loadBattles(clubId).filter((b) => b.id !== battleId));
 }
 
-export function getBattleLeaderboard(clubId: string): BattleLeaderboardEntry[] {
+export function getBattleLeaderboard(
+  clubId: string,
+  members?: Array<{ userId: string; avatarUrl?: string | null }>
+): BattleLeaderboardEntry[] {
   const completed = loadBattles(clubId).filter((b) => b.status === "completed" && b.result);
   const map = new Map<string, { name: string; wins: number; draws: number; losses: number; history: string[] }>();
 
@@ -164,7 +168,8 @@ export function getBattleLeaderboard(clubId: string): BattleLeaderboardEntry[] {
       else if (streak < 0 && r === "loss") streak--;
       else break;
     }
-    entries.push({ playerId, playerName: stats.name, wins: stats.wins, draws: stats.draws, losses: stats.losses, total, winRate, streak });
+    const member = members?.find((m) => m.userId === playerId);
+    entries.push({ playerId, playerName: stats.name, avatarUrl: member?.avatarUrl ?? null, wins: stats.wins, draws: stats.draws, losses: stats.losses, total, winRate, streak });
   }
   return entries.sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
 }

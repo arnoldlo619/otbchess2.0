@@ -3260,3 +3260,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix useChesscomAvatar hook URL from /api/chess-com/:username to /api/chess/player/:username
 - [x] Enhance battle room GET endpoint to auto-fetch and store chess.com avatar if avatarUrl is null
 - [x] Verify avatars display in battle room player cards
+
+## Chess.com Avatars on Club Leaderboard
+
+- [x] Add avatarUrl field to BattleLeaderboardEntry interface
+- [x] Pass members list into getBattleLeaderboard to enrich entries with avatarUrl
+- [x] Render chess.com avatar next to player name in podium and ranked list
