@@ -1043,8 +1043,8 @@ export default function Battle() {
                     timeControl={room.timeControl}
                     hostName={room.host?.displayName ?? "Host"}
                     guestName={room.guest?.displayName ?? "Guest"}
-                    hostAvatarUrl={room.host?.avatarUrl}
-                    guestAvatarUrl={room.guest?.avatarUrl}
+                    hostAvatarUrl={hostAvatar ?? room.host?.avatarUrl ?? undefined}
+                    guestAvatarUrl={guestAvatar ?? room.guest?.avatarUrl ?? undefined}
                     onFlagFall={handleClockFlagFall}
                   />
                 </div>

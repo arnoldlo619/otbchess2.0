@@ -3260,3 +3260,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix useChesscomAvatar hook URL from /api/chess-com/:username to /api/chess/player/:username
 - [x] Enhance battle room GET endpoint to auto-fetch and store chess.com avatar if avatarUrl is null
 - [x] Verify avatars display in battle room player cards
+
+## Chess.com Avatar Integration in Battle Page (Fix)
+- [x] Fix join endpoint to call enrichAvatar for both host and guest profiles
+- [x] Pass resolved hook avatars (hostAvatar/guestAvatar) to ChessClock instead of raw DB values
+- [x] Verify TypeScript 0 errors

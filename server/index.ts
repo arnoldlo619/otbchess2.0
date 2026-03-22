@@ -1190,10 +1190,23 @@ function getRaceRoom(code: string): RaceRoomState {
       if (room.hostId === userId) return res.status(400).json({ error: "You cannot join your own battle room" });
       if (room.guestId) return res.status(409).json({ error: "Battle room is already full" });
       await db.update(battleRooms).set({ guestId: userId, status: "active", startedAt: new Date() }).where(eq(battleRooms.code, req.params.code.toUpperCase()));
-      // Return updated room with profiles
+      // Return updated room with profiles — enrich chess.com avatars if missing
+      type JoinProfile = { id: string; displayName: string; chesscomUsername: string | null; avatarUrl: string | null; chesscomElo: number | null };
+      const enrichJoin = async (p: JoinProfile | null): Promise<JoinProfile | null> => {
+        if (!p || p.avatarUrl || !p.chesscomUsername) return p;
+        try {
+          const r = await proxyChessCom(p.chesscomUsername);
+          if (r.status === 200) {
+            const av = (r.body as { profile?: { avatar?: string } })?.profile?.avatar ?? null;
+            if (av) { await db.update(users).set({ avatarUrl: av }).where(eq(users.id, p.id)); return { ...p, avatarUrl: av }; }
+          }
+        } catch { /* ignore */ }
+        return p;
+      };
       const hostRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, room.hostId)).limit(1);
       const guestRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, userId)).limit(1);
-      res.json({ ...room, guestId: userId, status: "active", host: hostRows[0] ?? null, guest: guestRows[0] ?? null });
+      const [host, guest] = await Promise.all([enrichJoin(hostRows[0] ?? null), enrichJoin(guestRows[0] ?? null)]);
+      res.json({ ...room, guestId: userId, status: "active", host, guest });
     } catch (err) {
       console.error("[battles] join error:", err);
       res.status(500).json({ error: "Failed to join battle room" });
