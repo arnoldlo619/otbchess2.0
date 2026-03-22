@@ -3276,3 +3276,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Logo already links to "/" — now sole home navigation on mobile
 - [x] Cleaned up unused ChevronLeft import and backHref/backLabel props
 - [x] TypeScript 0 errors
+
+## Fix Board Numbering (Board 1 = Top Board)
+- [x] Reverse tempGames order in swiss.ts so Board 1 = highest-rated pair
+- [x] Verify Director.tsx boardNums sort is ascending (a-b) so Board 1 displays first

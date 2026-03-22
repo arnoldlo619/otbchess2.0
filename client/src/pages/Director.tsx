@@ -2435,7 +2435,7 @@ export default function Director() {
                         })()
                       ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {currentRoundData.games.map((game, cardIdx) =>
+                        {[...currentRoundData.games].sort((a, b) => a.board - b.board).map((game, cardIdx) =>
                           game.whiteId === "BYE" ? (
                             <div
                               key={game.id}

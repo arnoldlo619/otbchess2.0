@@ -366,6 +366,10 @@ export function generateSwissPairings(
 
   tryPair(workingList);
 
+  // Reverse so that the highest-rated pair (added last by the recursive tryPair)
+  // receives Board 1, with board numbers ascending as ratings/scores decrease.
+  tempGames.reverse();
+
   // Convert tempGames to Game objects with color assignment
   for (const { p1, p2 } of tempGames) {
     const { whiteId, blackId } = assignColors(p1, p2);
