@@ -1138,15 +1138,36 @@ function getRaceRoom(code: string): RaceRoomState {
       const rows = await db.select().from(battleRooms).where(eq(battleRooms.code, req.params.code.toUpperCase())).limit(1);
       if (rows.length === 0) return res.status(404).json({ error: "Battle room not found" });
       const room = rows[0];
+
+      // Helper: if avatarUrl is missing but chesscomUsername is set, fetch from chess.com and persist
+      type UserProfile = { id: string; displayName: string; chesscomUsername: string | null; avatarUrl: string | null; chesscomElo: number | null };
+      const enrichAvatar = async (profile: UserProfile | null): Promise<UserProfile | null> => {
+        if (!profile || profile.avatarUrl || !profile.chesscomUsername) return profile;
+        try {
+          const result = await proxyChessCom(profile.chesscomUsername);
+          if (result.status === 200) {
+            const body = result.body as { profile?: { avatar?: string } };
+            const avatarUrl = body?.profile?.avatar ?? null;
+            if (avatarUrl) {
+              await db.update(users).set({ avatarUrl }).where(eq(users.id, profile.id));
+              return { ...profile, avatarUrl };
+            }
+          }
+        } catch { /* ignore — return profile as-is */ }
+        return profile;
+      };
+
       // Fetch host profile
       const hostRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, room.hostId)).limit(1);
-      const host = hostRows[0] ?? null;
+      const hostRaw = hostRows[0] ?? null;
       // Fetch guest profile if present
-      let guest = null;
+      let guestRaw: UserProfile | null = null;
       if (room.guestId) {
         const guestRows = await db.select({ id: users.id, displayName: users.displayName, chesscomUsername: users.chesscomUsername, avatarUrl: users.avatarUrl, chesscomElo: users.chesscomElo }).from(users).where(eq(users.id, room.guestId)).limit(1);
-        guest = guestRows[0] ?? null;
+        guestRaw = guestRows[0] ?? null;
       }
+      // Enrich both profiles with chess.com avatars in parallel
+      const [host, guest] = await Promise.all([enrichAvatar(hostRaw), enrichAvatar(guestRaw)]);
       res.json({ ...room, host, guest });
     } catch (err) {
       console.error("[battles] get error:", err);

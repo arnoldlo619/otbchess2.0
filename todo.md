@@ -3254,3 +3254,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show hamburger button on mobile (< 768px) instead of only < 320px
 - [x] Show full nav pill only on desktop (>= 768px)
 - [x] Slide-in drawer shows all nav items on mobile
+
+## Fix Chess.com Avatars in Battle Room
+
+- [x] Fix useChesscomAvatar hook URL from /api/chess-com/:username to /api/chess/player/:username
+- [x] Enhance battle room GET endpoint to auto-fetch and store chess.com avatar if avatarUrl is null
+- [x] Verify avatars display in battle room player cards

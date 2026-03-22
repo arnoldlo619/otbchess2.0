@@ -3,8 +3,8 @@
  *
  * Given a PlayerProfile, returns the best available avatar URL:
  *  1. player.avatarUrl (already stored in DB)
- *  2. Fetched from the chess.com proxy (/api/chess-com/:username)
- *  3. null (render initials)
+ *  2. Fetched from the server chess.com proxy (/api/chess/player/:username)
+ *  3. null (render initials fallback)
  *
  * Results are cached in a module-level Map so repeated renders don't
  * re-fetch the same username.
@@ -27,9 +27,13 @@ export function useChesscomAvatar(player: PlayerProfile | null): string | null {
   const [fetchedUrl, setFetchedUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // If the player already has an avatarUrl stored, no need to fetch
-    if (!player || player.avatarUrl) {
+    // If the player already has an avatarUrl stored, use it directly
+    if (!player) {
       setFetchedUrl(null);
+      return;
+    }
+    if (player.avatarUrl) {
+      setFetchedUrl(player.avatarUrl);
       return;
     }
     // If no chess.com username, nothing to fetch
@@ -50,7 +54,8 @@ export function useChesscomAvatar(player: PlayerProfile | null): string | null {
 
     async function fetchAvatar() {
       try {
-        const res = await fetch(`/api/chess-com/${encodeURIComponent(username)}`);
+        // Use the correct server proxy endpoint: /api/chess/player/:username
+        const res = await fetch(`/api/chess/player/${encodeURIComponent(username)}`);
         if (!res.ok) {
           avatarCache.set(username, "");
           return;
@@ -71,6 +76,5 @@ export function useChesscomAvatar(player: PlayerProfile | null): string | null {
   }, [player?.id, player?.avatarUrl, player?.chesscomUsername]);
 
   if (!player) return null;
-  // Prefer stored avatarUrl, then fetched, then null
-  return player.avatarUrl ?? fetchedUrl;
+  return fetchedUrl;
 }
