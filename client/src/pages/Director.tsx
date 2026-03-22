@@ -160,7 +160,8 @@ function ByeCard({ game, players, isDark }: {
           isDark ? "border-white/08 bg-white/04" : "border-gray-50 bg-gray-50/80"
         }`}
       >
-        <span className={`text-xs font-bold tracking-widest uppercase ${isDark ? "text-white/40" : "text-gray-400"}`}>
+        <span className={`flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          {game.board === 1 && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
           Board {game.board}
         </span>
         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
@@ -267,7 +268,7 @@ function BoardCard({
             <GripVertical className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/25" : "text-gray-300"}`} />
           )}
           <span
-            className={`text-[11px] font-black tracking-[0.12em] uppercase ${
+            className={`flex items-center gap-1.5 text-[11px] font-black tracking-[0.12em] uppercase ${
               editMode
                 ? isSwapSource
                   ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
@@ -275,6 +276,7 @@ function BoardCard({
                 : isDark ? "text-white/35" : "text-gray-400"
             }`}
           >
+            {game.board === 1 && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
             Board {game.board}
           </span>
           {!editMode && !isComplete && (
@@ -656,9 +658,12 @@ function DoubleSwissBoardCard({
         isDark ? "border-white/08 bg-white/03" : "border-gray-100 bg-gray-50/60"
       }`}>
         <div className="flex items-center gap-2">
-          <span className={`text-[11px] font-black tracking-[0.12em] uppercase ${
+          <span className={`flex items-center gap-1.5 text-[11px] font-black tracking-[0.12em] uppercase ${
             isDark ? "text-white/35" : "text-gray-400"
-          }`}>Board {gameA.board}</span>
+          }`}>
+            {gameA.board === 1 && <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />}
+            Board {gameA.board}
+          </span>
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
             isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
           }`}>2× Games</span>
