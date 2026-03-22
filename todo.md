@@ -3270,3 +3270,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove AnimatedQR component from StepShare (Step 4 of wizard)
 - [x] Replace with a minimalist hint card: "QR code ready on the next screen"
 - [x] TypeScript 0 errors
+
+## Remove Home Button from Director Dashboard Header
+- [x] Remove mobile "< Home" back button from MinimalTournamentNav
+- [x] Logo already links to "/" — now sole home navigation on mobile
+- [x] Cleaned up unused ChevronLeft import and backHref/backLabel props
+- [x] TypeScript 0 errors

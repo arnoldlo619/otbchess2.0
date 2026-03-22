@@ -13,7 +13,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
-import { LogIn, Ghost, Crown, X, ChevronLeft } from "lucide-react";
+import { LogIn, Ghost, Crown, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -25,9 +25,9 @@ interface MinimalTournamentNavProps {
   onSignInClick?: () => void;
   /** @deprecated Use centerSlot instead. Kept for backwards compat with Tournament.tsx */
   tournamentName?: string;
-  /** If provided, shows a mobile-only back button on the left side of the nav */
+  /** @deprecated No longer used — logo now serves as the home navigation link */
   backHref?: string;
-  /** Label for the back button. Defaults to "Home" */
+  /** @deprecated No longer used */
   backLabel?: string;
   /** Optional content to render in the center slot (e.g. QR buttons) */
   centerSlot?: ReactNode;
@@ -36,8 +36,6 @@ interface MinimalTournamentNavProps {
 export function MinimalTournamentNav({
   onSignInClick,
   tournamentName,
-  backHref,
-  backLabel = "Home",
   centerSlot,
 }: MinimalTournamentNavProps) {
   const { theme } = useTheme();
@@ -65,31 +63,14 @@ export function MinimalTournamentNav({
           : "bg-white/90 border-black/08 backdrop-blur-md"
       }`}
     >
-      {/* Left slot — back button (mobile) + logo */}
-      <div className="flex-1 flex items-center gap-1.5">
-        {/* Mobile back-to-dashboard button — only shown when backHref is provided */}
-        {backHref && (
-          <Link href={backHref}>
-            <button
-              className={`sm:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 border ${
-                isDark
-                  ? "bg-[#4CAF50]/12 border-[#4CAF50]/25 text-[#4CAF50] hover:bg-[#4CAF50]/22"
-                  : "bg-[#3D6B47]/08 border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/15"
-              }`}
-              title={`Back to ${backLabel}`}
-            >
-              <ChevronLeft className="w-3.5 h-3.5 -ml-0.5" />
-              <span>{backLabel}</span>
-            </button>
-          </Link>
-        )}
-
+      {/* Left slot — logo only (links to home) */}
+      <div className="flex-1 flex items-center">
         {/* Logo — always visible, links to home */}
-        <Link href="/" className="flex items-center flex-shrink-0">
+        <Link href="/" className="flex items-center flex-shrink-0" title="Back to Home">
           <img
             src={LOGO_URL}
-            alt="OTB Chess"
-            className={`h-7 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+            alt="OTB Chess — Back to Home"
+            className={`h-7 w-auto object-contain transition-opacity hover:opacity-80 active:scale-95 ${isDark ? "nav-logo-dark" : ""}`}
             draggable={false}
           />
         </Link>
