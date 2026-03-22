@@ -2069,8 +2069,32 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
         </div>
       </div>
 
-      {/* ── QR code — prominent ─────────────────────────────────────────── */}
-      <AnimatedQR inviteUrl={inviteUrl} isDark={isDark} />
+      {/* ── QR code hint ─────────────────────────────────────────────────── */}
+      <div
+        className="flex items-start gap-3 rounded-2xl p-4"
+        style={{
+          background: isDark ? "rgba(61,107,71,0.10)" : "#F0F5EE",
+          border: `1.5px solid ${isDark ? "rgba(61,107,71,0.22)" : "#D4E6D8"}`,
+        }}
+      >
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+          style={{ background: isDark ? "rgba(61,107,71,0.25)" : "#FFFFFF", color: T.green }}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h3v3h-3z" />
+          </svg>
+        </div>
+        <div>
+          <p className="text-sm font-semibold" style={{ color: isDark ? T.dText : T.lText }}>
+            QR code ready on the next screen
+          </p>
+          <p className="text-xs mt-0.5 leading-relaxed" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+            Once you tap <strong>Go to Tournament</strong>, a full-screen QR code will appear so players can scan and join instantly.
+          </p>
+        </div>
+      </div>
 
       {/* ── Player Invite Link ──────────────────────────────────────────── */}
       <div className="space-y-2">

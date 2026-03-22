@@ -3265,3 +3265,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix join endpoint to call enrichAvatar for both host and guest profiles
 - [x] Pass resolved hook avatars (hostAvatar/guestAvatar) to ChessClock instead of raw DB values
 - [x] Verify TypeScript 0 errors
+
+## Remove QR Code from Director Share Page
+- [x] Remove AnimatedQR component from StepShare (Step 4 of wizard)
+- [x] Replace with a minimalist hint card: "QR code ready on the next screen"
+- [x] TypeScript 0 errors
