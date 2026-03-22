@@ -1975,12 +1975,11 @@ export default function ClubDashboard() {
     }
 
     setClub(found);
-    const foundMembers = getClubMembers(found.id);
-    setMembers(foundMembers);
+    setMembers(getClubMembers(found.id));
     setEvents(listClubEvents(found.id, true));
     setFeedEvents(listFeedEvents(found.id, 50));
     setBattles(listBattles(found.id));
-    setBattleLeaderboard(getBattleLeaderboard(found.id, foundMembers));
+    setBattleLeaderboard(getBattleLeaderboard(found.id));
     setLoading(false);
   }, [id, user]);
 
@@ -2013,7 +2012,7 @@ export default function ClubDashboard() {
   function refreshBattles() {
     if (!club) return;
     setBattles(listBattles(club.id));
-    setBattleLeaderboard(getBattleLeaderboard(club.id, members));
+    setBattleLeaderboard(getBattleLeaderboard(club.id));
   }
 
   function refreshFeed() {
@@ -3193,8 +3192,9 @@ export default function ClubDashboard() {
                           {/* 2nd place */}
                           {battleLeaderboard[1] && (
                             <div className="flex flex-col items-center gap-2 flex-1">
-                              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 flex-shrink-0">
-                                <PlayerAvatar username={battleLeaderboard[1].playerName} name={battleLeaderboard[1].playerName} avatarUrl={battleLeaderboard[1].avatarUrl ?? undefined} size={48} className="w-full h-full object-cover" />
+                              <div className="w-12 h-12 rounded-full flex items-center justify-center text-base font-black text-white/70 border-2 border-white/20"
+                                style={{ background: "oklch(0.22 0.05 240)" }}>
+                                {battleLeaderboard[1].playerName.charAt(0).toUpperCase()}
                               </div>
                               <p className="text-white/70 text-xs font-semibold text-center truncate w-full">{battleLeaderboard[1].playerName}</p>
                               <div className="w-full rounded-t-xl flex flex-col items-center py-3" style={{ background: "oklch(0.28 0.06 240)", minHeight: 56 }}>
@@ -3207,8 +3207,9 @@ export default function ClubDashboard() {
                           {/* 1st place */}
                           <div className="flex flex-col items-center gap-2 flex-1">
                             <Crown className="w-5 h-5 text-amber-400" />
-                            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/60 flex-shrink-0">
-                              <PlayerAvatar username={battleLeaderboard[0].playerName} name={battleLeaderboard[0].playerName} avatarUrl={battleLeaderboard[0].avatarUrl ?? undefined} size={56} className="w-full h-full object-cover" />
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-black text-white border-2 border-amber-400/60"
+                              style={{ background: "oklch(0.26 0.08 80)" }}>
+                              {battleLeaderboard[0].playerName.charAt(0).toUpperCase()}
                             </div>
                             <p className="text-white text-xs font-bold text-center truncate w-full">{battleLeaderboard[0].playerName}</p>
                             <div className="w-full rounded-t-xl flex flex-col items-center py-4" style={{ background: "oklch(0.32 0.1 80)", minHeight: 72 }}>
@@ -3220,8 +3221,9 @@ export default function ClubDashboard() {
                           {/* 3rd place */}
                           {battleLeaderboard[2] && (
                             <div className="flex flex-col items-center gap-2 flex-1">
-                              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/10 flex-shrink-0">
-                                <PlayerAvatar username={battleLeaderboard[2].playerName} name={battleLeaderboard[2].playerName} avatarUrl={battleLeaderboard[2].avatarUrl ?? undefined} size={44} className="w-full h-full object-cover" />
+                              <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-black text-white/60 border-2 border-white/10"
+                                style={{ background: "oklch(0.2 0.04 240)" }}>
+                                {battleLeaderboard[2].playerName.charAt(0).toUpperCase()}
                               </div>
                               <p className="text-white/60 text-xs font-semibold text-center truncate w-full">{battleLeaderboard[2].playerName}</p>
                               <div className="w-full rounded-t-xl flex flex-col items-center py-2.5" style={{ background: "oklch(0.24 0.05 240)", minHeight: 48 }}>
@@ -3254,8 +3256,9 @@ export default function ClubDashboard() {
                                 {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`}
                               </span>
                               {/* Avatar */}
-                              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                                <PlayerAvatar username={entry.playerName} name={entry.playerName} avatarUrl={entry.avatarUrl ?? undefined} size={32} className="w-full h-full object-cover" />
+                              <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white/60"
+                                style={{ background: "oklch(0.25 0.07 145)" }}>
+                                {entry.playerName.charAt(0).toUpperCase()}
                               </div>
                               {/* Name + stats */}
                               <div className="flex-1 min-w-0">
