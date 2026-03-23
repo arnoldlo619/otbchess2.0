@@ -3438,3 +3438,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Create useClubPresence hook — polls presence every 30s, sends heartbeat every 60s if member
 - [x] Add animated green pulse dot + "N Online" indicator to club header stats row
 - [x] 22 unit tests pass: isOnlineNow (8), presence count (4), URL construction (2), interval constants (4), isMember guard (4)
+
+## Feature: Server-Side Club Search on Discover Page
+- [x] Audit Discover tab filter UI in MyClubs.tsx (search, categoryFilter state variables)
+- [x] Audit GET /api/clubs server endpoint — already supports ?search= and ?category= params
+- [x] Replace client-side useMemo array filter with debounced server API calls (350ms for text, 0ms for category)
+- [x] Added discoverLoading, discoverTotal state; server-first with localStorage fallback on error
+- [x] Added animated 6-card loading skeleton while search results are fetching
+- [x] Show result count label ("N clubs matching X in Y") and context-aware empty state
+- [x] 28 unit tests pass: URL construction (7), debounce delay (4), result count label (7), fallback filter (10)

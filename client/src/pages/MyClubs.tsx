@@ -9,7 +9,7 @@
  * For guests:
  *   - Full discovery grid with a sign-in prompt
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { useAuthContext } from "@/context/AuthContext";
@@ -608,6 +608,54 @@ export default function MyClubs() {
   const [showFilters, setShowFilters] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [rsvpRefresh, setRsvpRefresh] = useState(0);
+  const [discoverClubs, setDiscoverClubs] = useState<Club[]>([]);
+  const [discoverLoading, setDiscoverLoading] = useState(false);
+  const [discoverTotal, setDiscoverTotal] = useState(0);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Server-side Discover search (debounced) ──────────────────────────────
+  const fetchDiscover = useCallback(async (q: string, cat: ClubCategory | "all", joinedIds: Set<string>) => {
+    setDiscoverLoading(true);
+    try {
+      const results = await apiListPublicClubs({
+        search: q.trim() || undefined,
+        category: cat !== "all" ? cat : undefined,
+      });
+      // Exclude clubs the user has already joined
+      const filtered = results.filter((c) => !joinedIds.has(c.id));
+      setDiscoverClubs(filtered);
+      setDiscoverTotal(filtered.length);
+    } catch {
+      // Fallback: filter the already-loaded allClubs array
+      setDiscoverClubs(
+        allClubs.filter((c) => {
+          if (joinedIds.has(c.id)) return false;
+          if (cat !== "all" && c.category !== cat) return false;
+          if (q.trim()) {
+            const lq = q.toLowerCase();
+            return c.name.toLowerCase().includes(lq) || c.location.toLowerCase().includes(lq) || c.tagline.toLowerCase().includes(lq);
+          }
+          return true;
+        })
+      );
+    } finally {
+      setDiscoverLoading(false);
+    }
+  }, [allClubs]);
+
+  // Debounce search + category changes → server fetch
+  useEffect(() => {
+    const joinedIds = new Set(myClubs.map((c) => c.id));
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Immediate fetch for category changes, debounced for text search
+    const delay = search !== "" ? 350 : 0;
+    debounceRef.current = setTimeout(() => {
+      fetchDiscover(search, categoryFilter, joinedIds);
+    }, delay);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search, categoryFilter, myClubs, fetchDiscover]);
 
   const refreshClubs = async () => {
     seedClubsIfEmpty();
@@ -657,23 +705,7 @@ export default function MyClubs() {
     refreshClubs();
   }, [user, showWizard, rsvpRefresh]); // re-fetch after wizard closes or RSVP changes
 
-  const myClubIds = useMemo(() => new Set(myClubs.map((c) => c.id)), [myClubs]);
-
-  const discoverClubs = useMemo(() => {
-    return allClubs.filter((c) => {
-      if (myClubIds.has(c.id)) return false;
-      if (categoryFilter !== "all" && c.category !== categoryFilter) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        return (
-          c.name.toLowerCase().includes(q) ||
-          c.location.toLowerCase().includes(q) ||
-          c.tagline.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [allClubs, myClubIds, search, categoryFilter]);
+  const myClubIds = new Set(myClubs.map((c) => c.id));
 
   // ── Colour palette ──────────────────────────────────────────────────────────
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]";
@@ -920,12 +952,38 @@ export default function MyClubs() {
             </div>
           )}
 
-          {/* Results grid */}
-          {discoverClubs.length === 0 ? (
+          {/* Result count */}
+          {!discoverLoading && discoverTotal > 0 && (
+            <p className={`text-xs mb-3 ${textMuted}`}>
+              {discoverTotal} club{discoverTotal !== 1 ? "s" : ""}{search.trim() ? ` matching "${search.trim()}"` : ""}
+              {categoryFilter !== "all" ? ` in ${CATEGORY_LABELS[categoryFilter]}` : ""}
+            </p>
+          )}
+
+          {/* Loading skeleton */}
+          {discoverLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-3xl border ${cardBorder} ${card} p-5 animate-pulse`}
+                >
+                  <div className={`w-12 h-12 rounded-2xl mb-3 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                  <div className={`h-4 w-3/4 rounded-full mb-2 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                  <div className={`h-3 w-full rounded-full mb-1 ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
+                  <div className={`h-3 w-2/3 rounded-full ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
+                </div>
+              ))}
+            </div>
+          ) : discoverClubs.length === 0 ? (
             <div className={`rounded-3xl border ${cardBorder} ${card} py-12 text-center`}>
               <Search className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
               <p className={`text-sm font-semibold ${textMain}`}>No clubs found</p>
-              <p className={`text-xs mt-1 ${textMuted}`}>Try a different search or filter</p>
+              <p className={`text-xs mt-1 ${textMuted}`}>
+                {search.trim() || categoryFilter !== "all"
+                  ? "Try a different search or filter"
+                  : "Be the first to create a club!"}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
