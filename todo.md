@@ -3375,3 +3375,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Implement robust PNG export fix: replaced html2canvas with html-to-image in all 6 export paths (Report, ShareResultsModal, CrossTable, RoundTimeline, GameAnalysis, InstagramCarouselModal)
 - [x] Fixed hidden export card using sr-only (zero dimensions) to fixed positioning off-screen
 - [x] 26 unit tests pass verifying root cause, fix, and CORS proxy configuration
+
+## Feature: Persist Battles to Database
+- [x] Audit current battle localStorage data model (types, fields, shape)
+- [x] Design DB schema: club_battles table (12 columns: id, clubId, playerAId/Name, playerBId/Name, status, result, notes, createdAt, startedAt, completedAt) with 4 indexes
+- [x] Create club_battles table via SQL (db:push was interactive; used webdev_execute_sql directly)
+- [x] Build server API: GET/POST /api/clubs/:clubId/battles, POST /bulk, PATCH /:id/start, PATCH /:id/result, DELETE /:id, GET /stats/:playerId, GET /leaderboard
+- [x] Register clubBattlesRouter in server/index.ts at /api/clubs/:clubId/battles
+- [x] Create clubBattleApi.ts client service wrapping all 8 endpoints with typed helpers
+- [x] Update ClubDashboard: refreshBattles() is now async (server-first, localStorage fallback)
+- [x] Update ClubDashboard: Create/Start/Win/Draw/Delete battle buttons all call server API
+- [x] Update ClubDashboard: Seed Demo Battles button bulk-imports via server API
+- [x] Update ClubDashboard: Analytics Refresh button uses async refreshBattles()
+- [x] Add localStorage migration: migrateLocalBattlesToServer() called on club load (one-time, idempotent)
+- [x] Update ClubProfile MemberRow: battle stats fetched from server API (useState/useEffect, localStorage fallback)
+- [x] 16 unit tests for clubBattleApi (URL construction, row mapping, migration logic, leaderboard, bulk import)

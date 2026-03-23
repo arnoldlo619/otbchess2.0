@@ -64,6 +64,7 @@ import {
   getPlayerBattleSummary,
   type PlayerBattleSummary,
 } from "@/lib/clubBattleRegistry";
+import { apiBattlePlayerStats } from "@/lib/clubBattleApi";
 import {
   Users,
   Trophy,
@@ -1559,7 +1560,15 @@ function MemberRow({
 }) {
   const platform: "chesscom" | "lichess" | undefined = member.chesscomUsername ? "chesscom" : member.lichessUsername ? "lichess" : undefined;
   const username = member.chesscomUsername ?? member.lichessUsername ?? undefined;
-  const battleSummary: PlayerBattleSummary = getPlayerBattleSummary(clubId, member.userId);
+  // Start with localStorage data for instant render, then upgrade with server data
+  const [battleSummary, setBattleSummary] = useState<PlayerBattleSummary>(
+    () => getPlayerBattleSummary(clubId, member.userId)
+  );
+  useEffect(() => {
+    apiBattlePlayerStats(clubId, member.userId)
+      .then((stats) => setBattleSummary({ wins: stats.wins, draws: stats.draws, losses: stats.losses, total: stats.total, winRate: stats.winRate }))
+      .catch(() => { /* keep localStorage fallback */ });
+  }, [clubId, member.userId]);
 
   return (
     <div className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>

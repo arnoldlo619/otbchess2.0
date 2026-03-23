@@ -62,6 +62,16 @@ import {
   type PotmArchiveEntry,
 } from "@/lib/clubBattleRegistry";
 import {
+  apiBattleList,
+  apiBattleCreate,
+  apiBattleStart,
+  apiBattleRecordResult,
+  apiBattleDelete,
+  apiBattleLeaderboard,
+  apiBattleBulkImport,
+  migrateLocalBattlesToServer,
+} from "@/lib/clubBattleApi";
+import {
   listFeedEvents,
   seedFeedIfEmpty,
   postAnnouncement,
@@ -1981,9 +1991,12 @@ export default function ClubDashboard() {
     setMembers(getClubMembers(found.id));
     setEvents(listClubEvents(found.id, true));
     setFeedEvents(listFeedEvents(found.id, 50));
-    setBattles(listBattles(found.id));
-    setBattleLeaderboard(getBattleLeaderboard(found.id));
     setLoading(false);
+    // Load battles from server (async) + migrate any localStorage battles
+    const cid = found.id;
+    migrateLocalBattlesToServer(cid).catch(() => {});
+    apiBattleList(cid).then(setBattles).catch(() => setBattles(listBattles(cid)));
+    apiBattleLeaderboard(cid).then(setBattleLeaderboard).catch(() => setBattleLeaderboard(getBattleLeaderboard(cid)));
   }, [id, user]);
 
   // Poll-close + scheduled-publish interval: every 30 seconds
@@ -2012,10 +2025,20 @@ export default function ClubDashboard() {
     setEvents(listClubEvents(club.id, true));
   }
 
-  function refreshBattles() {
+  async function refreshBattles() {
     if (!club) return;
-    setBattles(listBattles(club.id));
-    setBattleLeaderboard(getBattleLeaderboard(club.id));
+    try {
+      const [battles, leaderboard] = await Promise.all([
+        apiBattleList(club.id),
+        apiBattleLeaderboard(club.id),
+      ]);
+      setBattles(battles);
+      setBattleLeaderboard(leaderboard);
+    } catch {
+      // Fallback to localStorage if server is unreachable
+      setBattles(listBattles(club.id));
+      setBattleLeaderboard(getBattleLeaderboard(club.id));
+    }
   }
 
   function refreshFeed() {
@@ -3002,12 +3025,11 @@ export default function ClubDashboard() {
               <TrendingUp className="w-5 h-5" style={{ color: accent }} />
               <h2 className="text-white font-bold text-lg">Club Engagement Analytics</h2>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!club) return;
                   setMembers(getClubMembers(club.id));
                   setFeedEvents(listFeedEvents(club.id, 50));
-                  setBattles(listBattles(club.id));
-                  setBattleLeaderboard(getBattleLeaderboard(club.id));
+                  await refreshBattles();
                   toast.success("Analytics refreshed");
                 }}
                 className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
@@ -3351,12 +3373,21 @@ export default function ClubDashboard() {
             {/* ── Seed demo battles (owner only) ──────────────────────────── */}
             {isOwnerOrDirector && (
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!club) return;
+                  // Generate demo battles into localStorage first (deterministic)
                   const added = seedDemoBattlesToClub(club.id);
-                  setBattles(listBattles(club.id));
                   if (added > 0) {
-                    toast.success(`Seeded ${added} demo battle results!`);
+                    // Push them to the server via bulk import
+                    try {
+                      const localBattles = listBattles(club.id);
+                      const { inserted } = await apiBattleBulkImport(club.id, localBattles);
+                      await refreshBattles();
+                      toast.success(`Seeded ${inserted} demo battle results!`);
+                    } catch {
+                      setBattles(listBattles(club.id));
+                      toast.success(`Seeded ${added} demo battle results (local only)!`);
+                    }
                   } else {
                     toast.info("Demo battles already seeded");
                   }
@@ -3585,13 +3616,17 @@ export default function ClubDashboard() {
                 />
                 <button
                   disabled={!battlePlayerA || !battlePlayerB}
-                  onClick={() => {
+                  onClick={async () => {
                     if (!club || !battlePlayerA || !battlePlayerB) return;
                     const nameA = members.find((m) => m.userId === battlePlayerA)?.displayName ?? battlePlayerA;
                     const nameB = members.find((m) => m.userId === battlePlayerB)?.displayName ?? battlePlayerB;
-                    createBattle(club.id, { playerAId: battlePlayerA, playerAName: nameA, playerBId: battlePlayerB, playerBName: nameB, notes: battleNotes || undefined });
+                    try {
+                      await apiBattleCreate(club.id, { playerAId: battlePlayerA, playerAName: nameA, playerBId: battlePlayerB, playerBName: nameB, notes: battleNotes || undefined });
+                    } catch {
+                      createBattle(club.id, { playerAId: battlePlayerA, playerAName: nameA, playerBId: battlePlayerB, playerBName: nameB, notes: battleNotes || undefined });
+                    }
                     setBattlePlayerA(""); setBattlePlayerB(""); setBattleNotes("");
-                    refreshBattles();
+                    await refreshBattles();
                     toast.success("Battle created!");
                   }}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
@@ -3629,7 +3664,10 @@ export default function ClubDashboard() {
                         <div className="flex flex-wrap gap-2 mt-2">
                           {battle.status === "pending" && (
                             <button
-                              onClick={() => { startBattle(club.id, battle.id); refreshBattles(); }}
+                              onClick={async () => {
+                                try { await apiBattleStart(club.id, battle.id); } catch { startBattle(club.id, battle.id); }
+                                await refreshBattles();
+                              }}
                               className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition"
                             >
                               Start
@@ -3638,20 +3676,37 @@ export default function ClubDashboard() {
                           {battle.status === "active" && (
                             <>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "player_a"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_a", directorName: user?.displayName }); const completedCount = listBattles(club.id).filter(b => b.status === "completed").length; postLeaderboardSnapshot(club.id, completedCount); refreshBattles(); toast.success(`${battle.playerAName} wins!`); }}
+                                onClick={async () => {
+                                  try { await apiBattleRecordResult(club.id, battle.id, "player_a"); } catch { recordBattleResult(club.id, battle.id, "player_a"); }
+                                  postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_a", directorName: user?.displayName });
+                                  await refreshBattles();
+                                  postLeaderboardSnapshot(club.id, battles.filter(b => b.status === "completed").length + 1);
+                                  toast.success(`${battle.playerAName} wins!`);
+                                }}
                                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
                                 style={{ background: accent + "33", color: accent }}
                               >
                                 {battle.playerAName} Wins
                               </button>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "draw"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "draw", directorName: user?.displayName }); const completedCount = listBattles(club.id).filter(b => b.status === "completed").length; postLeaderboardSnapshot(club.id, completedCount); refreshBattles(); toast.success("Draw recorded!"); }}
+                                onClick={async () => {
+                                  try { await apiBattleRecordResult(club.id, battle.id, "draw"); } catch { recordBattleResult(club.id, battle.id, "draw"); }
+                                  postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "draw", directorName: user?.displayName });
+                                  await refreshBattles();
+                                  toast.success("Draw recorded!");
+                                }}
                                 className="text-xs px-3 py-1.5 rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition"
                               >
                                 Draw
                               </button>
                               <button
-                                onClick={() => { recordBattleResult(club.id, battle.id, "player_b"); postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_b", directorName: user?.displayName }); const completedCount = listBattles(club.id).filter(b => b.status === "completed").length; postLeaderboardSnapshot(club.id, completedCount); refreshBattles(); toast.success(`${battle.playerBName} wins!`); }}
+                                onClick={async () => {
+                                  try { await apiBattleRecordResult(club.id, battle.id, "player_b"); } catch { recordBattleResult(club.id, battle.id, "player_b"); }
+                                  postBattleResult({ clubId: club.id, battleId: battle.id, playerAName: battle.playerAName, playerBName: battle.playerBName, outcome: "player_b", directorName: user?.displayName });
+                                  await refreshBattles();
+                                  postLeaderboardSnapshot(club.id, battles.filter(b => b.status === "completed").length + 1);
+                                  toast.success(`${battle.playerBName} wins!`);
+                                }}
                                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition"
                                 style={{ background: accent + "33", color: accent }}
                               >
@@ -3660,7 +3715,10 @@ export default function ClubDashboard() {
                             </>
                           )}
                           <button
-                            onClick={() => { deleteBattle(club.id, battle.id); refreshBattles(); }}
+                            onClick={async () => {
+                              try { await apiBattleDelete(club.id, battle.id); } catch { deleteBattle(club.id, battle.id); }
+                              await refreshBattles();
+                            }}
                             className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition ml-auto"
                           >
                             Cancel

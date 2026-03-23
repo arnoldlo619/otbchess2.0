@@ -537,3 +537,42 @@ export const ratingHistory = mysqlTable(
 
 export type RatingHistory = typeof ratingHistory.$inferSelect;
 export type NewRatingHistory = typeof ratingHistory.$inferInsert;
+
+// ─── club_battles ─────────────────────────────────────────────────────────────
+// One row per 1v1 OTB battle between two club members.
+// Mirrors the ClubBattle interface from clubBattleRegistry.ts but persisted
+// server-side so stats are cross-device and all-time.
+//
+// result: 'player_a' | 'player_b' | 'draw' | null (null = in-progress)
+// status: 'pending' | 'active' | 'completed'
+//
+// playerAId / playerBId are the OTB user IDs (users.id).
+// playerAName / playerBName are denormalised display names for fast reads.
+export const clubBattles = mysqlTable(
+  "club_battles",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    clubId: varchar("club_id", { length: 36 }).notNull(),
+    playerAId: varchar("player_a_id", { length: 64 }).notNull(),
+    playerAName: varchar("player_a_name", { length: 100 }).notNull(),
+    playerBId: varchar("player_b_id", { length: 64 }).notNull(),
+    playerBName: varchar("player_b_name", { length: 100 }).notNull(),
+    // 'pending' | 'active' | 'completed'
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    // 'player_a' | 'player_b' | 'draw' — null until completed
+    result: varchar("result", { length: 20 }),
+    // Optional director notes
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    startedAt: timestamp("started_at"),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => ({
+    clubIdx: index("cb_club_id_idx").on(table.clubId),
+    playerAIdx: index("cb_player_a_idx").on(table.playerAId),
+    playerBIdx: index("cb_player_b_idx").on(table.playerBId),
+    clubStatusIdx: index("cb_club_status_idx").on(table.clubId, table.status),
+  })
+);
+export type ClubBattleRow = typeof clubBattles.$inferSelect;
+export type NewClubBattleRow = typeof clubBattles.$inferInsert;
