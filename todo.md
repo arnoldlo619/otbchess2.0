@@ -3352,3 +3352,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fetch real chess.com profiles for 18 players (avatar, ratings, title, country)
 - [x] Add seedDemoMembersToClub(clubId) function to clubRegistry.ts with all 18 players
 - [x] Add "Seed Demo Members" button on Members tab (owner only) in ClubDashboard — one click adds all 18 players with real chess.com data
+
+## Bug Fix: Seed Demo Members Button Not Visible
+- [x] Move "Seed Demo Members" button outside the empty-state block so it always shows for the club owner — relocated to just below the search bar as a full-width dashed green button with player names preview

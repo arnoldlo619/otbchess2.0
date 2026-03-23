@@ -2568,6 +2568,26 @@ export default function ClubDashboard() {
               />
             </div>
 
+            {/* ── Seed demo members (owner only) ──────────────────────────── */}
+            {isOwnerOrDirector && (
+              <button
+                onClick={() => {
+                  if (!club) return;
+                  const added = seedDemoMembersToClub(club.id);
+                  setMembers(getClubMembers(club.id));
+                  if (added > 0) {
+                    toast.success(`Added ${added} demo members to ${club.name}`);
+                  } else {
+                    toast.info("Demo members already added");
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-dashed border-[#4CAF50]/40 text-[#4CAF50]/70 hover:text-[#4CAF50] hover:border-[#4CAF50]/70 hover:bg-[#4CAF50]/05 transition-all"
+              >
+                <Users className="w-4 h-4" />
+                Add Demo Members (Magnus Carlsen, Hikaru, Firouzja + 15 more)
+              </button>
+            )}
+
             {/* Owner / directors first */}
             {["owner", "director", "member"].map((role) => {
               const group = filteredMembers.filter((m) => m.role === role);
@@ -2649,27 +2669,7 @@ export default function ClubDashboard() {
               </div>
             )}
 
-            {/* ── Seed demo members (owner only, dev helper) ──────────────── */}
-            {isOwnerOrDirector && (
-              <div className="flex justify-center pt-2 pb-4">
-                <button
-                  onClick={() => {
-                    if (!club) return;
-                    const added = seedDemoMembersToClub(club.id);
-                    setMembers(getClubMembers(club.id));
-                    if (added > 0) {
-                      toast.success(`Added ${added} demo members to ${club.name}`);
-                    } else {
-                      toast.info("Demo members already added");
-                    }
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20 transition-all"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  Seed Demo Members
-                </button>
-              </div>
-            )}
+
           </div>
         )}
 
