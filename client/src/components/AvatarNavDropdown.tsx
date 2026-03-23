@@ -218,9 +218,23 @@ export function AvatarNavDropdown({
                     {user.displayName || user.email}
                   </p>
                   {user.chesscomUsername && (
-                    <p className="text-[11px] text-white/40 truncate leading-tight">
-                      chess.com/{user.chesscomUsername}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-[11px] text-white/40 truncate leading-tight">
+                        chess.com/{user.chesscomUsername}
+                      </p>
+                      {user.chesscomElo != null && user.chesscomElo > 0 && (
+                        <span
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
+                          style={{
+                            background: "rgba(76,175,80,0.18)",
+                            border: "1px solid rgba(76,175,80,0.30)",
+                            color: "#4CAF50",
+                          }}
+                        >
+                          ♟ {user.chesscomElo}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

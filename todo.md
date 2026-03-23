@@ -3312,3 +3312,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Profile Page Header Cleanup
 - [x] Remove redundant Sign Out button from Profile.tsx header (already in AvatarNavDropdown)
+
+## ELO Rating in Avatar Dropdown
+- [x] Show chess.com ELO rating next to username handle in AvatarNavDropdown header
