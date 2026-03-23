@@ -343,16 +343,7 @@ export default function ProfilePage() {
           Home
         </button>
         <NavLogo linked={false} />
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleLogout}
-            className={`flex items-center gap-1.5 text-sm ${muted} hover:text-red-400 transition`}
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Sign out</span>
-          </button>
-          <AvatarNavDropdown currentPage="Dashboard" />
-        </div>
+        <AvatarNavDropdown currentPage="Dashboard" />
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">

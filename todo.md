@@ -3309,3 +3309,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Chess.com Avatar in AvatarNavDropdown
 - [x] Use useChessAvatar hook in AvatarNavDropdown to fetch chess.com profile picture
 - [x] Show chess.com photo in button circle with shimmer loading state and initials fallback
+
+## Profile Page Header Cleanup
+- [x] Remove redundant Sign Out button from Profile.tsx header (already in AvatarNavDropdown)
