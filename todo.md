@@ -3347,3 +3347,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Fix: Duplicate Avatar Icon in Headers
 - [x] Audit ClubDashboard, Battle, BattleHistory, Profile, MyClubs headers for duplicate avatar/user-menu buttons
 - [x] Remove all duplicate avatar buttons — keep only AvatarNavDropdown in each header (only ClubDashboard had duplicates: PlayerAvatar circle + displayName text removed, Messages button kept)
+
+## Demo Club: Seed OTB Chess Club Members
+- [x] Fetch real chess.com profiles for 18 players (avatar, ratings, title, country)
+- [x] Add seedDemoMembersToClub(clubId) function to clubRegistry.ts with all 18 players
+- [x] Add "Seed Demo Members" button on Members tab (owner only) in ClubDashboard — one click adds all 18 players with real chess.com data

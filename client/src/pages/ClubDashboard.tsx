@@ -22,6 +22,7 @@ import {
   getClubMembers,
   isMember,
   seedClubsIfEmpty,
+  seedDemoMembersToClub,
   type Club,
   type ClubMember,
 } from "@/lib/clubRegistry";
@@ -2645,6 +2646,28 @@ export default function ClubDashboard() {
               <div className="text-center py-16 text-white/30">
                 <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
                 <p className="font-semibold">No members found</p>
+              </div>
+            )}
+
+            {/* ── Seed demo members (owner only, dev helper) ──────────────── */}
+            {isOwnerOrDirector && (
+              <div className="flex justify-center pt-2 pb-4">
+                <button
+                  onClick={() => {
+                    if (!club) return;
+                    const added = seedDemoMembersToClub(club.id);
+                    setMembers(getClubMembers(club.id));
+                    if (added > 0) {
+                      toast.success(`Added ${added} demo members to ${club.name}`);
+                    } else {
+                      toast.info("Demo members already added");
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20 transition-all"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  Seed Demo Members
+                </button>
               </div>
             )}
           </div>

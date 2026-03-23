@@ -769,3 +769,85 @@ export function seedClubsIfEmpty(): void {
     localStorage.setItem(SEED_KEY, "1");
   } catch { /* ignore */ }
 }
+
+// ── Demo member seeder ────────────────────────────────────────────────────────
+// Real chess.com profiles fetched 2026-03-23. Avatars are served through the
+// /api/avatar-proxy endpoint to avoid CORS issues in canvas-based exports.
+
+const DEMO_CHESS_PLAYERS: Array<{
+  userId: string;
+  displayName: string;
+  chesscomUsername: string;
+  avatarUrl: string | null;
+  title: string | null;
+  rapid: number | null;
+  blitz: number | null;
+  bullet: number | null;
+  country: string | null;
+}> = [
+  { userId: "demo_magnuscarlsen", displayName: "Magnus Carlsen", chesscomUsername: "magnuscarlsen", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/3889224.121e2094.200x200o.361c2f8a59c2.jpg", title: "GM", rapid: 2941, blitz: 3365, bullet: 3208, country: "NO" },
+  { userId: "demo_hikaru", displayName: "Hikaru Nakamura", chesscomUsername: "hikaru", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/15448422.88c010c1.200x200o.3c5619f5441e.png", title: "GM", rapid: 2839, blitz: 3400, bullet: 3299, country: "US" },
+  { userId: "demo_nemsko", displayName: "Nemo Zhou", chesscomUsername: "nemsko", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/37482410.707242c2.200x200o.926c591d80d8.png", title: "WGM", rapid: 2114, blitz: 2282, bullet: 2591, country: "FI" },
+  { userId: "demo_alexandrabotez", displayName: "Alexandra Botez", chesscomUsername: "alexandrabotez", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/28583276.401697ff.200x200o.152b758db93a.jpg", title: "WFM", rapid: 2320, blitz: 2255, bullet: 2271, country: "US" },
+  { userId: "demo_fabianocaruana", displayName: "Fabiano Caruana", chesscomUsername: "fabianocaruana", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/11177810.9dfc8d31.200x200o.9a9eccebc07c.png", title: "GM", rapid: 2766, blitz: 3213, bullet: 3117, country: "US" },
+  { userId: "demo_firouzja2003", displayName: "Alireza Firouzja", chesscomUsername: "firouzja2003", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/42022994.2c7a0722.200x200o.3088f5180d8d.jpg", title: "GM", rapid: 2844, blitz: 3277, bullet: 3301, country: "FR" },
+  { userId: "demo_gmwso", displayName: "Wesley So", chesscomUsername: "gmwso", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/30366824.22d6b1f8.200x200o.bf8ce3f933fc.jpg", title: "GM", rapid: 2799, blitz: 3240, bullet: 3140, country: "US" },
+  { userId: "demo_gukeshdommaraju", displayName: "Gukesh D", chesscomUsername: "gukeshdommaraju", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/40996222.a634fe54.200x200o.391c8e0a4b0b.jpeg", title: "GM", rapid: 2709, blitz: 3080, bullet: 3075, country: "IN" },
+  { userId: "demo_annacramling", displayName: "Anna Cramling", chesscomUsername: "annacramling", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/70349336.09d03b0c.200x200o.a5160d80bcc3.jpg", title: "WFM", rapid: 2278, blitz: 2352, bullet: 2300, country: "SE" },
+  { userId: "demo_rpragchess", displayName: "Praggnanandhaa R", chesscomUsername: "rpragchess", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/28692936.02da0bac.200x200o.d0b1b8f66ac2.jpg", title: "GM", rapid: 2711, blitz: 3278, bullet: 3201, country: "IN" },
+  { userId: "demo_lordillidan", displayName: "Richard Rapport", chesscomUsername: "lordillidan", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/33637219.19524502.200x200o.91796e352906.jpeg", title: "GM", rapid: 2744, blitz: 3033, bullet: 3047, country: "HU" },
+  { userId: "demo_ghandeevam2003", displayName: "Arjun Erigaisi", chesscomUsername: "ghandeevam2003", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/20718020.b93b0dad.200x200o.ce63c2b5ea24.jpeg", title: "GM", rapid: 2802, blitz: 3248, bullet: 3208, country: "IN" },
+  { userId: "demo_gothamchess", displayName: "Levy Rozman", chesscomUsername: "gothamchess", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/33945736.eb0c3771.200x200o.cf06060d2143.png", title: "IM", rapid: 2453, blitz: 2998, bullet: 2961, country: "ES" },
+  { userId: "demo_alexbanzea", displayName: "Alexandru Banzea", chesscomUsername: "alex_banzea", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/15671802.ae871a55.200x200o.e9db1df56a80.jpg", title: "IM", rapid: 2044, blitz: 2534, bullet: 2503, country: "RO" },
+  { userId: "demo_gmcanty", displayName: "James Canty", chesscomUsername: "gmcanty", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/17123334.6c6fa923.200x200o.c744c8640149.jpeg", title: "FM", rapid: 2457, blitz: 2636, bullet: 2736, country: "US" },
+  { userId: "demo_dinabelenkaya", displayName: "Dina Belenkaya", chesscomUsername: "dinabelenkaya", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/43773514.c36a7d0a.200x200o.efe9bb1e5cb9.jpg", title: "WGM", rapid: 2059, blitz: 2600, bullet: 2243, country: "FR" },
+  { userId: "demo_pircuhset", displayName: "Adrian", chesscomUsername: "pircuhset", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/301889135.727553a0.200x200o.e4008c567009.jpg", title: null, rapid: 896, blitz: 1143, bullet: 702, country: "US" },
+  { userId: "demo_arnoldadri", displayName: "Arnold", chesscomUsername: "arnoldadri", avatarUrl: "https://images.chesscomfiles.com/uploads/v1/user/313129343.40b21d18.200x200o.cf9b1bc77ae5.png", title: null, rapid: 1520, blitz: 1212, bullet: 1026, country: "US" },
+];
+
+/**
+ * Seed the 18 demo chess.com players as members of a given club.
+ * Safe to call multiple times — skips players already in the club.
+ * Returns the number of newly added members.
+ */
+export function seedDemoMembersToClub(clubId: string): number {
+  const members = loadMembers();
+  const newMembers: ClubMember[] = [];
+
+  // Staggered join dates over the last 18 months for realism
+  const now = Date.now();
+  const msPerDay = 86_400_000;
+
+  DEMO_CHESS_PLAYERS.forEach((p, i) => {
+    if (members.some((m) => m.clubId === clubId && m.userId === p.userId)) return;
+    const daysAgo = Math.round((i / DEMO_CHESS_PLAYERS.length) * 540);
+    const joinedAt = new Date(now - daysAgo * msPerDay).toISOString();
+    const elo = p.rapid ?? p.blitz ?? p.bullet ?? 1200;
+    const tournamentsPlayed = elo >= 2700 ? 12 + (i % 8) : elo >= 2000 ? 5 + (i % 7) : 2 + (i % 4);
+    const bestFinish = elo >= 2700 ? 1 + (i % 3) : elo >= 2000 ? 2 + (i % 4) : 3 + (i % 6);
+
+    newMembers.push({
+      clubId,
+      userId: p.userId,
+      displayName: p.displayName,
+      chesscomUsername: p.chesscomUsername,
+      lichessUsername: null,
+      avatarUrl: p.avatarUrl,
+      role: "member",
+      joinedAt,
+      tournamentsPlayed,
+      bestFinish,
+    });
+  });
+
+  if (newMembers.length === 0) return 0;
+
+  saveMembers([...members, ...newMembers]);
+
+  // Update memberCount
+  const clubs = loadClubs();
+  const totalForClub = [...members, ...newMembers].filter((m) => m.clubId === clubId).length;
+  saveClubs(clubs.map((c) => c.id === clubId ? { ...c, memberCount: totalForClub } : c));
+
+  return newMembers.length;
+}
