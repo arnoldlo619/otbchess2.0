@@ -97,7 +97,7 @@ function dbMemberToMember(row: typeof dbClubMembers.$inferSelect) {
 clubsRouter.get("/", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const { search, category } = req.query as Record<string, string>;
+    const { search, category, limit } = req.query as Record<string, string>;
     let rows = await db
       .select()
       .from(dbClubs)
@@ -118,8 +118,10 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
         (r: typeof dbClubs.$inferSelect) => r.category === category
       );
     }
+    const limitN = limit ? parseInt(limit, 10) : undefined;
+    const sliced = limitN && limitN > 0 ? rows.slice(0, limitN) : rows;
 
-    res.json(rows.map(dbRowToClub));
+    res.json({ clubs: sliced.map(dbRowToClub), total: rows.length });
   } catch (err) {
     console.error("[clubs] GET / error:", err);
     res.status(500).json({ error: "Failed to list clubs" });

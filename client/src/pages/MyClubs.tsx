@@ -29,6 +29,7 @@ import {
   apiListMyClubs,
   migrateLocalClubsToServer,
 } from "@/lib/clubsApi";
+import { FeaturedClubsCarousel } from "@/components/FeaturedClubsCarousel";
 import {
   listClubEvents,
   seedClubEventsIfEmpty,
@@ -617,14 +618,14 @@ export default function MyClubs() {
   const fetchDiscover = useCallback(async (q: string, cat: ClubCategory | "all", joinedIds: Set<string>) => {
     setDiscoverLoading(true);
     try {
-      const results = await apiListPublicClubs({
+      const { clubs: results, total } = await apiListPublicClubs({
         search: q.trim() || undefined,
         category: cat !== "all" ? cat : undefined,
       });
       // Exclude clubs the user has already joined
-      const filtered = results.filter((c) => !joinedIds.has(c.id));
+      const filtered = results.filter((c: Club) => !joinedIds.has(c.id));
       setDiscoverClubs(filtered);
-      setDiscoverTotal(filtered.length);
+      setDiscoverTotal(total);
     } catch {
       // Fallback: filter the already-loaded allClubs array
       setDiscoverClubs(
@@ -667,10 +668,10 @@ export default function MyClubs() {
     }
 
     // Fetch public clubs from server (server-first, localStorage fallback)
-    const serverClubs = await apiListPublicClubs();
+    const { clubs: serverClubs } = await apiListPublicClubs();
     const localClubs = listAllClubs();
     // Merge: server clubs take priority; add any local-only clubs not yet synced
-    const serverIds = new Set(serverClubs.map((c) => c.id));
+    const serverIds = new Set(serverClubs.map((c: Club) => c.id));
     const localOnly = localClubs.filter((c) => !serverIds.has(c.id));
     const all = [...serverClubs, ...localOnly];
     setAllClubs(all);
@@ -919,6 +920,9 @@ export default function MyClubs() {
               Filter
             </button>
           </div>
+
+          {/* Featured Clubs carousel — top 6 by member count */}
+          <FeaturedClubsCarousel />
 
           {/* Search bar */}
           <div className="relative mb-3">

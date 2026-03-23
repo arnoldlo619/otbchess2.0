@@ -3447,3 +3447,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added animated 6-card loading skeleton while search results are fetching
 - [x] Show result count label ("N clubs matching X in Y") and context-aware empty state
 - [x] 28 unit tests pass: URL construction (7), debounce delay (4), result count label (7), fallback filter (10)
+
+## Feature: Featured Clubs Carousel on Discover Page
+- [x] Added ?limit=N support to GET /api/clubs server endpoint (reuses existing sorted-by-memberCount query)
+- [x] Updated apiListPublicClubs to accept limit param and handle both array and { clubs, total } response shapes
+- [x] Fixed MyClubs.tsx to destructure { clubs, total } from apiListPublicClubs (was treating response as array)
+- [x] Created FeaturedClubsCarousel component: horizontal scroll with scroll-snap, prev/next arrows, 3-card loading skeleton, null when empty
+- [x] Created FeaturedClubCard: deterministic gradient from club ID, rank badge (★✦◆ for top 3), member/tournament count, category badge, hover scale effect
+- [x] Inserted carousel above search bar in Discover section of MyClubs.tsx
+- [x] 24 unit tests pass: clubGradient (4), URL construction (6), response normalization (5), rank badge (6), empty state (3)

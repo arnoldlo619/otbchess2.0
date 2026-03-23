@@ -14,18 +14,23 @@ const BASE = "/api/clubs";
 export async function apiListPublicClubs(opts?: {
   search?: string;
   category?: string;
-}): Promise<Club[]> {
+  limit?: number;
+}): Promise<{ clubs: Club[]; total: number }> {
   try {
     const params = new URLSearchParams();
     if (opts?.search) params.set("search", opts.search);
     if (opts?.category && opts.category !== "all")
       params.set("category", opts.category);
+    if (opts?.limit) params.set("limit", String(opts.limit));
     const qs = params.toString();
     const res = await fetch(`${BASE}${qs ? `?${qs}` : ""}`);
-    if (!res.ok) return [];
-    return (await res.json()) as Club[];
+    if (!res.ok) return { clubs: [], total: 0 };
+    const data = await res.json();
+    // Handle both old array shape and new { clubs, total } shape
+    if (Array.isArray(data)) return { clubs: data as Club[], total: (data as Club[]).length };
+    return { clubs: data.clubs ?? [], total: data.total ?? 0 };
   } catch {
-    return [];
+    return { clubs: [], total: 0 };
   }
 }
 
