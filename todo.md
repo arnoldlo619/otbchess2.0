@@ -3318,3 +3318,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## ELO Badge Rating Type Label
 - [x] Add rating type label (rapid/blitz/bullet) to ELO badge in AvatarNavDropdown
+
+## Three-Rating Row in Avatar Dropdown
+- [x] Replace single ELO badge with compact rapid/blitz/bullet row in AvatarNavDropdown

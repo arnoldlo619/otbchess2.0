@@ -218,39 +218,36 @@ export function AvatarNavDropdown({
                     {user.displayName || user.email}
                   </p>
                   {user.chesscomUsername && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex flex-col gap-1">
                       <p className="text-[11px] text-white/40 truncate leading-tight">
                         chess.com/{user.chesscomUsername}
                       </p>
-                      {user.chesscomElo != null && user.chesscomElo > 0 && (() => {
-                        // Determine which format the stored ELO corresponds to
-                        const ratingType =
-                          user.chesscomRapid && user.chesscomRapid === user.chesscomElo
-                            ? "rapid"
-                            : user.chesscomBlitz && user.chesscomBlitz === user.chesscomElo
-                            ? "blitz"
-                            : user.chesscomBullet && user.chesscomBullet === user.chesscomElo
-                            ? "bullet"
-                            : user.chesscomRapid
-                            ? "rapid"
-                            : user.chesscomBlitz
-                            ? "blitz"
-                            : user.chesscomBullet
-                            ? "bullet"
-                            : null;
-                        return (
-                          <span
-                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
-                            style={{
-                              background: "rgba(76,175,80,0.18)",
-                              border: "1px solid rgba(76,175,80,0.30)",
-                              color: "#4CAF50",
-                            }}
-                          >
-                            ♟ {user.chesscomElo}{ratingType && <span className="ml-0.5 font-normal opacity-70">{ratingType}</span>}
-                          </span>
-                        );
-                      })()}
+                      {/* Compact three-rating row — only shown when at least one rating exists */}
+                      {(user.chesscomRapid || user.chesscomBlitz || user.chesscomBullet) && (
+                        <div className="flex items-center gap-1.5">
+                          {([
+                            { label: "Rapid", icon: "♟", value: user.chesscomRapid },
+                            { label: "Blitz", icon: "⚡", value: user.chesscomBlitz },
+                            { label: "Bullet", icon: "•", value: user.chesscomBullet },
+                          ] as { label: string; icon: string; value: number | null }[]).map(({ label, icon, value }) =>
+                            value ? (
+                              <span
+                                key={label}
+                                title={label}
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none"
+                                style={{
+                                  background: "rgba(76,175,80,0.15)",
+                                  border: "1px solid rgba(76,175,80,0.25)",
+                                  color: "#4CAF50",
+                                }}
+                              >
+                                <span className="opacity-80">{icon}</span>
+                                <span>{value}</span>
+                              </span>
+                            ) : null
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
