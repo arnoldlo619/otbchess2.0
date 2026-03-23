@@ -3336,3 +3336,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Sparkline Hover Tooltip
 - [x] Show exact rating + date tooltip when hovering over sparkline data points in AvatarNavDropdown
+
+## Rating Progress Section on Profile Page
+- [x] Build RatingProgressChart component (format tabs, full SVG chart, axis labels, hover tooltip)
+- [x] Insert RatingProgressChart into Profile.tsx below the chess.com stats section

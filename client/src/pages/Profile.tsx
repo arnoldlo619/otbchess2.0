@@ -28,6 +28,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
+import { RatingProgressChart } from "@/components/RatingProgressChart";
 import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
@@ -598,6 +599,11 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Rating Progress card */}
+        {user.chesscomUsername && (
+          <RatingProgressChart isDark={isDark} />
+        )}
 
         {/* Tournaments card */}
         <div className={`rounded-3xl border p-6 ${card}`}>
