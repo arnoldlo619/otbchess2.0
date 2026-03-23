@@ -54,6 +54,7 @@ import {
   getHeadToHeadRecords,
   loadPotmArchive,
   snapshotPotmWinner,
+  seedDemoBattlesToClub,
   type ClubBattle,
   type BattleResult,
   type BattleLeaderboardEntry,
@@ -3195,6 +3196,26 @@ export default function ClubDashboard() {
                 </button>
               ))}
             </div>
+
+            {/* ── Seed demo battles (owner only) ──────────────────────────── */}
+            {isOwnerOrDirector && (
+              <button
+                onClick={() => {
+                  if (!club) return;
+                  const added = seedDemoBattlesToClub(club.id);
+                  setBattles(listBattles(club.id));
+                  if (added > 0) {
+                    toast.success(`Seeded ${added} demo battle results!`);
+                  } else {
+                    toast.info("Demo battles already seeded");
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-dashed border-[#4CAF50]/40 text-[#4CAF50]/70 hover:text-[#4CAF50] hover:border-[#4CAF50]/70 hover:bg-[#4CAF50]/05 transition-all"
+              >
+                <Swords className="w-4 h-4" />
+                Seed Demo Battles (Magnus vs Hikaru, Firouzja vs Caruana + 150 more)
+              </button>
+            )}
 
             {/* ── LEADERBOARD VIEW ────────────────────────────────────────────── */}
             {battleView === "leaderboard" && (

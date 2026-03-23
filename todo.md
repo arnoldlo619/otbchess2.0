@@ -3355,3 +3355,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Bug Fix: Seed Demo Members Button Not Visible
 - [x] Move "Seed Demo Members" button outside the empty-state block so it always shows for the club owner — relocated to just below the search bar as a full-width dashed green button with player names preview
+
+## Demo Club: Seed Mock Battle Results
+- [x] Read Battles tab data structure and localStorage schema
+- [x] Add seedDemoBattlesToClub() function with ELO-weighted realistic results (~153 battles across all 18-player pairs)
+- [x] Add "Seed Demo Battles" button on Battles tab (owner only) in ClubDashboard
