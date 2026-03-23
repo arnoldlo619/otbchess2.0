@@ -59,18 +59,23 @@ interface AvatarNavDropdownProps {
   className?: string;
 }
 
-// ─── Sparkline SVG ────────────────────────────────────────────────────────────
+// ─── Sparkline SVG (interactive with hover tooltip) ──────────────────────────
 function Sparkline({
   points,
+  dates,
   color,
   width = 72,
   height = 24,
 }: {
   points: number[];
+  dates?: string[];
   color: string;
   width?: number;
   height?: number;
 }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+
   if (points.length < 2) return null;
 
   const min = Math.min(...points);
@@ -82,49 +87,138 @@ function Sparkline({
   const coords = points.map((v, i) => {
     const x = pad + (i / (points.length - 1)) * (width - pad * 2);
     const y = pad + ((max - v) / range) * (height - pad * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
+    return { x: parseFloat(x.toFixed(1)), y: parseFloat(y.toFixed(1)) };
   });
 
-  const polyline = coords.join(" ");
+  const polylineStr = coords.map((c) => `${c.x},${c.y}`).join(" ");
 
-  // Area fill path (close below the line)
+  // Area fill path
   const firstX = pad;
   const lastX  = (width - pad).toFixed(1);
   const bottom = (height - pad).toFixed(1);
-  const areaPath = `M${firstX},${bottom} L${coords[0]} L${coords.slice(1).join(" L")} L${lastX},${bottom} Z`;
+  const areaPath = `M${firstX},${bottom} L${coords[0].x},${coords[0].y} ${coords.slice(1).map((c) => `L${c.x},${c.y}`).join(" ")} L${lastX},${bottom} Z`;
 
   const isUp = points[points.length - 1] >= points[0];
   const lineColor = isUp ? "#4ade80" : "#f87171";
   const fillColor = isUp ? "rgba(74,222,128,0.12)" : "rgba(248,113,113,0.12)";
 
+  // Format date for tooltip
+  const formatDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return iso;
+    }
+  };
+
+  // Find closest point to mouse X
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const mouseX = ((e.clientX - rect.left) / rect.width) * width;
+    let closest = 0;
+    let minDist = Infinity;
+    coords.forEach((c, i) => {
+      const dist = Math.abs(c.x - mouseX);
+      if (dist < minDist) { minDist = dist; closest = i; }
+    });
+    setHovered(closest);
+  };
+
+  const hoveredCoord = hovered !== null ? coords[hovered] : null;
+  const hoveredRating = hovered !== null ? points[hovered] : null;
+  const hoveredDate   = hovered !== null && dates ? formatDate(dates[hovered]) : null;
+
+  // Tooltip positioning — flip left if near right edge
+  const tooltipX = hoveredCoord ? (hoveredCoord.x > width * 0.65 ? hoveredCoord.x - 4 : hoveredCoord.x + 4) : 0;
+  const tooltipAnchor = hoveredCoord && hoveredCoord.x > width * 0.65 ? "end" : "start";
+
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      {/* Area fill */}
-      <path d={areaPath} fill={fillColor} />
-      {/* Line */}
-      <polyline
-        points={polyline}
+    <div className="relative" style={{ width, height }}>
+      <svg
+        ref={svgRef}
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
         fill="none"
-        stroke={lineColor}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* End dot */}
-      <circle
-        cx={coords[coords.length - 1].split(",")[0]}
-        cy={coords[coords.length - 1].split(",")[1]}
-        r="2"
-        fill={lineColor}
-      />
-    </svg>
+        xmlns="http://www.w3.org/2000/svg"
+        className="cursor-crosshair"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHovered(null)}
+      >
+        {/* Area fill */}
+        <path d={areaPath} fill={fillColor} />
+        {/* Line */}
+        <polyline
+          points={polylineStr}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* All dots (subtle) */}
+        {coords.map((c, i) => (
+          <circle key={i} cx={c.x} cy={c.y} r="1.5" fill={lineColor} opacity="0.4" />
+        ))}
+        {/* Hovered dot (highlighted) */}
+        {hoveredCoord && (
+          <>
+            <circle cx={hoveredCoord.x} cy={hoveredCoord.y} r="3" fill={lineColor} opacity="0.25" />
+            <circle cx={hoveredCoord.x} cy={hoveredCoord.y} r="2" fill={lineColor} />
+            {/* Vertical crosshair line */}
+            <line
+              x1={hoveredCoord.x} y1={pad}
+              x2={hoveredCoord.x} y2={height - pad}
+              stroke={lineColor}
+              strokeWidth="0.75"
+              strokeDasharray="2,2"
+              opacity="0.5"
+            />
+          </>
+        )}
+        {/* SVG tooltip label */}
+        {hoveredCoord && hoveredRating !== null && (
+          <>
+            <rect
+              x={tooltipAnchor === "end" ? tooltipX - (hoveredDate ? 62 : 28) : tooltipX}
+              y={hoveredCoord.y - 18 < pad ? hoveredCoord.y + 4 : hoveredCoord.y - 18}
+              width={hoveredDate ? 62 : 28}
+              height={hoveredDate ? 22 : 13}
+              rx="3"
+              fill="rgba(10,20,12,0.92)"
+              stroke={lineColor}
+              strokeWidth="0.75"
+              opacity="0.95"
+            />
+            <text
+              x={tooltipAnchor === "end" ? tooltipX - (hoveredDate ? 62 : 28) + (hoveredDate ? 31 : 14) : tooltipX + (hoveredDate ? 31 : 14)}
+              y={hoveredCoord.y - 18 < pad ? hoveredCoord.y + 12 : hoveredCoord.y - 9}
+              textAnchor="middle"
+              fill={lineColor}
+              fontSize="7"
+              fontWeight="700"
+              fontFamily="monospace"
+            >
+              {hoveredRating}
+            </text>
+            {hoveredDate && (
+              <text
+                x={tooltipAnchor === "end" ? tooltipX - (hoveredDate ? 62 : 28) + 31 : tooltipX + 31}
+                y={hoveredCoord.y - 18 < pad ? hoveredCoord.y + 21 : hoveredCoord.y - 1}
+                textAnchor="middle"
+                fill="rgba(255,255,255,0.45)"
+                fontSize="6"
+                fontFamily="sans-serif"
+              >
+                {hoveredDate}
+              </text>
+            )}
+          </>
+        )}
+      </svg>
+    </div>
   );
 }
 
@@ -193,9 +287,13 @@ export function AvatarNavDropdown({
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
 
-  // Rating history state
-  const [history, setHistory] = useState<{ rapid: number[]; blitz: number[]; bullet: number[] }>({
+  // Rating history state (ratings + dates for tooltip)
+  const [history, setHistory] = useState<{
+    rapid: number[]; blitz: number[]; bullet: number[];
+    rapidDates: string[]; blitzDates: string[]; bulletDates: string[];
+  }>({
     rapid: [], blitz: [], bullet: [],
+    rapidDates: [], blitzDates: [], bulletDates: [],
   });
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
@@ -221,14 +319,17 @@ export function AvatarNavDropdown({
       const rapid:  number[] = [];
       const blitz:  number[] = [];
       const bullet: number[] = [];
+      const rapidDates:  string[] = [];
+      const blitzDates:  string[] = [];
+      const bulletDates: string[] = [];
       // Rows come newest-first; reverse to get chronological order for sparkline
       const sorted = [...data.history].reverse();
       for (const row of sorted) {
-        if (row.format === "rapid")  rapid.push(row.rating);
-        if (row.format === "blitz")  blitz.push(row.rating);
-        if (row.format === "bullet") bullet.push(row.rating);
+        if (row.format === "rapid")  { rapid.push(row.rating);  rapidDates.push(row.recordedAt); }
+        if (row.format === "blitz")  { blitz.push(row.rating);  blitzDates.push(row.recordedAt); }
+        if (row.format === "bullet") { bullet.push(row.rating); bulletDates.push(row.recordedAt); }
       }
-      setHistory({ rapid, blitz, bullet });
+      setHistory({ rapid, blitz, bullet, rapidDates, blitzDates, bulletDates });
       setHistoryLoaded(true);
     } catch {
       // Silently ignore — sparkline just won't show
@@ -399,10 +500,10 @@ export function AvatarNavDropdown({
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {([
-                    { label: "Rapid",  icon: "♟", pts: history.rapid  },
-                    { label: "Blitz",  icon: "⚡", pts: history.blitz  },
-                    { label: "Bullet", icon: "•",  pts: history.bullet },
-                  ] as { label: string; icon: string; pts: number[] }[]).map(({ label, icon, pts }) => {
+                    { label: "Rapid",  icon: "♟", pts: history.rapid,  dts: history.rapidDates  },
+                    { label: "Blitz",  icon: "⚡", pts: history.blitz,  dts: history.blitzDates  },
+                    { label: "Bullet", icon: "•",  pts: history.bullet, dts: history.bulletDates },
+                  ] as { label: string; icon: string; pts: number[]; dts: string[] }[]).map(({ label, icon, pts, dts }) => {
                     if (pts.length < 2) return null;
                     const latest = pts[pts.length - 1];
                     const earliest = pts[0];
@@ -414,9 +515,9 @@ export function AvatarNavDropdown({
                           <span>{icon}</span>
                           <span>{label.slice(0, 1)}</span>
                         </span>
-                        {/* Sparkline */}
+                        {/* Sparkline with tooltip */}
                         <div className="flex-1">
-                          <Sparkline points={pts} color={OTB_GREEN} width={80} height={22} />
+                          <Sparkline points={pts} dates={dts} color={OTB_GREEN} width={80} height={22} />
                         </div>
                         {/* Delta */}
                         <span

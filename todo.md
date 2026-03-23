@@ -3333,3 +3333,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add GET /api/auth/rating-history endpoint
 - [x] Fetch rating history in AvatarNavDropdown when dropdown opens
 - [x] Render compact SVG sparkline per format below the rating pills
+
+## Sparkline Hover Tooltip
+- [x] Show exact rating + date tooltip when hovering over sparkline data points in AvatarNavDropdown
