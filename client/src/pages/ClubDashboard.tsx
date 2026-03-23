@@ -149,6 +149,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import BattleTrendSparkline from "@/components/BattleTrendSparkline";
+import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -3001,6 +3003,9 @@ export default function ClubDashboard() {
           const pollVotes = feedEvents.filter(e => e.type === "poll").reduce(
             (sum, e) => sum + (e.pollOptions ?? []).reduce((s: number, o) => s + Object.keys(o.votes).length, 0), 0
           );
+          // Weekly battle trend (last 8 weeks)
+          const weeklyTrend = computeWeeklyBattleTrend(battles, 8);
+
           // Per-member battle stats (top 8 by total battles played)
           const memberBattleStats = members.map(m => {
             const myBattles = completedBattles.filter(b => b.playerAId === m.userId || b.playerBId === m.userId);
@@ -3056,6 +3061,16 @@ export default function ClubDashboard() {
                   <p className="text-xs text-white/40 mt-0.5">{label}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Battle Trend Sparkline — weekly activity over last 8 weeks */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4" style={{ color: accent }} />
+                <h3 className="text-white font-semibold text-sm">Weekly Battle Trend</h3>
+                <span className="ml-auto text-[10px] text-white/30">Last 8 weeks</span>
+              </div>
+              <BattleTrendSparkline buckets={weeklyTrend} accent={accent} />
             </div>
 
             {/* Battle Activity chart — stacked W/D/L bars per member */}

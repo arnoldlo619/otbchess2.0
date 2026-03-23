@@ -3390,3 +3390,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add localStorage migration: migrateLocalBattlesToServer() called on club load (one-time, idempotent)
 - [x] Update ClubProfile MemberRow: battle stats fetched from server API (useState/useEffect, localStorage fallback)
 - [x] 16 unit tests for clubBattleApi (URL construction, row mapping, migration logic, leaderboard, bulk import)
+
+## Feature: Monthly Battle Trend Sparklines (Analytics Tab)
+- [x] Build computeWeeklyBattleTrend() helper — buckets battles by ISO week, last 8 weeks, returns { label, total, wins, losses, draws }[]
+- [x] Build computeTrendDelta() helper — % change between older 4-week avg and newer 4-week avg
+- [x] Build BattleTrendSparkline SVG component — cardinal spline area fill, hover crosshair tooltip (W/D/L breakdown), trend badge (+N% / -N% vs prior 4 weeks), empty state
+- [x] Add "Weekly Battle Trend" card to Analytics tab between key metrics and Battle Activity chart
+- [x] 23 unit tests for computeWeeklyBattleTrend, computeTrendDelta, getWeekStart, formatWeekLabel (all passing)
