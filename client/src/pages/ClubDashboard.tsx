@@ -89,6 +89,10 @@ import {
   cancelScheduledPoll,
   postBattleResult,
   postLeaderboardSnapshot,
+  postPlayerOfMonth,
+  shouldPostPotmThisMonth,
+  getPreviousMonthKey,
+  getPreviousMonthLabel,
   type FeedEvent,
   type PollOption,
   type FeedRSVPEntry,
@@ -1507,6 +1511,97 @@ function FeedCard({
           </div>
         </div>
       )}
+      {event.type === "potm_announcement" && event.potmWinnerName && (
+        <div className="px-4 pb-4">
+          <div
+            className="rounded-2xl border overflow-hidden"
+            style={{ background: "rgba(120,80,0,0.18)", border: "1px solid rgba(251,191,36,0.35)" }}
+          >
+            {/* Gold header banner */}
+            <div
+              className="flex items-center justify-between px-4 py-2.5 border-b"
+              style={{ background: "rgba(251,191,36,0.12)", borderColor: "rgba(251,191,36,0.25)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-xs font-bold tracking-widest uppercase text-amber-400">Player of the Month</span>
+              </div>
+              {event.potmMonthLabel && (
+                <span
+                  className="text-[10px] font-mono px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}
+                >
+                  {event.potmMonthLabel}
+                </span>
+              )}
+            </div>
+            {/* Winner row */}
+            <div className="flex items-center gap-4 px-4 py-4">
+              <div className="relative flex-shrink-0">
+                {event.potmWinnerAvatarUrl ? (
+                  <img
+                    src={event.potmWinnerAvatarUrl}
+                    alt={event.potmWinnerName}
+                    className="w-14 h-14 rounded-2xl object-cover"
+                    style={{ border: "2px solid rgba(251,191,36,0.6)" }}
+                  />
+                ) : (
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black text-white"
+                    style={{ background: "rgba(251,191,36,0.2)", border: "2px solid rgba(251,191,36,0.5)" }}
+                  >
+                    {event.potmWinnerName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ background: "#fbbf24" }}
+                >
+                  <Crown className="w-3 h-3 text-amber-900" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold text-base truncate">{event.potmWinnerName}</p>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                  {event.potmWins !== undefined && (
+                    <span className="text-[11px] text-amber-300 font-semibold">{event.potmWins} wins</span>
+                  )}
+                  {event.potmWinRate !== undefined && (
+                    <span className="text-[11px] text-white/50">{event.potmWinRate}% win rate</span>
+                  )}
+                  {event.potmEventsAttended !== undefined && (
+                    <span className="text-[11px] text-white/50">{event.potmEventsAttended} events</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* Runner-ups */}
+            {event.potmRunnerUps && event.potmRunnerUps.length > 0 && (
+              <div
+                className="px-4 pb-3 pt-0 border-t divide-y"
+                style={{ borderColor: "rgba(251,191,36,0.15)" }}
+              >
+                <p className="text-[10px] text-amber-400/60 uppercase tracking-widest font-bold pt-2.5 pb-1.5">Runner-ups</p>
+                {event.potmRunnerUps.map((ru, i) => (
+                  <div key={ru.playerId} className="flex items-center justify-between py-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-white/25 w-4">#{i + 2}</span>
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                        style={{ background: "rgba(251,191,36,0.2)" }}
+                      >
+                        {ru.playerName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-xs text-white/60">{ru.playerName}</span>
+                    </div>
+                    <span className="text-[10px] text-white/40">{ru.wins}W · {ru.winRate}% WR</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1524,6 +1619,7 @@ function FeedIcon({ type }: { type: FeedEvent["type"] }) {
     poll_result:           <Award className="w-4 h-4 text-amber-400" />,
     battle_result:         <Swords className="w-4 h-4 text-orange-400" />,
     leaderboard_snapshot:  <Trophy className="w-4 h-4 text-amber-400" />,
+    potm_announcement:      <Crown className="w-4 h-4 text-amber-400" />,
   };
   return (
     <div
@@ -3207,6 +3303,43 @@ export default function ClubDashboard() {
             </div>
 
             {/* Player of the Month — computed from battle data, not hardcoded */}
+            {(() => {
+              const prevMonthKey = getPreviousMonthKey();
+              const prevMonthLabel = getPreviousMonthLabel();
+              const potmAlreadyPosted = club ? !shouldPostPotmThisMonth(club.id, prevMonthKey) : true;
+              function handlePostPotm() {
+                if (!potmTop) return;
+                const runnerUps = potmRanked.slice(1, 3).map(e => ({
+                  playerId: e.memberId,
+                  playerName: e.memberName,
+                  wins: e.battleWins,
+                  winRate: e.winRate,
+                  total: e.battleWins + e.eventsAttended,
+                }));
+                const posted = postPlayerOfMonth({
+                  clubId: club!.id,
+                  winner: {
+                    memberId: potmTop.memberId,
+                    memberName: potmTop.memberName,
+                    avatarUrl: potmMember?.avatarUrl,
+                    battleWins: potmTop.battleWins,
+                    winRate: potmTop.winRate,
+                    eventsAttended: potmTop.eventsAttended,
+                    totalBattles: potmTop.battleWins + potmTop.eventsAttended,
+                  },
+                  runnerUps,
+                  postedByName: user?.displayName ?? "Club Director",
+                  monthKey: prevMonthKey,
+                  monthLabel: prevMonthLabel,
+                });
+                if (posted) {
+                  setFeedEvents(listFeedEvents(club!.id));
+                  toast.success(`Posted POTM announcement for ${prevMonthLabel}!`);
+                } else {
+                  toast.info("POTM for this month has already been posted.");
+                }
+              }
+              return (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Crown className="w-4 h-4 text-amber-400" />
@@ -3263,7 +3396,36 @@ export default function ClubDashboard() {
                   )}
                 </div>
               )}
+
+              {/* Post POTM to Feed button — director only */}
+              {isOwnerOrDirector && potmTop && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                  <button
+                    onClick={handlePostPotm}
+                    disabled={potmAlreadyPosted}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      background: potmAlreadyPosted ? "rgba(255,255,255,0.04)" : "rgba(251,191,36,0.12)",
+                      border: potmAlreadyPosted ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(251,191,36,0.3)",
+                      color: potmAlreadyPosted ? "rgba(255,255,255,0.2)" : "#fbbf24",
+                      cursor: potmAlreadyPosted ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    <Crown className="w-4 h-4" />
+                    {potmAlreadyPosted
+                      ? `Already posted for ${prevMonthLabel}`
+                      : `Post POTM to Feed — ${prevMonthLabel}`}
+                  </button>
+                  {!potmAlreadyPosted && (
+                    <p className="text-[10px] text-white/20 text-center mt-1.5">
+                      Tags {potmTop.memberName} and announces their win to all club members.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
+              );
+            })()}
           </div>
           );
         })()}

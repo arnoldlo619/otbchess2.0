@@ -28,7 +28,8 @@ export type FeedEventType =
   | "rsvp_form"
   | "poll_result"
   | "battle_result"
-  | "leaderboard_snapshot";
+  | "leaderboard_snapshot"
+  | "potm_announcement";
 
 /** A single option in a Poll */
 export interface PollOption {
@@ -130,6 +131,34 @@ export interface FeedEvent {
   pollResultBreakdown?: Array<{ text: string; votes: number; pct: number }>;
   /** Total votes cast */
   pollResultTotalVotes?: number;
+
+  // ── Player of the Month fields ───────────────────────────────────────────
+  /** "YYYY-MM" deduplication key, e.g. "2026-03" (type === "potm_announcement") */
+  potmMonth?: string;
+  /** Display name of the POTM winner */
+  potmWinnerName?: string;
+  /** User ID of the POTM winner */
+  potmWinnerId?: string;
+  /** Avatar URL of the POTM winner */
+  potmWinnerAvatarUrl?: string | null;
+  /** Number of battle wins in the scoring window */
+  potmWins?: number;
+  /** Win rate percentage (0–100) */
+  potmWinRate?: number;
+  /** Number of events attended */
+  potmEventsAttended?: number;
+  /** Total battles played */
+  potmTotalBattles?: number;
+  /** Human-readable month label, e.g. "March 2026" */
+  potmMonthLabel?: string;
+  /** Runner-up entries (up to 2) */
+  potmRunnerUps?: Array<{
+    playerId: string;
+    playerName: string;
+    wins: number;
+    winRate: number;
+    total: number;
+  }>;
 }
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
@@ -723,6 +752,112 @@ export function postLeaderboardSnapshot(
     leaderboardEntries: entries,
     leaderboardBattleCount: totalCompleted,
     leaderboardMilestone: totalCompleted,
+  });
+}
+
+// ── Player of the Month helpers ─────────────────────────────────────────────
+
+/**
+ * Returns the "YYYY-MM" key for the previous calendar month.
+ * Used as the deduplication key for POTM posts.
+ * e.g. if today is 2026-03-23, returns "2026-02"
+ */
+export function getPreviousMonthKey(now: Date = new Date()): string {
+  const d = new Date(now);
+  d.setDate(1); // avoid day-of-month overflow
+  d.setMonth(d.getMonth() - 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+/**
+ * Returns the human-readable label for the previous calendar month.
+ * e.g. "February 2026"
+ */
+export function getPreviousMonthLabel(now: Date = new Date()): string {
+  const d = new Date(now);
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+/**
+ * Returns true if a POTM announcement has already been posted for the given
+ * month key ("YYYY-MM") in this club's feed.
+ */
+export function shouldPostPotmThisMonth(
+  clubId: string,
+  monthKey: string
+): boolean {
+  const events = loadFeed(clubId);
+  return !events.some(
+    (e) => e.type === "potm_announcement" && e.potmMonth === monthKey
+  );
+}
+
+/**
+ * Post a Player of the Month announcement to the club feed.
+ * Deduplicates by potmMonth — only one POTM post per "YYYY-MM" key.
+ *
+ * @param clubId         - the club to post to
+ * @param winner         - the POTM winner's stats
+ * @param runnerUps      - up to 2 runner-up entries
+ * @param postedByName   - display name of the director/system posting
+ * @param monthKey       - "YYYY-MM" dedup key (defaults to previous month)
+ * @param monthLabel     - human-readable label, e.g. "February 2026"
+ * @param now            - injectable reference date for testing
+ */
+export function postPlayerOfMonth(params: {
+  clubId: string;
+  winner: {
+    memberId: string;
+    memberName: string;
+    avatarUrl?: string | null;
+    battleWins: number;
+    winRate: number;
+    eventsAttended: number;
+    totalBattles: number;
+  };
+  runnerUps?: Array<{
+    playerId: string;
+    playerName: string;
+    wins: number;
+    winRate: number;
+    total: number;
+  }>;
+  postedByName?: string;
+  monthKey?: string;
+  monthLabel?: string;
+  now?: Date;
+}): FeedEvent | null {
+  const now = params.now ?? new Date();
+  const monthKey = params.monthKey ?? getPreviousMonthKey(now);
+  const monthLabel = params.monthLabel ?? getPreviousMonthLabel(now);
+
+  // Deduplication: only one POTM post per month
+  if (!shouldPostPotmThisMonth(params.clubId, monthKey)) return null;
+
+  const actorName = params.postedByName ?? "Club";
+  const { winner } = params;
+
+  return addFeedEvent({
+    clubId: params.clubId,
+    type: "potm_announcement",
+    createdAt: now.toISOString(),
+    actorName,
+    description: `🏆 ${winner.memberName} is the Player of the Month for ${monthLabel}!`,
+    detail: `${winner.battleWins} wins · ${winner.winRate}% win rate · ${winner.eventsAttended} events attended`,
+    potmMonth: monthKey,
+    potmMonthLabel: monthLabel,
+    potmWinnerId: winner.memberId,
+    potmWinnerName: winner.memberName,
+    potmWinnerAvatarUrl: winner.avatarUrl,
+    potmWins: winner.battleWins,
+    potmWinRate: winner.winRate,
+    potmEventsAttended: winner.eventsAttended,
+    potmTotalBattles: winner.totalBattles,
+    potmRunnerUps: params.runnerUps?.slice(0, 2),
   });
 }
 

@@ -277,6 +277,11 @@ const FEED_EVENT_CONFIG: Record<
     accent: "text-amber-600 bg-amber-50",
     darkAccent: "text-amber-400 bg-amber-500/15",
   },
+  potm_announcement: {
+    icon: <Crown className="w-4 h-4" />,
+    accent: "text-amber-600 bg-amber-50",
+    darkAccent: "text-amber-400 bg-amber-500/15",
+  },
 };
 
 function FeedEventCard({

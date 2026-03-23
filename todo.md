@@ -3397,3 +3397,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build BattleTrendSparkline SVG component — cardinal spline area fill, hover crosshair tooltip (W/D/L breakdown), trend badge (+N% / -N% vs prior 4 weeks), empty state
 - [x] Add "Weekly Battle Trend" card to Analytics tab between key metrics and Battle Activity chart
 - [x] 23 unit tests for computeWeeklyBattleTrend, computeTrendDelta, getWeekStart, formatWeekLabel (all passing)
+
+## Feature: Auto-Post Player of the Month to Club Feed
+- [x] Audit postAnnouncement / postLeaderboardSnapshot in clubFeedRegistry to understand feed post shape
+- [x] Add potm_announcement to FeedEventType and 14 new POTM fields to FeedEvent interface
+- [x] Add getPreviousMonthKey() and getPreviousMonthLabel() helpers (injectable now: Date for testing)
+- [x] Add shouldPostPotmThisMonth() deduplication check — reads feed for existing potmMonth match
+- [x] Add postPlayerOfMonth() helper — creates rich POTM announcement with winner, runner-ups, deduplication
+- [x] Add potm_announcement icon to FeedIcon map in ClubDashboard and FEED_EVENT_CONFIG in ClubProfile
+- [x] Add "Post POTM to Feed" button in Analytics tab POTM section (director/owner only, disabled if already posted)
+- [x] Render POTM feed posts with a distinct gold/amber card style (avatar, stats, runner-up leaderboard)
+- [x] 18 unit tests pass for getPreviousMonthKey, getPreviousMonthLabel, shouldPostPotmThisMonth, postPlayerOfMonth
