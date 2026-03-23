@@ -28,6 +28,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
+import { MobileNavDrawer } from "../components/MobileNavDrawer";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
 
@@ -342,13 +343,16 @@ export default function ProfilePage() {
           Home
         </button>
         <NavLogo linked={false} />
-        <button
-          onClick={handleLogout}
-          className={`flex items-center gap-1.5 text-sm ${muted} hover:text-red-400 transition`}
-        >
-          <LogOut className="w-4 h-4" />
-          Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleLogout}
+            className={`flex items-center gap-1.5 text-sm ${muted} hover:text-red-400 transition`}
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign out</span>
+          </button>
+          <MobileNavDrawer currentPage="Dashboard" />
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">

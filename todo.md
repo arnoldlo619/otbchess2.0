@@ -3288,3 +3288,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Battle Page Logo Consistency
 - [x] Import NavLogo in Battle.tsx and replace text "OTB!!" logo with NavLogo component
+
+## Mobile Hamburger Menu (Re-add)
+- [x] Create shared MobileNavDrawer component with 4 nav links (Dashboard, Clubs, Battle, Analyze)
+- [x] Add hamburger button + MobileNavDrawer to Battle.tsx header
+- [x] Add hamburger button + MobileNavDrawer to BattleHistory.tsx header
+- [x] Add hamburger button + MobileNavDrawer to Profile.tsx header
+- [x] Add hamburger button + MobileNavDrawer to MyClubs.tsx header
+- [x] Add hamburger button + MobileNavDrawer to ClubDashboard.tsx header

@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
+import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -680,7 +681,7 @@ export default function MyClubs() {
           </button>
           <div className={`w-px h-4 ${isDark ? "bg-white/15" : "bg-gray-200"}`} />
           <NavLogo className="h-7" />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => user ? setShowWizard(true) : navigate("/")}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
@@ -688,6 +689,7 @@ export default function MyClubs() {
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Create Club</span>
             </button>
+            <MobileNavDrawer currentPage="Clubs" />
           </div>
         </div>
       </header>

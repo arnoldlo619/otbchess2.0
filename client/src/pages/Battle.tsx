@@ -29,6 +29,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { useChesscomAvatar } from "../hooks/useChesscomAvatar";
 import AuthModal from "../components/AuthModal";
+import { MobileNavDrawer } from "../components/MobileNavDrawer";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -558,21 +559,23 @@ export default function Battle() {
           <Swords className="w-4 h-4" />
           <span>Battle</span>
         </div>
-        {screen !== "mode_select" && (
-          <button
-            onClick={() => {
-              setScreen("mode_select");
-              setRoom(null);
-              setError(null);
-              setJoinCode("");
-            }}
-            className="flex items-center gap-1.5 text-white/40 hover:text-white text-sm transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
-        )}
-        {screen === "mode_select" && <div className="w-16" />}
+        <div className="flex items-center gap-2">
+          {screen !== "mode_select" && (
+            <button
+              onClick={() => {
+                setScreen("mode_select");
+                setRoom(null);
+                setError(null);
+                setJoinCode("");
+              }}
+              className="flex items-center gap-1.5 text-white/40 hover:text-white text-sm transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          )}
+          <MobileNavDrawer currentPage="Battle" />
+        </div>
       </header>
 
       {/* Main content */}

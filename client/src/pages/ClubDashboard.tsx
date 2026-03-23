@@ -136,6 +136,7 @@ import {
   PinOff,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -2204,20 +2205,23 @@ export default function ClubDashboard() {
           <div className="w-px h-4 bg-white/15" />
           <NavLogo />
         </div>
-        {user && (
-          <div className="flex items-center gap-2">
-            <Link href={`/clubs/${id}/messages`}>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition border border-white/10">
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span className="hidden sm:block">Messages</span>
-              </button>
-            </Link>
-            <div className="w-7 h-7 rounded-full overflow-hidden">
-              <PlayerAvatar username={user.displayName} name={user.displayName} avatarUrl={user.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
-            </div>
-            <span className="hidden sm:block text-white/60 text-sm font-medium">{user.displayName}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {user && (
+            <>
+              <Link href={`/clubs/${id}/messages`}>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition border border-white/10">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span className="hidden sm:block">Messages</span>
+                </button>
+              </Link>
+              <div className="w-7 h-7 rounded-full overflow-hidden">
+                <PlayerAvatar username={user.displayName} name={user.displayName} avatarUrl={user.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
+              </div>
+              <span className="hidden sm:block text-white/60 text-sm font-medium">{user.displayName}</span>
+            </>
+          )}
+          <MobileNavDrawer currentPage="Clubs" />
+        </div>
       </div>
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
