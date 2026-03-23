@@ -297,14 +297,11 @@ function QRCodePanel({
     if (!cardRef.current) return;
     setDownloading(true);
     try {
-      const { default: html2canvas } = await import("html2canvas");
-      const canvas = await html2canvas(cardRef.current, {
-        useCORS: true,
-        scale: 3,
-        backgroundColor: null,
-        logging: false,
+      const { toPng } = await import("html-to-image");
+      const url = await toPng(cardRef.current, {
+        pixelRatio: 3,
+        fetchRequestInit: { mode: "cors" },
       });
-      const url = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = url;
       a.download = `${tournamentName.toLowerCase().replace(/\s+/g, "-")}-qr.png`;

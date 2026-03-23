@@ -896,17 +896,14 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     const el = slideRefs.current[idx];
     if (!el) return null;
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(el, {
-        scale: 1,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
+      const { toBlob: htiToBlob } = await import("html-to-image");
+      const blob = await htiToBlob(el, {
+        pixelRatio: 1,
         width: SLIDE_SIZE,
         height: SLIDE_SIZE,
-        logging: false,
+        fetchRequestInit: { mode: "cors" },
       });
-      return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png", 1.0));
+      return blob ?? null;
     } catch (err) {
       console.error("[carousel] Export error", err);
       return null;

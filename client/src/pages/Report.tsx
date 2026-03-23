@@ -96,38 +96,47 @@ function TabBar({
 }
 
 // ─── Export helper ────────────────────────────────────────────────────────────
+/**
+ * Export a DOM element as a PNG download.
+ *
+ * Uses html-to-image (not html2canvas) because html2canvas 1.4.1 does not
+ * support the oklch() color function used throughout the OTB design system,
+ * causing a silent throw and the "Export failed" toast.
+ *
+ * html-to-image serialises the element to SVG via the browser's native
+ * rendering engine, so all modern CSS (oklch, backdrop-filter, etc.) works.
+ * Avatar images are already served through /api/avatar-proxy with
+ * Access-Control-Allow-Origin: * so cross-origin fetch succeeds.
+ */
 async function exportCardAsPng(
   element: HTMLElement,
   filename: string
 ): Promise<void> {
-  const { default: html2canvas } = await import("html2canvas");
-  const canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: null,
-    logging: false,
+  const { toPng } = await import("html-to-image");
+  const dataUrl = await toPng(element, {
+    pixelRatio: 2,
+    fetchRequestInit: { mode: "cors" },
+    // Ensure the hidden off-screen element is fully captured
+    width: element.offsetWidth || (element as HTMLElement).scrollWidth,
+    height: element.offsetHeight || (element as HTMLElement).scrollHeight,
   });
   const link = document.createElement("a");
   link.download = filename;
-  link.href = canvas.toDataURL("image/png");
+  link.href = dataUrl;
   link.click();
 }
 
 /** Render a card element to a Blob (PNG). */
 async function renderCardToBlob(element: HTMLElement): Promise<Blob> {
-  const { default: html2canvas } = await import("html2canvas");
-  const canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: null,
-    logging: false,
+  const { toBlob } = await import("html-to-image");
+  const blob = await toBlob(element, {
+    pixelRatio: 2,
+    fetchRequestInit: { mode: "cors" },
+    width: element.offsetWidth || (element as HTMLElement).scrollWidth,
+    height: element.offsetHeight || (element as HTMLElement).scrollHeight,
   });
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error("toBlob returned null"));
-    }, "image/png");
-  });
+  if (!blob) throw new Error("html-to-image toBlob returned null");
+  return blob;
 }
 
 // ─── Summary Banner ───────────────────────────────────────────────────────────
@@ -841,8 +850,9 @@ export default function ReportPage() {
                 const accent = getAccent(perf);
                 return (
                   <div key={perf.player.id}>
-                    {/* Hidden export-quality card (captured by html2canvas) */}
-                    <div className="sr-only absolute -left-[9999px] top-0 pointer-events-none">
+                    {/* Hidden export-quality card — positioned off-screen but with real dimensions */}
+                    {/* sr-only would collapse dimensions to 0; instead use fixed position far off-screen */}
+                    <div style={{ position: "fixed", left: "-9999px", top: 0, pointerEvents: "none", zIndex: -1 }}>
                       <PlayerStatsCard
                         ref={(el) => {
                           if (el) {

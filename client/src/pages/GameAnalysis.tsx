@@ -801,18 +801,13 @@ export default function GameAnalysis() {
     if (!highlightCardRef.current || !data) return;
     setHighlightStatus("generating");
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(highlightCardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: null,
-        logging: false,
+      const { toBlob: htiToBlob } = await import("html-to-image");
+      const blobResult = await htiToBlob(highlightCardRef.current, {
+        pixelRatio: 2,
+        fetchRequestInit: { mode: "cors" },
       });
-
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Canvas toBlob failed"))), "image/png");
-      });
+      if (!blobResult) throw new Error("html-to-image toBlob returned null");
+      const blob = blobResult;
 
       const white = data.game.whitePlayer || "White";
       const black = data.game.blackPlayer || "Black";
@@ -859,15 +854,11 @@ export default function GameAnalysis() {
     if (!highlightCardRef.current || !data) return;
     setHighlightStatus("generating");
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(highlightCardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: null,
-        logging: false,
+      const { toPng: htiToPng } = await import("html-to-image");
+      const url = await htiToPng(highlightCardRef.current, {
+        pixelRatio: 2,
+        fetchRequestInit: { mode: "cors" },
       });
-      const url = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = url;
       a.download = `chess-highlight-${data.game.id?.slice(0, 8) ?? "game"}.png`;

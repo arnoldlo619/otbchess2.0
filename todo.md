@@ -3369,3 +3369,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add runner-up leaderboard (top 4) below POTM winner
 - [x] Add Refresh Analytics button that re-reads battles/members/feed from localStorage
 - [x] Show graceful empty states when no battles have been seeded yet
+
+## Bug Fix: Player Performance Card PNG Export
+- [x] Root cause analysis: html2canvas 1.4.1 does not support oklch() color function (throws "unsupported color function" internally)
+- [x] Implement robust PNG export fix: replaced html2canvas with html-to-image in all 6 export paths (Report, ShareResultsModal, CrossTable, RoundTimeline, GameAnalysis, InstagramCarouselModal)
+- [x] Fixed hidden export card using sr-only (zero dimensions) to fixed positioning off-screen
+- [x] 26 unit tests pass verifying root cause, fix, and CORS proxy configuration

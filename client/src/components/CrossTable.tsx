@@ -129,16 +129,15 @@ export default function CrossTable({ players, rounds, tournamentName, isDark }: 
     if (!tableRef.current) return;
     setExporting(true);
     try {
-      const { default: html2canvas } = await import("html2canvas");
-      const canvas = await html2canvas(tableRef.current, {
-        scale: 2,
-        useCORS: true,
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(tableRef.current, {
+        pixelRatio: 2,
         backgroundColor: isDark ? "#1a2e1e" : "#ffffff",
-        logging: false,
+        fetchRequestInit: { mode: "cors" },
       });
       const link = document.createElement("a");
       link.download = `${tournamentName.toLowerCase().replace(/\s+/g, "-")}-cross-table.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = dataUrl;
       link.click();
     } catch {
       // silent
