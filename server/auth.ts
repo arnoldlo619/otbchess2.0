@@ -18,9 +18,9 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { nanoid, nanoid as nid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { getDb } from "./db.js";
-import { users, userTournaments } from "../shared/schema.js";
+import { users, userTournaments, ratingHistory } from "../shared/schema.js";
 
 const BCRYPT_ROUNDS = 12;
 const JWT_EXPIRY_DEFAULT = "7d";
@@ -363,6 +363,25 @@ export function createAuthRouter(): Router {
               }
               updateData.chesscomBullet = bulletRating;
             }
+            // ── Append rating history snapshots (keep last 10 per format) ──
+            const historyEntries: { format: string; rating: number }[] = [];
+            if (rapidRating && rapidRating !== currentUser?.chesscomRapid) historyEntries.push({ format: "rapid", rating: rapidRating });
+            if (blitzRating && blitzRating !== currentUser?.chesscomBlitz) historyEntries.push({ format: "blitz", rating: blitzRating });
+            if (bulletRating && bulletRating !== currentUser?.chesscomBullet) historyEntries.push({ format: "bullet", rating: bulletRating });
+            for (const entry of historyEntries) {
+              await db.insert(ratingHistory).values({ id: nid(), userId: payload.sub, format: entry.format, rating: entry.rating });
+              // Prune to last 10 rows for this user+format
+              const rows = await db.select({ id: ratingHistory.id })
+                .from(ratingHistory)
+                .where(and(eq(ratingHistory.userId, payload.sub), eq(ratingHistory.format, entry.format)))
+                .orderBy(desc(ratingHistory.recordedAt));
+              if (rows.length > 10) {
+                const toDelete = rows.slice(10).map((r) => r.id);
+                for (const id of toDelete) {
+                  await db.delete(ratingHistory).where(eq(ratingHistory.id, id));
+                }
+              }
+            }
           }
         } catch {
           // chess.com fetch failed — don't block the profile save
@@ -375,6 +394,31 @@ export function createAuthRouter(): Router {
     } catch (err) {
       console.error("[auth] patch me error:", err);
       return res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // ── GET /api/auth/rating-history ─────────────────────────────────────────────
+  // Returns the last 10 rating snapshots per format for the authenticated user.
+  // Response: { history: { format: string; rating: number; recordedAt: string }[] }
+  router.get("/auth/rating-history", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select()
+        .from(ratingHistory)
+        .where(eq(ratingHistory.userId, payload.sub))
+        .orderBy(desc(ratingHistory.recordedAt))
+        .limit(30);
+      return res.json({ history: rows });
+    } catch (err) {
+      console.error("[auth] rating-history error:", err);
+      return res.status(500).json({ error: "Failed to fetch rating history" });
     }
   });
 

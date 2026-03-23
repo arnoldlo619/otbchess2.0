@@ -2,9 +2,11 @@
  * AvatarNavDropdown
  *
  * A single avatar/initials button that opens a unified dropdown containing:
- *   1. Nav links  — Dashboard, Clubs, Battle, Analyze
- *   2. Divider
- *   3. User actions — My Profile, Sign Out  (or Sign In for guests)
+ *   1. User identity header (avatar, display name, chess.com handle)
+ *   2. Rating pills (rapid / blitz / bullet) with trend arrows
+ *   3. Compact sparkline chart for recent rating history
+ *   4. Nav links  — Dashboard, Clubs, Battle, Analyze
+ *   5. User actions — My Profile, Sign Out  (or Sign In for guests)
  *
  * The avatar button shows the user's Chess.com profile picture when available,
  * with a shimmer loading state and an initials/icon fallback.
@@ -13,7 +15,7 @@
  *   <AvatarNavDropdown currentPage="Battle" onSignInClick={() => setAuthOpen(true)} />
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -41,6 +43,12 @@ const NAV_ITEMS = [
   { name: "Analyze",   href: "/record",  icon: Video },
 ] as const;
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface RatingPoint {
+  rating: number;
+  recordedAt: string;
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface AvatarNavDropdownProps {
   /** Highlight this nav item as active (e.g. "Battle"). Falls back to URL matching. */
@@ -49,6 +57,75 @@ interface AvatarNavDropdownProps {
   onSignInClick?: () => void;
   /** Extra class names for the outer wrapper */
   className?: string;
+}
+
+// ─── Sparkline SVG ────────────────────────────────────────────────────────────
+function Sparkline({
+  points,
+  color,
+  width = 72,
+  height = 24,
+}: {
+  points: number[];
+  color: string;
+  width?: number;
+  height?: number;
+}) {
+  if (points.length < 2) return null;
+
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+  const pad = 2;
+
+  // Map points to SVG coordinates
+  const coords = points.map((v, i) => {
+    const x = pad + (i / (points.length - 1)) * (width - pad * 2);
+    const y = pad + ((max - v) / range) * (height - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const polyline = coords.join(" ");
+
+  // Area fill path (close below the line)
+  const firstX = pad;
+  const lastX  = (width - pad).toFixed(1);
+  const bottom = (height - pad).toFixed(1);
+  const areaPath = `M${firstX},${bottom} L${coords[0]} L${coords.slice(1).join(" L")} L${lastX},${bottom} Z`;
+
+  const isUp = points[points.length - 1] >= points[0];
+  const lineColor = isUp ? "#4ade80" : "#f87171";
+  const fillColor = isUp ? "rgba(74,222,128,0.12)" : "rgba(248,113,113,0.12)";
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      {/* Area fill */}
+      <path d={areaPath} fill={fillColor} />
+      {/* Line */}
+      <polyline
+        points={polyline}
+        fill="none"
+        stroke={lineColor}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* End dot */}
+      <circle
+        cx={coords[coords.length - 1].split(",")[0]}
+        cy={coords[coords.length - 1].split(",")[1]}
+        r="2"
+        fill={lineColor}
+      />
+    </svg>
+  );
 }
 
 // ─── Inner avatar circle (handles chess.com photo + shimmer + fallback) ───────
@@ -116,6 +193,12 @@ export function AvatarNavDropdown({
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
 
+  // Rating history state
+  const [history, setHistory] = useState<{ rapid: number[]; blitz: number[]; bullet: number[] }>({
+    rapid: [], blitz: [], bullet: [],
+  });
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
   // Close on outside click
   useEffect(() => {
     if (!open) return;
@@ -128,6 +211,34 @@ export function AvatarNavDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  // Fetch rating history when dropdown opens (once per session)
+  const fetchHistory = useCallback(async () => {
+    if (historyLoaded || !user || user.isGuest) return;
+    try {
+      const res = await fetch("/api/auth/rating-history", { credentials: "include" });
+      if (!res.ok) return;
+      const data = await res.json() as { history: (RatingPoint & { format: string })[] };
+      const rapid:  number[] = [];
+      const blitz:  number[] = [];
+      const bullet: number[] = [];
+      // Rows come newest-first; reverse to get chronological order for sparkline
+      const sorted = [...data.history].reverse();
+      for (const row of sorted) {
+        if (row.format === "rapid")  rapid.push(row.rating);
+        if (row.format === "blitz")  blitz.push(row.rating);
+        if (row.format === "bullet") bullet.push(row.rating);
+      }
+      setHistory({ rapid, blitz, bullet });
+      setHistoryLoaded(true);
+    } catch {
+      // Silently ignore — sparkline just won't show
+    }
+  }, [historyLoaded, user]);
+
+  useEffect(() => {
+    if (open) fetchHistory();
+  }, [open, fetchHistory]);
+
   const isActive = (item: (typeof NAV_ITEMS)[number]) => {
     if (currentPage) return item.name === currentPage;
     return location.startsWith(item.href);
@@ -136,6 +247,9 @@ export function AvatarNavDropdown({
   const buttonBorder = user?.isGuest
     ? "border-amber-500/40"
     : "border-white/20";
+
+  // Determine if any sparkline data exists
+  const hasSparkline = history.rapid.length >= 2 || history.blitz.length >= 2 || history.bullet.length >= 2;
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
@@ -194,7 +308,7 @@ export function AvatarNavDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="absolute right-0 top-full mt-2 z-[9999] w-52 rounded-2xl overflow-hidden shadow-2xl"
+            className="absolute right-0 top-full mt-2 z-[9999] w-56 rounded-2xl overflow-hidden shadow-2xl"
             style={{
               background: "oklch(0.17 0.06 145 / 0.97)",
               border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
@@ -232,7 +346,7 @@ export function AvatarNavDropdown({
                           ] as { label: string; icon: string; value: number | null; prev: number | null }[]).map(
                             ({ label, icon, value, prev }) => {
                               if (!value) return null;
-                              // Trend: up ▲ green, down ▼ red, neutral — (no prev or unchanged)
+                              // Trend: up ▲ green, down ▼ red, neutral (no prev or unchanged)
                               const trend =
                                 prev == null || prev === value
                                   ? null
@@ -267,6 +381,53 @@ export function AvatarNavDropdown({
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Sparkline section ── */}
+            {user && !user.isGuest && hasSparkline && (
+              <div
+                className="mx-3 mb-2 rounded-xl px-3 py-2"
+                style={{
+                  background: "rgba(0,0,0,0.25)",
+                  border: `1px solid ${OTB_GREEN_GLOW}0.12)`,
+                }}
+              >
+                <p className="text-[9px] font-semibold uppercase tracking-widest text-white/25 mb-1.5">
+                  Rating History
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {([
+                    { label: "Rapid",  icon: "♟", pts: history.rapid  },
+                    { label: "Blitz",  icon: "⚡", pts: history.blitz  },
+                    { label: "Bullet", icon: "•",  pts: history.bullet },
+                  ] as { label: string; icon: string; pts: number[] }[]).map(({ label, icon, pts }) => {
+                    if (pts.length < 2) return null;
+                    const latest = pts[pts.length - 1];
+                    const earliest = pts[0];
+                    const delta = latest - earliest;
+                    return (
+                      <div key={label} className="flex items-center gap-2">
+                        {/* Format label */}
+                        <span className="text-[10px] text-white/35 w-10 flex-shrink-0 flex items-center gap-0.5">
+                          <span>{icon}</span>
+                          <span>{label.slice(0, 1)}</span>
+                        </span>
+                        {/* Sparkline */}
+                        <div className="flex-1">
+                          <Sparkline points={pts} color={OTB_GREEN} width={80} height={22} />
+                        </div>
+                        {/* Delta */}
+                        <span
+                          className="text-[10px] font-semibold w-8 text-right flex-shrink-0"
+                          style={{ color: delta >= 0 ? "#4ade80" : "#f87171" }}
+                        >
+                          {delta >= 0 ? "+" : ""}{delta}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

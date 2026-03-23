@@ -515,3 +515,25 @@ export const clubInvites = mysqlTable(
 );
 export type ClubInvite = typeof clubInvites.$inferSelect;
 export type NewClubInvite = typeof clubInvites.$inferInsert;
+
+// ─── rating_history ───────────────────────────────────────────────────────────
+// Stores up to 10 time-series rating snapshots per user per format.
+// Appended each time a chess.com sync detects a changed rating.
+// Used to render sparkline charts in the AvatarNavDropdown.
+export const ratingHistory = mysqlTable(
+  "rating_history",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    // 'rapid' | 'blitz' | 'bullet'
+    format: varchar("format", { length: 10 }).notNull(),
+    rating: int("rating").notNull(),
+    recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userFormatIdx: index("rh_user_format_idx").on(table.userId, table.format),
+  })
+);
+
+export type RatingHistory = typeof ratingHistory.$inferSelect;
+export type NewRatingHistory = typeof ratingHistory.$inferInsert;

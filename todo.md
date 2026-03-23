@@ -3326,3 +3326,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add prev_rapid/blitz/bullet columns to DB to track previous ratings
 - [x] Update server to save current as previous before overwriting on sync
 - [x] Show up/down/neutral trend arrow next to each rating pill in AvatarNavDropdown
+
+## Rating Sparkline in Avatar Dropdown
+- [x] Add rating_history table to DB (userId, format, rating, recordedAt)
+- [x] Server appends snapshot on each chess.com sync (keep last 10 per format)
+- [x] Add GET /api/auth/rating-history endpoint
+- [x] Fetch rating history in AvatarNavDropdown when dropdown opens
+- [x] Render compact SVG sparkline per format below the rating pills
