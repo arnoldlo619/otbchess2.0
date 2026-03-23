@@ -3421,3 +3421,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Seeded all 11 demo clubs into DB (all is_public=1) — confirmed 11 rows in DB
 - [x] Added localStorage-to-server migration (migrateLocalClubsToServer) called on MyClubs mount
 - [x] 20 unit tests for clubsApi (URL construction, default visibility, row mapping, migration, merge logic)
+
+## Bug Fix: Mobile Landing Page Nav Bar Missing Nav Buttons
+- [x] Root cause: AnimeNavBar intentionally hides pill nav on mobile (isDesktop check), relying on avatar dropdown for nav links — but dropdown only shows bottom section on small screens
+- [x] Added a second mobile-only nav row below the logo/avatar bar in AnimeNavBar — shows Dashboard/Clubs/Battle/Analyze as pill buttons with active state indicator
+- [x] Mobile nav row uses OTB green active pill style matching desktop design language
+- [x] Increased hero section top padding on mobile: pt-28 sm:pt-24 md:pt-16 to prevent content overlap with taller two-row mobile header
+- [x] Avatar dropdown Navigate section remains intact as a secondary access point
