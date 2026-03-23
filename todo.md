@@ -3360,3 +3360,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Read Battles tab data structure and localStorage schema
 - [x] Add seedDemoBattlesToClub() function with ELO-weighted realistic results (~153 battles across all 18-player pairs)
 - [x] Add "Seed Demo Battles" button on Battles tab (owner only) in ClubDashboard
+
+## Analytics Tab: Battle Stats Integration
+- [x] Replace hardcoded members[0] in Player of the Month with computePlayerOfMonth() using real battle data
+- [x] Add battle statistics to key metrics row (Battles Played, Active Battlers)
+- [x] Add Battle Activity chart — stacked W/D/L bars for top 8 members with real chess.com avatars
+- [x] Add win-rate column to Member Roster in Analytics tab
+- [x] Add runner-up leaderboard (top 4) below POTM winner
+- [x] Add Refresh Analytics button that re-reads battles/members/feed from localStorage
+- [x] Show graceful empty states when no battles have been seeded yet

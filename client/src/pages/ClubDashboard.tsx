@@ -2968,20 +2968,62 @@ export default function ClubDashboard() {
         )}
 
         {/* ── ANALYTICS TAB ─────────────────────────────────────────────── */}
-        {tab === "analytics" && (
+        {tab === "analytics" && (() => {
+          // ── Derived analytics data ────────────────────────────────────────
+          const completedBattles = battles.filter(b => b.status === "completed");
+          const activePlayers = new Set([
+            ...completedBattles.map(b => b.playerAId),
+            ...completedBattles.map(b => b.playerBId),
+          ]).size;
+          const pollVotes = feedEvents.filter(e => e.type === "poll").reduce(
+            (sum, e) => sum + (e.pollOptions ?? []).reduce((s: number, o) => s + Object.keys(o.votes).length, 0), 0
+          );
+          // Per-member battle stats (top 8 by total battles played)
+          const memberBattleStats = members.map(m => {
+            const myBattles = completedBattles.filter(b => b.playerAId === m.userId || b.playerBId === m.userId);
+            const wins = myBattles.filter(b =>
+              (b.result === "player_a" && b.playerAId === m.userId) ||
+              (b.result === "player_b" && b.playerBId === m.userId)
+            ).length;
+            const draws = myBattles.filter(b => b.result === "draw").length;
+            const losses = myBattles.length - wins - draws;
+            const winRate = myBattles.length > 0 ? Math.round((wins / myBattles.length) * 100) : 0;
+            return { memberId: m.userId, name: m.displayName, avatarUrl: m.avatarUrl, total: myBattles.length, wins, draws, losses, winRate };
+          }).filter(s => s.total > 0).sort((a, b) => b.total - a.total).slice(0, 8);
+          // Player of the Month — computed from actual battle wins in last 30 days
+          const potmRanked = computePlayerOfMonth(members, battles, events);
+          const potmTop = potmRanked[0] ?? null;
+          const potmMember = potmTop ? members.find(m => m.userId === potmTop.memberId) : null;
+
+          return (
           <div className="space-y-6">
+            {/* Header with Refresh button */}
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5" style={{ color: accent }} />
               <h2 className="text-white font-bold text-lg">Club Engagement Analytics</h2>
+              <button
+                onClick={() => {
+                  if (!club) return;
+                  setMembers(getClubMembers(club.id));
+                  setFeedEvents(listFeedEvents(club.id, 50));
+                  setBattles(listBattles(club.id));
+                  setBattleLeaderboard(getBattleLeaderboard(club.id));
+                  toast.success("Analytics refreshed");
+                }}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Refresh
+              </button>
             </div>
 
-            {/* Key metrics row */}
+            {/* Key metrics — now includes battle stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Total Members", value: club.memberCount, icon: Users, delta: "+3 this month" },
-                { label: "Events Hosted", value: club.tournamentCount, icon: Trophy, delta: "All time" },
-                { label: "Feed Posts", value: feedEvents.length, icon: Activity, delta: "Active posts" },
-                { label: "Poll Votes", value: feedEvents.filter(e => e.type === "poll").reduce((sum, e) => sum + (e.pollOptions ?? []).reduce((s: number, o) => s + Object.keys(o.votes).length, 0), 0), icon: ThumbsUp, delta: "Total votes cast" },
+                { label: "Total Members", value: club.memberCount, icon: Users, delta: "All time" },
+                { label: "Battles Played", value: completedBattles.length, icon: Swords, delta: `${battles.length} total` },
+                { label: "Active Battlers", value: activePlayers, icon: Flame, delta: "Unique players" },
+                { label: "Poll Votes", value: pollVotes, icon: ThumbsUp, delta: "Total votes cast" },
               ].map(({ label, value, icon: Icon, delta }) => (
                 <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -2994,30 +3036,105 @@ export default function ClubDashboard() {
               ))}
             </div>
 
-            {/* Member join timeline */}
+            {/* Battle Activity chart — stacked W/D/L bars per member */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Swords className="w-4 h-4" style={{ color: accent }} />
+                <h3 className="text-white font-semibold text-sm">Battle Activity — Top Players</h3>
+                <span className="ml-auto text-[10px] text-white/30">Completed battles</span>
+              </div>
+              {memberBattleStats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <Swords className="w-8 h-8 text-white/15" />
+                  <p className="text-white/30 text-sm text-center">No completed battles yet.</p>
+                  <p className="text-white/20 text-xs text-center">Seed demo battles from the Battles tab to populate this chart.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {memberBattleStats.map((s) => {
+                    const maxTotal = memberBattleStats[0].total;
+                    const winPct  = s.total > 0 ? Math.round((s.wins  / s.total) * 100) : 0;
+                    const drawPct = s.total > 0 ? Math.round((s.draws / s.total) * 100) : 0;
+                    const lossPct = 100 - winPct - drawPct;
+                    return (
+                      <div key={s.memberId}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            {s.avatarUrl ? (
+                              <img src={s.avatarUrl} alt={s.name} className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-5 h-5 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+                                {s.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="text-xs text-white/70 font-medium truncate max-w-[120px]">{s.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px]">
+                            <span className="text-green-400 font-bold">{s.wins}W</span>
+                            <span className="text-amber-400">{s.draws}D</span>
+                            <span className="text-red-400/70">{s.losses}L</span>
+                            <span className="text-white/30 ml-1">{s.total}</span>
+                          </div>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/10 overflow-hidden flex" style={{ width: `${Math.round((s.total / maxTotal) * 100)}%` }}>
+                          <div className="h-full" style={{ width: `${winPct}%`,  background: "#4ade80" }} />
+                          <div className="h-full" style={{ width: `${drawPct}%`, background: "#fbbf24" }} />
+                          <div className="h-full" style={{ width: `${lossPct}%`, background: "rgba(248,113,113,0.4)" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-center gap-4 pt-1">
+                    {[{ color: "#4ade80", label: "Win" }, { color: "#fbbf24", label: "Draw" }, { color: "rgba(248,113,113,0.6)", label: "Loss" }].map(l => (
+                      <div key={l.label} className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
+                        <span className="text-[10px] text-white/40">{l.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Member Roster with win-rate column */}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <UserPlus className="w-4 h-4" style={{ color: accent }} />
                 <h3 className="text-white font-semibold text-sm">Member Roster</h3>
+                <span className="ml-auto text-[10px] text-white/30">{members.length} members</span>
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {members.length === 0 ? (
                   <p className="text-white/30 text-sm text-center py-4">No members yet.</p>
                 ) : (
-                  members.map((m) => (
-                    <div key={m.userId} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                          {m.displayName.charAt(0).toUpperCase()}
+                  members.map((m) => {
+                    const mStats = memberBattleStats.find(s => s.memberId === m.userId);
+                    return (
+                      <div key={m.userId} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                        <div className="flex items-center gap-2.5">
+                          {m.avatarUrl ? (
+                            <img src={m.avatarUrl} alt={m.displayName} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {m.displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-white">{m.displayName}</p>
+                            <p className="text-[10px] text-white/30 capitalize">{m.role}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-white">{m.displayName}</p>
-                          <p className="text-[10px] text-white/30 capitalize">{m.role}</p>
+                        <div className="flex items-center gap-3">
+                          {mStats && (
+                            <span className="text-[10px] font-semibold" style={{ color: mStats.winRate >= 60 ? "#4ade80" : mStats.winRate >= 40 ? "#fbbf24" : "rgba(248,113,113,0.8)" }}>
+                              {mStats.winRate}% WR
+                            </span>
+                          )}
+                          <span className="text-[10px] text-white/30">{new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                         </div>
                       </div>
-                      <span className="text-[10px] text-white/30">{new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -3052,33 +3169,67 @@ export default function ClubDashboard() {
               )}
             </div>
 
-            {/* Player of the Month highlight */}
+            {/* Player of the Month — computed from battle data, not hardcoded */}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Crown className="w-4 h-4 text-amber-400" />
                 <h3 className="text-white font-semibold text-sm">Player of the Month</h3>
-                <span className="ml-auto text-[10px] text-white/30">Based on battle wins</span>
+                <span className="ml-auto text-[10px] text-white/30">Last 30 days · battle wins</span>
               </div>
-              {members.length === 0 ? (
-                <p className="text-white/30 text-sm text-center py-4">No members yet.</p>
+              {potmTop === null ? (
+                <div className="flex flex-col items-center justify-center py-6 gap-2">
+                  <Crown className="w-8 h-8 text-white/15" />
+                  <p className="text-white/30 text-sm text-center">No battle activity in the last 30 days.</p>
+                  <p className="text-white/20 text-xs text-center">Complete battles to determine the top player.</p>
+                </div>
               ) : (
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#2d6a4f] flex items-center justify-center text-white text-xl font-black">
-                    {members[0].displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-lg">{members[0].displayName}</p>
-                    <p className="text-white/40 text-xs capitalize">{members[0].role} · Joined {new Date(members[0].joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</p>
-                    <div className="flex items-center gap-1.5 mt-1.5">
-                      <Crown className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="text-xs font-semibold text-amber-400">Top Member This Month</span>
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="relative">
+                      {potmMember?.avatarUrl ? (
+                        <img src={potmMember.avatarUrl} alt={potmTop.memberName} className="w-16 h-16 rounded-2xl object-cover" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-[#2d6a4f] flex items-center justify-center text-white text-2xl font-black">
+                          {potmTop.memberName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center">
+                        <Crown className="w-3.5 h-3.5 text-amber-900" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-lg">{potmTop.memberName}</p>
+                      <p className="text-white/40 text-xs">
+                        {potmTop.battleWins} wins · {potmTop.winRate}% win rate · {potmTop.eventsAttended} events
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <Crown className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-xs font-semibold text-amber-400">Top Player This Month</span>
+                      </div>
                     </div>
                   </div>
+                  {potmRanked.length > 1 && (
+                    <div className="border-t border-white/5 pt-3 space-y-2">
+                      {potmRanked.slice(1, 4).map((entry, i) => (
+                        <div key={entry.memberId} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-white/25 w-4">#{i + 2}</span>
+                            <div className="w-5 h-5 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-[9px] font-bold">
+                              {entry.memberName.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-xs text-white/60">{entry.memberName}</span>
+                          </div>
+                          <span className="text-[10px] text-white/40">{entry.battleWins}W · {entry.winRate}% WR</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* ── PAYMENTS TAB ─────────────────────────────────────────────────── */}
         {tab === "payments" && (
