@@ -3305,3 +3305,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace MobileNavDrawer in Profile.tsx with AvatarNavDropdown
 - [x] Replace MobileNavDrawer in MyClubs.tsx with AvatarNavDropdown
 - [x] Replace MobileNavDrawer in ClubDashboard.tsx with AvatarNavDropdown
+
+## Chess.com Avatar in AvatarNavDropdown
+- [x] Use useChessAvatar hook in AvatarNavDropdown to fetch chess.com profile picture
+- [x] Show chess.com photo in button circle with shimmer loading state and initials fallback

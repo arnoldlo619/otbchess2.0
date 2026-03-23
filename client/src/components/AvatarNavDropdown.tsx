@@ -6,10 +6,8 @@
  *   2. Divider
  *   3. User actions — My Profile, Sign Out  (or Sign In for guests)
  *
- * This replaces both the standalone hamburger menu AND the separate user-menu
- * button on inner-page headers, giving a clean, minimalist look:
- *
- *   [OTB!! logo]  ···  [avatar ▾]
+ * The avatar button shows the user's Chess.com profile picture when available,
+ * with a shimmer loading state and an initials/icon fallback.
  *
  * Usage:
  *   <AvatarNavDropdown currentPage="Battle" onSignInClick={() => setAuthOpen(true)} />
@@ -30,6 +28,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
+import { useChessAvatar } from "@/hooks/useChessAvatar";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const OTB_GREEN      = "#4CAF50";
@@ -50,6 +49,60 @@ interface AvatarNavDropdownProps {
   onSignInClick?: () => void;
   /** Extra class names for the outer wrapper */
   className?: string;
+}
+
+// ─── Inner avatar circle (handles chess.com photo + shimmer + fallback) ───────
+function AvatarCircle({
+  user,
+}: {
+  user: { displayName?: string | null; email?: string | null; isGuest?: boolean; chesscomUsername?: string | null; avatarUrl?: string | null } | null;
+}) {
+  // Prefer stored avatarUrl, then fetch from chess.com
+  const chesscomUsername = user?.chesscomUsername ?? null;
+  const { url: chesscomUrl, status } = useChessAvatar(
+    // Only fetch if no stored avatarUrl already
+    user?.avatarUrl ? null : chesscomUsername
+  );
+
+  const photoUrl = user?.avatarUrl || chesscomUrl;
+  const isLoading = !user?.avatarUrl && !!chesscomUsername && status === "loading";
+  const initials  = user
+    ? (user.displayName || user.email || "?").charAt(0).toUpperCase()
+    : null;
+
+  if (user?.isGuest) {
+    return <Ghost className="w-4 h-4 text-amber-300" />;
+  }
+
+  if (!user) {
+    return <LogIn className="w-4 h-4 text-white/70" />;
+  }
+
+  if (isLoading) {
+    // Shimmer skeleton while chess.com photo loads
+    return (
+      <div className="w-full h-full rounded-full animate-pulse bg-white/10" />
+    );
+  }
+
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={user.displayName ?? "avatar"}
+        className="w-full h-full object-cover rounded-full"
+        onError={(e) => {
+          // On broken image, hide and let initials show via parent
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+    );
+  }
+
+  // Initials fallback
+  return (
+    <span className="text-sm font-bold text-white select-none">{initials}</span>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -80,26 +133,6 @@ export function AvatarNavDropdown({
     return location.startsWith(item.href);
   };
 
-  // ── Avatar button content ─────────────────────────────────────────────────
-  const initials = user
-    ? (user.displayName || user.email || "?").charAt(0).toUpperCase()
-    : null;
-
-  const avatarEl = user ? (
-    user.avatarUrl ? (
-      <img
-        src={user.avatarUrl}
-        alt={user.displayName}
-        className="w-full h-full object-cover rounded-full"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-      />
-    ) : (
-      <span className="text-sm font-bold text-white">{initials}</span>
-    )
-  ) : (
-    <LogIn className="w-4 h-4 text-white/70" />
-  );
-
   const buttonBorder = user?.isGuest
     ? "border-amber-500/40"
     : "border-white/20";
@@ -117,9 +150,16 @@ export function AvatarNavDropdown({
         {/* Avatar circle */}
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-          style={{ background: user && !user.avatarUrl ? "#3D6B47" : "rgba(255,255,255,0.08)" }}
+          style={{
+            background:
+              user && !user.isGuest
+                ? "#3D6B47"
+                : user?.isGuest
+                ? "rgba(245,158,11,0.15)"
+                : "rgba(255,255,255,0.08)",
+          }}
         >
-          {user?.isGuest ? <Ghost className="w-4 h-4 text-amber-300" /> : avatarEl}
+          <AvatarCircle user={user} />
         </div>
         {/* Chevron */}
         <motion.div
@@ -163,8 +203,39 @@ export function AvatarNavDropdown({
               boxShadow: `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)`,
             }}
           >
+            {/* ── User identity header (when logged in) ── */}
+            {user && !user.isGuest && (
+              <div className="flex items-center gap-3 px-4 pt-3 pb-2">
+                {/* Larger avatar preview */}
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                  style={{ background: "#3D6B47" }}
+                >
+                  <AvatarCircle user={user} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate leading-tight">
+                    {user.displayName || user.email}
+                  </p>
+                  {user.chesscomUsername && (
+                    <p className="text-[11px] text-white/40 truncate leading-tight">
+                      chess.com/{user.chesscomUsername}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Divider after identity header ── */}
+            {user && !user.isGuest && (
+              <div
+                className="mx-3 mb-1 h-px"
+                style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+              />
+            )}
+
             {/* ── Section: Nav links ── */}
-            <div className="px-2 pt-2 pb-1">
+            <div className="px-2 pt-1.5 pb-1">
               <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">
                 Navigate
               </p>
