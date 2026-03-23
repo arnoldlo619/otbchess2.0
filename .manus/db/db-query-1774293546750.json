@@ -1,0 +1,31 @@
+{
+  "query": "SHOW TABLES LIKE 'club%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute SHOW TABLES LIKE 'club%';",
+  "rows": [
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "club_battles"
+    },
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "club_chess_games"
+    },
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "club_conversations"
+    },
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "club_invites"
+    },
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "club_members"
+    },
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "club_messages"
+    },
+    {
+      "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)": "clubs"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_J6FsDoRMH9x5xbUvpyzxyf (club%)\nclub_battles\nclub_chess_games\nclub_conversations\nclub_invites\nclub_members\nclub_messages\nclubs\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

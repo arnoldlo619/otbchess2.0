@@ -25,6 +25,11 @@ import {
   type ClubCategory,
 } from "@/lib/clubRegistry";
 import {
+  apiListPublicClubs,
+  apiListMyClubs,
+  migrateLocalClubsToServer,
+} from "@/lib/clubsApi";
+import {
   listClubEvents,
   seedClubEventsIfEmpty,
   getUserRSVP,
@@ -604,11 +609,24 @@ export default function MyClubs() {
   const [showWizard, setShowWizard] = useState(false);
   const [rsvpRefresh, setRsvpRefresh] = useState(0);
 
-  const refreshClubs = () => {
+  const refreshClubs = async () => {
     seedClubsIfEmpty();
     seedClubEventsIfEmpty();
-    const all = listAllClubs();
+
+    // Trigger one-time localStorage → server migration for signed-in users
+    if (user) {
+      migrateLocalClubsToServer(user.id).catch(() => {});
+    }
+
+    // Fetch public clubs from server (server-first, localStorage fallback)
+    const serverClubs = await apiListPublicClubs();
+    const localClubs = listAllClubs();
+    // Merge: server clubs take priority; add any local-only clubs not yet synced
+    const serverIds = new Set(serverClubs.map((c) => c.id));
+    const localOnly = localClubs.filter((c) => !serverIds.has(c.id));
+    const all = [...serverClubs, ...localOnly];
     setAllClubs(all);
+
     if (user) {
       const joined = listMyClubs(user.id);
       setMyClubs(joined);

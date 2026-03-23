@@ -3408,3 +3408,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Post POTM to Feed" button in Analytics tab POTM section (director/owner only, disabled if already posted)
 - [x] Render POTM feed posts with a distinct gold/amber card style (avatar, stats, runner-up leaderboard)
 - [x] 18 unit tests pass for getPreviousMonthKey, getPreviousMonthLabel, shouldPostPotmThisMonth, postPlayerOfMonth
+
+## Bug Fix: Discover Clubs Page Not Showing Clubs
+- [x] Root cause: Discover page read entirely from localStorage (listAllClubs()) — no server API existed for listing clubs
+- [x] Created clubs table in DB (22 columns, 4 indexes) and club_members table
+- [x] Built server/clubs.ts router: GET /api/clubs (public listing with search/filter), POST /api/clubs, PATCH /:id, DELETE /:id, GET /:id
+- [x] Registered clubs router in server/index.ts
+- [x] Created client/src/lib/clubsApi.ts service wrapping all 5 endpoints with typed helpers
+- [x] Updated MyClubs.tsx: refreshClubs() is now async (server-first, localStorage fallback merge)
+- [x] Updated CreateClubWizard.tsx: apiCreateClub() called after localStorage createClub() — new clubs immediately appear in Discover for all users
+- [x] Clubs default to isPublic=true on creation (enforced in both CreateClubWizard and server API)
+- [x] Seeded all 11 demo clubs into DB (all is_public=1) — confirmed 11 rows in DB
+- [x] Added localStorage-to-server migration (migrateLocalClubsToServer) called on MyClubs mount
+- [x] 20 unit tests for clubsApi (URL construction, default visibility, row mapping, migration, merge logic)

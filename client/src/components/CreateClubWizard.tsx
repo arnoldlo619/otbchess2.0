@@ -22,6 +22,7 @@ import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { createClub, type ClubCategory } from "@/lib/clubRegistry";
+import { apiCreateClub } from "@/lib/clubsApi";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { toast } from "sonner";
 import {
@@ -280,26 +281,32 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
     // On step 4 → create the club
     if (step === 4) {
       if (!user) { toast.error("Sign in to create a club"); return; }
+      const clubData = {
+        name: data.name.trim(),
+        tagline: data.tagline.trim(),
+        category: data.category,
+        location: data.location.trim(),
+        country: data.country,
+        description: data.description.trim(),
+        accentColor: data.accentColor,
+        avatarUrl: data.avatarUrl,
+        bannerUrl: null as null,
+        ownerId: user.id,
+        ownerName: user.displayName,
+        isPublic: data.isPublic,
+        website: data.website.trim() || undefined,
+        discord: data.discord.trim() || undefined,
+      };
+      // Persist to localStorage (immediate, offline-capable)
       const club = createClub(
-        {
-          name: data.name.trim(),
-          tagline: data.tagline.trim(),
-          category: data.category,
-          location: data.location.trim(),
-          country: data.country,
-          description: data.description.trim(),
-          accentColor: data.accentColor,
-          avatarUrl: data.avatarUrl,
-          bannerUrl: null,
-          ownerId: user.id,
-          ownerName: user.displayName,
-          isPublic: data.isPublic,
-          website: data.website.trim() || undefined,
-          discord: data.discord.trim() || undefined,
-        },
+        clubData,
         { userId: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl }
       );
       setCreatedClubId(club.id);
+      // Also persist to server so the club appears in Discover for all users
+      apiCreateClub({ ...clubData, id: club.id }).catch(() => {
+        // Non-fatal: club exists in localStorage; will sync on next migration run
+      });
     }
 
     setDirection("forward");

@@ -576,3 +576,67 @@ export const clubBattles = mysqlTable(
 );
 export type ClubBattleRow = typeof clubBattles.$inferSelect;
 export type NewClubBattleRow = typeof clubBattles.$inferInsert;
+
+// ── Clubs ─────────────────────────────────────────────────────────────────────
+// Mirrors the Club interface in client/src/lib/clubRegistry.ts.
+// Clubs default to isPublic=1 so they appear in Discover immediately.
+export const dbClubs = mysqlTable(
+  "clubs",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    slug: varchar("slug", { length: 100 }).notNull(),
+    tagline: varchar("tagline", { length: 200 }).notNull().default(""),
+    description: text("description").notNull().default(""),
+    location: varchar("location", { length: 100 }).notNull().default(""),
+    country: varchar("country", { length: 4 }).notNull().default(""),
+    category: varchar("category", { length: 30 }).notNull().default("club"),
+    avatarUrl: varchar("avatar_url", { length: 500 }),
+    bannerUrl: varchar("banner_url", { length: 500 }),
+    accentColor: varchar("accent_color", { length: 20 }).notNull().default("#4CAF50"),
+    ownerId: varchar("owner_id", { length: 64 }).notNull(),
+    ownerName: varchar("owner_name", { length: 100 }).notNull().default(""),
+    memberCount: int("member_count").notNull().default(1),
+    tournamentCount: int("tournament_count").notNull().default(0),
+    followerCount: int("follower_count").notNull().default(0),
+    isPublic: tinyint("is_public").notNull().default(1),
+    website: varchar("website", { length: 300 }),
+    twitter: varchar("twitter", { length: 100 }),
+    discord: varchar("discord", { length: 300 }),
+    announcement: text("announcement"),
+    foundedAt: timestamp("founded_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    slugIdx: index("clubs_slug_idx").on(table.slug),
+    ownerIdx: index("clubs_owner_idx").on(table.ownerId),
+    publicIdx: index("clubs_public_idx").on(table.isPublic),
+  })
+);
+export type DbClubRow = typeof dbClubs.$inferSelect;
+export type NewDbClubRow = typeof dbClubs.$inferInsert;
+
+// ── Club Members (DB) ─────────────────────────────────────────────────────────
+export const dbClubMembers = mysqlTable(
+  "club_members",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    userId: varchar("user_id", { length: 64 }).notNull(),
+    displayName: varchar("display_name", { length: 100 }).notNull().default(""),
+    chesscomUsername: varchar("chesscom_username", { length: 50 }),
+    lichessUsername: varchar("lichess_username", { length: 50 }),
+    avatarUrl: varchar("avatar_url", { length: 500 }),
+    role: varchar("role", { length: 20 }).notNull().default("member"),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+    tournamentsPlayed: int("tournaments_played").notNull().default(0),
+    bestFinish: int("best_finish"),
+  },
+  (table) => ({
+    clubIdx: index("cm_club_idx").on(table.clubId),
+    userIdx: index("cm_user_idx").on(table.userId),
+    uniqueMember: index("cm_club_user_idx").on(table.clubId, table.userId),
+  })
+);
+export type DbClubMemberRow = typeof dbClubMembers.$inferSelect;
+export type NewDbClubMemberRow = typeof dbClubMembers.$inferInsert;

@@ -1,0 +1,17 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `clubs` (\n  `id` varchar(64) NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `slug` varchar(100) NOT NULL,\n  `tagline` varchar(200) NOT NULL DEFAULT '',\n  `description` text NOT NULL DEFAULT (''),\n  `location` varchar(100) NOT NULL DEFAULT '',\n  `country` varchar(4) NOT NULL DEFAULT '',\n  `category` varchar(30) NOT NULL DEFAULT 'club',\n  `avatar_url` varchar(500),\n  `banner_url` varchar(500),\n  `accent_color` varchar(20) NOT NULL DEFAULT '#4CAF50',\n  `owner_id` varchar(64) NOT NULL,\n  `owner_name` varchar(100) NOT NULL DEFAULT '',\n  `member_count` int NOT NULL DEFAULT 1,\n  `tournament_count` int NOT NULL DEFAULT 0,\n  `follower_count` int NOT NULL DEFAULT 0,\n  `is_public` tinyint NOT NULL DEFAULT 1,\n  `website` varchar(300),\n  `twitter` varchar(100),\n  `discord` varchar(300),\n  `announcement` text,\n  `founded_at` timestamp NOT NULL DEFAULT (now()),\n  `updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `clubs_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute CREATE TABLE IF NOT EXISTS `clubs` (\n  `id` varchar(64) NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `slug` varchar(100) NOT NULL,\n  `tagline` varchar(200) NOT NULL DEFAULT '',\n  `description` text NOT NULL DEFAULT (''),\n  `location` varchar(100) NOT NULL DEFAULT '',\n  `country` varchar(4) NOT NULL DEFAULT '',\n  `category` varchar(30) NOT NULL DEFAULT 'club',\n  `avatar_url` varchar(500),\n  `banner_url` varchar(500),\n  `accent_color` varchar(20) NOT NULL DEFAULT '#4CAF50',\n  `owner_id` varchar(64) NOT NULL,\n  `owner_name` varchar(100) NOT NULL DEFAULT '',\n  `member_count` int NOT NULL DEFAULT 1,\n  `tournament_count` int NOT NULL DEFAULT 0,\n  `follower_count` int NOT NULL DEFAULT 0,\n  `is_public` tinyint NOT NULL DEFAULT 1,\n  `website` varchar(300),\n  `twitter` varchar(100),\n  `discord` varchar(300),\n  `announcement` text,\n  `founded_at` timestamp NOT NULL DEFAULT (now()),\n  `updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `clubs_id` PRIMARY KEY(`id`)\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 6 column 42 near \"''),",
+    "  `location` varchar(100) NOT NULL DEFAULT '',",
+    "  `country` varchar(4) NOT NULL DEFAULT '',",
+    "  `category` varchar(30) NOT NULL DEFAULT 'club',",
+    "  `avatar_url` varchar(500),",
+    "  `banner_url` varchar(500),",
+    "  `accent_color` varchar(20) NOT NULL DEFAULT '#4CAF50',",
+    "  `owner_id` varchar(64) NOT NULL,",
+    "  `owner_name` varchar(100) NOT NULL DEFAULT '',",
+    "  `member_count` int N"
+  ]
+}

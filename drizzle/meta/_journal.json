@@ -22,6 +22,13 @@
       "when": 1774289591152,
       "tag": "0002_melodic_lake",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1774293481008,
+      "tag": "0003_thin_black_knight",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "query": "CREATE TABLE `club_members` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `club_id` varchar(64) NOT NULL,\n  `user_id` varchar(64) NOT NULL,\n  `display_name` varchar(100) NOT NULL DEFAULT '',\n  `chesscom_username` varchar(50),\n  `lichess_username` varchar(50),\n  `avatar_url` varchar(500),\n  `role` varchar(20) NOT NULL DEFAULT 'member',\n  `joined_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `tournaments_played` int NOT NULL DEFAULT 0,\n  `best_finish` int,\n  PRIMARY KEY (`id`),\n  KEY `cm_club_idx` (`club_id`),\n  KEY `cm_user_idx` (`user_id`),\n  KEY `cm_club_user_idx` (`club_id`, `user_id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute CREATE TABLE `club_members` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `club_id` varchar(64) NOT NULL,\n  `user_id` varchar(64) NOT NULL,\n  `display_name` varchar(100) NOT NULL DEFAULT '',\n  `chesscom_username` varchar(50),\n  `lichess_username` varchar(50),\n  `avatar_url` varchar(500),\n  `role` varchar(20) NOT NULL DEFAULT 'member',\n  `joined_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `tournaments_played` int NOT NULL DEFAULT 0,\n  `best_finish` int,\n  PRIMARY KEY (`id`),\n  KEY `cm_club_idx` (`club_id`),\n  KEY `cm_user_idx` (`user_id`),\n  KEY `cm_club_user_idx` (`club_id`, `user_id`)\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1050 (42S01) at line 1: Table 'J6FsDoRMH9x5xbUvpyzxyf.club_members' already exists"
+  ]
+}

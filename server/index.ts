@@ -14,6 +14,7 @@ import { createRecordingsRouter } from "./recordings.js";
 import clubMessagingRouter from "./clubMessaging.js";
 import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
 import clubBattlesRouter from "./clubBattles.js";
+import { clubsRouter } from "./clubs.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -308,6 +309,9 @@ export function createApp() {
   // like /api/chess/* and /api/lichess/*.
   app.use("/api/recordings", createRecordingsRouter());
   app.use("/api/games", createRecordingsRouter());
+
+  // ── Clubs API (Discover, Create, Join, Members) ─────────────────────────────
+  app.use("/api/clubs", clubsRouter);
 
   // ── Club Messaging (DMs + turn-based chess) ───────────────────────────────
   app.use("/api/clubs/:clubId/conversations", clubMessagingRouter);
