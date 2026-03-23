@@ -3343,3 +3343,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Bug Fix: Player Card PNG Export
 - [x] Investigate and fix PNG export error on player performance cards — root cause: chess.com avatar images served without CORS headers caused tainted canvas error; fixed by adding /api/avatar-proxy server endpoint and routing export card avatar URLs through it
+
+## Fix: Duplicate Avatar Icon in Headers
+- [x] Audit ClubDashboard, Battle, BattleHistory, Profile, MyClubs headers for duplicate avatar/user-menu buttons
+- [x] Remove all duplicate avatar buttons — keep only AvatarNavDropdown in each header (only ClubDashboard had duplicates: PlayerAvatar circle + displayName text removed, Messages button kept)
