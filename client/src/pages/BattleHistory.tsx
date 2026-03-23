@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import AuthModal from "../components/AuthModal";
-import { MobileNavDrawer } from "../components/MobileNavDrawer";
+import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +126,7 @@ export default function BattleHistory() {
           <Swords className="w-5 h-5 text-green-400" />
           <h1 className="text-base font-black tracking-tight">Battle History</h1>
         </div>
-        <MobileNavDrawer currentPage="Battle" />
+        <AvatarNavDropdown currentPage="Battle" />
       </header>
 
       <main className="flex-1 flex flex-col items-center px-4 py-8 max-w-lg mx-auto w-full gap-6">

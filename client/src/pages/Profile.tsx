@@ -28,7 +28,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
-import { MobileNavDrawer } from "../components/MobileNavDrawer";
+import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
 
@@ -351,7 +351,7 @@ export default function ProfilePage() {
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Sign out</span>
           </button>
-          <MobileNavDrawer currentPage="Dashboard" />
+          <AvatarNavDropdown currentPage="Dashboard" />
         </div>
       </div>
 

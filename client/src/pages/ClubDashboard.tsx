@@ -136,7 +136,7 @@ import {
   PinOff,
 } from "lucide-react";
 import { toast } from "sonner";
-import { MobileNavDrawer } from "@/components/MobileNavDrawer";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -2220,7 +2220,7 @@ export default function ClubDashboard() {
               <span className="hidden sm:block text-white/60 text-sm font-medium">{user.displayName}</span>
             </>
           )}
-          <MobileNavDrawer currentPage="Clubs" />
+          <AvatarNavDropdown currentPage="Clubs" />
         </div>
       </div>
 

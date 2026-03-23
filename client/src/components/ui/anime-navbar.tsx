@@ -10,8 +10,9 @@
  *   - Right slot (theme toggle + user avatar)
  *   - Glassmorphic scroll background (intensifies on scroll)
  *   - IntersectionObserver scroll-aware active tab
- *   - Hamburger drawer for mobile (< 768 px) with swipe-to-close
- *   - Animated hamburger → X icon transition
+ *   - Desktop: full animated pill nav centred on viewport
+ *   - Mobile: nav links are consolidated into the avatar dropdown (rightSlot)
+ *             — no standalone hamburger button
  *
  * Design tokens:
  *   OTB green: oklch(0.55 0.18 145) ≈ #3D6B47 / #4CAF50
@@ -19,13 +20,13 @@
 
 import React, { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { LucideIcon, Menu, X } from "lucide-react"
+import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ─── OTB design tokens ────────────────────────────────────────────────────────
-const OTB_GREEN       = "#4CAF50"          // bright accent
-const OTB_GREEN_DARK  = "#3D6B47"          // deep forest green
-const OTB_GREEN_GLOW  = "rgba(61,107,71,"  // prefix for rgba glow layers
+const OTB_GREEN       = "#4CAF50"
+const OTB_GREEN_DARK  = "#3D6B47"
+const OTB_GREEN_GLOW  = "rgba(61,107,71,"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -176,26 +177,15 @@ export function AnimeNavBar({
   const [activeTab, setActiveTab]           = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
   const [scrollProgress, setScrollProgress] = useState(0)
   const [isDesktop, setIsDesktop]           = useState(false)
-  const [hamburgerOpen, setHamburgerOpen]   = useState(false)
-  const [drawerSwipeY, setDrawerSwipeY]     = useState(0)
 
-  const manualOverrideRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const touchStartYRef     = useRef<number>(0)
-  const touchStartTimeRef  = useRef<number>(0)
+  const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setMounted(true)
-    // Desktop = md breakpoint (768px+)
     setIsDesktop(window.innerWidth >= 768)
 
-    const handleResize = () => {
-      const desktop = window.innerWidth >= 768
-      setIsDesktop(desktop)
-      if (desktop) setHamburgerOpen(false)
-    }
-    const handleScroll = () => {
-      setScrollProgress(Math.min(1, window.scrollY / 100))
-    }
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768)
+    const handleScroll = () => setScrollProgress(Math.min(1, window.scrollY / 100))
 
     window.addEventListener("resize", handleResize, { passive: true })
     window.addEventListener("scroll", handleScroll, { passive: true })
@@ -233,26 +223,7 @@ export function AnimeNavBar({
     setActiveTab(item.name)
     if (manualOverrideRef.current) clearTimeout(manualOverrideRef.current)
     manualOverrideRef.current = setTimeout(() => { manualOverrideRef.current = null }, 1500)
-    setHamburgerOpen(false)
     onActiveChange?.(item.name)
-  }
-
-  // ── Swipe-to-close gesture handlers ──────────────────────────────────────
-  const handleDrawerTouchStart = (e: React.TouchEvent) => {
-    touchStartYRef.current    = e.touches[0].clientY
-    touchStartTimeRef.current = Date.now()
-    setDrawerSwipeY(0)
-  }
-  const handleDrawerTouchMove = (e: React.TouchEvent) => {
-    if (!hamburgerOpen) return
-    const deltaY = e.touches[0].clientY - touchStartYRef.current
-    if (deltaY < 0) setDrawerSwipeY(deltaY)
-  }
-  const handleDrawerTouchEnd = () => {
-    const deltaTime = Date.now() - touchStartTimeRef.current
-    const velocity  = Math.abs(drawerSwipeY) / deltaTime
-    if (Math.abs(drawerSwipeY) > 60 || velocity > 0.5) setHamburgerOpen(false)
-    setDrawerSwipeY(0)
   }
 
   // ── Glassmorphic background values ───────────────────────────────────────
@@ -261,7 +232,6 @@ export function AnimeNavBar({
   const blurPx   = (4 + scrollProgress * 12).toFixed(1)
 
   return (
-    // Visible on ALL screen sizes (removed hidden sm:block)
     <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
       <motion.div
         initial={{ opacity: 0, y: -16 }}
@@ -283,9 +253,8 @@ export function AnimeNavBar({
             </motion.div>
           )}
 
-          {/* ── Nav items (desktop: full pill | mobile: hamburger button) ── */}
-          {isDesktop ? (
-            /* Full nav pill — absolutely centred on viewport */
+          {/* ── Nav items — desktop only (full animated pill centred on viewport) ── */}
+          {isDesktop && (
             <div className="absolute left-1/2 -translate-x-1/2">
               <motion.div
                 className="flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 py-1.5 relative"
@@ -442,105 +411,20 @@ export function AnimeNavBar({
                 })}
               </motion.div>
             </div>
-          ) : (
-            /* ── Mobile: hamburger toggle button ── */
-            <div className="flex-1 flex items-center justify-center">
-              <button
-                onClick={() => setHamburgerOpen(!hamburgerOpen)}
-                className="relative cursor-pointer text-white/80 hover:text-white p-2 rounded-lg transition-colors hover:bg-white/10"
-                aria-label="Toggle menu"
-                aria-expanded={hamburgerOpen}
-              >
-                <motion.div
-                  animate={{ rotate: hamburgerOpen ? 90 : 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="w-6 h-6"
-                >
-                  <AnimatePresence mode="wait">
-                    {hamburgerOpen ? (
-                      <motion.div key="close"
-                        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.7 }} transition={{ duration: 0.18 }}
-                      >
-                        <X className="w-6 h-6" />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="menu"
-                        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.7 }} transition={{ duration: 0.18 }}
-                      >
-                        <Menu className="w-6 h-6" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              </button>
-            </div>
           )}
 
-          {/* ── Right slot (theme toggle + user avatar) ── */}
+          {/* ── Right slot (theme toggle + avatar dropdown) ── */}
           {rightSlot && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} className="flex-none min-w-0">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.12 }}
+              className="flex-none min-w-0 ml-auto"
+            >
               {rightSlot}
             </motion.div>
           )}
         </div>
-
-        {/* ── Mobile hamburger drawer ── */}
-        <AnimatePresence>
-          {!isDesktop && hamburgerOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto", y: drawerSwipeY }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              onTouchStart={handleDrawerTouchStart}
-              onTouchMove={handleDrawerTouchMove}
-              onTouchEnd={handleDrawerTouchEnd}
-              className="overflow-hidden mt-2 cursor-grab active:cursor-grabbing"
-            >
-              {/* Divider */}
-              <div className="h-px mx-3 mb-2" style={{ background: "rgba(61,107,71,0.25)" }} />
-
-              <div className="flex flex-col gap-1 px-3 pb-3">
-                {items.map((item) => {
-                  const isActive = activeTab === item.name
-                  return (
-                    <a
-                      key={item.name}
-                      href={item.url}
-                      onClick={handleNavClick(item)}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold",
-                        isActive
-                          ? "text-white"
-                          : "text-white/65 hover:text-white hover:bg-white/[0.07]"
-                      )}
-                      style={isActive ? {
-                        background: `${OTB_GREEN_GLOW}0.22)`,
-                        border: `1px solid ${OTB_GREEN_GLOW}0.30)`,
-                        boxShadow: `0 0 12px ${OTB_GREEN_GLOW}0.15)`,
-                      } : {}}
-                    >
-                      <item.icon
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: isActive ? OTB_GREEN : undefined }}
-                      />
-                      <span>{item.name}</span>
-                      {isActive && (
-                        <motion.div
-                          layoutId="mobile-active-dot"
-                          className="ml-auto w-1.5 h-1.5 rounded-full"
-                          style={{ background: OTB_GREEN }}
-                        />
-                      )}
-                    </a>
-                  )
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </div>
   )

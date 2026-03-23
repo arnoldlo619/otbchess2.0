@@ -61,7 +61,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
-import { MobileNavDrawer } from "@/components/MobileNavDrawer";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -689,7 +689,7 @@ export default function MyClubs() {
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Create Club</span>
             </button>
-            <MobileNavDrawer currentPage="Clubs" />
+            <AvatarNavDropdown currentPage="Clubs" />
           </div>
         </div>
       </header>

@@ -29,7 +29,7 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import { useChesscomAvatar } from "../hooks/useChesscomAvatar";
 import AuthModal from "../components/AuthModal";
-import { MobileNavDrawer } from "../components/MobileNavDrawer";
+import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -574,7 +574,7 @@ export default function Battle() {
               Back
             </button>
           )}
-          <MobileNavDrawer currentPage="Battle" />
+          <AvatarNavDropdown currentPage="Battle" />
         </div>
       </header>
 

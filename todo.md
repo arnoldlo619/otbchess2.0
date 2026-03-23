@@ -3296,3 +3296,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add hamburger button + MobileNavDrawer to Profile.tsx header
 - [x] Add hamburger button + MobileNavDrawer to MyClubs.tsx header
 - [x] Add hamburger button + MobileNavDrawer to ClubDashboard.tsx header
+
+## Consolidate Hamburger into Avatar Dropdown
+- [x] Redesign AnimeNavBar: remove standalone hamburger, nav links moved into avatar dropdown on mobile
+- [x] Build AvatarNavDropdown component (avatar button + nav links + Profile + Sign out)
+- [x] Replace MobileNavDrawer in Battle.tsx with AvatarNavDropdown
+- [x] Replace MobileNavDrawer in BattleHistory.tsx with AvatarNavDropdown
+- [x] Replace MobileNavDrawer in Profile.tsx with AvatarNavDropdown
+- [x] Replace MobileNavDrawer in MyClubs.tsx with AvatarNavDropdown
+- [x] Replace MobileNavDrawer in ClubDashboard.tsx with AvatarNavDropdown

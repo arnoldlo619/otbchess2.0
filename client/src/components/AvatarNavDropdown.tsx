@@ -1,0 +1,279 @@
+/**
+ * AvatarNavDropdown
+ *
+ * A single avatar/initials button that opens a unified dropdown containing:
+ *   1. Nav links  — Dashboard, Clubs, Battle, Analyze
+ *   2. Divider
+ *   3. User actions — My Profile, Sign Out  (or Sign In for guests)
+ *
+ * This replaces both the standalone hamburger menu AND the separate user-menu
+ * button on inner-page headers, giving a clean, minimalist look:
+ *
+ *   [OTB!! logo]  ···  [avatar ▾]
+ *
+ * Usage:
+ *   <AvatarNavDropdown currentPage="Battle" onSignInClick={() => setAuthOpen(true)} />
+ */
+
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  Building2,
+  Swords,
+  Video,
+  Crown,
+  LogOut,
+  LogIn,
+  Ghost,
+  ChevronDown,
+} from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { useAuthContext } from "@/context/AuthContext";
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const OTB_GREEN      = "#4CAF50";
+const OTB_GREEN_GLOW = "rgba(61,107,71,";
+
+const NAV_ITEMS = [
+  { name: "Dashboard", href: "/join",    icon: LayoutDashboard },
+  { name: "Clubs",     href: "/clubs",   icon: Building2 },
+  { name: "Battle",    href: "/battle",  icon: Swords },
+  { name: "Analyze",   href: "/record",  icon: Video },
+] as const;
+
+// ─── Props ────────────────────────────────────────────────────────────────────
+interface AvatarNavDropdownProps {
+  /** Highlight this nav item as active (e.g. "Battle"). Falls back to URL matching. */
+  currentPage?: string;
+  /** Called when the guest/unauthenticated user clicks "Sign In". */
+  onSignInClick?: () => void;
+  /** Extra class names for the outer wrapper */
+  className?: string;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+export function AvatarNavDropdown({
+  currentPage,
+  onSignInClick,
+  className = "",
+}: AvatarNavDropdownProps) {
+  const { user, logout } = useAuthContext();
+  const [open, setOpen]   = useState(false);
+  const [location]        = useLocation();
+  const wrapperRef        = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const isActive = (item: (typeof NAV_ITEMS)[number]) => {
+    if (currentPage) return item.name === currentPage;
+    return location.startsWith(item.href);
+  };
+
+  // ── Avatar button content ─────────────────────────────────────────────────
+  const initials = user
+    ? (user.displayName || user.email || "?").charAt(0).toUpperCase()
+    : null;
+
+  const avatarEl = user ? (
+    user.avatarUrl ? (
+      <img
+        src={user.avatarUrl}
+        alt={user.displayName}
+        className="w-full h-full object-cover rounded-full"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+      />
+    ) : (
+      <span className="text-sm font-bold text-white">{initials}</span>
+    )
+  ) : (
+    <LogIn className="w-4 h-4 text-white/70" />
+  );
+
+  const buttonBorder = user?.isGuest
+    ? "border-amber-500/40"
+    : "border-white/20";
+
+  return (
+    <div ref={wrapperRef} className={`relative ${className}`}>
+      {/* ── Avatar button ── */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
+        className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} bg-black/30 backdrop-blur-md hover:bg-white/10 active:bg-white/15`}
+        style={{ padding: "3px 8px 3px 3px" }}
+      >
+        {/* Avatar circle */}
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+          style={{ background: user && !user.avatarUrl ? "#3D6B47" : "rgba(255,255,255,0.08)" }}
+        >
+          {user?.isGuest ? <Ghost className="w-4 h-4 text-amber-300" /> : avatarEl}
+        </div>
+        {/* Chevron */}
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="w-3.5 h-3.5 text-white/50" />
+        </motion.div>
+      </button>
+
+      {/* ── Backdrop ── */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[9990]"
+            onClick={() => setOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Dropdown panel ── */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="dropdown"
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            className="absolute right-0 top-full mt-2 z-[9999] w-52 rounded-2xl overflow-hidden shadow-2xl"
+            style={{
+              background: "oklch(0.17 0.06 145 / 0.97)",
+              border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              boxShadow: `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)`,
+            }}
+          >
+            {/* ── Section: Nav links ── */}
+            <div className="px-2 pt-2 pb-1">
+              <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                Navigate
+              </p>
+              {NAV_ITEMS.map((item) => {
+                const active = isActive(item);
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <a
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                      style={
+                        active
+                          ? {
+                              background: `${OTB_GREEN_GLOW}0.22)`,
+                              border: `1px solid ${OTB_GREEN_GLOW}0.28)`,
+                              color: "#fff",
+                            }
+                          : {
+                              color: "rgba(255,255,255,0.65)",
+                              border: "1px solid transparent",
+                            }
+                      }
+                      onMouseEnter={(e) => {
+                        if (!active)
+                          (e.currentTarget as HTMLElement).style.background =
+                            "rgba(255,255,255,0.07)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active)
+                          (e.currentTarget as HTMLElement).style.background = "transparent";
+                      }}
+                    >
+                      <item.icon
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: active ? OTB_GREEN : undefined }}
+                      />
+                      <span>{item.name}</span>
+                      {active && (
+                        <motion.div
+                          layoutId="avatar-dropdown-dot"
+                          className="ml-auto w-1.5 h-1.5 rounded-full"
+                          style={{ background: OTB_GREEN }}
+                        />
+                      )}
+                    </a>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* ── Divider ── */}
+            <div
+              className="mx-3 my-1 h-px"
+              style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+            />
+
+            {/* ── Section: User actions ── */}
+            <div className="px-2 pb-2">
+              {user && !user.isGuest && (
+                <Link href="/profile">
+                  <a
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                    style={{ border: "1px solid transparent" }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background =
+                        "rgba(255,255,255,0.07)")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background = "transparent")
+                    }
+                  >
+                    <Crown className="w-4 h-4 flex-shrink-0" />
+                    <span>My Profile</span>
+                  </a>
+                </Link>
+              )}
+
+              {user?.isGuest && (
+                <button
+                  onClick={() => { setOpen(false); onSignInClick?.(); }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-300 hover:bg-amber-500/10 transition-colors"
+                >
+                  <Crown className="w-4 h-4 flex-shrink-0" />
+                  <span>Create Free Account</span>
+                </button>
+              )}
+
+              {user ? (
+                <button
+                  onClick={() => { logout(); setOpen(false); }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <span>Sign Out</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setOpen(false); onSignInClick?.(); }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
+                >
+                  <LogIn className="w-4 h-4 flex-shrink-0" />
+                  <span>Sign In</span>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
