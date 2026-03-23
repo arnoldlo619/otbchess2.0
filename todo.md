@@ -3315,3 +3315,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## ELO Rating in Avatar Dropdown
 - [x] Show chess.com ELO rating next to username handle in AvatarNavDropdown header
+
+## ELO Badge Rating Type Label
+- [x] Add rating type label (rapid/blitz/bullet) to ELO badge in AvatarNavDropdown

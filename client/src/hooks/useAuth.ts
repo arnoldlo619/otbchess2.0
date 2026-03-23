@@ -22,6 +22,9 @@ export interface AuthUser {
   chesscomUsername: string | null;
   lichessUsername: string | null;
   chesscomElo: number | null;
+  chesscomRapid: number | null;
+  chesscomBlitz: number | null;
+  chesscomBullet: number | null;
   lichessElo: number | null;
   avatarUrl: string | null;
   fideId: string | null;

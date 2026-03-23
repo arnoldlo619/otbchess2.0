@@ -338,8 +338,14 @@ export function createAuthRouter(): Router {
             const rapid = (stats.chess_rapid as Record<string, unknown> | undefined)?.last as Record<string, unknown> | undefined;
             const blitz = (stats.chess_blitz as Record<string, unknown> | undefined)?.last as Record<string, unknown> | undefined;
             const bullet = (stats.chess_bullet as Record<string, unknown> | undefined)?.last as Record<string, unknown> | undefined;
-            const elo = (rapid?.rating ?? blitz?.rating ?? bullet?.rating) as number | undefined;
+            const rapidRating = rapid?.rating as number | undefined;
+            const blitzRating = blitz?.rating as number | undefined;
+            const bulletRating = bullet?.rating as number | undefined;
+            const elo = (rapidRating ?? blitzRating ?? bulletRating);
             if (elo) updateData.chesscomElo = elo;
+            if (rapidRating) updateData.chesscomRapid = rapidRating;
+            if (blitzRating) updateData.chesscomBlitz = blitzRating;
+            if (bulletRating) updateData.chesscomBullet = bulletRating;
           }
         } catch {
           // chess.com fetch failed — don't block the profile save

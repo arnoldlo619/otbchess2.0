@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE `users`\n  ADD COLUMN IF NOT EXISTS `chesscom_rapid` int DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS `chesscom_blitz` int DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS `chesscom_bullet` int DEFAULT NULL;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute \nALTER TABLE `users`\n  ADD COLUMN IF NOT EXISTS `chesscom_rapid` int DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS `chesscom_blitz` int DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS `chesscom_bullet` int DEFAULT NULL;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 571
+}

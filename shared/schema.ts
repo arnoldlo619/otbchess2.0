@@ -47,6 +47,9 @@ export const users = mysqlTable(
 
     // Cached ELO ratings (refreshed on profile save)
     chesscomElo: int("chesscom_elo"),
+    chesscomRapid: int("chesscom_rapid"),
+    chesscomBlitz: int("chesscom_blitz"),
+    chesscomBullet: int("chesscom_bullet"),
     lichessElo: int("lichess_elo"),
 
     // FIDE ID (optional, for linking to official FIDE profile)

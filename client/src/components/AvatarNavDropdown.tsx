@@ -222,18 +222,35 @@ export function AvatarNavDropdown({
                       <p className="text-[11px] text-white/40 truncate leading-tight">
                         chess.com/{user.chesscomUsername}
                       </p>
-                      {user.chesscomElo != null && user.chesscomElo > 0 && (
-                        <span
-                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
-                          style={{
-                            background: "rgba(76,175,80,0.18)",
-                            border: "1px solid rgba(76,175,80,0.30)",
-                            color: "#4CAF50",
-                          }}
-                        >
-                          ♟ {user.chesscomElo}
-                        </span>
-                      )}
+                      {user.chesscomElo != null && user.chesscomElo > 0 && (() => {
+                        // Determine which format the stored ELO corresponds to
+                        const ratingType =
+                          user.chesscomRapid && user.chesscomRapid === user.chesscomElo
+                            ? "rapid"
+                            : user.chesscomBlitz && user.chesscomBlitz === user.chesscomElo
+                            ? "blitz"
+                            : user.chesscomBullet && user.chesscomBullet === user.chesscomElo
+                            ? "bullet"
+                            : user.chesscomRapid
+                            ? "rapid"
+                            : user.chesscomBlitz
+                            ? "blitz"
+                            : user.chesscomBullet
+                            ? "bullet"
+                            : null;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
+                            style={{
+                              background: "rgba(76,175,80,0.18)",
+                              border: "1px solid rgba(76,175,80,0.30)",
+                              color: "#4CAF50",
+                            }}
+                          >
+                            ♟ {user.chesscomElo}{ratingType && <span className="ml-0.5 font-normal opacity-70">{ratingType}</span>}
+                          </span>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
