@@ -3340,3 +3340,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Rating Progress Section on Profile Page
 - [x] Build RatingProgressChart component (format tabs, full SVG chart, axis labels, hover tooltip)
 - [x] Insert RatingProgressChart into Profile.tsx below the chess.com stats section
+
+## Bug Fix: Player Card PNG Export
+- [x] Investigate and fix PNG export error on player performance cards — root cause: chess.com avatar images served without CORS headers caused tainted canvas error; fixed by adding /api/avatar-proxy server endpoint and routing export card avatar URLs through it

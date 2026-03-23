@@ -8,7 +8,7 @@
  * color. Accent state is stored in a Map keyed by player id.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useChessAvatars } from "@/hooks/useChessAvatar";
+import { useChessAvatars, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { useParams, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { toast } from "sonner";
@@ -856,7 +856,7 @@ export default function ReportPage() {
                         perf={perf}
                         tournamentName={tournamentName}
                         tournamentDate={tournamentDate}
-                        avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                        avatarUrl={toProxiedAvatarUrl(avatars.get(perf.player.username.toLowerCase()))}
                         avatarStatus="loaded"
                         forExport
                         accentColor={accent}

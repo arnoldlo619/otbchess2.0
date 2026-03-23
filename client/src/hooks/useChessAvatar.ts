@@ -210,3 +210,24 @@ export function useChessAvatars(usernames: string[]): {
 
 /** Standalone imperative fetch — useful outside React (e.g. before html2canvas) */
 export { fetchAvatar };
+
+/**
+ * Rewrites a chess.com / lichess avatar URL to go through the server-side
+ * /api/avatar-proxy endpoint so html2canvas can draw it onto a canvas without
+ * triggering the "tainted canvas" CORS security error.
+ *
+ * Pass `null` or `undefined` and you get `null` back (safe for optional avatars).
+ */
+export function toProxiedAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const allowed = ["images.chess.com", "www.chess.com", "lichess.org", "lichess1.org"];
+    if (allowed.some((h) => parsed.hostname === h || parsed.hostname.endsWith("." + h))) {
+      return `/api/avatar-proxy?url=${encodeURIComponent(url)}`;
+    }
+  } catch {
+    // Not a valid URL — fall through
+  }
+  return url; // already same-origin or unrecognised — return as-is
+}
