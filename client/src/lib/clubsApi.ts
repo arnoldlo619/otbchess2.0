@@ -155,6 +155,32 @@ export async function apiLeaveClub(
   }
 }
 
+// ── Send presence heartbeat ──────────────────────────────────────────────────
+export async function apiHeartbeat(clubId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/${clubId}/heartbeat`, {
+      method: "POST",
+      credentials: "include",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ── Get online member count ───────────────────────────────────────────────────
+export async function apiGetPresence(
+  clubId: string
+): Promise<{ onlineCount: number; totalMembers: number }> {
+  try {
+    const res = await fetch(`${BASE}/${clubId}/presence`);
+    if (!res.ok) return { onlineCount: 0, totalMembers: 0 };
+    return await res.json();
+  } catch {
+    return { onlineCount: 0, totalMembers: 0 };
+  }
+}
+
 // ── Migrate localStorage clubs to the server (idempotent, one-time) ───────────
 const MIGRATION_KEY = "otb-clubs-synced-v1";
 export async function migrateLocalClubsToServer(

@@ -3428,3 +3428,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Mobile nav row uses OTB green active pill style matching desktop design language
 - [x] Increased hero section top padding on mobile: pt-28 sm:pt-24 md:pt-16 to prevent content overlap with taller two-row mobile header
 - [x] Avatar dropdown Navigate section remains intact as a secondary access point
+
+## Feature: Real-Time Members Online Indicator
+- [x] Audit club_members table schema and current join/leave localStorage logic
+- [x] Add last_seen_at column to club_members table (ALTER TABLE via webdev_execute_sql)
+- [x] Build POST /api/clubs/:id/heartbeat — updates last_seen_at for authenticated member
+- [x] Build GET /api/clubs/:id/presence — returns { onlineCount, totalMembers } (online = seen within 5 min)
+- [x] Update handleJoin and handleLeave in ClubProfile.tsx to call server API (fire-and-forget, localStorage fallback)
+- [x] Create useClubPresence hook — polls presence every 30s, sends heartbeat every 60s if member
+- [x] Add animated green pulse dot + "N Online" indicator to club header stats row
+- [x] 22 unit tests pass: isOnlineNow (8), presence count (4), URL construction (2), interval constants (4), isMember guard (4)

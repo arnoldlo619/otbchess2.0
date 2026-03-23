@@ -7,7 +7,7 @@
  *   - Members roster with roles and stats
  *   - Tournament history with status badges
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -33,6 +33,8 @@ import {
   type ClubMember,
   type ClubTournament,
 } from "@/lib/clubRegistry";
+import { apiJoinClub, apiLeaveClub } from "@/lib/clubsApi";
+import { useClubPresence } from "@/hooks/useClubPresence";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload } from "@/components/ClubBannerUpload";
 import { TournamentWizard } from "@/components/TournamentWizard";
@@ -673,13 +675,25 @@ export default function ClubProfile() {
   const isOwner = myMembership?.role === "owner";
   const isDirector = myMembership?.role === "director";
 
+  // Real-time presence: polls every 30s, sends heartbeat every 60s if member
+  const { onlineCount } = useClubPresence(
+    club.id,
+    !!(joined || isOwner || isDirector)
+  );
+
   const handleJoin = async () => {
     if (!user) {
       toast.error("Sign in to join clubs");
       return;
     }
     setJoining(true);
-    await new Promise((r) => setTimeout(r, 400));
+    // Persist to server (non-blocking — localStorage join still happens immediately)
+    apiJoinClub(club.id, {
+      displayName: user.displayName,
+      chesscomUsername: user.chesscomUsername,
+      lichessUsername: user.lichessUsername,
+      avatarUrl: user.avatarUrl,
+    }).catch(() => { /* server unavailable — localStorage is the fallback */ });
     joinClub(club.id, {
       userId: user.id,
       displayName: user.displayName,
@@ -699,7 +713,8 @@ export default function ClubProfile() {
   const handleLeave = async () => {
     if (!user || isOwner) return;
     setJoining(true);
-    await new Promise((r) => setTimeout(r, 300));
+    // Persist leave to server
+    apiLeaveClub(club.id, user.id).catch(() => { /* server unavailable */ });
     leaveClub(club.id, user.id);
     recordMemberLeave(club.id, user.displayName);
     setJoined(false);
@@ -905,6 +920,16 @@ export default function ClubProfile() {
             {/* Stats row */}
             <div className="flex gap-3 mt-5 overflow-x-auto pb-1 scrollbar-hide">
               <StatPill icon={<Users className="w-4 h-4" />} value={club.memberCount} label="Members" isDark={isDark} />
+              {/* Members Online indicator — green pulse dot + live count */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 ${
+                isDark ? "bg-white/8 text-white/80" : "bg-black/5 text-gray-700"
+              }`}>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span>{onlineCount} Online</span>
+              </div>
               <StatPill icon={<Bell className="w-4 h-4" />} value={followerCount} label="Followers" isDark={isDark} />
               <StatPill icon={<Trophy className="w-4 h-4" />} value={club.tournamentCount} label="Tournaments" isDark={isDark} />
               <StatPill icon={<CheckCircle2 className="w-4 h-4" />} value={completedTournaments.length} label="Completed" isDark={isDark} />

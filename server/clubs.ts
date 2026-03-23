@@ -16,7 +16,7 @@
 import { Router } from "express";
 import { getDb } from "./db.js";
 import { dbClubs, dbClubMembers } from "../shared/schema";
-import { eq, and, desc, or } from "drizzle-orm";
+import { eq, and, desc, or, sql, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 
@@ -63,6 +63,14 @@ function dbRowToClub(row: typeof dbClubs.$inferSelect) {
   };
 }
 
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
+function isOnlineNow(lastSeenAt: Date | null | undefined): boolean {
+  if (!lastSeenAt) return false;
+  const ts = lastSeenAt instanceof Date ? lastSeenAt.getTime() : new Date(String(lastSeenAt)).getTime();
+  return Date.now() - ts < ONLINE_THRESHOLD_MS;
+}
+
 function dbMemberToMember(row: typeof dbClubMembers.$inferSelect) {
   return {
     clubId: row.clubId,
@@ -78,6 +86,10 @@ function dbMemberToMember(row: typeof dbClubMembers.$inferSelect) {
         : String(row.joinedAt),
     tournamentsPlayed: row.tournamentsPlayed,
     bestFinish: row.bestFinish ?? null,
+    lastSeenAt: row.lastSeenAt instanceof Date
+      ? row.lastSeenAt.toISOString()
+      : (row.lastSeenAt ? String(row.lastSeenAt) : null),
+    isOnline: isOnlineNow(row.lastSeenAt as Date | null),
   };
 }
 
@@ -450,6 +462,53 @@ clubsRouter.post("/:id/members", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("[clubs] POST /:id/members error:", err);
     res.status(500).json({ error: "Failed to join club" });
+  }
+});
+
+// ── POST /api/clubs/:id/heartbeat — update presence timestamp ────────────────
+clubsRouter.post("/:id/heartbeat", async (req: Request, res: Response) => {
+  const userId = requireAuth(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const [existing] = await db
+      .select({ id: dbClubMembers.id })
+      .from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    if (!existing) {
+      res.status(404).json({ error: "Not a member" });
+      return;
+    }
+    await db
+      .update(dbClubMembers)
+      .set({ lastSeenAt: new Date() })
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[clubs] POST /:id/heartbeat error:", err);
+    res.status(500).json({ error: "Failed to update presence" });
+  }
+});
+
+// ── GET /api/clubs/:id/presence — get online member count ────────────────────
+clubsRouter.get("/:id/presence", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const thresholdDate = new Date(Date.now() - ONLINE_THRESHOLD_MS);
+    const allMembers = await db
+      .select({ lastSeenAt: dbClubMembers.lastSeenAt })
+      .from(dbClubMembers)
+      .where(eq(dbClubMembers.clubId, id));
+    const totalMembers = allMembers.length;
+    const onlineCount = allMembers.filter((m) =>
+      isOnlineNow(m.lastSeenAt as Date | null)
+    ).length;
+    res.json({ onlineCount, totalMembers });
+  } catch (err) {
+    console.error("[clubs] GET /:id/presence error:", err);
+    res.status(500).json({ error: "Failed to get presence" });
   }
 });
 
