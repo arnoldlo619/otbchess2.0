@@ -25,6 +25,9 @@ export interface AuthUser {
   chesscomRapid: number | null;
   chesscomBlitz: number | null;
   chesscomBullet: number | null;
+  chesscomPrevRapid: number | null;
+  chesscomPrevBlitz: number | null;
+  chesscomPrevBullet: number | null;
   lichessElo: number | null;
   avatarUrl: string | null;
   fideId: string | null;

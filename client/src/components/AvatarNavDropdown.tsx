@@ -226,25 +226,42 @@ export function AvatarNavDropdown({
                       {(user.chesscomRapid || user.chesscomBlitz || user.chesscomBullet) && (
                         <div className="flex items-center gap-1.5">
                           {([
-                            { label: "Rapid", icon: "♟", value: user.chesscomRapid },
-                            { label: "Blitz", icon: "⚡", value: user.chesscomBlitz },
-                            { label: "Bullet", icon: "•", value: user.chesscomBullet },
-                          ] as { label: string; icon: string; value: number | null }[]).map(({ label, icon, value }) =>
-                            value ? (
-                              <span
-                                key={label}
-                                title={label}
-                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none"
-                                style={{
-                                  background: "rgba(76,175,80,0.15)",
-                                  border: "1px solid rgba(76,175,80,0.25)",
-                                  color: "#4CAF50",
-                                }}
-                              >
-                                <span className="opacity-80">{icon}</span>
-                                <span>{value}</span>
-                              </span>
-                            ) : null
+                            { label: "Rapid",  icon: "♟", value: user.chesscomRapid,  prev: user.chesscomPrevRapid  },
+                            { label: "Blitz",  icon: "⚡", value: user.chesscomBlitz,  prev: user.chesscomPrevBlitz  },
+                            { label: "Bullet", icon: "•",  value: user.chesscomBullet, prev: user.chesscomPrevBullet },
+                          ] as { label: string; icon: string; value: number | null; prev: number | null }[]).map(
+                            ({ label, icon, value, prev }) => {
+                              if (!value) return null;
+                              // Trend: up ▲ green, down ▼ red, neutral — (no prev or unchanged)
+                              const trend =
+                                prev == null || prev === value
+                                  ? null
+                                  : value > prev
+                                  ? "up"
+                                  : "down";
+                              const delta = prev != null && prev !== value ? Math.abs(value - prev) : null;
+                              return (
+                                <span
+                                  key={label}
+                                  title={`${label}${delta != null ? ` (${trend === "up" ? "+" : "-"}${delta} since last sync)` : ""}`}
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none"
+                                  style={{
+                                    background: "rgba(76,175,80,0.15)",
+                                    border: "1px solid rgba(76,175,80,0.25)",
+                                    color: "#4CAF50",
+                                  }}
+                                >
+                                  <span className="opacity-80">{icon}</span>
+                                  <span>{value}</span>
+                                  {trend === "up" && (
+                                    <span className="text-[9px] font-bold" style={{ color: "#4ade80" }}>▲</span>
+                                  )}
+                                  {trend === "down" && (
+                                    <span className="text-[9px] font-bold" style={{ color: "#f87171" }}>▼</span>
+                                  )}
+                                </span>
+                              );
+                            }
                           )}
                         </div>
                       )}

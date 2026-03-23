@@ -3321,3 +3321,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Three-Rating Row in Avatar Dropdown
 - [x] Replace single ELO badge with compact rapid/blitz/bullet row in AvatarNavDropdown
+
+## Rating Trend Arrows in Avatar Dropdown
+- [x] Add prev_rapid/blitz/bullet columns to DB to track previous ratings
+- [x] Update server to save current as previous before overwriting on sync
+- [x] Show up/down/neutral trend arrow next to each rating pill in AvatarNavDropdown

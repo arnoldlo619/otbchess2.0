@@ -343,9 +343,26 @@ export function createAuthRouter(): Router {
             const bulletRating = bullet?.rating as number | undefined;
             const elo = (rapidRating ?? blitzRating ?? bulletRating);
             if (elo) updateData.chesscomElo = elo;
-            if (rapidRating) updateData.chesscomRapid = rapidRating;
-            if (blitzRating) updateData.chesscomBlitz = blitzRating;
-            if (bulletRating) updateData.chesscomBullet = bulletRating;
+            // Snapshot current values as "previous" before overwriting
+            const [currentUser] = await db.select().from(users).where(eq(users.id, payload.sub));
+            if (rapidRating) {
+              if (currentUser?.chesscomRapid && currentUser.chesscomRapid !== rapidRating) {
+                updateData.chesscomPrevRapid = currentUser.chesscomRapid;
+              }
+              updateData.chesscomRapid = rapidRating;
+            }
+            if (blitzRating) {
+              if (currentUser?.chesscomBlitz && currentUser.chesscomBlitz !== blitzRating) {
+                updateData.chesscomPrevBlitz = currentUser.chesscomBlitz;
+              }
+              updateData.chesscomBlitz = blitzRating;
+            }
+            if (bulletRating) {
+              if (currentUser?.chesscomBullet && currentUser.chesscomBullet !== bulletRating) {
+                updateData.chesscomPrevBullet = currentUser.chesscomBullet;
+              }
+              updateData.chesscomBullet = bulletRating;
+            }
           }
         } catch {
           // chess.com fetch failed — don't block the profile save

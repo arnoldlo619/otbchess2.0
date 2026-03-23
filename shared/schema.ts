@@ -50,6 +50,9 @@ export const users = mysqlTable(
     chesscomRapid: int("chesscom_rapid"),
     chesscomBlitz: int("chesscom_blitz"),
     chesscomBullet: int("chesscom_bullet"),
+    chesscomPrevRapid: int("chesscom_prev_rapid"),
+    chesscomPrevBlitz: int("chesscom_prev_blitz"),
+    chesscomPrevBullet: int("chesscom_prev_bullet"),
     lichessElo: int("lichess_elo"),
 
     // FIDE ID (optional, for linking to official FIDE profile)
