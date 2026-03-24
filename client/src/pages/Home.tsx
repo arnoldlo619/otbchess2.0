@@ -521,7 +521,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
           {/* Quick-stat chips */}
           <div
-            className="opacity-0-init animate-fade-in-up mt-14 flex flex-wrap justify-center gap-3"
+            className="opacity-0-init animate-fade-in-up mt-14 hidden sm:flex flex-wrap justify-center gap-3"
             style={{ animationDelay: "0.65s", animationFillMode: "forwards" }}
           >
             {[

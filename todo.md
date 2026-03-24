@@ -3559,3 +3559,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UX: Round Timer Position on Mobile Director Dashboard
 - [x] Move RoundTimer above the tournament title and tab bar on mobile for a more intuitive layout
+
+## UX: Hide stat badge pills on mobile hero section
+- [x] Hide the 4 quick-stat chips (Setup in < 3 min, 99.9% ELO accuracy, Swiss & Round Robin, 80+ clubs worldwide) on mobile (hidden sm:flex) for a cleaner, more minimalist layout
