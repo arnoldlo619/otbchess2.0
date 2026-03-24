@@ -11,12 +11,13 @@
  * and the layout is optimised for portrait mobile (board on top, moves below).
  */
 
-import { Undo2, RotateCcw, X, BookOpen, Copy, Check, Loader2, AlertCircle, HelpCircle } from "lucide-react";
+import { Undo2, RotateCcw, X, BookOpen, Copy, Check, Loader2, AlertCircle, HelpCircle, Cloud, CloudOff, CloudUpload } from "lucide-react";
 import { useState, useCallback, useEffect, useRef } from "react";
 import LiveNotationBoard from "./LiveNotationBoard";
 import MoveListPanel from "./MoveListPanel";
 import type { UseNotationModeReturn } from "../hooks/useNotationMode";
 import type { LnmAnalysisStatus } from "../hooks/useLnmAnalysis";
+import type { LnmSaveStatus } from "../hooks/useLnmSave";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,14 @@ interface NotationModeOverlayProps {
   analyseError?: string | null;
   /** Called when user dismisses the error banner */
   onAnalyseErrorDismiss?: () => void;
+  /** Status of the background save (from useLnmSave) */
+  saveStatus?: LnmSaveStatus;
+  /** Timestamp of the last successful save */
+  lastSavedAt?: Date | null;
+  /** Error message from the last failed save */
+  saveError?: string | null;
+  /** Trigger an immediate save + exit */
+  onSaveAndExit?: () => Promise<void>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -116,7 +125,12 @@ export default function NotationModeOverlay({
   analyseStatus = "idle",
   analyseError = null,
   onAnalyseErrorDismiss,
+  saveStatus = "idle",
+  lastSavedAt = null,
+  saveError = null,
+  onSaveAndExit,
 }: NotationModeOverlayProps) {
+  const [isSavingAndExiting, setIsSavingAndExiting] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [copied, setCopied] = useState(false);
   // Confirmation prompt shown when user taps Analyse without selecting a result
@@ -462,7 +476,40 @@ export default function NotationModeOverlay({
           <RotateCcw className="w-4 h-4" />
           {confirmReset ? "Confirm Reset" : "Reset"}
         </button>
+
+        {/* Save & Exit */}
+        {onSaveAndExit && notation.moves.length > 0 && !notation.isGameOver && (
+          <button
+            onClick={async () => {
+              setIsSavingAndExiting(true);
+              await onSaveAndExit();
+              setIsSavingAndExiting(false);
+            }}
+            disabled={isSavingAndExiting || saveStatus === "saving"}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#4ade80]/10 hover:bg-[#4ade80]/20 disabled:opacity-50 disabled:cursor-not-allowed text-[#4ade80] text-xs font-medium transition-all active:scale-95 border border-[#4ade80]/20"
+            title={lastSavedAt ? `Last saved ${lastSavedAt.toLocaleTimeString()}` : "Save progress and exit"}
+          >
+            {isSavingAndExiting || saveStatus === "saving" ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : saveStatus === "error" ? (
+              <CloudOff className="w-4 h-4 text-red-400" />
+            ) : saveStatus === "saved" ? (
+              <CloudUpload className="w-4 h-4" />
+            ) : (
+              <Cloud className="w-4 h-4" />
+            )}
+            {isSavingAndExiting ? "Saving..." : "Save & Exit"}
+          </button>
+        )}
       </div>
+
+      {/* ── Save error toast ──────────────────────────────────────────────── */}
+      {saveStatus === "error" && saveError && (
+        <div className="absolute bottom-20 left-4 right-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/25 z-10">
+          <CloudOff className="w-3.5 h-3.5 text-red-400 shrink-0" />
+          <p className="text-[11px] text-red-300 flex-1">Save failed: {saveError}</p>
+        </div>
+      )}
     </div>
   );
 }

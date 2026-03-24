@@ -36,6 +36,7 @@ import { useNotationMode } from "../hooks/useNotationMode";
 import NotationModeOverlay from "../components/NotationModeOverlay";
 import LnmOnboardingTooltip, { useLnmTooltip } from "../components/LnmOnboardingTooltip";
 import { useLnmAnalysis } from "../hooks/useLnmAnalysis";
+import { useLnmSave, getDraftPgn, clearDraftPgn } from "../hooks/useLnmSave";
 import type { GameResult } from "../components/NotationModeOverlay";
 import type { ChessClockHandle } from "../components/ChessClock";
 
@@ -292,6 +293,22 @@ export default function Battle() {
   const clockRef = useRef<ChessClockHandle>(null);
   const [, navigate] = useLocation();
 
+  // Draft recovery: show banner when a saved draft exists for this room
+  const [draftRecoveryPgn, setDraftRecoveryPgn] = useState<string | null>(null);
+  useEffect(() => {
+    if (room?.code && !notation.active) {
+      const draft = getDraftPgn(room.code);
+      if (draft) setDraftRecoveryPgn(draft);
+    }
+  }, [room?.code, notation.active]);
+
+  const lnmSave = useLnmSave({
+    battleCode: room?.code ?? "__none__",
+    pgn: notation.pgn,
+    active: notation.active,
+    onExit: handleLnmExitWithSave,
+  });
+
   // When a move validates in LNM, switch the clock to the other side
   const prevMoveCount = useRef(0);
   useEffect(() => {
@@ -314,22 +331,18 @@ export default function Battle() {
     prevMoveCount.current = notation.moves.length;
   }, [notation.active, notation.moves]);
 
-  // Save PGN to server when LNM overlay is exited
-  async function savePgnToServer(pgn: string) {
-    if (!room?.code) return;
-    try {
-      await fetch(`/api/battles/${room.code}/pgn`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pgn }),
-      });
-    } catch {
-      // Silently fail — PGN was already copied to clipboard / sessionStorage
-    }
+  // Called by useLnmSave's onExit callback after saving
+  function handleLnmExitWithSave(pgn: string | null) {
+    if (room?.code) clearDraftPgn(room.code);
+    setDraftRecoveryPgn(null);
+    // notation.deactivate() is called inside useLnmSave.saveAndExit → onExit
+    // We just need to dismiss the overlay; notation.active becomes false when deactivated
+    notation.deactivate();
   }
 
   function handleLnmExit(pgn: string | null) {
-    if (pgn) savePgnToServer(pgn);
+    if (room?.code) clearDraftPgn(room.code);
+    setDraftRecoveryPgn(null);
   }
 
   function handleAnalyse(pgn: string, result: GameResult | null) {
@@ -616,7 +629,32 @@ export default function Battle() {
           analyseStatus={lnmAnalysis.status}
           analyseError={lnmAnalysis.error}
           onAnalyseErrorDismiss={lnmAnalysis.reset}
+          saveStatus={lnmSave.status}
+          lastSavedAt={lnmSave.lastSavedAt}
+          saveError={lnmSave.saveError}
+          onSaveAndExit={lnmSave.saveAndExit}
         />
+      )}
+
+      {/* Draft PGN recovery banner */}
+      {draftRecoveryPgn && !notation.active && (
+        <div className="fixed top-4 left-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-[#1a2a1a] border border-[#4ade80]/30 shadow-lg">
+          <div className="w-2 h-2 rounded-full bg-[#4ade80] shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[#4ade80] text-xs font-semibold">Unsaved notation draft found</p>
+            <p className="text-white/40 text-[11px] truncate">Tap 'Record Moves' to resume or dismiss to discard.</p>
+          </div>
+          <button
+            onClick={() => {
+              if (room?.code) clearDraftPgn(room.code);
+              setDraftRecoveryPgn(null);
+            }}
+            className="text-white/30 hover:text-white/60 transition-colors shrink-0 text-xs"
+            aria-label="Dismiss draft recovery"
+          >
+            ✕
+          </button>
+        </div>
       )}
 
       {/* Victory flash overlay */}

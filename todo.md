@@ -3522,3 +3522,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] "Continue anyway" confirms and fires onAnalyse; "Select result" dismisses prompt
 - [x] Auto-dismiss confirmation prompt after 8 seconds
 - [x] Unit tests for confirmation prompt logic
+
+## Feature: LNM Save & Exit
+- [ ] useLnmSave hook: debounced auto-save (30s), manual save, save status (idle/saving/saved/error), sessionStorage fallback
+- [ ] Save & Exit button in NotationModeOverlay control bar with save-status indicator (cloud icon)
+- [ ] Auto-save every 30s when LNM is active and has moves
+- [ ] Draft PGN recovery banner in Battle.tsx when returning to a room with unsaved draft
+- [ ] Unit tests for useLnmSave debounce, status transitions, and recovery logic
