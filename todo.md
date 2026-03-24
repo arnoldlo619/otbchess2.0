@@ -3515,3 +3515,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Loading skeletons and empty state with contextual CTAs
 - [x] Register /games route in App.tsx
 - [x] Profile page "View all" link points to /games
+
+## Feature: LNM Result Confirmation Prompt
+- [x] Add confirmAnalyse state to NotationModeOverlay
+- [x] Show inline confirmation banner when Analyse Game tapped without result
+- [x] "Continue anyway" confirms and fires onAnalyse; "Select result" dismisses prompt
+- [x] Auto-dismiss confirmation prompt after 8 seconds
+- [x] Unit tests for confirmation prompt logic

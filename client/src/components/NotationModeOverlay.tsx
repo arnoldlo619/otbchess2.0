@@ -11,8 +11,8 @@
  * and the layout is optimised for portrait mobile (board on top, moves below).
  */
 
-import { Undo2, RotateCcw, X, BookOpen, Copy, Check, Loader2, AlertCircle } from "lucide-react";
-import { useState, useCallback, useEffect } from "react";
+import { Undo2, RotateCcw, X, BookOpen, Copy, Check, Loader2, AlertCircle, HelpCircle } from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import LiveNotationBoard from "./LiveNotationBoard";
 import MoveListPanel from "./MoveListPanel";
 import type { UseNotationModeReturn } from "../hooks/useNotationMode";
@@ -119,6 +119,9 @@ export default function NotationModeOverlay({
 }: NotationModeOverlayProps) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Confirmation prompt shown when user taps Analyse without selecting a result
+  const [confirmAnalyse, setConfirmAnalyse] = useState(false);
+  const confirmAnalyseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Result selector state ──────────────────────────────────────────────────
   // Auto-populated from chess.js when the game ends naturally; otherwise null
@@ -135,8 +138,18 @@ export default function NotationModeOverlay({
 
   // Reset result when notation resets
   useEffect(() => {
-    if (!notation.isGameOver) setSelectedResult(null);
+    if (!notation.isGameOver) {
+      setSelectedResult(null);
+      setConfirmAnalyse(false);
+    }
   }, [notation.isGameOver]);
+
+  // Clear confirmation prompt timer on unmount
+  useEffect(() => {
+    return () => {
+      if (confirmAnalyseTimerRef.current) clearTimeout(confirmAnalyseTimerRef.current);
+    };
+  }, []);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -179,11 +192,29 @@ export default function NotationModeOverlay({
 
   const handleAnalyse = useCallback(() => {
     if (!notation.pgn || !onAnalyse) return;
-    const pgnWithResult = selectedResult
-      ? injectResultIntoPgn(notation.pgn, selectedResult)
-      : notation.pgn;
+    // If no result selected, show confirmation prompt first
+    if (!selectedResult) {
+      setConfirmAnalyse(true);
+      // Auto-dismiss after 8 seconds
+      if (confirmAnalyseTimerRef.current) clearTimeout(confirmAnalyseTimerRef.current);
+      confirmAnalyseTimerRef.current = setTimeout(() => setConfirmAnalyse(false), 8000);
+      return;
+    }
+    const pgnWithResult = injectResultIntoPgn(notation.pgn, selectedResult);
     onAnalyse(pgnWithResult, selectedResult);
   }, [notation.pgn, onAnalyse, selectedResult]);
+
+  const handleAnalyseAnyway = useCallback(() => {
+    if (!notation.pgn || !onAnalyse) return;
+    setConfirmAnalyse(false);
+    if (confirmAnalyseTimerRef.current) clearTimeout(confirmAnalyseTimerRef.current);
+    onAnalyse(notation.pgn, null);
+  }, [notation.pgn, onAnalyse]);
+
+  const handleDismissConfirmAnalyse = useCallback(() => {
+    setConfirmAnalyse(false);
+    if (confirmAnalyseTimerRef.current) clearTimeout(confirmAnalyseTimerRef.current);
+  }, []);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -291,6 +322,45 @@ export default function NotationModeOverlay({
               </p>
             )}
           </div>
+
+          {/* ── Confirm analyse without result ──────────────────────── */}
+          {confirmAnalyse && (
+            <div className="flex flex-col gap-2 px-3 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="flex items-start gap-2">
+                <HelpCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-amber-300 text-xs font-semibold leading-snug">
+                    No result selected
+                  </p>
+                  <p className="text-amber-300/60 text-[11px] mt-0.5 leading-snug">
+                    The game result won't be recorded in the PGN. Continue anyway?
+                  </p>
+                </div>
+                <button
+                  onClick={handleDismissConfirmAnalyse}
+                  className="text-amber-400/40 hover:text-amber-400 transition-colors shrink-0"
+                  aria-label="Dismiss"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDismissConfirmAnalyse}
+                  className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 text-xs font-medium transition-colors"
+                >
+                  Select result
+                </button>
+                <button
+                  onClick={handleAnalyseAnyway}
+                  disabled={analyseStatus === "submitting" || analyseStatus === "navigating"}
+                  className="flex-1 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-60 disabled:cursor-not-allowed text-amber-300 text-xs font-semibold transition-colors"
+                >
+                  Continue anyway
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* ── Action buttons ───────────────────────────────────────────── */}
           <div className="flex items-center justify-center gap-3">
