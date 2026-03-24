@@ -1781,19 +1781,7 @@ export default function Director() {
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
           <main className="flex-1 min-w-0 space-y-5">
-                {/* ── Mobile Round Timer (md:hidden) ──────────────────────────────── */}
-          {!isRegistration && (
-            <div className="md:hidden">
-              <RoundTimer
-                isDark={isDark}
-                defaultMinutes={state.roundMinutes ?? 25}
-                tournamentId={state.tournamentId}
-                onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
-              />
-            </div>
-          )}
-
-          {/* ── Page Title + Tab Bar ───────────────────────────────── */}
+                {/* ── Page Title + Tab Bar ───────────────────────────────── */}
           <div className="space-y-3">
             {/* Round title row */}
             <div className="flex items-start justify-between gap-3">

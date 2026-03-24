@@ -3550,3 +3550,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix hero button container: full-width stacked on mobile, side-by-side on sm+
 - [x] Fix SpinBorderButton: ensure spinning conic layer doesn't overflow/clip on narrow widths
 - [x] Ensure both buttons have consistent height, padding, and font size on mobile
+
+## Fix: Duplicate Round Timer on Mobile Director Dashboard
+- [x] Remove duplicate md:hidden RoundTimer block — single instance now renders on all breakpoints
+
+## Fix: Duplicate Round Timer on Mobile Director Dashboard
+- [x] Remove duplicate md:hidden RoundTimer block — single instance now renders on all breakpoints
