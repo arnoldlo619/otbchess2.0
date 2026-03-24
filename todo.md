@@ -3581,3 +3581,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## UI: Dual Dark/Light Gradient System — Carousel & Leaderboard
 - [x] Apply dual dark/light gradient variants to FeaturedClubsCarousel cards
 - [x] Apply dual dark/light gradient variants to ClubLeaderboard podium cards and table rows
+
+## UI: Club Profile Content Area — Dual Dark/Light Tokens
+- [x] Apply isDark token system to all content area sections in ClubProfile.tsx

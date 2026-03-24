@@ -220,7 +220,7 @@ function RoleBadge({ role }: { role: ClubMember["role"] }) {
   return null;
 }
 
-function TournamentStatusBadge({ status }: { status: ClubTournament["status"] }) {
+function TournamentStatusBadge({ status, isDark = true }: { status: ClubTournament["status"]; isDark?: boolean }) {
   if (status === "upcoming") {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400">
@@ -237,7 +237,9 @@ function TournamentStatusBadge({ status }: { status: ClubTournament["status"] })
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/8 text-white/40">
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+      isDark ? "bg-white/8 text-white/40" : "bg-gray-100 text-gray-400"
+    }`}>
       <CheckCircle2 className="w-2.5 h-2.5" /> Completed
     </span>
   );
@@ -1253,7 +1255,7 @@ export default function ClubProfile() {
               </h2>
               <span className={`text-xs font-medium ${textMuted}`}>{club.memberCount} total</span>
             </div>
-            <div className="divide-y divide-white/5">
+            <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
               {members.map((member) => (
                 <MemberRow key={member.userId} member={member} clubId={club.id} isDark={isDark} textMuted={textMuted} />
               ))}
@@ -1322,7 +1324,7 @@ export default function ClubProfile() {
                     Activity
                   </h2>
                 </div>
-                <div className="divide-y divide-white/5">
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {feedEvents.map((event) => (
                     <FeedEventCard
                       key={event.id}
@@ -1383,7 +1385,7 @@ export default function ClubProfile() {
                     Upcoming & Active
                   </h2>
                 </div>
-                <div className="divide-y divide-white/5">
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {upcomingTournaments.map((t) => (
                     <TournamentRow key={t.tournamentId} tournament={t} isDark={isDark} textMuted={textMuted} />
                   ))}
@@ -1402,7 +1404,7 @@ export default function ClubProfile() {
                     Live
                   </span>
                 </div>
-                <div className="divide-y divide-white/5">
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {liveUpcoming.map((t) => (
                     <a
                       key={t.id}
@@ -1438,7 +1440,7 @@ export default function ClubProfile() {
                     Past Tournaments
                   </h2>
                 </div>
-                <div className="divide-y divide-white/5">
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {completedTournaments.map((t) => (
                     <TournamentRow key={t.tournamentId} tournament={t} isDark={isDark} textMuted={textMuted} />
                   ))}
@@ -1454,7 +1456,7 @@ export default function ClubProfile() {
                     Past Tournaments
                   </h2>
                 </div>
-                <div className="divide-y divide-white/5">
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
                   {livePast.map((t) => (
                     <a
                       key={t.id}
@@ -1766,7 +1768,7 @@ function TournamentRow({
           <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
             {tournament.name}
           </span>
-          <TournamentStatusBadge status={tournament.status} />
+          <TournamentStatusBadge status={tournament.status} isDark={isDark} />
         </div>
         <div className={`flex items-center gap-3 mt-0.5 text-xs ${textMuted}`}>
           <span className="flex items-center gap-1">
