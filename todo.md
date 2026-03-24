@@ -3574,3 +3574,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Club Profile — Gradient Header Banner
 - [x] Replace the generic chess-board hero banner with a per-category full-bleed gradient matching the FeaturedClubsCarousel/ClubLeaderboard style, including noise texture, radial glow, rank/category badge, and avatar ring
+
+## UI: Club Profile — Light Mode Gradient Banner Variants
+- [x] Add lighter, more saturated gradient variants for each category in light mode so the banner reads well in both themes

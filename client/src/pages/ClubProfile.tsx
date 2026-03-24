@@ -131,28 +131,71 @@ const COUNTRY_FLAGS: Record<string, string> = {
 };
 
 // Per-category gradient theme — mirrors FeaturedClubsCarousel & ClubLeaderboard
-const CATEGORY_BANNER_THEME: Record<string, { grad: string; badge: string }> = {
-  competitive: { grad: "from-red-950 via-rose-900 to-red-800", badge: "bg-red-500/20 text-red-300 border-red-500/30" },
-  casual:      { grad: "from-blue-950 via-blue-900 to-indigo-800", badge: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-  scholastic:  { grad: "from-yellow-950 via-amber-900 to-yellow-800", badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
-  online:      { grad: "from-purple-950 via-violet-900 to-purple-800", badge: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
-  otb:         { grad: "from-emerald-950 via-green-900 to-emerald-800", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  blitz:       { grad: "from-orange-950 via-orange-900 to-amber-800", badge: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
-  correspondence: { grad: "from-cyan-950 via-teal-900 to-cyan-800", badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
-  club:        { grad: "from-green-950 via-green-900 to-green-800", badge: "bg-green-500/20 text-green-300 border-green-500/30" },
-  school:      { grad: "from-yellow-950 via-amber-900 to-yellow-800", badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
-  university:  { grad: "from-indigo-950 via-indigo-900 to-blue-800", badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
-  community:   { grad: "from-teal-950 via-teal-900 to-cyan-800", badge: "bg-teal-500/20 text-teal-300 border-teal-500/30" },
-  professional:{ grad: "from-rose-950 via-rose-900 to-pink-800", badge: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
-  other:       { grad: "from-slate-900 via-slate-800 to-slate-700", badge: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+// Each entry has separate dark/light variants so the banner reads well in both themes.
+const CATEGORY_BANNER_THEME: Record<
+  string,
+  { dark: { grad: string; badge: string }; light: { grad: string; badge: string } }
+> = {
+  competitive: {
+    dark:  { grad: "from-red-950 via-rose-900 to-red-800",           badge: "bg-red-500/20 text-red-300 border-red-500/30" },
+    light: { grad: "from-red-400 via-rose-300 to-red-200",           badge: "bg-red-600/15 text-red-700 border-red-400/40" },
+  },
+  casual: {
+    dark:  { grad: "from-blue-950 via-blue-900 to-indigo-800",       badge: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+    light: { grad: "from-blue-400 via-sky-300 to-indigo-200",        badge: "bg-blue-600/15 text-blue-700 border-blue-400/40" },
+  },
+  scholastic: {
+    dark:  { grad: "from-yellow-950 via-amber-900 to-yellow-800",    badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+    light: { grad: "from-amber-400 via-yellow-300 to-amber-200",     badge: "bg-amber-600/15 text-amber-700 border-amber-400/40" },
+  },
+  online: {
+    dark:  { grad: "from-purple-950 via-violet-900 to-purple-800",   badge: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+    light: { grad: "from-purple-400 via-violet-300 to-purple-200",   badge: "bg-purple-600/15 text-purple-700 border-purple-400/40" },
+  },
+  otb: {
+    dark:  { grad: "from-emerald-950 via-green-900 to-emerald-800",  badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+    light: { grad: "from-emerald-400 via-green-300 to-emerald-200",  badge: "bg-emerald-600/15 text-emerald-700 border-emerald-400/40" },
+  },
+  blitz: {
+    dark:  { grad: "from-orange-950 via-orange-900 to-amber-800",    badge: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
+    light: { grad: "from-orange-400 via-amber-300 to-orange-200",    badge: "bg-orange-600/15 text-orange-700 border-orange-400/40" },
+  },
+  correspondence: {
+    dark:  { grad: "from-cyan-950 via-teal-900 to-cyan-800",         badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+    light: { grad: "from-cyan-400 via-teal-300 to-cyan-200",         badge: "bg-cyan-600/15 text-cyan-700 border-cyan-400/40" },
+  },
+  club: {
+    dark:  { grad: "from-green-950 via-green-900 to-green-800",      badge: "bg-green-500/20 text-green-300 border-green-500/30" },
+    light: { grad: "from-green-400 via-emerald-300 to-green-200",    badge: "bg-green-600/15 text-green-700 border-green-400/40" },
+  },
+  school: {
+    dark:  { grad: "from-yellow-950 via-amber-900 to-yellow-800",    badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+    light: { grad: "from-yellow-400 via-amber-300 to-yellow-200",    badge: "bg-yellow-600/15 text-yellow-700 border-yellow-400/40" },
+  },
+  university: {
+    dark:  { grad: "from-indigo-950 via-indigo-900 to-blue-800",     badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
+    light: { grad: "from-indigo-400 via-blue-300 to-indigo-200",     badge: "bg-indigo-600/15 text-indigo-700 border-indigo-400/40" },
+  },
+  community: {
+    dark:  { grad: "from-teal-950 via-teal-900 to-cyan-800",         badge: "bg-teal-500/20 text-teal-300 border-teal-500/30" },
+    light: { grad: "from-teal-400 via-cyan-300 to-teal-200",         badge: "bg-teal-600/15 text-teal-700 border-teal-400/40" },
+  },
+  professional: {
+    dark:  { grad: "from-rose-950 via-rose-900 to-pink-800",         badge: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+    light: { grad: "from-rose-400 via-pink-300 to-rose-200",         badge: "bg-rose-600/15 text-rose-700 border-rose-400/40" },
+  },
+  other: {
+    dark:  { grad: "from-slate-900 via-slate-800 to-slate-700",      badge: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+    light: { grad: "from-slate-400 via-gray-300 to-slate-200",       badge: "bg-slate-600/15 text-slate-700 border-slate-400/40" },
+  },
 };
-const FALLBACK_BANNER_GRADS = [
-  "from-emerald-950 via-green-900 to-emerald-800",
-  "from-blue-950 via-blue-900 to-indigo-800",
-  "from-purple-950 via-violet-900 to-purple-800",
-  "from-amber-950 via-yellow-900 to-amber-800",
-  "from-rose-950 via-pink-900 to-rose-800",
-  "from-cyan-950 via-teal-900 to-cyan-800",
+const FALLBACK_BANNER_GRADS: { dark: string; light: string }[] = [
+  { dark: "from-emerald-950 via-green-900 to-emerald-800",  light: "from-emerald-400 via-green-300 to-emerald-200" },
+  { dark: "from-blue-950 via-blue-900 to-indigo-800",       light: "from-blue-400 via-sky-300 to-indigo-200" },
+  { dark: "from-purple-950 via-violet-900 to-purple-800",   light: "from-purple-400 via-violet-300 to-purple-200" },
+  { dark: "from-amber-950 via-yellow-900 to-amber-800",     light: "from-amber-400 via-yellow-300 to-amber-200" },
+  { dark: "from-rose-950 via-pink-900 to-rose-800",         light: "from-rose-400 via-pink-300 to-rose-200" },
+  { dark: "from-cyan-950 via-teal-900 to-cyan-800",         light: "from-cyan-400 via-teal-300 to-cyan-200" },
 ];
 const NOISE_BG =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
@@ -835,9 +878,11 @@ export default function ClubProfile() {
   // ── Banner gradient theme (per-category, matches carousel & leaderboard) ─────
   const bannerTheme = (() => {
     const cat = club.category ?? "other";
-    if (CATEGORY_BANNER_THEME[cat]) return CATEGORY_BANNER_THEME[cat];
+    const mode = isDark ? "dark" : "light";
+    if (CATEGORY_BANNER_THEME[cat]) return CATEGORY_BANNER_THEME[cat][mode];
     const idx = club.id.charCodeAt(club.id.length - 1) % FALLBACK_BANNER_GRADS.length;
-    return { grad: FALLBACK_BANNER_GRADS[idx], badge: CATEGORY_BANNER_THEME.other.badge };
+    const fallbackGrad = FALLBACK_BANNER_GRADS[idx][mode];
+    return { grad: fallbackGrad, badge: CATEGORY_BANNER_THEME.other[mode].badge };
   })();
 
   // ── Colour palette ──────────────────────────────────────────────────────────
@@ -891,13 +936,17 @@ export default function ClubProfile() {
         <div className={`h-52 sm:h-64 w-full relative bg-gradient-to-br ${bannerTheme.grad}`}>
           {/* Noise texture overlay */}
           <div
-            className="absolute inset-0 opacity-[0.05] pointer-events-none"
+            className={`absolute inset-0 pointer-events-none ${isDark ? "opacity-[0.05]" : "opacity-[0.07]"}`}
             style={{ backgroundImage: NOISE_BG, backgroundSize: "150px" }}
           />
           {/* Radial glow from top-center */}
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 65%)" }}
+            style={{
+              background: isDark
+                ? "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 65%)"
+                : "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.45) 0%, transparent 65%)",
+            }}
           />
           {/* Custom banner overlay (if set) */}
           {club.bannerUrl && (
