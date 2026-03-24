@@ -922,7 +922,7 @@ export default function MyClubs() {
           </div>
 
           {/* Featured Clubs carousel — top 6 by member count */}
-          <FeaturedClubsCarousel />
+          <FeaturedClubsCarousel isDark={isDark} />
 
           {/* Search bar */}
           <div className="relative mb-3">

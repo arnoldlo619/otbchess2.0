@@ -3577,3 +3577,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Club Profile — Light Mode Gradient Banner Variants
 - [x] Add lighter, more saturated gradient variants for each category in light mode so the banner reads well in both themes
+
+## UI: Dual Dark/Light Gradient System — Carousel & Leaderboard
+- [x] Apply dual dark/light gradient variants to FeaturedClubsCarousel cards
+- [x] Apply dual dark/light gradient variants to ClubLeaderboard podium cards and table rows
