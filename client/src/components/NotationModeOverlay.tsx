@@ -283,6 +283,10 @@ export default function NotationModeOverlay({
             moves={notation.moves}
             openingName={notation.openingName}
             moveCount={notation.moveCount}
+            pendingJump={notation.pendingJump}
+            onJumpToMove={notation.jumpToMove}
+            onConfirmJump={notation.confirmJump}
+            onCancelJump={notation.cancelJump}
           />
         </div>
       </div>

@@ -3529,3 +3529,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Auto-save every 30s when LNM is active and has moves
 - [ ] Draft PGN recovery banner in Battle.tsx when returning to a room with unsaved draft
 - [ ] Unit tests for useLnmSave debounce, status transitions, and recovery logic
+
+## Feature: LNM Mid-Game Move Correction
+- [x] jumpToMove(index) action in useNotationMode: replay moves up to index, restore FEN, update chess.js instance
+- [x] pendingJump state in useNotationMode: tracks which move index is selected for correction
+- [x] MoveListPanel: tap-to-correct interaction, amber highlight on pending jump, truncation warning banner
+- [x] NotationModeOverlay: pass onJumpToMove and pendingJump through to MoveListPanel
+- [x] Unit tests for jumpToMove: replay logic, FEN restoration, truncation count, edge cases

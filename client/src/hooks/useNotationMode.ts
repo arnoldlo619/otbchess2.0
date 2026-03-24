@@ -35,6 +35,14 @@ export interface NotationMove {
 }
 
 export interface UseNotationModeReturn {
+  /** Jump to a specific move index to correct from that point (0-based, -1 = start) */
+  jumpToMove: (index: number) => void;
+  /** Pending jump index: which move the user tapped to correct (-1 = none selected) */
+  pendingJump: number;
+  /** Confirm the pending jump — truncates history and resumes from that position */
+  confirmJump: () => void;
+  /** Cancel the pending jump without changing the game */
+  cancelJump: () => void;
   /** Whether LNM is currently active */
   active: boolean;
   /** Toggle LNM on/off */
@@ -351,6 +359,53 @@ export function useNotationMode(battleCode: string): UseNotationModeReturn {
     setIllegalAttempt(false);
   }, []);
 
+  // ── Jump-to-move (mid-game correction) ────────────────────────────────────
+  const [pendingJump, setPendingJump] = useState<number>(-1);
+
+  /**
+   * Tap a move in the list to stage a correction. The user must then confirm
+   * (or cancel) before the history is actually truncated.
+   * @param index 0-based move index to jump back to (-1 = before move 1)
+   */
+  const jumpToMove = useCallback((index: number) => {
+    // Don't allow jumping to the last move (nothing to correct)
+    if (index >= moves.length - 1) return;
+    setPendingJump(index);
+    // Cancel any in-progress selection
+    setSelectedSquare(null);
+    setLegalDestinations([]);
+    setPendingPromotion(null);
+  }, [moves.length]);
+
+  /**
+   * Confirm the pending jump: replay moves[0..pendingJump] on a fresh Chess
+   * instance, then update all state.
+   */
+  const confirmJump = useCallback(() => {
+    if (pendingJump < -1) return;
+    const targetMoves = moves.slice(0, pendingJump + 1);
+    const c = new Chess();
+    for (const m of targetMoves) {
+      try {
+        c.move(m.san);
+      } catch {
+        // If a SAN fails (shouldn't happen), stop replaying
+        break;
+      }
+    }
+    chessRef.current = c;
+    syncState();
+    setSelectedSquare(null);
+    setLegalDestinations([]);
+    setPendingPromotion(null);
+    setPendingJump(-1);
+    setIllegalAttempt(false);
+  }, [pendingJump, moves, syncState]);
+
+  const cancelJump = useCallback(() => {
+    setPendingJump(-1);
+  }, []);
+
   return {
     active,
     toggle,
@@ -379,5 +434,9 @@ export function useNotationMode(battleCode: string): UseNotationModeReturn {
     lastMove,
     moveCount,
     openingName,
+    jumpToMove,
+    pendingJump,
+    confirmJump,
+    cancelJump,
   };
 }
