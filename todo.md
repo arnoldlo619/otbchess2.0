@@ -3536,3 +3536,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] MoveListPanel: tap-to-correct interaction, amber highlight on pending jump, truncation warning banner
 - [x] NotationModeOverlay: pass onJumpToMove and pendingJump through to MoveListPanel
 - [x] Unit tests for jumpToMove: replay logic, FEN restoration, truncation count, edge cases
+
+## Feature: Mobile Header Nav Consolidation
+- [x] Remove mobile pill nav row from AnimeNavBar (nav links already in AvatarNavDropdown)

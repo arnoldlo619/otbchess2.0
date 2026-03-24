@@ -426,57 +426,7 @@ export function AnimeNavBar({
           )}
         </div>
 
-        {/* ── Mobile nav row — visible only on small screens ── */}
-        {!isDesktop && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, type: "spring", stiffness: 280, damping: 24 }}
-            className="flex items-center justify-center gap-1 mt-1 pb-1"
-          >
-            {items.map((item) => {
-              const isActiveTab = activeTab === item.name
-              return (
-                <a
-                  key={item.name}
-                  href={item.url}
-                  onClick={handleNavClick(item)}
-                  className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 select-none"
-                  style={{
-                    color: isActiveTab ? "#fff" : "rgba(255,255,255,0.55)",
-                    background: isActiveTab
-                      ? `linear-gradient(135deg, ${OTB_GREEN_GLOW}0.30) 0%, ${OTB_GREEN_GLOW}0.15) 100%)`
-                      : "rgba(255,255,255,0.04)",
-                    border: isActiveTab
-                      ? `1px solid ${OTB_GREEN_GLOW}0.40)`
-                      : "1px solid rgba(255,255,255,0.08)",
-                    boxShadow: isActiveTab
-                      ? `0 0 10px ${OTB_GREEN_GLOW}0.20), 0 0 4px ${OTB_GREEN_GLOW}0.12)`
-                      : "none",
-                  }}
-                >
-                  <item.icon
-                    style={{
-                      width: 13,
-                      height: 13,
-                      flexShrink: 0,
-                      color: isActiveTab ? OTB_GREEN : undefined,
-                    }}
-                  />
-                  <span>{item.name}</span>
-                  {isActiveTab && (
-                    <motion.div
-                      layoutId="mobile-active-dot"
-                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                      style={{ background: OTB_GREEN }}
-                      transition={{ type: "spring", stiffness: 320, damping: 30 }}
-                    />
-                  )}
-                </a>
-              )
-            })}
-          </motion.div>
-        )}
+        {/* Mobile nav row removed — nav links live in the avatar dropdown on mobile */}
       </motion.div>
     </div>
   )
