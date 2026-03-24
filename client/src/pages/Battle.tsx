@@ -35,6 +35,7 @@ import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { useNotationMode } from "../hooks/useNotationMode";
 import NotationModeOverlay from "../components/NotationModeOverlay";
 import LnmOnboardingTooltip, { useLnmTooltip } from "../components/LnmOnboardingTooltip";
+import { useLnmAnalysis } from "../hooks/useLnmAnalysis";
 import type { ChessClockHandle } from "../components/ChessClock";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -286,6 +287,7 @@ export default function Battle() {
   // ── Live Notation Mode ──────────────────────────────────────────────────────
   const notation = useNotationMode(room?.code ?? "__none__");
   const lnmTooltip = useLnmTooltip();
+  const lnmAnalysis = useLnmAnalysis();
   const clockRef = useRef<ChessClockHandle>(null);
   const [, navigate] = useLocation();
 
@@ -330,9 +332,15 @@ export default function Battle() {
   }
 
   function handleAnalyse(pgn: string) {
-    // For now, copy PGN and navigate to a placeholder
-    // In future, create a game record and navigate to /game/:id/analysis
-    navigator.clipboard.writeText(pgn).catch(() => {});
+    // Derive player names from the battle room participants
+    const whiteName = room?.host?.displayName ?? "White";
+    const blackName = room?.guest?.displayName ?? "Black";
+    lnmAnalysis.startAnalysis(pgn, {
+      whitePlayer: whiteName,
+      blackPlayer: blackName,
+      event: "OTB Battle",
+      date: new Date().toISOString().split("T")[0],
+    });
   }
 
   function handleClockFlagFall(side: "host" | "guest") {
@@ -603,6 +611,9 @@ export default function Battle() {
           guestName={room.guest?.displayName ?? "Black"}
           onExit={handleLnmExit}
           onAnalyse={handleAnalyse}
+          analyseStatus={lnmAnalysis.status}
+          analyseError={lnmAnalysis.error}
+          onAnalyseErrorDismiss={lnmAnalysis.reset}
         />
       )}
 

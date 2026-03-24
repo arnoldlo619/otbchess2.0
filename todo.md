@@ -3492,3 +3492,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] LnmOnboardingTooltip component: coach mark with 3-step content, dismiss button, localStorage persistence
 - [x] Integrate tooltip into Battle.tsx Record Moves section (shown only when !notation.active and not dismissed)
 - [x] Unit tests for localStorage dismiss logic and step content
+
+## Feature: Post-Game PGN → Stockfish Analysis Pipeline
+- [x] POST /api/games/from-pgn endpoint: creates session + game record, triggers async Stockfish analysis, returns { sessionId, gameId }
+- [x] useLnmAnalysis hook: idle/submitting/navigating/error state machine, POST PGN, navigate to /game/:gameId/analysis
+- [x] NotationModeOverlay: analyseStatus/analyseError/onAnalyseErrorDismiss props; Analyse Game button shows spinner + loading labels; error banner with dismiss
+- [x] Battle.tsx: handleAnalyse wired to lnmAnalysis.startAnalysis with player names from room
+- [x] 31 unit tests: empty PGN guard, success flow, player names, server errors, network errors, reset, button label/disabled logic, request format

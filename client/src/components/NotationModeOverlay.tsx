@@ -10,11 +10,12 @@
  * and the layout is optimised for portrait mobile (board on top, moves below).
  */
 
-import { Undo2, RotateCcw, X, BookOpen, Copy, Check } from "lucide-react";
+import { Undo2, RotateCcw, X, BookOpen, Copy, Check, Loader2, AlertCircle } from "lucide-react";
 import { useState, useCallback } from "react";
 import LiveNotationBoard from "./LiveNotationBoard";
 import MoveListPanel from "./MoveListPanel";
 import type { UseNotationModeReturn } from "../hooks/useNotationMode";
+import type { LnmAnalysisStatus } from "../hooks/useLnmAnalysis";
 
 interface NotationModeOverlayProps {
   notation: UseNotationModeReturn;
@@ -22,6 +23,12 @@ interface NotationModeOverlayProps {
   guestName: string;
   onExit: (pgn: string | null) => void;
   onAnalyse?: (pgn: string) => void;
+  /** Status of the analysis pipeline (from useLnmAnalysis) */
+  analyseStatus?: LnmAnalysisStatus;
+  /** Error message from the analysis pipeline */
+  analyseError?: string | null;
+  /** Called when user dismisses the error banner */
+  onAnalyseErrorDismiss?: () => void;
 }
 
 export default function NotationModeOverlay({
@@ -30,6 +37,9 @@ export default function NotationModeOverlay({
   guestName,
   onExit,
   onAnalyse,
+  analyseStatus = "idle",
+  analyseError = null,
+  onAnalyseErrorDismiss,
 }: NotationModeOverlayProps) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -144,13 +154,38 @@ export default function NotationModeOverlay({
             {onAnalyse && notation.pgn && (
               <button
                 onClick={handleAnalyse}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-xs font-medium transition-colors"
+                disabled={analyseStatus === "submitting" || analyseStatus === "navigating"}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4ade80]/20 hover:bg-[#4ade80]/30 disabled:opacity-60 disabled:cursor-not-allowed text-[#4ade80] text-xs font-medium transition-colors"
               >
-                <BookOpen className="w-3.5 h-3.5" />
-                Analyse Game
+                {analyseStatus === "submitting" || analyseStatus === "navigating" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <BookOpen className="w-3.5 h-3.5" />
+                )}
+                {analyseStatus === "submitting"
+                  ? "Submitting..."
+                  : analyseStatus === "navigating"
+                  ? "Opening..."
+                  : "Analyse Game"}
               </button>
             )}
           </div>
+          {/* Analysis error banner */}
+          {analyseStatus === "error" && analyseError && (
+            <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/25">
+              <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+              <p className="text-[11px] text-red-300 flex-1">{analyseError}</p>
+              {onAnalyseErrorDismiss && (
+                <button
+                  onClick={onAnalyseErrorDismiss}
+                  className="text-red-400/60 hover:text-red-400 transition-colors"
+                  aria-label="Dismiss error"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 

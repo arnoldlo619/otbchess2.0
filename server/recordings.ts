@@ -909,6 +909,185 @@ export function createRecordingsRouter(): Router {
     }
   });
 
+  // ── POST /api/games/from-pgn — one-shot LNM → analysis pipeline ─────────────────
+  // Creates a recording session, submits the PGN, triggers async Stockfish analysis,
+  // and returns { sessionId, gameId } so the caller can navigate to /game/:gameId/analysis.
+  // This endpoint is only reachable when the router is mounted at /api/games.
+  router.post("/from-pgn", async (req, res) => {
+    const userId = getUserId(req);
+    const {
+      pgn,
+      whitePlayer,
+      blackPlayer,
+      result,
+      event,
+      date,
+    } = req.body as {
+      pgn: string;
+      whitePlayer?: string;
+      blackPlayer?: string;
+      result?: string;
+      event?: string;
+      date?: string;
+    };
+
+    if (!pgn || pgn.trim().length === 0) {
+      return res.status(400).json({ error: "PGN is required" });
+    }
+
+    try {
+      const db = await getDb();
+
+      // 1. Create a recording session
+      const sessionId = nanoid();
+      await db.insert(recordingSessions).values({
+        id: sessionId,
+        userId,
+        status: "ready",
+      });
+
+      // 2. Detect opening
+      let openingName: string | null = null;
+      let openingEco: string | null = null;
+      const ecoMatch = pgn.match(/\[ECO\s+"([^"]+)"\]/);
+      const openingMatch = pgn.match(/\[Opening\s+"([^"]+)"\]/);
+      if (ecoMatch) openingEco = ecoMatch[1];
+      if (openingMatch) openingName = openingMatch[1];
+
+      if (!openingName || !openingEco) {
+        try {
+          const { Chess: ChessForOpening } = await import("chess.js");
+          const chessForOpening = new ChessForOpening();
+          const pgnForOpening = pgn.replace(/\[.*?\]\s*/g, "").trim();
+          chessForOpening.loadPgn(pgnForOpening);
+          const movesForOpening = chessForOpening.history();
+          const detected = detectOpening(movesForOpening);
+          if (detected) {
+            if (!openingEco) openingEco = detected.eco;
+            if (!openingName) openingName = detected.variation
+              ? `${detected.name}: ${detected.variation}`
+              : detected.name;
+          }
+        } catch {
+          // Opening detection is non-critical
+        }
+      }
+
+      // 3. Count moves
+      const moveMatches = pgn.match(/\d+\./g);
+      const totalMoves = moveMatches ? moveMatches.length : 0;
+
+      // 4. Create processed game record
+      const gameId = nanoid();
+      await db.insert(processedGames).values({
+        id: gameId,
+        sessionId,
+        pgn,
+        openingName,
+        openingEco,
+        totalMoves,
+        whitePlayer: whitePlayer ?? "White",
+        blackPlayer: blackPlayer ?? "Black",
+        result: result ?? "*",
+        event: event ?? "OTB Battle",
+        date: date ?? new Date().toISOString().split("T")[0],
+      });
+
+      // 5. Update session to analyzing
+      await db
+        .update(recordingSessions)
+        .set({ status: "analyzing", updatedAt: new Date() })
+        .where(eq(recordingSessions.id, sessionId));
+
+      // 6. Respond immediately with IDs
+      res.status(201).json({ sessionId, gameId });
+
+      // 7. Trigger Stockfish analysis in background
+      (async () => {
+        try {
+          const { Chess } = await import("chess.js");
+          const chess = new Chess();
+          const pgnMoves = pgn.replace(/\[.*?\]\s*/g, "").trim();
+          chess.loadPgn(pgnMoves);
+          const history = chess.history({ verbose: true });
+          if (history.length === 0) return;
+
+          const analysisChess = new Chess();
+          let prevEval = 0;
+
+          for (let i = 0; i < history.length; i++) {
+            const move = history[i];
+            const fenBefore = analysisChess.fen();
+            const beforeAnalysis = await analyzePosition(fenBefore);
+            analysisChess.move(move.san);
+            const fenAfter = analysisChess.fen();
+            const afterAnalysis = await analyzePosition(fenAfter);
+            const evalAfter = afterAnalysis?.eval ?? 0;
+            const bestMoveSan = beforeAnalysis?.san ?? "";
+            const bestEval = beforeAnalysis?.eval ?? prevEval;
+            const cpLoss =
+              move.color === "w"
+                ? Math.max(0, bestEval - evalAfter)
+                : Math.max(0, evalAfter - bestEval);
+            const classification = classifyMove(cpLoss);
+            const moveNum = Math.floor(i / 2) + 1;
+
+            await db.insert(moveAnalyses).values({
+              id: nanoid(),
+              gameId,
+              moveNumber: moveNum,
+              color: move.color,
+              san: move.san,
+              fen: fenAfter,
+              eval: Math.round(evalAfter * 100),
+              bestMove: bestMoveSan,
+              classification,
+              winChance: Math.round(afterAnalysis?.winChance ?? 50),
+              continuation: afterAnalysis?.continuation ?? "",
+            });
+
+            prevEval = evalAfter;
+            await new Promise((r) => setTimeout(r, 200));
+          }
+
+          // Compute accuracy
+          const allMoveAnalyses = await db
+            .select()
+            .from(moveAnalyses)
+            .where(eq(moveAnalyses.gameId, gameId))
+            .orderBy(moveAnalyses.moveNumber);
+
+          const whiteMoves = allMoveAnalyses.filter((m) => m.color === "w");
+          const blackMoves = allMoveAnalyses.filter((m) => m.color === "b");
+          const whiteAccuracy = computePlayerAccuracy(whiteMoves.map((m) => m.eval), "w");
+          const blackAccuracy = computePlayerAccuracy(blackMoves.map((m) => m.eval), "b");
+
+          await db
+            .update(processedGames)
+            .set({ whiteAccuracy, blackAccuracy })
+            .where(eq(processedGames.id, gameId));
+
+          await db
+            .update(recordingSessions)
+            .set({ status: "complete", updatedAt: new Date() })
+            .where(eq(recordingSessions.id, sessionId));
+
+          console.log(`[games/from-pgn] Analysis complete for game ${gameId} — White: ${whiteAccuracy}%, Black: ${blackAccuracy}%`);
+        } catch (err) {
+          console.error("[games/from-pgn] Background analysis error:", err);
+          await db
+            .update(recordingSessions)
+            .set({ status: "failed", updatedAt: new Date() })
+            .where(eq(recordingSessions.id, sessionId))
+            .catch(() => {});
+        }
+      })();
+    } catch (err) {
+      console.error("[games/from-pgn] error:", err);
+      res.status(500).json({ error: "Failed to create game from PGN" });
+    }
+  });
+
   // ── GET /api/games/:id — get processed game data ──────────────────────────────────
   // When mounted at /api/games, the router path is /:id (not /games/:id)
   // When mounted at /api/recordings, this path is unreachable (intentional)
