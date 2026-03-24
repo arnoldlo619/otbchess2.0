@@ -1781,6 +1781,19 @@ export default function Director() {
 
           {/* ── Main Panel ──────────────────────────────────────────────────────── */}
           <main className="flex-1 min-w-0 space-y-5">
+
+            {/* ── Round Timer — mobile: above title; desktop: between title and tabs ── */}
+            {!isRegistration && (
+              <div className="md:hidden">
+                <RoundTimer
+                  isDark={isDark}
+                  defaultMinutes={state.roundMinutes ?? 25}
+                  tournamentId={state.tournamentId}
+                  onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
+                />
+              </div>
+            )}
+
                 {/* ── Page Title + Tab Bar ───────────────────────────────── */}
           <div className="space-y-3">
             {/* Round title row */}
@@ -1826,14 +1839,16 @@ export default function Director() {
 
             </div>
 
-            {/* Round Timer — digital countdown clock */}
+            {/* Round Timer — desktop: between title and tabs (hidden on mobile, shown above title instead) */}
             {!isRegistration && (
-              <RoundTimer
-                isDark={isDark}
-                defaultMinutes={state.roundMinutes ?? 25}
-                tournamentId={state.tournamentId}
-                onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
-              />
+              <div className="hidden md:block">
+                <RoundTimer
+                  isDark={isDark}
+                  defaultMinutes={state.roundMinutes ?? 25}
+                  tournamentId={state.tournamentId}
+                  onDurationChange={(mins) => updateSettings({ roundMinutes: mins })}
+                />
+              </div>
             )}
 
             {/* Unified tab bar */}

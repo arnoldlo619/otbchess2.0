@@ -3556,3 +3556,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Fix: Duplicate Round Timer on Mobile Director Dashboard
 - [x] Remove duplicate md:hidden RoundTimer block — single instance now renders on all breakpoints
+
+## UX: Round Timer Position on Mobile Director Dashboard
+- [x] Move RoundTimer above the tournament title and tab bar on mobile for a more intuitive layout
