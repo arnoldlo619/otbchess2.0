@@ -479,7 +479,9 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             className="opacity-0-init animate-fade-in-up text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-2 sm:px-0"
             style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
           >
-            Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.
+            {/* Short single-line on mobile, full copy on sm+ */}
+            <span className="sm:hidden">Set up in minutes. Pairings generated automatically.</span>
+            <span className="hidden sm:inline">Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.</span>
           </p>
 
           <div

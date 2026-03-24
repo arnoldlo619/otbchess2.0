@@ -3562,3 +3562,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UX: Hide stat badge pills on mobile hero section
 - [x] Hide the 4 quick-stat chips (Setup in < 3 min, 99.9% ELO accuracy, Swiss & Round Robin, 80+ clubs worldwide) on mobile (hidden sm:flex) for a cleaner, more minimalist layout
+
+## UX: Shorten hero subtitle on mobile
+- [x] Show short single-line subtitle on mobile ("Set up in minutes. Pairings generated automatically.") and full two-line copy on sm+ to reduce scroll depth
