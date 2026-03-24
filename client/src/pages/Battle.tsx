@@ -36,6 +36,7 @@ import { useNotationMode } from "../hooks/useNotationMode";
 import NotationModeOverlay from "../components/NotationModeOverlay";
 import LnmOnboardingTooltip, { useLnmTooltip } from "../components/LnmOnboardingTooltip";
 import { useLnmAnalysis } from "../hooks/useLnmAnalysis";
+import type { GameResult } from "../components/NotationModeOverlay";
 import type { ChessClockHandle } from "../components/ChessClock";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -331,13 +332,14 @@ export default function Battle() {
     if (pgn) savePgnToServer(pgn);
   }
 
-  function handleAnalyse(pgn: string) {
+  function handleAnalyse(pgn: string, result: GameResult | null) {
     // Derive player names from the battle room participants
     const whiteName = room?.host?.displayName ?? "White";
     const blackName = room?.guest?.displayName ?? "Black";
     lnmAnalysis.startAnalysis(pgn, {
       whitePlayer: whiteName,
       blackPlayer: blackName,
+      result: result ?? "*",
       event: "OTB Battle",
       date: new Date().toISOString().split("T")[0],
     });

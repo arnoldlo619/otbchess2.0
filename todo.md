@@ -3499,3 +3499,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] NotationModeOverlay: analyseStatus/analyseError/onAnalyseErrorDismiss props; Analyse Game button shows spinner + loading labels; error banner with dismiss
 - [x] Battle.tsx: handleAnalyse wired to lnmAnalysis.startAnalysis with player names from room
 - [x] 31 unit tests: empty PGN guard, success flow, player names, server errors, network errors, reset, button label/disabled logic, request format
+
+## Feature: LNM Game Result Selector
+- [x] Result selector UI in NotationModeOverlay game-over banner (1-0 / ½-½ / 0-1 chips)
+- [x] selectedResult state: defaults to chess.js outcome if game ended naturally, otherwise unset
+- [x] Thread result into PGN header via useNotationMode getPgnWithResult helper
+- [x] Pass result to useLnmAnalysis.startAnalysis and PATCH battle_rooms pgn with result header
+- [x] Unit tests for result selector logic, PGN header injection, and default derivation

@@ -4,6 +4,7 @@
  * Full-screen overlay for Live Notation Mode. Composes:
  * - LiveNotationBoard (interactive chessboard)
  * - MoveListPanel (scrolling notation)
+ * - Game-over banner with result selector (1-0 / ½-½ / 0-1)
  * - Control bar (undo, reset, exit, game-over actions)
  *
  * Designed for shared-device pass-and-play: the board auto-flips per turn,
@@ -11,18 +12,91 @@
  */
 
 import { Undo2, RotateCcw, X, BookOpen, Copy, Check, Loader2, AlertCircle } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import LiveNotationBoard from "./LiveNotationBoard";
 import MoveListPanel from "./MoveListPanel";
 import type { UseNotationModeReturn } from "../hooks/useNotationMode";
 import type { LnmAnalysisStatus } from "../hooks/useLnmAnalysis";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+/** PGN result token */
+export type GameResult = "1-0" | "0-1" | "1/2-1/2";
+
+interface ResultOption {
+  value: GameResult;
+  label: string;
+  sublabel: string;
+  activeClass: string;
+  dotClass: string;
+}
+
+const RESULT_OPTIONS: ResultOption[] = [
+  {
+    value: "1-0",
+    label: "1 – 0",
+    sublabel: "White wins",
+    activeClass: "bg-white/20 border-white/50 text-white",
+    dotClass: "bg-white",
+  },
+  {
+    value: "1/2-1/2",
+    label: "½ – ½",
+    sublabel: "Draw",
+    activeClass: "bg-yellow-400/20 border-yellow-400/50 text-yellow-300",
+    dotClass: "bg-yellow-400",
+  },
+  {
+    value: "0-1",
+    label: "0 – 1",
+    sublabel: "Black wins",
+    activeClass: "bg-[#4ade80]/20 border-[#4ade80]/50 text-[#4ade80]",
+    dotClass: "bg-[#4ade80]",
+  },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Derive the natural result from a chess.js gameOverReason string.
+ * Returns null when the game was stopped manually (no natural conclusion).
+ */
+export function deriveResultFromReason(reason: string | null): GameResult | null {
+  if (!reason) return null;
+  const r = reason.toLowerCase();
+  if (r.includes("white wins")) return "1-0";
+  if (r.includes("black wins")) return "0-1";
+  if (
+    r.includes("draw") ||
+    r.includes("stalemate") ||
+    r.includes("repetition") ||
+    r.includes("insufficient")
+  )
+    return "1/2-1/2";
+  return null;
+}
+
+/**
+ * Inject or replace the [Result "..."] PGN header.
+ * If the PGN already has a Result tag, replace it; otherwise prepend it.
+ */
+export function injectResultIntoPgn(pgn: string, result: GameResult): string {
+  const resultTag = `[Result "${result}"]`;
+  if (/\[Result\s+"[^"]*"\]/.test(pgn)) {
+    return pgn.replace(/\[Result\s+"[^"]*"\]/, resultTag);
+  }
+  // Prepend before move text
+  return `${resultTag}\n${pgn}`;
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface NotationModeOverlayProps {
   notation: UseNotationModeReturn;
   hostName: string;
   guestName: string;
   onExit: (pgn: string | null) => void;
-  onAnalyse?: (pgn: string) => void;
+  onAnalyse?: (pgn: string, result: GameResult | null) => void;
   /** Status of the analysis pipeline (from useLnmAnalysis) */
   analyseStatus?: LnmAnalysisStatus;
   /** Error message from the analysis pipeline */
@@ -30,6 +104,8 @@ interface NotationModeOverlayProps {
   /** Called when user dismisses the error banner */
   onAnalyseErrorDismiss?: () => void;
 }
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function NotationModeOverlay({
   notation,
@@ -44,6 +120,26 @@ export default function NotationModeOverlay({
   const [confirmReset, setConfirmReset] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // ── Result selector state ──────────────────────────────────────────────────
+  // Auto-populated from chess.js when the game ends naturally; otherwise null
+  // until the user explicitly picks one.
+  const [selectedResult, setSelectedResult] = useState<GameResult | null>(null);
+
+  // Auto-derive result when game ends naturally
+  useEffect(() => {
+    if (notation.isGameOver && notation.gameOverReason) {
+      const derived = deriveResultFromReason(notation.gameOverReason);
+      if (derived) setSelectedResult(derived);
+    }
+  }, [notation.isGameOver, notation.gameOverReason]);
+
+  // Reset result when notation resets
+  useEffect(() => {
+    if (!notation.isGameOver) setSelectedResult(null);
+  }, [notation.isGameOver]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const handleExit = useCallback(() => {
     const pgn = notation.deactivate();
     onExit(pgn);
@@ -57,18 +153,21 @@ export default function NotationModeOverlay({
     }
     notation.reset();
     setConfirmReset(false);
+    setSelectedResult(null);
   }, [confirmReset, notation]);
 
   const handleCopyPgn = useCallback(async () => {
-    if (!notation.pgn) return;
+    const pgnToCopy = selectedResult
+      ? injectResultIntoPgn(notation.pgn, selectedResult)
+      : notation.pgn;
+    if (!pgnToCopy) return;
     try {
-      await navigator.clipboard.writeText(notation.pgn);
+      await navigator.clipboard.writeText(pgnToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const ta = document.createElement("textarea");
-      ta.value = notation.pgn;
+      ta.value = pgnToCopy;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -76,13 +175,17 @@ export default function NotationModeOverlay({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [notation.pgn]);
+  }, [notation.pgn, selectedResult]);
 
   const handleAnalyse = useCallback(() => {
-    if (notation.pgn && onAnalyse) {
-      onAnalyse(notation.pgn);
-    }
-  }, [notation.pgn, onAnalyse]);
+    if (!notation.pgn || !onAnalyse) return;
+    const pgnWithResult = selectedResult
+      ? injectResultIntoPgn(notation.pgn, selectedResult)
+      : notation.pgn;
+    onAnalyse(pgnWithResult, selectedResult);
+  }, [notation.pgn, onAnalyse, selectedResult]);
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#0a0a1a] flex flex-col overflow-hidden">
@@ -141,23 +244,79 @@ export default function NotationModeOverlay({
 
       {/* ── Game Over Banner ──────────────────────────────────────────────── */}
       {notation.isGameOver && notation.gameOverReason && (
-        <div className="px-4 py-3 bg-[#4ade80]/10 border-t border-[#4ade80]/20 text-center shrink-0">
-          <p className="text-[#4ade80] text-sm font-semibold">{notation.gameOverReason}</p>
-          <div className="flex items-center justify-center gap-3 mt-2">
+        <div className="px-4 py-4 bg-[#4ade80]/10 border-t border-[#4ade80]/20 shrink-0 space-y-3">
+          {/* Game-over reason */}
+          <p className="text-[#4ade80] text-sm font-semibold text-center">
+            {notation.gameOverReason}
+          </p>
+
+          {/* ── Result selector ─────────────────────────────────────────── */}
+          <div className="space-y-1.5">
+            <p className="text-white/40 text-[10px] font-medium uppercase tracking-widest text-center">
+              Record Result
+            </p>
+            <div className="flex items-stretch gap-2">
+              {RESULT_OPTIONS.map((opt) => {
+                const isActive = selectedResult === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() =>
+                      setSelectedResult(isActive ? null : opt.value)
+                    }
+                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
+                      isActive
+                        ? opt.activeClass
+                        : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60"
+                    }`}
+                    aria-pressed={isActive}
+                    title={`${opt.label} — ${opt.sublabel}`}
+                  >
+                    {isActive && (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full mb-0.5 ${opt.dotClass}`}
+                      />
+                    )}
+                    <span className="text-sm leading-none">{opt.label}</span>
+                    <span className="text-[10px] font-normal opacity-70">
+                      {opt.sublabel}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {!selectedResult && (
+              <p className="text-white/25 text-[10px] text-center">
+                Select a result to embed it in the PGN
+              </p>
+            )}
+          </div>
+
+          {/* ── Action buttons ───────────────────────────────────────────── */}
+          <div className="flex items-center justify-center gap-3">
             <button
               onClick={handleCopyPgn}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 text-xs font-medium transition-colors"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-[#4ade80]" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-[#4ade80]" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
               {copied ? "Copied!" : "Copy PGN"}
             </button>
+
             {onAnalyse && notation.pgn && (
               <button
                 onClick={handleAnalyse}
-                disabled={analyseStatus === "submitting" || analyseStatus === "navigating"}
+                disabled={
+                  analyseStatus === "submitting" ||
+                  analyseStatus === "navigating"
+                }
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4ade80]/20 hover:bg-[#4ade80]/30 disabled:opacity-60 disabled:cursor-not-allowed text-[#4ade80] text-xs font-medium transition-colors"
               >
-                {analyseStatus === "submitting" || analyseStatus === "navigating" ? (
+                {analyseStatus === "submitting" ||
+                analyseStatus === "navigating" ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <BookOpen className="w-3.5 h-3.5" />
@@ -170,9 +329,10 @@ export default function NotationModeOverlay({
               </button>
             )}
           </div>
+
           {/* Analysis error banner */}
           {analyseStatus === "error" && analyseError && (
-            <div className="flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/25">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/25">
               <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
               <p className="text-[11px] text-red-300 flex-1">{analyseError}</p>
               {onAnalyseErrorDismiss && (
@@ -202,14 +362,18 @@ export default function NotationModeOverlay({
           Undo
         </button>
 
-        {/* Copy PGN */}
+        {/* Copy PGN (mid-game) */}
         {notation.moves.length > 0 && !notation.isGameOver && (
           <button
             onClick={handleCopyPgn}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-xs font-medium transition-all active:scale-95"
             title="Copy PGN to clipboard"
           >
-            {copied ? <Check className="w-4 h-4 text-[#4ade80]" /> : <Copy className="w-4 h-4" />}
+            {copied ? (
+              <Check className="w-4 h-4 text-[#4ade80]" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
             {copied ? "Copied!" : "Copy PGN"}
           </button>
         )}
