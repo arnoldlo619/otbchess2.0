@@ -3565,3 +3565,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UX: Shorten hero subtitle on mobile
 - [x] Show short single-line subtitle on mobile ("Set up in minutes. Pairings generated automatically.") and full two-line copy on sm+ to reduce scroll depth
+
+## UI: Featured Club Cards Redesign
+- [x] Redesign FeaturedClubsCarousel cards with premium visual style (larger cards, richer gradients, glassmorphism, better typography, rank medals, hover polish)
