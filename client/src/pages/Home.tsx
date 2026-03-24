@@ -506,7 +506,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
           >
             <Link
-              href="/tournament/otb-demo-2026"
+              href="/tournament/otb-demo-2026/manage"
               className={`text-sm font-medium underline underline-offset-4 ${
                 isDark ? "text-white/50 hover:text-white/80" : "text-[#4B5563] hover:text-[#3D6B47]"
               }`}
@@ -1113,7 +1113,7 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             </button>
             <SpinBorderButton
               variant="glass"
-              onClick={() => window.location.href = "/tournament/otb-demo-2026"}
+              onClick={() => window.location.href = "/tournament/otb-demo-2026/manage"}
             >
               View Live Demo
               <ArrowRight className="w-4 h-4" />
@@ -1131,7 +1131,7 @@ function Footer() {
     Product: [
       { label: "Features", href: "/#features" },
       { label: "How It Works", href: "/#how-it-works" },
-      { label: "Demo", href: "/tournament/otb-demo-2026" },
+      { label: "Demo", href: "/tournament/otb-demo-2026/manage" },
     ],
     Community: [
       { label: "Join a Tournament", href: "/join" },

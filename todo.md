@@ -3539,3 +3539,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Feature: Mobile Header Nav Consolidation
 - [x] Remove mobile pill nav row from AnimeNavBar (nav links already in AvatarNavDropdown)
+
+## Feature: Live Demo Update (18 real players + Director dashboard link)
+- [x] Replace 8 fictional players with 18 real chess.com players in tournamentData.ts
+- [x] Expand to 5 rounds (rounds 1-4 completed, round 5 in progress)
+- [x] Update all "View live demo" links to point to Director dashboard (/manage)
+- [x] Unit tests: 46 tests covering structure, player roster, data integrity, standings, results, flags, referential integrity
