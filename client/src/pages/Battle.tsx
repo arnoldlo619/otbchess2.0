@@ -34,6 +34,7 @@ import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { useNotationMode } from "../hooks/useNotationMode";
 import NotationModeOverlay from "../components/NotationModeOverlay";
+import LnmOnboardingTooltip, { useLnmTooltip } from "../components/LnmOnboardingTooltip";
 import type { ChessClockHandle } from "../components/ChessClock";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -284,6 +285,7 @@ export default function Battle() {
 
   // ── Live Notation Mode ──────────────────────────────────────────────────────
   const notation = useNotationMode(room?.code ?? "__none__");
+  const lnmTooltip = useLnmTooltip();
   const clockRef = useRef<ChessClockHandle>(null);
   const [, navigate] = useLocation();
 
@@ -1151,6 +1153,16 @@ export default function Battle() {
                     <p className="text-center text-[10px] text-white/25 mt-1.5">
                       Tap to open the notation board
                     </p>
+                  )}
+
+                  {/* One-time onboarding tooltip — shown only when not yet dismissed and LNM is inactive */}
+                  {!notation.active && !lnmTooltip.dismissed && (
+                    <div className="mt-3">
+                      <LnmOnboardingTooltip
+                        visible={!lnmTooltip.dismissed}
+                        onDismiss={lnmTooltip.dismiss}
+                      />
+                    </div>
                   )}
                 </motion.div>
               )}

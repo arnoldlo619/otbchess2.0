@@ -3487,3 +3487,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Battle.tsx integration: Record Moves toggle, overlay mount/unmount, PGN save on exit
 - [x] Post-game Analyse Game deep-link to /analysis page
 - [x] Unit tests for useNotationMode, board logic, clock integration, PGN persistence
+
+## Feature: LNM Onboarding Tooltip
+- [x] LnmOnboardingTooltip component: coach mark with 3-step content, dismiss button, localStorage persistence
+- [x] Integrate tooltip into Battle.tsx Record Moves section (shown only when !notation.active and not dismissed)
+- [x] Unit tests for localStorage dismiss logic and step content
