@@ -17,10 +17,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ChevronLeft, ChevronRight, Users, Trophy, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Trophy, ArrowRight, UserPlus, Check } from "lucide-react";
 import { apiListPublicClubs } from "../lib/clubsApi";
-import type { Club } from "../lib/clubRegistry";
+import { joinClub, isMember, type Club } from "../lib/clubRegistry";
+import { apiJoinClub } from "../lib/clubsApi";
 import { resolveClubTheme } from "../lib/clubTheme";
+import { useAuthContext } from "../context/AuthContext";
+import { toast } from "sonner";
 
 // ── Category display helpers ───────────────────────────────────────────────────
 
@@ -68,11 +71,14 @@ interface FeaturedClubCardProps {
   club: Club;
   rank: number;
   isDark: boolean;
+  user: ReturnType<typeof useAuthContext>["user"];
 }
 
-function FeaturedClubCard({ club, rank, isDark }: FeaturedClubCardProps) {
+function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
   const [, navigate] = useLocation();
   const { grad, glow, badge } = resolveClubTheme(club, isDark);
+  const [joined, setJoined] = useState(() => !!(user && isMember(club.id, user.id)));
+  const [joining, setJoining] = useState(false);
   const catLabel = CATEGORY_LABELS[club.category ?? "other"] ?? "Other";
   const medal = RANK_MEDALS[rank];
   const initial = club.name.charAt(0).toUpperCase();
@@ -168,11 +174,50 @@ function FeaturedClubCard({ club, rank, isDark }: FeaturedClubCardProps) {
             )}
           </div>
 
-          {/* Category badge + arrow */}
+          {/* Right side: Join button (signed-in non-member) OR category badge + arrow */}
           <div className="flex items-center gap-1.5">
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge}`}>
-              {catLabel}
-            </span>
+            {user && !joined ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (joining) return;
+                  setJoining(true);
+                  apiJoinClub(club.id, {
+                    displayName: user.displayName,
+                    chesscomUsername: user.chesscomUsername,
+                    lichessUsername: user.lichessUsername,
+                    avatarUrl: user.avatarUrl,
+                  }).catch(() => {});
+                  joinClub(club.id, {
+                    userId: user.id,
+                    displayName: user.displayName,
+                    chesscomUsername: user.chesscomUsername,
+                    lichessUsername: user.lichessUsername,
+                    avatarUrl: user.avatarUrl,
+                  });
+                  setJoined(true);
+                  setJoining(false);
+                  toast.success(`Joined ${club.name}!`);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 hover:border-white/40 transition-all active:scale-95"
+                aria-label={`Join ${club.name}`}
+              >
+                {joining ? (
+                  <span className="w-2.5 h-2.5 rounded-full border border-white/40 border-t-white animate-spin" />
+                ) : (
+                  <UserPlus className="w-2.5 h-2.5" />
+                )}
+                Join
+              </button>
+            ) : user && joined ? (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-500/20 text-green-300 border border-green-500/30">
+                <Check className="w-2.5 h-2.5" /> Member
+              </span>
+            ) : (
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge}`}>
+                {catLabel}
+              </span>
+            )}
             <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all duration-200" />
           </div>
         </div>
@@ -189,6 +234,7 @@ interface FeaturedClubsCarouselProps {
 
 export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselProps) {
   const [, navigate] = useLocation();
+  const { user } = useAuthContext();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -288,7 +334,7 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
         ) : (
           clubs.map((club, idx) => (
             <div key={club.id} style={{ scrollSnapAlign: "start" }}>
-              <FeaturedClubCard club={club} rank={idx + 1} isDark={isDark} />
+              <FeaturedClubCard club={club} rank={idx + 1} isDark={isDark} user={user} />
             </div>
           ))
         )}

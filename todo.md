@@ -3584,3 +3584,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Club Profile Content Area — Dual Dark/Light Tokens
 - [x] Apply isDark token system to all content area sections in ClubProfile.tsx
+
+## Feature: Join Club Quick-Action on Cards
+- [x] Add "+ Join" button to FeaturedClubsCarousel card glassmorphism footer for signed-in non-members
+- [x] Add "+ Join" button to ClubLeaderboard podium cards for signed-in non-members

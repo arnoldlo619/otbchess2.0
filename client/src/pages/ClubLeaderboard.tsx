@@ -30,9 +30,15 @@ import {
   TrendingUp,
   ChevronRight,
   ArrowRight,
+  UserPlus,
+  Check,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuthContext } from "@/context/AuthContext";
 import { resolveClubTheme } from "@/lib/clubTheme";
+import { joinClub, isMember } from "@/lib/clubRegistry";
+import { apiJoinClub } from "@/lib/clubsApi";
+import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -153,11 +159,13 @@ interface PodiumCardProps {
   club: LeaderboardClub;
   metric: SortMetric;
   isDark: boolean;
+  user: ReturnType<typeof useAuthContext>["user"];
 }
-
-function PodiumCard({ club, metric, isDark }: PodiumCardProps) {
+function PodiumCard({ club, metric, isDark, user }: PodiumCardProps) {
   const [, navigate] = useLocation();
   const { grad, glow, badge } = resolveClubTheme(club, isDark);
+  const [joined, setJoined] = useState(() => !!(user && isMember(club.id, user.id)));
+  const [joining, setJoining] = useState(false);
   const catLabel = CATEGORY_LABELS[club.category ?? "other"] ?? "Other";
   const medal = RANK_MEDALS[club.rank];
   const initial = club.name.charAt(0).toUpperCase();
@@ -257,11 +265,50 @@ function PodiumCard({ club, metric, isDark }: PodiumCardProps) {
               )}
             </div>
             <div className="flex items-center gap-1.5">
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge}`}
-              >
-                {catLabel}
-              </span>
+              {user && !joined ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (joining) return;
+                    setJoining(true);
+                    apiJoinClub(club.id, {
+                      displayName: user.displayName,
+                      chesscomUsername: user.chesscomUsername,
+                      lichessUsername: user.lichessUsername,
+                      avatarUrl: user.avatarUrl,
+                    }).catch(() => {});
+                    joinClub(club.id, {
+                      userId: user.id,
+                      displayName: user.displayName,
+                      chesscomUsername: user.chesscomUsername,
+                      lichessUsername: user.lichessUsername,
+                      avatarUrl: user.avatarUrl,
+                    });
+                    setJoined(true);
+                    setJoining(false);
+                    toast.success(`Joined ${club.name}!`);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 hover:border-white/40 transition-all active:scale-95"
+                  aria-label={`Join ${club.name}`}
+                >
+                  {joining ? (
+                    <span className="w-2.5 h-2.5 rounded-full border border-white/40 border-t-white animate-spin" />
+                  ) : (
+                    <UserPlus className="w-2.5 h-2.5" />
+                  )}
+                  Join
+                </button>
+              ) : user && joined ? (
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-500/20 text-green-300 border border-green-500/30">
+                  <Check className="w-2.5 h-2.5" /> Member
+                </span>
+              ) : (
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge}`}
+                >
+                  {catLabel}
+                </span>
+              )}
               <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
           </div>
@@ -377,8 +424,8 @@ export default function ClubLeaderboard() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const { theme } = useTheme();
+  const { user } = useAuthContext();
   const isDark = theme === "dark";
 
   // Colour tokens
@@ -494,7 +541,7 @@ export default function ClubLeaderboard() {
           ) : podium.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               {podium.map((club) => (
-                <PodiumCard key={club.id} club={club} metric={metric} isDark={isDark} />
+                <PodiumCard key={club.id} club={club} metric={metric} isDark={isDark} user={user} />
               ))}
             </div>
           ) : null}
