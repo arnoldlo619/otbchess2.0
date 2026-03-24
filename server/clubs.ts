@@ -312,6 +312,50 @@ clubsRouter.post("/sync", async (req: Request, res: Response) => {
 });
 
 // ── GET /api/clubs/:id — get a single club ────────────────────────────────────
+
+// ── GET /api/clubs/leaderboard — ranked leaderboard across all clubs ──────────
+// MUST be declared before /:id to avoid the wildcard swallowing "leaderboard".
+// Supports ?sortBy=members|tournaments  (default: members)
+// Returns top 50 clubs with rank and score.
+clubsRouter.get("/leaderboard", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const { sortBy = "members" } = req.query as Record<string, string>;
+
+    const rows = await db
+      .select()
+      .from(dbClubs)
+      .where(eq(dbClubs.isPublic, 1));
+
+    // Compute score per club based on requested metric
+    type ScoredClub = ReturnType<typeof dbRowToClub> & { score: number };
+    const scored: ScoredClub[] = rows.map((r: typeof dbClubs.$inferSelect) => ({
+      ...dbRowToClub(r),
+      score:
+        sortBy === "tournaments"
+          ? r.tournamentCount
+          : r.memberCount, // default: members
+    }));
+
+    // Sort descending by score, then alphabetically for ties
+    scored.sort((a, b) =>
+      b.score !== a.score ? b.score - a.score : a.name.localeCompare(b.name)
+    );
+
+    // Assign ranks (ties share the same rank number)
+    let rank = 1;
+    const ranked = scored.map((club, idx, arr) => {
+      if (idx > 0 && arr[idx - 1].score !== club.score) rank = idx + 1;
+      return { ...club, rank };
+    });
+
+    res.json({ clubs: ranked.slice(0, 50), total: ranked.length, sortBy });
+  } catch (err) {
+    console.error("[clubs] GET /leaderboard error:", err);
+    res.status(500).json({ error: "Failed to load leaderboard" });
+  }
+});
+
 clubsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const db = await getDb();

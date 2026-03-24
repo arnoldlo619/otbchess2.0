@@ -157,6 +157,7 @@ function FeaturedClubCard({ club, rank }: FeaturedClubCardProps) {
 // ── Main carousel component ────────────────────────────────────────────────────
 
 export function FeaturedClubsCarousel() {
+  const [, navigate] = useLocation();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -196,6 +197,17 @@ export function FeaturedClubsCarousel() {
             Featured Clubs
           </h2>
           <span className="text-white/40 text-xs">— most popular communities</span>
+        </div>
+
+        {/* See All link */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/clubs/leaderboard")}
+            className="flex items-center gap-1 text-green-400 hover:text-green-300 text-xs font-medium transition-colors duration-200"
+          >
+            See All
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Scroll arrows */}

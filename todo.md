@@ -3456,3 +3456,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Created FeaturedClubCard: deterministic gradient from club ID, rank badge (★✦◆ for top 3), member/tournament count, category badge, hover scale effect
 - [x] Inserted carousel above search bar in Discover section of MyClubs.tsx
 - [x] 24 unit tests pass: clubGradient (4), URL construction (6), response normalization (5), rank badge (6), empty state (3)
+
+## Feature: Club Leaderboard Page (/clubs/leaderboard)
+- [x] Added GET /api/clubs/leaderboard endpoint (declared before /:id wildcard) with ?sortBy=members|tournaments, DESC sort, tie-breaking by name, rank assignment with shared ranks for ties, top-50 limit
+- [x] Created ClubLeaderboard page: sticky header with back-link, metric tab switcher (Members | Tournaments), podium section (top 3 with crown/medal icons, staggered heights), ranked table (clubs 4-50 with position, avatar, name, location, category badge, score, chevron), loading skeletons, empty state, footer note
+- [x] Added /clubs/leaderboard route to App.tsx (lazy-loaded, placed before /:id to avoid wildcard collision)
+- [x] Added "See All" button to FeaturedClubsCarousel section header linking to /clubs/leaderboard
+- [x] 30 unit tests pass: URL construction (2), rank assignment (5), score computation (3), sort order (4), podium/table split (4), metricLabel (4), clubGradient (3), empty/error states (5)

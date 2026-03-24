@@ -33,6 +33,7 @@ const VideoRecorder = lazy(() => import("./pages/VideoRecorder"));
 const Battle = lazy(() => import("./pages/Battle"));
 const BattleHistory = lazy(() => import("./pages/BattleHistory"));
 const ClubMessages = lazy(() => import("./pages/ClubMessages"));
+const ClubLeaderboard = lazy(() => import("./pages/ClubLeaderboard"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
@@ -66,6 +67,7 @@ function Router() {
         <Route path={"/clock"} component={ChessClock} />
         <Route path={"/profile"} component={ProfilePage} />
         <Route path={"/clubs"} component={MyClubs} />
+        <Route path={"/clubs/leaderboard"} component={ClubLeaderboard} />
         <Route path={"/clubs/:id/home"} component={ClubDashboard} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
