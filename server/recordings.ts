@@ -130,13 +130,22 @@ export function createRecordingsRouter(): Router {
 
   // ── GET /api/games (list) — user's analyzed games ──────────────────────────
   // This route is only reachable when the router is mounted at /api/games.
-  // Returns processed_games joined with session status, ordered by most recent.
+  // Returns processed_games joined with session status.
+  // Supports: ?page=1&limit=20&search=&result=1-0|0-1|1/2-1/2&sortBy=createdAt|totalMoves|whiteAccuracy&sortDir=asc|desc
   router.get("/", async (req, res) => {
     const userId = getUserId(req);
     try {
       const db = await getDb();
 
-      // Fetch all recording sessions for this user
+      // ── Parse query params ────────────────────────────────────────────────
+      const page    = Math.max(1, parseInt(String(req.query.page  ?? "1"),  10) || 1);
+      const limit   = Math.min(50, Math.max(1, parseInt(String(req.query.limit ?? "20"), 10) || 20));
+      const search  = String(req.query.search  ?? "").trim();
+      const result  = String(req.query.result  ?? "").trim();  // "1-0" | "0-1" | "1/2-1/2" | ""
+      const sortBy  = String(req.query.sortBy  ?? "createdAt").trim();
+      const sortDir = String(req.query.sortDir ?? "desc").trim();
+
+      // ── Fetch sessions for this user ──────────────────────────────────────
       const sessions = await db
         .select()
         .from(recordingSessions)
@@ -144,26 +153,60 @@ export function createRecordingsRouter(): Router {
         .orderBy(desc(recordingSessions.createdAt));
 
       if (sessions.length === 0) {
-        return res.json([]);
+        return res.json({ games: [], total: 0, page, limit });
       }
 
       const sessionIds = sessions.map((s) => s.id);
+      const sessionMap = new Map(sessions.map((s) => [s.id, s]));
 
-      // Fetch all processed games for those sessions
-      const games = await db
+      // ── Fetch all matching games (filter in JS for portability) ───────────
+      const allGames = await db
         .select()
         .from(processedGames)
-        .where(inArray(processedGames.sessionId, sessionIds))
-        .orderBy(desc(processedGames.createdAt));
+        .where(inArray(processedGames.sessionId, sessionIds));
 
-      // Attach session status to each game
-      const sessionMap = new Map(sessions.map((s) => [s.id, s]));
-      const result = games.map((g) => ({
+      // Attach session status
+      let enriched = allGames.map((g) => ({
         ...g,
         sessionStatus: sessionMap.get(g.sessionId)?.status ?? "unknown",
       }));
 
-      res.json(result);
+      // ── Filter: only processed games ─────────────────────────────────────
+      enriched = enriched.filter((g) => g.sessionStatus === "processed");
+
+      // ── Filter: result ────────────────────────────────────────────────────
+      if (result) {
+        enriched = enriched.filter((g) => g.result === result);
+      }
+
+      // ── Filter: search (opening name, ECO, white/black player, event) ─────
+      if (search) {
+        const q = search.toLowerCase();
+        enriched = enriched.filter((g) =>
+          (g.openingName ?? "").toLowerCase().includes(q) ||
+          (g.openingEco  ?? "").toLowerCase().includes(q) ||
+          (g.whitePlayer ?? "").toLowerCase().includes(q) ||
+          (g.blackPlayer ?? "").toLowerCase().includes(q) ||
+          (g.event       ?? "").toLowerCase().includes(q)
+        );
+      }
+
+      // ── Sort ──────────────────────────────────────────────────────────────
+      const validSortFields = ["createdAt", "totalMoves", "whiteAccuracy", "blackAccuracy", "date"];
+      const field = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+      enriched.sort((a, b) => {
+        const av = (a as Record<string, unknown>)[field] ?? "";
+        const bv = (b as Record<string, unknown>)[field] ?? "";
+        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+
+      // ── Paginate ──────────────────────────────────────────────────────────
+      const total  = enriched.length;
+      const offset = (page - 1) * limit;
+      const games  = enriched.slice(offset, offset + limit);
+
+      res.json({ games, total, page, limit });
     } catch (err) {
       console.error("[recordings] list games error:", err);
       res.status(500).json({ error: "Failed to list games" });

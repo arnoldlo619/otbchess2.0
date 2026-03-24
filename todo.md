@@ -3506,3 +3506,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Thread result into PGN header via useNotationMode getPgnWithResult helper
 - [x] Pass result to useLnmAnalysis.startAnalysis and PATCH battle_rooms pgn with result header
 - [x] Unit tests for result selector logic, PGN header injection, and default derivation
+
+## Feature: Game History Page (/games)
+- [x] Extend GET /api/games to support page, limit, search, result filter, sortBy, sortDir params
+- [x] useGameHistory hook with URL-synced state (page, search, result, sort)
+- [x] GamesHistory page: search bar, result filter chips, sort options, game cards grid
+- [x] Pagination controls with page numbers and prev/next buttons
+- [x] Loading skeletons and empty state with contextual CTAs
+- [x] Register /games route in App.tsx
+- [x] Profile page "View all" link points to /games
