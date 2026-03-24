@@ -3571,3 +3571,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Club Leaderboard — Apply Premium Card Style
 - [x] Update PodiumCard and TableRow in ClubLeaderboard.tsx to match the FeaturedClubsCarousel premium style (per-category gradients, glassmorphism footer, rank medals, avatar ring, hover polish)
+
+## UI: Club Profile — Gradient Header Banner
+- [x] Replace the generic chess-board hero banner with a per-category full-bleed gradient matching the FeaturedClubsCarousel/ClubLeaderboard style, including noise texture, radial glow, rank/category badge, and avatar ring

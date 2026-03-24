@@ -130,6 +130,33 @@ const COUNTRY_FLAGS: Record<string, string> = {
   ES: "🇪🇸", IT: "🇮🇹", CA: "🇨🇦", AU: "🇦🇺", BR: "🇧🇷", RU: "🇷🇺",
 };
 
+// Per-category gradient theme — mirrors FeaturedClubsCarousel & ClubLeaderboard
+const CATEGORY_BANNER_THEME: Record<string, { grad: string; badge: string }> = {
+  competitive: { grad: "from-red-950 via-rose-900 to-red-800", badge: "bg-red-500/20 text-red-300 border-red-500/30" },
+  casual:      { grad: "from-blue-950 via-blue-900 to-indigo-800", badge: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+  scholastic:  { grad: "from-yellow-950 via-amber-900 to-yellow-800", badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+  online:      { grad: "from-purple-950 via-violet-900 to-purple-800", badge: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+  otb:         { grad: "from-emerald-950 via-green-900 to-emerald-800", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+  blitz:       { grad: "from-orange-950 via-orange-900 to-amber-800", badge: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
+  correspondence: { grad: "from-cyan-950 via-teal-900 to-cyan-800", badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+  club:        { grad: "from-green-950 via-green-900 to-green-800", badge: "bg-green-500/20 text-green-300 border-green-500/30" },
+  school:      { grad: "from-yellow-950 via-amber-900 to-yellow-800", badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+  university:  { grad: "from-indigo-950 via-indigo-900 to-blue-800", badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" },
+  community:   { grad: "from-teal-950 via-teal-900 to-cyan-800", badge: "bg-teal-500/20 text-teal-300 border-teal-500/30" },
+  professional:{ grad: "from-rose-950 via-rose-900 to-pink-800", badge: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+  other:       { grad: "from-slate-900 via-slate-800 to-slate-700", badge: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+};
+const FALLBACK_BANNER_GRADS = [
+  "from-emerald-950 via-green-900 to-emerald-800",
+  "from-blue-950 via-blue-900 to-indigo-800",
+  "from-purple-950 via-violet-900 to-purple-800",
+  "from-amber-950 via-yellow-900 to-amber-800",
+  "from-rose-950 via-pink-900 to-rose-800",
+  "from-cyan-950 via-teal-900 to-cyan-800",
+];
+const NOISE_BG =
+  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function RoleBadge({ role }: { role: ClubMember["role"] }) {
@@ -805,6 +832,14 @@ export default function ClubProfile() {
   });
   const hasAnyTournaments = tournaments.length > 0 || liveTournaments.length > 0;
 
+  // ── Banner gradient theme (per-category, matches carousel & leaderboard) ─────
+  const bannerTheme = (() => {
+    const cat = club.category ?? "other";
+    if (CATEGORY_BANNER_THEME[cat]) return CATEGORY_BANNER_THEME[cat];
+    const idx = club.id.charCodeAt(club.id.length - 1) % FALLBACK_BANNER_GRADS.length;
+    return { grad: FALLBACK_BANNER_GRADS[idx], badge: CATEGORY_BANNER_THEME.other.badge };
+  })();
+
   // ── Colour palette ──────────────────────────────────────────────────────────
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]";
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
@@ -852,43 +887,50 @@ export default function ClubProfile() {
 
       {/* ── Hero banner ─────────────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden">
-        {/* Chess-board pattern hero — matches landing page */}
-        <div className="h-44 sm:h-56 w-full relative">
-          {/* Base dark-green background */}
-          <div className={`absolute inset-0 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[oklch(0.28_0.07_145)]"}`} />
-          {/* Micro-grid checkered pattern */}
-          <div className="absolute inset-0 chess-board-bg opacity-40" />
-          {/* Radial glow */}
+        {/* Full-bleed per-category gradient banner */}
+        <div className={`h-52 sm:h-64 w-full relative bg-gradient-to-br ${bannerTheme.grad}`}>
+          {/* Noise texture overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.05] pointer-events-none"
+            style={{ backgroundImage: NOISE_BG, backgroundSize: "150px" }}
+          />
+          {/* Radial glow from top-center */}
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.44 0.12 145 / 0.22) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 65%)" }}
           />
           {/* Custom banner overlay (if set) */}
           {club.bannerUrl && (
             <img
               src={club.bannerUrl}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-25"
+              className="absolute inset-0 w-full h-full object-cover opacity-20"
             />
           )}
-          {/* Gradient fade to card below */}
+          {/* Category badge — top-left */}
+          <div className="absolute top-4 left-4 z-10">
+            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm ${bannerTheme.badge}`}>
+              {categoryLabel}
+            </span>
+          </div>
+          {/* Gradient fade to page background below */}
           <div
             className="absolute inset-0"
-            style={{ background: `linear-gradient(to bottom, transparent 30%, ${isDark ? "oklch(0.20 0.06 145)" : "oklch(0.28 0.07 145)"} 100%)` }}
+            style={{ background: `linear-gradient(to bottom, transparent 40%, ${isDark ? "#0d1a0f" : "#F0F5EE"} 100%)` }}
           />
         </div>
 
         {/* Club identity card — overlaps banner */}
         <div className="max-w-4xl mx-auto px-4">
-          <div className={`relative -mt-16 rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6 shadow-xl`}>
+          <div className={`relative -mt-20 rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6 shadow-2xl`}>
             <div className="flex items-start gap-4">
-              {/* Club avatar */}
+              {/* Club avatar with ring */}
               <div
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl sm:text-4xl shadow-lg border-2 border-white/10"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl sm:text-4xl shadow-lg ring-2 ring-white/20 overflow-hidden"
                 style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
               >
                 {club.avatarUrl ? (
-                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover rounded-2xl" />
+                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
                 ) : (
                   <span>{flag}</span>
                 )}
