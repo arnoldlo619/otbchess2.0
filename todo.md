@@ -3568,3 +3568,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Featured Club Cards Redesign
 - [x] Redesign FeaturedClubsCarousel cards with premium visual style (larger cards, richer gradients, glassmorphism, better typography, rank medals, hover polish)
+
+## UI: Club Leaderboard — Apply Premium Card Style
+- [x] Update PodiumCard and TableRow in ClubLeaderboard.tsx to match the FeaturedClubsCarousel premium style (per-category gradients, glassmorphism footer, rank medals, avatar ring, hover polish)

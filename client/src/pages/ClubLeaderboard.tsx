@@ -12,6 +12,13 @@
  *   3. Podium section — top 3 clubs with large visual cards
  *   4. Ranked table — clubs 4-50 with position, name, score, category badge
  *   5. Loading skeleton & empty state
+ *
+ * Visual style matches FeaturedClubsCarousel:
+ *   - Per-category full-bleed gradient backgrounds
+ *   - Glassmorphism footer strip
+ *   - Rank medal badges (🥇🥈🥉)
+ *   - Avatar ring
+ *   - Noise texture + diagonal shine on hover
  */
 
 import { useState, useEffect } from "react";
@@ -20,11 +27,9 @@ import {
   ArrowLeft,
   Users,
   Trophy,
-  Medal,
-  Crown,
   TrendingUp,
   ChevronRight,
-  Star,
+  ArrowRight,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -49,7 +54,7 @@ interface LeaderboardClub {
   score: number;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Shared design tokens (mirrors FeaturedClubsCarousel) ──────────────────────
 
 const CATEGORY_LABELS: Record<string, string> = {
   competitive: "Competitive",
@@ -67,35 +72,118 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  competitive: "bg-red-500/20 text-red-300 border-red-500/30",
-  casual: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  scholastic: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  online: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  otb: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  blitz: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  correspondence: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-  club: "bg-green-500/20 text-green-300 border-green-500/30",
-  school: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  university: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-  community: "bg-teal-500/20 text-teal-300 border-teal-500/30",
-  professional: "bg-rose-500/20 text-rose-300 border-rose-500/30",
-  other: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+const CATEGORY_THEME: Record<
+  string,
+  { grad: string; glow: string; badge: string }
+> = {
+  competitive: {
+    grad: "from-red-950 via-rose-900 to-red-800",
+    glow: "group-hover:shadow-red-900/50",
+    badge: "bg-red-500/20 text-red-300 border-red-500/30",
+  },
+  casual: {
+    grad: "from-blue-950 via-blue-900 to-indigo-800",
+    glow: "group-hover:shadow-blue-900/50",
+    badge: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  },
+  scholastic: {
+    grad: "from-yellow-950 via-amber-900 to-yellow-800",
+    glow: "group-hover:shadow-amber-900/50",
+    badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+  },
+  online: {
+    grad: "from-purple-950 via-violet-900 to-purple-800",
+    glow: "group-hover:shadow-purple-900/50",
+    badge: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  },
+  otb: {
+    grad: "from-emerald-950 via-green-900 to-emerald-800",
+    glow: "group-hover:shadow-emerald-900/50",
+    badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  },
+  blitz: {
+    grad: "from-orange-950 via-orange-900 to-amber-800",
+    glow: "group-hover:shadow-orange-900/50",
+    badge: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  },
+  correspondence: {
+    grad: "from-cyan-950 via-teal-900 to-cyan-800",
+    glow: "group-hover:shadow-cyan-900/50",
+    badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+  },
+  club: {
+    grad: "from-green-950 via-green-900 to-green-800",
+    glow: "group-hover:shadow-green-900/50",
+    badge: "bg-green-500/20 text-green-300 border-green-500/30",
+  },
+  school: {
+    grad: "from-yellow-950 via-amber-900 to-yellow-800",
+    glow: "group-hover:shadow-amber-900/50",
+    badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+  },
+  university: {
+    grad: "from-indigo-950 via-indigo-900 to-blue-800",
+    glow: "group-hover:shadow-indigo-900/50",
+    badge: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+  },
+  community: {
+    grad: "from-teal-950 via-teal-900 to-cyan-800",
+    glow: "group-hover:shadow-teal-900/50",
+    badge: "bg-teal-500/20 text-teal-300 border-teal-500/30",
+  },
+  professional: {
+    grad: "from-rose-950 via-rose-900 to-pink-800",
+    glow: "group-hover:shadow-rose-900/50",
+    badge: "bg-rose-500/20 text-rose-300 border-rose-500/30",
+  },
+  other: {
+    grad: "from-slate-900 via-slate-800 to-slate-700",
+    glow: "group-hover:shadow-slate-800/50",
+    badge: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+  },
 };
 
-// Deterministic gradient from club id (same algorithm as FeaturedClubsCarousel)
-function clubGradient(club: LeaderboardClub): string {
-  const accents = [
-    "from-emerald-900/80 to-green-800/60",
-    "from-blue-900/80 to-indigo-800/60",
-    "from-purple-900/80 to-violet-800/60",
-    "from-amber-900/80 to-yellow-800/60",
-    "from-rose-900/80 to-pink-800/60",
-    "from-cyan-900/80 to-teal-800/60",
-  ];
-  const idx = club.id.charCodeAt(club.id.length - 1) % accents.length;
-  return accents[idx];
+const FALLBACK_GRADS = [
+  "from-emerald-950 via-green-900 to-emerald-800",
+  "from-blue-950 via-blue-900 to-indigo-800",
+  "from-purple-950 via-violet-900 to-purple-800",
+  "from-amber-950 via-yellow-900 to-amber-800",
+  "from-rose-950 via-pink-900 to-rose-800",
+  "from-cyan-950 via-teal-900 to-cyan-800",
+];
+
+function clubTheme(club: LeaderboardClub) {
+  const cat = club.category ?? "other";
+  if (CATEGORY_THEME[cat]) return CATEGORY_THEME[cat];
+  const idx = club.id.charCodeAt(club.id.length - 1) % FALLBACK_GRADS.length;
+  return {
+    grad: FALLBACK_GRADS[idx],
+    glow: "group-hover:shadow-green-900/50",
+    badge: CATEGORY_THEME.other.badge,
+  };
 }
+
+const RANK_MEDALS: Record<number, { emoji: string; cls: string; border: string }> = {
+  1: {
+    emoji: "🥇",
+    cls: "bg-yellow-500/25 border-yellow-400/40 text-yellow-200",
+    border: "border-yellow-500/40 shadow-yellow-900/30",
+  },
+  2: {
+    emoji: "🥈",
+    cls: "bg-slate-400/20 border-slate-300/40 text-slate-200",
+    border: "border-slate-400/30 shadow-slate-900/20",
+  },
+  3: {
+    emoji: "🥉",
+    cls: "bg-amber-700/25 border-amber-600/40 text-amber-300",
+    border: "border-amber-700/30 shadow-amber-900/20",
+  },
+};
+
+// Noise texture data URI (same as carousel)
+const NOISE_BG =
+  "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
 function metricLabel(metric: SortMetric, club: LeaderboardClub): string {
   if (metric === "tournaments") return `${club.tournamentCount} tournaments`;
@@ -125,7 +213,7 @@ function PodiumSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-52 rounded-2xl bg-white/5 border border-white/10 animate-pulse"
+          className="h-56 rounded-2xl bg-white/5 border border-white/10 animate-pulse"
         />
       ))}
     </div>
@@ -134,7 +222,7 @@ function PodiumSkeleton() {
 
 function TableRowSkeleton() {
   return (
-    <div className="flex items-center gap-4 px-4 py-3 border-b border-white/5 animate-pulse">
+    <div className="flex items-center gap-4 px-4 py-3.5 border-b border-white/5 animate-pulse">
       <div className="w-8 h-4 bg-white/10 rounded" />
       <div className="w-10 h-10 bg-white/10 rounded-xl flex-shrink-0" />
       <div className="flex-1 space-y-2">
@@ -155,74 +243,78 @@ interface PodiumCardProps {
 
 function PodiumCard({ club, metric }: PodiumCardProps) {
   const [, navigate] = useLocation();
-  const gradient = clubGradient(club);
+  const { grad, glow, badge } = clubTheme(club);
   const catLabel = CATEGORY_LABELS[club.category ?? "other"] ?? "Other";
-  const catColor =
-    CATEGORY_COLORS[club.category ?? "other"] ?? CATEGORY_COLORS.other;
+  const medal = RANK_MEDALS[club.rank];
+  const initial = club.name.charAt(0).toUpperCase();
 
+  // Stagger podium heights: #1 tallest, #2 medium, #3 shortest
   const podiumOffset =
     club.rank === 1 ? "sm:mt-0" : club.rank === 2 ? "sm:mt-6" : "sm:mt-10";
-
-  const medalIcon =
-    club.rank === 1 ? (
-      <Crown className="w-5 h-5 text-yellow-400" />
-    ) : club.rank === 2 ? (
-      <Medal className="w-5 h-5 text-slate-300" />
-    ) : (
-      <Medal className="w-5 h-5 text-amber-600" />
-    );
-
-  const rankColor =
-    club.rank === 1
-      ? "text-yellow-400"
-      : club.rank === 2
-      ? "text-slate-300"
-      : "text-amber-600";
-
-  const borderColor =
-    club.rank === 1
-      ? "border-yellow-500/40 shadow-lg shadow-yellow-900/20"
-      : club.rank === 2
-      ? "border-slate-400/30"
-      : "border-amber-700/30";
 
   return (
     <div
       className={`${podiumOffset} flex flex-col cursor-pointer group`}
       onClick={() => navigate(`/clubs/${club.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && navigate(`/clubs/${club.id}`)}
+      aria-label={`View ${club.name}`}
     >
-      {/* Rank indicator above card */}
-      <div className="flex items-center justify-center gap-1.5 mb-2">
-        <span className={`${rankColor} flex items-center gap-1`}>
-          {medalIcon}
-          <span className="font-bold text-sm">#{club.rank}</span>
-        </span>
-      </div>
-
       {/* Card */}
       <div
-        className={`flex-1 rounded-2xl border bg-gradient-to-br ${gradient} overflow-hidden transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-green-900/30 ${borderColor}`}
+        className={`
+          flex-1 rounded-2xl overflow-hidden relative
+          bg-gradient-to-br ${grad}
+          border ${medal ? medal.border : "border-white/10"}
+          shadow-lg ${glow}
+          transition-all duration-300
+          group-hover:scale-[1.02] group-hover:shadow-xl group-hover:border-white/20
+          active:scale-[0.98]
+        `}
       >
-        <div className="p-5 flex flex-col h-full min-h-[180px]">
+        {/* Noise texture */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{ backgroundImage: NOISE_BG, backgroundSize: "150px" }}
+        />
+
+        {/* Diagonal shine on hover */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-white/8 via-transparent to-transparent" />
+
+        {/* Rank medal — top-left */}
+        {medal && (
+          <div
+            className={`absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold backdrop-blur-sm ${medal.cls}`}
+          >
+            <span>{medal.emoji}</span>
+            <span>#{club.rank}</span>
+          </div>
+        )}
+
+        {/* Card body */}
+        <div className="relative z-10 p-4 sm:p-5 flex flex-col min-h-[200px] sm:min-h-[220px]">
           {/* Avatar + name */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-xl flex-shrink-0">
+          <div className="flex items-center gap-3 mt-7 mb-2.5">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex-shrink-0 ring-2 ring-white/20 overflow-hidden bg-white/10 flex items-center justify-center">
               {club.avatarUrl ? (
                 <img
                   src={club.avatarUrl}
                   alt={club.name}
-                  className="w-full h-full rounded-xl object-cover"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <span>{club.name.charAt(0).toUpperCase()}</span>
+                <span className="text-white font-bold text-lg leading-none">
+                  {initial}
+                </span>
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-white font-bold text-sm leading-tight truncate">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-white font-bold text-sm sm:text-base leading-tight truncate drop-shadow-sm">
                 {club.name}
               </h3>
               {club.location && (
-                <p className="text-white/50 text-xs mt-0.5 truncate">
+                <p className="text-white/50 text-[11px] mt-0.5 truncate">
                   {club.location}
                 </p>
               )}
@@ -230,36 +322,47 @@ function PodiumCard({ club, metric }: PodiumCardProps) {
           </div>
 
           {/* Tagline */}
-          <p className="text-white/60 text-xs leading-relaxed line-clamp-2 flex-1 mb-3">
+          <p className="text-white/55 text-xs leading-relaxed line-clamp-2 flex-1 mb-3">
             {club.tagline || "A chess club community."}
           </p>
 
-          {/* Stats */}
-          <div className="flex items-center justify-between">
+          {/* Glassmorphism footer strip */}
+          <div className="flex items-center justify-between rounded-xl bg-black/25 backdrop-blur-sm border border-white/10 px-3 py-2">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1 text-white/70 text-xs font-medium">
-                <Users className="w-3 h-3" />
+                <Users className="w-3 h-3 text-white/50" />
                 {club.memberCount.toLocaleString()}
               </span>
               {club.tournamentCount > 0 && (
-                <span className="flex items-center gap-1 text-white/60 text-xs">
-                  <Trophy className="w-3 h-3" />
+                <span className="flex items-center gap-1 text-white/70 text-xs font-medium">
+                  <Trophy className="w-3 h-3 text-white/50" />
                   {club.tournamentCount}
                 </span>
               )}
             </div>
-            <span
-              className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${catColor}`}
-            >
-              {catLabel}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge}`}
+              >
+                {catLabel}
+              </span>
+              <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all duration-200" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Score badge below card */}
+      {/* Score label below card */}
       <div className="flex items-center justify-center mt-2">
-        <span className={`text-xs font-semibold ${rankColor}`}>
+        <span
+          className={`text-xs font-semibold ${
+            club.rank === 1
+              ? "text-yellow-400"
+              : club.rank === 2
+              ? "text-slate-300"
+              : "text-amber-500"
+          }`}
+        >
           {metricLabel(metric, club)}
         </span>
       </div>
@@ -276,37 +379,44 @@ interface TableRowProps {
 
 function TableRow({ club, metric }: TableRowProps) {
   const [, navigate] = useLocation();
+  const { grad, badge } = clubTheme(club);
   const catLabel = CATEGORY_LABELS[club.category ?? "other"] ?? "Other";
-  const catColor =
-    CATEGORY_COLORS[club.category ?? "other"] ?? CATEGORY_COLORS.other;
   const value = metricValue(metric, club);
+  const initial = club.name.charAt(0).toUpperCase();
 
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors duration-150 group"
+      className="flex items-center gap-3 sm:gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/[0.04] cursor-pointer transition-colors duration-150 group"
       onClick={() => navigate(`/clubs/${club.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && navigate(`/clubs/${club.id}`)}
     >
-      {/* Rank */}
-      <span className="w-8 text-center text-white/40 text-sm font-mono flex-shrink-0">
+      {/* Rank number */}
+      <span className="w-7 text-center text-white/35 text-sm font-mono flex-shrink-0">
         {club.rank}
       </span>
 
-      {/* Avatar */}
-      <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-base flex-shrink-0">
+      {/* Avatar — mini gradient swatch */}
+      <div
+        className={`w-10 h-10 rounded-xl flex-shrink-0 bg-gradient-to-br ${grad} ring-1 ring-white/15 overflow-hidden flex items-center justify-center`}
+      >
         {club.avatarUrl ? (
           <img
             src={club.avatarUrl}
             alt={club.name}
-            className="w-full h-full rounded-xl object-cover"
+            className="w-full h-full object-cover"
           />
         ) : (
-          <span>{club.name.charAt(0).toUpperCase()}</span>
+          <span className="text-white font-bold text-sm leading-none">
+            {initial}
+          </span>
         )}
       </div>
 
       {/* Name + location */}
       <div className="flex-1 min-w-0">
-        <p className="text-white text-sm font-medium truncate group-hover:text-green-400 transition-colors">
+        <p className="text-white text-sm font-semibold truncate group-hover:text-green-300 transition-colors duration-150">
           {club.name}
         </p>
         {club.location && (
@@ -316,18 +426,18 @@ function TableRow({ club, metric }: TableRowProps) {
 
       {/* Category badge */}
       <span
-        className={`hidden sm:inline-flex text-[10px] font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${catColor}`}
+        className={`hidden sm:inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ${badge}`}
       >
         {catLabel}
       </span>
 
       {/* Score */}
-      <span className="text-white/70 text-sm font-semibold flex-shrink-0 min-w-[4rem] text-right">
+      <span className="text-white/70 text-sm font-bold flex-shrink-0 min-w-[3.5rem] text-right tabular-nums">
         {value.toLocaleString()}
       </span>
 
       {/* Arrow */}
-      <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
+      <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all duration-150 flex-shrink-0" />
     </div>
   );
 }
@@ -437,7 +547,7 @@ export default function ClubLeaderboard() {
         {/* Podium — top 3 */}
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-4">
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+            <span className="text-base leading-none">🏆</span>
             <h2 className="text-white/70 text-xs font-semibold uppercase tracking-widest">
               Top 3
             </h2>
@@ -458,17 +568,18 @@ export default function ClubLeaderboard() {
         {(loading || rest.length > 0) && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
             {/* Table header */}
-            <div className="flex items-center gap-4 px-4 py-2.5 border-b border-white/10 bg-white/5">
-              <span className="w-8 text-center text-white/30 text-xs font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-3 sm:gap-4 px-4 py-2.5 border-b border-white/10 bg-white/5">
+              <span className="w-7 text-center text-white/30 text-xs font-semibold uppercase tracking-wider">
                 #
               </span>
+              <span className="w-10 flex-shrink-0" />
               <span className="flex-1 text-white/30 text-xs font-semibold uppercase tracking-wider">
                 Club
               </span>
               <span className="hidden sm:block text-white/30 text-xs font-semibold uppercase tracking-wider">
                 Category
               </span>
-              <span className="text-white/30 text-xs font-semibold uppercase tracking-wider min-w-[4rem] text-right">
+              <span className="text-white/30 text-xs font-semibold uppercase tracking-wider min-w-[3.5rem] text-right">
                 {metric === "members" ? "Members" : "Tournaments"}
               </span>
               <span className="w-4" />
