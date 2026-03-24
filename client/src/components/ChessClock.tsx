@@ -10,7 +10,7 @@
  * every change back via onStateChange so the inline view stays in sync.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pause, Play, RotateCcw, Flag, Volume2, VolumeX, Maximize2 } from "lucide-react";
 import { useClockSounds } from "../hooks/useClockSounds";
@@ -26,6 +26,12 @@ interface ChessClockProps {
   guestAvatarUrl?: string | null;
   /** Called once when a player's time reaches zero. Receives the side whose flag fell. */
   onFlagFall?: (side: "host" | "guest") => void;
+  /** External pause signal from Live Notation Mode — ORed with internal paused state */
+  externalPause?: boolean;
+  /** When true, hide the clock-tap buttons (LNM handles clock switching via move validation) */
+  hideTapButtons?: boolean;
+  /** Imperative clock-switch trigger from LNM (called when a move validates) */
+  onClockSwitch?: (newActive: "host" | "guest") => void;
 }
 
 type ActiveSide = "host" | "guest" | null;
@@ -56,16 +62,28 @@ function avatarFallback(name: string) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
+// ─── Imperative handle for clock-switch unification ──────────────────────────
+export interface ChessClockHandle {
+  /** Switch the active clock side (called by LNM on move validation) */
+  switchTo: (side: "host" | "guest") => void;
+  /** Get current active side */
+  getActive: () => "host" | "guest" | null;
+  /** Start the clock if not started (first move) */
+  startClock: (firstActive: "host" | "guest") => void;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ChessClock({
+export default forwardRef<ChessClockHandle, ChessClockProps>(function ChessClock({
   timeControl,
   hostName,
   guestName,
   hostAvatarUrl,
   guestAvatarUrl,
   onFlagFall,
-}: ChessClockProps) {
+  externalPause = false,
+  hideTapButtons = false,
+}: ChessClockProps, ref) {
   const { minutes, increment } = parseTimeControl(timeControl);
   const initialMs = minutes * 60_000;
 
@@ -121,7 +139,8 @@ export default function ChessClock({
       lastTickRef.current = null;
       return;
     }
-    if (active && !paused && !flagFallen) {
+    const effectivePaused = paused || externalPause;
+    if (active && !effectivePaused && !flagFallen) {
       lastTickRef.current = performance.now();
       rafRef.current = requestAnimationFrame(tick);
     } else {
@@ -129,11 +148,11 @@ export default function ChessClock({
       lastTickRef.current = null;
     }
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [active, paused, flagFallen, tick, fullScreen]);
+  }, [active, paused, externalPause, flagFallen, tick, fullScreen]);
 
   // ── Warning tick ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (fullScreen || !active || paused || flagFallen) return;
+    if (fullScreen || !active || paused || externalPause || flagFallen) return;
     const ms = active === "host" ? hostMs : guestMs;
     if (ms <= 0 || ms >= 10_000) { lastWarnSecRef.current = -1; return; }
     const sec = Math.ceil(ms / 1000);
@@ -212,6 +231,31 @@ export default function ChessClock({
     setGuestMoves(state.guestMoves);
   }
 
+  // ── Imperative handle ─────────────────────────────────────────────────────────
+  useImperativeHandle(ref, () => ({
+    switchTo(side: "host" | "guest") {
+      if (flagFallen) return;
+      // Add increment to the side that just moved (opposite of new active)
+      const justMoved = side === "host" ? "guest" : "host";
+      if (justMoved === "host") {
+        setHostMs((p) => p + increment * 1000);
+        setHostMoves((m) => m + 1);
+      } else {
+        setGuestMs((p) => p + increment * 1000);
+        setGuestMoves((m) => m + 1);
+      }
+      setActive(side);
+    },
+    getActive() {
+      return active;
+    },
+    startClock(firstActive: "host" | "guest") {
+      if (active === null && !flagFallen) {
+        setActive(firstActive);
+      }
+    },
+  }), [active, flagFallen, increment]);
+
   // ── Derived ───────────────────────────────────────────────────────────────────
   const hostLow = hostMs < 10_000 && hostMs > 0;
   const guestLow = guestMs < 10_000 && guestMs > 0;
@@ -246,6 +290,7 @@ export default function ChessClock({
               initialHostMoves={hostMoves}
               initialGuestMoves={guestMoves}
               onStateChange={handleFsStateChange}
+              externalPause={externalPause}
             />
           </motion.div>
         )}
@@ -566,4 +611,4 @@ export default function ChessClock({
       </motion.div>
     </>
   );
-}
+});

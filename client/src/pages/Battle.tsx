@@ -4,7 +4,7 @@ import ChessNotationRace from "../components/ChessNotationRace";
 import ChessClock from "../components/ChessClock";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Swords,
@@ -25,12 +25,16 @@ import {
   Ghost,
   Flag,
   Share2,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useChesscomAvatar } from "../hooks/useChesscomAvatar";
 import AuthModal from "../components/AuthModal";
 import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
+import { useNotationMode } from "../hooks/useNotationMode";
+import NotationModeOverlay from "../components/NotationModeOverlay";
+import type { ChessClockHandle } from "../components/ChessClock";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -277,6 +281,57 @@ export default function Battle() {
   // Stores which side ran out of time so we can surface a result suggestion.
   const [clockFlagFallen, setClockFlagFallen] = useState<"host" | "guest" | null>(null);
   const [flagSuggestionDismissed, setFlagSuggestionDismissed] = useState(false);
+
+  // ── Live Notation Mode ──────────────────────────────────────────────────────
+  const notation = useNotationMode(room?.code ?? "__none__");
+  const clockRef = useRef<ChessClockHandle>(null);
+  const [, navigate] = useLocation();
+
+  // When a move validates in LNM, switch the clock to the other side
+  const prevMoveCount = useRef(0);
+  useEffect(() => {
+    if (!notation.active || notation.moves.length === 0) {
+      prevMoveCount.current = notation.moves.length;
+      return;
+    }
+    if (notation.moves.length > prevMoveCount.current) {
+      // A new move was just made
+      const lastMoveColor = notation.moves[notation.moves.length - 1].color;
+      // After white moves, clock should switch to guest (black); after black, to host (white)
+      const newActive = lastMoveColor === "w" ? "guest" : "host";
+      if (notation.moves.length === 1) {
+        // First move — start the clock
+        clockRef.current?.startClock(newActive);
+      } else {
+        clockRef.current?.switchTo(newActive);
+      }
+    }
+    prevMoveCount.current = notation.moves.length;
+  }, [notation.active, notation.moves]);
+
+  // Save PGN to server when LNM overlay is exited
+  async function savePgnToServer(pgn: string) {
+    if (!room?.code) return;
+    try {
+      await fetch(`/api/battles/${room.code}/pgn`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pgn }),
+      });
+    } catch {
+      // Silently fail — PGN was already copied to clipboard / sessionStorage
+    }
+  }
+
+  function handleLnmExit(pgn: string | null) {
+    if (pgn) savePgnToServer(pgn);
+  }
+
+  function handleAnalyse(pgn: string) {
+    // For now, copy PGN and navigate to a placeholder
+    // In future, create a game record and navigate to /game/:id/analysis
+    navigator.clipboard.writeText(pgn).catch(() => {});
+  }
 
   function handleClockFlagFall(side: "host" | "guest") {
     setClockFlagFallen(side);
@@ -538,6 +593,17 @@ export default function Battle() {
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a1a0e] text-white flex flex-col relative overflow-hidden">
+      {/* Live Notation Mode overlay */}
+      {notation.active && room?.guest && (
+        <NotationModeOverlay
+          notation={notation}
+          hostName={room.host?.displayName ?? "White"}
+          guestName={room.guest?.displayName ?? "Black"}
+          onExit={handleLnmExit}
+          onAnalyse={handleAnalyse}
+        />
+      )}
+
       {/* Victory flash overlay */}
       <AnimatePresence>
         {victoryFlash && (
@@ -1040,14 +1106,53 @@ export default function Battle() {
               {room.guest && room.timeControl && (
                 <div className="w-full relative z-10 mb-8">
                   <ChessClock
+                    ref={clockRef}
                     timeControl={room.timeControl}
                     hostName={room.host?.displayName ?? "Host"}
                     guestName={room.guest?.displayName ?? "Guest"}
                     hostAvatarUrl={hostAvatar ?? room.host?.avatarUrl ?? undefined}
                     guestAvatarUrl={guestAvatar ?? room.guest?.avatarUrl ?? undefined}
                     onFlagFall={handleClockFlagFall}
+                    externalPause={notation.active && notation.inputting}
                   />
                 </div>
+              )}
+
+              {/* ── Live Notation Mode toggle ──────────────────────────── */}
+              {room.guest && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9, duration: 0.4 }}
+                  className="w-full max-w-md relative z-10 mb-6"
+                >
+                  <button
+                    onClick={() => notation.activate()}
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-[0.98]"
+                    style={{
+                      background: notation.active
+                        ? "oklch(0.22 0.10 142 / 0.7)"
+                        : "oklch(0.14 0.04 240 / 0.6)",
+                      border: notation.active
+                        ? "1.5px solid oklch(0.45 0.15 142 / 0.5)"
+                        : "1.5px solid oklch(0.30 0.04 240 / 0.4)",
+                      color: notation.active ? "#4ade80" : "oklch(0.65 0.04 240)",
+                      boxShadow: notation.active
+                        ? "0 0 20px oklch(0.55 0.18 142 / 0.2)"
+                        : "none",
+                    }}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    {notation.active
+                      ? `Recording · ${notation.moveCount} move${notation.moveCount !== 1 ? "s" : ""}`
+                      : "Record Moves"}
+                  </button>
+                  {notation.active && (
+                    <p className="text-center text-[10px] text-white/25 mt-1.5">
+                      Tap to open the notation board
+                    </p>
+                  )}
+                </motion.div>
               )}
 
               {/* ── Flag-fall result suggestion banner ──────────────────────── */}

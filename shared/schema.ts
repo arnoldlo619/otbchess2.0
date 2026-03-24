@@ -390,6 +390,8 @@ export const battleRooms = mysqlTable(
     result: varchar("result", { length: 20 }),
     // Optional time control string (e.g. "10+0", "5+3")
     timeControl: varchar("time_control", { length: 20 }),
+    // PGN string recorded via Live Notation Mode (null if notation was not used)
+    pgn: text("pgn"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     startedAt: timestamp("started_at"),
     completedAt: timestamp("completed_at"),

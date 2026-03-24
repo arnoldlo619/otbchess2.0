@@ -1401,6 +1401,30 @@ function getRaceRoom(code: string): RaceRoomState {
     }
   });
 
+  // PATCH /api/battles/:code/pgn — Save PGN from Live Notation Mode (host or guest)
+  app.patch("/api/battles/:code/pgn", requireAuth, async (req, res) => {
+    const { battleRooms } = await import("../shared/schema.js");
+    const userId = (req as import("express").Request & { userId: string }).userId;
+    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    const { pgn } = req.body as { pgn: string };
+    if (typeof pgn !== "string" || pgn.length === 0) return res.status(400).json({ error: "PGN is required" });
+    if (pgn.length > 50_000) return res.status(400).json({ error: "PGN too large" });
+    try {
+      const db = await getDb();
+      const rows = await db.select().from(battleRooms).where(eq(battleRooms.code, req.params.code.toUpperCase())).limit(1);
+      if (rows.length === 0) return res.status(404).json({ error: "Battle room not found" });
+      const room = rows[0];
+      if (room.hostId !== userId && room.guestId !== userId) {
+        return res.status(403).json({ error: "Only battle participants can save PGN" });
+      }
+      await db.update(battleRooms).set({ pgn }).where(eq(battleRooms.code, req.params.code.toUpperCase()));
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[battles] pgn save error:", err);
+      res.status(500).json({ error: "Failed to save PGN" });
+    }
+  });
+
   return app;
 }
 

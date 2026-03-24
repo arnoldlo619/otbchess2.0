@@ -36,6 +36,8 @@ export interface FullScreenClockProps {
   hostAvatarUrl?: string | null;
   guestAvatarUrl?: string | null;
   onExit: () => void;
+  /** External pause signal from Live Notation Mode */
+  externalPause?: boolean;
   /** Sync initial times from the inline clock so state is preserved on enter */
   initialHostMs?: number;
   initialGuestMs?: number;
@@ -95,6 +97,7 @@ export default function FullScreenClock({
   initialHostMoves = 0,
   initialGuestMoves = 0,
   onStateChange,
+  externalPause = false,
 }: FullScreenClockProps) {
   const { increment } = parseTimeControl(timeControl);
   const defaultMs = parseTimeControl(timeControl).minutes * 60_000;
@@ -182,7 +185,8 @@ export default function FullScreenClock({
   }, [active]);
 
   useEffect(() => {
-    if (active && !paused && !flagFallen) {
+    const effectivePaused = paused || externalPause;
+    if (active && !effectivePaused && !flagFallen) {
       lastTickRef.current = performance.now();
       rafRef.current = requestAnimationFrame(tick);
     } else {
@@ -190,11 +194,11 @@ export default function FullScreenClock({
       lastTickRef.current = null;
     }
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [active, paused, flagFallen, tick]);
+  }, [active, paused, externalPause, flagFallen, tick]);
 
   // ── Warning tick ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!active || paused || flagFallen) return;
+    if (!active || paused || externalPause || flagFallen) return;
     const ms = active === "host" ? hostMs : guestMs;
     if (ms <= 0 || ms >= 10_000) { lastWarnSecRef.current = -1; return; }
     const sec = Math.ceil(ms / 1000);

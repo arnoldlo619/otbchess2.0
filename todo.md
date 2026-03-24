@@ -3463,3 +3463,27 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added /clubs/leaderboard route to App.tsx (lazy-loaded, placed before /:id to avoid wildcard collision)
 - [x] Added "See All" button to FeaturedClubsCarousel section header linking to /clubs/leaderboard
 - [x] 30 unit tests pass: URL construction (2), rank assignment (5), score computation (3), sort order (4), podium/table split (4), metricLabel (4), clubGradient (3), empty/error states (5)
+## Feature: Live Notation Mode (LNM) — Option B with Clock-Switch Unification
+- [x] Schema migration: add pgn TEXT column to battle_rooms table
+- [x] Server endpoint: PATCH /api/battles/:code/pgn (host-or-guest auth)
+- [x] useNotationMode hook: chess.js integration, move validation, PGN generation, inputting state, undo, 10s timeout
+- [x] LiveNotationBoard component: tap-to-move board with CSS 3D flip animation, orientation derived from turn
+- [x] MoveListPanel component: scrolling SAN move list with last-move highlight
+- [x] NotationModeOverlay: full-screen LNM layout composing board + move list + controls
+- [x] ChessClock externalPause prop: thread through ChessClock and FullScreenClock
+- [x] Clock-switch unification: move validation triggers clock side switch, hide clock-tap buttons during LNM
+- [x] Battle.tsx integration: Record Moves toggle, overlay mount/unmount, PGN save on exit
+- [x] Post-game Analyse Game deep-link to /analysis page
+- [x] Unit tests for useNotationMode, board logic, clock integration, PGN persistence
+## Feature: Live Notation Mode (LNM) — Option B with Clock-Switch Unification
+- [x] Schema migration: add pgn TEXT column to battle_rooms table
+- [x] Server endpoint: PATCH /api/battles/:code/pgn (host-or-guest auth)
+- [x] useNotationMode hook: chess.js integration, move validation, PGN generation, inputting state, undo, 10s timeout
+- [x] LiveNotationBoard component: tap-to-move board with CSS 3D flip animation, orientation derived from turn
+- [x] MoveListPanel component: scrolling SAN move list with last-move highlight
+- [x] NotationModeOverlay: full-screen LNM layout composing board + move list + controls
+- [x] ChessClock externalPause prop: thread through ChessClock and FullScreenClock
+- [x] Clock-switch unification: move validation triggers clock side switch, hide clock-tap buttons during LNM
+- [x] Battle.tsx integration: Record Moves toggle, overlay mount/unmount, PGN save on exit
+- [x] Post-game Analyse Game deep-link to /analysis page
+- [x] Unit tests for useNotationMode, board logic, clock integration, PGN persistence
