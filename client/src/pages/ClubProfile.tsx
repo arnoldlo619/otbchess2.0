@@ -641,6 +641,20 @@ export default function ClubProfile() {
   // Poll-close + scheduled-publish interval: check every 30 seconds
   // MUST be declared before any early return to comply with Rules of Hooks
   const clubId = club?.id ?? null;
+
+  // Derive membership flags before the early return so useClubPresence
+  // is always called unconditionally (Rules of Hooks).
+  const myMembershipEarly = club && user ? getMembership(club.id, user.id) : null;
+  const isOwnerEarly = myMembershipEarly?.role === "owner";
+  const isDirectorEarly = myMembershipEarly?.role === "director";
+
+  // Real-time presence: polls every 30s, sends heartbeat every 60s if member
+  // Declared here (before any early return) to satisfy Rules of Hooks.
+  const { onlineCount } = useClubPresence(
+    clubId ?? "",
+    !!(joined || isOwnerEarly || isDirectorEarly)
+  );
+
   useEffect(() => {
     if (!clubId) return;
     // Run once on mount
@@ -671,15 +685,11 @@ export default function ClubProfile() {
     );
   }
 
-  const myMembership = user ? getMembership(club.id, user.id) : null;
-  const isOwner = myMembership?.role === "owner";
-  const isDirector = myMembership?.role === "director";
-
-  // Real-time presence: polls every 30s, sends heartbeat every 60s if member
-  const { onlineCount } = useClubPresence(
-    club.id,
-    !!(joined || isOwner || isDirector)
-  );
+  // Membership flags (aliases of the pre-return derivations for readability below)
+  const myMembership = myMembershipEarly;
+  const isOwner = isOwnerEarly;
+  const isDirector = isDirectorEarly;
+  // onlineCount already declared above (before the early return)
 
   const handleJoin = async () => {
     if (!user) {
