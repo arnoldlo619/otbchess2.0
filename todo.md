@@ -3545,3 +3545,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Expand to 5 rounds (rounds 1-4 completed, round 5 in progress)
 - [x] Update all "View live demo" links to point to Director dashboard (/manage)
 - [x] Unit tests: 46 tests covering structure, player roster, data integrity, standings, results, flags, referential integrity
+
+## Fix: Mobile Hero Button Polish
+- [x] Fix hero button container: full-width stacked on mobile, side-by-side on sm+
+- [x] Fix SpinBorderButton: ensure spinning conic layer doesn't overflow/clip on narrow widths
+- [x] Ensure both buttons have consistent height, padding, and font size on mobile

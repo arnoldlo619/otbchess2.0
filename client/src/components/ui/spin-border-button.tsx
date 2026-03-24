@@ -107,7 +107,7 @@ export const SpinBorderButton = React.forwardRef<
     <button
       ref={ref}
       className={cn(
-        "group relative inline-flex overflow-hidden rounded-lg p-[1.5px]",
+        "group relative inline-flex overflow-hidden rounded-xl p-[2px]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.65_0.18_145)] focus-visible:ring-offset-2",
         "disabled:pointer-events-none disabled:opacity-50",
         "cursor-pointer",
@@ -115,11 +115,13 @@ export const SpinBorderButton = React.forwardRef<
       )}
       {...props}
     >
-      {/* Spinning conic-gradient layer */}
+      {/* Spinning conic-gradient layer — uses a square aspect-ratio pseudo-element
+          trick so the gradient always covers the button regardless of width */}
       <span
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-[-200%]",
+          "pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+          "aspect-square w-[200%]",
           "animate-[spin_3s_linear_infinite] group-hover:animate-[spin_1.5s_linear_infinite]",
           isSolid
             ? "bg-[conic-gradient(from_90deg_at_50%_50%,oklch(0.44_0.12_145)_0%,oklch(0.82_0.18_145)_40%,#ffffff_50%,oklch(0.82_0.18_145)_60%,oklch(0.44_0.12_145)_100%)]"
@@ -127,11 +129,11 @@ export const SpinBorderButton = React.forwardRef<
         )}
       />
 
-      {/* Inner content surface — arrow slide applied here so the selector targets the SVG inside this span */}
+      {/* Inner content surface */}
       <span
         className={cn(
-          "relative z-10 inline-flex w-full items-center justify-center gap-2 rounded-[5px]",
-          "px-6 py-3 text-sm font-semibold tracking-wide",
+          "relative z-10 inline-flex w-full items-center justify-center gap-2 rounded-[9px]",
+          "px-6 py-3.5 text-sm font-semibold tracking-wide whitespace-nowrap",
           "transition-all duration-200",
           // Arrow micro-interaction
           ARROW_SLIDE,

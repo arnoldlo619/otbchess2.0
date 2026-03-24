@@ -483,12 +483,13 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           </p>
 
           <div
-            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center"
+            className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto"
             style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
           >
             <SpinBorderButton
               variant="solid"
               onClick={onCreateTournament}
+              className="w-full sm:w-auto"
             >
               Host Tournament
               <ArrowRight className="w-4 h-4" />
@@ -496,6 +497,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             <SpinBorderButton
               variant="outline"
               onClick={() => window.location.href = "/join"}
+              className="w-full sm:w-auto"
             >
               Join a Tournament
               <ArrowRight className="w-4 h-4" />
