@@ -813,24 +813,7 @@ export default function MyClubs() {
         {(!user || activeTab === "clubs") && (
           <>
 
-        {/* ── Guest sign-in prompt ─────────────────────────────────────────── */}
-        {!user && (
-          <div className={`rounded-3xl border ${cardBorder} ${card} p-5 flex items-center gap-4`}>
-            <div className="w-12 h-12 rounded-2xl bg-[#3D6B47]/15 flex items-center justify-center flex-shrink-0">
-              <Crown className="w-6 h-6 text-[#4CAF50]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-semibold ${textMain}`}>Sign in to join clubs</p>
-              <p className={`text-xs mt-0.5 ${textMuted}`}>Track your clubs, get tournament updates, and connect with your community.</p>
-            </div>
-            <button
-              onClick={() => navigate("/")}
-              className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
-            >
-              Sign In
-            </button>
-          </div>
-        )}
+
 
         {/* ── Following section (signed-in, non-empty) ─────────────────── */}
         {user && followedClubs.length > 0 && (
