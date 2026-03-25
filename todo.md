@@ -3603,3 +3603,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Featured Clubs Carousel Monochromatic Polish
 - [x] Replace multi-hue per-category gradients in FeaturedClubsCarousel with monochromatic green/charcoal palette aligned to platform design system
+
+## UI: Club Leaderboard Monochromatic Polish
+- [x] Apply monochromatic OKLCH green/charcoal palette to ClubLeaderboard podium cards, table rows, and all surface tokens
