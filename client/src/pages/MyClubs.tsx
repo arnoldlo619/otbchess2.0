@@ -47,7 +47,6 @@ import {
   MapPin,
   Search,
   Plus,
-  ChevronLeft,
   Crown,
   Zap,
   Globe,
@@ -723,14 +722,6 @@ export default function MyClubs() {
       {/* ── Sticky header ──────────────────────────────────────────────────── */}
       <header className={`sticky top-0 z-30 border-b ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
-          <button
-            onClick={() => navigate("/profile")}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-900"}`}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Profile
-          </button>
-          <div className={`w-px h-4 ${isDark ? "bg-white/15" : "bg-gray-200"}`} />
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
             <button
