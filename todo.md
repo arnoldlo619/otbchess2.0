@@ -3588,3 +3588,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Feature: Join Club Quick-Action on Cards
 - [x] Add "+ Join" button to FeaturedClubsCarousel card glassmorphism footer for signed-in non-members
 - [x] Add "+ Join" button to ClubLeaderboard podium cards for signed-in non-members
+
+## Bug: QR Projection Close Button Hidden on Mobile
+- [x] Fix AnnounceModal close button always visible on mobile (sticky top bar)
+- [x] Fix SpectatorQRScreen close button always visible on mobile (sticky top bar)

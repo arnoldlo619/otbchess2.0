@@ -262,33 +262,39 @@ export function SpectatorQRScreen({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-[110] flex flex-col items-center justify-center overflow-auto"
+      className="fixed inset-0 z-[110] flex flex-col"
       style={{ background: "oklch(0.13 0.06 240)" }}
       role="dialog"
       aria-modal="true"
       aria-label="Spectator QR projection screen"
     >
-      {/* ── Close button ─────────────────────────────────────────────────────── */}
-      <button
-        onClick={onClose}
-        aria-label="Close spectator QR screen"
-        className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 z-10"
-        style={{ background: "rgba(255,255,255,0.08)" }}
-        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.16)")}
-        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-      >
-        <X className="w-5 h-5 text-white/60" />
-      </button>
-
-      {/* ── Escape hint ──────────────────────────────────────────────────────── */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-1.5 text-white/25 text-xs select-none">
-        <Maximize2 className="w-3.5 h-3.5" />
-        <span className="hidden sm:block">Press Escape to close</span>
+      {/* ── Sticky top bar — always visible, never scrolls away ───────────────── */}
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+        {/* Left: hint */}
+        <div className="flex items-center gap-1.5 text-white/25 text-xs select-none">
+          <Maximize2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:block">Press Escape to close</span>
+          <span className="sm:hidden">Tap × to close</span>
+        </div>
+        {/* Right: close button — 44×44 px minimum tap target */}
+        <button
+          onClick={onClose}
+          aria-label="Close spectator QR screen"
+          className="w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-90 touch-manipulation"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.16)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+        >
+          <X className="w-5 h-5 text-white/60" />
+        </button>
       </div>
+
+      {/* ── Scrollable content ────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col items-center justify-start sm:justify-center">
 
       {/* ── Hero timer (shown when timer is active) ───────────────────────────── */}
       {showTimer && (
-        <div className="w-full flex flex-col items-center pt-16 pb-6 px-6">
+        <div className="w-full flex flex-col items-center pt-4 pb-6 px-6">
           <HeroClock snap={timerSnap!} />
           {/* Divider */}
           <div className="mt-8 w-full max-w-2xl h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
@@ -297,9 +303,7 @@ export function SpectatorQRScreen({
 
       {/* ── Main content ─────────────────────────────────────────────────────── */}
       <div
-        className={`flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 px-6 py-8 w-full max-w-5xl text-center lg:text-left ${
-          showTimer ? "" : "mt-0"
-        }`}
+        className={`flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20 px-6 py-6 pb-10 w-full max-w-5xl text-center lg:text-left`}
       >
         {/* Left column: title + live badge + instructions */}
         <div className="flex flex-col items-center lg:items-start gap-5 lg:max-w-xs">
@@ -417,10 +421,12 @@ export function SpectatorQRScreen({
       </div>
 
       {/* ── Bottom branding strip ─────────────────────────────────────────────── */}
-      <div className="absolute bottom-5 flex items-center gap-2 text-white/15 text-xs select-none">
+      <div className="flex items-center justify-center gap-2 text-white/15 text-xs select-none py-4">
         <Tv2 className="w-3.5 h-3.5" />
         <span>OTB Chess · Live Spectator View</span>
       </div>
+
+      </div>{/* end scrollable wrapper */}
     </div>
   );
 }
