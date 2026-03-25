@@ -3606,3 +3606,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UI: Club Leaderboard Monochromatic Polish
 - [x] Apply monochromatic OKLCH green/charcoal palette to ClubLeaderboard podium cards, table rows, and all surface tokens
+
+## Mobile Nav: Fix dropdown overflow and Dashboard URL
+- [x] Add max-height + overflow-y-auto to AvatarNavDropdown panel so it scrolls on small screens
+- [x] Pass dashboardUrl prop from AppNavBar to AvatarNavDropdown for correct Dashboard routing on mobile

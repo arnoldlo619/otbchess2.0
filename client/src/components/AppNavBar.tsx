@@ -115,6 +115,7 @@ export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, classNam
       <AvatarNavDropdown
         currentPage={activeTab}
         onSignInClick={onSignInClick}
+        dashboardUrl={dashboardUrl}
       />
     </div>
   );

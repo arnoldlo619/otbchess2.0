@@ -41,7 +41,7 @@ const NAV_ITEMS = [
   { name: "Clubs",     href: "/clubs",   icon: Building2 },
   { name: "Battle",    href: "/battle",  icon: Swords },
   { name: "Analyze",   href: "/record",  icon: Video },
-] as const;
+];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface RatingPoint {
@@ -57,6 +57,8 @@ interface AvatarNavDropdownProps {
   onSignInClick?: () => void;
   /** Extra class names for the outer wrapper */
   className?: string;
+  /** Smart dashboard URL (resolves to active tournament or /join). Passed from AppNavBar. */
+  dashboardUrl?: string;
 }
 
 // ─── Sparkline SVG (interactive with hover tooltip) ──────────────────────────
@@ -281,6 +283,7 @@ export function AvatarNavDropdown({
   currentPage,
   onSignInClick,
   className = "",
+  dashboardUrl,
 }: AvatarNavDropdownProps) {
   const { user, logout } = useAuthContext();
   const [open, setOpen]   = useState(false);
@@ -339,6 +342,13 @@ export function AvatarNavDropdown({
   useEffect(() => {
     if (open) fetchHistory();
   }, [open, fetchHistory]);
+
+  // Build nav items — use smart dashboardUrl if provided, else fall back to /join
+  const resolvedNavItems = NAV_ITEMS.map((item) =>
+    item.name === "Dashboard" && dashboardUrl
+      ? { ...item, href: dashboardUrl }
+      : item
+  );
 
   const isActive = (item: (typeof NAV_ITEMS)[number]) => {
     if (currentPage) return item.name === currentPage;
@@ -409,13 +419,16 @@ export function AvatarNavDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="absolute right-0 top-full mt-2 z-[9999] w-56 rounded-2xl overflow-hidden shadow-2xl"
+            className="absolute right-0 top-full mt-2 z-[9999] w-64 rounded-2xl shadow-2xl"
             style={{
               background: "oklch(0.17 0.06 145 / 0.97)",
               border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
               boxShadow: `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)`,
+              maxHeight: "calc(100dvh - 5rem)",
+              overflowY: "auto",
+              overflowX: "hidden",
             }}
           >
             {/* ── User identity header (when logged in) ── */}
@@ -546,7 +559,7 @@ export function AvatarNavDropdown({
               <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">
                 Navigate
               </p>
-              {NAV_ITEMS.map((item) => {
+              {resolvedNavItems.map((item) => {
                 const active = isActive(item);
                 return (
                   <Link key={item.name} href={item.href}>
