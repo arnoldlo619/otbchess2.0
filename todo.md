@@ -3631,3 +3631,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Standings: add streak column, top-3 highlight, movement indicator
 - [ ] Schedule: highlight user's own matches, label upcoming/completed
 - [ ] UI polish pass: spacing, typography, mobile responsiveness
+
+## FCL: Commissioner Advance Week button
+- [ ] Add POST /api/leagues/:leagueId/advance-week endpoint (commissioner-only)
+- [ ] Add Advance Week button to Matchups tab in LeagueDashboard (only when all current-week matches are reported or commissioner forces it)

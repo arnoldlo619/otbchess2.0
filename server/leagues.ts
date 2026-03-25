@@ -567,3 +567,65 @@ leaguesRouter.patch("/:leagueId/matches/:matchId/result", async (req: Request, r
     res.status(500).json({ error: "Failed to override result" });
   }
 });
+
+// ── POST /:leagueId/advance-week ─────────────────────────────────────────────
+// Commissioner-only: close the current week and advance currentWeek by 1.
+leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response) => {
+  try {
+    const userId = getUser(req, res);
+    if (!userId) return;
+
+    const db = await getDb();
+
+    const league = await db
+      .select()
+      .from(leagues)
+      .where(eq(leagues.id, req.params.leagueId))
+      .limit(1);
+    if (!league.length) return res.status(404).json({ error: "League not found" });
+
+    if (league[0].commissionerId !== userId) {
+      return res.status(403).json({ error: "Only the commissioner can advance the week" });
+    }
+
+    if (league[0].status !== "active") {
+      return res.status(400).json({ error: "League is not active" });
+    }
+
+    const currentWeek = league[0].currentWeek ?? 1;
+    const totalWeeks = league[0].totalWeeks ?? 1;
+
+    if (currentWeek >= totalWeeks) {
+      return res.status(400).json({ error: "Already on the final week" });
+    }
+
+    // Mark the current week as complete
+    const weekRow = await db
+      .select()
+      .from(leagueWeeks)
+      .where(and(eq(leagueWeeks.leagueId, req.params.leagueId), eq(leagueWeeks.weekNumber, currentWeek)))
+      .limit(1);
+
+    if (weekRow.length) {
+      await db
+        .update(leagueWeeks)
+        .set({ isComplete: 1 })
+        .where(eq(leagueWeeks.id, weekRow[0].id));
+    }
+
+    // Advance currentWeek
+    const nextWeek = currentWeek + 1;
+    await db
+      .update(leagues)
+      .set({ currentWeek: nextWeek })
+      .where(eq(leagues.id, req.params.leagueId));
+
+    // Recalculate standings after the week closes
+    await recalculateStandings(req.params.leagueId);
+
+    res.json({ success: true, newWeek: nextWeek });
+  } catch (err) {
+    console.error("[leagues] POST advance-week error:", err);
+    res.status(500).json({ error: "Failed to advance week" });
+  }
+});

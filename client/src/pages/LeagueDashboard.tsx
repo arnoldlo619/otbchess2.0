@@ -231,6 +231,7 @@ export default function LeagueDashboard() {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [advancingWeek, setAdvancingWeek] = useState(false);
 
   // Colour tokens
   const pageBg = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
@@ -285,7 +286,36 @@ export default function LeagueDashboard() {
     }
   }
 
+  async function handleAdvanceWeek() {
+    if (!leagueId || !league) return;
+    const allCurrentWeekReported = weeks
+      .find((w) => w.weekNumber === league.currentWeek)
+      ?.matches.every((m) => m.resultStatus === "completed") ?? false;
+    const confirmed = allCurrentWeekReported
+      ? true
+      : window.confirm(
+          `Not all Week ${league.currentWeek} matches have been reported. Advance anyway? Unreported matches will be left as pending.`
+        );
+    if (!confirmed) return;
+    setAdvancingWeek(true);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/advance-week`, { method: "POST" });
+      if (res.ok) {
+        const d = await res.json();
+        showToast(`Advanced to Week ${d.newWeek}!`);
+        await fetchAll();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        showToast(d.error ?? "Failed to advance week", "error");
+      }
+    } finally {
+      setAdvancingWeek(false);
+    }
+  }
+
   // ── Derived values ───────────────────────────────────────────────────────
+  const isCommissioner = !!(user && league && league.commissionerId === user.id);
+
   function resultLabel(match: LeagueMatch) {
     if (match.resultStatus !== "completed" || !match.result) return null;
     if (match.result === "white_win") return `${match.playerWhiteName} won`;
@@ -850,6 +880,40 @@ export default function LeagueDashboard() {
                 })
               )}
             </div>
+
+            {/* Commissioner: Advance Week button */}
+            {isCommissioner && league.status === "active" && league.currentWeek < league.totalWeeks && selectedWeek === league.currentWeek && (
+              <div
+                className="rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                style={{ background: isDark ? "oklch(0.22 0.07 145)" : "#f0fdf4", border: `1.5px solid ${accent}44` }}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold flex items-center gap-1.5" style={{ color: textMain }}>
+                    <Crown size={14} style={{ color: accent }} />
+                    Commissioner Controls
+                  </span>
+                  <span className="text-xs" style={{ color: textMuted }}>
+                    {weeks.find(w => w.weekNumber === league.currentWeek)?.matches.every(m => m.resultStatus === "completed")
+                      ? `All Week ${league.currentWeek} results reported — ready to advance.`
+                      : `${currentWeekMatches.filter(m => m.resultStatus === "completed").length}/${currentWeekMatches.length} matches reported in Week ${league.currentWeek}.`
+                    }
+                  </span>
+                </div>
+                <button
+                  onClick={handleAdvanceWeek}
+                  disabled={advancingWeek}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
+                  style={{ background: accent, color: "#fff" }}
+                >
+                  {advancingWeek ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  ) : (
+                    <ChevronRight size={15} />
+                  )}
+                  Close Week & Advance
+                </button>
+              </div>
+            )}
           </>
         )}
 
