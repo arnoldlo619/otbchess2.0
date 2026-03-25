@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Copy, Check, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,6 +30,10 @@ export function AnnounceModal({
   code,
 }: AnnounceModalProps) {
   const [codeCopied, setCodeCopied] = useState(false);
+
+  // Keep the screen awake while the QR code is displayed so it doesn't dim
+  // on the director's device. Silently no-ops on unsupported browsers.
+  useWakeLock(open);
 
   // Close on Escape key
   useEffect(() => {

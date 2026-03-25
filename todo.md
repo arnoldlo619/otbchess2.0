@@ -3592,3 +3592,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Bug: QR Projection Close Button Hidden on Mobile
 - [x] Fix AnnounceModal close button always visible on mobile (sticky top bar)
 - [x] Fix SpectatorQRScreen close button always visible on mobile (sticky top bar)
+
+## Feature: Screen Wake Lock on QR Projection Screens
+- [x] Create useWakeLock hook with graceful fallback for unsupported browsers
+- [x] Integrate useWakeLock into AnnounceModal (Join QR)
+- [x] Integrate useWakeLock into SpectatorQRScreen (Spectator QR)

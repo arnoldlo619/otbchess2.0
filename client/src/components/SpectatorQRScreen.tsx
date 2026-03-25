@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState, useRef } from "react";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { QRCodeSVG } from "qrcode.react";
 import { X, Maximize2, Copy, Check, Tv2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -201,6 +202,10 @@ export function SpectatorQRScreen({
 }: SpectatorQRScreenProps) {
   const [copied, setCopied] = useState(false);
   const [timerSnap, setTimerSnap] = useState<TimerSnap | null>(null);
+
+  // Keep the screen awake while the QR code is displayed so it doesn't dim
+  // on the director's device. Silently no-ops on unsupported browsers.
+  useWakeLock(open);
   const esRef = useRef<EventSource | null>(null);
 
   // ── Keyboard / scroll lock ──────────────────────────────────────────────────
