@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE league_standings ADD COLUMN streak VARCHAR(20) DEFAULT '' NOT NULL; ALTER TABLE league_standings ADD COLUMN movement VARCHAR(10) DEFAULT 'same' NOT NULL; ALTER TABLE league_standings ADD COLUMN last_results TEXT DEFAULT '[]' NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute ALTER TABLE league_standings ADD COLUMN streak VARCHAR(20) DEFAULT '' NOT NULL; ALTER TABLE league_standings ADD COLUMN movement VARCHAR(10) DEFAULT 'same' NOT NULL; ALTER TABLE league_standings ADD COLUMN last_results TEXT DEFAULT '[]' NOT NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1101 (42000) at line 1: BLOB/TEXT/JSON column 'last_results' can't have a default value"
+  ]
+}

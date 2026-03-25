@@ -3620,3 +3620,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Build LeagueDashboard page with Overview/Matchups/Standings/Schedule tabs
 - [ ] Wire result reporting modal and standings recalculation
 - [ ] Add routes to App.tsx
+
+## FCL Phase 2 Refinement
+- [ ] Server: add streak, movement, lastResults to standings endpoint
+- [ ] Server: add GET /:leagueId/recent-results endpoint
+- [ ] Dashboard: add "Your Match This Week" primary module
+- [ ] Dashboard: add "Next Opponent Preview" module
+- [ ] Dashboard: add week transition banner (Week X Complete)
+- [ ] Dashboard: add Recent Results module
+- [ ] Standings: add streak column, top-3 highlight, movement indicator
+- [ ] Schedule: highlight user's own matches, label upcoming/completed
+- [ ] UI polish pass: spacing, typography, mobile responsiveness

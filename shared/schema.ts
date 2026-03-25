@@ -715,6 +715,9 @@ export const leagueStandings = mysqlTable('league_standings', {
   draws: int('draws').notNull().default(0),
   points: float('points').notNull().default(0),
   rank: int('rank').notNull().default(0),
+  streak: varchar('streak', { length: 20 }).notNull().default(''),
+  movement: varchar('movement', { length: 10 }).notNull().default('same'),
+  lastResults: varchar('last_results', { length: 100 }).notNull().default(''),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 }, (t) => ({ leagueIdx: index('ls_league_idx').on(t.leagueId), uniqueStanding: index('ls_lp_idx').on(t.leagueId, t.playerId) }));
 export type LeagueStandingRow = typeof leagueStandings.$inferSelect;

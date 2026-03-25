@@ -96,30 +96,39 @@ async function recalculateStandings(leagueId: string): Promise<void> {
     .where(eq(leaguePlayers.leagueId, leagueId));
 
   // Build stats map
-  const stats: Record<string, { wins: number; losses: number; draws: number; points: number }> = {};
+  const stats: Record<string, { wins: number; losses: number; draws: number; points: number; lastResults: string[] }> = {};
   for (const p of players) {
-    stats[p.playerId] = { wins: 0, losses: 0, draws: 0, points: 0 };
+    stats[p.playerId] = { wins: 0, losses: 0, draws: 0, points: 0, lastResults: [] };
   }
+
+  // Sort completed matches by weekNumber ascending so lastResults is chronological
+  completedMatches.sort((a, b) => a.weekNumber - b.weekNumber);
 
   for (const match of completedMatches) {
     const w = match.playerWhiteId;
     const b = match.playerBlackId;
-    if (!stats[w]) stats[w] = { wins: 0, losses: 0, draws: 0, points: 0 };
-    if (!stats[b]) stats[b] = { wins: 0, losses: 0, draws: 0, points: 0 };
+    if (!stats[w]) stats[w] = { wins: 0, losses: 0, draws: 0, points: 0, lastResults: [] };
+    if (!stats[b]) stats[b] = { wins: 0, losses: 0, draws: 0, points: 0, lastResults: [] };
 
     if (match.result === "white_win") {
       stats[w].wins++;
       stats[w].points += 1;
+      stats[w].lastResults.push("W");
       stats[b].losses++;
+      stats[b].lastResults.push("L");
     } else if (match.result === "black_win") {
       stats[b].wins++;
       stats[b].points += 1;
+      stats[b].lastResults.push("W");
       stats[w].losses++;
+      stats[w].lastResults.push("L");
     } else if (match.result === "draw") {
       stats[w].draws++;
       stats[w].points += 0.5;
+      stats[w].lastResults.push("D");
       stats[b].draws++;
       stats[b].points += 0.5;
+      stats[b].lastResults.push("D");
     }
   }
 
@@ -144,10 +153,29 @@ async function recalculateStandings(leagueId: string): Promise<void> {
       .where(and(eq(leagueStandings.leagueId, leagueId), eq(leagueStandings.playerId, p.playerId)))
       .limit(1);
 
+    // Compute streak from lastResults (last 5)
+    const last5 = s.lastResults.slice(-5);
+    let streak = "";
+    if (last5.length > 0) {
+      // Build streak string e.g. "W-W-L"
+      streak = last5.join("-");
+    }
+    // Movement: compare new rank to previous rank (stored in DB)
+    let movement: "up" | "down" | "same" = "same";
+    if (existing.length > 0) {
+      const prevRank = existing[0].rank;
+      if (i + 1 < prevRank) movement = "up";
+      else if (i + 1 > prevRank) movement = "down";
+    }
+
     if (existing.length > 0) {
       await db
         .update(leagueStandings)
-        .set({ wins: s.wins, losses: s.losses, draws: s.draws, points: s.points, rank: i + 1, displayName: p.displayName, avatarUrl: p.avatarUrl ?? undefined })
+        .set({
+          wins: s.wins, losses: s.losses, draws: s.draws, points: s.points,
+          rank: i + 1, displayName: p.displayName, avatarUrl: p.avatarUrl ?? undefined,
+          streak, movement, lastResults: JSON.stringify(s.lastResults.slice(-5)),
+        })
         .where(and(eq(leagueStandings.leagueId, leagueId), eq(leagueStandings.playerId, p.playerId)));
     } else {
       await db.insert(leagueStandings).values({
@@ -160,6 +188,9 @@ async function recalculateStandings(leagueId: string): Promise<void> {
         draws: s.draws,
         points: s.points,
         rank: i + 1,
+        streak,
+        movement,
+        lastResults: JSON.stringify(s.lastResults.slice(-5)),
       });
     }
   }
