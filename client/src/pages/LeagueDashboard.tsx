@@ -302,7 +302,11 @@ export default function LeagueDashboard() {
       const res = await fetch(`/api/leagues/${leagueId}/advance-week`, { method: "POST" });
       if (res.ok) {
         const d = await res.json();
-        showToast(`Advanced to Week ${d.newWeek}!`);
+        if (d.completed) {
+          showToast(d.champion ? `🏆 Season complete! ${d.champion.displayName} is the champion!` : "Season complete!");
+        } else {
+          showToast(`Advanced to Week ${d.newWeek}!`);
+        }
         await fetchAll();
       } else {
         const d = await res.json().catch(() => ({}));
@@ -461,6 +465,46 @@ export default function LeagueDashboard() {
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
+            {/* Champion announcement banner */}
+            {league.status === "completed" && (() => {
+              const champion = standings[0];
+              return (
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, oklch(0.22 0.09 85), oklch(0.18 0.06 145))`, border: `1.5px solid oklch(0.7 0.18 85 / 0.5)` }}
+                >
+                  <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
+                    <Trophy size={14} style={{ color: "oklch(0.82 0.18 85)" }} />
+                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "oklch(0.82 0.18 85)" }}>
+                      Season Complete
+                    </span>
+                  </div>
+                  <div className="px-4 py-5 flex flex-col items-center gap-3 text-center">
+                    {champion && (
+                      <>
+                        <Avatar url={champion.avatarUrl} name={champion.displayName} size={16} ring />
+                        <div>
+                          <p className="text-lg font-bold" style={{ color: "oklch(0.82 0.18 85)" }}>{champion.displayName}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "oklch(0.82 0.18 85 / 0.7)" }}>
+                            {champion.points} pts · {champion.wins}W {champion.draws}D {champion.losses}L
+                          </p>
+                        </div>
+                        <div
+                          className="px-3 py-1 rounded-full text-xs font-bold"
+                          style={{ background: "oklch(0.82 0.18 85 / 0.18)", color: "oklch(0.82 0.18 85)" }}
+                        >
+                          League Champion
+                        </div>
+                      </>
+                    )}
+                    {!champion && (
+                      <p className="text-sm font-medium" style={{ color: "oklch(0.82 0.18 85)" }}>Season has concluded</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Week-complete transition banner */}
             {league.status === "active" && league.currentWeek > 1 && (() => {
               const prevWeek = weeks.find((w) => w.weekNumber === league.currentWeek - 1);

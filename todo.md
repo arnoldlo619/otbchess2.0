@@ -3635,3 +3635,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## FCL: Commissioner Advance Week button
 - [ ] Add POST /api/leagues/:leagueId/advance-week endpoint (commissioner-only)
 - [ ] Add Advance Week button to Matchups tab in LeagueDashboard (only when all current-week matches are reported or commissioner forces it)
+
+## League Final Week Auto-Completion
+- [x] Server: auto-set league status to "completed" when advancing past final week
+- [x] Client: champion announcement banner on Overview tab for completed leagues

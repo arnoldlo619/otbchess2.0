@@ -595,10 +595,6 @@ leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response
     const currentWeek = league[0].currentWeek ?? 1;
     const totalWeeks = league[0].totalWeeks ?? 1;
 
-    if (currentWeek >= totalWeeks) {
-      return res.status(400).json({ error: "Already on the final week" });
-    }
-
     // Mark the current week as complete
     const weekRow = await db
       .select()
@@ -613,15 +609,38 @@ leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response
         .where(eq(leagueWeeks.id, weekRow[0].id));
     }
 
+    // Recalculate standings after the week closes
+    await recalculateStandings(req.params.leagueId);
+
+    // If this was the final week, mark the league as completed
+    if (currentWeek >= totalWeeks) {
+      await db
+        .update(leagues)
+        .set({ status: "completed" })
+        .where(eq(leagues.id, req.params.leagueId));
+
+      // Determine champion (rank 1 standing)
+      const topStanding = await db
+        .select()
+        .from(leagueStandings)
+        .where(eq(leagueStandings.leagueId, req.params.leagueId))
+        .orderBy(leagueStandings.rank)
+        .limit(1);
+
+      const champion = topStanding.length ? topStanding[0] : null;
+      return res.json({
+        success: true,
+        completed: true,
+        champion: champion ? { playerId: champion.playerId, displayName: champion.displayName, points: champion.points } : null,
+      });
+    }
+
     // Advance currentWeek
     const nextWeek = currentWeek + 1;
     await db
       .update(leagues)
       .set({ currentWeek: nextWeek })
       .where(eq(leagues.id, req.params.leagueId));
-
-    // Recalculate standings after the week closes
-    await recalculateStandings(req.params.leagueId);
 
     res.json({ success: true, newWeek: nextWeek });
   } catch (err) {
