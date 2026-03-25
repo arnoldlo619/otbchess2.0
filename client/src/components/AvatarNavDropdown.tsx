@@ -562,45 +562,45 @@ export function AvatarNavDropdown({
               {resolvedNavItems.map((item) => {
                 const active = isActive(item);
                 return (
-                  <Link key={item.name} href={item.href}>
-                    <a
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-                      style={
-                        active
-                          ? {
-                              background: `${OTB_GREEN_GLOW}0.22)`,
-                              border: `1px solid ${OTB_GREEN_GLOW}0.28)`,
-                              color: "#fff",
-                            }
-                          : {
-                              color: "rgba(255,255,255,0.65)",
-                              border: "1px solid transparent",
-                            }
-                      }
-                      onMouseEnter={(e) => {
-                        if (!active)
-                          (e.currentTarget as HTMLElement).style.background =
-                            "rgba(255,255,255,0.07)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active)
-                          (e.currentTarget as HTMLElement).style.background = "transparent";
-                      }}
-                    >
-                      <item.icon
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: active ? OTB_GREEN : undefined }}
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                    style={
+                      active
+                        ? {
+                            background: `${OTB_GREEN_GLOW}0.22)`,
+                            border: `1px solid ${OTB_GREEN_GLOW}0.28)`,
+                            color: "#fff",
+                          }
+                        : {
+                            color: "rgba(255,255,255,0.65)",
+                            border: "1px solid transparent",
+                          }
+                    }
+                    onMouseEnter={(e) => {
+                      if (!active)
+                        (e.currentTarget as HTMLElement).style.background =
+                          "rgba(255,255,255,0.07)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active)
+                        (e.currentTarget as HTMLElement).style.background = "transparent";
+                    }}
+                  >
+                    <item.icon
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: active ? OTB_GREEN : undefined }}
+                    />
+                    <span>{item.name}</span>
+                    {active && (
+                      <motion.div
+                        layoutId="avatar-dropdown-dot"
+                        className="ml-auto w-1.5 h-1.5 rounded-full"
+                        style={{ background: OTB_GREEN }}
                       />
-                      <span>{item.name}</span>
-                      {active && (
-                        <motion.div
-                          layoutId="avatar-dropdown-dot"
-                          className="ml-auto w-1.5 h-1.5 rounded-full"
-                          style={{ background: OTB_GREEN }}
-                        />
-                      )}
-                    </a>
+                    )}
                   </Link>
                 );
               })}
@@ -615,22 +615,21 @@ export function AvatarNavDropdown({
             {/* ── Section: User actions ── */}
             <div className="px-2 pb-2">
               {user && !user.isGuest && (
-                <Link href="/profile">
-                  <a
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
-                    style={{ border: "1px solid transparent" }}
-                    onMouseEnter={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background =
-                        "rgba(255,255,255,0.07)")
-                    }
-                    onMouseLeave={(e) =>
-                      ((e.currentTarget as HTMLElement).style.background = "transparent")
-                    }
-                  >
-                    <Crown className="w-4 h-4 flex-shrink-0" />
-                    <span>My Profile</span>
-                  </a>
+                <Link
+                  href="/profile"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                  style={{ border: "1px solid transparent" }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.07)")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background = "transparent")
+                  }
+                >
+                  <Crown className="w-4 h-4 flex-shrink-0" />
+                  <span>My Profile</span>
                 </Link>
               )}
 
