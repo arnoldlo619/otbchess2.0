@@ -206,6 +206,8 @@ export function validateGuestName(name: string): string | undefined {
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called immediately after a successful sign-in, sign-up, or guest login (before modal closes). */
+  onSuccess?: () => void;
   isDark?: boolean;
   initialTab?: Tab;
 }
@@ -213,6 +215,7 @@ interface AuthModalProps {
 export default function AuthModal({
   isOpen,
   onClose,
+  onSuccess,
   isDark = false,
   initialTab = "signin",
 }: AuthModalProps) {
@@ -293,6 +296,7 @@ export default function AuthModal({
     try {
       await login(siEmail, siPassword, siRemember);
       setSuccess(true);
+      onSuccess?.();
       setTimeout(onClose, 1200);
     } catch (err) {
       setSiErrors({ general: (err as Error).message });
@@ -314,6 +318,7 @@ export default function AuthModal({
     try {
       await register(suEmail, suPassword, suName, suChesscom || undefined);
       setSuccess(true);
+      onSuccess?.();
       setTimeout(onClose, 1200);
     } catch (err) {
       setSuErrors({ general: (err as Error).message });
@@ -331,6 +336,7 @@ export default function AuthModal({
     try {
       await loginAsGuest(guestName.trim());
       setSuccess(true);
+      onSuccess?.();
       setTimeout(onClose, 1200);
     } catch (err) {
       setGuestError((err as Error).message);

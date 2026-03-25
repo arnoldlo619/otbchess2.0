@@ -255,19 +255,37 @@ export default function Battle() {
   const [polling, setPolling] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
-  // ── Join-code preservation across guest → account upgrade ──────────────────
-  // When a guest opens the AuthModal while a join code is entered, we stash the
-  // code in sessionStorage so AuthModal can restore it after registration.
-  const PENDING_JOIN_KEY = "otb_pending_join_code";
+   // ── Join-code + battle URL preservation across guest → account upgrade ───────
+  // When a user opens AuthModal while a join code is entered (or from a QR scan),
+  // we stash both the join code and the full battle URL in sessionStorage so that:
+  //   1. The join code is restored after registration (same-page flow)
+  //   2. If the user was redirected away, the URL is restored after signup
+  const PENDING_JOIN_KEY   = "otb_pending_join_code";
+  const PENDING_BATTLE_URL = "otb_pending_battle_url";
 
   function openAuthForUpgrade() {
-    if (joinCode.trim()) {
-      sessionStorage.setItem(PENDING_JOIN_KEY, joinCode.trim());
+    const code = joinCode.trim();
+    if (code) {
+      sessionStorage.setItem(PENDING_JOIN_KEY, code);
+      sessionStorage.setItem(
+        PENDING_BATTLE_URL,
+        `${window.location.origin}/battle?join=${code}`
+      );
     }
     setAuthOpen(true);
   }
 
-  // After AuthModal closes (successful registration), restore the stashed code.
+  // Called immediately after successful auth (before modal closes).
+  // If a battle join URL was stashed, redirect back to it so the sync starts.
+  function handleAuthSuccess() {
+    const pendingUrl = sessionStorage.getItem(PENDING_BATTLE_URL);
+    if (pendingUrl) {
+      sessionStorage.removeItem(PENDING_BATTLE_URL);
+      window.location.replace(pendingUrl);
+    }
+  }
+
+  // After AuthModal closes, restore the stashed join code (same-page flow fallback)
   function handleAuthClose() {
     setAuthOpen(false);
     const pending = sessionStorage.getItem(PENDING_JOIN_KEY);
@@ -415,12 +433,20 @@ export default function Battle() {
   ];
 
   // Auto-populate join code from QR scan URL param (?join=CODE)
+  // Also persist the full battle join URL to sessionStorage so it survives a
+  // page reload during the auth flow (e.g. new user creates account from QR scan).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("join");
     if (code) {
-      setJoinCode(code.toUpperCase());
+      const upper = code.toUpperCase();
+      setJoinCode(upper);
       setScreen("join_enter_code");
+      sessionStorage.setItem("otb_pending_join_code", upper);
+      sessionStorage.setItem(
+        "otb_pending_battle_url",
+        `${window.location.origin}/battle?join=${upper}`
+      );
     }
   }, []);
 
@@ -1627,7 +1653,7 @@ export default function Battle() {
       </main>
 
       {/* Auth modal — opened when unauthenticated user clicks sign-in prompt */}
-      <AuthModal isOpen={authOpen} onClose={handleAuthClose} isDark />
+      <AuthModal isOpen={authOpen} onClose={handleAuthClose} onSuccess={handleAuthSuccess} isDark />
     </div>
   );
 }
