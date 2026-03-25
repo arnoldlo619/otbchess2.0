@@ -660,7 +660,12 @@ export default function ClubProfile() {
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed" | "leagues">("about");
+  const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number }>>([]);
+  const [leaguesLoading, setLeaguesLoading] = useState(false);
+  const [showCreateLeague, setShowCreateLeague] = useState(false);
+  const [leagueForm, setLeagueForm] = useState({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
+  const [creatingLeague, setCreatingLeague] = useState(false);
   const [joining, setJoining] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
@@ -742,6 +747,19 @@ export default function ClubProfile() {
     }, 30_000);
     return () => clearInterval(timer);
   }, [clubId]);
+
+  // Fetch leagues when the leagues tab is opened
+  useEffect(() => {
+    if (activeTab !== "leagues" || !clubId) return;
+    setLeaguesLoading(true);
+    fetch(`/api/leagues?clubId=${encodeURIComponent(clubId)}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number }>) => {
+        setClubLeagues(data);
+      })
+      .catch(() => {})
+      .finally(() => setLeaguesLoading(false));
+  }, [activeTab, clubId]);
 
   if (!club) {
     return (
@@ -1146,7 +1164,7 @@ export default function ClubProfile() {
       {/* ── Tab navigation ──────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
         <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-white/5" : "bg-black/5"}`}>
-          {(["about", "events", "feed", "members", "tournaments"] as const).map((tab) => (
+          {(["about", "events", "feed", "members", "tournaments", "leagues"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1173,6 +1191,11 @@ export default function ClubProfile() {
               {tab === "tournaments" && (
                 <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
                   {tournaments.length + liveTournaments.length}
+                </span>
+              )}
+              {tab === "leagues" && clubLeagues.length > 0 && (
+                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
+                  {clubLeagues.length}
                 </span>
               )}
             </button>
@@ -1497,6 +1520,165 @@ export default function ClubProfile() {
                     The club owner hasn't hosted any tournaments yet.
                   </p>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Leagues tab ──────────────────────────────────────────────────── */}
+        {activeTab === "leagues" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Commissioner CTA */}
+            {isOwner && (
+              <button
+                onClick={() => setShowCreateLeague(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border-2 border-dashed border-[#3D6B47]/40 text-sm font-semibold transition-all hover:border-[#3D6B47] hover:bg-[#3D6B47]/8 group"
+              >
+                <PlusCircle className={`w-4 h-4 transition-colors ${isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}`} />
+                <span className={isDark ? "text-[#4CAF50] group-hover:text-[#66BB6A]" : "text-[#3D6B47] group-hover:text-[#2d5236]"}>
+                  Create a League for {club.name}
+                </span>
+              </button>
+            )}
+
+            {/* Create league form */}
+            {showCreateLeague && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 space-y-4`}>
+                <h3 className={`text-sm font-semibold ${textMain}`}>New League</h3>
+                <div>
+                  <label className={`text-xs font-medium block mb-1 ${textMuted}`}>League Name *</label>
+                  <input
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
+                    placeholder="e.g. Spring 2026 League"
+                    value={leagueForm.name}
+                    onChange={(e) => setLeagueForm((f) => ({ ...f, name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className={`text-xs font-medium block mb-1 ${textMuted}`}>Description (optional)</label>
+                  <textarea
+                    rows={2}
+                    className={`w-full rounded-xl px-4 py-2.5 text-sm border outline-none focus:ring-2 focus:ring-[#4CAF50]/40 resize-none ${isDark ? "bg-white/5 border-white/10 text-white placeholder-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
+                    placeholder="Brief description…"
+                    value={leagueForm.description}
+                    onChange={(e) => setLeagueForm((f) => ({ ...f, description: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`text-xs font-medium block mb-1 ${textMuted}`}>Max Players</label>
+                    <select
+                      className={`w-full rounded-xl px-3 py-2.5 text-sm border outline-none ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                      value={leagueForm.maxPlayers}
+                      onChange={(e) => setLeagueForm((f) => ({ ...f, maxPlayers: Number(e.target.value) }))}
+                    >
+                      {[4, 6, 8, 10, 12, 16].map((n) => <option key={n} value={n}>{n} players</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`text-xs font-medium block mb-1 ${textMuted}`}>Season Length</label>
+                    <select
+                      className={`w-full rounded-xl px-3 py-2.5 text-sm border outline-none ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"}`}
+                      value={leagueForm.totalWeeks}
+                      onChange={(e) => setLeagueForm((f) => ({ ...f, totalWeeks: Number(e.target.value) }))}
+                    >
+                      {[4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((n) => <option key={n} value={n}>{n} weeks</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setShowCreateLeague(false); setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 }); }}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={!leagueForm.name.trim() || creatingLeague}
+                    onClick={async () => {
+                      if (!leagueForm.name.trim() || !club) return;
+                      setCreatingLeague(true);
+                      try {
+                        const res = await fetch("/api/leagues", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            clubId: club.id,
+                            name: leagueForm.name.trim(),
+                            description: leagueForm.description.trim() || null,
+                            maxPlayers: leagueForm.maxPlayers,
+                            totalWeeks: leagueForm.totalWeeks,
+                          }),
+                        });
+                        if (res.ok) {
+                          const created = await res.json();
+                          setClubLeagues((prev) => [{ id: created.id, name: created.name, status: created.status, currentWeek: created.currentWeek, totalWeeks: created.totalWeeks, playerCount: 0 }, ...prev]);
+                          setShowCreateLeague(false);
+                          setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
+                          toast.success(`League "${created.name}" created!`);
+                          navigate(`/leagues/${created.id}`);
+                        } else {
+                          const d = await res.json().catch(() => ({}));
+                          toast.error(d.error ?? "Failed to create league");
+                        }
+                      } finally {
+                        setCreatingLeague(false);
+                      }
+                    }}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
+                    style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
+                  >
+                    {creatingLeague ? "Creating…" : "Create League"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* League list */}
+            {leaguesLoading ? (
+              <div className={`rounded-3xl border ${cardBorder} ${card} py-12 flex items-center justify-center`}>
+                <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "oklch(0.55 0.13 145) transparent oklch(0.55 0.13 145) oklch(0.55 0.13 145)" }} />
+              </div>
+            ) : clubLeagues.length === 0 && !showCreateLeague ? (
+              <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
+                <Trophy className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
+                <p className={`text-sm font-semibold ${textMain} mb-1`}>No leagues yet</p>
+                {isOwner ? (
+                  <p className={`text-xs ${textMuted}`}>Use the button above to create your first league.</p>
+                ) : (
+                  <p className={`text-xs ${textMuted}`}>The club owner hasn't created any leagues yet.</p>
+                )}
+              </div>
+            ) : (
+              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                  {clubLeagues.map((lg) => (
+                    <button
+                      key={lg.id}
+                      onClick={() => navigate(`/leagues/${lg.id}`)}
+                      className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                    >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/15" : "bg-green-50"}`}>
+                        <Trophy className="w-4 h-4 text-[#4CAF50]" strokeWidth={1.8} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</p>
+                        <p className={`text-xs ${textMuted}`}>
+                          Week {lg.currentWeek}/{lg.totalWeeks} &middot; {lg.playerCount} players
+                        </p>
+                      </div>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+                        style={{
+                          background: lg.status === "active" ? "oklch(0.55 0.13 145 / 0.15)" : isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6",
+                          color: lg.status === "active" ? "oklch(0.55 0.13 145)" : isDark ? "rgba(255,255,255,0.4)" : "#6b7280",
+                        }}
+                      >
+                        {lg.status === "active" ? "Active" : lg.status === "completed" ? "Complete" : "Draft"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

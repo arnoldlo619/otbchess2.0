@@ -15,6 +15,7 @@ import clubMessagingRouter from "./clubMessaging.js";
 import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
 import clubBattlesRouter from "./clubBattles.js";
 import { clubsRouter } from "./clubs.js";
+import { leaguesRouter } from "./leagues.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -312,6 +313,7 @@ export function createApp() {
 
   // ── Clubs API (Discover, Create, Join, Members) ─────────────────────────────
   app.use("/api/clubs", clubsRouter);
+  app.use("/api/leagues", leaguesRouter);
 
   // ── Club Messaging (DMs + turn-based chess) ───────────────────────────────
   app.use("/api/clubs/:clubId/conversations", clubMessagingRouter);

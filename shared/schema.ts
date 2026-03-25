@@ -643,3 +643,79 @@ export const dbClubMembers = mysqlTable(
 );
 export type DbClubMemberRow = typeof dbClubMembers.$inferSelect;
 export type NewDbClubMemberRow = typeof dbClubMembers.$inferInsert;
+
+// Fantasy Chess League Tables
+export const leagues = mysqlTable('leagues', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  clubId: varchar('club_id', { length: 64 }).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  commissionerId: varchar('commissioner_id', { length: 64 }).notNull(),
+  commissionerName: varchar('commissioner_name', { length: 100 }).notNull().default(''),
+  formatType: varchar('format_type', { length: 30 }).notNull().default('round_robin'),
+  maxPlayers: int('max_players').notNull(),
+  currentWeek: int('current_week').notNull().default(1),
+  totalWeeks: int('total_weeks').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+}, (t) => ({ clubIdx: index('lg_club_idx').on(t.clubId), commIdx: index('lg_comm_idx').on(t.commissionerId) }));
+export type LeagueRow = typeof leagues.$inferSelect;
+export type NewLeagueRow = typeof leagues.$inferInsert;
+
+export const leaguePlayers = mysqlTable('league_players', {
+  id: int('id').primaryKey().autoincrement(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  playerId: varchar('player_id', { length: 64 }).notNull(),
+  displayName: varchar('display_name', { length: 100 }).notNull().default(''),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  chesscomUsername: varchar('chesscom_username', { length: 50 }),
+  rating: int('rating'),
+  joinedAt: timestamp('joined_at').defaultNow().notNull(),
+}, (t) => ({ leagueIdx: index('lp_league_idx').on(t.leagueId), uniquePlayer: index('lp_lp_idx').on(t.leagueId, t.playerId) }));
+export type LeaguePlayerRow = typeof leaguePlayers.$inferSelect;
+export type NewLeaguePlayerRow = typeof leaguePlayers.$inferInsert;
+
+export const leagueWeeks = mysqlTable('league_weeks', {
+  id: int('id').primaryKey().autoincrement(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  weekNumber: int('week_number').notNull(),
+  publishedAt: timestamp('published_at'),
+  isComplete: tinyint('is_complete').notNull().default(0),
+}, (t) => ({ leagueIdx: index('lw_league_idx').on(t.leagueId) }));
+export type LeagueWeekRow = typeof leagueWeeks.$inferSelect;
+export type NewLeagueWeekRow = typeof leagueWeeks.$inferInsert;
+
+export const leagueMatches = mysqlTable('league_matches', {
+  id: int('id').primaryKey().autoincrement(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  weekId: int('week_id').notNull(),
+  weekNumber: int('week_number').notNull(),
+  playerWhiteId: varchar('player_white_id', { length: 64 }).notNull(),
+  playerWhiteName: varchar('player_white_name', { length: 100 }).notNull().default(''),
+  playerBlackId: varchar('player_black_id', { length: 64 }).notNull(),
+  playerBlackName: varchar('player_black_name', { length: 100 }).notNull().default(''),
+  resultStatus: varchar('result_status', { length: 20 }).notNull().default('pending'),
+  result: varchar('result', { length: 20 }),
+  reportedByUserId: varchar('reported_by_user_id', { length: 64 }),
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => ({ leagueIdx: index('lm_league_idx').on(t.leagueId), weekIdx: index('lm_week_idx').on(t.weekId) }));
+export type LeagueMatchRow = typeof leagueMatches.$inferSelect;
+export type NewLeagueMatchRow = typeof leagueMatches.$inferInsert;
+
+export const leagueStandings = mysqlTable('league_standings', {
+  id: int('id').primaryKey().autoincrement(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  playerId: varchar('player_id', { length: 64 }).notNull(),
+  displayName: varchar('display_name', { length: 100 }).notNull().default(''),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  wins: int('wins').notNull().default(0),
+  losses: int('losses').notNull().default(0),
+  draws: int('draws').notNull().default(0),
+  points: float('points').notNull().default(0),
+  rank: int('rank').notNull().default(0),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+}, (t) => ({ leagueIdx: index('ls_league_idx').on(t.leagueId), uniqueStanding: index('ls_lp_idx').on(t.leagueId, t.playerId) }));
+export type LeagueStandingRow = typeof leagueStandings.$inferSelect;
+export type NewLeagueStandingRow = typeof leagueStandings.$inferInsert;

@@ -3610,3 +3610,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Mobile Nav: Fix dropdown overflow and Dashboard URL
 - [x] Add max-height + overflow-y-auto to AvatarNavDropdown panel so it scrolls on small screens
 - [x] Pass dashboardUrl prop from AppNavBar to AvatarNavDropdown for correct Dashboard routing on mobile
+
+## Fantasy Chess League Feature
+- [ ] Add DB schema: leagues, league_players, league_weeks, league_matches, league_standings
+- [ ] Run DB migration
+- [ ] Build server-side leagues API router
+- [ ] Add leagues tab to ClubProfile page
+- [ ] Build CreateLeagueModal component
+- [ ] Build LeagueDashboard page with Overview/Matchups/Standings/Schedule tabs
+- [ ] Wire result reporting modal and standings recalculation
+- [ ] Add routes to App.tsx
