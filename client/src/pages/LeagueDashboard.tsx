@@ -482,19 +482,50 @@ export default function LeagueDashboard() {
                   <div className="px-4 py-5 flex flex-col items-center gap-3 text-center">
                     {champion && (
                       <>
-                        <Avatar url={champion.avatarUrl} name={champion.displayName} size={16} ring />
-                        <div>
-                          <p className="text-lg font-bold" style={{ color: "oklch(0.82 0.18 85)" }}>{champion.displayName}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "oklch(0.82 0.18 85 / 0.7)" }}>
-                            {champion.points} pts · {champion.wins}W {champion.draws}D {champion.losses}L
-                          </p>
-                        </div>
-                        <div
-                          className="px-3 py-1 rounded-full text-xs font-bold"
-                          style={{ background: "oklch(0.82 0.18 85 / 0.18)", color: "oklch(0.82 0.18 85)" }}
+                        {/* Clickable champion card — links to club profile members tab */}
+                        <button
+                          className="flex flex-col items-center gap-3 group cursor-pointer"
+                          onClick={() => navigate(`/clubs/${league.clubId}?tab=members`)}
+                          title={`View ${champion.displayName}'s club profile`}
                         >
+                          <div className="relative">
+                            <Avatar url={champion.avatarUrl} name={champion.displayName} size={16} ring />
+                            {/* Trophy badge overlay */}
+                            <span
+                              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-lg"
+                              style={{ background: "oklch(0.82 0.18 85)", color: "oklch(0.18 0.06 85)" }}
+                            >
+                              🏆
+                            </span>
+                          </div>
+                          <div>
+                            <p
+                              className="text-lg font-bold group-hover:underline transition-all"
+                              style={{ color: "oklch(0.82 0.18 85)" }}
+                            >
+                              {champion.displayName}
+                            </p>
+                            <p className="text-xs mt-0.5" style={{ color: "oklch(0.82 0.18 85 / 0.7)" }}>
+                              {champion.points} pts · {champion.wins}W {champion.draws}D {champion.losses}L
+                            </p>
+                          </div>
+                        </button>
+                        {/* League Champion badge pill */}
+                        <div
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+                          style={{ background: "oklch(0.82 0.18 85 / 0.18)", color: "oklch(0.82 0.18 85)", border: "1px solid oklch(0.82 0.18 85 / 0.35)" }}
+                        >
+                          <Trophy size={11} />
                           League Champion
                         </div>
+                        {/* View profile link */}
+                        <button
+                          className="text-[11px] underline underline-offset-2 opacity-60 hover:opacity-100 transition-opacity"
+                          style={{ color: "oklch(0.82 0.18 85)" }}
+                          onClick={() => navigate(`/clubs/${league.clubId}?tab=members`)}
+                        >
+                          View on club profile →
+                        </button>
                       </>
                     )}
                     {!champion && (

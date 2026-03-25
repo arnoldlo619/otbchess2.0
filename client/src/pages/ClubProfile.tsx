@@ -656,11 +656,20 @@ export default function ClubProfile() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  // Read optional ?tab= query param for deep-linking (e.g. from League Dashboard champion banner)
+  const initialTab = (() => {
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const p = new URLSearchParams(search);
+    const t = p.get("tab");
+    const valid = ["about", "events", "members", "tournaments", "feed", "leagues"] as const;
+    return (valid as readonly string[]).includes(t ?? "") ? (t as typeof valid[number]) : "about";
+  })();
+
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed" | "leagues">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);

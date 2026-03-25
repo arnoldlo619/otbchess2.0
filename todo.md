@@ -3644,3 +3644,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] DB: add league_championships column to club_members table
 - [x] Server: write champion badge in advance-week endpoint
 - [x] Client: display trophy badge on member card in ClubProfile Members tab
+
+## League Champion Badge Deep-link
+- [x] ClubProfile: read ?tab= query param to deep-link to members tab
+- [x] LeagueDashboard: add trophy badge pill and link champion to club profile members tab
