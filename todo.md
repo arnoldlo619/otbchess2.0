@@ -3597,3 +3597,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Create useWakeLock hook with graceful fallback for unsupported browsers
 - [x] Integrate useWakeLock into AnnounceModal (Join QR)
 - [x] Integrate useWakeLock into SpectatorQRScreen (Spectator QR)
+
+## UX: Invite Code Copy Flash Animation
+- [x] Animate invite code badge to flash green on copy in AnnounceModal

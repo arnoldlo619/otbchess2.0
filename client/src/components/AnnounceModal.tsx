@@ -6,6 +6,9 @@
  *
  * Mobile fix: Close button lives in a sticky top bar (not absolute-positioned) so it
  * stays visible even when the user scrolls the content on a small screen.
+ *
+ * Copy feedback: The invite code badge flashes green (border + background + text glow)
+ * for 1.8 s when the director taps it, giving strong visual confirmation in a noisy hall.
  */
 
 import { useEffect, useState } from "react";
@@ -61,7 +64,7 @@ export function AnnounceModal({
     navigator.clipboard.writeText(code);
     setCodeCopied(true);
     toast.success("Invite code copied!");
-    setTimeout(() => setCodeCopied(false), 2000);
+    setTimeout(() => setCodeCopied(false), 1800);
   }
 
   // Strip the ?t= param from the displayed URL to keep it short and readable
@@ -141,24 +144,64 @@ export function AnnounceModal({
             ))}
           </div>
 
-          {/* Giant invite code */}
+          {/* Giant invite code — flashes green on copy */}
           <div className="flex flex-col items-center gap-2">
-            <p className="text-white/35 text-xs font-semibold uppercase tracking-[0.25em]">
-              Or enter this code
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.25em] transition-colors duration-300"
+              style={{ color: codeCopied ? "#4CAF50" : "rgba(255,255,255,0.35)" }}
+            >
+              {codeCopied ? "Copied!" : "Or enter this code"}
             </p>
+
+            {/* Badge wrapper — animates border, background, and shadow on copy */}
             <button
               onClick={copyCode}
               title="Click to copy"
-              className="group flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/08 hover:bg-white/12 border border-white/12 hover:border-white/20 transition-all active:scale-95 touch-manipulation"
+              aria-label="Copy invite code"
+              className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl transition-all duration-300 active:scale-95 touch-manipulation overflow-hidden"
+              style={{
+                background: codeCopied
+                  ? "rgba(76,175,80,0.18)"
+                  : "rgba(255,255,255,0.06)",
+                border: codeCopied
+                  ? "1.5px solid rgba(76,175,80,0.55)"
+                  : "1.5px solid rgba(255,255,255,0.12)",
+                boxShadow: codeCopied
+                  ? "0 0 28px 4px rgba(76,175,80,0.25), inset 0 0 16px rgba(76,175,80,0.10)"
+                  : "none",
+              }}
             >
+              {/* Ripple / sweep overlay on copy */}
+              {codeCopied && (
+                <span
+                  className="pointer-events-none absolute inset-0 rounded-2xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 50% 50%, rgba(76,175,80,0.22) 0%, transparent 70%)",
+                    animation: "otb-code-flash 0.45s ease-out forwards",
+                  }}
+                />
+              )}
+
+              {/* The code text */}
               <span
-                className="text-white font-mono font-bold tracking-[0.3em] text-4xl sm:text-5xl select-all"
-                style={{ fontFamily: "'Clash Display', monospace" }}
+                className="relative font-mono font-bold tracking-[0.3em] text-4xl sm:text-5xl select-all transition-colors duration-300"
+                style={{
+                  fontFamily: "'Clash Display', monospace",
+                  color: codeCopied ? "#6EE77A" : "#ffffff",
+                  textShadow: codeCopied
+                    ? "0 0 18px rgba(76,175,80,0.70)"
+                    : "none",
+                }}
               >
                 {code}
               </span>
-              <span className="text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0">
-                {codeCopied ? <Check className="w-5 h-5 text-[#4CAF50]" /> : <Copy className="w-5 h-5" />}
+
+              {/* Copy / check icon */}
+              <span className="relative text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0">
+                {codeCopied
+                  ? <Check className="w-5 h-5" style={{ color: "#4CAF50" }} />
+                  : <Copy className="w-5 h-5" />}
               </span>
             </button>
           </div>
@@ -170,6 +213,15 @@ export function AnnounceModal({
 
         </div>
       </div>
+
+      {/* ── Keyframe for the radial sweep flash ─────────────────────────────── */}
+      <style>{`
+        @keyframes otb-code-flash {
+          0%   { opacity: 0; transform: scale(0.6); }
+          40%  { opacity: 1; transform: scale(1.05); }
+          100% { opacity: 0; transform: scale(1.3); }
+        }
+      `}</style>
     </div>
   );
 }
