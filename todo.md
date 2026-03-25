@@ -3600,3 +3600,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## UX: Invite Code Copy Flash Animation
 - [x] Animate invite code badge to flash green on copy in AnnounceModal
+
+## UI: Featured Clubs Carousel Monochromatic Polish
+- [x] Replace multi-hue per-category gradients in FeaturedClubsCarousel with monochromatic green/charcoal palette aligned to platform design system

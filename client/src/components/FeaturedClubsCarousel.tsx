@@ -4,15 +4,14 @@
  * Horizontal scroll carousel showing the top 6 most popular clubs
  * (sorted by memberCount DESC) at the top of the Discover page.
  *
- * Features:
- *  - Fetches top 6 clubs from GET /api/clubs?limit=6
- *  - Smooth horizontal scroll with prev/next arrow buttons
- *  - CSS scroll-snap for satisfying card-by-card navigation
- *  - Loading skeleton (3 ghost cards)
- *  - Premium card design: full-bleed gradient, glassmorphism footer,
- *    rank medal, avatar ring, member/tournament stats, category badge
- *  - Dual dark/light gradient system via shared resolveClubTheme()
- *  - "View Club" CTA navigates to the club profile page
+ * Design system:
+ *  - Monochromatic deep-green / charcoal palette aligned with the platform's
+ *    CSS tokens (oklch 145° hue family). No rainbow per-category hues.
+ *  - Dark mode: deep forest green card surfaces with layered green-to-charcoal
+ *    gradients and a single chess-green (#4CAF50-family) accent.
+ *  - Light mode: sage-white surfaces with subtle green-tinted depth.
+ *  - Category differentiation via opacity/saturation shifts, not hue changes.
+ *  - Glassmorphism footer, rank medals, avatar ring, hover polish.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -21,7 +20,6 @@ import { ChevronLeft, ChevronRight, Users, Trophy, ArrowRight, UserPlus, Check }
 import { apiListPublicClubs } from "../lib/clubsApi";
 import { joinClub, isMember, type Club } from "../lib/clubRegistry";
 import { apiJoinClub } from "../lib/clubsApi";
-import { resolveClubTheme } from "../lib/clubTheme";
 import { useAuthContext } from "../context/AuthContext";
 import { toast } from "sonner";
 
@@ -44,14 +42,68 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 // Rank medal labels
-const RANK_MEDALS: Record<number, { label: string; cls: string }> = {
-  1: { label: "🥇", cls: "bg-yellow-500/25 border-yellow-400/40 text-yellow-200" },
-  2: { label: "🥈", cls: "bg-slate-400/20 border-slate-300/40 text-slate-200" },
-  3: { label: "🥉", cls: "bg-amber-700/25 border-amber-600/40 text-amber-300" },
+const RANK_MEDALS: Record<number, { label: string }> = {
+  1: { label: "🥇" },
+  2: { label: "🥈" },
+  3: { label: "🥉" },
+};
+
+/**
+ * Per-category depth offset — subtle lightness/saturation shift within the
+ * green family so cards feel distinct without leaving the brand palette.
+ * Values are OKLCH lightness and chroma adjustments relative to the base card.
+ */
+const CATEGORY_DEPTH: Record<string, { l: number; c: number }> = {
+  competitive:    { l: 0.00, c: 0.00 }, // base — deep forest
+  casual:         { l: 0.02, c: 0.01 }, // slightly lighter
+  scholastic:     { l: 0.03, c: 0.01 },
+  online:         { l: -0.01, c: 0.01 },
+  otb:            { l: 0.04, c: 0.02 }, // brightest — most "on the board"
+  blitz:          { l: -0.01, c: 0.00 },
+  correspondence: { l: 0.01, c: 0.01 },
+  club:           { l: 0.03, c: 0.02 },
+  school:         { l: 0.02, c: 0.01 },
+  university:     { l: 0.01, c: 0.01 },
+  community:      { l: 0.03, c: 0.01 },
+  professional:   { l: -0.02, c: 0.01 },
+  other:          { l: 0.00, c: 0.00 },
 };
 
 const NOISE_BG =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+/** Build the card gradient inline style from the platform's green token family */
+function cardGradient(category: string | null | undefined, isDark: boolean): React.CSSProperties {
+  const cat = category ?? "other";
+  const d = CATEGORY_DEPTH[cat] ?? CATEGORY_DEPTH.other;
+
+  if (isDark) {
+    // Base: oklch(0.20 0.06 145) → oklch(0.16 0.05 145) deep forest
+    const l1 = +(0.22 + d.l).toFixed(3);
+    const c1 = +(0.08 + d.c).toFixed(3);
+    const l2 = +(0.18 + d.l).toFixed(3);
+    const c2 = +(0.06 + d.c).toFixed(3);
+    const l3 = +(0.14 + d.l * 0.5).toFixed(3);
+    return {
+      background: `linear-gradient(135deg,
+        oklch(${l1} ${c1} 145) 0%,
+        oklch(${l2} ${c2} 145) 55%,
+        oklch(${l3} 0.04 145) 100%)`,
+    };
+  } else {
+    // Light mode: sage-white to soft green tint
+    const l1 = +(0.96 + d.l * 0.3).toFixed(3);
+    const c1 = +(0.02 + d.c * 0.5).toFixed(3);
+    const l2 = +(0.92 + d.l * 0.3).toFixed(3);
+    const c2 = +(0.03 + d.c * 0.5).toFixed(3);
+    return {
+      background: `linear-gradient(135deg,
+        oklch(${l1} ${c1} 145) 0%,
+        oklch(${l2} ${c2} 145) 60%,
+        oklch(0.88 0.04 145) 100%)`,
+    };
+  }
+}
 
 // ── Skeleton card ──────────────────────────────────────────────────────────────
 
@@ -59,8 +111,14 @@ function SkeletonCard({ isDark }: { isDark: boolean }) {
   return (
     <div
       className={`flex-shrink-0 w-64 sm:w-72 h-[200px] sm:h-[220px] rounded-2xl animate-pulse ${
-        isDark ? "bg-white/5 border border-white/8" : "bg-black/5 border border-black/8"
+        isDark
+          ? "border border-white/8"
+          : "border border-black/8"
       }`}
+      style={isDark
+        ? { background: "oklch(0.22 0.07 145 / 0.7)" }
+        : { background: "oklch(0.94 0.02 145 / 0.7)" }
+      }
     />
   );
 }
@@ -76,31 +134,44 @@ interface FeaturedClubCardProps {
 
 function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
   const [, navigate] = useLocation();
-  const { grad, glow, badge } = resolveClubTheme(club, isDark);
   const [joined, setJoined] = useState(() => !!(user && isMember(club.id, user.id)));
   const [joining, setJoining] = useState(false);
   const catLabel = CATEGORY_LABELS[club.category ?? "other"] ?? "Other";
   const medal = RANK_MEDALS[rank];
   const initial = club.name.charAt(0).toUpperCase();
 
-  // In light mode, text on the gradient card should stay white (gradients are
-  // saturated enough to keep contrast). Badge text is already per-mode from resolveClubTheme.
-  const nameColor = "text-white";
-  const mutedColor = "text-white/55";
-  const footerBg = isDark ? "bg-black/25" : "bg-black/15";
+  // Text colours — always white-on-green in dark, dark-on-sage in light
+  const nameColor   = isDark ? "text-white"         : "text-[oklch(0.15_0.06_145)]";
+  const mutedColor  = isDark ? "text-white/50"       : "text-[oklch(0.40_0.05_145)]";
+  const footerBg    = isDark ? "bg-black/20"         : "bg-white/40";
+  const footerBorder= isDark ? "border-white/10"     : "border-black/8";
+  const statColor   = isDark ? "text-white/65"       : "text-[oklch(0.35_0.06_145)]";
+  const iconColor   = isDark ? "text-white/40"       : "text-[oklch(0.50_0.05_145)]";
+  // Category badge — monochromatic green pill
+  const badgeCls    = isDark
+    ? "bg-[oklch(0.55_0.13_145)]/20 text-[oklch(0.75_0.12_145)] border-[oklch(0.55_0.13_145)]/30"
+    : "bg-[oklch(0.44_0.12_145)]/12 text-[oklch(0.30_0.10_145)] border-[oklch(0.44_0.12_145)]/30";
+  // Rank medal badge
+  const medalCls    = isDark
+    ? "bg-white/10 border-white/20 text-white/80"
+    : "bg-black/8 border-black/15 text-[oklch(0.25_0.06_145)]";
+  // Hover glow — single green accent
+  const hoverGlow   = isDark
+    ? "hover:shadow-[0_8px_32px_oklch(0.44_0.12_145_/_0.35)]"
+    : "hover:shadow-[0_8px_24px_oklch(0.44_0.12_145_/_0.18)]";
 
   return (
     <div
       className={`
         group flex-shrink-0 w-64 sm:w-72 h-[200px] sm:h-[220px]
         rounded-2xl overflow-hidden cursor-pointer relative
-        bg-gradient-to-br ${grad}
-        border border-white/10
-        shadow-lg ${glow}
+        ${isDark ? "border border-white/10 hover:border-white/20" : "border border-black/8 hover:border-[oklch(0.44_0.12_145)]/30"}
+        shadow-md ${hoverGlow}
         transition-all duration-300
-        hover:scale-[1.03] hover:border-white/20 hover:shadow-xl
+        hover:scale-[1.03] hover:shadow-xl
         active:scale-[0.98]
       `}
+      style={cardGradient(club.category, isDark)}
       onClick={() => navigate(`/clubs/${club.id}`)}
       role="button"
       tabIndex={0}
@@ -109,16 +180,26 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
     >
       {/* Subtle noise texture overlay */}
       <div
-        className="absolute inset-0 opacity-[0.05] pointer-events-none"
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{ backgroundImage: NOISE_BG, backgroundSize: "150px" }}
       />
 
+      {/* Radial highlight — top-left glow */}
+      <div
+        className="absolute top-0 left-0 w-40 h-40 pointer-events-none opacity-30"
+        style={{
+          background: isDark
+            ? "radial-gradient(circle at 0% 0%, oklch(0.65 0.14 145 / 0.4) 0%, transparent 70%)"
+            : "radial-gradient(circle at 0% 0%, oklch(0.80 0.10 145 / 0.35) 0%, transparent 70%)",
+        }}
+      />
+
       {/* Diagonal shine on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-white/8 via-transparent to-transparent" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-br from-white/6 via-transparent to-transparent" />
 
       {/* Rank medal — top-left */}
       {medal && (
-        <div className={`absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold backdrop-blur-sm ${medal.cls}`}>
+        <div className={`absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold backdrop-blur-sm ${medalCls}`}>
           <span>{medal.label}</span>
           <span>#{rank}</span>
         </div>
@@ -130,7 +211,17 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
         {/* Avatar + name row */}
         <div className="flex items-center gap-3 mt-6 sm:mt-7 mb-2.5">
           {/* Avatar */}
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex-shrink-0 ring-2 ring-white/20 overflow-hidden bg-white/10 flex items-center justify-center">
+          <div
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
+            style={{
+              boxShadow: isDark
+                ? "0 0 0 2px oklch(0.55 0.13 145 / 0.35)"
+                : "0 0 0 2px oklch(0.44 0.12 145 / 0.25)",
+              background: isDark
+                ? "oklch(0.28 0.08 145 / 0.8)"
+                : "oklch(0.90 0.03 145 / 0.8)",
+            }}
+          >
             {club.avatarUrl ? (
               <img
                 src={club.avatarUrl}
@@ -159,16 +250,16 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
         </p>
 
         {/* Glassmorphism footer strip */}
-        <div className={`flex items-center justify-between rounded-xl ${footerBg} backdrop-blur-sm border border-white/10 px-3 py-2`}>
+        <div className={`flex items-center justify-between rounded-xl ${footerBg} backdrop-blur-sm border ${footerBorder} px-3 py-2`}>
           {/* Stats */}
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-white/70 text-xs font-medium">
-              <Users className="w-3 h-3 text-white/50" />
+            <span className={`flex items-center gap-1 ${statColor} text-xs font-medium`}>
+              <Users className={`w-3 h-3 ${iconColor}`} />
               {(club.memberCount ?? 0).toLocaleString()}
             </span>
             {(club.tournamentCount ?? 0) > 0 && (
-              <span className="flex items-center gap-1 text-white/70 text-xs font-medium">
-                <Trophy className="w-3 h-3 text-white/50" />
+              <span className={`flex items-center gap-1 ${statColor} text-xs font-medium`}>
+                <Trophy className={`w-3 h-3 ${iconColor}`} />
                 {club.tournamentCount}
               </span>
             )}
@@ -199,26 +290,42 @@ function FeaturedClubCard({ club, rank, isDark, user }: FeaturedClubCardProps) {
                   setJoining(false);
                   toast.success(`Joined ${club.name}!`);
                 }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 hover:border-white/40 transition-all active:scale-95"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 touch-manipulation"
+                style={{
+                  background: isDark
+                    ? "oklch(0.55 0.13 145 / 0.25)"
+                    : "oklch(0.44 0.12 145 / 0.15)",
+                  border: isDark
+                    ? "1px solid oklch(0.55 0.13 145 / 0.40)"
+                    : "1px solid oklch(0.44 0.12 145 / 0.35)",
+                  color: isDark ? "oklch(0.85 0.12 145)" : "oklch(0.30 0.10 145)",
+                }}
                 aria-label={`Join ${club.name}`}
               >
                 {joining ? (
-                  <span className="w-2.5 h-2.5 rounded-full border border-white/40 border-t-white animate-spin" />
+                  <span className="w-2.5 h-2.5 rounded-full border border-current border-t-transparent animate-spin" />
                 ) : (
                   <UserPlus className="w-2.5 h-2.5" />
                 )}
                 Join
               </button>
             ) : user && joined ? (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-500/20 text-green-300 border border-green-500/30">
+              <span
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                style={{
+                  background: "oklch(0.55 0.13 145 / 0.20)",
+                  border: "1px solid oklch(0.55 0.13 145 / 0.35)",
+                  color: "oklch(0.75 0.14 145)",
+                }}
+              >
                 <Check className="w-2.5 h-2.5" /> Member
               </span>
             ) : (
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge}`}>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeCls}`}>
                 {catLabel}
               </span>
             )}
-            <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all duration-200" />
+            <ArrowRight className={`w-3.5 h-3.5 ${iconColor} group-hover:text-[oklch(0.65_0.14_145)] group-hover:translate-x-0.5 transition-all duration-200`} />
           </div>
         </div>
       </div>
@@ -263,13 +370,11 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
 
   if (!loading && clubs.length === 0) return null;
 
-  const headingColor = isDark ? "text-white" : "text-gray-900";
-  const subColor = isDark ? "text-white/35" : "text-gray-400";
-  const arrowBg = isDark
-    ? "bg-white/5 hover:bg-white/12 border-white/10 hover:border-white/25"
-    : "bg-black/5 hover:bg-black/10 border-black/10 hover:border-black/20";
-  const arrowIcon = isDark ? "text-white/60" : "text-gray-500";
-  const divider = isDark ? "border-white/5" : "border-black/5";
+  const headingColor = isDark ? "text-white"    : "text-[oklch(0.15_0.06_145)]";
+  const subColor     = isDark ? "text-white/35"  : "text-[oklch(0.50_0.05_145)]";
+  const arrowBg      = isDark
+    ? "bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-white/50 hover:text-white/80"
+    : "bg-black/4 hover:bg-black/8 border-black/8 hover:border-black/15 text-[oklch(0.45_0.05_145)] hover:text-[oklch(0.25_0.08_145)]";
 
   return (
     <div className="mb-8">
@@ -287,7 +392,10 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
           {/* See All */}
           <button
             onClick={() => navigate("/clubs/leaderboard")}
-            className="flex items-center gap-1 text-green-500 hover:text-green-400 text-xs font-semibold transition-colors duration-200"
+            className="flex items-center gap-1 text-xs font-semibold transition-colors duration-200"
+            style={{ color: "oklch(0.65 0.14 145)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "oklch(0.75 0.14 145)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "oklch(0.65 0.14 145)")}
           >
             See All
             <ChevronRight className="w-3.5 h-3.5" />
@@ -301,14 +409,14 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
                 className={`w-7 h-7 rounded-full border flex items-center justify-center transition-all duration-200 ${arrowBg}`}
                 aria-label="Scroll left"
               >
-                <ChevronLeft className={`w-4 h-4 ${arrowIcon}`} />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => scroll("right")}
                 className={`w-7 h-7 rounded-full border flex items-center justify-center transition-all duration-200 ${arrowBg}`}
                 aria-label="Scroll right"
               >
-                <ChevronRight className={`w-4 h-4 ${arrowIcon}`} />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -339,9 +447,6 @@ export function FeaturedClubsCarousel({ isDark = true }: FeaturedClubsCarouselPr
           ))
         )}
       </div>
-
-      {/* Divider */}
-      <div className={`mt-6 border-t ${divider}`} />
     </div>
   );
 }
