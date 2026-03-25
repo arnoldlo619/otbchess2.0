@@ -78,6 +78,8 @@ export interface ClubMember {
   tournamentsPlayed: number;
   /** Best finish position across all club tournaments */
   bestFinish: number | null;
+  /** Number of Fantasy Chess League seasons won */
+  leagueChampionships?: number;
 }
 
 export interface ClubTournament {

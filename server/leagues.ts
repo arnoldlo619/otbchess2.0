@@ -20,7 +20,7 @@ import {
   leagueStandings,
   dbClubMembers,
 } from "../shared/schema.js";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 
@@ -628,6 +628,20 @@ leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response
         .limit(1);
 
       const champion = topStanding.length ? topStanding[0] : null;
+
+      // Permanently award the League Champion badge on the member's club row
+      if (champion) {
+        await db
+          .update(dbClubMembers)
+          .set({ leagueChampionships: sql`league_championships + 1` })
+          .where(
+            and(
+              eq(dbClubMembers.clubId, league[0].clubId),
+              eq(dbClubMembers.userId, champion.playerId)
+            )
+          );
+      }
+
       return res.json({
         success: true,
         completed: true,

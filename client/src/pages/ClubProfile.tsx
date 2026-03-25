@@ -1900,6 +1900,15 @@ function MemberRow({
             {member.displayName}
           </span>
           <RoleBadge role={member.role} />
+          {(member.leagueChampionships ?? 0) > 0 && (
+            <span
+              title={`${member.leagueChampionships}× League Champion`}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/25 flex-shrink-0"
+            >
+              <Trophy className="w-2.5 h-2.5" />
+              {(member.leagueChampionships ?? 0) > 1 ? `×${member.leagueChampionships}` : "Champion"}
+            </span>
+          )}
         </div>
         {username && (
           <p className={`text-xs mt-0.5 ${textMuted}`}>

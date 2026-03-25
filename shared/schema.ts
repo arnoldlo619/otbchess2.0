@@ -634,6 +634,7 @@ export const dbClubMembers = mysqlTable(
     tournamentsPlayed: int("tournaments_played").notNull().default(0),
     bestFinish: int("best_finish"),
     lastSeenAt: timestamp("last_seen_at"),
+    leagueChampionships: int("league_championships").notNull().default(0),
   },
   (table) => ({
     clubIdx: index("cm_club_idx").on(table.clubId),

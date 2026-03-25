@@ -3639,3 +3639,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## League Final Week Auto-Completion
 - [x] Server: auto-set league status to "completed" when advancing past final week
 - [x] Client: champion announcement banner on Overview tab for completed leagues
+
+## League Champion Badge on Member Card
+- [x] DB: add league_championships column to club_members table
+- [x] Server: write champion badge in advance-week endpoint
+- [x] Client: display trophy badge on member card in ClubProfile Members tab
