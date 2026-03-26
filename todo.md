@@ -3612,29 +3612,29 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Pass dashboardUrl prop from AppNavBar to AvatarNavDropdown for correct Dashboard routing on mobile
 
 ## Fantasy Chess League Feature
-- [ ] Add DB schema: leagues, league_players, league_weeks, league_matches, league_standings
-- [ ] Run DB migration
-- [ ] Build server-side leagues API router
-- [ ] Add leagues tab to ClubProfile page
-- [ ] Build CreateLeagueModal component
-- [ ] Build LeagueDashboard page with Overview/Matchups/Standings/Schedule tabs
-- [ ] Wire result reporting modal and standings recalculation
-- [ ] Add routes to App.tsx
+- [x] Add DB schema: leagues, league_players, league_weeks, league_matches, league_standings
+- [x] Run DB migration
+- [x] Build server-side leagues API router
+- [x] Add leagues tab to ClubProfile page
+- [x] Build CreateLeagueModal component
+- [x] Build LeagueDashboard page with Overview/Matchups/Standings/Schedule tabs
+- [x] Wire result reporting modal and standings recalculation
+- [x] Add routes to App.tsx
 
 ## FCL Phase 2 Refinement
-- [ ] Server: add streak, movement, lastResults to standings endpoint
-- [ ] Server: add GET /:leagueId/recent-results endpoint
-- [ ] Dashboard: add "Your Match This Week" primary module
-- [ ] Dashboard: add "Next Opponent Preview" module
-- [ ] Dashboard: add week transition banner (Week X Complete)
-- [ ] Dashboard: add Recent Results module
-- [ ] Standings: add streak column, top-3 highlight, movement indicator
-- [ ] Schedule: highlight user's own matches, label upcoming/completed
-- [ ] UI polish pass: spacing, typography, mobile responsiveness
+- [x] Server: add streak, movement, lastResults to standings endpoint
+- [x] Server: add GET /:leagueId/recent-results endpoint
+- [x] Dashboard: add "Your Match This Week" primary module
+- [x] Dashboard: add "Next Opponent Preview" module
+- [x] Dashboard: add week transition banner (Week X Complete)
+- [x] Dashboard: add Recent Results module
+- [x] Standings: add streak column, top-3 highlight, movement indicator
+- [x] Schedule: highlight user's own matches, label upcoming/completed
+- [x] UI polish pass: spacing, typography, mobile responsiveness
 
 ## FCL: Commissioner Advance Week button
-- [ ] Add POST /api/leagues/:leagueId/advance-week endpoint (commissioner-only)
-- [ ] Add Advance Week button to Matchups tab in LeagueDashboard (only when all current-week matches are reported or commissioner forces it)
+- [x] Add POST /api/leagues/:leagueId/advance-week endpoint (commissioner-only)
+- [x] Add Advance Week button to Matchups tab in LeagueDashboard (only when all current-week matches are reported or commissioner forces it)
 
 ## League Final Week Auto-Completion
 - [x] Server: auto-set league status to "completed" when advancing past final week
@@ -3648,3 +3648,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## League Champion Badge Deep-link
 - [x] ClubProfile: read ?tab= query param to deep-link to members tab
 - [x] LeagueDashboard: add trophy badge pill and link champion to club profile members tab
+
+## FCL Phase 4: Share/Invite & Season History
+
+- [x] League share link: copy-to-clipboard button on League Dashboard header with join URL
+- [x] League share link: QR code modal for projecting the join link
+- [x] Season history: "Season Summary" tab on completed League Dashboard showing final standings, all match results, and champion
+- [x] Season history: "Past Seasons" section on Club Profile Leagues tab listing completed leagues

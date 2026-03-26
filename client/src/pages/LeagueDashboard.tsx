@@ -10,8 +10,10 @@ import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
-  Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target
+  Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
+  Share2, Copy, Check, QrCode, X, History
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
@@ -124,6 +126,132 @@ function Avatar({
   );
 }
 
+// ── Share / QR Modal ────────────────────────────────────────────────────────
+function ShareModal({
+  league, isDark, onClose,
+}: {
+  league: League; isDark: boolean; onClose: () => void;
+}) {
+  const joinUrl = `${window.location.origin}/leagues/${league.id}`;
+  const [copied, setCopied] = useState(false);
+  const [view, setView] = useState<"link" | "qr">("link");
+
+  const bg = isDark ? "oklch(0.18 0.05 145)" : "#ffffff";
+  const border = isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb";
+  const textMain = isDark ? "#f0f5ee" : "#111827";
+  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
+  const accent = "oklch(0.55 0.13 145)";
+
+  function handleCopy() {
+    navigator.clipboard.writeText(joinUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.6)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: bg, border: `1px solid ${border}` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Share2 size={16} style={{ color: accent }} />
+            <span className="font-bold text-base" style={{ color: textMain }}>Share League</span>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-xl" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}>
+            <X size={14} style={{ color: textMuted }} />
+          </button>
+        </div>
+
+        {/* Toggle: Link / QR */}
+        <div className="px-5 pb-3">
+          <div className="flex gap-1 p-1 rounded-xl" style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6" }}>
+            {(["link", "qr"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  background: view === v ? (isDark ? "oklch(0.28 0.08 145)" : "#ffffff") : "transparent",
+                  color: view === v ? textMain : textMuted,
+                  boxShadow: view === v ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                }}
+              >
+                {v === "link" ? <Copy size={11} /> : <QrCode size={11} />}
+                {v === "link" ? "Copy Link" : "QR Code"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Link view */}
+        {view === "link" && (
+          <div className="px-5 pb-5 space-y-3">
+            <p className="text-xs" style={{ color: textMuted }}>
+              Share this link so players can view the league and request to join.
+            </p>
+            <div
+              className="flex items-center gap-2 rounded-2xl px-3 py-2.5"
+              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f9fafb", border: `1px solid ${border}` }}
+            >
+              <span className="flex-1 text-xs truncate font-mono" style={{ color: textMain }}>{joinUrl}</span>
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold flex-shrink-0 transition-all"
+                style={{ background: copied ? "#4ade8022" : `${accent}22`, color: copied ? "#4ade80" : accent }}
+              >
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
+            {/* Native share if supported */}
+            {typeof navigator.share === "function" && (
+              <button
+                onClick={() => navigator.share({ title: league.name, url: joinUrl }).catch(() => {})}
+                className="w-full py-3 rounded-2xl text-sm font-semibold"
+                style={{ background: accent, color: "#fff" }}
+              >
+                Share via…
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* QR view */}
+        {view === "qr" && (
+          <div className="px-5 pb-5 flex flex-col items-center gap-4">
+            <div
+              className="rounded-2xl p-4"
+              style={{ background: "#ffffff" }}
+            >
+              <QRCodeSVG value={joinUrl} size={200} fgColor="#111827" bgColor="#ffffff" />
+            </div>
+            <p className="text-xs text-center" style={{ color: textMuted }}>
+              Scan to view <strong style={{ color: textMain }}>{league.name}</strong>
+            </p>
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+              style={{ background: `${accent}22`, color: accent }}
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied ? "Link copied!" : "Copy link too"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Result Report Modal ───────────────────────────────────────────────────────
 function ReportResultModal({
   match, isDark, onClose, onSubmit,
@@ -227,11 +355,12 @@ export default function LeagueDashboard() {
   const [weeks, setWeeks] = useState<LeagueWeek[]>([]);
   const [standings, setStandings] = useState<LeagueStanding[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history">("overview");
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [advancingWeek, setAdvancingWeek] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   // Colour tokens
   const pageBg = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
@@ -384,6 +513,7 @@ export default function LeagueDashboard() {
     { id: "matchups" as const, label: "Matchups", icon: Swords },
     { id: "standings" as const, label: "Standings", icon: ListOrdered },
     { id: "schedule" as const, label: "Schedule", icon: Calendar },
+    ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: History }] : []),
   ];
 
   const progressPct = totalMatches > 0 ? Math.round((completedMatchCount / totalMatches) * 100) : 0;
@@ -433,6 +563,15 @@ export default function LeagueDashboard() {
         >
           {league.status === "active" ? "Active" : league.status === "completed" ? "Complete" : "Draft"}
         </div>
+        {/* Share button */}
+        <button
+          onClick={() => setShowShare(true)}
+          className="p-2 rounded-xl transition-opacity hover:opacity-70 flex-shrink-0"
+          style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
+          title="Share league"
+        >
+          <Share2 size={15} style={{ color: accent }} />
+        </button>
       </div>
 
       {/* Tab bar */}
@@ -1172,6 +1311,142 @@ export default function LeagueDashboard() {
           </div>
         )}
 
+
+        {/* ── HISTORY / SEASON SUMMARY ─────────────────────────────────────── */}
+        {activeTab === "history" && (
+          <div className="space-y-5">
+            {/* Champion card */}
+            {standings[0] && (
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{ background: `linear-gradient(135deg, oklch(0.22 0.09 85), oklch(0.18 0.06 145))`, border: `1.5px solid oklch(0.7 0.18 85 / 0.5)` }}
+              >
+                <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
+                  <Trophy size={14} style={{ color: "oklch(0.82 0.18 85)" }} />
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "oklch(0.82 0.18 85)" }}>
+                    {league.name} — Season Champion
+                  </span>
+                </div>
+                <div className="px-4 py-4 flex items-center gap-4">
+                  <div className="relative flex-shrink-0">
+                    <Avatar url={standings[0].avatarUrl} name={standings[0].displayName} size={14} ring />
+                    <span
+                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-lg"
+                      style={{ background: "oklch(0.82 0.18 85)", color: "oklch(0.18 0.06 85)" }}
+                    >
+                      🏆
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-lg font-bold" style={{ color: "oklch(0.82 0.18 85)" }}>{standings[0].displayName}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "oklch(0.82 0.18 85 / 0.7)" }}>
+                      {standings[0].points} pts · {standings[0].wins}W {standings[0].draws}D {standings[0].losses}L
+                    </p>
+                  </div>
+                  <div
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0"
+                    style={{ background: "oklch(0.82 0.18 85 / 0.18)", color: "oklch(0.82 0.18 85)", border: "1px solid oklch(0.82 0.18 85 / 0.35)" }}
+                  >
+                    <Trophy size={10} />
+                    Champion
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Final standings */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+              <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                <ListOrdered size={14} style={{ color: accent }} />
+                <span className="font-semibold text-sm" style={{ color: textMain }}>Final Standings</span>
+              </div>
+              {standings.map((s, i) => {
+                const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#cd7c2f" : null;
+                const isMe = s.playerId === user?.id;
+                return (
+                  <div
+                    key={s.playerId}
+                    className="flex items-center gap-3 px-4 py-3"
+                    style={{
+                      borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
+                      background: isMe ? `${accent}08` : i < 3 && podiumColor ? `${podiumColor}06` : "transparent",
+                    }}
+                  >
+                    {podiumColor ? (
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                        style={{ background: `${podiumColor}22`, color: podiumColor }}
+                      >
+                        {i + 1}
+                      </div>
+                    ) : (
+                      <span className="w-7 text-center text-sm" style={{ color: textMuted }}>{i + 1}</span>
+                    )}
+                    <Avatar url={s.avatarUrl} name={s.displayName} size={8} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate" style={{ color: isMe ? accent : textMain }}>
+                        {s.displayName}{isMe ? " (you)" : ""}
+                      </div>
+                      <div className="text-xs" style={{ color: textMuted }}>{s.wins}W {s.draws}D {s.losses}L</div>
+                    </div>
+                    <span className="font-bold text-base flex-shrink-0" style={{ color: accent }}>{s.points} pts</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* All results by week */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Calendar size={14} style={{ color: accent }} />
+                <span className="font-semibold text-sm" style={{ color: textMain }}>All Results by Week</span>
+              </div>
+              {weeks.map((week) => (
+                <div key={week.weekNumber} className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                  <div
+                    className="px-4 py-2.5 flex items-center justify-between"
+                    style={{ borderBottom: `1px solid ${cardBorder}`, background: isDark ? "oklch(0.23 0.06 145)" : "#f9fafb" }}
+                  >
+                    <span className="text-xs font-semibold" style={{ color: textMain }}>Week {week.weekNumber}</span>
+                    <span className="text-xs" style={{ color: week.isComplete ? accent : textMuted }}>
+                      {week.isComplete ? "Complete" : "Incomplete"}
+                    </span>
+                  </div>
+                  <div className="divide-y" style={{ borderColor: cardBorder }}>
+                    {week.matches.map((match) => (
+                      <div key={match.id} className="flex items-center gap-3 px-4 py-2.5">
+                        <span
+                          className="flex-1 text-sm truncate"
+                          style={{ color: textMain, fontWeight: match.result === "white_win" ? 600 : 400 }}
+                        >
+                          {match.playerWhiteName}
+                        </span>
+                        <span
+                          className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                          style={{
+                            background: match.resultStatus === "completed" ? `${accent}22` : "transparent",
+                            color: match.resultStatus === "completed" ? accent : textMuted,
+                          }}
+                        >
+                          {match.resultStatus === "completed"
+                            ? (match.result === "white_win" ? "1–0" : match.result === "black_win" ? "0–1" : "½–½")
+                            : "vs"}
+                        </span>
+                        <span
+                          className="flex-1 text-sm truncate text-right"
+                          style={{ color: textMain, fontWeight: match.result === "black_win" ? 600 : 400 }}
+                        >
+                          {match.playerBlackName}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Result report modal */}
@@ -1181,6 +1456,15 @@ export default function LeagueDashboard() {
           isDark={isDark}
           onClose={() => setReportingMatch(null)}
           onSubmit={handleReportResult}
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          league={league}
+          isDark={isDark}
+          onClose={() => setShowShare(false)}
         />
       )}
     </div>

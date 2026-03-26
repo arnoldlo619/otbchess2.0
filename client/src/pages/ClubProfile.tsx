@@ -1658,38 +1658,65 @@ export default function ClubProfile() {
                   <p className={`text-xs ${textMuted}`}>The club owner hasn't created any leagues yet.</p>
                 )}
               </div>
-            ) : (
-              <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {clubLeagues.map((lg) => (
-                    <button
-                      key={lg.id}
-                      onClick={() => navigate(`/leagues/${lg.id}`)}
-                      className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
-                    >
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? "bg-[#4CAF50]/15" : "bg-green-50"}`}>
-                        <Trophy className="w-4 h-4 text-[#4CAF50]" strokeWidth={1.8} />
+            ) : (() => {
+              const activeLeagues = clubLeagues.filter((lg) => lg.status !== "completed");
+              const completedLeagues = clubLeagues.filter((lg) => lg.status === "completed");
+              const LeagueRow = ({ lg }: { lg: typeof clubLeagues[0] }) => (
+                <button
+                  key={lg.id}
+                  onClick={() => navigate(`/leagues/${lg.id}`)}
+                  className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                >
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${lg.status === "completed" ? (isDark ? "bg-yellow-500/15" : "bg-yellow-50") : (isDark ? "bg-[#4CAF50]/15" : "bg-green-50")}`}>
+                    <Trophy className={`w-4 h-4 ${lg.status === "completed" ? "text-yellow-500" : "text-[#4CAF50]"}`} strokeWidth={1.8} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</p>
+                    <p className={`text-xs ${textMuted}`}>
+                      {lg.status === "completed"
+                        ? `${lg.totalWeeks} weeks · ${lg.playerCount} players · Season complete`
+                        : `Week ${lg.currentWeek}/${lg.totalWeeks} · ${lg.playerCount} players`
+                      }
+                    </p>
+                  </div>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+                    style={{
+                      background: lg.status === "active" ? "oklch(0.55 0.13 145 / 0.15)" : lg.status === "completed" ? "oklch(0.82 0.18 85 / 0.15)" : (isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6"),
+                      color: lg.status === "active" ? "oklch(0.55 0.13 145)" : lg.status === "completed" ? "oklch(0.72 0.18 85)" : (isDark ? "rgba(255,255,255,0.4)" : "#6b7280"),
+                    }}
+                  >
+                    {lg.status === "active" ? "Active" : lg.status === "completed" ? "🏆 Complete" : "Draft"}
+                  </span>
+                </button>
+              );
+              return (
+                <div className="space-y-4">
+                  {/* Active / Draft leagues */}
+                  {activeLeagues.length > 0 && (
+                    <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                      <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                        {activeLeagues.map((lg) => <LeagueRow key={lg.id} lg={lg} />)}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</p>
-                        <p className={`text-xs ${textMuted}`}>
-                          Week {lg.currentWeek}/{lg.totalWeeks} &middot; {lg.playerCount} players
-                        </p>
+                    </div>
+                  )}
+                  {/* Past Seasons */}
+                  {completedLeagues.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 px-1 mb-2">
+                        <span className={`text-xs font-semibold uppercase tracking-wide ${textMuted}`}>Past Seasons</span>
+                        <span className={`text-xs ${textMuted} opacity-50`}>· {completedLeagues.length}</span>
                       </div>
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
-                        style={{
-                          background: lg.status === "active" ? "oklch(0.55 0.13 145 / 0.15)" : isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6",
-                          color: lg.status === "active" ? "oklch(0.55 0.13 145)" : isDark ? "rgba(255,255,255,0.4)" : "#6b7280",
-                        }}
-                      >
-                        {lg.status === "active" ? "Active" : lg.status === "completed" ? "Complete" : "Draft"}
-                      </span>
-                    </button>
-                  ))}
+                      <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                        <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                          {completedLeagues.map((lg) => <LeagueRow key={lg.id} lg={lg} />)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
       </div>
