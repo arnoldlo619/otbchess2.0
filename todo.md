@@ -3655,3 +3655,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] League share link: QR code modal for projecting the join link
 - [x] Season history: "Season Summary" tab on completed League Dashboard showing final standings, all match results, and champion
 - [x] Season history: "Past Seasons" section on Club Profile Leagues tab listing completed leagues
+
+## FCL Phase 5: Season Stats Player Cards
+- [ ] Server: install canvas npm package for server-side PNG generation
+- [ ] Server: add GET /api/leagues/:leagueId/player-card/:playerId endpoint that renders a PNG card
+- [ ] Card design: dark green gradient background with OTB branding, player avatar, rank badge, W/D/L, points, best result, league name + season label
+- [ ] Season Summary tab: add "Download Card" button per player row and a "Share Your Card" CTA for the current user
+- [ ] Season Summary tab: show card preview modal before download
+
+## Mobile Nav: Hamburger Menu for Unauthenticated Users
+- [x] Add hamburger icon button to navbar (mobile only, hidden when signed in or on desktop)
+- [x] Build slide-in drawer with Dashboard, Clubs, Battle, Analyze links
+- [x] Animated open/close with backdrop blur overlay
+- [x] Premium minimalist design matching existing dark green design system

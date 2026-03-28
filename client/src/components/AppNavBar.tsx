@@ -24,6 +24,7 @@ import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/to
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 
 const LOGO_URL =
   "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png";
@@ -75,6 +76,7 @@ function getDashboardTooltip(): string | undefined {
 export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, className }: AppNavBarProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { user } = useAuthContext();
   const [activeTab, setActiveTab] = useState(defaultActive);
 
   const dashboardUrl     = getDashboardUrl();
@@ -108,15 +110,32 @@ export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, classNam
     </Link>
   );
 
-  // Right slot: theme toggle + unified avatar dropdown (contains nav links on mobile)
+  // Right slot:
+  //   Desktop / signed-in: theme toggle + avatar dropdown
+  //   Mobile + guest:      theme toggle + hamburger menu (GuestMobileMenu)
+  //                        (avatar dropdown hidden — no avatar to tap)
+  const isGuest = !user || user.isGuest;
+
   const rightSlotEl = (
     <div className="flex items-center gap-2">
       <ThemeToggle />
-      <AvatarNavDropdown
-        currentPage={activeTab}
-        onSignInClick={onSignInClick}
-        dashboardUrl={dashboardUrl}
-      />
+      {/* Hamburger — mobile only, unauthenticated only */}
+      {isGuest && (
+        <div className="flex md:hidden">
+          <GuestMobileMenu
+            currentPage={activeTab}
+            onSignInClick={onSignInClick}
+          />
+        </div>
+      )}
+      {/* Avatar dropdown — always on desktop; on mobile only when signed in */}
+      <div className={isGuest ? "hidden md:flex" : "flex"}>
+        <AvatarNavDropdown
+          currentPage={activeTab}
+          onSignInClick={onSignInClick}
+          dashboardUrl={dashboardUrl}
+        />
+      </div>
     </div>
   );
 
