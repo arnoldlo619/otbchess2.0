@@ -3678,3 +3678,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Mobile Nav Fix: Signed-in avatar dropdown missing nav links
 - [x] Add Dashboard, Clubs, Battle, Analyze links to AvatarNavDropdown for signed-in users on mobile
 - [x] Fix Home.tsx signed-in user dropdown to also include nav links on mobile
+
+## Mobile Nav Fix: Guest hamburger dropdown
+- [x] Replace slide-up sheet with simple dropdown showing Clubs, Battle, Analyze, Sign In
