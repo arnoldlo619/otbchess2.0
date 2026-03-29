@@ -3692,3 +3692,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Use club slug (not ID) in share URLs: chessotb.club/clubs/{slug}
 - [x] Update server GET /api/clubs/:id to also resolve by slug (id OR slug match)
 - [x] Update ClubProfile handleShare to use canonical chessotb.club URL
+
+## Club Profile: Feed as Default Tab
+- [x] Change default activeTab from 'about' to 'feed' in ClubProfile
+- [x] Reorder tabs so Feed appears first: Feed, Events, Members, Tournaments, About, Leagues

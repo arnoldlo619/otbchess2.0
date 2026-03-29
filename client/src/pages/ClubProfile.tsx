@@ -662,7 +662,7 @@ export default function ClubProfile() {
     const p = new URLSearchParams(search);
     const t = p.get("tab");
     const valid = ["about", "events", "members", "tournaments", "feed", "leagues"] as const;
-    return (valid as readonly string[]).includes(t ?? "") ? (t as typeof valid[number]) : "about";
+    return (valid as readonly string[]).includes(t ?? "") ? (t as typeof valid[number]) : "feed";
   })();
 
   const [club, setClub] = useState<Club | null>(null);
@@ -1192,7 +1192,7 @@ export default function ClubProfile() {
       {/* ── Tab navigation ──────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
         <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-white/5" : "bg-black/5"}`}>
-          {(["about", "events", "feed", "members", "tournaments", "leagues"] as const).map((tab) => (
+          {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
