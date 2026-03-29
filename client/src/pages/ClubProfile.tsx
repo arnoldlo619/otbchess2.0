@@ -898,7 +898,8 @@ export default function ClubProfile() {
   };
 
   const handleShare = () => {
-    const url = window.location.href;
+    // Always use the canonical chessotb.club domain with the slug for share links
+    const url = `https://chessotb.club/clubs/${club.slug || club.id}`;
     if (navigator.share) {
       navigator.share({ title: club.name, text: club.tagline, url });
     } else {

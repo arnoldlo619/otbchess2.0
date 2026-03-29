@@ -341,8 +341,15 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
     }, 180);
   };
 
+  // Use canonical chessotb.club domain with slug for share links
+  const clubSlug = createdClubId
+    ? (data.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, ""))
+    : "";
   const clubUrl = createdClubId
-    ? `${window.location.origin}/clubs/${createdClubId}`
+    ? `https://chessotb.club/clubs/${clubSlug || createdClubId}`
     : "";
 
   const handleCopy = () => {

@@ -3686,3 +3686,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit club creation POST endpoint and DB insert
 - [x] Fix Clubs page query so newly created clubs populate — CreateClubWizard now awaits apiCreateClub and shows error if server save fails
 - [x] Fix club share link routing — ClubProfile now falls back to server API when club not in localStorage
+
+## Club Share URL: Use chessotb.club domain
+- [x] Replace window.location.origin with https://chessotb.club in all club share URL generation
+- [x] Use club slug (not ID) in share URLs: chessotb.club/clubs/{slug}
+- [x] Update server GET /api/clubs/:id to also resolve by slug (id OR slug match)
+- [x] Update ClubProfile handleShare to use canonical chessotb.club URL

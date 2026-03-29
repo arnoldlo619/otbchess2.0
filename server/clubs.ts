@@ -360,10 +360,12 @@ clubsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
     const { id } = req.params;
+    // Resolve by ID first, then by slug — so chessotb.club/clubs/my-club-name works
     const [row] = await db
       .select()
       .from(dbClubs)
-      .where(eq(dbClubs.id, id));
+      .where(or(eq(dbClubs.id, id), eq(dbClubs.slug, id)))
+      .limit(1);
     if (!row) {
       res.status(404).json({ error: "Club not found" });
       return;
