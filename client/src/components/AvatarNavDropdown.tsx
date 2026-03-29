@@ -489,6 +489,7 @@ export function AvatarNavDropdown({
       </AnimatePresence>
 
       {/* ── Dropdown panel ── */}
+      {/* On mobile: full-screen slide-up sheet. On desktop: anchored dropdown. */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -497,7 +498,7 @@ export function AvatarNavDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="absolute right-0 top-full mt-2 z-[9999] w-64 rounded-2xl shadow-2xl"
+            className="hidden md:block absolute right-0 top-full mt-2 z-[9999] w-64 rounded-2xl shadow-2xl"
             style={{
               background: "oklch(0.17 0.06 145 / 0.97)",
               border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
@@ -740,6 +741,141 @@ export function AvatarNavDropdown({
               )}
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Mobile slide-up sheet (signed-in users only, hidden on md+) ── */}
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="mobile-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[9990] md:hidden"
+              style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+              onClick={() => setOpen(false)}
+            />
+            {/* Sheet */}
+            <motion.div
+              key="mobile-sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 340, damping: 36 }}
+              className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
+              style={{
+                background: "oklch(0.15 0.06 145 / 0.98)",
+                border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+                backdropFilter: "blur(24px)",
+                WebkitBackdropFilter: "blur(24px)",
+                boxShadow: `0 -8px 40px rgba(0,0,0,0.6), 0 0 32px ${OTB_GREEN_GLOW}0.08)`,
+                paddingBottom: "env(safe-area-inset-bottom, 16px)",
+              }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+              </div>
+
+              {/* User identity */}
+              {user && !user.isGuest && (
+                <div className="flex items-center gap-3 px-5 pt-2 pb-3">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                    style={{ background: "#3D6B47" }}
+                  >
+                    <AvatarCircle user={user} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">
+                      {user.displayName || user.email}
+                    </p>
+                    {user.chesscomUsername && (
+                      <p className="text-[11px] text-white/40 truncate">
+                        chess.com/{user.chesscomUsername}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="mx-4 mb-2 h-px" style={{ background: `${OTB_GREEN_GLOW}0.15)` }} />
+
+              {/* Nav links */}
+              <div className="px-3 pb-1">
+                <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                  Navigate
+                </p>
+                {resolvedNavItems.map((item, i) => {
+                  const active = isActive(item);
+                  return (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 + 0.05 }}
+                    >
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors"
+                        style={active
+                          ? { background: `${OTB_GREEN_GLOW}0.22)`, border: `1px solid ${OTB_GREEN_GLOW}0.28)`, color: "#fff" }
+                          : { color: "rgba(255,255,255,0.65)", border: "1px solid transparent" }
+                        }
+                      >
+                        <div
+                          className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: active ? `${OTB_GREEN_GLOW}0.25)` : "rgba(255,255,255,0.06)" }}
+                        >
+                          <item.icon className="w-4 h-4" style={{ color: active ? "#4CAF50" : "rgba(255,255,255,0.5)" }} />
+                        </div>
+                        <span>{item.name}</span>
+                        {active && (
+                          <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "#4CAF50" }} />
+                        )}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Divider */}
+              <div className="mx-4 my-2 h-px" style={{ background: `${OTB_GREEN_GLOW}0.15)` }} />
+
+              {/* User actions */}
+              <div className="px-3 pb-3">
+                {user && !user.isGuest && (
+                  <Link
+                    href="/profile"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                    style={{ border: "1px solid transparent" }}
+                  >
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <Crown className="w-4 h-4 text-white/50" />
+                    </div>
+                    <span>My Profile</span>
+                  </Link>
+                )}
+                <button
+                  onClick={() => { logout(); setOpen(false); }}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
+                  style={{ border: "1px solid transparent" }}
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(239,68,68,0.08)" }}>
+                    <LogOut className="w-4 h-4 text-red-400" />
+                  </div>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

@@ -3674,3 +3674,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Render hamburger unconditionally in mobile slot (bypass isDesktop guard)
 - [x] Remove standalone Sign In button from navbar on mobile
 - [x] Move Sign In action inside the hamburger drawer
+
+## Mobile Nav Fix: Signed-in avatar dropdown missing nav links
+- [x] Add Dashboard, Clubs, Battle, Analyze links to AvatarNavDropdown for signed-in users on mobile
+- [x] Fix Home.tsx signed-in user dropdown to also include nav links on mobile
