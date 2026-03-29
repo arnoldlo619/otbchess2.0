@@ -694,34 +694,52 @@ export default function ClubProfile() {
   useEffect(() => {
     seedClubsIfEmpty();
     const id = params.id;
-    // Try by id first, then by slug
-    const found = getClub(id) ?? getClubBySlug(id);
-    if (!found) return;
-    setClub(found);
-    const clubMembers = getClubMembers(found.id);
-    setMembers(clubMembers);
-    setTournaments(getClubTournaments(found.id));
-    setLiveTournaments(listTournamentsByClub(found.id));
-    if (user) {
-      setJoined(isMember(found.id, user.id));
-      setFollowing(isFollowing(found.id, user.id));
+
+    const loadClubData = (found: Club) => {
+      setClub(found);
+      const clubMembers = getClubMembers(found.id);
+      setMembers(clubMembers);
+      setTournaments(getClubTournaments(found.id));
+      setLiveTournaments(listTournamentsByClub(found.id));
+      if (user) {
+        setJoined(isMember(found.id, user.id));
+        setFollowing(isFollowing(found.id, user.id));
+      }
+      setFollowerCount(getFollowerCount(found.id));
+      seedFeedIfEmpty(
+        found.id,
+        found.name,
+        found.ownerName,
+        found.foundedAt,
+        clubMembers.map((m) => ({
+          displayName: m.displayName,
+          joinedAt: m.joinedAt,
+          avatarUrl: m.avatarUrl,
+        }))
+      );
+      setFeedEvents(listFeedEvents(found.id));
+      setClubEvents(listClubEvents(found.id).filter((e) => e.isPublished));
+    };
+
+    // Try localStorage first (fast, works offline)
+    const local = getClub(id) ?? getClubBySlug(id);
+    if (local) {
+      loadClubData(local);
+      return;
     }
-    setFollowerCount(getFollowerCount(found.id));
-    // Seed and load feed
-    seedFeedIfEmpty(
-      found.id,
-      found.name,
-      found.ownerName,
-      found.foundedAt,
-      clubMembers.map((m) => ({
-        displayName: m.displayName,
-        joinedAt: m.joinedAt,
-        avatarUrl: m.avatarUrl,
-      }))
-    );
-    setFeedEvents(listFeedEvents(found.id));
-    // Load published club events
-    setClubEvents(listClubEvents(found.id).filter((e) => e.isPublished));
+
+    // Fall back to server API (handles share links from other devices/browsers)
+    fetch(`/api/clubs/${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((serverClub: Club | null) => {
+        if (serverClub) {
+          loadClubData(serverClub);
+        }
+        // If null, the "Club not found" UI will render (club truly doesn't exist)
+      })
+      .catch(() => {
+        // Network error — "Club not found" UI will render
+      });
   }, [params.id, user]);
 
   // Poll-close + scheduled-publish interval: check every 30 seconds

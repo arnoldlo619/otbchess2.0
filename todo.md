@@ -3681,3 +3681,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Mobile Nav Fix: Guest hamburger dropdown
 - [x] Replace slide-up sheet with simple dropdown showing Clubs, Battle, Analyze, Sign In
+
+## Bug Fix: Club Creation & Share Links
+- [x] Audit club creation POST endpoint and DB insert
+- [x] Fix Clubs page query so newly created clubs populate — CreateClubWizard now awaits apiCreateClub and shows error if server save fails
+- [x] Fix club share link routing — ClubProfile now falls back to server API when club not in localStorage

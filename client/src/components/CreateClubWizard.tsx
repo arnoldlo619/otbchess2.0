@@ -16,7 +16,7 @@
  *   - Keyboard navigation (Enter → next, Escape → close)
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -242,6 +242,8 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const [animating, setAnimating] = useState(false);
   const [createdClubId, setCreatedClubId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [, startTransition] = useTransition();
   const nameRef = useRef<HTMLInputElement>(null);
 
   // Focus first input on mount
@@ -272,15 +274,17 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
     setError(null);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 5) return;
+    if (creating) return;
     const err = validateStep(step, data);
     if (err) { setError(err); return; }
     setError(null);
 
-    // On step 4 → create the club
+    // On step 4 → create the club (server-first)
     if (step === 4) {
       if (!user) { toast.error("Sign in to create a club"); return; }
+      setCreating(true);
       const clubData = {
         name: data.name.trim(),
         tagline: data.tagline.trim(),
@@ -297,16 +301,25 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         website: data.website.trim() || undefined,
         discord: data.discord.trim() || undefined,
       };
-      // Persist to localStorage (immediate, offline-capable)
-      const club = createClub(
+
+      // 1. Persist to localStorage immediately (offline-capable, instant feedback)
+      const localClub = createClub(
         clubData,
         { userId: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl }
       );
-      setCreatedClubId(club.id);
-      // Also persist to server so the club appears in Discover for all users
-      apiCreateClub({ ...clubData, id: club.id }).catch(() => {
-        // Non-fatal: club exists in localStorage; will sync on next migration run
-      });
+
+      // 2. Persist to server (required so club appears in Discover for all users)
+      const serverClub = await apiCreateClub({ ...clubData, id: localClub.id });
+      if (!serverClub) {
+        // Server save failed — show error and stay on step 4
+        setCreating(false);
+        setError("Failed to save club to server. Please check your connection and try again.");
+        toast.error("Club creation failed — please try again.");
+        return;
+      }
+
+      setCreatedClubId(serverClub.id);
+      setCreating(false);
     }
 
     setDirection("forward");
@@ -533,10 +546,23 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
               {/* Next button */}
               <button
                 onClick={handleNext}
-                className="mt-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] active:scale-98 transition-all"
+                disabled={creating}
+                className="mt-8 w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-base font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] active:scale-98 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {step === 4 ? "Create Club" : "Continue"}
-                <ChevronRight className="w-5 h-5" />
+                {creating ? (
+                  <>
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    Creating Club...
+                  </>
+                ) : (
+                  <>
+                    {step === 4 ? "Create Club" : "Continue"}
+                    <ChevronRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           </div>
