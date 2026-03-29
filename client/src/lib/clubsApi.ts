@@ -48,19 +48,22 @@ export async function apiListMyClubs(): Promise<Club[]> {
 // ── Create a new club ─────────────────────────────────────────────────────────
 export async function apiCreateClub(
   club: Partial<Club> & { name: string }
-): Promise<Club | null> {
-  try {
-    const res = await fetch(BASE, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(club),
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as Club;
-  } catch {
-    return null;
+): Promise<Club> {
+  const res = await fetch(BASE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(club),
+  });
+  if (!res.ok) {
+    let msg = "Failed to save club to server";
+    try {
+      const body = await res.json();
+      if (body?.error) msg = body.error;
+    } catch {}
+    throw new Error(msg);
   }
+  return (await res.json()) as Club;
 }
 
 // ── Sync localStorage clubs to the server (one-time migration) ────────────────

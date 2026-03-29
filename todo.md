@@ -3705,3 +3705,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show linked tournaments on Club Profile Tournaments tab (via listTournamentsByClub)
 - [x] Grant director session automatically on creation
 - [x] Show join invite code in success toast
+
+## Bug Fix: Club Creation Server Error
+- [x] Diagnose "Failed to save club to server" error — root cause: clubs.ts had no auth middleware so req.userId was always undefined
+- [x] Fix server POST /api/clubs endpoint — apply requireFullAuth middleware from auth.ts
+- [x] Fix all other protected club routes (mine, sync, PATCH, members, heartbeat, DELETE)
+- [x] Fix client apiCreateClub to throw with server error message instead of silently returning null
+- [x] Rewrite clubs.ts cleanly to fix syntax corruption from partial edits

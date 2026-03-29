@@ -1,4 +1,4 @@
-/**
+/*
  * OTB Chess — Clubs REST API
  *
  * Endpoints (all mounted at /api/clubs):
@@ -6,25 +6,30 @@
  *   GET  /mine               — list clubs the signed-in user belongs to
  *   POST /                   — create a new club (auth required)
  *   POST /sync               — bulk-upsert clubs from localStorage (migration)
- *   GET  /:id                — get a single club by ID
+ *   GET  /leaderboard        — ranked leaderboard across all clubs
+ *   GET  /:id                — get a single club by ID or slug
  *   PATCH /:id               — update club metadata (owner/director only)
  *   GET  /:id/members        — list club members
  *   POST /:id/members        — join a club (auth required)
+ *   POST /:id/heartbeat      — update presence timestamp (auth required)
+ *   GET  /:id/presence       — get online member count
  *   DELETE /:id/members/:uid — leave / remove a member
  */
 
 import { Router } from "express";
 import { getDb } from "./db.js";
 import { dbClubs, dbClubMembers } from "../shared/schema";
-import { eq, and, desc, or, sql, gt } from "drizzle-orm";
+import { eq, and, desc, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
+import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 
 export const clubsRouter = Router();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function requireAuth(req: Request, res: Response): string | null {
+/** Read req.userId set by authMiddleware — returns it or sends 401 and returns null. */
+function getUserId(req: Request, res: Response): string | null {
   const userId = (req as any).userId as string | undefined;
   if (!userId) {
     res.status(401).json({ error: "Authentication required" });
@@ -67,7 +72,10 @@ const ONLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 function isOnlineNow(lastSeenAt: Date | null | undefined): boolean {
   if (!lastSeenAt) return false;
-  const ts = lastSeenAt instanceof Date ? lastSeenAt.getTime() : new Date(String(lastSeenAt)).getTime();
+  const ts =
+    lastSeenAt instanceof Date
+      ? lastSeenAt.getTime()
+      : new Date(String(lastSeenAt)).getTime();
   return Date.now() - ts < ONLINE_THRESHOLD_MS;
 }
 
@@ -88,7 +96,9 @@ function dbMemberToMember(row: typeof dbClubMembers.$inferSelect) {
     bestFinish: row.bestFinish ?? null,
     lastSeenAt: row.lastSeenAt instanceof Date
       ? row.lastSeenAt.toISOString()
-      : (row.lastSeenAt ? String(row.lastSeenAt) : null),
+      : row.lastSeenAt
+      ? String(row.lastSeenAt)
+      : null,
     isOnline: isOnlineNow(row.lastSeenAt as Date | null),
   };
 }
@@ -129,8 +139,8 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
 });
 
 // ── GET /api/clubs/mine — clubs the signed-in user belongs to ─────────────────
-clubsRouter.get("/mine", async (req: Request, res: Response) => {
-  const userId = requireAuth(req, res);
+clubsRouter.get("/mine", authMiddleware, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
@@ -161,9 +171,44 @@ clubsRouter.get("/mine", async (req: Request, res: Response) => {
   }
 });
 
+// ── GET /api/clubs/leaderboard — ranked leaderboard across all clubs ──────────
+// MUST be declared before /:id to avoid the wildcard swallowing "leaderboard".
+clubsRouter.get("/leaderboard", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const { sortBy = "members" } = req.query as Record<string, string>;
+
+    const rows = await db
+      .select()
+      .from(dbClubs)
+      .where(eq(dbClubs.isPublic, 1));
+
+    type ScoredClub = ReturnType<typeof dbRowToClub> & { score: number };
+    const scored: ScoredClub[] = rows.map((r: typeof dbClubs.$inferSelect) => ({
+      ...dbRowToClub(r),
+      score: sortBy === "tournaments" ? r.tournamentCount : r.memberCount,
+    }));
+
+    scored.sort((a, b) =>
+      b.score !== a.score ? b.score - a.score : a.name.localeCompare(b.name)
+    );
+
+    let rank = 1;
+    const ranked = scored.map((club, idx, arr) => {
+      if (idx > 0 && arr[idx - 1].score !== club.score) rank = idx + 1;
+      return { ...club, rank };
+    });
+
+    res.json({ clubs: ranked.slice(0, 50), total: ranked.length, sortBy });
+  } catch (err) {
+    console.error("[clubs] GET /leaderboard error:", err);
+    res.status(500).json({ error: "Failed to load leaderboard" });
+  }
+});
+
 // ── POST /api/clubs — create a new club ───────────────────────────────────────
-clubsRouter.post("/", async (req: Request, res: Response) => {
-  const userId = requireAuth(req, res);
+clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
@@ -246,8 +291,8 @@ clubsRouter.post("/", async (req: Request, res: Response) => {
 });
 
 // ── POST /api/clubs/sync — bulk upsert from localStorage (migration) ──────────
-clubsRouter.post("/sync", async (req: Request, res: Response) => {
-  const userId = requireAuth(req, res);
+clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
@@ -311,51 +356,7 @@ clubsRouter.post("/sync", async (req: Request, res: Response) => {
   }
 });
 
-// ── GET /api/clubs/:id — get a single club ────────────────────────────────────
-
-// ── GET /api/clubs/leaderboard — ranked leaderboard across all clubs ──────────
-// MUST be declared before /:id to avoid the wildcard swallowing "leaderboard".
-// Supports ?sortBy=members|tournaments  (default: members)
-// Returns top 50 clubs with rank and score.
-clubsRouter.get("/leaderboard", async (req: Request, res: Response) => {
-  try {
-    const db = await getDb();
-    const { sortBy = "members" } = req.query as Record<string, string>;
-
-    const rows = await db
-      .select()
-      .from(dbClubs)
-      .where(eq(dbClubs.isPublic, 1));
-
-    // Compute score per club based on requested metric
-    type ScoredClub = ReturnType<typeof dbRowToClub> & { score: number };
-    const scored: ScoredClub[] = rows.map((r: typeof dbClubs.$inferSelect) => ({
-      ...dbRowToClub(r),
-      score:
-        sortBy === "tournaments"
-          ? r.tournamentCount
-          : r.memberCount, // default: members
-    }));
-
-    // Sort descending by score, then alphabetically for ties
-    scored.sort((a, b) =>
-      b.score !== a.score ? b.score - a.score : a.name.localeCompare(b.name)
-    );
-
-    // Assign ranks (ties share the same rank number)
-    let rank = 1;
-    const ranked = scored.map((club, idx, arr) => {
-      if (idx > 0 && arr[idx - 1].score !== club.score) rank = idx + 1;
-      return { ...club, rank };
-    });
-
-    res.json({ clubs: ranked.slice(0, 50), total: ranked.length, sortBy });
-  } catch (err) {
-    console.error("[clubs] GET /leaderboard error:", err);
-    res.status(500).json({ error: "Failed to load leaderboard" });
-  }
-});
-
+// ── GET /api/clubs/:id — get a single club by ID or slug ─────────────────────
 clubsRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
@@ -378,8 +379,8 @@ clubsRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 // ── PATCH /api/clubs/:id — update club metadata ───────────────────────────────
-clubsRouter.patch("/:id", async (req: Request, res: Response) => {
-  const userId = requireAuth(req, res);
+clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
@@ -395,15 +396,11 @@ clubsRouter.patch("/:id", async (req: Request, res: Response) => {
     const [membership] = await db
       .select()
       .from(dbClubMembers)
-      .where(
-        and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId))
-      );
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
     const isOwner = club.ownerId === userId;
     const isDirector = membership?.role === "director";
     if (!isOwner && !isDirector) {
-      res
-        .status(403)
-        .json({ error: "Only owners and directors can update club settings" });
+      res.status(403).json({ error: "Only owners and directors can update club settings" });
       return;
     }
 
@@ -414,8 +411,6 @@ clubsRouter.patch("/:id", async (req: Request, res: Response) => {
       "location",
       "country",
       "category",
-      "avatarUrl",
-      "bannerUrl",
       "accentColor",
       "isPublic",
       "website",
@@ -434,10 +429,7 @@ clubsRouter.patch("/:id", async (req: Request, res: Response) => {
       await db.update(dbClubs).set(updates).where(eq(dbClubs.id, id));
     }
 
-    const [updated] = await db
-      .select()
-      .from(dbClubs)
-      .where(eq(dbClubs.id, id));
+    const [updated] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
     res.json(dbRowToClub(updated));
   } catch (err) {
     console.error("[clubs] PATCH /:id error:", err);
@@ -462,16 +454,13 @@ clubsRouter.get("/:id/members", async (req: Request, res: Response) => {
 });
 
 // ── POST /api/clubs/:id/members — join a club ─────────────────────────────────
-clubsRouter.post("/:id/members", async (req: Request, res: Response) => {
-  const userId = requireAuth(req, res);
+clubsRouter.post("/:id/members", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
     const { id } = req.params;
-    const [club] = await db
-      .select()
-      .from(dbClubs)
-      .where(eq(dbClubs.id, id));
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
     if (!club) {
       res.status(404).json({ error: "Club not found" });
       return;
@@ -479,19 +468,12 @@ clubsRouter.post("/:id/members", async (req: Request, res: Response) => {
     const [existing] = await db
       .select()
       .from(dbClubMembers)
-      .where(
-        and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId))
-      );
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
     if (existing) {
       res.status(409).json({ error: "Already a member" });
       return;
     }
-    const {
-      displayName = "",
-      chesscomUsername,
-      lichessUsername,
-      avatarUrl,
-    } = req.body;
+    const { displayName = "", chesscomUsername, lichessUsername, avatarUrl } = req.body;
     await db.insert(dbClubMembers).values({
       clubId: id,
       userId,
@@ -514,8 +496,8 @@ clubsRouter.post("/:id/members", async (req: Request, res: Response) => {
 });
 
 // ── POST /api/clubs/:id/heartbeat — update presence timestamp ────────────────
-clubsRouter.post("/:id/heartbeat", async (req: Request, res: Response) => {
-  const userId = requireAuth(req, res);
+clubsRouter.post("/:id/heartbeat", authMiddleware, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
   if (!userId) return;
   try {
     const db = await getDb();
@@ -544,7 +526,6 @@ clubsRouter.get("/:id/presence", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
     const { id } = req.params;
-    const thresholdDate = new Date(Date.now() - ONLINE_THRESHOLD_MS);
     const allMembers = await db
       .select({ lastSeenAt: dbClubMembers.lastSeenAt })
       .from(dbClubMembers)
@@ -560,19 +541,17 @@ clubsRouter.get("/:id/presence", async (req: Request, res: Response) => {
   }
 });
 
-// ── DELETE /api/clubs/:id/members/:uid — leave / remove member ────────────────
+// ── DELETE /api/clubs/:id/members/:memberId — leave / remove member ───────────
 clubsRouter.delete(
   "/:id/members/:memberId",
+  requireFullAuth,
   async (req: Request, res: Response) => {
-    const requesterId = requireAuth(req, res);
+    const requesterId = getUserId(req, res);
     if (!requesterId) return;
     try {
       const db = await getDb();
       const { id, memberId } = req.params;
-      const [club] = await db
-        .select()
-        .from(dbClubs)
-        .where(eq(dbClubs.id, id));
+      const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
       if (!club) {
         res.status(404).json({ error: "Club not found" });
         return;
@@ -590,9 +569,7 @@ clubsRouter.delete(
       const isDirector = requesterMembership?.role === "director";
       const isSelf = requesterId === memberId;
       if (!isOwner && !isDirector && !isSelf) {
-        res
-          .status(403)
-          .json({ error: "Not authorised to remove this member" });
+        res.status(403).json({ error: "Not authorised to remove this member" });
         return;
       }
 
