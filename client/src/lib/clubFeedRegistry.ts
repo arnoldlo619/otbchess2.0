@@ -384,7 +384,7 @@ export function recordTournamentCreated(
     description: `${directorName} created a new tournament`,
     detail: tournamentName,
     linkHref: `/tournament/${tournamentId}`,
-    linkLabel: "View tournament",
+    linkLabel: "Join Tournament",
   });
 }
 

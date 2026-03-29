@@ -3696,3 +3696,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Club Profile: Feed as Default Tab
 - [x] Change default activeTab from 'about' to 'feed' in ClubProfile
 - [x] Reorder tabs so Feed appears first: Feed, Events, Members, Tournaments, About, Leagues
+
+## Club Event → OTB Tournament Integration
+- [x] Audit RSVP form and club event creation to understand current data model
+- [x] Add "Create OTB Tournament" toggle to RSVP form in ClubDashboard Feed composer
+- [x] Link created tournament to club (clubId + clubName on TournamentConfig)
+- [x] Post feed card with "Join Tournament" link to /tournament/{slug}
+- [x] Show linked tournaments on Club Profile Tournaments tab (via listTournamentsByClub)
+- [x] Grant director session automatically on creation
+- [x] Show join invite code in success toast

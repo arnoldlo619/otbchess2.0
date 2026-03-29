@@ -93,11 +93,20 @@ import {
   shouldPostPotmThisMonth,
   getPreviousMonthKey,
   getPreviousMonthLabel,
+  recordTournamentCreated,
   type FeedEvent,
   type PollOption,
   type FeedRSVPEntry,
   type ScheduledPoll,
 } from "@/lib/clubFeedRegistry";
+import {
+  registerTournament,
+  makeSlug,
+  generateDirectorCode,
+  grantDirectorSession,
+  type TournamentConfig,
+} from "@/lib/tournamentRegistry";
+import { nanoid } from "nanoid";
 import {
   Users,
   Trophy,
@@ -2054,6 +2063,9 @@ export default function ClubDashboard() {
   const [rsvpTitle, setRsvpTitle] = useState("");
   const [rsvpDate, setRsvpDate] = useState("");
   const [rsvpVenue, setRsvpVenue] = useState("");
+  const [rsvpCreateTournament, setRsvpCreateTournament] = useState(true);
+  const [rsvpFormat, setRsvpFormat] = useState<"swiss" | "roundrobin">("swiss");
+  const [rsvpTimePreset, setRsvpTimePreset] = useState<"5+0" | "10+0" | "10+5" | "15+10">("10+5");
   // Battle state
   const [battleView, setBattleView] = useState<"leaderboard" | "battles">("leaderboard");
   const [battles, setBattles] = useState<ClubBattle[]>([]);
@@ -2257,10 +2269,53 @@ export default function ClubDashboard() {
   function submitRsvpForm(e: React.FormEvent) {
     e.preventDefault();
     if (!rsvpTitle.trim() || !rsvpDate || !club || !user) return;
-    postRsvpForm(club.id, user.displayName, rsvpTitle.trim(), rsvpDate, rsvpVenue.trim(), user.avatarUrl ?? null);
+
+    if (rsvpCreateTournament) {
+      // ── Create a real OTB tournament linked to this club ──────────────────
+      const timeMap: Record<string, { base: number; inc: number }> = {
+        "5+0":   { base: 5,  inc: 0  },
+        "10+0":  { base: 10, inc: 0  },
+        "10+5":  { base: 10, inc: 5  },
+        "15+10": { base: 15, inc: 10 },
+      };
+      const { base, inc } = timeMap[rsvpTimePreset] ?? { base: 10, inc: 5 };
+      const slug = makeSlug(rsvpTitle.trim(), rsvpDate);
+      const directorCode = generateDirectorCode();
+      const inviteCode = nanoid(8).toUpperCase();
+      const config: TournamentConfig = {
+        id: slug,
+        inviteCode,
+        directorCode,
+        name: rsvpTitle.trim(),
+        venue: rsvpVenue.trim() || club.location || "",
+        date: rsvpDate,
+        description: `Club event hosted by ${club.name}`,
+        format: rsvpFormat,
+        rounds: 5,
+        maxPlayers: 32,
+        timeBase: base,
+        timeIncrement: inc,
+        timePreset: rsvpTimePreset,
+        ratingSystem: "chess.com",
+        ratingType: "rapid",
+        createdAt: new Date().toISOString(),
+        ownerId: user.id as unknown as number,
+        clubId: club.id,
+        clubName: club.name,
+      };
+      registerTournament(config);
+      grantDirectorSession(slug);
+      // Post a feed card with a direct tournament link
+      recordTournamentCreated(club.id, user.displayName, rsvpTitle.trim(), slug);
+      toast.success("Tournament created! Share the join code: " + inviteCode);
+    } else {
+      // Plain RSVP form (no tournament)
+      postRsvpForm(club.id, user.displayName, rsvpTitle.trim(), rsvpDate, rsvpVenue.trim(), user.avatarUrl ?? null);
+      toast.success("RSVP form posted!");
+    }
+
     setRsvpTitle(""); setRsvpDate(""); setRsvpVenue("");
     refreshFeed();
-    toast.success("RSVP form posted!");
   }
 
   function handleDeleteFeedEvent(eventId: string) {
@@ -2967,9 +3022,10 @@ export default function ClubDashboard() {
                   </form>
                 )}
 
-                {/* RSVP Form composer */}
+                {/* RSVP Form / Tournament Event composer */}
                 {composerMode === "rsvp" && (
                   <form onSubmit={submitRsvpForm} className="p-4 space-y-3">
+                    {/* Event title */}
                     <input
                       value={rsvpTitle}
                       onChange={(e) => setRsvpTitle(e.target.value)}
@@ -2977,6 +3033,7 @@ export default function ClubDashboard() {
                       maxLength={120}
                       className="w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/50 transition-colors"
                     />
+                    {/* Date + Venue */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-white/40 text-xs mb-1">Date</label>
@@ -2998,13 +3055,67 @@ export default function ClubDashboard() {
                         />
                       </div>
                     </div>
+
+                    {/* Create Tournament toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setRsvpCreateTournament((v) => !v)}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                        rsvpCreateTournament
+                          ? "border-[#4CAF50]/50 bg-[#4CAF50]/10 text-[#4CAF50]"
+                          : "border-white/12 bg-white/05 text-white/50"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4" />
+                        Create OTB Tournament
+                      </span>
+                      <span className={`w-8 h-4 rounded-full transition-colors relative ${
+                        rsvpCreateTournament ? "bg-[#4CAF50]" : "bg-white/20"
+                      }`}>
+                        <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${
+                          rsvpCreateTournament ? "left-4" : "left-0.5"
+                        }`} />
+                      </span>
+                    </button>
+
+                    {/* Tournament options (shown when toggle is on) */}
+                    {rsvpCreateTournament && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-white/40 text-xs mb-1">Format</label>
+                          <select
+                            value={rsvpFormat}
+                            onChange={(e) => setRsvpFormat(e.target.value as "swiss" | "roundrobin")}
+                            className="w-full bg-white/07 border border-white/12 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-[#4CAF50]/50 transition-colors"
+                          >
+                            <option value="swiss">Swiss</option>
+                            <option value="roundrobin">Round Robin</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-white/40 text-xs mb-1">Time Control</label>
+                          <select
+                            value={rsvpTimePreset}
+                            onChange={(e) => setRsvpTimePreset(e.target.value as typeof rsvpTimePreset)}
+                            className="w-full bg-white/07 border border-white/12 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-[#4CAF50]/50 transition-colors"
+                          >
+                            <option value="5+0">5+0 Blitz</option>
+                            <option value="10+0">10+0 Rapid</option>
+                            <option value="10+5">10+5 Rapid</option>
+                            <option value="15+10">15+10 Classical</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       type="submit"
                       disabled={!rsvpTitle.trim() || !rsvpDate}
                       className="w-full py-2.5 rounded-xl text-sm font-bold text-black transition-all active:scale-98 disabled:opacity-40"
                       style={{ background: accent }}
                     >
-                      Post RSVP Form
+                      {rsvpCreateTournament ? "Create Tournament Event" : "Post RSVP Form"}
                     </button>
                   </form>
                 )}
