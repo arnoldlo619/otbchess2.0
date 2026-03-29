@@ -3712,3 +3712,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix all other protected club routes (mine, sync, PATCH, members, heartbeat, DELETE)
 - [x] Fix client apiCreateClub to throw with server error message instead of silently returning null
 - [x] Rewrite clubs.ts cleanly to fix syntax corruption from partial edits
+
+## Footer Contact Email
+- [x] Update contact email to info@chessotb.club in footer (Home.tsx + Tournament.tsx)
