@@ -31,6 +31,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
 import { useChessAvatar } from "@/hooks/useChessAvatar";
+import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const OTB_GREEN      = "#4CAF50";
@@ -361,6 +362,83 @@ export function AvatarNavDropdown({
 
   // Determine if any sparkline data exists
   const hasSparkline = history.rapid.length >= 2 || history.blitz.length >= 2 || history.bullet.length >= 2;
+
+  // On mobile, guests see the dedicated hamburger drawer instead of the avatar dropdown
+  const isGuest = !user || user.isGuest;
+
+  if (isGuest) {
+    return (
+      <>
+        {/* Mobile: full hamburger drawer */}
+        <div className="flex md:hidden">
+          <GuestMobileMenu
+            currentPage={currentPage}
+            onSignInClick={onSignInClick}
+          />
+        </div>
+        {/* Desktop: avatar dropdown (same JSX as the main return below, scoped to desktop) */}
+        <div ref={wrapperRef} className={`relative hidden md:block ${className}`}>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className={`flex items-center gap-1.5 rounded-full border transition-all border-white/20 bg-black/30 backdrop-blur-md hover:bg-white/10 active:bg-white/15`}
+            style={{ padding: "3px 8px 3px 3px" }}
+          >
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+              style={{ background: "rgba(255,255,255,0.08)" }}
+            >
+              <LogIn className="w-3.5 h-3.5 text-white/50" />
+            </div>
+            <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="w-3.5 h-3.5 text-white/50" />
+            </motion.div>
+          </button>
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                key="backdrop-guest"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 z-[9990]"
+                onClick={() => setOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                key="dropdown-guest"
+                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                className="absolute right-0 top-full mt-2 z-[9999] w-56 rounded-2xl shadow-2xl"
+                style={{
+                  background: "oklch(0.17 0.06 145 / 0.97)",
+                  border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  boxShadow: `0 8px 32px rgba(0,0,0,0.55)`,
+                }}
+              >
+                <div className="px-2 py-2">
+                  <button
+                    onClick={() => { setOpen(false); onSignInClick?.(); }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
+                  >
+                    <LogIn className="w-4 h-4 flex-shrink-0" />
+                    <span>Sign In</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>

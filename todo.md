@@ -3668,3 +3668,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build slide-in drawer with Dashboard, Clubs, Battle, Analyze links
 - [x] Animated open/close with backdrop blur overlay
 - [x] Premium minimalist design matching existing dark green design system
+
+## Mobile Nav Fix: Hamburger always visible + Sign In inside drawer
+- [x] Diagnose why hamburger hidden — check AnimeNavBar isDesktop logic and rightSlot rendering
+- [x] Render hamburger unconditionally in mobile slot (bypass isDesktop guard)
+- [x] Remove standalone Sign In button from navbar on mobile
+- [x] Move Sign In action inside the hamburger drawer
