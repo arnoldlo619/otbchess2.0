@@ -3722,3 +3722,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Bug Fix: AvatarNavDropdown Mobile Portal
 - [x] Move AvatarNavDropdown mobile sheet to ReactDOM.createPortal at document.body to fix stacking context clipping on inner pages
+
+## Mobile UX: Swipe-to-Dismiss & Guest Portal Fix
+- [x] Add swipe-to-dismiss touch gesture to AvatarNavDropdown mobile sheet
+- [x] Apply createPortal to GuestMobileMenu for clipping-free rendering on all pages

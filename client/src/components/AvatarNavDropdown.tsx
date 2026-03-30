@@ -292,6 +292,30 @@ export function AvatarNavDropdown({
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
 
+  // ── Swipe-to-dismiss state ──────────────────────────────────────────────────
+  const [swipeDy, setSwipeDy]   = useState(0);   // current drag offset (px)
+  const swipeStartY              = useRef<number | null>(null);
+  const DISMISS_THRESHOLD        = 80;            // px to trigger close
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    swipeStartY.current = e.touches[0].clientY;
+    setSwipeDy(0);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (swipeStartY.current === null) return;
+    const dy = e.touches[0].clientY - swipeStartY.current;
+    if (dy > 0) setSwipeDy(dy); // only allow downward drag
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (swipeDy >= DISMISS_THRESHOLD) {
+      setOpen(false);
+    }
+    setSwipeDy(0);
+    swipeStartY.current = null;
+  }, [swipeDy]);
+
   // Rating history state (ratings + dates for tooltip)
   const [history, setHistory] = useState<{
     rapid: number[]; blitz: number[]; bullet: number[];
@@ -766,22 +790,34 @@ export function AvatarNavDropdown({
               <motion.div
                 key="mobile-sheet"
                 initial={{ y: "100%" }}
-                animate={{ y: 0 }}
+                animate={{ y: swipeDy }}
                 exit={{ y: "100%" }}
-                transition={{ type: "spring", stiffness: 340, damping: 36 }}
+                transition={swipeDy > 0
+                  ? { type: "tween", duration: 0 }        // instant follow during drag
+                  : { type: "spring", stiffness: 340, damping: 36 }
+                }
                 className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
-              style={{
-                background: "oklch(0.15 0.06 145 / 0.98)",
-                border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
-                backdropFilter: "blur(24px)",
-                WebkitBackdropFilter: "blur(24px)",
-                boxShadow: `0 -8px 40px rgba(0,0,0,0.6), 0 0 32px ${OTB_GREEN_GLOW}0.08)`,
-                paddingBottom: "env(safe-area-inset-bottom, 16px)",
-              }}
-            >
-              {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+                style={{
+                  background: "oklch(0.15 0.06 145 / 0.98)",
+                  border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+                  backdropFilter: "blur(24px)",
+                  WebkitBackdropFilter: "blur(24px)",
+                  boxShadow: `0 -8px 40px rgba(0,0,0,0.6), 0 0 32px ${OTB_GREEN_GLOW}0.08)`,
+                  paddingBottom: "env(safe-area-inset-bottom, 16px)",
+                  opacity: swipeDy > 0 ? Math.max(0.4, 1 - swipeDy / 200) : 1,
+                }}
+              >
+              {/* Drag handle — touch target for swipe-to-dismiss */}
+              <div
+                className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div
+                  className="w-10 h-1 rounded-full transition-colors"
+                  style={{ background: swipeDy > 20 ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.18)" }}
+                />
               </div>
 
               {/* User identity */}
