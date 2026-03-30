@@ -3715,3 +3715,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Footer Contact Email
 - [x] Update contact email to info@chessotb.club in footer (Home.tsx + Tournament.tsx)
+
+## Bug Fix: Mobile Signed-In Avatar Dropdown (Home.tsx)
+- [ ] Fix Home.tsx signed-in user dropdown on mobile to show all nav links (Dashboard, Clubs, Battle, Analyze, My Profile, Sign Out)
+- [ ] Replace broken dropdown that only shows Sign Out with a proper slide-up sheet

@@ -1373,102 +1373,6 @@ export default function Home() {
             </>
           )}
 
-          {/* Mobile slide-up sheet */}
-          {userMenuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-[9990] md:hidden"
-                style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-                onClick={() => setUserMenuOpen(false)}
-              />
-              <div
-                className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
-                style={{
-                  background: "oklch(0.15 0.06 145 / 0.98)",
-                  border: "1px solid rgba(61,107,71,0.22)",
-                  backdropFilter: "blur(24px)",
-                  paddingBottom: "env(safe-area-inset-bottom, 16px)",
-                  boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
-                }}
-              >
-                {/* Handle */}
-                <div className="flex justify-center pt-3 pb-1">
-                  <div className="w-10 h-1 rounded-full bg-white/20" />
-                </div>
-                {/* Identity */}
-                <div className="flex items-center gap-3 px-5 pt-2 pb-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: user.isGuest ? "rgba(245,158,11,0.15)" : "#3D6B47" }}>
-                    {user.isGuest ? <Ghost className="w-5 h-5 text-amber-400" /> : <span className="text-sm font-bold text-white">{(user.displayName || user.email).charAt(0).toUpperCase()}</span>}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{user.displayName || user.email}</p>
-                    {user.isGuest && <p className="text-[11px] text-amber-400/70">Guest session</p>}
-                  </div>
-                </div>
-                {/* Divider */}
-                <div className="mx-4 mb-2 h-px bg-white/08" />
-                {/* Nav links */}
-                <div className="px-3 pb-1">
-                  <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">Navigate</p>
-                  {[
-                    { name: "Dashboard", href: getDashboardUrl(), Icon: LayoutDashboard },
-                    { name: "Clubs",     href: "/clubs",          Icon: Building2 },
-                    { name: "Battle",    href: "/battle",         Icon: Swords },
-                    { name: "Analyze",   href: "/record",         Icon: Video },
-                  ].map(({ name, href, Icon }) => (
-                    <Link
-                      key={name}
-                      href={href}
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/06">
-                        <Icon className="w-4 h-4 text-white/50" />
-                      </div>
-                      <span>{name}</span>
-                    </Link>
-                  ))}
-                </div>
-                {/* Divider */}
-                <div className="mx-4 my-2 h-px bg-white/08" />
-                {/* User actions */}
-                <div className="px-3 pb-3">
-                  {!user.isGuest && (
-                    <Link
-                      href="/profile"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/06">
-                        <Crown className="w-4 h-4 text-white/50" />
-                      </div>
-                      <span>My Profile</span>
-                    </Link>
-                  )}
-                  {user.isGuest && (
-                    <button
-                      onClick={() => { setUserMenuOpen(false); setAuthOpen(true); }}
-                      className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-amber-300 hover:bg-amber-500/10 transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/10">
-                        <Crown className="w-4 h-4 text-amber-400" />
-                      </div>
-                      <span>Create Free Account</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { logout(); setUserMenuOpen(false); }}
-                    className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-red-500/08">
-                      <LogOut className="w-4 h-4 text-red-400" />
-                    </div>
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
         </>
       )}
     </div>
@@ -1496,6 +1400,103 @@ export default function Home() {
       <Footer />
       <TournamentWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark={isDark} />
+
+      {/* Mobile slide-up sheet — rendered at root level to escape backdrop-filter stacking context */}
+      {user && userMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[9990] md:hidden"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            onClick={() => setUserMenuOpen(false)}
+          />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
+            style={{
+              background: "oklch(0.15 0.06 145 / 0.98)",
+              border: "1px solid rgba(61,107,71,0.22)",
+              backdropFilter: "blur(24px)",
+              paddingBottom: "env(safe-area-inset-bottom, 16px)",
+              boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            {/* Identity */}
+            <div className="flex items-center gap-3 px-5 pt-2 pb-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: user.isGuest ? "rgba(245,158,11,0.15)" : "#3D6B47" }}>
+                {user.isGuest ? <Ghost className="w-5 h-5 text-amber-400" /> : <span className="text-sm font-bold text-white">{(user.displayName || user.email).charAt(0).toUpperCase()}</span>}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{user.displayName || user.email}</p>
+                {user.isGuest && <p className="text-[11px] text-amber-400/70">Guest session</p>}
+              </div>
+            </div>
+            {/* Divider */}
+            <div className="mx-4 mb-2 h-px bg-white/08" />
+            {/* Nav links */}
+            <div className="px-3 pb-1">
+              <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">Navigate</p>
+              {[
+                { name: "Dashboard", href: getDashboardUrl(), Icon: LayoutDashboard },
+                { name: "Clubs",     href: "/clubs",          Icon: Building2 },
+                { name: "Battle",    href: "/battle",         Icon: Swords },
+                { name: "Analyze",   href: "/record",         Icon: Video },
+              ].map(({ name, href, Icon }) => (
+                <Link
+                  key={name}
+                  href={href}
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/06">
+                    <Icon className="w-4 h-4 text-white/50" />
+                  </div>
+                  <span>{name}</span>
+                </Link>
+              ))}
+            </div>
+            {/* Divider */}
+            <div className="mx-4 my-2 h-px bg-white/08" />
+            {/* User actions */}
+            <div className="px-3 pb-3">
+              {!user.isGuest && (
+                <Link
+                  href="/profile"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/06">
+                    <Crown className="w-4 h-4 text-white/50" />
+                  </div>
+                  <span>My Profile</span>
+                </Link>
+              )}
+              {user.isGuest && (
+                <button
+                  onClick={() => { setUserMenuOpen(false); setAuthOpen(true); }}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-amber-300 hover:bg-amber-500/10 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/10">
+                    <Crown className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <span>Create Free Account</span>
+                </button>
+              )}
+              <button
+                onClick={() => { logout(); setUserMenuOpen(false); }}
+                className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-red-500/08">
+                  <LogOut className="w-4 h-4 text-red-400" />
+                </div>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
