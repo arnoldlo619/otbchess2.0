@@ -3719,3 +3719,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Bug Fix: Mobile Signed-In Avatar Dropdown (Home.tsx)
 - [ ] Fix Home.tsx signed-in user dropdown on mobile to show all nav links (Dashboard, Clubs, Battle, Analyze, My Profile, Sign Out)
 - [ ] Replace broken dropdown that only shows Sign Out with a proper slide-up sheet
+
+## Bug Fix: AvatarNavDropdown Mobile Portal
+- [x] Move AvatarNavDropdown mobile sheet to ReactDOM.createPortal at document.body to fix stacking context clipping on inner pages

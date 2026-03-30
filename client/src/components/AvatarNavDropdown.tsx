@@ -16,6 +16,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -745,28 +746,30 @@ export function AvatarNavDropdown({
       </AnimatePresence>
 
       {/* ── Mobile slide-up sheet (signed-in users only, hidden on md+) ── */}
-      <AnimatePresence>
-        {open && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              key="mobile-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[9990] md:hidden"
-              style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-              onClick={() => setOpen(false)}
-            />
-            {/* Sheet */}
-            <motion.div
-              key="mobile-sheet"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 340, damping: 36 }}
-              className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
+      {/* Rendered via portal at document.body to escape backdrop-filter stacking context */}
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {open && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                key="mobile-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-[9990] md:hidden"
+                style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+                onClick={() => setOpen(false)}
+              />
+              {/* Sheet */}
+              <motion.div
+                key="mobile-sheet"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", stiffness: 340, damping: 36 }}
+                className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
               style={{
                 background: "oklch(0.15 0.06 145 / 0.98)",
                 border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
@@ -877,7 +880,9 @@ export function AvatarNavDropdown({
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
