@@ -252,7 +252,46 @@ async function recalculateStandings(leagueId: string): Promise<void> {
   }
 }
 
-// ── GET /club/:clubId — list leagues for a club ───────────────────────────────
+// ── GET /mine — list all leagues the current user is a player in ─────────────────
+leaguesRouter.get("/mine", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    // Find all league_players rows for this user
+    const myPlayers = await db.select().from(leaguePlayers).where(eq(leaguePlayers.playerId, userId));
+    if (!myPlayers.length) return res.json([]);
+    const leagueIds = Array.from(new Set(myPlayers.map(p => p.leagueId)));
+    // Fetch league details for each
+    const results = [];
+    for (const lid of leagueIds) {
+      const [league] = await db.select().from(leagues).where(eq(leagues.id, lid)).limit(1);
+      if (!league) continue;
+      const playerCount = await db.select({ count: sql<number>`count(*)` }).from(leaguePlayers).where(eq(leaguePlayers.leagueId, lid));
+      const standing = await db.select().from(leagueStandings)
+        .where(and(eq(leagueStandings.leagueId, lid), eq(leagueStandings.playerId, userId)))
+        .limit(1);
+      results.push({
+        id: league.id,
+        name: league.name,
+        description: league.description,
+        status: league.status,
+        currentWeek: league.currentWeek,
+        totalWeeks: league.maxPlayers - 1,
+        maxPlayers: league.maxPlayers,
+        playerCount: Number(playerCount[0]?.count ?? 0),
+        clubId: league.clubId,
+        myStanding: standing[0] ?? null,
+      });
+    }
+    res.json(results);
+  } catch (err) {
+    console.error("[leagues] GET /mine error:", err);
+    res.status(500).json({ error: "Failed to fetch your leagues" });
+  }
+});
+
+// ── GET /club/:clubId — list leagues for a club ───────────────────────────────────────
 leaguesRouter.get("/club/:clubId", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
@@ -381,6 +420,34 @@ leaguesRouter.post("/:leagueId/start", async (req: Request, res: Response) => {
 
     const playerIds = players.map((p) => p.playerId);
     const totalWeeks = league.maxPlayers - 1;
+
+    // Auto-fetch chess.com ratings for all players
+    for (const p of players) {
+      if (!p.chesscomUsername) continue;
+      try {
+        const statsRes = await fetch(`https://api.chess.com/pub/player/${encodeURIComponent(p.chesscomUsername.toLowerCase())}/stats`, {
+          headers: { "User-Agent": "ChessOTB/1.0 (contact: support@chessotb.club)" },
+        });
+        if (statsRes.ok) {
+          const stats = await statsRes.json() as Record<string, any>;
+          // Prefer rapid → blitz → bullet → daily rating
+          const rapid = stats?.chess_rapid?.last?.rating;
+          const blitz = stats?.chess_blitz?.last?.rating;
+          const bullet = stats?.chess_bullet?.last?.rating;
+          const daily = stats?.chess_daily?.last?.rating;
+          const rating = rapid ?? blitz ?? bullet ?? daily ?? null;
+          if (rating) {
+            await db.update(leaguePlayers).set({ rating }).where(eq(leaguePlayers.id, p.id));
+          }
+        }
+      } catch (fetchErr) {
+        console.warn(`[leagues] Failed to fetch chess.com rating for ${p.chesscomUsername}:`, fetchErr);
+        // Non-fatal — continue without rating
+      }
+    }
+
+    // Re-read players after rating update
+    const updatedPlayers = await db.select().from(leaguePlayers).where(eq(leaguePlayers.leagueId, league.id));
 
     // Generate round-robin schedule
     const schedule = generateRoundRobin(league.maxPlayers);
@@ -949,6 +1016,24 @@ leaguesRouter.patch("/:leagueId/join-requests/:requestId", async (req: Request, 
         chesscomUsername: joinReq[0].chesscomUsername ?? undefined,
       });
     }
+    // Notify the player about the decision
+    const playerId = joinReq[0].playerId;
+    const leagueName = league[0].name;
+    if (action === "approve") {
+      notifyPlayerPush(playerId, {
+        title: `You're in! Welcome to ${leagueName}`,
+        body: "Your join request has been approved. Tap to view your league.",
+        url: `/leagues/${req.params.leagueId}`,
+        tag: `league-approved-${req.params.leagueId}`,
+      }).catch(() => {});
+    } else {
+      notifyPlayerPush(playerId, {
+        title: `Update on ${leagueName}`,
+        body: "Your join request was not accepted this time. You can try again for future seasons.",
+        url: `/leagues/${req.params.leagueId}`,
+        tag: `league-rejected-${req.params.leagueId}`,
+      }).catch(() => {});
+    }
     res.json({ success: true, action });
   } catch (err) {
     console.error("[leagues] PATCH join-request error:", err);
@@ -1073,7 +1158,12 @@ leaguesRouter.post("/:leagueId/invites", async (req: Request, res: Response) => 
         .where(eq(leagueInvites.id, existing[0].id));
       const [updated] = await db.select().from(leagueInvites).where(eq(leagueInvites.id, existing[0].id)).limit(1);
       // Send push notification to invited player
-      await notifyPlayer(invitedUserId, leagueId, league.name, commissioner?.displayName ?? "Commissioner");
+      await notifyPlayerPush(invitedUserId, {
+        title: `You've been invited to ${league.name}!`,
+        body: `${commissioner?.displayName ?? "Commissioner"} has invited you to join their league. Tap to accept or decline.`,
+        url: `/leagues/${leagueId}?invite=1`,
+        tag: `league-invite-${leagueId}`,
+      });
       return res.json(updated);
     }
     const [inserted] = await db.insert(leagueInvites).values({
@@ -1089,7 +1179,12 @@ leaguesRouter.post("/:leagueId/invites", async (req: Request, res: Response) => 
     }).$returningId();
     const [invite] = await db.select().from(leagueInvites).where(eq(leagueInvites.id, inserted.id)).limit(1);
     // Send push notification to invited player
-    await notifyPlayer(invitedUserId, leagueId, league.name, commissioner?.displayName ?? "Commissioner");
+    await notifyPlayerPush(invitedUserId, {
+      title: `You've been invited to ${league.name}!`,
+      body: `${commissioner?.displayName ?? "Commissioner"} has invited you to join their league. Tap to accept or decline.`,
+      url: `/leagues/${leagueId}?invite=1`,
+      tag: `league-invite-${leagueId}`,
+    });
     res.status(201).json(invite);
   } catch (err) {
     console.error("[league-invites] POST error:", err);
@@ -1190,27 +1285,24 @@ leaguesRouter.delete("/:leagueId/invites/:inviteId", async (req: Request, res: R
   }
 });
 
-/** Send a push notification to the invited player's subscribed devices */
-async function notifyPlayer(userId: string, leagueId: string, leagueName: string, commissionerName: string) {
+/** Send a push notification to a player's subscribed devices */
+async function notifyPlayerPush(
+  userId: string,
+  payload: { title: string; body: string; url: string; tag: string }
+) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
   try {
     const db = await getDb();
-    // Look up the player's push subscriptions (reuse league_push_subscriptions table keyed by userId)
     const subs = await db.select().from(leaguePushSubscriptions)
       .where(eq(leaguePushSubscriptions.userId, userId));
     if (!subs.length) return;
-    const payload = JSON.stringify({
-      title: `You've been invited to ${leagueName}!`,
-      body: `${commissionerName} has invited you to join their league. Tap to accept or decline.`,
-      url: `/leagues/${leagueId}?invite=1`,
-      tag: `league-invite-${leagueId}`,
-    });
+    const payloadStr = JSON.stringify(payload);
     const staleIds: string[] = [];
     await Promise.all(subs.map(async (row) => {
       try {
         await webpush.sendNotification(
           { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
-          payload
+          payloadStr
         );
       } catch (err: any) {
         const code = err?.statusCode;

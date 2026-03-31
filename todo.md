@@ -3747,3 +3747,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Server — PATCH /:leagueId/weeks/:weekId/deadline endpoint
 - [x] Client — deadline display + date picker for commissioner in Matchups tab
 - [x] Client — countdown timer on "Your Match This Week" card + overdue/urgent badges
+
+## Phase 3: Player Experience & Discovery
+- [x] Server — add GET /api/leagues/mine endpoint returning all leagues the current user is a player in
+- [x] Client — add "My Leagues" section in DashboardDropdown with status badges, rank, and points
+- [x] Server — send push notification to player when join request is approved or rejected
+- [x] Server — auto-fetch chess.com ratings (rapid→blitz→bullet→daily) when commissioner starts a season
