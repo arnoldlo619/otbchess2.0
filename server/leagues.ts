@@ -596,7 +596,7 @@ leaguesRouter.get("/:leagueId/weeks", async (req: Request, res: Response) => {
   }
 });
 
-// ── GET /:leagueId/standings — get current standings ─────────────────────────
+// ── GET /:leagueId/standings — get current standings (with chess.com ratings) ─
 leaguesRouter.get("/:leagueId/standings", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
@@ -606,7 +606,20 @@ leaguesRouter.get("/:leagueId/standings", async (req: Request, res: Response) =>
       .where(eq(leagueStandings.leagueId, req.params.leagueId))
       .orderBy(asc(leagueStandings.rank));
 
-    res.json(standings);
+    // Join with leaguePlayers to get chess.com rating and username
+    const players = await db.select().from(leaguePlayers).where(eq(leaguePlayers.leagueId, req.params.leagueId));
+    const playerMap = new Map(players.map((p) => [p.playerId, p]));
+
+    const enriched = standings.map((s) => {
+      const player = playerMap.get(s.playerId);
+      return {
+        ...s,
+        chesscomRating: player?.rating ?? null,
+        chesscomUsername: player?.chesscomUsername ?? null,
+      };
+    });
+
+    res.json(enriched);
   } catch (err) {
     console.error("[leagues] GET /:leagueId/standings error:", err);
     res.status(500).json({ error: "Failed to fetch standings" });

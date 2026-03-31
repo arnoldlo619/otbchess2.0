@@ -3753,3 +3753,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Client — add "My Leagues" section in DashboardDropdown with status badges, rank, and points
 - [x] Server — send push notification to player when join request is approved or rejected
 - [x] Server — auto-fetch chess.com ratings (rapid→blitz→bullet→daily) when commissioner starts a season
+
+## Phase 3.5: League Standings Polish
+- [x] Redesign standings table with premium styling matching platform design system
+- [x] Show chess.com ratings alongside W/D/L/Points in standings
+- [x] Add rank indicators (gold/silver/bronze for top 3), movement arrows, streak badges
+- [x] Add podium visualization for top 3 players
+- [x] Add league stats summary bar (games played, draw rate, top scorer, highest rated)
+- [x] Update overview tab top-3 preview with ratings and streak badges
+- [x] Update Players grid with chess.com rating badges
+- [x] Ensure responsive layout for mobile (card-based mobile rows)

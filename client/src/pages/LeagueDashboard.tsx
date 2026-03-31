@@ -24,6 +24,7 @@ interface LeaguePlayer {
   displayName: string;
   avatarUrl?: string | null;
   chesscomUsername?: string | null;
+  rating?: number | null;
 }
 interface LeagueMatch {
   id: number;
@@ -66,6 +67,8 @@ interface LeagueStanding {
   streak?: string;
   movement?: string;
   lastResults?: string;
+  chesscomRating?: number | null;
+  chesscomUsername?: string | null;
 }
 interface League {
   id: string;
@@ -1443,27 +1446,49 @@ export default function LeagueDashboard() {
                 <div className="space-y-2">
                   {standings.slice(0, 3).map((s, i) => {
                     const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : "#cd7c2f";
+                    const isMe = s.playerId === user?.id;
                     return (
                       <div
                         key={s.playerId}
-                        className="flex items-center gap-3 py-2 px-2 rounded-xl"
-                        style={s.playerId === user?.id ? { background: `${accent}08` } : {}}
+                        className="flex items-center gap-3 py-2.5 px-3 rounded-xl transition-colors"
+                        style={{ background: isMe ? `${accent}0a` : `${podiumColor}06` }}
                       >
                         <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={{ background: `${podiumColor}22`, color: podiumColor }}
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0"
+                          style={{ background: `${podiumColor}20`, color: podiumColor, boxShadow: i === 0 ? `0 0 8px ${podiumColor}33` : "none" }}
                         >
                           {i + 1}
                         </div>
-                        <Avatar url={s.avatarUrl} name={s.displayName} size={8} />
+                        <div className="relative flex-shrink-0">
+                          <Avatar url={s.avatarUrl} name={s.displayName} size={9} />
+                          {isMe && (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate" style={{ color: textMain }}>{s.displayName}</div>
-                          <div className="text-xs" style={{ color: textMuted }}>{s.wins}W {s.draws}D {s.losses}L</div>
+                          <div className="flex items-center gap-1">
+                            <MovementIcon movement={s.movement} />
+                            <span className="font-semibold text-sm truncate" style={{ color: isMe ? accent : textMain }}>{s.displayName}</span>
+                            {s.streak && s.streak.length >= 3 && (
+                              <span
+                                className="text-[10px] font-bold px-1 py-0.5 rounded"
+                                style={{
+                                  background: s.streak.startsWith("W") ? "#4ade8022" : "#ef444422",
+                                  color: s.streak.startsWith("W") ? "#4ade80" : "#ef4444",
+                                }}
+                              >
+                                {s.streak}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[11px]" style={{ color: textMuted }}>{s.wins}W {s.draws}D {s.losses}L</span>
+                            {s.chesscomRating && (
+                              <span className="text-[11px] font-medium" style={{ color: textMuted }}>{s.chesscomRating} ELO</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <MovementIcon movement={s.movement} />
-                          <span className="font-bold text-base" style={{ color: accent }}>{s.points}</span>
-                        </div>
+                        <span className="font-black text-lg" style={{ color: accent }}>{s.points}</span>
                       </div>
                     );
                   })}
@@ -1480,24 +1505,39 @@ export default function LeagueDashboard() {
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {league.players.map((p) => (
-                  <div
-                    key={p.playerId}
-                    className="flex items-center gap-2 rounded-xl p-2.5"
-                    style={{
-                      background: isDark ? "oklch(0.25 0.06 145)" : "#f9fafb",
-                      border: p.playerId === user?.id ? `1px solid ${accent}55` : "1px solid transparent",
-                    }}
-                  >
-                    <Avatar url={p.avatarUrl} name={p.displayName} size={8} />
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium truncate" style={{ color: textMain }}>{p.displayName}</div>
-                      {p.chesscomUsername && (
-                        <div className="text-xs truncate" style={{ color: textMuted }}>@{p.chesscomUsername}</div>
-                      )}
+                {league.players.map((p) => {
+                  const isMe = p.playerId === user?.id;
+                  return (
+                    <div
+                      key={p.playerId}
+                      className="flex items-center gap-2.5 rounded-xl p-2.5 transition-colors"
+                      style={{
+                        background: isDark ? "oklch(0.25 0.06 145)" : "#f9fafb",
+                        border: isMe ? `1px solid ${accent}55` : "1px solid transparent",
+                      }}
+                    >
+                      <div className="relative flex-shrink-0">
+                        <Avatar url={p.avatarUrl} name={p.displayName} size={9} />
+                        {isMe && (
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold truncate" style={{ color: isMe ? accent : textMain }}>{p.displayName}</div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {p.chesscomUsername && (
+                            <span className="text-[11px] truncate" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
+                          )}
+                          {p.rating && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: isDark ? "oklch(0.3 0.06 145)" : "#e5e7eb", color: textMuted }}>
+                              {p.rating}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </>
@@ -1747,77 +1787,290 @@ export default function LeagueDashboard() {
 
         {/* ── STANDINGS ─────────────────────────────────────────────────────── */}
         {activeTab === "standings" && (
-          <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-            {/* Header row */}
-            <div
-              className="grid items-center px-4 py-2.5 text-xs font-semibold uppercase tracking-wide"
-              style={{
-                borderBottom: `1px solid ${cardBorder}`,
-                color: textMuted,
-                gridTemplateColumns: "2rem 1fr 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
-                gap: "0.5rem",
-              }}
-            >
-              <span>#</span>
-              <span>Player</span>
-              <span className="text-center">W</span>
-              <span className="text-center">D</span>
-              <span className="text-center">L</span>
-              <span className="text-center">Pts</span>
-              <span className="text-center">Form</span>
-            </div>
-            {standings.length === 0 ? (
-              <div className="p-8 text-center" style={{ color: textMuted }}>No standings yet</div>
-            ) : (
-              standings.map((s, i) => {
-                const isMe = s.playerId === user?.id;
-                const lastArr = parseLastResults(s.lastResults);
-                const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#cd7c2f" : null;
-                return (
-                  <div
-                    key={s.playerId}
-                    className="grid items-center px-4 py-3"
-                    style={{
-                      gridTemplateColumns: "2rem 1fr 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
-                      gap: "0.5rem",
-                      borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
-                      background: isMe ? `${accent}08` : i < 3 && podiumColor ? `${podiumColor}06` : "transparent",
-                    }}
-                  >
-                    {/* Rank */}
-                    {podiumColor ? (
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: `${podiumColor}22`, color: podiumColor }}
-                      >
-                        {i + 1}
+          <div className="space-y-5">
+            {/* Podium — top 3 visual cards */}
+            {standings.length >= 3 && (
+              <div className="flex items-end justify-center gap-3 pt-4 pb-2">
+                {[1, 0, 2].map((idx) => {
+                  const s = standings[idx];
+                  const podiumColors = ["#f59e0b", "#9ca3af", "#cd7c2f"];
+                  const podiumLabels = ["1st", "2nd", "3rd"];
+                  const heights = ["h-32", "h-28", "h-24"];
+                  const pc = podiumColors[idx];
+                  const isMe = s.playerId === user?.id;
+                  return (
+                    <div key={s.playerId} className={`flex flex-col items-center ${idx === 0 ? "order-2" : idx === 1 ? "order-1" : "order-3"}`}>
+                      <div className="relative mb-2">
+                        <Avatar url={s.avatarUrl} name={s.displayName} size={idx === 0 ? 14 : 11} />
+                        <div
+                          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+                          style={{ background: pc, color: "#fff", boxShadow: `0 0 8px ${pc}66` }}
+                        >
+                          {idx + 1}
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-sm font-medium text-center" style={{ color: textMuted }}>{i + 1}</span>
-                    )}
-                    {/* Player */}
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <MovementIcon movement={s.movement} />
-                      <Avatar url={s.avatarUrl} name={s.displayName} size={7} />
-                      <span className="text-sm font-medium truncate" style={{ color: isMe ? accent : textMain }}>
-                        {s.displayName}{isMe ? " (you)" : ""}
+                      <span className="text-xs font-semibold truncate max-w-[5rem] text-center" style={{ color: isMe ? accent : textMain }}>
+                        {s.displayName}
                       </span>
+                      <span className="text-[10px] font-bold mt-0.5" style={{ color: pc }}>{s.points} pts</span>
+                      {s.chesscomRating && (
+                        <span className="text-[10px] mt-0.5" style={{ color: textMuted }}>{s.chesscomRating} ELO</span>
+                      )}
+                      <div
+                        className={`${heights[idx]} w-16 sm:w-20 rounded-t-xl mt-2 flex items-end justify-center pb-2 transition-all`}
+                        style={{ background: `${pc}18`, borderTop: `2px solid ${pc}` }}
+                      >
+                        <span className="text-xs font-bold" style={{ color: pc }}>{podiumLabels[idx]}</span>
+                      </div>
                     </div>
-                    <span className="text-center text-sm font-medium" style={{ color: textMain }}>{s.wins}</span>
-                    <span className="text-center text-sm" style={{ color: textMuted }}>{s.draws}</span>
-                    <span className="text-center text-sm" style={{ color: textMuted }}>{s.losses}</span>
-                    <span className="text-center text-sm font-bold" style={{ color: accent }}>{s.points}</span>
-                    {/* Form dots */}
-                    <div className="flex gap-0.5 justify-center">
-                      {lastArr.length === 0
-                        ? <span className="text-xs" style={{ color: textMuted }}>—</span>
-                        : lastArr.map((r, j) => <ResultDot key={j} r={r} />)
-                      }
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
+
+            {/* Full standings table */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+              {/* Desktop header */}
+              <div
+                className="hidden sm:grid items-center px-5 py-3 text-[11px] font-semibold uppercase tracking-wider"
+                style={{
+                  borderBottom: `1px solid ${cardBorder}`,
+                  color: textMuted,
+                  background: isDark ? "oklch(0.18 0.05 145)" : "#f9fafb",
+                  gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
+                  gap: "0.5rem",
+                }}
+              >
+                <span className="text-center">#</span>
+                <span>Player</span>
+                <span className="text-center">Rating</span>
+                <span className="text-center">W</span>
+                <span className="text-center">D</span>
+                <span className="text-center">L</span>
+                <span className="text-center">Pts</span>
+                <span className="text-center">Form</span>
+              </div>
+
+              {standings.length === 0 ? (
+                <div className="p-12 text-center" style={{ color: textMuted }}>
+                  <ListOrdered size={32} className="mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">No standings yet</p>
+                  <p className="text-xs mt-1">Standings will appear once matches are played.</p>
+                </div>
+              ) : (
+                standings.map((s, i) => {
+                  const isMe = s.playerId === user?.id;
+                  const lastArr = parseLastResults(s.lastResults);
+                  const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#cd7c2f" : null;
+                  const gamesPlayed = s.wins + s.draws + s.losses;
+                  const winRate = gamesPlayed > 0 ? Math.round((s.wins / gamesPlayed) * 100) : 0;
+
+                  return (
+                    <div key={s.playerId}>
+                      {/* Desktop row */}
+                      <div
+                        className="hidden sm:grid items-center px-5 py-3.5 transition-colors duration-200"
+                        style={{
+                          gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
+                          gap: "0.5rem",
+                          borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
+                          background: isMe
+                            ? `${accent}0a`
+                            : i < 3 && podiumColor
+                            ? `${podiumColor}06`
+                            : "transparent",
+                        }}
+                      >
+                        {/* Rank badge */}
+                        <div className="flex justify-center">
+                          {podiumColor ? (
+                            <div
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black"
+                              style={{ background: `${podiumColor}20`, color: podiumColor, boxShadow: i === 0 ? `0 0 12px ${podiumColor}33` : "none" }}
+                            >
+                              {i + 1}
+                            </div>
+                          ) : (
+                            <span className="text-sm font-medium" style={{ color: textMuted }}>{i + 1}</span>
+                          )}
+                        </div>
+
+                        {/* Player info */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="relative flex-shrink-0">
+                            <Avatar url={s.avatarUrl} name={s.displayName} size={9} />
+                            {isMe && (
+                              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <MovementIcon movement={s.movement} />
+                              <span className="text-sm font-semibold truncate" style={{ color: isMe ? accent : textMain }}>
+                                {s.displayName}{isMe ? " (you)" : ""}
+                              </span>
+                              {s.streak && s.streak.length >= 3 && (
+                                <span
+                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                  style={{
+                                    background: s.streak.startsWith("W") ? "#4ade8022" : s.streak.startsWith("L") ? "#ef444422" : "transparent",
+                                    color: s.streak.startsWith("W") ? "#4ade80" : s.streak.startsWith("L") ? "#ef4444" : textMuted,
+                                  }}
+                                >
+                                  {s.streak}
+                                </span>
+                              )}
+                            </div>
+                            {s.chesscomUsername && (
+                              <span className="text-[11px] truncate block" style={{ color: textMuted }}>@{s.chesscomUsername}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Chess.com Rating */}
+                        <div className="flex flex-col items-center">
+                          {s.chesscomRating ? (
+                            <>
+                              <span className="text-sm font-bold" style={{ color: textMain }}>{s.chesscomRating}</span>
+                              <span className="text-[9px] uppercase tracking-wide" style={{ color: textMuted }}>ELO</span>
+                            </>
+                          ) : (
+                            <span className="text-xs" style={{ color: textMuted }}>—</span>
+                          )}
+                        </div>
+
+                        {/* W / D / L */}
+                        <span className="text-center text-sm font-semibold" style={{ color: "#4ade80" }}>{s.wins}</span>
+                        <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{s.draws}</span>
+                        <span className="text-center text-sm font-medium" style={{ color: "#ef4444" }}>{s.losses}</span>
+
+                        {/* Points */}
+                        <div className="flex flex-col items-center">
+                          <span className="text-base font-black" style={{ color: accent }}>{s.points}</span>
+                          <span className="text-[9px]" style={{ color: textMuted }}>{winRate}% win</span>
+                        </div>
+
+                        {/* Form dots */}
+                        <div className="flex gap-1 justify-center">
+                          {lastArr.length === 0
+                            ? <span className="text-xs" style={{ color: textMuted }}>—</span>
+                            : lastArr.map((r, j) => <ResultDot key={j} r={r} />)
+                          }
+                        </div>
+                      </div>
+
+                      {/* Mobile card */}
+                      <div
+                        className="sm:hidden px-4 py-3.5"
+                        style={{
+                          borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
+                          background: isMe
+                            ? `${accent}0a`
+                            : i < 3 && podiumColor
+                            ? `${podiumColor}06`
+                            : "transparent",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Rank */}
+                          <div className="flex-shrink-0">
+                            {podiumColor ? (
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black"
+                                style={{ background: `${podiumColor}20`, color: podiumColor }}
+                              >
+                                {i + 1}
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium" style={{ color: textMuted, background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}>
+                                {i + 1}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Avatar + name */}
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className="relative flex-shrink-0">
+                              <Avatar url={s.avatarUrl} name={s.displayName} size={9} />
+                              {isMe && (
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full" style={{ background: accent, border: `2px solid ${cardBg}` }} />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1">
+                                <MovementIcon movement={s.movement} />
+                                <span className="text-sm font-semibold truncate" style={{ color: isMe ? accent : textMain }}>
+                                  {s.displayName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {s.chesscomRating && (
+                                  <span className="text-[11px] font-medium" style={{ color: textMuted }}>{s.chesscomRating} ELO</span>
+                                )}
+                                {s.streak && s.streak.length >= 3 && (
+                                  <span
+                                    className="text-[10px] font-bold px-1 py-0.5 rounded"
+                                    style={{
+                                      background: s.streak.startsWith("W") ? "#4ade8022" : "#ef444422",
+                                      color: s.streak.startsWith("W") ? "#4ade80" : "#ef4444",
+                                    }}
+                                  >
+                                    {s.streak}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Points + record */}
+                          <div className="flex flex-col items-end flex-shrink-0">
+                            <span className="text-lg font-black" style={{ color: accent }}>{s.points}</span>
+                            <span className="text-[11px]" style={{ color: textMuted }}>
+                              {s.wins}W {s.draws}D {s.losses}L
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Form dots row */}
+                        {lastArr.length > 0 && (
+                          <div className="flex gap-1 mt-2 ml-11">
+                            {lastArr.map((r, j) => <ResultDot key={j} r={r} />)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* League stats summary */}
+            {standings.length > 0 && (() => {
+              const totalGames = standings.reduce((a, s) => a + s.wins + s.draws + s.losses, 0) / 2;
+              const totalDraws = standings.reduce((a, s) => a + s.draws, 0) / 2;
+              const drawRate = totalGames > 0 ? Math.round((totalDraws / totalGames) * 100) : 0;
+              const highestRated = standings.filter(s => s.chesscomRating).sort((a, b) => (b.chesscomRating ?? 0) - (a.chesscomRating ?? 0))[0];
+              const topScorer = standings[0];
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Games Played", value: String(totalGames) },
+                    { label: "Draw Rate", value: `${drawRate}%` },
+                    { label: "Top Scorer", value: topScorer?.displayName ?? "—" },
+                    { label: "Highest Rated", value: highestRated ? `${highestRated.displayName} (${highestRated.chesscomRating})` : "—" },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="rounded-xl p-3.5 text-center"
+                      style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+                    >
+                      <div className="text-[11px] uppercase tracking-wider mb-1" style={{ color: textMuted }}>{stat.label}</div>
+                      <div className="text-sm font-bold truncate" style={{ color: textMain }}>{stat.value}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
