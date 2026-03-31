@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import clubMessagingRouter from "./clubMessaging.js";
 import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
@@ -248,8 +248,62 @@ export function createApp() {
   // ── Auth routes ─────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
 
+  // ── Prep Cache Helper ──────────────────────────────────────────────────────
+  // 24-hour TTL: returns cached report if fresh, otherwise builds + caches.
+  const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+  async function getCachedOrBuildPrepReport(username: string, maxGames: number) {
+    const normalised = username.toLowerCase().trim();
+    try {
+      const db = await getDb();
+      const [cached] = await db.select().from(prepCache)
+        .where(eq(prepCache.username, normalised))
+        .limit(1);
+
+      if (cached) {
+        const age = Date.now() - new Date(cached.cachedAt).getTime();
+        if (age < PREP_CACHE_TTL_MS) {
+          console.log(`[prep-cache] HIT for ${normalised} (age: ${Math.round(age / 60000)}m)`);
+          return { report: JSON.parse(cached.reportJson), fromCache: true };
+        }
+        console.log(`[prep-cache] STALE for ${normalised} (age: ${Math.round(age / 60000)}m), refreshing...`);
+      } else {
+        console.log(`[prep-cache] MISS for ${normalised}, building fresh report...`);
+      }
+    } catch (dbErr) {
+      console.warn("[prep-cache] DB read error, falling through to live fetch:", dbErr);
+    }
+
+    // Build fresh report
+    const report = await buildPrepReport(normalised, maxGames);
+
+    // Store in cache (fire-and-forget)
+    try {
+      const db = await getDb();
+      const reportStr = JSON.stringify(report);
+      // Upsert: try insert, on duplicate key update
+      await db.insert(prepCache).values({
+        username: normalised,
+        reportJson: reportStr,
+        gamesAnalyzed: report.opponent.gamesAnalyzed,
+        cachedAt: new Date(),
+      }).onDuplicateKeyUpdate({
+        set: {
+          reportJson: reportStr,
+          gamesAnalyzed: report.opponent.gamesAnalyzed,
+          cachedAt: new Date(),
+        },
+      });
+      console.log(`[prep-cache] STORED for ${normalised} (${report.opponent.gamesAnalyzed} games)`);
+    } catch (dbErr) {
+      console.warn("[prep-cache] DB write error (non-fatal):", dbErr);
+    }
+
+    return { report, fromCache: false };
+  }
+
   // ── Matchup Prep Engine: GET /api/prep/:username ──────────────────────────
-  // Full matchup preparation report for a chess.com player.
+  // Full matchup preparation report with 24h server-side caching.
   app.get("/api/prep/:username", prepLimiter, async (req, res) => {
     try {
       const username = req.params.username;
@@ -258,8 +312,30 @@ export function createApp() {
         return;
       }
       const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
-      const report = await buildPrepReport(username, maxGames);
-      res.json(report);
+      const forceRefresh = req.query.refresh === "true";
+
+      if (forceRefresh) {
+        // Bypass cache when ?refresh=true
+        const report = await buildPrepReport(username.toLowerCase().trim(), maxGames);
+        // Update cache
+        try {
+          const db = await getDb();
+          const reportStr = JSON.stringify(report);
+          await db.insert(prepCache).values({
+            username: username.toLowerCase().trim(),
+            reportJson: reportStr,
+            gamesAnalyzed: report.opponent.gamesAnalyzed,
+            cachedAt: new Date(),
+          }).onDuplicateKeyUpdate({
+            set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date() },
+          });
+        } catch (_) { /* non-fatal */ }
+        res.json({ ...report, _cached: false });
+        return;
+      }
+
+      const { report, fromCache } = await getCachedOrBuildPrepReport(username, maxGames);
+      res.json({ ...report, _cached: fromCache });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       console.error("[prep engine]", msg);
@@ -272,7 +348,7 @@ export function createApp() {
   });
 
   // ── Matchup Prep: GET /api/prep/:username/openings ────────────────────────
-  // Opening repertoire breakdown only (lighter endpoint).
+  // Opening repertoire breakdown — also uses cache when available.
   app.get("/api/prep/:username/openings", prepLimiter, async (req, res) => {
     try {
       const username = req.params.username;
@@ -281,17 +357,16 @@ export function createApp() {
         return;
       }
       const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
-      const [games, ratings] = await Promise.all([
-        fetchPlayerGames(username, maxGames),
-        fetchPlayerStats(username),
-      ]);
-      const profile = analyzePlayStyle(username, games, ratings);
+
+      // Try cache first for the full report, extract openings from it
+      const { report, fromCache } = await getCachedOrBuildPrepReport(username, maxGames);
       res.json({
-        username: profile.username,
-        gamesAnalyzed: profile.gamesAnalyzed,
-        whiteOpenings: profile.whiteOpenings,
-        blackOpenings: profile.blackOpenings,
-        firstMoveAsWhite: profile.firstMoveAsWhite,
+        username: report.opponent.username,
+        gamesAnalyzed: report.opponent.gamesAnalyzed,
+        whiteOpenings: report.opponent.whiteOpenings,
+        blackOpenings: report.opponent.blackOpenings,
+        firstMoveAsWhite: report.opponent.firstMoveAsWhite,
+        _cached: fromCache,
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";

@@ -792,3 +792,23 @@ export const leagueInvites = mysqlTable('league_invites', {
 }));
 export type LeagueInviteRow = typeof leagueInvites.$inferSelect;
 export type NewLeagueInviteRow = typeof leagueInvites.$inferInsert;
+
+// ─── prep_cache ──────────────────────────────────────────────────────────────
+// Caches full matchup prep reports per chess.com username.
+// TTL: 24 hours — stale entries are refreshed on next request.
+export const prepCache = mysqlTable('prep_cache', {
+  id: int('id').primaryKey().autoincrement(),
+  /** chess.com username (lower-cased) — unique lookup key */
+  username: varchar('username', { length: 100 }).notNull().unique(),
+  /** Full PrepReport JSON blob */
+  reportJson: text('report_json').notNull(),
+  /** Number of games analysed (for quick display without parsing JSON) */
+  gamesAnalyzed: int('games_analyzed').notNull().default(0),
+  /** When this cache entry was created / last refreshed */
+  cachedAt: timestamp('cached_at').defaultNow().notNull(),
+}, (t) => ({
+  usernameIdx: index('pc_username_idx').on(t.username),
+  cachedAtIdx: index('pc_cached_at_idx').on(t.cachedAt),
+}));
+export type PrepCacheRow = typeof prepCache.$inferSelect;
+export type NewPrepCacheRow = typeof prepCache.$inferInsert;

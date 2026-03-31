@@ -22,7 +22,9 @@ import {
   leaguePushSubscriptions,
   dbClubMembers,
   users,
+  prepCache,
 } from "../shared/schema.js";
+import { buildPrepReport } from "./prepEngine.js";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import webpush from "web-push";
@@ -500,6 +502,46 @@ leaguesRouter.post("/:leagueId/start", async (req: Request, res: Response) => {
 
     // Update league status to active
     await db.update(leagues).set({ status: "active", currentWeek: 1 }).where(eq(leagues.id, league.id));
+
+    // ── Pre-warm prep cache for all league players (fire-and-forget) ──────
+    // This runs in the background so the response isn't delayed.
+    // Each player with a chess.com username gets their prep report cached
+    // so opponents can one-click access it from match cards.
+    const playersWithChessCom = updatedPlayers.filter(p => p.chesscomUsername);
+    if (playersWithChessCom.length > 0) {
+      console.log(`[league-prep] Pre-warming prep cache for ${playersWithChessCom.length} players...`);
+      (async () => {
+        for (const p of playersWithChessCom) {
+          try {
+            const username = p.chesscomUsername!.toLowerCase().trim();
+            // Check if already cached and fresh
+            const [existing] = await db.select().from(prepCache)
+              .where(eq(prepCache.username, username)).limit(1);
+            if (existing) {
+              const age = Date.now() - new Date(existing.cachedAt).getTime();
+              if (age < 24 * 60 * 60 * 1000) {
+                console.log(`[league-prep] Cache fresh for ${username}, skipping`);
+                continue;
+              }
+            }
+            const report = await buildPrepReport(username, 50);
+            const reportStr = JSON.stringify(report);
+            await db.insert(prepCache).values({
+              username,
+              reportJson: reportStr,
+              gamesAnalyzed: report.opponent.gamesAnalyzed,
+              cachedAt: new Date(),
+            }).onDuplicateKeyUpdate({
+              set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date() },
+            });
+            console.log(`[league-prep] Cached prep for ${username} (${report.opponent.gamesAnalyzed} games)`);
+          } catch (err) {
+            console.warn(`[league-prep] Failed to pre-warm for ${p.chesscomUsername}:`, err);
+          }
+        }
+        console.log(`[league-prep] Pre-warming complete for league ${league.id}`);
+      })();
+    }
 
     res.json({ success: true, message: "Season started!", status: "active" });
   } catch (err) {

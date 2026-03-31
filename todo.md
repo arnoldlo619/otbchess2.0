@@ -3805,3 +3805,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Frontend: "Try Matchup Prep" CTA on landing page Chess Club League section
 - [x] Tests: 46 unit tests for opening classification, stat computation, prep generation (all passing)
 - [x] TypeScript: 0 errors across entire codebase
+
+## Prep Report Caching (24h TTL)
+- [x] Add prep_cache table to schema (username, report JSON, cached_at timestamp)
+- [x] Migrate database with new table (created via SQL)
+- [x] Wrap buildPrepReport with cache-first logic (getCachedOrBuildPrepReport)
+- [x] Add cache invalidation for stale entries (>24h TTL)
+- [x] Support ?refresh=true to force cache bypass
+- [x] Cache indicator + Refresh button on MatchupPrep page
+
+## League Matchup Prep Integration
+- [x] Audit league round generation and pairing data model
+- [x] Pre-warm prep cache for all league players when season starts (fire-and-forget)
+- [x] Add "Prep for opponent" button to Your Match This Week card (Overview tab)
+- [x] Add Prep button to Next Opponent card (Overview tab)
+- [x] Add Prep button to Matchups tab match cards
+- [x] Add Prep icon button to Schedule tab match rows
+- [x] One-click access from pairing to opponent's prep report (/prep/:username)
+- [x] 18 tests for caching logic, normalisation, opponent lookup, JSON round-trip (all passing)

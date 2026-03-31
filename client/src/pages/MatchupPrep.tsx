@@ -55,6 +55,7 @@ interface PrepReport {
   prepLines: PrepLine[];
   insights: string[];
   generatedAt: string;
+  _cached?: boolean;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ export default function MatchupPrep() {
   const [report, setReport] = useState<PrepReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Auto-fetch if username is in URL
   useEffect(() => {
@@ -79,12 +81,17 @@ export default function MatchupPrep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.username]);
 
-  async function fetchReport(username: string) {
-    setLoading(true);
+  async function fetchReport(username: string, refresh = false) {
+    if (refresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+      setReport(null);
+    }
     setError(null);
-    setReport(null);
     try {
-      const res = await fetch(`/api/prep/${encodeURIComponent(username.trim())}`);
+      const url = `/api/prep/${encodeURIComponent(username.trim())}${refresh ? "?refresh=true" : ""}`;
+      const res = await fetch(url);
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: "Unknown error" }));
         throw new Error(data.error || `Error ${res.status}`);
@@ -95,6 +102,7 @@ export default function MatchupPrep() {
       setError(err instanceof Error ? err.message : "Failed to fetch prep report");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
@@ -203,9 +211,32 @@ export default function MatchupPrep() {
                       {report.opponent.username}
                     </h2>
                   </div>
-                  <p className={`text-sm ${textMuted}`}>
-                    {report.opponent.gamesAnalyzed} recent games analyzed
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className={`text-sm ${textMuted}`}>
+                      {report.opponent.gamesAnalyzed} recent games analyzed
+                    </p>
+                    {report._cached && (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-green-50 text-green-600"
+                      }`}>
+                        Cached
+                      </span>
+                    )}
+                    <button
+                      onClick={() => fetchReport(report.opponent.username, true)}
+                      disabled={refreshing}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all ${
+                        isDark ? "bg-[#1a2e1c] hover:bg-[#243d27] text-[#5B9A6A]" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                      } disabled:opacity-50`}
+                      title="Refresh report with latest games"
+                    >
+                      {refreshing ? (
+                        <Loader2 className="w-3 h-3 animate-spin inline" />
+                      ) : (
+                        "Refresh"
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex gap-3">
                   {report.opponent.rating.rapid && (

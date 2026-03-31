@@ -769,6 +769,14 @@ export default function LeagueDashboard() {
     return !!(user && (match.playerWhiteId === user.id || match.playerBlackId === user.id));
   }
 
+  // Helper: get opponent's chess.com username for a match (for prep links)
+  function getOpponentChesscom(match: LeagueMatch): string | null {
+    if (!user || !league) return null;
+    const oppId = match.playerWhiteId === user.id ? match.playerBlackId : match.playerWhiteId;
+    const oppPlayer = league.players.find(p => p.playerId === oppId);
+    return oppPlayer?.chesscomUsername ?? null;
+  }
+
   const currentWeekMatches = weeks.find((w) => w.weekNumber === selectedWeek)?.matches ?? [];
   const allMatches = weeks.flatMap((w) => w.matches);
   const completedMatchCount = allMatches.filter((m) => m.resultStatus === "completed").length;
@@ -1298,6 +1306,23 @@ export default function LeagueDashboard() {
                     <span className="text-[10px]" style={{ color: textMuted }}>Black</span>
                   </div>
                 </div>
+                {/* Prep Opponent button */}
+                {(() => {
+                  const oppChessCom = myMatchThisWeek ? getOpponentChesscom(myMatchThisWeek) : null;
+                  if (!oppChessCom) return null;
+                  return (
+                    <div className="px-4 pb-4">
+                      <button
+                        onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
+                        style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                      >
+                        <Target size={13} />
+                        Prep for {oppChessCom}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -1353,6 +1378,16 @@ export default function LeagueDashboard() {
                             </div>
                           </div>
                           <div className="text-xs mt-2" style={{ color: textMuted }}>Week {league.currentWeek + 1}</div>
+                          {oppPlayer?.chesscomUsername && (
+                            <button
+                              onClick={() => navigate(`/prep/${encodeURIComponent(oppPlayer.chesscomUsername!)}`)}
+                              className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all hover:opacity-90"
+                              style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                            >
+                              <Target size={11} />
+                              Prep
+                            </button>
+                          )}
                         </>
                       );
                     })()}
@@ -1743,6 +1778,23 @@ export default function LeagueDashboard() {
                           <span className="text-[10px]" style={{ color: textMuted }}>Black</span>
                         </div>
                       </div>
+                      {/* Prep button for my matches */}
+                      {mine && (() => {
+                        const oppChessCom = getOpponentChesscom(match);
+                        if (!oppChessCom) return null;
+                        return (
+                          <div className="px-4 pb-3">
+                            <button
+                              onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
+                              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-semibold transition-all hover:opacity-90"
+                              style={{ background: `${accent}15`, color: accent, border: `1px solid ${accent}30` }}
+                            >
+                              <Target size={12} />
+                              Prep for {oppChessCom}
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })
@@ -2164,11 +2216,25 @@ export default function LeagueDashboard() {
                             <span style={{ color: accent }}> ★</span>
                           )}
                         </div>
-                        <div className="flex-shrink-0 ml-2">
+                        <div className="flex-shrink-0 ml-1">
                           {match.resultStatus === "completed"
                             ? <CheckCircle2 size={14} style={{ color: accent }} />
                             : <Clock size={14} style={{ color: textMuted }} />}
                         </div>
+                        {mine && (() => {
+                          const oppChessCom = getOpponentChesscom(match);
+                          if (!oppChessCom) return null;
+                          return (
+                            <button
+                              onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
+                              className="flex-shrink-0 ml-1 p-1.5 rounded-lg transition-all hover:opacity-80"
+                              style={{ background: `${accent}15`, color: accent }}
+                              title={`Prep for ${oppChessCom}`}
+                            >
+                              <Target size={12} />
+                            </button>
+                          );
+                        })()}
                       </div>
                     );
                   })}
