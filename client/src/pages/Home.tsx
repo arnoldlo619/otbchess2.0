@@ -950,13 +950,22 @@ function Showcase() {
               ))}
             </div>
 
-            <Link
-              href="/clubs"
-              className="btn-chess-primary flex items-center gap-2 inline-flex"
-            >
-              Explore Chess Leagues
-              <ChevronRight className="w-4 h-4" />
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/clubs"
+                className="btn-chess-primary flex items-center gap-2 inline-flex"
+              >
+                Explore Chess Leagues
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/prep"
+                className="btn-chess-secondary flex items-center gap-2 inline-flex"
+              >
+                Try Matchup Prep
+                <Target className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

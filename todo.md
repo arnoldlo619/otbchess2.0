@@ -3793,3 +3793,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Explain how leagues help users prep and study for chess matchups against local club players
 - [x] Highlight chess.com API integration for analyzing play styles and offering strategic lines
 - [x] Mock matchup prep dashboard visual with opponent stats and suggested prep lines
+
+## Matchup Prep Engine
+- [x] Backend: chess.com game fetcher service (pull recent games for a player)
+- [x] Backend: opening analysis engine (classify openings, compute repertoire stats)
+- [x] Backend: tactical pattern analyzer (endgame tendencies, win rates by phase)
+- [x] Backend: prep line generator (suggest counter-openings based on opponent analysis)
+- [x] API: GET /api/prep/:username endpoint (full matchup prep report)
+- [x] API: GET /api/prep/:username/openings endpoint (opening repertoire breakdown)
+- [x] Frontend: MatchupPrep page at /prep/:username wired to real API data
+- [x] Frontend: "Try Matchup Prep" CTA on landing page Chess Club League section
+- [x] Tests: 46 unit tests for opening classification, stat computation, prep generation (all passing)
+- [x] TypeScript: 0 errors across entire codebase

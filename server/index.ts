@@ -16,6 +16,7 @@ import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
 import clubBattlesRouter from "./clubBattles.js";
 import { clubsRouter } from "./clubs.js";
 import { leaguesRouter } from "./leagues.js";
+import { buildPrepReport, fetchPlayerGames, analyzePlayStyle, fetchPlayerStats, generatePrepLines, generateInsights } from "./prepEngine.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -208,6 +209,16 @@ const chessProxyLimiter = rateLimit({
   skip: () => process.env.NODE_ENV !== "production",
 });
 
+// Matchup prep: 5 lookups per minute per IP (heavy API calls to chess.com)
+const prepLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many prep requests — please wait a moment." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
 // Push subscribe: 30 per minute per IP (players subscribe once per tournament)
 const pushSubscribeLimiter = rateLimit({
   windowMs: 60_000,
@@ -236,6 +247,62 @@ export function createApp() {
 
   // ── Auth routes ─────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
+
+  // ── Matchup Prep Engine: GET /api/prep/:username ──────────────────────────
+  // Full matchup preparation report for a chess.com player.
+  app.get("/api/prep/:username", prepLimiter, async (req, res) => {
+    try {
+      const username = req.params.username;
+      if (!username || username.length < 2 || username.length > 50) {
+        res.status(400).json({ error: "Invalid username" });
+        return;
+      }
+      const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
+      const report = await buildPrepReport(username, maxGames);
+      res.json(report);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[prep engine]", msg);
+      if (msg.includes("archives error: 404")) {
+        res.status(404).json({ error: "Player not found on chess.com" });
+      } else {
+        res.status(502).json({ error: "Could not generate prep report" });
+      }
+    }
+  });
+
+  // ── Matchup Prep: GET /api/prep/:username/openings ────────────────────────
+  // Opening repertoire breakdown only (lighter endpoint).
+  app.get("/api/prep/:username/openings", prepLimiter, async (req, res) => {
+    try {
+      const username = req.params.username;
+      if (!username || username.length < 2 || username.length > 50) {
+        res.status(400).json({ error: "Invalid username" });
+        return;
+      }
+      const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
+      const [games, ratings] = await Promise.all([
+        fetchPlayerGames(username, maxGames),
+        fetchPlayerStats(username),
+      ]);
+      const profile = analyzePlayStyle(username, games, ratings);
+      res.json({
+        username: profile.username,
+        gamesAnalyzed: profile.gamesAnalyzed,
+        whiteOpenings: profile.whiteOpenings,
+        blackOpenings: profile.blackOpenings,
+        firstMoveAsWhite: profile.firstMoveAsWhite,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[prep openings]", msg);
+      if (msg.includes("archives error: 404")) {
+        res.status(404).json({ error: "Player not found on chess.com" });
+      } else {
+        res.status(502).json({ error: "Could not fetch opening data" });
+      }
+    }
+  });
 
   // ── Proxy: GET /api/chess/player/:username ──────────────────────────────────
   // IMPORTANT: These must be registered BEFORE the recordings router, which
