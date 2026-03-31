@@ -372,15 +372,16 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[200] flex items-start justify-center p-4 overflow-y-auto"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal card */}
+      {/* Modal card — my-auto pushes it to vertical center when content fits, scrolls when it doesn't */}
       <div
-        className={`relative z-10 w-full max-w-md rounded-3xl border shadow-2xl ${bg} ${border} overflow-hidden`}
+        className={`relative z-10 w-full max-w-md my-auto rounded-3xl border shadow-2xl ${bg} ${border} overflow-hidden`}
+        style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

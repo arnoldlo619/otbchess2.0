@@ -3823,3 +3823,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Prep icon button to Schedule tab match rows
 - [x] One-click access from pairing to opponent's prep report (/prep/:username)
 - [x] 18 tests for caching logic, normalisation, opponent lookup, JSON round-trip (all passing)
+
+## Sign-in Modal Positioning Fix
+- [x] Fix sign-in modal on Clubs page clipping at top of viewport — center it properly on screen
