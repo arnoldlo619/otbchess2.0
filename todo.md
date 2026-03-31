@@ -3881,3 +3881,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Frontend: Champion banner with avatar, points, and ELO
 - [x] Frontend: "View Full Season History" link in LeagueDashboard history tab
 - [x] 21 tests for history endpoint, routing, and page structure (all passing)
+
+## ECO Opening Book Expansion
+- [x] Expanded ECO_BOOK from 75 to 207 entries covering all 5 ECO volumes (A-E)
+- [x] Added Pirc (Austrian, Classical), Alekhine (Four Pawns, Modern), Benoni (Modern, Czech, Benko), Budapest, Old Indian, Bogo-Indian, Nimzowitsch, Owen's, St. George, and many more
+- [x] Added sub-variations: Sveshnikov, Taimanov, Richter-Rauzer, Grand Prix, Maroczy Bind, Marshall Attack, Breyer, Mar del Plata, Panov-Botvinnik, Ragozin, Chigorin, Veresov, Tartakower, Blackmar-Diemer, and more
+- [x] 97 tests verifying coverage of all opening families and entry integrity (all passing)
+- [x] TypeScript 0 errors
