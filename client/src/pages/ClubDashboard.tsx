@@ -159,6 +159,9 @@ import {
   RefreshCw,
   Pin,
   PinOff,
+  ListOrdered,
+  GitBranch,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -2028,7 +2031,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed" | "analytics" | "payments" | "battles";
+type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "analytics" | "payments";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -2082,6 +2085,36 @@ export default function ClubDashboard() {
   const [pendingInvites, setPendingInvites] = useState<Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>>([]);
   const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
   const [showInvitePanel, setShowInvitePanel] = useState(false);
+
+  // League state
+  const [clubLeagues, setClubLeagues] = useState<Array<{
+    id: number;
+    name: string;
+    description: string | null;
+    status: string;
+    currentWeek: number;
+    totalWeeks: number;
+    playerCount: number;
+    maxPlayers: number;
+    commissionerId: string;
+    pendingRequests?: number;
+  }>>([]);
+  const [leagueWizardOpen, setLeagueWizardOpen] = useState(false);
+  const [leagueWizardStep, setLeagueWizardStep] = useState<1 | 2>(1);
+  const [leagueName, setLeagueName] = useState("");
+  const [leagueDesc, setLeagueDesc] = useState("");
+  const [leagueMaxPlayers, setLeagueMaxPlayers] = useState(6);
+  const [leagueCreating, setLeagueCreating] = useState(false);
+  const [leaguePickedIds, setLeaguePickedIds] = useState<Set<string>>(new Set());
+  const [leaguePickSearch, setLeaguePickSearch] = useState("");
+
+  async function fetchClubLeagues() {
+    if (!club) return;
+    try {
+      const res = await fetch(`/api/leagues/club/${club.id}`, { credentials: "include" });
+      if (res.ok) setClubLeagues(await res.json());
+    } catch { /* ignore */ }
+  }
 
   // Seed and load
   useEffect(() => {
@@ -2349,6 +2382,14 @@ export default function ClubDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, isOwnerOrDirector]);
 
+  // Load leagues when leagues tab is opened
+  useEffect(() => {
+    if (tab === "leagues" && club) {
+      fetchClubLeagues();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, club]);
+
   const upcomingEvents = events.filter(isUpcoming);
   const pastEvents = events.filter((e) => !isUpcoming(e));
 
@@ -2498,7 +2539,7 @@ export default function ClubDashboard() {
         style={{ background: "oklch(0.20 0.06 145 / 0.95)", backdropFilter: "blur(12px)" }}
       >
         <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
-          {(["events", "members", "feed", "battles", "analytics", "payments"] as Tab[]).map((t) => (
+          {(["events", "members", "feed", "battles", "leagues", "analytics", "payments"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -4163,8 +4204,322 @@ export default function ClubDashboard() {
             )}
           </div>
         )}
-      </div>
+         {/* ── LEAGUES TAB ─────────────────────────────────────────────────── */}
+        {tab === "leagues" && (
+          <div className="space-y-6">
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-white font-bold text-lg">Club Leagues</h2>
+                <p className="text-white/40 text-sm mt-0.5">Round-robin seasons for your club members</p>
+              </div>
+              {isOwnerOrDirector && !leagueWizardOpen && (
+                <button
+                  onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); setLeagueName(""); setLeagueDesc(""); setLeagueMaxPlayers(6); setLeaguePickedIds(new Set()); }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
+                  style={{ background: accent, color: "#0a1a0f" }}
+                >
+                  <Plus className="w-4 h-4" />
+                  New League
+                </button>
+              )}
+            </div>
 
+            {/* ── Create League Wizard ── */}
+            {leagueWizardOpen && isOwnerOrDirector && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-5">
+                {/* Step indicator */}
+                <div className="flex items-center gap-3 mb-1">
+                  {([1, 2] as const).map((s) => (
+                    <div key={s} className="flex items-center gap-2">
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                        style={leagueWizardStep >= s ? { background: accent, color: "#0a1a0f" } : { background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}
+                      >
+                        {s}
+                      </div>
+                      <span className={`text-xs font-medium ${leagueWizardStep >= s ? "text-white" : "text-white/30"}`}>
+                        {s === 1 ? "Details" : "Add Players"}
+                      </span>
+                      {s < 2 && <div className="w-8 h-px bg-white/10" />}
+                    </div>
+                  ))}
+                  <button onClick={() => setLeagueWizardOpen(false)} className="ml-auto text-white/30 hover:text-white/60 transition">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Step 1 — Details */}
+                {leagueWizardStep === 1 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5 block">League Name</label>
+                      <input
+                        value={leagueName}
+                        onChange={(e) => setLeagueName(e.target.value)}
+                        placeholder="e.g. Spring 2026 League"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Description <span className="text-white/20 normal-case">(optional)</span></label>
+                      <textarea
+                        value={leagueDesc}
+                        onChange={(e) => setLeagueDesc(e.target.value)}
+                        placeholder="What's this league about?"
+                        rows={2}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-2 block">Max Players</label>
+                      <div className="flex gap-2">
+                        {[4, 6, 8, 10].map((n) => (
+                          <button
+                            key={n}
+                            onClick={() => setLeagueMaxPlayers(n)}
+                            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition border ${
+                              leagueMaxPlayers === n ? "text-[#0a1a0f] border-transparent" : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                            }`}
+                            style={leagueMaxPlayers === n ? { background: accent, borderColor: accent } : {}}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-white/30 text-xs mt-2">{leagueMaxPlayers - 1} rounds · {Math.round((leagueMaxPlayers - 1) * 1.5)} weeks estimated</p>
+                    </div>
+                    <div className="flex gap-3 pt-1">
+                      <button
+                        disabled={!leagueName.trim()}
+                        onClick={() => setLeagueWizardStep(2)}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
+                        style={{ background: accent, color: "#0a1a0f" }}
+                      >
+                        Next: Add Players
+                      </button>
+                      <button
+                        disabled={!leagueName.trim() || leagueCreating}
+                        onClick={async () => {
+                          if (!club || !leagueName.trim()) return;
+                          setLeagueCreating(true);
+                          try {
+                            const res = await fetch("/api/leagues", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "include",
+                              body: JSON.stringify({ clubId: club.id, name: leagueName.trim(), description: leagueDesc.trim() || null, maxPlayers: leagueMaxPlayers }),
+                            });
+                            if (!res.ok) throw new Error(await res.text());
+                            toast.success("League created as Draft!");
+                            setLeagueWizardOpen(false);
+                            await fetchClubLeagues();
+                          } catch (err) {
+                            toast.error("Failed to create league");
+                            console.error(err);
+                          } finally {
+                            setLeagueCreating(false);
+                          }
+                        }}
+                        className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition disabled:opacity-30"
+                      >
+                        {leagueCreating ? "Creating…" : "Create Draft"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2 — Add Players */}
+                {leagueWizardStep === 2 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-semibold text-sm">{leagueName}</p>
+                        <p className="text-white/40 text-xs">{leaguePickedIds.size} / {leagueMaxPlayers} players selected</p>
+                      </div>
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ background: leaguePickedIds.size >= leagueMaxPlayers ? accent : "rgba(255,255,255,0.1)", color: leaguePickedIds.size >= leagueMaxPlayers ? "#0a1a0f" : "rgba(255,255,255,0.4)" }}
+                      >
+                        {leaguePickedIds.size}/{leagueMaxPlayers}
+                      </div>
+                    </div>
+                    <input
+                      value={leaguePickSearch}
+                      onChange={(e) => setLeaguePickSearch(e.target.value)}
+                      placeholder="Search members…"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30"
+                    />
+                    <div className="space-y-1.5 max-h-52 overflow-y-auto">
+                      {members
+                        .filter((m) => !leaguePickSearch || m.displayName.toLowerCase().includes(leaguePickSearch.toLowerCase()) || (m.chesscomUsername ?? "").toLowerCase().includes(leaguePickSearch.toLowerCase()))
+                        .map((m) => {
+                          const picked = leaguePickedIds.has(m.userId);
+                          const full = !picked && leaguePickedIds.size >= leagueMaxPlayers;
+                          return (
+                            <button
+                              key={m.userId}
+                              disabled={full}
+                              onClick={() => {
+                                setLeaguePickedIds((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(m.userId)) next.delete(m.userId); else next.add(m.userId);
+                                  return next;
+                                });
+                              }}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left ${
+                                picked ? "bg-white/10 border border-white/20" : full ? "opacity-30 cursor-not-allowed bg-white/3" : "bg-white/5 hover:bg-white/10"
+                              }`}
+                            >
+                              <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={32} className="w-8 h-8 rounded-full flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{m.displayName}</p>
+                                {m.chesscomUsername && <p className="text-white/40 text-xs truncate">{m.chesscomUsername}</p>}
+                              </div>
+                              {picked && <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: accent }} />}
+                            </button>
+                          );
+                        })}
+                    </div>
+                    <div className="flex gap-3 pt-1">
+                      <button onClick={() => setLeagueWizardStep(1)} className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition">
+                        Back
+                      </button>
+                      <button
+                        disabled={!leagueName.trim() || leagueCreating}
+                        onClick={async () => {
+                          if (!club || !leagueName.trim()) return;
+                          setLeagueCreating(true);
+                          try {
+                            const res = await fetch("/api/leagues", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "include",
+                              body: JSON.stringify({
+                                clubId: club.id,
+                                name: leagueName.trim(),
+                                description: leagueDesc.trim() || null,
+                                maxPlayers: leagueMaxPlayers,
+                                playerIds: Array.from(leaguePickedIds),
+                              }),
+                            });
+                            if (!res.ok) throw new Error(await res.text());
+                            toast.success(leaguePickedIds.size > 0 ? `League created with ${leaguePickedIds.size} players!` : "League created as Draft!");
+                            setLeagueWizardOpen(false);
+                            await fetchClubLeagues();
+                          } catch (err) {
+                            toast.error("Failed to create league");
+                            console.error(err);
+                          } finally {
+                            setLeagueCreating(false);
+                          }
+                        }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30"
+                        style={{ background: accent, color: "#0a1a0f" }}
+                      >
+                        {leagueCreating ? "Creating…" : leaguePickedIds.size > 0 ? `Create with ${leaguePickedIds.size} Players` : "Create Draft League"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── League list ── */}
+            {clubLeagues.length === 0 && !leagueWizardOpen ? (
+              <div className="flex flex-col items-center gap-4 py-16 text-white/30">
+                <ListOrdered className="w-12 h-12 opacity-20" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-white/50">No leagues yet</p>
+                  <p className="text-xs mt-1">{isOwnerOrDirector ? "Create your first league to get started" : "Your director hasn't created a league yet"}</p>
+                </div>
+                {isOwnerOrDirector && (
+                  <button
+                    onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition"
+                    style={{ background: accent, color: "#0a1a0f" }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create First League
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {clubLeagues.map((league) => (
+                  <div
+                    key={league.id}
+                    className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/8 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                              league.status === "active" ? "bg-green-500/20 text-green-400" :
+                              league.status === "completed" ? "bg-white/10 text-white/40" :
+                              "bg-amber-500/20 text-amber-400"
+                            }`}
+                          >
+                            {league.status === "active" ? "Active" : league.status === "completed" ? "Completed" : "Draft"}
+                          </span>
+                          {league.status === "active" && (
+                            <span className="text-white/40 text-xs">Week {league.currentWeek} of {league.totalWeeks}</span>
+                          )}
+                        </div>
+                        <h3 className="text-white font-semibold text-base truncate">{league.name}</h3>
+                        {league.description && <p className="text-white/40 text-xs mt-0.5 line-clamp-1">{league.description}</p>}
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="flex items-center gap-1 text-white/40 text-xs">
+                            <Users className="w-3 h-3" />
+                            {league.playerCount}/{league.maxPlayers} players
+                          </span>
+                          {league.status === "draft" && league.commissionerId === user?.id && (
+                            <span className="text-xs text-amber-400/70">Roster {league.playerCount}/{league.maxPlayers} filled</span>
+                          )}
+                        </div>
+                      </div>
+                      <a
+                        href={`/leagues/${league.id}`}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white/10 text-white/70 hover:bg-white/15 transition flex-shrink-0"
+                      >
+                        Open
+                        <ArrowRight className="w-3 h-3" />
+                      </a>
+                    </div>
+                    {/* Progress bar for draft leagues */}
+                    {league.status === "draft" && (
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-white/30 text-xs">Roster progress</span>
+                          <span className="text-white/50 text-xs font-semibold">{league.playerCount}/{league.maxPlayers}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${(league.playerCount / league.maxPlayers) * 100}%`, background: accent }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {/* Week progress bar for active leagues */}
+                    {league.status === "active" && league.totalWeeks > 0 && (
+                      <div className="mt-4">
+                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${(league.currentWeek / league.totalWeeks) * 100}%`, background: accent }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       {/* ── Create Event Modal ───────────────────────────────────────────────── */}
       {showCreateEvent && user && (
         <CreateEventModal

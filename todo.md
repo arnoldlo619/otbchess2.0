@@ -3770,3 +3770,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Schema: expanded avatarUrl + bannerUrl to text type (was varchar(500))
 - [x] Client: added try/catch with toast.error and setError for all failure paths
 - [x] Client: setCreating(false) in all error paths including catch block
+
+## Club Dashboard Leagues Tab (Navigation Fix)
+- [x] Add "Leagues" tab to Club Dashboard tab bar (Events, Members, Feed, Battles, Leagues, Analytics, Payments)
+- [x] Leagues tab: show existing club leagues list with status badges and quick-navigate to League Dashboard
+- [x] Leagues tab: embed the 2-step league creation wizard directly in the dashboard
+- [x] Leagues tab: roster progress bar for Draft leagues, week progress for Active leagues
