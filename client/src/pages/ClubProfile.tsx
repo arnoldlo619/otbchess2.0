@@ -101,6 +101,7 @@ import {
   Swords,
 } from "lucide-react";
 import { toast } from "sonner";
+import AuthModal from "@/components/AuthModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -678,6 +679,7 @@ export default function ClubProfile() {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
   const [creatingLeague, setCreatingLeague] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   // Track which draft leagues the current user has already requested to join
   const [requestedLeagueIds, setRequestedLeagueIds] = useState<Set<string>>(new Set());
   const [requestingLeagueId, setRequestingLeagueId] = useState<string | null>(null);
@@ -815,7 +817,7 @@ export default function ClubProfile() {
 
   const handleJoin = async () => {
     if (!user) {
-      toast.error("Sign in to join clubs");
+      setAuthOpen(true);
       return;
     }
     setJoining(true);
@@ -883,7 +885,7 @@ export default function ClubProfile() {
 
   const handleFollow = async () => {
     if (!user) {
-      toast.error("Sign in to follow clubs");
+      setAuthOpen(true);
       return;
     }
     setFollowingLoading(true);
@@ -1103,7 +1105,7 @@ export default function ClubProfile() {
               )}
               {!user ? (
                 <button
-                  onClick={() => toast("Sign in to join clubs")}
+                  onClick={() => setAuthOpen(true)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
                 >
                   <UserPlus className="w-4 h-4" />
@@ -1794,7 +1796,7 @@ export default function ClubProfile() {
               const completedLeagues = clubLeagues.filter((lg) => lg.status === "completed");
               const handleRequestJoin = async (e: React.MouseEvent, lgId: string) => {
                 e.stopPropagation();
-                if (!user) { toast.error("Sign in to request joining a league"); return; }
+                if (!user) { setAuthOpen(true); return; }
                 setRequestingLeagueId(lgId);
                 try {
                   const res = await fetch(`/api/leagues/${lgId}/join-request`, {
@@ -2054,10 +2056,11 @@ export default function ClubProfile() {
           </div>
         </div>
       )}
+      {/* Auth modal — shown when guest tries to join, follow, or request a league */}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
     </div>
   );
 }
-
 // ── Extracted row components ──────────────────────────────────────────────────
 
 function DetailRow({

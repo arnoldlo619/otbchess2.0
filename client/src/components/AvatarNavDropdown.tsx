@@ -33,6 +33,7 @@ import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
 import { useChessAvatar } from "@/hooks/useChessAvatar";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
+import AuthModal from "@/components/AuthModal";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const OTB_GREEN      = "#4CAF50";
@@ -291,6 +292,16 @@ export function AvatarNavDropdown({
   const [open, setOpen]   = useState(false);
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
+  // Internal auth modal — used when the parent page doesn't provide onSignInClick
+  const [internalAuthOpen, setInternalAuthOpen] = useState(false);
+  const handleSignIn = () => {
+    setOpen(false);
+    if (onSignInClick) {
+      onSignInClick();
+    } else {
+      setInternalAuthOpen(true);
+    }
+  };
 
   // ── Swipe-to-dismiss state ──────────────────────────────────────────────────
   const [swipeDy, setSwipeDy]   = useState(0);   // current drag offset (px)
@@ -394,11 +405,17 @@ export function AvatarNavDropdown({
   if (isGuest) {
     return (
       <>
+        {/* Internal AuthModal fallback — renders when no onSignInClick prop is provided */}
+        <AuthModal
+          isOpen={internalAuthOpen}
+          onClose={() => setInternalAuthOpen(false)}
+          isDark
+        />
         {/* Mobile: full hamburger drawer */}
         <div className="flex md:hidden">
           <GuestMobileMenu
             currentPage={currentPage}
-            onSignInClick={onSignInClick}
+            onSignInClick={handleSignIn}
           />
         </div>
         {/* Desktop: avatar dropdown (same JSX as the main return below, scoped to desktop) */}
@@ -450,7 +467,7 @@ export function AvatarNavDropdown({
               >
                 <div className="px-2 py-2">
                   <button
-                    onClick={() => { setOpen(false); onSignInClick?.(); }}
+                    onClick={handleSignIn}
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
                   >
                     <LogIn className="w-4 h-4 flex-shrink-0" />
@@ -594,8 +611,8 @@ export function AvatarNavDropdown({
                                 </span>
                               );
                             }
-                          )}
-                        </div>
+              )}
+            </div>
                       )}
                     </div>
                   )}
@@ -739,14 +756,13 @@ export function AvatarNavDropdown({
 
               {user?.isGuest && (
                 <button
-                  onClick={() => { setOpen(false); onSignInClick?.(); }}
+                  onClick={handleSignIn}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-300 hover:bg-amber-500/10 transition-colors"
                 >
                   <Crown className="w-4 h-4 flex-shrink-0" />
                   <span>Create Free Account</span>
                 </button>
               )}
-
               {user ? (
                 <button
                   onClick={() => { logout(); setOpen(false); }}
@@ -757,7 +773,7 @@ export function AvatarNavDropdown({
                 </button>
               ) : (
                 <button
-                  onClick={() => { setOpen(false); onSignInClick?.(); }}
+                  onClick={handleSignIn}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
                 >
                   <LogIn className="w-4 h-4 flex-shrink-0" />
