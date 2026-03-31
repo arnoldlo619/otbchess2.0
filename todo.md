@@ -3916,3 +3916,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Platform chess green design system (OKLCH tokens, accent colors, cardBg, cardBorder)
 - [x] Fixed TS errors: format → formatType, clubName → View Club link
 - [x] TypeScript 0 errors
+
+## LeagueHistory Page Sidebar
+- [x] Added hero banner with chess micro-grid pattern (matches LeagueDashboard)
+- [x] Added floating identity card with 4-stat row (Players, Rounds, Total Matches, Champion)
+- [x] Added two-column desktop layout (main content left, sidebar right w-72)
+- [x] Sidebar: Champion card with avatar, points, W/D/L, ELO, chess.com link
+- [x] Sidebar: Final Standings mini-table (top 8 with rank badges, "View all" button)
+- [x] Sidebar: Season Stats quick panel (match count, white/black/draw win %)
+- [x] Sidebar: Back to League Dashboard button
+- [x] TypeScript 0 errors
