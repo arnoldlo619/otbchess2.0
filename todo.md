@@ -3763,3 +3763,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update overview tab top-3 preview with ratings and streak badges
 - [x] Update Players grid with chess.com rating badges
 - [x] Ensure responsive layout for mobile (card-based mobile rows)
+
+## Club Creation Bug Fix
+- [x] Server: add POST /api/clubs/upload-avatar endpoint (saves to /uploads/avatars/, returns served URL)
+- [x] Client: upload avatar to server first, send served URL instead of base64 in club creation payload
+- [x] Schema: expanded avatarUrl + bannerUrl to text type (was varchar(500))
+- [x] Client: added try/catch with toast.error and setError for all failure paths
+- [x] Client: setCreating(false) in all error paths including catch block

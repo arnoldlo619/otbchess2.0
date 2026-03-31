@@ -311,7 +311,11 @@ export function createApp() {
   app.use("/api/recordings", createRecordingsRouter());
   app.use("/api/games", createRecordingsRouter());
 
-  // ── Clubs API (Discover, Create, Join, Members) ─────────────────────────────
+   // ── Static: serve uploaded club avatars ─────────────────────────────────────
+  const uploadsDir = path.resolve(__dirname, "../uploads");
+  app.use("/uploads", express.static(uploadsDir, { maxAge: "7d" }));
+
+  // ── Clubs API (Discover, Create, Join, Members) ───────────────────────────
   app.use("/api/clubs", clubsRouter);
   app.use("/api/leagues", leaguesRouter);
 

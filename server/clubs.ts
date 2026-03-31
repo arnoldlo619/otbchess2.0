@@ -16,13 +16,21 @@
  *   DELETE /:id/members/:uid — leave / remove a member
  */
 
-import { Router } from "express";
+import express, { Router } from "express";
 import { getDb } from "./db.js";
 import { dbClubs, dbClubMembers } from "../shared/schema";
 import { eq, and, desc, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
 import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const AVATARS_DIR = path.resolve(__dirname, "../uploads/avatars");
+if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
 
 export const clubsRouter = Router();
 
@@ -203,6 +211,43 @@ clubsRouter.get("/leaderboard", async (req: Request, res: Response) => {
   } catch (err) {
     console.error("[clubs] GET /leaderboard error:", err);
     res.status(500).json({ error: "Failed to load leaderboard" });
+  }
+});
+
+// ── POST /api/clubs/upload-avatar — upload a club avatar image ───────────────
+// Accepts a base64 data URL, saves it to disk, returns a served URL.
+// Uses a higher body-size limit applied per-route via a local middleware.
+// Per-route body parser with a higher limit for image uploads
+const avatarJsonParser = express.json({ limit: "10mb" });
+
+clubsRouter.post("/upload-avatar", requireFullAuth, avatarJsonParser, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { dataUrl } = req.body as { dataUrl?: string };
+    if (!dataUrl || !dataUrl.startsWith("data:image/")) {
+      res.status(400).json({ error: "Invalid image data" });
+      return;
+    }
+    // Parse the base64 payload
+    const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) {
+      res.status(400).json({ error: "Malformed data URL" });
+      return;
+    }
+    const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+    const buffer = Buffer.from(matches[2], "base64");
+    if (buffer.length > 5 * 1024 * 1024) {
+      res.status(413).json({ error: "Image too large (max 5 MB)" });
+      return;
+    }
+    const filename = `${nanoid()}.${ext}`;
+    const filepath = path.join(AVATARS_DIR, filename);
+    fs.writeFileSync(filepath, buffer);
+    res.json({ url: `/uploads/avatars/${filename}` });
+  } catch (err) {
+    console.error("[clubs] POST /upload-avatar error:", err);
+    res.status(500).json({ error: "Failed to upload avatar" });
   }
 });
 

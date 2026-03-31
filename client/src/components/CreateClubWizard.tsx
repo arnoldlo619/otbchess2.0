@@ -285,41 +285,70 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
     if (step === 4) {
       if (!user) { toast.error("Sign in to create a club"); return; }
       setCreating(true);
-      const clubData = {
-        name: data.name.trim(),
-        tagline: data.tagline.trim(),
-        category: data.category,
-        location: data.location.trim(),
-        country: data.country,
-        description: data.description.trim(),
-        accentColor: data.accentColor,
-        avatarUrl: data.avatarUrl,
-        bannerUrl: null as null,
-        ownerId: user.id,
-        ownerName: user.displayName,
-        isPublic: data.isPublic,
-        website: data.website.trim() || undefined,
-        discord: data.discord.trim() || undefined,
-      };
+      try {
+        // 1. If the user uploaded an avatar (base64 data URL), upload it to the
+        //    server first so we store a served URL instead of a raw base64 string.
+        //    This avoids the varchar(500) truncation and the 512kb JSON body limit.
+        let resolvedAvatarUrl: string | null = data.avatarUrl;
+        if (data.avatarUrl && data.avatarUrl.startsWith("data:image/")) {
+          const uploadRes = await fetch("/api/clubs/upload-avatar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ dataUrl: data.avatarUrl }),
+          });
+          if (uploadRes.ok) {
+            const { url } = await uploadRes.json() as { url: string };
+            resolvedAvatarUrl = url;
+          } else {
+            // Avatar upload failed — continue without avatar rather than blocking
+            console.warn("[CreateClubWizard] Avatar upload failed, continuing without avatar");
+            resolvedAvatarUrl = null;
+          }
+        }
 
-      // 1. Persist to localStorage immediately (offline-capable, instant feedback)
-      const localClub = createClub(
-        clubData,
-        { userId: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl }
-      );
+        const clubData = {
+          name: data.name.trim(),
+          tagline: data.tagline.trim(),
+          category: data.category,
+          location: data.location.trim(),
+          country: data.country,
+          description: data.description.trim(),
+          accentColor: data.accentColor,
+          avatarUrl: resolvedAvatarUrl,
+          bannerUrl: null as null,
+          ownerId: user.id,
+          ownerName: user.displayName,
+          isPublic: data.isPublic,
+          website: data.website.trim() || undefined,
+          discord: data.discord.trim() || undefined,
+        };
 
-      // 2. Persist to server (required so club appears in Discover for all users)
-      const serverClub = await apiCreateClub({ ...clubData, id: localClub.id });
-      if (!serverClub) {
-        // Server save failed — show error and stay on step 4
+        // 2. Persist to localStorage immediately (offline-capable, instant feedback)
+        const localClub = createClub(
+          clubData,
+          { userId: user.id, displayName: user.displayName, avatarUrl: user.avatarUrl }
+        );
+
+        // 3. Persist to server (required so club appears in Discover for all users)
+        const serverClub = await apiCreateClub({ ...clubData, id: localClub.id });
+        if (!serverClub) {
+          setCreating(false);
+          setError("Failed to save club to server. Please check your connection and try again.");
+          toast.error("Club creation failed — please try again.");
+          return;
+        }
+
+        setCreatedClubId(serverClub.id);
         setCreating(false);
-        setError("Failed to save club to server. Please check your connection and try again.");
-        toast.error("Club creation failed — please try again.");
+      } catch (err) {
+        console.error("[CreateClubWizard] handleNext error:", err);
+        setCreating(false);
+        const msg = err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(msg);
+        toast.error("Club creation failed — " + msg);
         return;
       }
-
-      setCreatedClubId(serverClub.id);
-      setCreating(false);
     }
 
     setDirection("forward");
