@@ -364,6 +364,9 @@ export default function LeagueDashboard() {
   // Join requests (commissioner-only, for Draft leagues)
   const [joinRequests, setJoinRequests] = useState<Array<{ id: number; playerId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null; createdAt: string }>>([]);
   const [reviewingId, setReviewingId] = useState<number | null>(null);
+  // Push notification subscription state (commissioner-only)
+  const [pushStatus, setPushStatus] = useState<"idle" | "subscribed" | "denied" | "loading" | "unsupported">("idle");
+  const [pushLoading, setPushLoading] = useState(false);
 
   // Colour tokens
   const pageBg = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
@@ -409,6 +412,67 @@ export default function LeagueDashboard() {
     } catch { /* not commissioner or not draft */ }
   }, [leagueId]);
   useEffect(() => { fetchJoinRequests(); }, [fetchJoinRequests]);
+
+  // Check push subscription status on mount
+  useEffect(() => {
+    if (!leagueId) return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setPushStatus("unsupported"); return;
+    }
+    if (typeof Notification !== "undefined" && Notification.permission === "denied") {
+      setPushStatus("denied"); return;
+    }
+    fetch(`/api/leagues/${leagueId}/push/status`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.subscribed) setPushStatus("subscribed"); })
+      .catch(() => {});
+  }, [leagueId]);
+
+  async function getVapidKey(): Promise<string> {
+    const r = await fetch("/api/push/vapid-public-key");
+    const d = await r.json() as { publicKey: string };
+    return d.publicKey;
+  }
+  function urlBase64ToUint8Array(base64: string): Uint8Array {
+    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+    const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(b64);
+    return Uint8Array.from(Array.from(raw).map((c) => c.charCodeAt(0)));
+  }
+  async function handleSubscribePush() {
+    if (!leagueId || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    setPushLoading(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") { setPushStatus("denied"); return; }
+      const vapidKey = await getVapidKey();
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidKey) });
+      const subJson = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
+      const res = await fetch(`/api/leagues/${leagueId}/push/subscribe`, {
+        method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: subJson }),
+      });
+      if (res.ok) { setPushStatus("subscribed"); showToast("Notifications enabled!"); }
+      else showToast("Failed to save subscription", "error");
+    } catch (err) {
+      console.error("[push]", err);
+      showToast("Could not enable notifications", "error");
+    } finally {
+      setPushLoading(false);
+    }
+  }
+  async function handleUnsubscribePush() {
+    if (!leagueId) return;
+    setPushLoading(true);
+    try {
+      await fetch(`/api/leagues/${leagueId}/push/subscribe`, { method: "DELETE", credentials: "include" });
+      setPushStatus("idle");
+      showToast("Notifications disabled");
+    } catch { showToast("Failed to disable notifications", "error"); }
+    finally { setPushLoading(false); }
+  }
 
   async function handleReviewRequest(reqId: number, action: "approve" | "reject") {
     if (!leagueId) return;
@@ -598,6 +662,26 @@ export default function LeagueDashboard() {
         >
           {league.status === "active" ? "Active" : league.status === "completed" ? "Complete" : "Draft"}
         </div>
+        {/* Push notification bell — commissioner only, Draft leagues */}
+        {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
+          <button
+            onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
+            disabled={pushLoading || pushStatus === "denied"}
+            className="p-2 rounded-xl transition-opacity hover:opacity-70 flex-shrink-0 relative"
+            style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
+            title={pushStatus === "subscribed" ? "Notifications on — tap to disable" : pushStatus === "denied" ? "Notifications blocked in browser" : "Enable join-request notifications"}
+          >
+            {pushLoading ? (
+              <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke={pushStatus === "denied" ? textMuted : pushStatus === "subscribed" ? accent : textMain} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                {pushStatus === "subscribed" && <circle cx="19" cy="5" r="3" fill="#4ade80" stroke="none" />}
+              </svg>
+            )}
+          </button>
+        )}
         {/* Share button */}
         <button
           onClick={() => setShowShare(true)}
@@ -1496,6 +1580,47 @@ export default function LeagueDashboard() {
               <p className="text-sm font-semibold" style={{ color: textMain }}>Join Requests</p>
               <span className="text-xs" style={{ color: textMuted }}>{joinRequests.length} pending</span>
             </div>
+            {/* Push notification prompt for commissioners who haven't subscribed */}
+            {pushStatus === "idle" && (
+              <div
+                className="rounded-2xl px-4 py-3 flex items-center gap-3"
+                style={{ background: `${accent}0d`, border: `1px solid ${accent}22` }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold" style={{ color: textMain }}>Get notified instantly</p>
+                  <p className="text-xs" style={{ color: textMuted }}>Enable push notifications to be alerted when a player requests to join.</p>
+                </div>
+                <button
+                  onClick={handleSubscribePush}
+                  disabled={pushLoading}
+                  className="text-xs font-semibold flex-shrink-0 px-3 py-1.5 rounded-xl"
+                  style={{ background: accent, color: "#fff" }}
+                >
+                  {pushLoading ? "..." : "Enable"}
+                </button>
+              </div>
+            )}
+            {pushStatus === "subscribed" && (
+              <div
+                className="rounded-2xl px-4 py-3 flex items-center gap-2"
+                style={{ background: "oklch(0.55 0.13 145 / 0.08)", border: "1px solid oklch(0.55 0.13 145 / 0.2)" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <p className="text-xs flex-1" style={{ color: textMain }}>Push notifications are <strong>on</strong> — you’ll be alerted on this device when someone requests to join.</p>
+                <button onClick={handleUnsubscribePush} className="text-xs flex-shrink-0" style={{ color: textMuted }}>Turn off</button>
+              </div>
+            )}
+            {pushStatus === "denied" && (
+              <div className="rounded-2xl px-4 py-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                <p className="text-xs" style={{ color: "#ef4444" }}>Notifications are blocked in your browser. To enable them, update your browser’s site settings and refresh.</p>
+              </div>
+            )}
             {joinRequests.length === 0 ? (
               <div
                 className="rounded-3xl py-12 text-center"

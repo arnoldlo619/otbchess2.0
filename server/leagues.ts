@@ -19,12 +19,56 @@ import {
   leagueMatches,
   leagueStandings,
   leagueJoinRequests,
+  leaguePushSubscriptions,
   dbClubMembers,
   users,
 } from "../shared/schema.js";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import webpush from "web-push";
 import type { Request, Response } from "express";
+
+// Initialise VAPID details (same keys as main server)
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY ?? "";
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY ?? "";
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT ?? "mailto:admin@chessotb.club";
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
+
+/** Send a push notification to all subscribed commissioner endpoints for a league */
+async function notifyCommissioner(leagueId: string, title: string, body: string, url: string) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  try {
+    const db = await getDb();
+    const subs = await db.select().from(leaguePushSubscriptions)
+      .where(eq(leaguePushSubscriptions.leagueId, leagueId));
+    if (!subs.length) return;
+    const payload = JSON.stringify({ title, body, url, tag: `league-join-${leagueId}` });
+    const staleIds: string[] = [];
+    await Promise.all(subs.map(async (row) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
+          payload
+        );
+      } catch (err: any) {
+        const code = err?.statusCode;
+        if (code === 410 || code === 404) staleIds.push(row.id);
+        else console.warn("[league-push] Send failed:", err?.message);
+      }
+    }));
+    if (staleIds.length) {
+      // Remove expired subscriptions
+      for (const id of staleIds) {
+        await db.delete(leaguePushSubscriptions).where(eq(leaguePushSubscriptions.id, id));
+      }
+    }
+    console.log(`[league-push] Notified ${subs.length - staleIds.length} commissioner(s) for league ${leagueId}`);
+  } catch (err) {
+    console.error("[league-push] notifyCommissioner error:", err);
+  }
+}
 
 export const leaguesRouter = Router();
 
@@ -717,6 +761,15 @@ leaguesRouter.post("/:leagueId/join-request", async (req: Request, res: Response
       chesscomUsername: u?.chesscomUsername ?? undefined,
       status: "pending",
     });
+    // Fire-and-forget push notification to commissioner
+    const leagueName = league[0].name;
+    const requesterName = u?.displayName ?? "A player";
+    notifyCommissioner(
+      req.params.leagueId,
+      `New join request — ${leagueName}`,
+      `${requesterName} wants to join your league. Tap to review.`,
+      `/leagues/${req.params.leagueId}`
+    ).catch(() => {});
     res.json({ success: true, message: "Join request submitted" });
   } catch (err) {
     console.error("[leagues] POST join-request error:", err);
@@ -770,5 +823,82 @@ leaguesRouter.patch("/:leagueId/join-requests/:requestId", async (req: Request, 
   } catch (err) {
     console.error("[leagues] PATCH join-request error:", err);
     res.status(500).json({ error: "Failed to review request" });
+  }
+});
+
+// ── POST /:leagueId/push/subscribe — commissioner subscribes for notifications ─
+leaguesRouter.post("/:leagueId/push/subscribe", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  const { subscription } = req.body as { subscription: { endpoint: string; keys: { p256dh: string; auth: string } } };
+  if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+    return res.status(400).json({ error: "Invalid subscription object" });
+  }
+  try {
+    const db = await getDb();
+    const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league.length) return res.status(404).json({ error: "League not found" });
+    // Only commissioner or club admin can subscribe for notifications
+    const isCommissioner = league[0].commissionerId === userId;
+    const membership = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, league[0].clubId), eq(dbClubMembers.userId, userId))).limit(1);
+    const isAdmin = membership.length > 0 && ["owner", "admin", "director"].includes(membership[0].role);
+    if (!isCommissioner && !isAdmin) return res.status(403).json({ error: "Only the commissioner can subscribe" });
+    // Upsert by endpoint — if same endpoint re-subscribes, update keys
+    const existing = await db.select().from(leaguePushSubscriptions)
+      .where(and(eq(leaguePushSubscriptions.leagueId, req.params.leagueId), eq(leaguePushSubscriptions.userId, userId)))
+      .limit(1);
+    if (existing.length) {
+      await db.update(leaguePushSubscriptions).set({
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+      }).where(eq(leaguePushSubscriptions.id, existing[0].id));
+    } else {
+      await db.insert(leaguePushSubscriptions).values({
+        id: nanoid(),
+        leagueId: req.params.leagueId,
+        userId,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+      });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[league-push] subscribe error:", err);
+    res.status(500).json({ error: "Failed to save subscription" });
+  }
+});
+
+// ── DELETE /:leagueId/push/subscribe — commissioner unsubscribes ──────────────
+leaguesRouter.delete("/:leagueId/push/subscribe", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    await db.delete(leaguePushSubscriptions)
+      .where(and(eq(leaguePushSubscriptions.leagueId, req.params.leagueId), eq(leaguePushSubscriptions.userId, userId)));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[league-push] unsubscribe error:", err);
+    res.status(500).json({ error: "Failed to remove subscription" });
+  }
+});
+
+// ── GET /:leagueId/push/status — check if current user is subscribed ──────────
+leaguesRouter.get("/:leagueId/push/status", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const sub = await db.select({ id: leaguePushSubscriptions.id })
+      .from(leaguePushSubscriptions)
+      .where(and(eq(leaguePushSubscriptions.leagueId, req.params.leagueId), eq(leaguePushSubscriptions.userId, userId)))
+      .limit(1);
+    res.json({ subscribed: sub.length > 0 });
+  } catch (err) {
+    console.error("[league-push] status error:", err);
+    res.status(500).json({ error: "Failed to check subscription" });
   }
 });

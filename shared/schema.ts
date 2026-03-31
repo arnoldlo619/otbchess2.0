@@ -743,3 +743,21 @@ export const leagueJoinRequests = mysqlTable('league_join_requests', {
 }));
 export type LeagueJoinRequestRow = typeof leagueJoinRequests.$inferSelect;
 export type NewLeagueJoinRequestRow = typeof leagueJoinRequests.$inferInsert;
+
+// ─── league_push_subscriptions ───────────────────────────────────────────────────────────────
+// Stores Web Push subscriptions for league commissioners so they receive
+// real-time notifications when a player requests to join their Draft league.
+export const leaguePushSubscriptions = mysqlTable('league_push_subscriptions', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  userId: varchar('user_id', { length: 64 }).notNull(),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => ({
+  leagueIdx: index('lps_league_idx').on(t.leagueId),
+  userIdx: index('lps_user_idx').on(t.userId),
+}));
+export type LeaguePushSubscriptionRow = typeof leaguePushSubscriptions.$inferSelect;
+export type NewLeaguePushSubscriptionRow = typeof leaguePushSubscriptions.$inferInsert;
