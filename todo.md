@@ -3905,3 +3905,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 409 duplicate-request response now shows pending state instead of error
 - [x] Cache cleared when request is rejected so player can re-request
 - [x] TypeScript 0 errors
+
+## Club League Dashboard UI Redesign
+- [x] Full-width hero banner (chess micro-grid pattern + league name + status badge overlay)
+- [x] Floating identity card with 4-stat row (Players, Progress, Week, Format) overlapping hero
+- [x] Two-column layout: main content left, sidebar right w-72 (desktop lg:flex)
+- [x] Sidebar: mini standings top-5, next match card with prep button, commissioner quick actions
+- [x] Mobile-first single column stacking (sidebar hidden on mobile, lg:flex on desktop)
+- [x] All existing tabs and functionality preserved
+- [x] Platform chess green design system (OKLCH tokens, accent colors, cardBg, cardBorder)
+- [x] Fixed TS errors: format → formatType, clubName → View Club link
+- [x] TypeScript 0 errors

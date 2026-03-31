@@ -978,10 +978,153 @@ export default function LeagueDashboard() {
         </button>
       </div>
 
-      {/* Guest CTA banner — shown when a non-signed-in user visits via an invite link or a Draft league */}
+      {/* ── HERO BANNER ─────────────────────────────────────────────────── */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: "180px" }}
+      >
+        {/* Micro-grid chess pattern background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isDark
+              ? `linear-gradient(135deg, oklch(0.14 0.07 145) 0%, oklch(0.18 0.09 145) 50%, oklch(0.13 0.05 145) 100%)`
+              : `linear-gradient(135deg, oklch(0.22 0.09 145) 0%, oklch(0.28 0.12 145) 50%, oklch(0.20 0.07 145) 100%)`,
+          }}
+        />
+        {/* Chess board grid overlay */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `repeating-conic-gradient(${accent} 0% 25%, transparent 0% 50%)`,
+            backgroundSize: "28px 28px",
+          }}
+        />
+        {/* Gradient fade at bottom */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-20"
+          style={{
+            background: `linear-gradient(to bottom, transparent, ${pageBg})`,
+          }}
+        />
+        {/* Status badge top-right */}
+        <div className="absolute top-4 right-4">
+          <span
+            className="px-3 py-1 rounded-full text-xs font-bold"
+            style={{
+              background: league.status === "active" ? `${accent}33` : league.status === "completed" ? "oklch(0.82 0.18 85 / 0.25)" : "oklch(0.5 0.02 145 / 0.3)",
+              color: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.82 0.18 85)" : textMuted,
+              backdropFilter: "blur(8px)",
+              border: `1px solid ${league.status === "active" ? accent + "44" : "transparent"}`,
+            }}
+          >
+            {league.status === "active" ? "● Active" : league.status === "completed" ? "🏆 Complete" : "Draft"}
+          </span>
+        </div>
+        {/* League format badge bottom-left */}
+        <div className="absolute bottom-8 left-4">
+          <span className="text-xs font-medium" style={{ color: `${accent}cc` }}>
+            {league.formatType === "classical" ? "Classical" : league.formatType === "rapid" ? "Rapid" : league.formatType === "blitz" ? "Blitz" : "Round Robin"} · {league.totalWeeks} weeks
+          </span>
+        </div>
+      </div>
+
+      {/* ── FLOATING IDENTITY CARD ──────────────────────────────────────── */}
+      <div className="px-4 -mt-2">
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            background: isDark ? "oklch(0.19 0.06 145)" : "#fff",
+            border: `1px solid ${cardBorder}`,
+            boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.08)",
+          }}
+        >
+          {/* League name + actions row */}
+          <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-xl font-black leading-tight truncate" style={{ color: textMain }}>{league.name}</h2>
+              <button
+                onClick={() => navigate(`/clubs/${league.clubId}`)}
+                className="text-xs mt-0.5 flex items-center gap-1 hover:underline"
+                style={{ color: accent }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                View Club
+              </button>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Push bell — commissioner only */}
+              {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
+                <button
+                  onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
+                  disabled={pushLoading || pushStatus === "denied"}
+                  className="p-2 rounded-xl transition-opacity hover:opacity-70"
+                  style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}
+                  title={pushStatus === "subscribed" ? "Notifications on" : "Enable notifications"}
+                >
+                  {pushLoading ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke={pushStatus === "denied" ? textMuted : pushStatus === "subscribed" ? accent : textMain} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                      {pushStatus === "subscribed" && <circle cx="19" cy="5" r="3" fill="#4ade80" stroke="none" />}
+                    </svg>
+                  )}
+                </button>
+              )}
+              <button
+                onClick={() => setShowShare(true)}
+                className="p-2 rounded-xl transition-opacity hover:opacity-70"
+                style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}
+                title="Share league"
+              >
+                <Share2 size={15} style={{ color: accent }} />
+              </button>
+            </div>
+          </div>
+
+          {/* 4-stat row — reference-style */}
+          <div
+            className="grid grid-cols-4 divide-x"
+            style={{ borderTop: `1px solid ${cardBorder}`, borderColor: cardBorder }}
+          >
+            {[
+              {
+                label: "Players",
+                value: `${league.players.length}${league.maxPlayers ? ` / ${league.maxPlayers}` : ""}`,
+              },
+              {
+                label: "Progress",
+                value: league.status === "draft" ? "Draft" : league.status === "completed" ? "Done" : `${progressPct}%`,
+              },
+              {
+                label: "Week",
+                value: league.status === "active" ? `${league.currentWeek} / ${league.totalWeeks}` : league.status === "completed" ? `${league.totalWeeks} wks` : "—",
+              },
+              {
+                label: "Format",
+                value: league.formatType
+                  ? league.formatType.charAt(0).toUpperCase() + league.formatType.slice(1)
+                  : "Classic",
+              },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center py-3 px-2">
+                <span className="text-[10px] uppercase tracking-wider mb-1" style={{ color: textMuted }}>{stat.label}</span>
+                <span className="text-sm font-bold" style={{ color: textMain }}>{stat.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Auth modal for guest CTA */}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+
+      {/* Guest CTA banner */}
       {(!user || user.isGuest) && (isInviteLink || league.status === "draft") && (
         <div
-          className="mx-4 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+          className="mx-4 mt-3 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
           style={{
             background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
             border: `1px solid ${accent}44`,
@@ -1005,12 +1148,11 @@ export default function LeagueDashboard() {
           </button>
         </div>
       )}
-      {/* Auth modal for guest CTA */}
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
-      {/* Player invite banner — shown to the invited player when they have a pending invite */}
+
+      {/* Player invite banner */}
       {user && !isCommissioner && myInvite && (
         <div
-          className="mx-4 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+          className="mx-4 mt-3 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
           style={{
             background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
             border: `1px solid ${accent}55`,
@@ -1021,7 +1163,7 @@ export default function LeagueDashboard() {
               <span style={{ color: accent }}>{myInvite.commissionerName}</span> has invited you to join this league!
             </p>
             {myInvite.message && (
-              <p className="text-xs mt-0.5 italic" style={{ color: textMuted }}>“{myInvite.message}”</p>
+              <p className="text-xs mt-0.5 italic" style={{ color: textMuted }}>"{myInvite.message}"</p>
             )}
             <p className="text-xs mt-0.5" style={{ color: textMuted }}>Accept to be added to the roster immediately.</p>
           </div>
@@ -1050,7 +1192,8 @@ export default function LeagueDashboard() {
           </div>
         </div>
       )}
-      {/* Tab bar */}
+
+      {/* ── TAB BAR ─────────────────────────────────────────────────────── */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex gap-1 p-1 rounded-2xl" style={{ background: tabBg }}>
           {tabs.map((tab) => {
@@ -1083,7 +1226,11 @@ export default function LeagueDashboard() {
         </div>
       </div>
 
-      <div className="px-4 space-y-4">
+      {/* ── TWO-COLUMN LAYOUT (desktop: main left + sidebar right) ───────── */}
+      <div className="px-4 pb-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-start">
+          {/* Main content column */}
+          <div className="flex-1 min-w-0 space-y-4">
 
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
@@ -2772,7 +2919,112 @@ export default function LeagueDashboard() {
             </div>
           </div>
         )}
-      </div>
+          </div>{/* end main content column */}
+
+          {/* ── SIDEBAR (desktop only) ─────────────────────────────────── */}
+          <div className="hidden lg:flex flex-col gap-4 w-72 flex-shrink-0">
+            {/* Mini standings */}
+            {standings.length > 0 && (
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{ background: isDark ? "oklch(0.19 0.06 145)" : "#fff", border: `1px solid ${cardBorder}` }}
+              >
+                <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: accent }}>Standings</span>
+                  <button onClick={() => setActiveTab("standings")} className="text-xs" style={{ color: textMuted }}>See all →</button>
+                </div>
+                <div className="divide-y" style={{ borderColor: cardBorder }}>
+                  {standings.slice(0, 5).map((p, i) => (
+                    <div key={p.playerId} className="flex items-center gap-2.5 px-4 py-2.5">
+                      <span className="text-xs font-bold w-4 text-center" style={{ color: i === 0 ? "oklch(0.82 0.18 85)" : textMuted }}>#{i + 1}</span>
+                      <Avatar url={p.avatarUrl} name={p.displayName} size={7} />
+                      <span className="flex-1 text-xs font-medium truncate" style={{ color: textMain }}>{p.displayName}</span>
+                      <span className="text-xs font-bold" style={{ color: accent }}>{p.points}pt</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Next match card */}
+            {myMatchThisWeek && myMatchThisWeek.resultStatus !== "completed" && (
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{ background: isDark ? "oklch(0.19 0.06 145)" : "#fff", border: `1.5px solid ${accent}44` }}
+              >
+                <div className="px-4 py-3" style={{ background: `${accent}12`, borderBottom: `1px solid ${accent}22` }}>
+                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: accent }}>Your Next Match</span>
+                </div>
+                <div className="px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      url={league.players.find(p => p.playerId === (myMatchThisWeek.playerWhiteId === user?.id ? myMatchThisWeek.playerBlackId : myMatchThisWeek.playerWhiteId))?.avatarUrl}
+                      name={myMatchThisWeek.playerWhiteId === user?.id ? myMatchThisWeek.playerBlackName : myMatchThisWeek.playerWhiteName}
+                      size={8}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: textMain }}>
+                        {myMatchThisWeek.playerWhiteId === user?.id ? myMatchThisWeek.playerBlackName : myMatchThisWeek.playerWhiteName}
+                      </p>
+                      <p className="text-xs" style={{ color: textMuted }}>Week {league.currentWeek}</p>
+                    </div>
+                  </div>
+                  {/* Prep button */}
+                  {(() => {
+                    const oppUsername = myMatchThisWeek.playerWhiteId === user?.id
+                      ? league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId)?.chesscomUsername
+                      : league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId)?.chesscomUsername;
+                    return oppUsername ? (
+                      <button
+                        onClick={() => navigate(`/prep/${oppUsername}`)}
+                        className="w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                        style={{ background: `${accent}18`, color: accent }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Prep for Opponent
+                      </button>
+                    ) : null;
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* Commissioner quick actions */}
+            {isCommissioner && league.status === "active" && (
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{ background: isDark ? "oklch(0.19 0.06 145)" : "#fff", border: `1px solid ${cardBorder}` }}
+              >
+                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: textMuted }}>Commissioner</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  <button
+                    onClick={() => setActiveTab("matchups")}
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background: `${accent}18`, color: accent }}
+                  >
+                    Report Results
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/leagues/${league.id}/advance-week`, { method: "POST", credentials: "include" });
+                        if (res.ok) { showToast("Advanced to next week", "success"); fetchAll(); }
+                        else { const d = await res.json().catch(() => ({})); showToast(d.error ?? "Failed", "error"); }
+                      } catch { showToast("Network error", "error"); }
+                    }}
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMain }}
+                  >
+                    Advance Week →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>{/* end sidebar */}
+        </div>{/* end flex row */}
+      </div>{/* end two-column wrapper */}
       {/* Result report modal */}
       {reportingMatch && (
         <ReportResultModal
