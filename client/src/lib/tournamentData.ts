@@ -10,7 +10,12 @@ export interface Player {
   id: string;
   name: string;
   username: string;
+  /** Active ELO used for pairings (rapid or blitz, depending on tournament ratingType) */
   elo: number;
+  /** chess.com Rapid rating (stored separately so directors can switch rating type) */
+  rapidElo?: number;
+  /** chess.com Blitz rating (stored separately so directors can switch rating type) */
+  blitzElo?: number;
   title?: "GM" | "IM" | "WGM" | "WIM" | "FM" | "WFM" | "CM" | "NM";
   country: string;
   points: number;

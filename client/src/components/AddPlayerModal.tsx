@@ -89,24 +89,24 @@ const AMBER_RING = "rgba(217,119,6,0.25)";
 // ─── ELO lookup helpers ───────────────────────────────────────────────────────
 
 async function lookupChessCom(username: string): Promise<LookupResult> {
-  const [profileRes, statsRes] = await Promise.all([
-    fetch(`https://api.chess.com/pub/player/${username.toLowerCase()}`),
-    fetch(`https://api.chess.com/pub/player/${username.toLowerCase()}/stats`),
-  ]);
-  if (!profileRes.ok) throw new Error("Player not found on chess.com");
-  const profile = await profileRes.json();
-  const stats = statsRes.ok ? await statsRes.json() : {};
-  const rapid = stats?.chess_rapid?.last?.rating ?? 0;
-  const blitz = stats?.chess_blitz?.last?.rating ?? 0;
-  const bullet = stats?.chess_bullet?.last?.rating ?? 0;
+  // Route through server proxy to avoid browser User-Agent restrictions and
+  // Cloudflare rate-limiting on direct browser → api.chess.com calls
+  const res = await fetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
+  if (res.status === 404) throw new Error("Player not found on chess.com");
+  if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`);
+  const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
+  const { profile, stats } = data;
+  const rapid = (stats?.chess_rapid as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
+  const blitz = (stats?.chess_blitz as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
+  const bullet = (stats?.chess_bullet as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
   return {
-    name: profile.name || profile.username,
-    username: profile.username,
+    name: (profile.name as string) || (profile.username as string),
+    username: profile.username as string,
     rapid, blitz, bullet,
     elo: rapid || blitz || bullet || 1200,
-    avatar: profile.avatar,
-    country: profile.country?.split("/").pop()?.toUpperCase(),
-    title: profile.title,
+    avatar: profile.avatar as string | undefined,
+    country: (profile.country as string | undefined)?.split("/").pop()?.toUpperCase(),
+    title: profile.title as string | undefined,
   };
 }
 
@@ -790,14 +790,21 @@ export function AddPlayerModal({
       };
     } else {
       if (lookupState !== "found" || !lookupResult) return;
+      const isChessCom = platform === "chess.com";
+      const activeElo = isChessCom
+        ? (ratingType === "blitz"
+          ? (lookupResult.blitz || lookupResult.rapid || lookupResult.bullet || lookupResult.elo)
+          : (lookupResult.rapid || lookupResult.blitz || lookupResult.bullet || lookupResult.elo))
+        : lookupResult.elo;
       player = {
         id: nanoid(),
         name: lookupResult.name || lookupResult.username,
         username: lookupResult.username,
-        elo: platform === "chess.com" && ratingType === "blitz"
-          ? (lookupResult.blitz || lookupResult.rapid || lookupResult.bullet || lookupResult.elo)
-          : (lookupResult.rapid || lookupResult.blitz || lookupResult.bullet || lookupResult.elo),
-        platform: platform === "chess.com" ? "chesscom" : "lichess",
+        elo: activeElo,
+        // Store both chess.com ratings so the director can switch rating type later
+        ...(isChessCom && lookupResult.rapid ? { rapidElo: lookupResult.rapid } : {}),
+        ...(isChessCom && lookupResult.blitz ? { blitzElo: lookupResult.blitz } : {}),
+        platform: isChessCom ? "chesscom" : "lichess",
         country: lookupResult.country ?? "Unknown",
         title: lookupResult.title as Player["title"],
         avatarUrl: lookupResult.avatar,
@@ -1028,9 +1035,49 @@ export function AddPlayerModal({
                           {lookupResult.name || lookupResult.username}
                         </p>
                         <p className="text-xs" style={{ color: isDark ? "rgba(255,255,255,0.50)" : "#6B7280" }}>
-                          @{lookupResult.username} · ELO {lookupResult.elo}
+                          @{lookupResult.username}
                           {lookupResult.country && ` · ${lookupResult.country}`}
                         </p>
+                        {/* Show both Rapid and Blitz ratings for chess.com players */}
+                        {platform === "chess.com" && (lookupResult.rapid || lookupResult.blitz) ? (
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {lookupResult.rapid ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
+                                style={{
+                                  background: ratingType === "rapid"
+                                    ? (isDark ? "rgba(61,107,71,0.30)" : "rgba(61,107,71,0.12)")
+                                    : (isDark ? "rgba(255,255,255,0.08)" : "#F3F4F6"),
+                                  color: ratingType === "rapid" ? G : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
+                                  border: ratingType === "rapid" ? `1px solid ${isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"}` : "1px solid transparent",
+                                }}
+                              >
+                                ⚡ Rapid {lookupResult.rapid}
+                              </span>
+                            ) : null}
+                            {lookupResult.blitz ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
+                                style={{
+                                  background: ratingType === "blitz"
+                                    ? (isDark ? "rgba(61,107,71,0.30)" : "rgba(61,107,71,0.12)")
+                                    : (isDark ? "rgba(255,255,255,0.08)" : "#F3F4F6"),
+                                  color: ratingType === "blitz" ? G : isDark ? "rgba(255,255,255,0.50)" : "#6B7280",
+                                  border: ratingType === "blitz" ? `1px solid ${isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"}` : "1px solid transparent",
+                                }}
+                              >
+                                🔥 Blitz {lookupResult.blitz}
+                              </span>
+                            ) : null}
+                            <span className="text-[10px]" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>
+                              Using {ratingType === "blitz" ? "Blitz" : "Rapid"} for pairings
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-xs" style={{ color: isDark ? "rgba(255,255,255,0.50)" : "#6B7280" }}>
+                            ELO {lookupResult.elo}
+                          </p>
+                        )}
                       </div>
                       <CheckCircle2 className="w-5 h-5 flex-shrink-0" style={{ color: G }} />
                     </div>

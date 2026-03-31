@@ -1151,7 +1151,7 @@ function QuickstartForm({
             </div>
           </div>
           <p className="px-5 lg:px-6 pb-2 text-[10px] leading-relaxed" style={{ color: isDark ? "rgba(255,255,255,0.35)" : "#9CA3AF" }}>
-            Uses players' chess.com {data.ratingType === "rapid" ? "Rapid" : "Blitz"} rating for pairings. Auto-set by time control.
+            Both Rapid &amp; Blitz are fetched automatically. This sets which one is used for pairings. Auto-set by time control — changeable later in Settings.
           </p>
         </div>
 

@@ -1987,12 +1987,29 @@ export default function Director() {
                                   <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-gray-400"}`}>@{p.username}</p>
                                 )}
                               </div>
-                              {/* ELO */}
-                              {p.elo != null && (
+                              {/* ELO — show both Rapid and Blitz if available */}
+                              {(p.rapidElo || p.blitzElo) ? (
+                                <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                                  {p.rapidElo ? (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                      (tournamentConfig?.ratingType ?? "rapid") === "rapid"
+                                        ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                        : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                    }`}>⚡{p.rapidElo}</span>
+                                  ) : null}
+                                  {p.blitzElo ? (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                      (tournamentConfig?.ratingType ?? "rapid") === "blitz"
+                                        ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                        : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                    }`}>🔥{p.blitzElo}</span>
+                                  ) : null}
+                                </div>
+                              ) : p.elo != null ? (
                                 <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg ${
                                   isDark ? "bg-white/06 text-white/60" : "bg-gray-100 text-gray-500"
                                 }`}>{p.elo}</span>
-                              )}
+                              ) : null}
                               {/* Remove button */}
                               <button
                                 onClick={() => { removePlayer(p.id); toast.success(`${p.name} removed`); }}
@@ -2250,11 +2267,29 @@ export default function Director() {
                                     )}
                                   </div>
                                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                    {player.elo != null && (
+                                    {/* Show both Rapid and Blitz if available, otherwise just elo */}
+                                    {(player.rapidElo || player.blitzElo) ? (
+                                      <>
+                                        {player.rapidElo ? (
+                                          <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                            (tournamentConfig?.ratingType ?? "rapid") === "rapid"
+                                              ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                              : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                          }`}>⚡ {player.rapidElo}</span>
+                                        ) : null}
+                                        {player.blitzElo ? (
+                                          <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                            (tournamentConfig?.ratingType ?? "rapid") === "blitz"
+                                              ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                              : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                          }`}>🔥 {player.blitzElo}</span>
+                                        ) : null}
+                                      </>
+                                    ) : player.elo != null ? (
                                       <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-gray-400"}`}>
                                         {player.elo} ELO
                                       </span>
-                                    )}
+                                    ) : null}
                                     <span className={`text-xs font-semibold ${ isDark ? "text-white/45" : "text-gray-400"}`}>
                                       {standing.wins}W {standing.draws}D {standing.losses}L
                                     </span>
@@ -3118,7 +3153,25 @@ export default function Director() {
                             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
                           )}
                         </div>
-                        <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
+                        <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                          @{p.username}
+                          {(p.rapidElo || p.blitzElo) ? (
+                            <>
+                              {p.rapidElo ? <span className={`ml-1.5 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                                (tournamentConfig?.ratingType ?? "rapid") === "rapid"
+                                  ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  : isDark ? "bg-white/06 text-white/35" : "bg-gray-100 text-gray-400"
+                              }`}>⚡{p.rapidElo}</span> : null}
+                              {p.blitzElo ? <span className={`ml-1 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                                (tournamentConfig?.ratingType ?? "rapid") === "blitz"
+                                  ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  : isDark ? "bg-white/06 text-white/35" : "bg-gray-100 text-gray-400"
+                              }`}>🔥{p.blitzElo}</span> : null}
+                            </>
+                          ) : (
+                            <> · {p.elo} ELO</>
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-center">
                         <div>
@@ -3218,7 +3271,25 @@ export default function Director() {
                               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white animate-pulse">New</span>
                             )}
                           </div>
-                          <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>@{p.username} · {p.elo} ELO</span>
+                          <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                          @{p.username}
+                          {(p.rapidElo || p.blitzElo) ? (
+                            <>
+                              {p.rapidElo ? <span className={`ml-1.5 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                                (tournamentConfig?.ratingType ?? "rapid") === "rapid"
+                                  ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  : isDark ? "bg-white/06 text-white/35" : "bg-gray-100 text-gray-400"
+                              }`}>⚡{p.rapidElo}</span> : null}
+                              {p.blitzElo ? <span className={`ml-1 text-[11px] font-semibold px-1 py-0.5 rounded ${
+                                (tournamentConfig?.ratingType ?? "rapid") === "blitz"
+                                  ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  : isDark ? "bg-white/06 text-white/35" : "bg-gray-100 text-gray-400"
+                              }`}>🔥{p.blitzElo}</span> : null}
+                            </>
+                          ) : (
+                            <> · {p.elo} ELO</>
+                          )}
+                        </span>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
@@ -3466,6 +3537,113 @@ export default function Director() {
                   ))}
                 </div>
               </div>
+              {/* ── Rating Type Selector ─────────────────────────────────── */}
+              {tournamentConfig && tournamentConfig.ratingSystem === "chess.com" && (
+                <div className={`rounded-2xl border overflow-hidden ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                }`}>
+                  <div className={`px-5 py-3 border-b ${
+                    isDark ? "border-white/06" : "border-gray-100"
+                  }`}>
+                    <h2 className={`text-xs font-bold uppercase tracking-widest ${
+                      isDark ? "text-white/35" : "text-gray-400"
+                    }`}>Pairing Rating</h2>
+                  </div>
+                  <div className="px-5 py-4 space-y-3">
+                    <p className={`text-xs ${
+                      isDark ? "text-white/45" : "text-gray-500"
+                    }`}>
+                      Choose which chess.com rating to use for Swiss pairings. Auto-set by time control when the tournament was created.
+                    </p>
+                    <div className="flex gap-2">
+                      {(["rapid", "blitz"] as const).map((rt) => {
+                        const active = (tournamentConfig.ratingType ?? "rapid") === rt;
+                        return (
+                          <button
+                            key={rt}
+                            type="button"
+                            onClick={() => {
+                              updateTournamentConfig(tournamentId, { ratingType: rt });
+                              // Re-sync each player's active elo from stored rapidElo/blitzElo
+                              state.players.forEach((p) => {
+                                const newElo = rt === "blitz"
+                                  ? (p.blitzElo || p.rapidElo || p.elo)
+                                  : (p.rapidElo || p.blitzElo || p.elo);
+                                if (newElo !== p.elo) updatePlayer(p.id, { elo: newElo });
+                              });
+                              toast.success(`Pairings will now use ${
+                                rt === "blitz" ? "Blitz" : "Rapid"
+                              } ratings`);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                            style={{
+                              background: active
+                                ? isDark ? "rgba(61,107,71,0.25)" : "rgba(61,107,71,0.10)"
+                                : isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                              color: active
+                                ? isDark ? "#6FCF7F" : "#3D6B47"
+                                : isDark ? "rgba(255,255,255,0.45)" : "#6B7280",
+                              border: active
+                                ? `1.5px solid ${
+                                    isDark ? "rgba(61,107,71,0.40)" : "rgba(61,107,71,0.25)"
+                                  }`
+                                : "1.5px solid transparent",
+                            }}
+                          >
+                            {rt === "rapid" ? "⚡ Rapid" : "🔥 Blitz"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Show per-player both ratings if available */}
+                    {state.players.some((p) => p.rapidElo || p.blitzElo) && (
+                      <div className={`rounded-xl border overflow-hidden ${
+                        isDark ? "border-white/08" : "border-gray-100"
+                      }`}>
+                        <div className={`px-3 py-2 ${
+                          isDark ? "bg-white/03" : "bg-gray-50"
+                        }`}>
+                          <p className={`text-[10px] font-bold uppercase tracking-widest ${
+                            isDark ? "text-white/30" : "text-gray-400"
+                          }`}>Player Ratings</p>
+                        </div>
+                        <div className="divide-y" style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "#F3F4F6" }}>
+                          {state.players
+                            .filter((p) => p.rapidElo || p.blitzElo)
+                            .map((p) => (
+                              <div key={p.id} className="flex items-center justify-between px-3 py-2">
+                                <span className={`text-xs font-medium truncate max-w-[120px] ${
+                                  isDark ? "text-white/70" : "text-gray-700"
+                                }`}>{p.name}</span>
+                                <div className="flex items-center gap-2">
+                                  {p.rapidElo ? (
+                                    <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                      (tournamentConfig.ratingType ?? "rapid") === "rapid"
+                                        ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                        : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                    }`}>
+                                      ⚡ {p.rapidElo}
+                                    </span>
+                                  ) : null}
+                                  {p.blitzElo ? (
+                                    <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                      (tournamentConfig.ratingType ?? "rapid") === "blitz"
+                                        ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                        : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                    }`}>
+                                      🔥 {p.blitzElo}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Editable tournament settings panel */}
               {tournamentId !== "otb-demo-2026" ? (
                 <TournamentSettingsPanel

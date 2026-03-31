@@ -3926,3 +3926,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Sidebar: Season Stats quick panel (match count, white/black/draw win %)
 - [x] Sidebar: Back to League Dashboard button
 - [x] TypeScript 0 errors
+
+## ActiveTournamentBanner — Hide on Creation Flow Pages
+- [ ] Suppress ActiveTournamentBanner on tournament creation flow pages (Setup, Bracket, Director setup steps)
+
+## Rapid + Blitz ELO Ratings
+- [x] Update chess.com ELO fetch to return both rapidElo and blitzElo
+- [x] Update player schema/types to store both rapidElo and blitzElo fields
+- [x] Update Add Player modal to display and store both ratings
+- [x] Update Director dashboard player list to show both ratings
+- [x] Add ELO rating selector (Rapid/Blitz) to tournament settings, defaulting to time control
+- [ ] Update Swiss pairing logic to use the selected rating type
+- [ ] Update standings display to show the active rating type
