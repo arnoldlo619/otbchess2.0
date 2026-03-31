@@ -3776,3 +3776,20 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Leagues tab: show existing club leagues list with status badges and quick-navigate to League Dashboard
 - [x] Leagues tab: embed the 2-step league creation wizard directly in the dashboard
 - [x] Leagues tab: roster progress bar for Draft leagues, week progress for Active leagues
+
+## Fix Join a Tournament Flow
+- [x] Audit Join a Tournament code entry and submission flow (client + server)
+- [x] Fix any bugs preventing successful tournament join via code (server-side resolve for manually typed codes)
+- [x] Ensure proper error handling and success feedback (loading state, error messages)
+
+## Persistent Back-to-Tournament Navigation
+- [x] Add ActiveTournamentBanner component showing tournament name that links back to active tournament dashboard
+- [x] Works for both tournament directors and participants (director → /manage, participant → /tournament/:id)
+- [x] Mobile-friendly floating banner with dismiss per session
+- [x] Improved success step CTA with prominent tournament name button
+
+## Landing Page Section Redesign
+- [x] Replace "Every game deserves a proper stage" section with Chess Club League matchup prep section
+- [x] Explain how leagues help users prep and study for chess matchups against local club players
+- [x] Highlight chess.com API integration for analyzing play styles and offering strategic lines
+- [x] Mock matchup prep dashboard visual with opponent stats and suggested prep lines

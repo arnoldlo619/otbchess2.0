@@ -51,6 +51,11 @@ import {
   ChevronDown,
   Ghost,
   LayoutDashboard,
+  Target,
+  BookOpen,
+  Search,
+  TrendingUp,
+  Brain,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
@@ -791,99 +796,167 @@ function Features() {
     </section>
   );
 }
-// ─── Visual Showcasee ─────────────────────────────────────────────────────────
+// ─── Chess Club Chess League — Matchup Prep ─────────────────────────────────
 function Showcase() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  const steps = [
+    {
+      icon: <Search className="w-5 h-5" />,
+      title: "Pull Club Member Games",
+      desc: "Connect your chess.com club and we automatically import every member's recent games for analysis.",
+    },
+    {
+      icon: <Brain className="w-5 h-5" />,
+      title: "Analyze Play Styles",
+      desc: "Our engine identifies each player's opening repertoire, tactical tendencies, and endgame patterns.",
+    },
+    {
+      icon: <Target className="w-5 h-5" />,
+      title: "Get Strategic Lines",
+      desc: "Receive tailored preparation lines and counter-strategies for your next round matchup.",
+    },
+    {
+      icon: <TrendingUp className="w-5 h-5" />,
+      title: "Track Your Progress",
+      desc: "Monitor how your prep translates to results across league rounds and club events.",
+    },
+  ];
+
   return (
     <section id="for-clubs" className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* Left — visual card */}
           <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
             <div
               className={`relative rounded-2xl overflow-hidden shadow-xl ${
                 isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-[#F2F7F3]"
               }`}
-              style={{ minHeight: "360px" }}
+              style={{ minHeight: "420px" }}
             >
               {/* Decorative chess board grid */}
-              <div className="absolute inset-0 chess-board-bg opacity-30" />
-              {/* Centered stat block */}
-              <div className="relative z-10 flex flex-col items-center justify-center h-full min-h-[360px] gap-8 p-10">
-                <div className="grid grid-cols-2 gap-4 w-full max-w-xs">
-                  {[
-                    { label: "Tournaments", value: "300+" },
-                    { label: "Players", value: "550+" },
-                    { label: "Chess Clubs", value: "80+" },
-                    { label: "Avg Rating", value: "4.9★" },
-                  ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className={`rounded-xl p-4 text-center border ${
-                        isDark
-                          ? "bg-[oklch(0.28_0.07_145)] border-white/10"
-                          : "bg-white border-[#3D6B47]/12 shadow-sm"
-                      }`}
-                    >
-                      <p
-                        className={`text-2xl font-bold mb-1 ${
-                          isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"
-                        }`}
-                        style={{ fontFamily: "'Clash Display', sans-serif" }}
-                      >
-                        {value}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium">{label}</p>
+              <div className="absolute inset-0 chess-board-bg opacity-20" />
+              <div className="relative z-10 flex flex-col h-full min-h-[420px] p-8">
+                {/* Header */}
+                <div className="mb-6">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${
+                    isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                  }`}>
+                    <Swords className="w-3.5 h-3.5" /> Chess League
+                  </div>
+                  <h3 className={`text-lg font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    Matchup Prep Dashboard
+                  </h3>
+                </div>
+
+                {/* Mock prep card */}
+                <div className={`rounded-xl border p-4 mb-4 ${
+                  isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                      }`}>
+                        <Crown className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Round 3 Opponent</p>
+                        <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>chess.com/member/opponent42</p>
+                      </div>
                     </div>
-                  ))}
+                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${
+                      isDark ? "bg-blue-400/15 text-blue-300" : "bg-blue-50 text-blue-600"
+                    }`}>1847 Rapid</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Plays 1.d4", pct: "68%" },
+                      { label: "King's Indian", pct: "45%" },
+                      { label: "Endgame Win", pct: "52%" },
+                    ].map(({ label, pct }) => (
+                      <div key={label} className={`rounded-lg p-2 text-center ${
+                        isDark ? "bg-white/05" : "bg-gray-50"
+                      }`}>
+                        <p className={`text-sm font-bold ${
+                          isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"
+                        }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{pct}</p>
+                        <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Suggested line */}
+                <div className={`rounded-xl border p-4 ${
+                  isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className={`w-4 h-4 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`} />
+                    <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>Suggested Prep</p>
+                  </div>
+                  <p className={`text-sm font-mono ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                    1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5
+                  </p>
+                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                    King's Indian Defense — Classical Variation
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Right — text content */}
           <div className={`transition-all duration-700 delay-200 ${inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
             <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
               style={{ animationFillMode: "forwards" }}>
-              Casual, Social, Competition
+              Chess Club Chess League
             </p>
             <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
               style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "120ms", animationFillMode: "forwards" }}>
-              Every game deserves
+              Prep like the
               <br />
-              a proper stage.
+              pros do.
             </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Professional chess players spend hours studying their opponents before every tournament round. The Chess Club Chess League brings that same preparation edge to your local club.
+            </p>
             <p className="text-muted-foreground leading-relaxed mb-8">
-              OTB Chess brings the rigor of competitive chess to your local club. Whether you're running a casual Saturday blitz or a serious club championship, the platform handles the logistics so you can focus on the game.
+              Using the chess.com API, we pull your club members' game history, analyze their opening choices, tactical patterns, and weaknesses — then generate strategic preparation lines tailored to your next matchup. It's like having a personal coach for every round.
             </p>
 
             <div className="space-y-4 mb-8">
-              {[
-                "Automatic ELO-based seeding and pairings",
-                "Support for up to 256 players per tournament",
-                "Printable pairing sheets and result slips",
-                "Post-tournament performance reports",
-              ].map((item, idx) => (
+              {steps.map((step, idx) => (
                 <div
-                  key={item}
+                  key={step.title}
                   className={`flex items-start gap-3 ${inView ? "animate-check-reveal" : "opacity-0"}`}
-                  style={{ animationDelay: `${400 + idx * 80}ms`, animationFillMode: "forwards" }}
+                  style={{ animationDelay: `${400 + idx * 100}ms`, animationFillMode: "forwards" }}
                 >
-                  <CheckCircle2 className={`w-5 h-5 mt-0.5 flex-shrink-0 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`} />
-                  <span className="text-sm text-muted-foreground">{item}</span>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                  }`}>
+                    {step.icon}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold mb-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{step.title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            <Link
+              href="/clubs"
               className="btn-chess-primary flex items-center gap-2 inline-flex"
             >
-              Start a Tournament
+              Explore Chess Leagues
               <ChevronRight className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -68,6 +68,7 @@ import {
   Twitter,
   MessageCircle,
   ChevronLeft,
+  ArrowLeft,
   Phone,
   Mail,
 } from "lucide-react";
@@ -576,11 +577,67 @@ export default function JoinPage() {
     setStep(next);
   }
 
+  const [codeLoading, setCodeLoading] = useState(false);
+
   async function handleCodeSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isValidCode) { setError("Invalid tournament code. Check with your host."); return; }
+    const code = tournamentCode.trim();
+    if (!code) return;
+
+    // If already resolved locally (localStorage or demo), advance immediately
+    if (isValidCode) {
+      setError("");
+      advanceStep("username");
+      return;
+    }
+
+    // Not found locally — try server-side resolve
+    setCodeLoading(true);
     setError("");
-    advanceStep("username");
+    try {
+      const res = await fetch(`/api/auth/join/resolve/${encodeURIComponent(code)}`);
+      if (!res.ok) {
+        setCodeLoading(false);
+        setError("Invalid tournament code. Check with your host.");
+        return;
+      }
+      const data = await res.json() as {
+        tournamentId: string;
+        name: string;
+        venue?: string | null;
+        format?: string | null;
+        rounds?: number | null;
+        inviteCode?: string | null;
+        customSlug?: string | null;
+      };
+      // Register the tournament locally so the rest of the flow works
+      if (!resolveTournament(data.inviteCode ?? code)) {
+        registerTournament({
+          id: data.tournamentId,
+          inviteCode: data.inviteCode ?? code,
+          directorCode: "",
+          name: data.name,
+          venue: data.venue ?? "",
+          date: "",
+          description: "",
+          format: (data.format ?? "swiss") as TournamentConfig["format"],
+          rounds: data.rounds ?? 5,
+          maxPlayers: 64,
+          timeBase: 10,
+          timeIncrement: 0,
+          timePreset: "10+5",
+          ratingSystem: "chess.com",
+          customSlug: data.customSlug ?? undefined,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      setServerResolved(true);
+      setCodeLoading(false);
+      advanceStep("username");
+    } catch {
+      setCodeLoading(false);
+      setError("Could not verify tournament code. Check your connection and try again.");
+    }
   }
 
   async function handleUsernameSubmit(e: React.FormEvent) {
@@ -1494,10 +1551,14 @@ export default function JoinPage() {
         {step === "code" && (
           <button
             onClick={handleCodeSubmit as unknown as React.MouseEventHandler}
-            disabled={!tournamentCode.trim()}
-            className="mobile-cta"
+            disabled={!tournamentCode.trim() || codeLoading}
+            className="mobile-cta disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue <ChevronRight className="w-4 h-4" />
+            {codeLoading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</>
+            ) : (
+              <>Continue <ChevronRight className="w-4 h-4" /></>
+            )}
           </button>
         )}
 
@@ -1558,26 +1619,26 @@ export default function JoinPage() {
 
         {step === "success" && profile && (
           <div className="space-y-2.5">
+            <Link
+              href={`/tournament/${resolveTournament(tournamentCode)?.id ?? tournamentCode}`}
+              className="mobile-cta !rounded-2xl text-sm"
+            >
+              <Trophy className="w-4 h-4" /> {tournamentDisplay.name || "Tournament Dashboard"}
+            </Link>
             <div className="grid grid-cols-2 gap-2.5">
-              <Link
-                href={`/tournament/${resolveTournament(tournamentCode)?.id ?? tournamentCode}`}
-                className="mobile-cta !rounded-2xl text-sm"
-              >
-                <Trophy className="w-4 h-4" /> Standings
-              </Link>
               <button
                 onClick={() => setShowShare(true)}
                 className="mobile-cta-ghost !rounded-2xl text-sm"
               >
                 <Share2 className="w-4 h-4" /> Share
               </button>
+              <Link
+                href="/"
+                className="mobile-cta-ghost !rounded-2xl text-sm"
+              >
+                <ArrowLeft className="w-4 h-4" /> Home
+              </Link>
             </div>
-            <Link
-              href="/"
-              className={`flex items-center justify-center w-full py-2.5 text-xs font-medium ${textMuted} active:opacity-60`}
-            >
-              Back to OTB Chess
-            </Link>
           </div>
         )}
       </div>

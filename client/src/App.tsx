@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { InstallBanner } from "./components/InstallBanner";
+import { ActiveTournamentBanner } from "./components/ActiveTournamentBanner";
 import { AuthProvider } from "./context/AuthContext";
 
 // ── Lazy-loaded page components ──────────────────────────────────────────────
@@ -99,6 +100,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <ActiveTournamentBanner />
             <InstallBanner />
           </TooltipProvider>
         </ThemeProvider>
