@@ -1642,16 +1642,55 @@ export default function ClubProfile() {
                       <button
                         type="button"
                         onClick={() => { setShowCreateLeague(false); setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 }); setLeagueWizardStep(1); setSelectedPlayerIds([]); }}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}
+                        className={`py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-70 ${isDark ? "bg-white/8 text-white/60" : "bg-gray-100 text-gray-500"}`}
                       >Cancel</button>
                       <button
                         type="button"
                         disabled={!leagueForm.name.trim()}
                         onClick={() => { setLeagueWizardStep(2); setSelectedPlayerIds([]); }}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-40 border ${isDark ? "border-white/10 text-white/60 hover:border-white/20" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                      >Next: Pick Players →</button>
+                      <button
+                        type="button"
+                        disabled={!leagueForm.name.trim() || creatingLeague}
+                        onClick={async () => {
+                          if (!club) return;
+                          setCreatingLeague(true);
+                          try {
+                            const res = await fetch("/api/leagues", {
+                              method: "POST",
+                              credentials: "include",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                clubId: club.id,
+                                name: leagueForm.name.trim(),
+                                description: leagueForm.description.trim() || null,
+                                maxPlayers: leagueForm.maxPlayers,
+                              }),
+                            });
+                            if (res.ok) {
+                              const created = await res.json();
+                              const newLeagueId = created.leagueId ?? created.id;
+                              setClubLeagues((prev) => [{ id: newLeagueId, name: leagueForm.name.trim(), status: "draft", currentWeek: 0, totalWeeks: leagueForm.maxPlayers - 1, maxPlayers: leagueForm.maxPlayers, playerCount: 0 }, ...prev]);
+                              setShowCreateLeague(false);
+                              setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
+                              setLeagueWizardStep(1);
+                              setSelectedPlayerIds([]);
+                              toast.success(`League "${leagueForm.name.trim()}" created in Draft mode!`);
+                              navigate(`/leagues/${newLeagueId}`);
+                            } else {
+                              const d = await res.json().catch(() => ({}));
+                              toast.error(d.error ?? "Failed to create league");
+                            }
+                          } finally {
+                            setCreatingLeague(false);
+                          }
+                        }}
                         className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
                         style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
-                      >Next: Pick Players →</button>
+                      >{creatingLeague ? "Creating…" : "Create Draft League"}</button>
                     </div>
+                    <p className={`text-xs text-center ${textMuted}`}>You can add players later via invites and join requests</p>
                   </div>
                 )}
 
@@ -1719,9 +1758,9 @@ export default function ClubProfile() {
                         >← Back</button>
                         <button
                           type="button"
-                          disabled={picked !== needed || creatingLeague}
+                          disabled={picked === 0 || creatingLeague}
                           onClick={async () => {
-                            if (!club || picked !== needed) return;
+                            if (!club || picked === 0) return;
                             setCreatingLeague(true);
                             try {
                               const res = await fetch("/api/leagues", {
@@ -1739,12 +1778,12 @@ export default function ClubProfile() {
                               if (res.ok) {
                                 const created = await res.json();
                                 const newLeagueId = created.leagueId ?? created.id;
-                                setClubLeagues((prev) => [{ id: newLeagueId, name: leagueForm.name.trim(), status: "active", currentWeek: 1, totalWeeks: leagueForm.maxPlayers - 1, playerCount: leagueForm.maxPlayers }, ...prev]);
+                                setClubLeagues((prev) => [{ id: newLeagueId, name: leagueForm.name.trim(), status: "draft", currentWeek: 0, totalWeeks: leagueForm.maxPlayers - 1, maxPlayers: leagueForm.maxPlayers, playerCount: picked }, ...prev]);
                                 setShowCreateLeague(false);
                                 setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
                                 setLeagueWizardStep(1);
                                 setSelectedPlayerIds([]);
-                                toast.success(`League "${leagueForm.name.trim()}" created!`);
+                                toast.success(`League "${leagueForm.name.trim()}" created in Draft mode with ${picked} player${picked !== 1 ? "s" : ""}!`);
                                 navigate(`/leagues/${newLeagueId}`);
                               } else {
                                 const d = await res.json().catch(() => ({}));
@@ -1756,7 +1795,7 @@ export default function ClubProfile() {
                           }}
                           className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
                           style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
-                        >{creatingLeague ? "Creating…" : `Create League (${picked}/${needed})`}</button>
+                        >{creatingLeague ? "Creating…" : `Create Draft League (${picked}/${needed})`}</button>
                       </div>
                     </div>
                   );

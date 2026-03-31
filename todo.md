@@ -3726,3 +3726,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Mobile UX: Swipe-to-Dismiss & Guest Portal Fix
 - [x] Add swipe-to-dismiss touch gesture to AvatarNavDropdown mobile sheet
 - [x] Apply createPortal to GuestMobileMenu for clipping-free rendering on all pages
+
+## Phase 1: Fix Core League Creation Loop
+- [x] Server — make playerIds optional at creation, create league as "draft" not "active"
+- [x] Server — add POST /:leagueId/start endpoint (Draft → Active transition, generates schedule)
+- [x] Client ClubProfile — wizard allows 0-N players, Step 2 becomes optional
+- [x] Client LeagueDashboard — add "Start Season" button for commissioner on Draft leagues with full roster
+- [x] Fix route ordering — /invites/mine moved before /:leagueId to prevent Express conflict

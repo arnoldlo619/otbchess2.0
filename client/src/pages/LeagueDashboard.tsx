@@ -378,6 +378,7 @@ export default function LeagueDashboard() {
   // Player-side invite (shown to the invited player on the League Dashboard)
   const [myInvite, setMyInvite] = useState<{ id: number; commissionerName: string; message?: string | null; status: string } | null>(null);
   const [respondingInvite, setRespondingInvite] = useState(false);
+  const [startingSeason, setStartingSeason] = useState(false);
   // Auth modal for guest CTA
   const [authOpen, setAuthOpen] = useState(false);
   // Detect if the user arrived via an invite link (?join=1)
@@ -905,6 +906,98 @@ export default function LeagueDashboard() {
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
           <>
+            {/* ── Draft mode: roster progress + Start Season ─────────────── */}
+            {league.status === "draft" && isCommissioner && (() => {
+              const rosterCount = league.players.length;
+              const rosterFull = rosterCount >= league.maxPlayers;
+              const rosterPct = Math.round((rosterCount / league.maxPlayers) * 100);
+              return (
+                <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1.5px solid ${accent}55` }}>
+                  <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: `${accent}18`, borderBottom: `1px solid ${accent}33` }}>
+                    <Users size={13} style={{ color: accent }} />
+                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>Draft — Build Your Roster</span>
+                  </div>
+                  <div className="px-4 py-4 space-y-3">
+                    {/* Roster progress bar */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-semibold" style={{ color: textMain }}>Roster: {rosterCount} / {league.maxPlayers} players</span>
+                        <span className="text-xs font-medium" style={{ color: rosterFull ? accent : textMuted }}>{rosterPct}%</span>
+                      </div>
+                      <div className="h-2.5 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#e5e7eb" }}>
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${rosterPct}%`, background: rosterFull ? accent : "oklch(0.6 0.12 85)" }} />
+                      </div>
+                    </div>
+                    {/* Roster list */}
+                    {rosterCount > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {league.players.map((p) => (
+                          <div key={p.playerId} className="flex items-center gap-2 rounded-xl p-2" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f9fafb" }}>
+                            <Avatar url={p.avatarUrl} name={p.displayName} size={7} />
+                            <span className="text-xs font-medium truncate" style={{ color: textMain }}>{p.displayName}</span>
+                          </div>
+                        ))}
+                        {Array.from({ length: league.maxPlayers - rosterCount }).map((_, i) => (
+                          <div key={`empty-${i}`} className="flex items-center gap-2 rounded-xl p-2 border-2 border-dashed" style={{ borderColor: isDark ? "oklch(0.3 0.04 145)" : "#d1d5db" }}>
+                            <div className="w-7 h-7 rounded-full" style={{ background: isDark ? "oklch(0.25 0.04 145)" : "#e5e7eb" }} />
+                            <span className="text-xs" style={{ color: textMuted }}>Open spot</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-1">
+                      <button
+                        onClick={() => setActiveTab("requests")}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all"
+                        style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
+                      >Invite Players</button>
+                      <button
+                        disabled={!rosterFull || startingSeason}
+                        onClick={async () => {
+                          setStartingSeason(true);
+                          try {
+                            const res = await fetch(`/api/leagues/${league.id}/start`, { method: "POST", credentials: "include" });
+                            if (res.ok) {
+                              showToast("Season started! Round-robin schedule generated.", "success");
+                              await fetchAll();
+                            } else {
+                              const d = await res.json().catch(() => ({}));
+                              showToast(d.error ?? "Failed to start season", "error");
+                            }
+                          } finally {
+                            setStartingSeason(false);
+                          }
+                        }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
+                        style={{ background: accent, color: "#fff" }}
+                      >{startingSeason ? "Starting…" : rosterFull ? "Start Season →" : `Need ${league.maxPlayers - rosterCount} more`}</button>
+                    </div>
+                    {!rosterFull && (
+                      <p className="text-xs text-center" style={{ color: textMuted }}>Fill all {league.maxPlayers} spots to start the season. Use the Requests tab to invite members or share the league link.</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Draft mode: non-commissioner player view */}
+            {league.status === "draft" && !isCommissioner && (
+              <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock size={15} style={{ color: accent }} />
+                  <span className="font-semibold text-sm" style={{ color: textMain }}>League in Draft</span>
+                </div>
+                <p className="text-sm" style={{ color: textMuted }}>The commissioner is building the roster. The season will start once all {league.maxPlayers} spots are filled.</p>
+                <div className="mt-3">
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#e5e7eb" }}>
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.round((league.players.length / league.maxPlayers) * 100)}%`, background: accent }} />
+                  </div>
+                  <span className="text-xs mt-1 block" style={{ color: textMuted }}>{league.players.length} / {league.maxPlayers} players</span>
+                </div>
+              </div>
+            )}
+
             {/* Champion announcement banner */}
             {league.status === "completed" && (() => {
               const champion = standings[0];

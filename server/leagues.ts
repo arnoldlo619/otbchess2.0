@@ -268,7 +268,7 @@ leaguesRouter.get("/club/:clubId", async (req: Request, res: Response) => {
   }
 });
 
-// ── POST / — create a league ──────────────────────────────────────────────────
+// ── POST / — create a league (Draft mode — schedule generated on Start) ──────
 leaguesRouter.post("/", async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
@@ -278,18 +278,19 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
     name: string;
     description?: string;
     maxPlayers: number;
-    playerIds: string[]; // array of user IDs
+    playerIds?: string[]; // optional — commissioner can add players later
   };
 
   // Validate
-  if (!clubId || !name || !maxPlayers || !playerIds) {
+  if (!clubId || !name || !maxPlayers) {
     return res.status(400).json({ error: "Missing required fields" });
   }
   if (![4, 6, 8, 10].includes(maxPlayers)) {
     return res.status(400).json({ error: "League size must be 4, 6, 8, or 10" });
   }
-  if (playerIds.length !== maxPlayers) {
-    return res.status(400).json({ error: `Exactly ${maxPlayers} players required` });
+  const ids = playerIds ?? [];
+  if (ids.length > maxPlayers) {
+    return res.status(400).json({ error: `Cannot exceed ${maxPlayers} players` });
   }
 
   try {
@@ -306,7 +307,7 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Only club admins can create leagues" });
     }
 
-    // Fetch member details for selected players
+    // Fetch member details
     const memberRows = await db
       .select()
       .from(dbClubMembers)
@@ -317,7 +318,7 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
     const totalWeeks = maxPlayers - 1;
     const leagueId = nanoid(16);
 
-    // Insert league
+    // Insert league as DRAFT — schedule is generated when commissioner starts the season
     await db.insert(leagues).values({
       id: leagueId,
       clubId,
@@ -327,12 +328,12 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
       commissionerName: memberMap.get(userId)?.displayName ?? "Commissioner",
       maxPlayers,
       totalWeeks,
-      status: "active",
-      currentWeek: 1,
+      status: "draft",
+      currentWeek: 0,
     });
 
-    // Insert league players
-    for (const pid of playerIds) {
+    // Insert any initial players
+    for (const pid of ids) {
       const member = memberMap.get(pid);
       await db.insert(leaguePlayers).values({
         leagueId,
@@ -343,33 +344,68 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
       });
     }
 
+    res.status(201).json({ leagueId, message: "League created in Draft mode", status: "draft" });
+  } catch (err) {
+    console.error("[leagues] POST / error:", err);
+    res.status(500).json({ error: "Failed to create league" });
+  }
+});
+
+// ── POST /:leagueId/start — transition Draft → Active, generate schedule ─────
+leaguesRouter.post("/:leagueId/start", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+
+  try {
+    const db = await getDb();
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (league.status !== "draft") return res.status(400).json({ error: "League is not in Draft status" });
+
+    // Only commissioner or club admin can start
+    const isCommissioner = league.commissionerId === userId;
+    const membership = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, league.clubId), eq(dbClubMembers.userId, userId))).limit(1);
+    const isAdmin = membership.length > 0 && ["owner", "admin", "director"].includes(membership[0].role);
+    if (!isCommissioner && !isAdmin) return res.status(403).json({ error: "Only the commissioner can start the season" });
+
+    // Verify roster is full
+    const players = await db.select().from(leaguePlayers).where(eq(leaguePlayers.leagueId, league.id));
+    if (players.length !== league.maxPlayers) {
+      return res.status(400).json({ error: `Roster must have exactly ${league.maxPlayers} players (currently ${players.length})` });
+    }
+
+    // Fetch member details for player names
+    const memberRows = await db.select().from(dbClubMembers).where(eq(dbClubMembers.clubId, league.clubId));
+    const memberMap = new Map(memberRows.map((m) => [m.userId, m]));
+
+    const playerIds = players.map((p) => p.playerId);
+    const totalWeeks = league.maxPlayers - 1;
+
     // Generate round-robin schedule
-    const schedule = generateRoundRobin(maxPlayers);
+    const schedule = generateRoundRobin(league.maxPlayers);
 
     // Insert weeks
     const weekIds: Record<number, number> = {};
     for (let w = 1; w <= totalWeeks; w++) {
-      const [inserted] = await db.insert(leagueWeeks).values({
-        leagueId,
+      await db.insert(leagueWeeks).values({
+        leagueId: league.id,
         weekNumber: w,
         publishedAt: new Date(),
         isComplete: 0,
       });
-      // Get the inserted id
-      const weekRow = await db
-        .select()
-        .from(leagueWeeks)
-        .where(and(eq(leagueWeeks.leagueId, leagueId), eq(leagueWeeks.weekNumber, w)))
+      const weekRow = await db.select().from(leagueWeeks)
+        .where(and(eq(leagueWeeks.leagueId, league.id), eq(leagueWeeks.weekNumber, w)))
         .limit(1);
       weekIds[w] = weekRow[0].id;
     }
 
     // Insert matches
     for (const m of schedule) {
-      const whitePlayer = memberMap.get(playerIds[m.whiteIdx]);
-      const blackPlayer = memberMap.get(playerIds[m.blackIdx]);
+      const whitePlayer = players[m.whiteIdx];
+      const blackPlayer = players[m.blackIdx];
       await db.insert(leagueMatches).values({
-        leagueId,
+        leagueId: league.id,
         weekId: weekIds[m.weekNumber],
         weekNumber: m.weekNumber,
         playerWhiteId: playerIds[m.whiteIdx],
@@ -380,14 +416,13 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // Initialize standings (all zeros)
-    for (const pid of playerIds) {
-      const member = memberMap.get(pid);
+    // Initialize standings
+    for (const p of players) {
       await db.insert(leagueStandings).values({
-        leagueId,
-        playerId: pid,
-        displayName: member?.displayName ?? pid,
-        avatarUrl: member?.avatarUrl ?? undefined,
+        leagueId: league.id,
+        playerId: p.playerId,
+        displayName: p.displayName,
+        avatarUrl: p.avatarUrl ?? undefined,
         wins: 0,
         losses: 0,
         draws: 0,
@@ -396,10 +431,41 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    res.status(201).json({ leagueId, message: "League created successfully" });
+    // Update league status to active
+    await db.update(leagues).set({ status: "active", currentWeek: 1 }).where(eq(leagues.id, league.id));
+
+    res.json({ success: true, message: "Season started!", status: "active" });
   } catch (err) {
-    console.error("[leagues] POST / error:", err);
-    res.status(500).json({ error: "Failed to create league" });
+    console.error("[leagues] POST /:leagueId/start error:", err);
+    res.status(500).json({ error: "Failed to start season" });
+  }
+});
+
+// ── GET /invites/mine — list pending invites for the current user ────────────
+// MUST be defined before /:leagueId to avoid Express treating "invites" as a leagueId
+leaguesRouter.get("/invites/mine", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const { leagueInvites } = await import("../shared/schema.js");
+    const rows = await db.select({
+      id: leagueInvites.id,
+      leagueId: leagueInvites.leagueId,
+      leagueName: leagues.name,
+      commissionerName: leagueInvites.commissionerName,
+      message: leagueInvites.message,
+      status: leagueInvites.status,
+      createdAt: leagueInvites.createdAt,
+    })
+      .from(leagueInvites)
+      .innerJoin(leagues, eq(leagues.id, leagueInvites.leagueId))
+      .where(and(eq(leagueInvites.invitedUserId, userId), eq(leagueInvites.status, "pending")))
+      .orderBy(desc(leagueInvites.createdAt));
+    res.json(rows);
+  } catch (err) {
+    console.error("[league-invites] GET /mine error:", err);
+    res.status(500).json({ error: "Failed to list invites" });
   }
 });
 
@@ -988,32 +1054,7 @@ leaguesRouter.get("/:leagueId/invites", async (req: Request, res: Response) => {
   }
 });
 
-// GET /invites/mine — list all pending invites for the current user
-leaguesRouter.get("/invites/mine", async (req: Request, res: Response) => {
-  const userId = getUser(req, res);
-  if (!userId) return;
-  try {
-    const db = await getDb();
-    const { leagueInvites } = await import("../shared/schema.js");
-    const rows = await db.select({
-      id: leagueInvites.id,
-      leagueId: leagueInvites.leagueId,
-      leagueName: leagues.name,
-      commissionerName: leagueInvites.commissionerName,
-      message: leagueInvites.message,
-      status: leagueInvites.status,
-      createdAt: leagueInvites.createdAt,
-    })
-      .from(leagueInvites)
-      .innerJoin(leagues, eq(leagues.id, leagueInvites.leagueId))
-      .where(and(eq(leagueInvites.invitedUserId, userId), eq(leagueInvites.status, "pending")))
-      .orderBy(desc(leagueInvites.createdAt));
-    res.json(rows);
-  } catch (err) {
-    console.error("[league-invites] GET /mine error:", err);
-    res.status(500).json({ error: "Failed to list invites" });
-  }
-});
+// (moved to before /:leagueId — see above)
 
 // PATCH /:leagueId/invites/:inviteId — accept or decline an invite (invited player only)
 leaguesRouter.patch("/:leagueId/invites/:inviteId", async (req: Request, res: Response) => {
