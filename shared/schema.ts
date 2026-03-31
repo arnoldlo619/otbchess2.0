@@ -683,6 +683,7 @@ export const leagueWeeks = mysqlTable('league_weeks', {
   weekNumber: int('week_number').notNull(),
   publishedAt: timestamp('published_at'),
   isComplete: tinyint('is_complete').notNull().default(0),
+  deadline: timestamp('deadline'),
 }, (t) => ({ leagueIdx: index('lw_league_idx').on(t.leagueId) }));
 export type LeagueWeekRow = typeof leagueWeeks.$inferSelect;
 export type NewLeagueWeekRow = typeof leagueWeeks.$inferInsert;
@@ -699,6 +700,11 @@ export const leagueMatches = mysqlTable('league_matches', {
   resultStatus: varchar('result_status', { length: 20 }).notNull().default('pending'),
   result: varchar('result', { length: 20 }),
   reportedByUserId: varchar('reported_by_user_id', { length: 64 }),
+  // Dual-confirmation fields
+  whiteReport: varchar('white_report', { length: 20 }),
+  blackReport: varchar('black_report', { length: 20 }),
+  whiteReportedAt: timestamp('white_reported_at'),
+  blackReportedAt: timestamp('black_reported_at'),
   completedAt: timestamp('completed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (t) => ({ leagueIdx: index('lm_league_idx').on(t.leagueId), weekIdx: index('lm_week_idx').on(t.weekId) }));

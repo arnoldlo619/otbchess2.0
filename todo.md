@@ -3733,3 +3733,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Client ClubProfile — wizard allows 0-N players, Step 2 becomes optional
 - [x] Client LeagueDashboard — add "Start Season" button for commissioner on Draft leagues with full roster
 - [x] Fix route ordering — /invites/mine moved before /:leagueId to prevent Express conflict
+
+## Phase 2a: Result Confirmation with Disputed State
+- [x] Schema — add whiteReport, blackReport, whiteReportedAt, blackReportedAt columns to league_matches
+- [x] Server — rewrite result POST for dual-confirmation (awaiting_confirmation → completed/disputed)
+- [x] Server — PATCH override clears dual-confirmation fields; commissioner can resolve disputed matches
+- [x] Client — ReportResultModal shows contextual messaging (first report vs confirm vs dispute)
+- [x] Client — status badges on matchup cards (Awaiting amber, Disputed red, Completed green)
+- [x] Client — commissioner dispute resolution buttons (W/B/½) on disputed match cards
+
+## Phase 2b: Week Deadlines with Countdown Timers
+- [x] Schema — deadline timestamp column added to league_weeks
+- [x] Server — PATCH /:leagueId/weeks/:weekId/deadline endpoint
+- [x] Client — deadline display + date picker for commissioner in Matchups tab
+- [x] Client — countdown timer on "Your Match This Week" card + overdue/urgent badges

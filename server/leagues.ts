@@ -546,7 +546,11 @@ leaguesRouter.get("/:leagueId/standings", async (req: Request, res: Response) =>
   }
 });
 
-// ── POST /:leagueId/matches/:matchId/result — report result ───────────────────
+// ── POST /:leagueId/matches/:matchId/result — dual-confirmation result report ───
+// Flow: first player reports → status becomes "awaiting_confirmation"
+//       second player confirms (same result) → status becomes "completed"
+//       second player disagrees → status becomes "disputed"
+//       commissioner/admin reports → auto-finalized (no confirmation needed)
 leaguesRouter.post("/:leagueId/matches/:matchId/result", async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
@@ -568,20 +572,14 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", async (req: Request, re
 
     if (!match.length) return res.status(404).json({ error: "Match not found" });
     if (match[0].resultStatus === "completed") {
-      return res.status(409).json({ error: "Result already submitted" });
+      return res.status(409).json({ error: "Result already finalized" });
     }
 
-    // Verify reporter is one of the players or a league commissioner/admin
-    const league = await db
-      .select()
-      .from(leagues)
-      .where(eq(leagues.id, req.params.leagueId))
-      .limit(1);
-
-    const isPlayer = match[0].playerWhiteId === userId || match[0].playerBlackId === userId;
+    const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    const m = match[0];
+    const isWhite = m.playerWhiteId === userId;
+    const isBlack = m.playerBlackId === userId;
     const isCommissioner = league[0]?.commissionerId === userId;
-
-    // Also check if club admin
     const membership = await db
       .select()
       .from(dbClubMembers)
@@ -589,55 +587,92 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", async (req: Request, re
       .limit(1);
     const isAdmin = membership.length > 0 && ["owner", "admin", "director"].includes(membership[0].role);
 
-    if (!isPlayer && !isCommissioner && !isAdmin) {
+    if (!isWhite && !isBlack && !isCommissioner && !isAdmin) {
       return res.status(403).json({ error: "Only match participants or admins can report results" });
     }
 
-    // Update match
-    await db
-      .update(leagueMatches)
-      .set({
-        result,
-        resultStatus: "completed",
-        reportedByUserId: userId,
+    // Commissioner/admin: auto-finalize immediately
+    if ((isCommissioner || isAdmin) && !isWhite && !isBlack) {
+      await db.update(leagueMatches).set({
+        result, resultStatus: "completed", reportedByUserId: userId,
+        whiteReport: result, blackReport: result,
+        whiteReportedAt: new Date(), blackReportedAt: new Date(),
         completedAt: new Date(),
-      })
-      .where(eq(leagueMatches.id, matchId));
-
-    // Check if all matches in this week are complete → mark week complete
-    const weekMatches = await db
-      .select()
-      .from(leagueMatches)
-      .where(and(eq(leagueMatches.leagueId, req.params.leagueId), eq(leagueMatches.weekNumber, match[0].weekNumber)));
-
-    const weekComplete = weekMatches.every((m) => m.id === matchId || m.resultStatus === "completed");
-    if (weekComplete) {
-      await db
-        .update(leagueWeeks)
-        .set({ isComplete: 1 })
-        .where(eq(leagueWeeks.id, match[0].weekId));
-
-      // Advance currentWeek if this is the current week
-      const leagueRow = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
-      if (leagueRow[0] && leagueRow[0].currentWeek === match[0].weekNumber && leagueRow[0].currentWeek < leagueRow[0].totalWeeks) {
-        await db
-          .update(leagues)
-          .set({ currentWeek: leagueRow[0].currentWeek + 1 })
-          .where(eq(leagues.id, req.params.leagueId));
-      }
+      }).where(eq(leagueMatches.id, matchId));
+      await finalizeWeekIfComplete(db, req.params.leagueId, m.weekNumber, m.weekId, matchId);
+      await recalculateStandings(req.params.leagueId);
+      return res.json({ success: true, message: "Result finalized by commissioner", status: "completed" });
     }
 
-    // Recalculate standings
-    await recalculateStandings(req.params.leagueId);
+    // Player report
+    const now = new Date();
+    const updateFields: Record<string, unknown> = {};
 
-    res.json({ success: true, message: "Result recorded" });
+    if (isWhite) {
+      if (m.whiteReport) return res.status(409).json({ error: "You already reported a result" });
+      updateFields.whiteReport = result;
+      updateFields.whiteReportedAt = now;
+      updateFields.reportedByUserId = userId;
+    } else {
+      if (m.blackReport) return res.status(409).json({ error: "You already reported a result" });
+      updateFields.blackReport = result;
+      updateFields.blackReportedAt = now;
+      updateFields.reportedByUserId = userId;
+    }
+
+    // Check if the other player has already reported
+    const otherReport = isWhite ? m.blackReport : m.whiteReport;
+    if (otherReport) {
+      // Both have now reported
+      if (otherReport === result) {
+        // Agreement → finalize
+        updateFields.result = result;
+        updateFields.resultStatus = "completed";
+        updateFields.completedAt = now;
+      } else {
+        // Disagreement → disputed
+        updateFields.resultStatus = "disputed";
+      }
+    } else {
+      // First report → awaiting confirmation
+      updateFields.resultStatus = "awaiting_confirmation";
+    }
+
+    await db.update(leagueMatches).set(updateFields).where(eq(leagueMatches.id, matchId));
+
+    if (updateFields.resultStatus === "completed") {
+      await finalizeWeekIfComplete(db, req.params.leagueId, m.weekNumber, m.weekId, matchId);
+      await recalculateStandings(req.params.leagueId);
+    }
+
+    const statusMsg = updateFields.resultStatus === "completed" ? "Both players agree — result confirmed!"
+      : updateFields.resultStatus === "disputed" ? "Reports conflict — commissioner will resolve"
+      : "Your report is saved. Waiting for opponent to confirm.";
+    res.json({ success: true, message: statusMsg, status: updateFields.resultStatus });
   } catch (err) {
     console.error("[leagues] POST result error:", err);
     res.status(500).json({ error: "Failed to record result" });
   }
 });
 
-// ── PATCH /:leagueId/matches/:matchId/result — admin override ─────────────────
+// Helper: check if all matches in a week are completed and advance if so
+async function finalizeWeekIfComplete(db: any, leagueId: string, weekNumber: number, weekId: number, justCompletedMatchId: number) {
+  const weekMatches = await db
+    .select()
+    .from(leagueMatches)
+    .where(and(eq(leagueMatches.leagueId, leagueId), eq(leagueMatches.weekNumber, weekNumber)));
+  const weekComplete = weekMatches.every((m: any) => m.id === justCompletedMatchId || m.resultStatus === "completed");
+  if (weekComplete) {
+    await db.update(leagueWeeks).set({ isComplete: 1 }).where(eq(leagueWeeks.id, weekId));
+    const leagueRow = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (leagueRow[0] && leagueRow[0].currentWeek === weekNumber && leagueRow[0].currentWeek < leagueRow[0].totalWeeks) {
+      await db.update(leagues).set({ currentWeek: leagueRow[0].currentWeek + 1 }).where(eq(leagues.id, leagueId));
+    }
+  }
+}
+
+// ── PATCH /:leagueId/matches/:matchId/result — commissioner resolve / admin override ──
+// Used for: resolving disputes, overriding results, or resetting a match
 leaguesRouter.patch("/:leagueId/matches/:matchId/result", async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
@@ -669,9 +704,15 @@ leaguesRouter.patch("/:leagueId/matches/:matchId/result", async (req: Request, r
         resultStatus: result ? "completed" : "pending",
         reportedByUserId: userId,
         completedAt: result ? new Date() : null,
+        // Clear dual-confirmation fields on reset
+        ...(result === null ? { whiteReport: null, blackReport: null, whiteReportedAt: null, blackReportedAt: null } : {}),
       })
       .where(eq(leagueMatches.id, matchId));
 
+    if (result) {
+      const m = await db.select().from(leagueMatches).where(eq(leagueMatches.id, matchId)).limit(1);
+      if (m.length) await finalizeWeekIfComplete(db, req.params.leagueId, m[0].weekNumber, m[0].weekId, matchId);
+    }
     await recalculateStandings(req.params.leagueId);
     res.json({ success: true });
   } catch (err) {
@@ -775,7 +816,30 @@ leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response
   }
 });
 
-// ── GET /:leagueId/join-requests — commissioner sees pending requests ──────────
+// ── PATCH /:leagueId/weeks/:weekId/deadline — commissioner sets/clears a week deadline ──
+leaguesRouter.patch("/:leagueId/weeks/:weekId/deadline", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league.length) return res.status(404).json({ error: "League not found" });
+    if (league[0].commissionerId !== userId) {
+      return res.status(403).json({ error: "Only the commissioner can set deadlines" });
+    }
+    const weekId = parseInt(req.params.weekId, 10);
+    const { deadline } = req.body as { deadline: string | null };
+    await db.update(leagueWeeks).set({
+      deadline: deadline ? new Date(deadline) : null,
+    }).where(eq(leagueWeeks.id, weekId));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[leagues] PATCH deadline error:", err);
+    res.status(500).json({ error: "Failed to set deadline" });
+  }
+});
+
+// ── GET /:leagueId/join-requests — commissioner sees pending requests ──────────────
 leaguesRouter.get("/:leagueId/join-requests", async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;

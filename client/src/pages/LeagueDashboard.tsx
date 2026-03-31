@@ -34,9 +34,13 @@ interface LeagueMatch {
   playerWhiteName: string;
   playerBlackId: string;
   playerBlackName: string;
-  resultStatus: "pending" | "completed";
+  resultStatus: "pending" | "awaiting_confirmation" | "disputed" | "completed";
   result?: "white_win" | "black_win" | "draw" | null;
   reportedByUserId?: string | null;
+  whiteReport?: "white_win" | "black_win" | "draw" | null;
+  blackReport?: "white_win" | "black_win" | "draw" | null;
+  whiteReportedAt?: string | null;
+  blackReportedAt?: string | null;
   completedAt?: string | null;
 }
 interface LeagueWeek {
@@ -45,6 +49,7 @@ interface LeagueWeek {
   weekNumber: number;
   publishedAt?: string | null;
   isComplete: number;
+  deadline?: string | null;
   matches: LeagueMatch[];
 }
 interface LeagueStanding {
@@ -254,10 +259,16 @@ function ShareModal({
 }
 
 // ── Result Report Modal ───────────────────────────────────────────────────────
+function resultLabel(r: string, wName: string, bName: string) {
+  if (r === "white_win") return `${wName} wins`;
+  if (r === "black_win") return `${bName} wins`;
+  return "Draw";
+}
+
 function ReportResultModal({
-  match, isDark, onClose, onSubmit,
+  match, isDark, onClose, onSubmit, currentUserId,
 }: {
-  match: LeagueMatch; isDark: boolean;
+  match: LeagueMatch; isDark: boolean; currentUserId?: string;
   onClose: () => void;
   onSubmit: (result: "white_win" | "black_win" | "draw") => Promise<void>;
 }) {
@@ -268,6 +279,14 @@ function ReportResultModal({
   const textMain = isDark ? "#f0f5ee" : "#111827";
   const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
   const accent = "oklch(0.55 0.13 145)";
+  const warn = "oklch(0.65 0.18 60)";
+
+  const isWhite = currentUserId === match.playerWhiteId;
+  const isBlack = currentUserId === match.playerBlackId;
+  const myPriorReport = isWhite ? match.whiteReport : isBlack ? match.blackReport : null;
+  const opponentReport = isWhite ? match.blackReport : isBlack ? match.whiteReport : null;
+  const isConfirming = match.resultStatus === "awaiting_confirmation" && opponentReport && !myPriorReport;
+
   const options: { value: "white_win" | "black_win" | "draw"; label: string; sub: string }[] = [
     { value: "white_win", label: `${match.playerWhiteName} wins`, sub: "White wins (+1 pt)" },
     { value: "black_win", label: `${match.playerBlackName} wins`, sub: "Black wins (+1 pt)" },
@@ -292,53 +311,89 @@ function ReportResultModal({
         <div className="px-5 pt-5 pb-3">
           <div className="flex items-center gap-2 mb-1">
             <Swords size={16} style={{ color: accent }} />
-            <span className="font-bold text-base" style={{ color: textMain }}>Report Result</span>
+            <span className="font-bold text-base" style={{ color: textMain }}>
+              {isConfirming ? "Confirm Result" : "Report Result"}
+            </span>
           </div>
           <p className="text-sm" style={{ color: textMuted }}>
             {match.playerWhiteName} vs {match.playerBlackName} — Week {match.weekNumber}
           </p>
         </div>
-        <div className="px-5 pb-2 space-y-2">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setSelected(opt.value)}
-              className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all"
-              style={{
-                background: selected === opt.value ? `${accent}22` : isDark ? "oklch(0.22 0.06 145)" : "#f9fafb",
-                border: `1.5px solid ${selected === opt.value ? accent : "transparent"}`,
-              }}
-            >
-              <div
-                className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
-                style={{ borderColor: selected === opt.value ? accent : border }}
+
+        {/* Show opponent's report if awaiting confirmation */}
+        {isConfirming && opponentReport && (
+          <div className="mx-5 mb-3 px-4 py-3 rounded-2xl text-sm" style={{ background: `${warn}18`, border: `1px solid ${warn}44`, color: textMain }}>
+            <span style={{ color: warn }}>Your opponent reported:</span>{" "}
+            <strong>{resultLabel(opponentReport, match.playerWhiteName, match.playerBlackName)}</strong>
+            <p className="text-xs mt-1" style={{ color: textMuted }}>Select the same result to confirm, or a different one to dispute.</p>
+          </div>
+        )}
+
+        {/* Already reported — show waiting message */}
+        {myPriorReport && match.resultStatus === "awaiting_confirmation" && (
+          <div className="mx-5 mb-3 px-4 py-3 rounded-2xl text-sm" style={{ background: `${accent}18`, border: `1px solid ${accent}44`, color: textMain }}>
+            You reported: <strong>{resultLabel(myPriorReport, match.playerWhiteName, match.playerBlackName)}</strong>
+            <p className="text-xs mt-1" style={{ color: textMuted }}>Waiting for your opponent to confirm.</p>
+          </div>
+        )}
+
+        {!myPriorReport && (
+          <>
+            <div className="px-5 pb-2 space-y-2">
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSelected(opt.value)}
+                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all"
+                  style={{
+                    background: selected === opt.value ? `${accent}22` : isDark ? "oklch(0.22 0.06 145)" : "#f9fafb",
+                    border: `1.5px solid ${selected === opt.value ? accent : "transparent"}`,
+                  }}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
+                    style={{ borderColor: selected === opt.value ? accent : border }}
+                  >
+                    {selected === opt.value && <div className="w-2 h-2 rounded-full" style={{ background: accent }} />}
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm" style={{ color: textMain }}>{opt.label}</div>
+                    <div className="text-xs" style={{ color: textMuted }}>{opt.sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="px-5 pb-5 pt-3 flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 py-3 rounded-2xl text-sm font-medium"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted }}
               >
-                {selected === opt.value && <div className="w-2 h-2 rounded-full" style={{ background: accent }} />}
-              </div>
-              <div>
-                <div className="font-medium text-sm" style={{ color: textMain }}>{opt.label}</div>
-                <div className="text-xs" style={{ color: textMuted }}>{opt.sub}</div>
-              </div>
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={!selected || loading}
+                className="flex-1 py-3 rounded-2xl text-sm font-bold transition-opacity disabled:opacity-40"
+                style={{ background: accent, color: "#fff" }}
+              >
+                {loading ? "Saving…" : isConfirming ? "Confirm" : "Submit Report"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {myPriorReport && (
+          <div className="px-5 pb-5 pt-1">
+            <button
+              onClick={onClose}
+              className="w-full py-3 rounded-2xl text-sm font-medium"
+              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted }}
+            >
+              Close
             </button>
-          ))}
-        </div>
-        <div className="px-5 pb-5 pt-3 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 rounded-2xl text-sm font-medium"
-            style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!selected || loading}
-            className="flex-1 py-3 rounded-2xl text-sm font-bold transition-opacity disabled:opacity-40"
-            style={{ background: accent, color: "#fff" }}
-          >
-            {loading ? "Saving…" : "Confirm"}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -608,12 +663,46 @@ export default function LeagueDashboard() {
       body: JSON.stringify({ result }),
     });
     if (res.ok) {
-      showToast("Result recorded!");
+      const d = await res.json().catch(() => ({ message: "Result recorded!" }));
+      showToast(d.message ?? "Result recorded!");
       setReportingMatch(null);
       await fetchAll();
     } else {
       const d = await res.json().catch(() => ({}));
       showToast(d.error ?? "Failed to save result", "error");
+    }
+  }
+
+  // Commissioner resolves a disputed match
+  async function handleResolveDispute(matchId: number, result: "white_win" | "black_win" | "draw") {
+    if (!leagueId) return;
+    const res = await fetch(`/api/leagues/${leagueId}/matches/${matchId}/result`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ result }),
+    });
+    if (res.ok) {
+      showToast("Dispute resolved!");
+      await fetchAll();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      showToast(d.error ?? "Failed to resolve", "error");
+    }
+  }
+
+  // Commissioner sets a deadline for a week
+  async function handleSetDeadline(weekId: number, deadline: string | null) {
+    if (!leagueId) return;
+    const res = await fetch(`/api/leagues/${leagueId}/weeks/${weekId}/deadline`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deadline }),
+    });
+    if (res.ok) {
+      showToast(deadline ? "Deadline set!" : "Deadline cleared");
+      await fetchAll();
+    } else {
+      showToast("Failed to set deadline", "error");
     }
   }
 
@@ -659,7 +748,19 @@ export default function LeagueDashboard() {
   function canReport(match: LeagueMatch) {
     if (match.resultStatus === "completed") return false;
     if (!user) return false;
-    return match.playerWhiteId === user.id || match.playerBlackId === user.id || league?.commissionerId === user.id;
+    const isWhite = match.playerWhiteId === user.id;
+    const isBlack = match.playerBlackId === user.id;
+    const isComm = league?.commissionerId === user.id;
+    // If awaiting_confirmation, only the player who hasn't reported yet can confirm
+    if (match.resultStatus === "awaiting_confirmation") {
+      if (isWhite && !match.whiteReport) return true;
+      if (isBlack && !match.blackReport) return true;
+      if (isComm) return true;
+      return false;
+    }
+    // Disputed — only commissioner can resolve (via PATCH, not this button)
+    if (match.resultStatus === "disputed") return false;
+    return isWhite || isBlack || isComm;
   }
   function isMyMatch(match: LeagueMatch) {
     return !!(user && (match.playerWhiteId === user.id || match.playerBlackId === user.id));
@@ -1099,6 +1200,25 @@ export default function LeagueDashboard() {
                   <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
                     Your Match · Week {league.currentWeek}
                   </span>
+                  {(() => {
+                    const cw = weeks.find(w => w.weekNumber === league.currentWeek);
+                    if (!cw?.deadline) return null;
+                    const dl = new Date(cw.deadline);
+                    const now = new Date();
+                    const diff = dl.getTime() - now.getTime();
+                    if (diff <= 0) return (
+                      <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Overdue</span>
+                    );
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const isUrgent = diff < 48 * 60 * 60 * 1000;
+                    const timeStr = days > 0 ? `${days}d ${hours}h left` : `${hours}h left`;
+                    return (
+                      <span className="ml-auto flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: isUrgent ? "oklch(0.65 0.18 60)22" : `${accent}22`, color: isUrgent ? "oklch(0.65 0.18 60)" : accent }}>
+                        <Clock size={10} />{timeStr}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="px-4 py-4 flex items-center gap-3">
                   {/* White player */}
@@ -1120,6 +1240,26 @@ export default function LeagueDashboard() {
                       <>
                         <CheckCircle2 size={20} style={{ color: accent }} />
                         <span className="text-xs font-medium" style={{ color: accent }}>{resultLabel(myMatchThisWeek)}</span>
+                      </>
+                    ) : myMatchThisWeek.resultStatus === "disputed" ? (
+                      <>
+                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>Disputed</span>
+                        <span className="text-[9px] mt-0.5" style={{ color: textMuted }}>Commissioner will resolve</span>
+                      </>
+                    ) : myMatchThisWeek.resultStatus === "awaiting_confirmation" ? (
+                      <>
+                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.55 0.15 60)", color: "#fff" }}>Awaiting</span>
+                        {canReport(myMatchThisWeek) ? (
+                          <button
+                            onClick={() => setReportingMatch(myMatchThisWeek)}
+                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
+                            style={{ background: accent, color: "#fff" }}
+                          >
+                            Confirm
+                          </button>
+                        ) : (
+                          <span className="text-[9px] mt-0.5" style={{ color: textMuted }}>Waiting for opponent</span>
+                        )}
                       </>
                     ) : (
                       <>
@@ -1408,6 +1548,50 @@ export default function LeagueDashboard() {
               )}
             </div>
 
+            {/* Deadline display + commissioner set deadline */}
+            {(() => {
+              const selectedWeekObj = weeks.find(w => w.weekNumber === selectedWeek);
+              const dl = selectedWeekObj?.deadline ? new Date(selectedWeekObj.deadline) : null;
+              const now = new Date();
+              const isOverdue = dl && dl < now;
+              const isClose = dl && !isOverdue && (dl.getTime() - now.getTime()) < 48 * 60 * 60 * 1000;
+              return (
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  {dl ? (
+                    <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: isOverdue ? "oklch(0.55 0.2 25)" : isClose ? "oklch(0.65 0.18 60)" : textMuted }}>
+                      <Clock size={12} />
+                      {isOverdue ? "Overdue" : "Due"}: {dl.toLocaleDateString(undefined, { month: "short", day: "numeric" })} at {dl.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                    </span>
+                  ) : (
+                    <span className="text-xs" style={{ color: textMuted }}>No deadline set</span>
+                  )}
+                  {isCommissioner && selectedWeekObj && !selectedWeekObj.isComplete && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="datetime-local"
+                        className="text-xs rounded-lg px-2 py-1"
+                        style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
+                        defaultValue={dl ? dl.toISOString().slice(0, 16) : ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) handleSetDeadline(selectedWeekObj.id, new Date(val).toISOString());
+                        }}
+                      />
+                      {dl && (
+                        <button
+                          onClick={() => selectedWeekObj && handleSetDeadline(selectedWeekObj.id, null)}
+                          className="text-[10px] px-2 py-1 rounded-lg"
+                          style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMuted }}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Match cards */}
             <div className="space-y-3">
               {currentWeekMatches.length === 0 ? (
@@ -1451,6 +1635,42 @@ export default function LeagueDashboard() {
                                 {match.result === "white_win" ? "1 – 0" : match.result === "black_win" ? "0 – 1" : "½ – ½"}
                               </span>
                               <span className="text-[10px]" style={{ color: textMuted }}>{label}</span>
+                            </>
+                          ) : match.resultStatus === "disputed" ? (
+                            <>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.45 0.18 25)", color: "#fff" }}>
+                                Disputed
+                              </span>
+                              {isCommissioner && (
+                                <div className="flex gap-1 mt-1">
+                                  {(["white_win", "black_win", "draw"] as const).map((r) => (
+                                    <button
+                                      key={r}
+                                      onClick={() => handleResolveDispute(match.id, r)}
+                                      className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                                      style={{ background: accent, color: "#fff" }}
+                                      title={r === "white_win" ? `${match.playerWhiteName} wins` : r === "black_win" ? `${match.playerBlackName} wins` : "Draw"}
+                                    >
+                                      {r === "white_win" ? "W" : r === "black_win" ? "B" : "½"}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          ) : match.resultStatus === "awaiting_confirmation" ? (
+                            <>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.55 0.15 60)", color: "#fff" }}>
+                                Awaiting
+                              </span>
+                              {canReport(match) && (
+                                <button
+                                  onClick={() => setReportingMatch(match)}
+                                  className="mt-1 text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                                  style={{ background: accent, color: "#fff" }}
+                                >
+                                  Confirm
+                                </button>
+                              )}
                             </>
                           ) : (
                             <>
@@ -2082,6 +2302,7 @@ export default function LeagueDashboard() {
         <ReportResultModal
           match={reportingMatch}
           isDark={isDark}
+          currentUserId={user?.id}
           onClose={() => setReportingMatch(null)}
           onSubmit={handleReportResult}
         />
