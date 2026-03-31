@@ -14,6 +14,7 @@ import {
   Share2, Copy, Check, QrCode, X, History
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import AuthModal from "@/components/AuthModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
@@ -367,7 +368,20 @@ export default function LeagueDashboard() {
   // Push notification subscription state (commissioner-only)
   const [pushStatus, setPushStatus] = useState<"idle" | "subscribed" | "denied" | "loading" | "unsupported">("idle");
   const [pushLoading, setPushLoading] = useState(false);
-
+  // Commissioner invite flow
+  const [sentInvites, setSentInvites] = useState<Array<{ id: number; invitedUserId: string; invitedDisplayName: string; invitedAvatarUrl?: string | null; invitedChesscomUsername?: string | null; status: string; createdAt: string }>>([]);
+  const [clubMembers, setClubMembers] = useState<Array<{ userId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null }>>([]);
+  const [showInvitePicker, setShowInvitePicker] = useState(false);
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [sendingInviteId, setSendingInviteId] = useState<string | null>(null);
+  const [cancellingInviteId, setCancellingInviteId] = useState<number | null>(null);
+  // Player-side invite (shown to the invited player on the League Dashboard)
+  const [myInvite, setMyInvite] = useState<{ id: number; commissionerName: string; message?: string | null; status: string } | null>(null);
+  const [respondingInvite, setRespondingInvite] = useState(false);
+  // Auth modal for guest CTA
+  const [authOpen, setAuthOpen] = useState(false);
+  // Detect if the user arrived via an invite link (?join=1)
+  const isInviteLink = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("join") === "1";
   // Colour tokens
   const pageBg = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
   const cardBg = isDark ? "oklch(0.20 0.06 145)" : "#ffffff";
@@ -412,6 +426,94 @@ export default function LeagueDashboard() {
     } catch { /* not commissioner or not draft */ }
   }, [leagueId]);
   useEffect(() => { fetchJoinRequests(); }, [fetchJoinRequests]);
+  const fetchSentInvites = useCallback(async () => {
+    if (!leagueId) return;
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/invites`, { credentials: "include" });
+      if (res.ok) setSentInvites(await res.json());
+    } catch { /* not commissioner */ }
+  }, [leagueId]);
+  useEffect(() => { fetchSentInvites(); }, [fetchSentInvites]);
+  const fetchClubMembers = useCallback(async () => {
+    if (!league?.clubId) return;
+    try {
+      const res = await fetch(`/api/clubs/${league.clubId}/members`, { credentials: "include" });
+      if (res.ok) setClubMembers(await res.json());
+    } catch { /* ignore */ }
+  }, [league?.clubId]);
+  useEffect(() => { if (showInvitePicker) fetchClubMembers(); }, [showInvitePicker, fetchClubMembers]);
+  async function handleSendInvite(memberId: string) {
+    if (!leagueId) return;
+    setSendingInviteId(memberId);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/invites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ invitedUserId: memberId }),
+      });
+      if (res.ok) {
+        showToast("Invite sent!");
+        await fetchSentInvites();
+      } else {
+        const d = await res.json();
+        showToast(d.error ?? "Failed to send invite", "error");
+      }
+    } catch { showToast("Failed to send invite", "error"); }
+    finally { setSendingInviteId(null); }
+  }
+  async function handleCancelInvite(inviteId: number) {
+    if (!leagueId) return;
+    setCancellingInviteId(inviteId);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/invites/${inviteId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        showToast("Invite cancelled");
+        await fetchSentInvites();
+      } else {
+        showToast("Failed to cancel invite", "error");
+      }
+    } catch { showToast("Failed to cancel invite", "error"); }
+    finally { setCancellingInviteId(null); }
+  }
+  // Fetch the current user's pending invite for this league
+  const fetchMyInvite = useCallback(async () => {
+    if (!leagueId || !user) return;
+    try {
+      // Use the /invites/mine endpoint to find any pending invite for this league
+      const res = await fetch(`/api/leagues/invites/mine`, { credentials: "include" });
+      if (res.ok) {
+        const all = await res.json() as Array<{ id: number; leagueId: string; commissionerName: string; message?: string | null; status: string }>;
+        const mine = all.find((inv) => inv.leagueId === leagueId) ?? null;
+        setMyInvite(mine);
+      }
+    } catch { /* ignore */ }
+  }, [leagueId, user]);
+  useEffect(() => { fetchMyInvite(); }, [fetchMyInvite]);
+  async function handleRespondInvite(action: "accept" | "decline") {
+    if (!leagueId || !myInvite) return;
+    setRespondingInvite(true);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/invites/${myInvite.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        showToast(action === "accept" ? "You've joined the league!" : "Invite declined");
+        setMyInvite(null);
+        if (action === "accept") await fetchAll(); // refresh league players
+      } else {
+        const d = await res.json();
+        showToast(d.error ?? "Failed to respond", "error");
+      }
+    } catch { showToast("Failed to respond", "error"); }
+    finally { setRespondingInvite(false); }
+  }
 
   // Check push subscription status on mount
   useEffect(() => {
@@ -693,6 +795,78 @@ export default function LeagueDashboard() {
         </button>
       </div>
 
+      {/* Guest CTA banner — shown when a non-signed-in user visits via an invite link or a Draft league */}
+      {(!user || user.isGuest) && (isInviteLink || league.status === "draft") && (
+        <div
+          className="mx-4 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+          style={{
+            background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
+            border: `1px solid ${accent}44`,
+          }}
+        >
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm" style={{ color: textMain }}>
+              {isInviteLink ? "You've been invited to join this league!" : "Interested in joining this league?"}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: textMuted }}>
+              Sign in with your chess.com account to request a spot from the commissioner.
+            </p>
+          </div>
+          <button
+            onClick={() => setAuthOpen(true)}
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            style={{ background: accent, color: "#fff" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Sign In to Request a Spot
+          </button>
+        </div>
+      )}
+      {/* Auth modal for guest CTA */}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+      {/* Player invite banner — shown to the invited player when they have a pending invite */}
+      {user && !isCommissioner && myInvite && (
+        <div
+          className="mx-4 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+          style={{
+            background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
+            border: `1px solid ${accent}55`,
+          }}
+        >
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm" style={{ color: textMain }}>
+              <span style={{ color: accent }}>{myInvite.commissionerName}</span> has invited you to join this league!
+            </p>
+            {myInvite.message && (
+              <p className="text-xs mt-0.5 italic" style={{ color: textMuted }}>“{myInvite.message}”</p>
+            )}
+            <p className="text-xs mt-0.5" style={{ color: textMuted }}>Accept to be added to the roster immediately.</p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={() => handleRespondInvite("accept")}
+              disabled={respondingInvite}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: accent, color: "#fff" }}
+            >
+              {respondingInvite ? (
+                <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: "#fff transparent #fff #fff" }} />
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              )}
+              Accept
+            </button>
+            <button
+              onClick={() => handleRespondInvite("decline")}
+              disabled={respondingInvite}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", color: "#ef4444" }}
+            >
+              Decline
+            </button>
+          </div>
+        </div>
+      )}
       {/* Tab bar */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex gap-1 p-1 rounded-2xl" style={{ background: tabBg }}>
@@ -1575,8 +1749,118 @@ export default function LeagueDashboard() {
           )}
         {/* ── REQUESTS (commissioner, draft league) ─────────────────────────── */}
         {activeTab === "requests" && (
-          <div className="space-y-3 pb-4">
-            <div className="flex items-center justify-between">
+          <div className="space-y-4">
+            {/* Invite Members section */}
+            <div
+              className="rounded-3xl overflow-hidden"
+              style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+            >
+              <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: textMain }}>Invite Club Members</p>
+                  <p className="text-xs mt-0.5" style={{ color: textMuted }}>Proactively invite specific members to join this league</p>
+                </div>
+                <button
+                  onClick={() => setShowInvitePicker((v) => !v)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                  style={{ background: showInvitePicker ? `${accent}22` : accent, color: showInvitePicker ? accent : "#fff" }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    {showInvitePicker
+                      ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+                      : <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>}
+                  </svg>
+                  {showInvitePicker ? "Close" : "Invite Members"}
+                </button>
+              </div>
+              {showInvitePicker && (
+                <div className="px-4 pb-4 space-y-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
+                  <div className="pt-3">
+                    <input
+                      type="text"
+                      placeholder="Search members…"
+                      value={inviteSearch}
+                      onChange={(e) => setInviteSearch(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                      style={{
+                        background: isDark ? "oklch(0.22 0.06 145)" : "#f9fafb",
+                        border: `1px solid ${cardBorder}`,
+                        color: textMain,
+                      }}
+                    />
+                  </div>
+                  {clubMembers.length === 0 ? (
+                    <div className="py-6 text-center">
+                      <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                      <p className="text-xs mt-2" style={{ color: textMuted }}>Loading members…</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1 max-h-72 overflow-y-auto">
+                      {clubMembers
+                        .filter((m) => {
+                          if (!inviteSearch) return true;
+                          const q = inviteSearch.toLowerCase();
+                          return m.displayName.toLowerCase().includes(q) || (m.chesscomUsername ?? "").toLowerCase().includes(q);
+                        })
+                        .filter((m) => m.userId !== user?.id) // exclude commissioner
+                        .map((m) => {
+                          const existingInvite = sentInvites.find((inv) => inv.invitedUserId === m.userId);
+                          const alreadyInLeague = league.players.some((p) => p.playerId === m.userId);
+                          const isPending = existingInvite?.status === "pending";
+                          const isAccepted = existingInvite?.status === "accepted" || alreadyInLeague;
+                          return (
+                            <div
+                              key={m.userId}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-2xl"
+                              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f9fafb" }}
+                            >
+                              <Avatar url={m.avatarUrl} name={m.displayName} size={8} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate" style={{ color: textMain }}>{m.displayName}</p>
+                                {m.chesscomUsername && (
+                                  <p className="text-xs truncate" style={{ color: textMuted }}>chess.com/{m.chesscomUsername}</p>
+                                )}
+                              </div>
+                              {isAccepted ? (
+                                <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#4ade8022", color: "#4ade80" }}>In League</span>
+                              ) : isPending ? (
+                                <button
+                                  onClick={() => existingInvite && handleCancelInvite(existingInvite.id)}
+                                  disabled={cancellingInviteId === existingInvite?.id}
+                                  className="text-xs font-semibold px-2.5 py-1 rounded-full transition-all"
+                                  style={{ background: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", color: "#ef4444" }}
+                                >
+                                  {cancellingInviteId === existingInvite?.id ? "…" : "Cancel Invite"}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleSendInvite(m.userId)}
+                                  disabled={sendingInviteId === m.userId}
+                                  className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full transition-all"
+                                  style={{ background: `${accent}22`, color: accent }}
+                                >
+                                  {sendingInviteId === m.userId ? (
+                                    <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                                  ) : (
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                  )}
+                                  Invite
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* ── Join Requests section ── */}
+            <div
+              className="rounded-3xl overflow-hidden"
+              style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+            >
+            <div className="px-4 pt-4 pb-3 flex items-center justify-between">
               <p className="text-sm font-semibold" style={{ color: textMain }}>Join Requests</p>
               <span className="text-xs" style={{ color: textMuted }}>{joinRequests.length} pending</span>
             </div>
@@ -1679,6 +1963,7 @@ export default function LeagueDashboard() {
                 ))}
               </div>
             )}
+            </div>
             {/* Quick share reminder */}
             <div
               className="rounded-2xl px-4 py-3 flex items-center gap-3"

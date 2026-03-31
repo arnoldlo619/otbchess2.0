@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `league_invites` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `league_id` varchar(64) NOT NULL,\n  `invited_user_id` varchar(64) NOT NULL,\n  `invited_display_name` varchar(100) NOT NULL DEFAULT '',\n  `invited_avatar_url` varchar(500),\n  `invited_chesscom_username` varchar(50),\n  `commissioner_id` varchar(64) NOT NULL,\n  `commissioner_name` varchar(100) NOT NULL DEFAULT '',\n  `status` varchar(20) NOT NULL DEFAULT 'pending',\n  `message` varchar(300),\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `responded_at` timestamp,\n  PRIMARY KEY (`id`),\n  INDEX `linv_league_idx` (`league_id`),\n  INDEX `linv_user_idx` (`invited_user_id`),\n  INDEX `linv_lu_idx` (`league_id`, `invited_user_id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute CREATE TABLE IF NOT EXISTS `league_invites` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `league_id` varchar(64) NOT NULL,\n  `invited_user_id` varchar(64) NOT NULL,\n  `invited_display_name` varchar(100) NOT NULL DEFAULT '',\n  `invited_avatar_url` varchar(500),\n  `invited_chesscom_username` varchar(50),\n  `commissioner_id` varchar(64) NOT NULL,\n  `commissioner_name` varchar(100) NOT NULL DEFAULT '',\n  `status` varchar(20) NOT NULL DEFAULT 'pending',\n  `message` varchar(300),\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `responded_at` timestamp,\n  PRIMARY KEY (`id`),\n  INDEX `linv_league_idx` (`league_id`),\n  INDEX `linv_user_idx` (`invited_user_id`),\n  INDEX `linv_lu_idx` (`league_id`, `invited_user_id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 170
+}

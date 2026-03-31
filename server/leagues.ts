@@ -902,3 +902,223 @@ leaguesRouter.get("/:leagueId/push/status", async (req: Request, res: Response) 
     res.status(500).json({ error: "Failed to check subscription" });
   }
 });
+
+
+// ── League Invite Endpoints ────────────────────────────────────────────────────
+// Commissioner sends an invite to a specific club member.
+// POST /:leagueId/invites
+leaguesRouter.post("/:leagueId/invites", async (req: Request, res: Response) => {
+  const commissionerId = getUser(req, res);
+  if (!commissionerId) return;
+  const { leagueId } = req.params;
+  const { invitedUserId, message } = req.body as { invitedUserId: string; message?: string };
+  if (!invitedUserId) return res.status(400).json({ error: "invitedUserId required" });
+  try {
+    const db = await getDb();
+    // Verify the caller is the commissioner
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (league.commissionerId !== commissionerId) return res.status(403).json({ error: "Commissioner only" });
+    if (league.status !== "draft") return res.status(400).json({ error: "Can only invite to Draft leagues" });
+    // Get invited member details from club membership
+    const [member] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, league.clubId), eq(dbClubMembers.userId, invitedUserId)))
+      .limit(1);
+    if (!member) return res.status(404).json({ error: "Member not found in club" });
+    // Get commissioner display name
+    const [commissioner] = await db.select({ displayName: users.displayName }).from(users)
+      .where(eq(users.id, commissionerId)).limit(1);
+    // Upsert invite (cancel any existing declined invite so commissioner can re-invite)
+    const { leagueInvites } = await import("../shared/schema.js");
+    const existing = await db.select().from(leagueInvites)
+      .where(and(eq(leagueInvites.leagueId, leagueId), eq(leagueInvites.invitedUserId, invitedUserId)))
+      .limit(1);
+    if (existing.length && existing[0].status === "pending") {
+      return res.status(409).json({ error: "Invite already pending for this player" });
+    }
+    if (existing.length) {
+      // Re-invite: reset to pending
+      await db.update(leagueInvites)
+        .set({ status: "pending", message: message ?? null, commissionerId, commissionerName: commissioner?.displayName ?? "Commissioner", respondedAt: null, createdAt: new Date() })
+        .where(eq(leagueInvites.id, existing[0].id));
+      const [updated] = await db.select().from(leagueInvites).where(eq(leagueInvites.id, existing[0].id)).limit(1);
+      // Send push notification to invited player
+      await notifyPlayer(invitedUserId, leagueId, league.name, commissioner?.displayName ?? "Commissioner");
+      return res.json(updated);
+    }
+    const [inserted] = await db.insert(leagueInvites).values({
+      leagueId,
+      invitedUserId,
+      invitedDisplayName: member.displayName,
+      invitedAvatarUrl: member.avatarUrl ?? null,
+      invitedChesscomUsername: member.chesscomUsername ?? null,
+      commissionerId,
+      commissionerName: commissioner?.displayName ?? "Commissioner",
+      status: "pending",
+      message: message ?? null,
+    }).$returningId();
+    const [invite] = await db.select().from(leagueInvites).where(eq(leagueInvites.id, inserted.id)).limit(1);
+    // Send push notification to invited player
+    await notifyPlayer(invitedUserId, leagueId, league.name, commissioner?.displayName ?? "Commissioner");
+    res.status(201).json(invite);
+  } catch (err) {
+    console.error("[league-invites] POST error:", err);
+    res.status(500).json({ error: "Failed to send invite" });
+  }
+});
+
+// GET /:leagueId/invites — list all invites for a league (commissioner only)
+leaguesRouter.get("/:leagueId/invites", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  const { leagueId } = req.params;
+  try {
+    const db = await getDb();
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (league.commissionerId !== userId) return res.status(403).json({ error: "Commissioner only" });
+    const { leagueInvites } = await import("../shared/schema.js");
+    const rows = await db.select().from(leagueInvites)
+      .where(eq(leagueInvites.leagueId, leagueId))
+      .orderBy(desc(leagueInvites.createdAt));
+    res.json(rows);
+  } catch (err) {
+    console.error("[league-invites] GET error:", err);
+    res.status(500).json({ error: "Failed to list invites" });
+  }
+});
+
+// GET /invites/mine — list all pending invites for the current user
+leaguesRouter.get("/invites/mine", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const { leagueInvites } = await import("../shared/schema.js");
+    const rows = await db.select({
+      id: leagueInvites.id,
+      leagueId: leagueInvites.leagueId,
+      leagueName: leagues.name,
+      commissionerName: leagueInvites.commissionerName,
+      message: leagueInvites.message,
+      status: leagueInvites.status,
+      createdAt: leagueInvites.createdAt,
+    })
+      .from(leagueInvites)
+      .innerJoin(leagues, eq(leagues.id, leagueInvites.leagueId))
+      .where(and(eq(leagueInvites.invitedUserId, userId), eq(leagueInvites.status, "pending")))
+      .orderBy(desc(leagueInvites.createdAt));
+    res.json(rows);
+  } catch (err) {
+    console.error("[league-invites] GET /mine error:", err);
+    res.status(500).json({ error: "Failed to list invites" });
+  }
+});
+
+// PATCH /:leagueId/invites/:inviteId — accept or decline an invite (invited player only)
+leaguesRouter.patch("/:leagueId/invites/:inviteId", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  const { leagueId, inviteId } = req.params;
+  const { action } = req.body as { action: "accept" | "decline" };
+  if (!["accept", "decline"].includes(action)) return res.status(400).json({ error: "action must be accept or decline" });
+  try {
+    const db = await getDb();
+    const { leagueInvites } = await import("../shared/schema.js");
+    const [invite] = await db.select().from(leagueInvites)
+      .where(and(eq(leagueInvites.id, Number(inviteId)), eq(leagueInvites.leagueId, leagueId)))
+      .limit(1);
+    if (!invite) return res.status(404).json({ error: "Invite not found" });
+    if (invite.invitedUserId !== userId) return res.status(403).json({ error: "Not your invite" });
+    if (invite.status !== "pending") return res.status(409).json({ error: "Invite already responded to" });
+    await db.update(leagueInvites)
+      .set({ status: action === "accept" ? "accepted" : "declined", respondedAt: new Date() })
+      .where(eq(leagueInvites.id, Number(inviteId)));
+    if (action === "accept") {
+      // Add the player to the league roster
+      const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+      if (league && league.status === "draft") {
+        const [member] = await db.select().from(dbClubMembers)
+          .where(and(eq(dbClubMembers.clubId, league.clubId), eq(dbClubMembers.userId, userId)))
+          .limit(1);
+        if (member) {
+          const existing = await db.select({ id: leaguePlayers.id }).from(leaguePlayers)
+            .where(and(eq(leaguePlayers.leagueId, leagueId), eq(leaguePlayers.playerId, userId)))
+            .limit(1);
+          if (!existing.length) {
+            await db.insert(leaguePlayers).values({
+              leagueId,
+              playerId: userId,
+              displayName: member.displayName,
+              avatarUrl: member.avatarUrl ?? null,
+              chesscomUsername: member.chesscomUsername ?? null,
+            });
+          }
+        }
+      }
+    }
+    res.json({ success: true, status: action === "accept" ? "accepted" : "declined" });
+  } catch (err) {
+    console.error("[league-invites] PATCH error:", err);
+    res.status(500).json({ error: "Failed to respond to invite" });
+  }
+});
+
+// DELETE /:leagueId/invites/:inviteId — commissioner cancels a pending invite
+leaguesRouter.delete("/:leagueId/invites/:inviteId", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  const { leagueId, inviteId } = req.params;
+  try {
+    const db = await getDb();
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (league.commissionerId !== userId) return res.status(403).json({ error: "Commissioner only" });
+    const { leagueInvites } = await import("../shared/schema.js");
+    await db.update(leagueInvites)
+      .set({ status: "cancelled" })
+      .where(and(eq(leagueInvites.id, Number(inviteId)), eq(leagueInvites.leagueId, leagueId)));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[league-invites] DELETE error:", err);
+    res.status(500).json({ error: "Failed to cancel invite" });
+  }
+});
+
+/** Send a push notification to the invited player's subscribed devices */
+async function notifyPlayer(userId: string, leagueId: string, leagueName: string, commissionerName: string) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  try {
+    const db = await getDb();
+    // Look up the player's push subscriptions (reuse league_push_subscriptions table keyed by userId)
+    const subs = await db.select().from(leaguePushSubscriptions)
+      .where(eq(leaguePushSubscriptions.userId, userId));
+    if (!subs.length) return;
+    const payload = JSON.stringify({
+      title: `You've been invited to ${leagueName}!`,
+      body: `${commissionerName} has invited you to join their league. Tap to accept or decline.`,
+      url: `/leagues/${leagueId}?invite=1`,
+      tag: `league-invite-${leagueId}`,
+    });
+    const staleIds: string[] = [];
+    await Promise.all(subs.map(async (row) => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
+          payload
+        );
+      } catch (err: any) {
+        const code = err?.statusCode;
+        if (code === 410 || code === 404) staleIds.push(row.id);
+        else console.warn("[league-push] Player notify failed:", err?.message);
+      }
+    }));
+    if (staleIds.length) {
+      for (const id of staleIds) {
+        await db.delete(leaguePushSubscriptions).where(eq(leaguePushSubscriptions.id, id));
+      }
+    }
+  } catch (err) {
+    console.error("[league-invites] notifyPlayer error:", err);
+  }
+}

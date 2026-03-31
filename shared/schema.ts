@@ -761,3 +761,28 @@ export const leaguePushSubscriptions = mysqlTable('league_push_subscriptions', {
 }));
 export type LeaguePushSubscriptionRow = typeof leaguePushSubscriptions.$inferSelect;
 export type NewLeaguePushSubscriptionRow = typeof leaguePushSubscriptions.$inferInsert;
+
+// ─── league_invites ────────────────────────────────────────────────────────────
+// Commissioner-initiated invites: commissioner picks a club member and sends them
+// an invite. The invited player can accept or decline from their League Dashboard.
+export const leagueInvites = mysqlTable('league_invites', {
+  id: int('id').primaryKey().autoincrement(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  invitedUserId: varchar('invited_user_id', { length: 64 }).notNull(),
+  invitedDisplayName: varchar('invited_display_name', { length: 100 }).notNull().default(''),
+  invitedAvatarUrl: varchar('invited_avatar_url', { length: 500 }),
+  invitedChesscomUsername: varchar('invited_chesscom_username', { length: 50 }),
+  commissionerId: varchar('commissioner_id', { length: 64 }).notNull(),
+  commissionerName: varchar('commissioner_name', { length: 100 }).notNull().default(''),
+  // status: pending | accepted | declined | cancelled
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  message: varchar('message', { length: 300 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  respondedAt: timestamp('responded_at'),
+}, (t) => ({
+  leagueIdx: index('linv_league_idx').on(t.leagueId),
+  userIdx: index('linv_user_idx').on(t.invitedUserId),
+  uniqueInvite: index('linv_lu_idx').on(t.leagueId, t.invitedUserId),
+}));
+export type LeagueInviteRow = typeof leagueInvites.$inferSelect;
+export type NewLeagueInviteRow = typeof leagueInvites.$inferInsert;
