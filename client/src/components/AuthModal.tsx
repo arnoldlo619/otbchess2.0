@@ -225,11 +225,12 @@ export default function AuthModal({
   const [success, setSuccess] = useState(false);
 
   // Sign In fields + errors
-  // Pre-fill email from localStorage if the user has signed in before
+  // Pre-fill email and Remember Me from localStorage if the user has signed in before
   const savedEmail = typeof window !== "undefined" ? (localStorage.getItem("otb-last-signin-email") ?? "") : "";
+  const savedRemember = typeof window !== "undefined" ? localStorage.getItem("otb-remember-me") === "true" : false;
   const [siEmail, setSiEmail] = useState(savedEmail);
   const [siPassword, setSiPassword] = useState("");
-  const [siRemember, setSiRemember] = useState(false);
+  const [siRemember, setSiRemember] = useState(savedRemember);
   const [siErrors, setSiErrors] = useState<{ email?: string; password?: string; general?: string }>({})
 
   // Sign Up fields + errors
@@ -248,9 +249,10 @@ export default function AuthModal({
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const resetAll = useCallback(() => {
-    // Restore saved email on reset so it persists across opens
+    // Restore saved email and Remember Me preference on reset so they persist across opens
     const lastEmail = typeof window !== "undefined" ? (localStorage.getItem("otb-last-signin-email") ?? "") : "";
-    setSiEmail(lastEmail); setSiPassword(""); setSiRemember(false); setSiErrors({});
+    const lastRemember = typeof window !== "undefined" ? localStorage.getItem("otb-remember-me") === "true" : false;
+    setSiEmail(lastEmail); setSiPassword(""); setSiRemember(lastRemember); setSiErrors({});
     setSuName(""); setSuEmail(""); setSuPassword(""); setSuChesscom(""); setSuErrors({});
     setGuestName(""); setGuestError(undefined);
     setSuccess(false); setLoading(false);
@@ -299,9 +301,10 @@ export default function AuthModal({
     setLoading(true); setSiErrors({});
     try {
       await login(siEmail, siPassword, siRemember);
-      // Persist email so it auto-fills on the next sign-in
+      // Persist email and Remember Me preference so they auto-fill on the next sign-in
       if (typeof window !== "undefined") {
         localStorage.setItem("otb-last-signin-email", siEmail.trim().toLowerCase());
+        localStorage.setItem("otb-remember-me", String(siRemember));
       }
       setSuccess(true);
       onSuccess?.();
@@ -492,7 +495,17 @@ export default function AuthModal({
                   />
                   <FieldError msg={siErrors.password} />
                 </div>
-                <RememberMe checked={siRemember} onChange={setSiRemember} isDark={isDark} />
+                <RememberMe
+                  checked={siRemember}
+                  onChange={(val) => {
+                    setSiRemember(val);
+                    // Persist preference immediately so it survives page refreshes
+                    if (typeof window !== "undefined") {
+                      localStorage.setItem("otb-remember-me", String(val));
+                    }
+                  }}
+                  isDark={isDark}
+                />
                 <button
                   type="submit"
                   disabled={loading}

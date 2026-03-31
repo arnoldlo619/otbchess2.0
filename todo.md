@@ -3835,3 +3835,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix AddPlayerModal, QRModal, SpectatorShareModal, ArchivePasswordModal, UploadRSVPModal, Director Start Confirm
 - [x] Implement sign-in email pre-fill using localStorage (otb-last-signin-email key, persists on successful login, restores on open)
 - [x] Add subtle "Remembered from last sign-in" indicator below email field
+
+## Remember Me Persistence
+- [x] Persist "Remember me" checkbox state to localStorage in AuthModal (otb-remember-me key, persists on toggle + on successful login, restores on every open)
