@@ -3896,3 +3896,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Success state shows checkmark and confirmation message after request is sent
 - [x] Duplicate request (409) handled gracefully with "already pending" message
 - [x] TypeScript 0 errors
+
+## League Join — Pending Request Status for Returning Visitors
+- [x] Added GET /api/leagues/:id/my-join-request endpoint to check current user's request status
+- [x] fetchMyJoinRequest hook checks on load and whenever user changes
+- [x] localStorage cache (otb-join-req-{leagueId}-{userId}) avoids flash of join button on revisit
+- [x] Pending state persists across page refresh and revisits
+- [x] 409 duplicate-request response now shows pending state instead of error
+- [x] Cache cleared when request is rejected so player can re-request
+- [x] TypeScript 0 errors

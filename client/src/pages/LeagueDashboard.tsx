@@ -488,6 +488,41 @@ export default function LeagueDashboard() {
     } catch { /* not commissioner or not draft */ }
   }, [leagueId]);
   useEffect(() => { fetchJoinRequests(); }, [fetchJoinRequests]);
+
+  // Check if the current user already has a pending/rejected request (for returning visitors)
+  const fetchMyJoinRequest = useCallback(async () => {
+    if (!leagueId || !user) return;
+    // Fast path: localStorage cache to avoid flash of join button
+    const cacheKey = `otb-join-req-${leagueId}-${user.id}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { status: cachedStatus } = JSON.parse(cached) as { status: string };
+      if (cachedStatus === "pending") {
+        setJoinRequestStatus("pending");
+        setJoinRequestMsg("Your request has been sent! The commissioner will review it shortly.");
+      } else if (cachedStatus === "rejected") {
+        setJoinRequestStatus("idle"); // allow re-request if rejected
+      }
+    }
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/my-join-request`, { credentials: "include" });
+      if (!res.ok) return;
+      const data = await res.json() as { status: string | null };
+      if (data.status === "pending") {
+        setJoinRequestStatus("pending");
+        setJoinRequestMsg("Your request has been sent! The commissioner will review it shortly.");
+        localStorage.setItem(cacheKey, JSON.stringify({ status: "pending" }));
+      } else if (data.status === "rejected") {
+        // Clear cache so they can re-request
+        localStorage.removeItem(cacheKey);
+        setJoinRequestStatus("idle");
+      } else if (data.status === null) {
+        localStorage.removeItem(cacheKey);
+      }
+    } catch { /* ignore */ }
+  }, [leagueId, user]);
+  useEffect(() => { fetchMyJoinRequest(); }, [fetchMyJoinRequest]);
+
   const fetchSentInvites = useCallback(async () => {
     if (!leagueId) return;
     try {
@@ -763,9 +798,11 @@ export default function LeagueDashboard() {
         setJoinRequestStatus("pending");
         setJoinRequestMsg("Your request has been sent! The commissioner will review it shortly.");
         showToast("Join request sent!", "success");
+        // Persist so returning visitors immediately see pending state
+        if (user) localStorage.setItem(`otb-join-req-${leagueId}-${user.id}`, JSON.stringify({ status: "pending" }));
       } else if (res.status === 409) {
-        setJoinRequestStatus("already");
-        setJoinRequestMsg("You already have a pending request for this league.");
+        setJoinRequestStatus("pending");
+        setJoinRequestMsg("Your request is pending — waiting for commissioner approval.");
       } else {
         setJoinRequestStatus("error");
         setJoinRequestMsg(data.error ?? "Failed to submit request.");

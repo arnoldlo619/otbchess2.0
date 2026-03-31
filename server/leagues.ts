@@ -962,6 +962,23 @@ leaguesRouter.patch("/:leagueId/weeks/:weekId/deadline", requireAuth, async (req
   }
 });
 
+// ── GET /:leagueId/my-join-request — player checks their own request status ─────────
+leaguesRouter.get("/:leagueId/my-join-request", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const existing = await db.select().from(leagueJoinRequests)
+      .where(and(eq(leagueJoinRequests.leagueId, req.params.leagueId), eq(leagueJoinRequests.playerId, userId)))
+      .limit(1);
+    if (!existing.length) return res.json({ status: null });
+    res.json({ status: existing[0].status, createdAt: existing[0].createdAt });
+  } catch (err) {
+    console.error("[leagues] GET my-join-request error:", err);
+    res.status(500).json({ error: "Failed to check request status" });
+  }
+});
+
 // ── GET /:leagueId/join-requests — commissioner sees pending requests ──────────────
 leaguesRouter.get("/:leagueId/join-requests", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
