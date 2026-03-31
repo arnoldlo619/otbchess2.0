@@ -439,6 +439,9 @@ export default function LeagueDashboard() {
   const [startingSeason, setStartingSeason] = useState(false);
   // Auth modal for guest CTA
   const [authOpen, setAuthOpen] = useState(false);
+  // Join-request state (for non-member visitors)
+  const [joinRequestStatus, setJoinRequestStatus] = useState<"idle" | "pending" | "already" | "loading" | "error">("idle");
+  const [joinRequestMsg, setJoinRequestMsg] = useState("");
   // Detect if the user arrived via an invite link (?join=1)
   const isInviteLink = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("join") === "1";
   // Colour tokens
@@ -745,6 +748,33 @@ export default function LeagueDashboard() {
 
   // ── Derived values ─────────────────────────────────────────────────────
   const isCommissioner = !!(user && league && league.commissionerId === user.id);
+  const isMember = !!(user && league && league.players.some((p: LeaguePlayer) => p.playerId === user.id));
+
+  async function handleRequestToJoin() {
+    if (!user) { setAuthOpen(true); return; }
+    setJoinRequestStatus("loading");
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/join-request`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setJoinRequestStatus("pending");
+        setJoinRequestMsg("Your request has been sent! The commissioner will review it shortly.");
+        showToast("Join request sent!", "success");
+      } else if (res.status === 409) {
+        setJoinRequestStatus("already");
+        setJoinRequestMsg("You already have a pending request for this league.");
+      } else {
+        setJoinRequestStatus("error");
+        setJoinRequestMsg(data.error ?? "Failed to submit request.");
+      }
+    } catch {
+      setJoinRequestStatus("error");
+      setJoinRequestMsg("Network error. Please try again.");
+    }
+  }
   function resultLabel(match: LeagueMatch) {
     if (match.resultStatus !== "completed" || !match.result) return null;
     if (match.result === "white_win") return `${match.playerWhiteName} won`;
@@ -1098,6 +1128,7 @@ export default function LeagueDashboard() {
 
             {/* Draft mode: non-commissioner player view */}
             {league.status === "draft" && !isCommissioner && (
+              <>
               <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Clock size={15} style={{ color: accent }} />
@@ -1111,6 +1142,81 @@ export default function LeagueDashboard() {
                   <span className="text-xs mt-1 block" style={{ color: textMuted }}>{league.players.length} / {league.maxPlayers} players</span>
                 </div>
               </div>
+
+              {/* ── Join this League CTA — shown to non-members on draft leagues ── */}
+              {!isMember && !myInvite && (
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: isDark
+                      ? "linear-gradient(135deg, oklch(0.20 0.09 145), oklch(0.17 0.06 145))"
+                      : "linear-gradient(135deg, oklch(0.94 0.06 145), oklch(0.97 0.03 145))",
+                    border: `1.5px solid ${accent}55`,
+                  }}
+                >
+                  <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: `1px solid ${accent}22` }}>
+                    <Users size={14} style={{ color: accent }} />
+                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>Join this League</span>
+                  </div>
+                  <div className="px-5 py-5">
+                    {joinRequestStatus === "pending" || joinRequestStatus === "already" ? (
+                      <div className="flex flex-col items-center gap-3 text-center py-2">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center"
+                          style={{ background: `${accent}22` }}
+                        >
+                          <CheckCircle2 size={24} style={{ color: accent }} />
+                        </div>
+                        <p className="font-semibold text-sm" style={{ color: textMain }}>Request Submitted</p>
+                        <p className="text-xs" style={{ color: textMuted }}>{joinRequestMsg}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm mb-4" style={{ color: textMuted }}>
+                          {user
+                            ? `Ready to compete? Request to join and the commissioner will add you to the roster.`
+                            : `Sign in to request a spot in this league. The commissioner will review and approve your request.`
+                          }
+                        </p>
+                        {joinRequestStatus === "error" && (
+                          <p className="text-xs mb-3 px-3 py-2 rounded-xl" style={{ color: "oklch(0.55 0.18 25)", background: "oklch(0.55 0.18 25 / 0.1)" }}>
+                            {joinRequestMsg}
+                          </p>
+                        )}
+                        <button
+                          onClick={handleRequestToJoin}
+                          disabled={joinRequestStatus === "loading"}
+                          className="w-full py-3.5 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-60"
+                          style={{
+                            background: accent,
+                            color: isDark ? "oklch(0.12 0.04 145)" : "#fff",
+                            boxShadow: `0 4px 16px ${accent}44`,
+                          }}
+                        >
+                          {joinRequestStatus === "loading"
+                            ? "Sending request…"
+                            : user
+                            ? "Request to Join"
+                            : "Sign in to Join"}
+                        </button>
+                        {!user && (
+                          <p className="text-xs mt-2.5 text-center" style={{ color: textMuted }}>
+                            Don't have an account?{" "}
+                            <button
+                              className="underline font-medium"
+                              style={{ color: accent }}
+                              onClick={() => setAuthOpen(true)}
+                            >
+                              Create one free
+                            </button>
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              </>
             )}
 
             {/* Champion announcement banner */}

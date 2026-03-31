@@ -3888,3 +3888,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added sub-variations: Sveshnikov, Taimanov, Richter-Rauzer, Grand Prix, Maroczy Bind, Marshall Attack, Breyer, Mar del Plata, Panov-Botvinnik, Ragozin, Chigorin, Veresov, Tartakower, Blackmar-Diemer, and more
 - [x] 97 tests verifying coverage of all opening families and entry integrity (all passing)
 - [x] TypeScript 0 errors
+
+## League Join CTA for QR Code Visitors
+- [x] Added prominent "Join this League" CTA card on league landing page for non-member visitors (draft leagues)
+- [x] Signed-in users see "Request to Join" button that POSTs to /api/leagues/:id/join-request
+- [x] Guests see "Sign in to Join" button that opens AuthModal + "Create one free" link
+- [x] Success state shows checkmark and confirmation message after request is sent
+- [x] Duplicate request (409) handled gracefully with "already pending" message
+- [x] TypeScript 0 errors
