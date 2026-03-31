@@ -58,17 +58,18 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className={`absolute inset-0 ${isDark ? "bg-black/70" : "bg-black/40"} backdrop-blur-sm`} />
+      <div className={`fixed inset-0 ${isDark ? "bg-black/70" : "bg-black/40"} backdrop-blur-sm`} onClick={onClose} />
 
       {/* Modal */}
       <div
-        className={`relative w-full max-w-sm rounded-3xl border shadow-2xl overflow-hidden ${
+        className={`relative z-10 w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
           isDark ? "bg-[oklch(0.22_0.06_145)] border-white/10" : "bg-white border-gray-100"
         }`}
+        style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Green accent bar */}

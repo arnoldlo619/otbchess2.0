@@ -225,10 +225,12 @@ export default function AuthModal({
   const [success, setSuccess] = useState(false);
 
   // Sign In fields + errors
-  const [siEmail, setSiEmail] = useState("");
+  // Pre-fill email from localStorage if the user has signed in before
+  const savedEmail = typeof window !== "undefined" ? (localStorage.getItem("otb-last-signin-email") ?? "") : "";
+  const [siEmail, setSiEmail] = useState(savedEmail);
   const [siPassword, setSiPassword] = useState("");
   const [siRemember, setSiRemember] = useState(false);
-  const [siErrors, setSiErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [siErrors, setSiErrors] = useState<{ email?: string; password?: string; general?: string }>({})
 
   // Sign Up fields + errors
   const [suName, setSuName] = useState("");
@@ -246,7 +248,9 @@ export default function AuthModal({
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const resetAll = useCallback(() => {
-    setSiEmail(""); setSiPassword(""); setSiRemember(false); setSiErrors({});
+    // Restore saved email on reset so it persists across opens
+    const lastEmail = typeof window !== "undefined" ? (localStorage.getItem("otb-last-signin-email") ?? "") : "";
+    setSiEmail(lastEmail); setSiPassword(""); setSiRemember(false); setSiErrors({});
     setSuName(""); setSuEmail(""); setSuPassword(""); setSuChesscom(""); setSuErrors({});
     setGuestName(""); setGuestError(undefined);
     setSuccess(false); setLoading(false);
@@ -295,6 +299,10 @@ export default function AuthModal({
     setLoading(true); setSiErrors({});
     try {
       await login(siEmail, siPassword, siRemember);
+      // Persist email so it auto-fills on the next sign-in
+      if (typeof window !== "undefined") {
+        localStorage.setItem("otb-last-signin-email", siEmail.trim().toLowerCase());
+      }
       setSuccess(true);
       onSuccess?.();
       setTimeout(onClose, 1200);
@@ -462,6 +470,13 @@ export default function AuthModal({
                     autoComplete="email"
                     className={inputCls(!!siErrors.email)}
                   />
+                  {/* Subtle hint when email was remembered from a previous sign-in */}
+                  {siEmail && !siErrors.email && (
+                    <p className={`mt-1 text-xs flex items-center gap-1 ${isDark ? "text-emerald-400/70" : "text-emerald-600/80"}`}>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-current" />
+                      Remembered from last sign-in
+                    </p>
+                  )}
                   <FieldError msg={siErrors.email} />
                 </div>
                 <div>

@@ -3696,17 +3696,18 @@ export default function Director() {
 
       {/* ── Start Tournament Confirmation Dialog ─────────────────────────────── */}
       {showStartConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowStartConfirm(false)}
           />
           {/* Dialog */}
           <div
-            className={`relative z-10 w-full max-w-sm rounded-2xl p-6 shadow-2xl ${
+            className={`relative z-10 w-full max-w-sm my-auto rounded-2xl p-6 shadow-2xl ${
               isDark ? "bg-[oklch(0.18_0.04_145)] border border-white/10" : "bg-white border border-gray-100"
             }`}
+            style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
           >
             {/* Icon */}
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mx-auto mb-4">

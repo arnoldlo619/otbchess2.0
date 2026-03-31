@@ -401,16 +401,18 @@ export function UploadRSVPModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div
-        className={`relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl border overflow-hidden ${
+        className={`relative z-10 w-full max-w-2xl my-auto flex flex-col rounded-2xl shadow-2xl border overflow-hidden ${
           isDark
             ? "bg-[oklch(0.18_0.05_145)] border-white/10"
             : "bg-white border-gray-200"
         }`}
+        style={{ marginTop: "max(1rem, 8vh)", marginBottom: "max(1rem, 8vh)" }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-6 py-4 border-b ${

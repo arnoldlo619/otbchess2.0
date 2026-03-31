@@ -71,7 +71,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
       style={{
         background: isDark
           ? "oklch(0.14 0.06 145 / 0.97)"
@@ -96,12 +96,14 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
 
       {/* Card */}
       <div
-        className={`w-full max-w-sm rounded-3xl border shadow-2xl overflow-hidden ${
+        className={`w-full max-w-sm my-auto rounded-3xl border shadow-2xl overflow-hidden ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)] border-white/10"
             : "bg-white border-gray-100"
         }`}
         style={{
+          marginTop: "max(1rem, 10vh)",
+          marginBottom: "max(1rem, 10vh)",
           animation: shaking ? "archiveShake 0.55s ease" : undefined,
         }}
       >

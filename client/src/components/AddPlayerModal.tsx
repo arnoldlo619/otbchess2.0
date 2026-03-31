@@ -864,13 +864,15 @@ export function AddPlayerModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[300] flex items-start justify-center p-4 overflow-y-auto"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full rounded-2xl shadow-2xl overflow-hidden my-auto"
         style={{
+          marginTop: "max(1rem, 8vh)",
+          marginBottom: "max(1rem, 8vh)",
           maxWidth: isCsvMode ? 580 : 448,
           background: isDark ? "oklch(0.22 0.06 145)" : "#FFFFFF",
           border: `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#E5E7EB"}`,

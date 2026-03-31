@@ -3826,3 +3826,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Sign-in Modal Positioning Fix
 - [x] Fix sign-in modal on Clubs page clipping at top of viewport — center it properly on screen
+
+## Modal Viewport Clipping Audit & Email Pre-fill
+- [x] Audit Report Match modal for viewport clipping (inline in LeagueDashboard — uses items-end/sm:items-center slide-up sheet, already correct)
+- [x] Audit Dispute Resolution modal for viewport clipping (same slide-up sheet pattern, already correct)
+- [x] Audit Battle invite/room modals for viewport clipping (no dialog modals, only ambient overlays)
+- [x] Audit all other modals across the codebase (6 modals needed fixing)
+- [x] Fix AddPlayerModal, QRModal, SpectatorShareModal, ArchivePasswordModal, UploadRSVPModal, Director Start Confirm
+- [x] Implement sign-in email pre-fill using localStorage (otb-last-signin-email key, persists on successful login, restores on open)
+- [x] Add subtle "Remembered from last sign-in" indicator below email field
