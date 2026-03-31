@@ -12,6 +12,7 @@
  */
 import { Router } from "express";
 import { getDb } from "./db.js";
+import { requireAuth } from "./auth.js";
 import {
   leagues,
   leaguePlayers,
@@ -255,7 +256,7 @@ async function recalculateStandings(leagueId: string): Promise<void> {
 }
 
 // ── GET /mine — list all leagues the current user is a player in ─────────────────
-leaguesRouter.get("/mine", async (req: Request, res: Response) => {
+leaguesRouter.get("/mine", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -310,7 +311,7 @@ leaguesRouter.get("/club/:clubId", async (req: Request, res: Response) => {
 });
 
 // ── POST / — create a league (Draft mode — schedule generated on Start) ──────
-leaguesRouter.post("/", async (req: Request, res: Response) => {
+leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
 
@@ -393,7 +394,7 @@ leaguesRouter.post("/", async (req: Request, res: Response) => {
 });
 
 // ── POST /:leagueId/start — transition Draft → Active, generate schedule ─────
-leaguesRouter.post("/:leagueId/start", async (req: Request, res: Response) => {
+leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
 
@@ -552,7 +553,7 @@ leaguesRouter.post("/:leagueId/start", async (req: Request, res: Response) => {
 
 // ── GET /invites/mine — list pending invites for the current user ────────────
 // MUST be defined before /:leagueId to avoid Express treating "invites" as a leagueId
-leaguesRouter.get("/invites/mine", async (req: Request, res: Response) => {
+leaguesRouter.get("/invites/mine", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -673,7 +674,7 @@ leaguesRouter.get("/:leagueId/standings", async (req: Request, res: Response) =>
 //       second player confirms (same result) → status becomes "completed"
 //       second player disagrees → status becomes "disputed"
 //       commissioner/admin reports → auto-finalized (no confirmation needed)
-leaguesRouter.post("/:leagueId/matches/:matchId/result", async (req: Request, res: Response) => {
+leaguesRouter.post("/:leagueId/matches/:matchId/result", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
 
@@ -795,7 +796,7 @@ async function finalizeWeekIfComplete(db: any, leagueId: string, weekNumber: num
 
 // ── PATCH /:leagueId/matches/:matchId/result — commissioner resolve / admin override ──
 // Used for: resolving disputes, overriding results, or resetting a match
-leaguesRouter.patch("/:leagueId/matches/:matchId/result", async (req: Request, res: Response) => {
+leaguesRouter.patch("/:leagueId/matches/:matchId/result", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
 
@@ -845,7 +846,7 @@ leaguesRouter.patch("/:leagueId/matches/:matchId/result", async (req: Request, r
 
 // ── POST /:leagueId/advance-week ─────────────────────────────────────────────
 // Commissioner-only: close the current week and advance currentWeek by 1.
-leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response) => {
+leaguesRouter.post("/:leagueId/advance-week", requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = getUser(req, res);
     if (!userId) return;
@@ -939,7 +940,7 @@ leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response
 });
 
 // ── PATCH /:leagueId/weeks/:weekId/deadline — commissioner sets/clears a week deadline ──
-leaguesRouter.patch("/:leagueId/weeks/:weekId/deadline", async (req: Request, res: Response) => {
+leaguesRouter.patch("/:leagueId/weeks/:weekId/deadline", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -962,7 +963,7 @@ leaguesRouter.patch("/:leagueId/weeks/:weekId/deadline", async (req: Request, re
 });
 
 // ── GET /:leagueId/join-requests — commissioner sees pending requests ──────────────
-leaguesRouter.get("/:leagueId/join-requests", async (req: Request, res: Response) => {
+leaguesRouter.get("/:leagueId/join-requests", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -986,7 +987,7 @@ leaguesRouter.get("/:leagueId/join-requests", async (req: Request, res: Response
 });
 
 // ── POST /:leagueId/join-request — player requests to join a Draft league ─────
-leaguesRouter.post("/:leagueId/join-request", async (req: Request, res: Response) => {
+leaguesRouter.post("/:leagueId/join-request", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -1030,7 +1031,7 @@ leaguesRouter.post("/:leagueId/join-request", async (req: Request, res: Response
 });
 
 // ── PATCH /:leagueId/join-requests/:requestId — approve or reject ─────────────
-leaguesRouter.patch("/:leagueId/join-requests/:requestId", async (req: Request, res: Response) => {
+leaguesRouter.patch("/:leagueId/join-requests/:requestId", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   const { action } = req.body as { action: "approve" | "reject" };
@@ -1097,7 +1098,7 @@ leaguesRouter.patch("/:leagueId/join-requests/:requestId", async (req: Request, 
 });
 
 // ── POST /:leagueId/push/subscribe — commissioner subscribes for notifications ─
-leaguesRouter.post("/:leagueId/push/subscribe", async (req: Request, res: Response) => {
+leaguesRouter.post("/:leagueId/push/subscribe", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   const { subscription } = req.body as { subscription: { endpoint: string; keys: { p256dh: string; auth: string } } };
@@ -1142,7 +1143,7 @@ leaguesRouter.post("/:leagueId/push/subscribe", async (req: Request, res: Respon
 });
 
 // ── DELETE /:leagueId/push/subscribe — commissioner unsubscribes ──────────────
-leaguesRouter.delete("/:leagueId/push/subscribe", async (req: Request, res: Response) => {
+leaguesRouter.delete("/:leagueId/push/subscribe", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -1157,7 +1158,7 @@ leaguesRouter.delete("/:leagueId/push/subscribe", async (req: Request, res: Resp
 });
 
 // ── GET /:leagueId/push/status — check if current user is subscribed ──────────
-leaguesRouter.get("/:leagueId/push/status", async (req: Request, res: Response) => {
+leaguesRouter.get("/:leagueId/push/status", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   try {
@@ -1177,7 +1178,7 @@ leaguesRouter.get("/:leagueId/push/status", async (req: Request, res: Response) 
 // ── League Invite Endpoints ────────────────────────────────────────────────────
 // Commissioner sends an invite to a specific club member.
 // POST /:leagueId/invites
-leaguesRouter.post("/:leagueId/invites", async (req: Request, res: Response) => {
+leaguesRouter.post("/:leagueId/invites", requireAuth, async (req: Request, res: Response) => {
   const commissionerId = getUser(req, res);
   if (!commissionerId) return;
   const { leagueId } = req.params;
@@ -1248,7 +1249,7 @@ leaguesRouter.post("/:leagueId/invites", async (req: Request, res: Response) => 
 });
 
 // GET /:leagueId/invites — list all invites for a league (commissioner only)
-leaguesRouter.get("/:leagueId/invites", async (req: Request, res: Response) => {
+leaguesRouter.get("/:leagueId/invites", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   const { leagueId } = req.params;
@@ -1271,7 +1272,7 @@ leaguesRouter.get("/:leagueId/invites", async (req: Request, res: Response) => {
 // (moved to before /:leagueId — see above)
 
 // PATCH /:leagueId/invites/:inviteId — accept or decline an invite (invited player only)
-leaguesRouter.patch("/:leagueId/invites/:inviteId", async (req: Request, res: Response) => {
+leaguesRouter.patch("/:leagueId/invites/:inviteId", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   const { leagueId, inviteId } = req.params;
@@ -1320,7 +1321,7 @@ leaguesRouter.patch("/:leagueId/invites/:inviteId", async (req: Request, res: Re
 });
 
 // DELETE /:leagueId/invites/:inviteId — commissioner cancels a pending invite
-leaguesRouter.delete("/:leagueId/invites/:inviteId", async (req: Request, res: Response) => {
+leaguesRouter.delete("/:leagueId/invites/:inviteId", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
   const { leagueId, inviteId } = req.params;

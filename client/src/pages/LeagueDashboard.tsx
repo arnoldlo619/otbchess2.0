@@ -662,6 +662,7 @@ export default function LeagueDashboard() {
     if (!reportingMatch || !leagueId) return;
     const res = await fetch(`/api/leagues/${leagueId}/matches/${reportingMatch.id}/result`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ result }),
     });
@@ -681,6 +682,7 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     const res = await fetch(`/api/leagues/${leagueId}/matches/${matchId}/result`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ result }),
     });
@@ -698,6 +700,7 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     const res = await fetch(`/api/leagues/${leagueId}/weeks/${weekId}/deadline`, {
       method: "PATCH",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ deadline }),
     });
@@ -722,7 +725,7 @@ export default function LeagueDashboard() {
     if (!confirmed) return;
     setAdvancingWeek(true);
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/advance-week`, { method: "POST" });
+      const res = await fetch(`/api/leagues/${leagueId}/advance-week`, { method: "POST", credentials: "include" });
       if (res.ok) {
         const d = await res.json();
         if (d.completed) {

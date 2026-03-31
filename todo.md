@@ -3838,3 +3838,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Remember Me Persistence
 - [x] Persist "Remember me" checkbox state to localStorage in AuthModal (otb-remember-me key, persists on toggle + on successful login, restores on every open)
+
+## Club Leagues Feature — Full Audit & Fix
+- [x] Audit: schema tables (leagues, leaguePlayers, leagueWeeks, leagueMatches) — all present and correct
+- [x] Audit: server/leagues.ts — all endpoints (create, join, start, report, standings) — logic is sound
+- [x] Audit: frontend CreateLeague flow and LeagueDashboard — credentials already included on create
+- [x] Fix: "Create Draft" league creation failure — ROOT CAUSE: requireAuth middleware was missing from all leagues router endpoints; req.userId was always undefined
+- [x] Fix: Applied requireAuth to all 19 authenticated endpoints, kept 4 public GETs open
+- [x] Fix: Added credentials: "include" to 4 missing fetch calls in LeagueDashboard (reportResult, resolveDispute, setDeadline, advanceWeek)
+- [x] Fix: league player management (add/remove players) — auth now works
+- [x] Fix: season start and round generation — auth now works
+- [x] Fix: match result reporting — credentials + auth middleware both fixed
+- [x] Fix: standings calculation — public endpoint, was already working
+- [x] Fix: frontend UI issues in LeagueDashboard — all fetch calls now include credentials
+- [x] Vitest: 32 tests covering all requireAuth placements and credential inclusion (all passing)
