@@ -18,7 +18,9 @@ import {
   leagueWeeks,
   leagueMatches,
   leagueStandings,
+  leagueJoinRequests,
   dbClubMembers,
+  users,
 } from "../shared/schema.js";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -660,5 +662,113 @@ leaguesRouter.post("/:leagueId/advance-week", async (req: Request, res: Response
   } catch (err) {
     console.error("[leagues] POST advance-week error:", err);
     res.status(500).json({ error: "Failed to advance week" });
+  }
+});
+
+// ── GET /:leagueId/join-requests — commissioner sees pending requests ──────────
+leaguesRouter.get("/:leagueId/join-requests", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league.length) return res.status(404).json({ error: "League not found" });
+    // Only commissioner or club admin can see requests
+    const isCommissioner = league[0].commissionerId === userId;
+    const membership = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, league[0].clubId), eq(dbClubMembers.userId, userId))).limit(1);
+    const isAdmin = membership.length > 0 && ["owner", "admin", "director"].includes(membership[0].role);
+    if (!isCommissioner && !isAdmin) return res.status(403).json({ error: "Forbidden" });
+    const requests = await db.select().from(leagueJoinRequests)
+      .where(and(eq(leagueJoinRequests.leagueId, req.params.leagueId), eq(leagueJoinRequests.status, "pending")))
+      .orderBy(asc(leagueJoinRequests.createdAt));
+    res.json(requests);
+  } catch (err) {
+    console.error("[leagues] GET join-requests error:", err);
+    res.status(500).json({ error: "Failed to fetch join requests" });
+  }
+});
+
+// ── POST /:leagueId/join-request — player requests to join a Draft league ─────
+leaguesRouter.post("/:leagueId/join-request", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league.length) return res.status(404).json({ error: "League not found" });
+    if (league[0].status !== "draft") return res.status(400).json({ error: "League is not accepting requests" });
+    // Check if already a player
+    const existing = await db.select().from(leaguePlayers)
+      .where(and(eq(leaguePlayers.leagueId, req.params.leagueId), eq(leaguePlayers.playerId, userId))).limit(1);
+    if (existing.length) return res.status(409).json({ error: "Already a player in this league" });
+    // Check if already requested
+    const existingReq = await db.select().from(leagueJoinRequests)
+      .where(and(eq(leagueJoinRequests.leagueId, req.params.leagueId), eq(leagueJoinRequests.playerId, userId))).limit(1);
+    if (existingReq.length) return res.status(409).json({ error: "Request already submitted", status: existingReq[0].status });
+    // Get user details
+    const userRow = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const u = userRow[0];
+    await db.insert(leagueJoinRequests).values({
+      leagueId: req.params.leagueId,
+      playerId: userId,
+      displayName: u?.displayName ?? "Unknown",
+      avatarUrl: u?.avatarUrl ?? undefined,
+      chesscomUsername: u?.chesscomUsername ?? undefined,
+      status: "pending",
+    });
+    res.json({ success: true, message: "Join request submitted" });
+  } catch (err) {
+    console.error("[leagues] POST join-request error:", err);
+    res.status(500).json({ error: "Failed to submit join request" });
+  }
+});
+
+// ── PATCH /:leagueId/join-requests/:requestId — approve or reject ─────────────
+leaguesRouter.patch("/:leagueId/join-requests/:requestId", async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  const { action } = req.body as { action: "approve" | "reject" };
+  if (!action || !["approve", "reject"].includes(action)) {
+    return res.status(400).json({ error: "action must be approve or reject" });
+  }
+  try {
+    const db = await getDb();
+    const league = await db.select().from(leagues).where(eq(leagues.id, req.params.leagueId)).limit(1);
+    if (!league.length) return res.status(404).json({ error: "League not found" });
+    const isCommissioner = league[0].commissionerId === userId;
+    const membership = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, league[0].clubId), eq(dbClubMembers.userId, userId))).limit(1);
+    const isAdmin = membership.length > 0 && ["owner", "admin", "director"].includes(membership[0].role);
+    if (!isCommissioner && !isAdmin) return res.status(403).json({ error: "Forbidden" });
+    const reqId = parseInt(req.params.requestId, 10);
+    const joinReq = await db.select().from(leagueJoinRequests).where(eq(leagueJoinRequests.id, reqId)).limit(1);
+    if (!joinReq.length) return res.status(404).json({ error: "Request not found" });
+    if (joinReq[0].status !== "pending") return res.status(409).json({ error: "Request already reviewed" });
+    // Update request status
+    await db.update(leagueJoinRequests).set({
+      status: action === "approve" ? "approved" : "rejected",
+      reviewedAt: new Date(),
+      reviewedByUserId: userId,
+    }).where(eq(leagueJoinRequests.id, reqId));
+    // If approved, add to league players
+    if (action === "approve") {
+      const currentPlayers = await db.select().from(leaguePlayers)
+        .where(eq(leaguePlayers.leagueId, req.params.leagueId));
+      if (currentPlayers.length >= league[0].maxPlayers) {
+        return res.status(400).json({ error: "League is full" });
+      }
+      await db.insert(leaguePlayers).values({
+        leagueId: req.params.leagueId,
+        playerId: joinReq[0].playerId,
+        displayName: joinReq[0].displayName,
+        avatarUrl: joinReq[0].avatarUrl ?? undefined,
+        chesscomUsername: joinReq[0].chesscomUsername ?? undefined,
+      });
+    }
+    res.json({ success: true, action });
+  } catch (err) {
+    console.error("[leagues] PATCH join-request error:", err);
+    res.status(500).json({ error: "Failed to review request" });
   }
 });

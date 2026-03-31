@@ -723,3 +723,23 @@ export const leagueStandings = mysqlTable('league_standings', {
 }, (t) => ({ leagueIdx: index('ls_league_idx').on(t.leagueId), uniqueStanding: index('ls_lp_idx').on(t.leagueId, t.playerId) }));
 export type LeagueStandingRow = typeof leagueStandings.$inferSelect;
 export type NewLeagueStandingRow = typeof leagueStandings.$inferInsert;
+
+// ─── league_join_requests ──────────────────────────────────────────────────────
+// Tracks player requests to join a Draft league. Commissioner can approve/reject.
+export const leagueJoinRequests = mysqlTable('league_join_requests', {
+  id: int('id').primaryKey().autoincrement(),
+  leagueId: varchar('league_id', { length: 64 }).notNull(),
+  playerId: varchar('player_id', { length: 64 }).notNull(),
+  displayName: varchar('display_name', { length: 100 }).notNull().default(''),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  chesscomUsername: varchar('chesscom_username', { length: 50 }),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  reviewedAt: timestamp('reviewed_at'),
+  reviewedByUserId: varchar('reviewed_by_user_id', { length: 64 }),
+}, (t) => ({
+  leagueIdx: index('ljr_league_idx').on(t.leagueId),
+  uniqueReq: index('ljr_lp_idx').on(t.leagueId, t.playerId),
+}));
+export type LeagueJoinRequestRow = typeof leagueJoinRequests.$inferSelect;
+export type NewLeagueJoinRequestRow = typeof leagueJoinRequests.$inferInsert;

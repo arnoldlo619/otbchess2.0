@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `league_join_requests` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `league_id` varchar(64) NOT NULL,\n  `player_id` varchar(64) NOT NULL,\n  `display_name` varchar(100) NOT NULL DEFAULT '',\n  `avatar_url` varchar(500),\n  `chesscom_username` varchar(50),\n  `status` varchar(20) NOT NULL DEFAULT 'pending',\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `reviewed_at` timestamp,\n  `reviewed_by_user_id` varchar(64),\n  PRIMARY KEY (`id`),\n  INDEX `ljr_league_idx` (`league_id`),\n  UNIQUE INDEX `ljr_lp_idx` (`league_id`, `player_id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user D4MrfaGZHkmWBvH.0a8993041759 --database J6FsDoRMH9x5xbUvpyzxyf --execute CREATE TABLE IF NOT EXISTS `league_join_requests` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `league_id` varchar(64) NOT NULL,\n  `player_id` varchar(64) NOT NULL,\n  `display_name` varchar(100) NOT NULL DEFAULT '',\n  `avatar_url` varchar(500),\n  `chesscom_username` varchar(50),\n  `status` varchar(20) NOT NULL DEFAULT 'pending',\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `reviewed_at` timestamp,\n  `reviewed_by_user_id` varchar(64),\n  PRIMARY KEY (`id`),\n  INDEX `ljr_league_idx` (`league_id`),\n  UNIQUE INDEX `ljr_lp_idx` (`league_id`, `player_id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 149
+}

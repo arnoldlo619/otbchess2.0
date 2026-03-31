@@ -355,12 +355,15 @@ export default function LeagueDashboard() {
   const [weeks, setWeeks] = useState<LeagueWeek[]>([]);
   const [standings, setStandings] = useState<LeagueStanding[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history" | "requests">("overview");
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [advancingWeek, setAdvancingWeek] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  // Join requests (commissioner-only, for Draft leagues)
+  const [joinRequests, setJoinRequests] = useState<Array<{ id: number; playerId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null; createdAt: string }>>([]);
+  const [reviewingId, setReviewingId] = useState<number | null>(null);
 
   // Colour tokens
   const pageBg = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
@@ -397,6 +400,38 @@ export default function LeagueDashboard() {
   }, [leagueId]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const fetchJoinRequests = useCallback(async () => {
+    if (!leagueId) return;
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/join-requests`, { credentials: "include" });
+      if (res.ok) setJoinRequests(await res.json());
+    } catch { /* not commissioner or not draft */ }
+  }, [leagueId]);
+  useEffect(() => { fetchJoinRequests(); }, [fetchJoinRequests]);
+
+  async function handleReviewRequest(reqId: number, action: "approve" | "reject") {
+    if (!leagueId) return;
+    setReviewingId(reqId);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/join-requests/${reqId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast(action === "approve" ? "Player added to league!" : "Request declined");
+        setJoinRequests((prev) => prev.filter((r) => r.id !== reqId));
+        if (action === "approve") fetchAll();
+      } else {
+        showToast(d.error ?? "Failed to review request", "error");
+      }
+    } finally {
+      setReviewingId(null);
+    }
+  }
 
   async function handleReportResult(result: "white_win" | "black_win" | "draw") {
     if (!reportingMatch || !leagueId) return;
@@ -446,9 +481,8 @@ export default function LeagueDashboard() {
     }
   }
 
-  // ── Derived values ───────────────────────────────────────────────────────
+  // ── Derived values ─────────────────────────────────────────────────────
   const isCommissioner = !!(user && league && league.commissionerId === user.id);
-
   function resultLabel(match: LeagueMatch) {
     if (match.resultStatus !== "completed" || !match.result) return null;
     if (match.result === "white_win") return `${match.playerWhiteName} won`;
@@ -514,6 +548,7 @@ export default function LeagueDashboard() {
     { id: "standings" as const, label: "Standings", icon: ListOrdered },
     { id: "schedule" as const, label: "Schedule", icon: Calendar },
     ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: History }] : []),
+    ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: Users, badge: joinRequests.length }] : []),
   ];
 
   const progressPct = totalMatches > 0 ? Math.round((completedMatchCount / totalMatches) * 100) : 0;
@@ -584,7 +619,7 @@ export default function LeagueDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all relative"
                 style={{
                   background: isActive ? tabActive : "transparent",
                   color: isActive ? textMain : textMuted,
@@ -593,6 +628,14 @@ export default function LeagueDashboard() {
               >
                 <Icon size={13} />
                 <span className="hidden sm:inline">{tab.label}</span>
+                {(tab as any).badge > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                    style={{ background: accent, color: "#fff" }}
+                  >
+                    {(tab as any).badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -1445,10 +1488,92 @@ export default function LeagueDashboard() {
               ))}
             </div>
           </div>
+          )}
+        {/* ── REQUESTS (commissioner, draft league) ─────────────────────────── */}
+        {activeTab === "requests" && (
+          <div className="space-y-3 pb-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold" style={{ color: textMain }}>Join Requests</p>
+              <span className="text-xs" style={{ color: textMuted }}>{joinRequests.length} pending</span>
+            </div>
+            {joinRequests.length === 0 ? (
+              <div
+                className="rounded-3xl py-12 text-center"
+                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+              >
+                <Users size={32} className="mx-auto mb-3" style={{ color: textMuted }} />
+                <p className="text-sm font-semibold" style={{ color: textMain }}>No pending requests</p>
+                <p className="text-xs mt-1" style={{ color: textMuted }}>Share the league invite link to attract players.</p>
+                <button
+                  onClick={() => setShowShare(true)}
+                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+                  style={{ background: `${accent}22`, color: accent }}
+                >
+                  <Share2 size={12} /> Share Invite Link
+                </button>
+              </div>
+            ) : (
+              <div
+                className="rounded-3xl overflow-hidden"
+                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+              >
+                {joinRequests.map((req, i) => (
+                  <div
+                    key={req.id}
+                    className="flex items-center gap-3 px-4 py-3.5"
+                    style={{ borderBottom: i < joinRequests.length - 1 ? `1px solid ${cardBorder}` : "none" }}
+                  >
+                    <Avatar url={req.avatarUrl} name={req.displayName} size={9} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: textMain }}>{req.displayName}</p>
+                      {req.chesscomUsername && (
+                        <p className="text-xs truncate" style={{ color: textMuted }}>chess.com/{req.chesscomUsername}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleReviewRequest(req.id, "approve")}
+                        disabled={reviewingId === req.id}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                        style={{ background: `${accent}22`, color: accent }}
+                      >
+                        {reviewingId === req.id ? (
+                          <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                        ) : "Approve"}
+                      </button>
+                      <button
+                        onClick={() => handleReviewRequest(req.id, "reject")}
+                        disabled={reviewingId === req.id}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                        style={{ background: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", color: "#ef4444" }}
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Quick share reminder */}
+            <div
+              className="rounded-2xl px-4 py-3 flex items-center gap-3"
+              style={{ background: `${accent}0d`, border: `1px solid ${accent}22` }}
+            >
+              <Share2 size={14} style={{ color: accent }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs" style={{ color: textMain }}>Share the invite link so more players can request to join.</p>
+              </div>
+              <button
+                onClick={() => setShowShare(true)}
+                className="text-xs font-semibold flex-shrink-0"
+                style={{ color: accent }}
+              >
+                Share
+              </button>
+            </div>
+          </div>
         )}
-
       </div>
-
       {/* Result report modal */}
       {reportingMatch && (
         <ReportResultModal

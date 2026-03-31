@@ -670,7 +670,7 @@ export default function ClubProfile() {
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
   const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
-  const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number }>>([]);
+  const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
   const [leagueForm, setLeagueForm] = useState({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
@@ -678,6 +678,9 @@ export default function ClubProfile() {
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
   const [creatingLeague, setCreatingLeague] = useState(false);
   const [joining, setJoining] = useState(false);
+  // Track which draft leagues the current user has already requested to join
+  const [requestedLeagueIds, setRequestedLeagueIds] = useState<Set<string>>(new Set());
+  const [requestingLeagueId, setRequestingLeagueId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
   const [pendingBanner, setPendingBanner] = useState<string | null | undefined>(undefined);
@@ -783,7 +786,7 @@ export default function ClubProfile() {
     setLeaguesLoading(true);
     fetch(`/api/leagues/club/${encodeURIComponent(clubId)}`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : [])
-      .then((data: Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number }>) => {
+      .then((data: Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>) => {
         setClubLeagues(data);
       })
       .catch(() => {})
@@ -1789,35 +1792,90 @@ export default function ClubProfile() {
             ) : (() => {
               const activeLeagues = clubLeagues.filter((lg) => lg.status !== "completed");
               const completedLeagues = clubLeagues.filter((lg) => lg.status === "completed");
-              const LeagueRow = ({ lg }: { lg: typeof clubLeagues[0] }) => (
-                <button
-                  key={lg.id}
-                  onClick={() => navigate(`/leagues/${lg.id}`)}
-                  className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
-                >
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${lg.status === "completed" ? (isDark ? "bg-yellow-500/15" : "bg-yellow-50") : (isDark ? "bg-[#4CAF50]/15" : "bg-green-50")}`}>
-                    <Trophy className={`w-4 h-4 ${lg.status === "completed" ? "text-yellow-500" : "text-[#4CAF50]"}`} strokeWidth={1.8} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</p>
-                    <p className={`text-xs ${textMuted}`}>
-                      {lg.status === "completed"
-                        ? `${lg.totalWeeks} weeks · ${lg.playerCount} players · Season complete`
-                        : `Week ${lg.currentWeek}/${lg.totalWeeks} · ${lg.playerCount} players`
-                      }
-                    </p>
-                  </div>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
-                    style={{
-                      background: lg.status === "active" ? "oklch(0.55 0.13 145 / 0.15)" : lg.status === "completed" ? "oklch(0.82 0.18 85 / 0.15)" : (isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6"),
-                      color: lg.status === "active" ? "oklch(0.55 0.13 145)" : lg.status === "completed" ? "oklch(0.72 0.18 85)" : (isDark ? "rgba(255,255,255,0.4)" : "#6b7280"),
-                    }}
+              const handleRequestJoin = async (e: React.MouseEvent, lgId: string) => {
+                e.stopPropagation();
+                if (!user) { toast.error("Sign in to request joining a league"); return; }
+                setRequestingLeagueId(lgId);
+                try {
+                  const res = await fetch(`/api/leagues/${lgId}/join-request`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    setRequestedLeagueIds((prev) => { const n = new Set(Array.from(prev)); n.add(lgId); return n; });
+                    toast.success("Request sent! The commissioner will review it.");
+                  } else if (res.status === 409) {
+                    setRequestedLeagueIds((prev) => { const n = new Set(Array.from(prev)); n.add(lgId); return n; });
+                    toast.info(data.error ?? "Request already submitted");
+                  } else {
+                    toast.error(data.error ?? "Failed to send request");
+                  }
+                } catch {
+                  toast.error("Network error — please try again");
+                } finally {
+                  setRequestingLeagueId(null);
+                }
+              };
+              const LeagueRow = ({ lg }: { lg: typeof clubLeagues[0] }) => {
+                const isDraft = lg.status === "draft";
+                const hasRequested = requestedLeagueIds.has(lg.id);
+                const isRequesting = requestingLeagueId === lg.id;
+                const canRequest = isDraft && !isOwner && joined && user;
+                return (
+                  <div
+                    key={lg.id}
+                    className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors cursor-pointer ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                    onClick={() => navigate(`/leagues/${lg.id}`)}
                   >
-                    {lg.status === "active" ? "Active" : lg.status === "completed" ? "🏆 Complete" : "Draft"}
-                  </span>
-                </button>
-              );
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${lg.status === "completed" ? (isDark ? "bg-yellow-500/15" : "bg-yellow-50") : isDraft ? (isDark ? "bg-white/5" : "bg-gray-50") : (isDark ? "bg-[#4CAF50]/15" : "bg-green-50")}`}>
+                      <Trophy className={`w-4 h-4 ${lg.status === "completed" ? "text-yellow-500" : isDraft ? (isDark ? "text-white/30" : "text-gray-400") : "text-[#4CAF50]"}`} strokeWidth={1.8} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold truncate ${textMain}`}>{lg.name}</p>
+                      <p className={`text-xs ${textMuted}`}>
+                        {lg.status === "completed"
+                          ? `${lg.totalWeeks} weeks · ${lg.playerCount} players · Season complete`
+                          : isDraft
+                          ? `${lg.playerCount}/${lg.maxPlayers ?? lg.playerCount} players · Forming up`
+                          : `Week ${lg.currentWeek}/${lg.totalWeeks} · ${lg.playerCount} players`
+                        }
+                      </p>
+                    </div>
+                    {canRequest ? (
+                      <button
+                        onClick={(e) => handleRequestJoin(e, lg.id)}
+                        disabled={hasRequested || isRequesting}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                        style={{
+                          background: hasRequested ? (isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6") : "oklch(0.55 0.13 145 / 0.15)",
+                          color: hasRequested ? (isDark ? "rgba(255,255,255,0.3)" : "#9ca3af") : "oklch(0.55 0.13 145)",
+                          cursor: hasRequested ? "default" : "pointer",
+                        }}
+                      >
+                        {isRequesting ? (
+                          <span className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: "oklch(0.55 0.13 145) transparent oklch(0.55 0.13 145) oklch(0.55 0.13 145)" }} />
+                        ) : hasRequested ? (
+                          <><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Requested</>
+                        ) : (
+                          <><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> Request to Join</>
+                        )}
+                      </button>
+                    ) : (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+                        style={{
+                          background: lg.status === "active" ? "oklch(0.55 0.13 145 / 0.15)" : lg.status === "completed" ? "oklch(0.82 0.18 85 / 0.15)" : (isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6"),
+                          color: lg.status === "active" ? "oklch(0.55 0.13 145)" : lg.status === "completed" ? "oklch(0.72 0.18 85)" : (isDark ? "rgba(255,255,255,0.4)" : "#6b7280"),
+                        }}
+                      >
+                        {lg.status === "active" ? "Active" : lg.status === "completed" ? "🏆 Complete" : "Draft"}
+                      </span>
+                    )}
+                  </div>
+                );
+              };
               return (
                 <div className="space-y-4">
                   {/* Active / Draft leagues */}
