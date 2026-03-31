@@ -38,6 +38,7 @@ const ClubLeaderboard = lazy(() => import("./pages/ClubLeaderboard"));
 const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 const GamesHistory = lazy(() => import("./pages/GamesHistory"));
 const LeagueDashboard = lazy(() => import("./pages/LeagueDashboard"));
+const LeagueHistory = lazy(() => import("./pages/LeagueHistory"));
 const MatchupPrep = lazy(() => import("./pages/MatchupPrep"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
@@ -75,6 +76,7 @@ function Router() {
         <Route path={"/clubs/:id/home"} component={ClubDashboard} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
+        <Route path={"/leagues/:leagueId/history"} component={LeagueHistory} />
         <Route path={"/leagues/:leagueId"} component={LeagueDashboard} />
         <Route path={"/prep/:username"} component={MatchupPrep} />
         <Route path={"/prep"} component={MatchupPrep} />

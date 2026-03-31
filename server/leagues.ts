@@ -1341,6 +1341,140 @@ leaguesRouter.delete("/:leagueId/invites/:inviteId", requireAuth, async (req: Re
   }
 });
 
+// ── GET /:leagueId/history — full season history with champion, final standings, and H2H records ──
+leaguesRouter.get("/:leagueId/history", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const leagueId = req.params.leagueId;
+
+    // Get league details
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+
+    // Get all players
+    const players = await db.select().from(leaguePlayers).where(eq(leaguePlayers.leagueId, leagueId));
+    const playerMap = new Map(players.map(p => [p.playerId, p]));
+
+    // Get final standings (sorted by rank)
+    const standings = await db.select().from(leagueStandings)
+      .where(eq(leagueStandings.leagueId, leagueId))
+      .orderBy(asc(leagueStandings.rank));
+
+    // Champion = rank 1
+    const champion = standings.length > 0 ? standings[0] : null;
+
+    // Get all matches
+    const matches = await db.select().from(leagueMatches)
+      .where(eq(leagueMatches.leagueId, leagueId))
+      .orderBy(asc(leagueMatches.weekNumber));
+
+    // Get all weeks
+    const weeks = await db.select().from(leagueWeeks)
+      .where(eq(leagueWeeks.leagueId, leagueId))
+      .orderBy(asc(leagueWeeks.weekNumber));
+
+    // Build head-to-head records
+    // For each pair of players, compute W/D/L from their matches
+    const h2h: Record<string, Record<string, { wins: number; draws: number; losses: number }>> = {};
+    for (const m of matches) {
+      if (m.resultStatus !== "completed" || !m.result) continue;
+      const w = m.playerWhiteId;
+      const b = m.playerBlackId;
+      if (!h2h[w]) h2h[w] = {};
+      if (!h2h[b]) h2h[b] = {};
+      if (!h2h[w][b]) h2h[w][b] = { wins: 0, draws: 0, losses: 0 };
+      if (!h2h[b][w]) h2h[b][w] = { wins: 0, draws: 0, losses: 0 };
+
+      if (m.result === "white_win") {
+        h2h[w][b].wins++;
+        h2h[b][w].losses++;
+      } else if (m.result === "black_win") {
+        h2h[b][w].wins++;
+        h2h[w][b].losses++;
+      } else if (m.result === "draw") {
+        h2h[w][b].draws++;
+        h2h[b][w].draws++;
+      }
+    }
+
+    // Enrich standings with chess.com data
+    const enrichedStandings = standings.map(s => {
+      const player = playerMap.get(s.playerId);
+      return {
+        ...s,
+        chesscomUsername: player?.chesscomUsername ?? null,
+        chesscomRating: player?.rating ?? null,
+        gamesPlayed: s.wins + s.losses + s.draws,
+      };
+    });
+
+    // Group matches by week
+    const weekResults = weeks.map(w => ({
+      weekNumber: w.weekNumber,
+      isComplete: w.isComplete,
+      deadline: w.deadline,
+      matches: matches
+        .filter(m => m.weekNumber === w.weekNumber)
+        .map(m => ({
+          id: m.id,
+          whiteName: m.playerWhiteName,
+          whiteId: m.playerWhiteId,
+          blackName: m.playerBlackName,
+          blackId: m.playerBlackId,
+          result: m.result,
+          resultStatus: m.resultStatus,
+          completedAt: m.completedAt,
+        })),
+    }));
+
+    // Season stats
+    const completedMatches = matches.filter(m => m.resultStatus === "completed");
+    const whiteWins = completedMatches.filter(m => m.result === "white_win").length;
+    const blackWins = completedMatches.filter(m => m.result === "black_win").length;
+    const draws = completedMatches.filter(m => m.result === "draw").length;
+
+    res.json({
+      league: {
+        id: league.id,
+        name: league.name,
+        description: league.description,
+        status: league.status,
+        clubId: league.clubId,
+        formatType: league.formatType,
+        maxPlayers: league.maxPlayers,
+        totalWeeks: league.totalWeeks,
+        createdAt: league.createdAt,
+      },
+      champion: champion ? {
+        playerId: champion.playerId,
+        displayName: champion.displayName,
+        avatarUrl: champion.avatarUrl,
+        points: champion.points,
+        wins: champion.wins,
+        losses: champion.losses,
+        draws: champion.draws,
+        chesscomUsername: playerMap.get(champion.playerId)?.chesscomUsername ?? null,
+        chesscomRating: playerMap.get(champion.playerId)?.rating ?? null,
+      } : null,
+      standings: enrichedStandings,
+      weeks: weekResults,
+      headToHead: h2h,
+      seasonStats: {
+        totalMatches: completedMatches.length,
+        whiteWins,
+        blackWins,
+        draws,
+        whiteWinPct: completedMatches.length > 0 ? Math.round((whiteWins / completedMatches.length) * 100) : 0,
+        blackWinPct: completedMatches.length > 0 ? Math.round((blackWins / completedMatches.length) * 100) : 0,
+        drawPct: completedMatches.length > 0 ? Math.round((draws / completedMatches.length) * 100) : 0,
+      },
+    });
+  } catch (err) {
+    console.error("[leagues] GET /:leagueId/history error:", err);
+    res.status(500).json({ error: "Failed to fetch season history" });
+  }
+});
+
 /** Send a push notification to a player's subscribed devices */
 async function notifyPlayerPush(
   userId: string,

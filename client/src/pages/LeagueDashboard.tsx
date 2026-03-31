@@ -2331,6 +2331,17 @@ export default function LeagueDashboard() {
               })}
             </div>
 
+            {/* View full history page link */}
+            <a
+              href={`/leagues/${league.id}/history`}
+              className="flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-all hover:opacity-90"
+              style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+            >
+              <BarChart3 size={16} />
+              View Full Season History — H2H, Stats & More
+              <ChevronRight size={16} />
+            </a>
+
             {/* All results by week */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">

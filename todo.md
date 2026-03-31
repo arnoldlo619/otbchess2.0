@@ -3852,3 +3852,32 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: standings calculation — public endpoint, was already working
 - [x] Fix: frontend UI issues in LeagueDashboard — all fetch calls now include credentials
 - [x] Vitest: 32 tests covering all requireAuth placements and credential inclusion (all passing)
+
+## League Lifecycle End-to-End Testing
+- [x] Test league creation via API (POST /api/leagues) — 42 lifecycle tests passing
+- [x] Test adding players to league — covered in lifecycle tests
+- [x] Test starting a season (round generation) — covered in lifecycle tests
+- [x] Test reporting match results — covered in lifecycle tests
+- [x] Test advancing weeks — covered in lifecycle tests
+- [x] Test standings calculation — covered in lifecycle tests
+- [x] No issues discovered — auth fix resolved all failures
+
+## League Invitation Push Notifications
+- [x] Push notification already implemented (notifyPlayerPush function in leagues.ts)
+- [x] Notification includes league name and invite link — fires on invite creation, approval, rejection
+- [x] Works with existing VAPID push subscription infrastructure (leaguePushSubscriptions table)
+
+## League Season History Page
+- [x] Backend: GET /:leagueId/history endpoint with full season data
+- [x] Backend: champion highlights (rank 1 player with stats + chess.com data)
+- [x] Backend: head-to-head records computed from all completed matches
+- [x] Backend: season stats (white/black/draw win rates and percentages)
+- [x] Backend: enriched standings with chess.com username and rating
+- [x] Frontend: LeagueHistory page at /leagues/:leagueId/history with 4 tabs
+- [x] Frontend: Standings tab with rank badges and champion crown
+- [x] Frontend: Rounds tab with expandable week cards and match results
+- [x] Frontend: Head-to-Head tab with player selector and W/D/L records
+- [x] Frontend: Stats tab with result distribution bar, top performers, season summary
+- [x] Frontend: Champion banner with avatar, points, and ELO
+- [x] Frontend: "View Full Season History" link in LeagueDashboard history tab
+- [x] 21 tests for history endpoint, routing, and page structure (all passing)
