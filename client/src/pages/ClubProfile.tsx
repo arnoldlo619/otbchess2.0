@@ -1980,7 +1980,7 @@ export default function ClubProfile() {
       {/* ── Club Settings Panel (owner/director only) ──────────────────────── */}
       {showSettings && club && (isOwner || isDirector) && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          className="modal-overlay z-50"
           style={{ background: "rgba(0,0,0,0.6)" }}
           onClick={() => setShowSettings(false)}
         >

@@ -71,7 +71,7 @@ export default function ArchivePasswordModal({ onAttempt }: ArchivePasswordModal
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
+      className="modal-overlay z-50"
       style={{
         background: isDark
           ? "oklch(0.14 0.06 145 / 0.97)"

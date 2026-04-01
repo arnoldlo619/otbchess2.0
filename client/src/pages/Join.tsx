@@ -1146,6 +1146,7 @@ export default function JoinPage() {
                     autoComplete="off"
                     autoCapitalize="characters"
                     inputMode="text"
+                    enterKeyHint="search"
                   />
                 </div>
                 {error && (
@@ -1205,6 +1206,8 @@ export default function JoinPage() {
                         placeholder="e.g. Magnus Carlsen"
                         className={`${inputBase} !pl-10 text-base`}
                         autoComplete="name"
+                        inputMode="text"
+                        enterKeyHint="next"
                         autoFocus
                       />
                     </div>
@@ -1222,6 +1225,8 @@ export default function JoinPage() {
                       placeholder="you@example.com"
                       className={`${inputBase} !pl-10 text-base`}
                       autoComplete="email"
+                      inputMode="email"
+                      enterKeyHint="next"
                       autoFocus={authMode === "signin"}
                     />
                   </div>
@@ -1230,14 +1235,15 @@ export default function JoinPage() {
                 <div>
                   <label className={`mobile-section-label block mb-2 ${labelCls}`}>Password</label>
                   <div className="relative">
-                    <input
-                      type={authShowPw ? "text" : "password"}
-                      value={authPassword}
-                      onChange={(e) => { setAuthPassword(e.target.value); setAuthError(""); }}
-                      placeholder={authMode === "signup" ? "Min 8 characters" : "Password"}
-                      className={`${inputBase} !pr-10 text-base`}
-                      autoComplete={authMode === "signup" ? "new-password" : "current-password"}
-                    />
+                      <input
+                        type={authShowPw ? "text" : "password"}
+                        value={authPassword}
+                        onChange={(e) => { setAuthPassword(e.target.value); setAuthError(""); }}
+                        placeholder={authMode === "signup" ? "Min 8 characters" : "Password"}
+                        className={`${inputBase} !pr-10 text-base`}
+                        autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                        enterKeyHint={authMode === "signup" ? "next" : "done"}
+                      />
                     <button
                       type="button"
                       onClick={() => setAuthShowPw((s) => !s)}
@@ -1281,6 +1287,8 @@ export default function JoinPage() {
                         autoCapitalize="none"
                         autoCorrect="off"
                         spellCheck={false}
+                        inputMode="text"
+                        enterKeyHint="done"
                       />
                     </div>
                     <p className={`text-xs mt-1.5 ${textMuted}`}>We'll pull your ELO for optimal pairings</p>

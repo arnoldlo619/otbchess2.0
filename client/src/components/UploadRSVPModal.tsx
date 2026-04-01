@@ -401,7 +401,7 @@ export function UploadRSVPModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto"
+      className="modal-overlay z-50"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >

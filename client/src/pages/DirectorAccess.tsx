@@ -279,7 +279,7 @@ export default function DirectorAccessPage() {
       {/* ── Forgot Code Modal ─────────────────────────────────────────────────── */}
       {showForgot && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          className="modal-overlay z-50"
           style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowForgot(false); }}
         >

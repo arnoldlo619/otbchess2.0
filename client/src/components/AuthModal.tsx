@@ -96,6 +96,7 @@ function PasswordInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? "Password"}
         autoComplete={autoComplete ?? (id === "signin-password" ? "current-password" : "new-password")}
+        enterKeyHint="done"
         className={`w-full rounded-xl border px-4 py-3.5 pr-11 text-base outline-none transition
           ${hasError
             ? "border-red-400 focus:border-red-400"
@@ -383,16 +384,16 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-start justify-center p-4 overflow-y-auto"
+      className="modal-overlay z-[200]"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal card — my-auto pushes it to vertical center when content fits, scrolls when it doesn't */}
+      {/* Modal card — bottom-sheet on xs (≤480px), centered dialog on sm+ */}
       <div
-        className={`relative z-10 w-full max-w-md my-auto rounded-3xl border shadow-2xl ${bg} ${border} overflow-hidden`}
-        style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}
+        className={`modal-card max-w-md rounded-3xl border shadow-2xl ${bg} ${border}`}
+        style={{ marginTop: "max(1rem, 8vh)", marginBottom: "max(1rem, 8vh)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -471,6 +472,8 @@ export default function AuthModal({
                     onChange={(e) => { setSiEmail(e.target.value); setSiErrors((p) => ({ ...p, email: undefined })); }}
                     placeholder="you@example.com"
                     autoComplete="email"
+                    inputMode="email"
+                    enterKeyHint="next"
                     className={inputCls(!!siErrors.email)}
                   />
                   {/* Subtle hint when email was remembered from a previous sign-in */}
@@ -549,6 +552,8 @@ export default function AuthModal({
                     onChange={(e) => { setSuName(e.target.value); setSuErrors((p) => ({ ...p, name: undefined })); }}
                     placeholder="Magnus Carlsen"
                     autoComplete="name"
+                    inputMode="text"
+                    enterKeyHint="next"
                     className={inputCls(!!suErrors.name)}
                   />
                   <FieldError msg={suErrors.name} />
@@ -563,6 +568,8 @@ export default function AuthModal({
                     onChange={(e) => { setSuEmail(e.target.value); setSuErrors((p) => ({ ...p, email: undefined })); }}
                     placeholder="you@example.com"
                     autoComplete="email"
+                    inputMode="email"
+                    enterKeyHint="next"
                     className={inputCls(!!suErrors.email)}
                   />
                   <FieldError msg={suErrors.email} />
@@ -593,6 +600,8 @@ export default function AuthModal({
                     onChange={(e) => setSuChesscom(e.target.value)}
                     placeholder="your-chess-username"
                     autoComplete="off"
+                    inputMode="text"
+                    enterKeyHint="done"
                     className={inputCls()}
                   />
                 </div>

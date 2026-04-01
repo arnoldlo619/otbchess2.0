@@ -596,7 +596,7 @@ function EventCard({
 
     {/* Delete confirmation dialog */}
     {showDeleteConfirm && (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="modal-overlay z-[200]">
         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
         <div
           className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4"
@@ -733,7 +733,7 @@ function CreateEventModal({
   const labelCls = "block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="modal-overlay z-[100]">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
@@ -1009,7 +1009,7 @@ function EditEventModal({
   const labelCls = "block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="modal-overlay z-[200]">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"

@@ -871,12 +871,12 @@ export function AddPlayerModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[300] flex items-start justify-center p-4 overflow-y-auto"
+      className="modal-overlay z-[300]"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full rounded-2xl shadow-2xl overflow-hidden my-auto"
+        className="modal-card rounded-2xl shadow-2xl"
         style={{
           marginTop: "max(1rem, 8vh)",
           marginBottom: "max(1rem, 8vh)",

@@ -968,7 +968,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      className="modal-overlay z-[9999]"
       style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >

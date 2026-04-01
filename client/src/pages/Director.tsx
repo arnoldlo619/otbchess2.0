@@ -3880,7 +3880,7 @@ export default function Director() {
 
       {/* ── Start Tournament Confirmation Dialog ─────────────────────────────── */}
       {showStartConfirm && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div className="modal-overlay z-50">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
@@ -3888,7 +3888,7 @@ export default function Director() {
           />
           {/* Dialog */}
           <div
-            className={`relative z-10 w-full max-w-sm my-auto rounded-2xl p-6 shadow-2xl ${
+            className={`modal-card max-w-sm rounded-2xl p-6 shadow-2xl ${
               isDark ? "bg-[oklch(0.18_0.04_145)] border border-white/10" : "bg-white border border-gray-100"
             }`}
             style={{ marginTop: "max(1rem, 10vh)", marginBottom: "max(1rem, 10vh)" }}

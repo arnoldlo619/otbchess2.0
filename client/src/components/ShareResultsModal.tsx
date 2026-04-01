@@ -673,7 +673,7 @@ export function ShareResultsModal({
   return (
     /* Backdrop */
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      className="modal-overlay z-[9999]"
       style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >

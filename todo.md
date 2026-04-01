@@ -3979,3 +3979,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] SMTP Settings panel in Director Settings tab (form + test connection button)
 - [x] "Send via Server" button in ShareResultsModal when SMTP is configured
 - [x] Per-player send status tracking (sent/failed/pending) in the modal
+
+## Mobile Design System — Android Audit & Fixes
+
+- [x] Fix 1: Add `interactive-widget: resizes-content` to viewport meta (Android Chrome keyboard resize)
+- [x] Fix 2: Replace `100vh` with `100dvh` fallback chain in min-height utilities
+- [x] Fix 3: Add VisualViewport keyboard-aware hook for modal bottom offset on Android
+- [x] Fix 4: AuthModal — convert to bottom-sheet on xs/sm screens (≤480px) to avoid keyboard clipping
+- [x] Fix 5: AddPlayerModal — add max-height + overflow-y-auto on small screens, prevent content cut-off
+- [x] Fix 6: Add Android-specific CSS: `touch-action: manipulation` on all interactive elements to remove 300ms tap delay
+- [x] Fix 7: Expand design token breakpoints (xs:360, sm:480, md:768, lg:1024) with CSS custom properties
+- [x] Fix 8: Add `scrollbar-gutter: stable` and `overscroll-behavior: contain` to modal containers
+- [x] Fix 9: Ensure all form inputs have `autocomplete`, `inputMode`, and `enterKeyHint` for Android keyboard optimization
+- [x] Fix 10: Add `font-size: 16px` guard on all non-.mobile-input inputs to prevent Android zoom
+- [x] Write unit tests for mobile design system changes

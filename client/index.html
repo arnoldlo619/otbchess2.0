@@ -2,8 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Removed maximum-scale=1 — pinch-zoom must remain accessible per WCAG 1.4.4 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: enables safe-area-inset-* on notched devices (iOS + Android)
+         interactive-widget=resizes-content: Android Chrome 108+ — keyboard shrinks the
+         layout viewport instead of overlaying it, so fixed bottom CTAs stay visible -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <!-- PWA manifest -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />

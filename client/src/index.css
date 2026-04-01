@@ -1315,16 +1315,190 @@ button:disabled {
   background: oklch(0.55 0.13 145 / 0.35);
 }
 
-/* Prevent text size adjust on orientation change (iOS) */
+/* Prevent text size adjust on orientation change (iOS + Android) */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Use dynamic viewport height as the base — adapts when Android Chrome
+     address bar shows/hides and when the virtual keyboard opens/closes.
+     Fallback chain: 100dvh → 100svh → 100vh for older browsers. */
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+/* ─── Dynamic Viewport Height Utilities ─────────────────────────────────────
+ * dvh  = dynamic viewport height (shrinks when keyboard opens on Android)
+ * svh  = small viewport height  (always excludes browser chrome)
+ * lvh  = large viewport height  (always includes browser chrome)
+ * Fallback to vh for browsers without support (Android < 108, iOS < 15.4)
+ * ─────────────────────────────────────────────────────────────────────────── */
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+.min-h-screen-safe {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.max-h-screen-safe {
+  max-height: 100vh;
+  max-height: 100dvh;
 }
 
 /* Smooth backdrop-filter transitions for sticky headers */
 [class*="backdrop-blur"] {
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+}
+
+/* ─── Android & Cross-Platform Mobile Fixes ────────────────────────────────
+ * touch-action: manipulation removes the 300ms tap delay on Android Chrome
+ * without disabling pinch-zoom (unlike touch-action: none).
+ * Applied globally to all interactive elements.
+ * ─────────────────────────────────────────────────────────────────────────── */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+select,
+label {
+  touch-action: manipulation;
+}
+
+/* All text inputs: font-size ≥ 16px prevents Android Chrome auto-zoom on focus.
+   The mobile-input class already sets 1rem; this catches any bare <input> tags. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  font-size: max(1rem, 16px);
+}
+
+/* ─── Modal System: Android-Safe Overlay ─────────────────────────────────────
+ * Problem: On Android Chrome, fixed modals using overflow-y:auto inside a
+ * fixed inset-0 container can clip when the virtual keyboard opens, because
+ * the layout viewport shrinks but the fixed element retains its original size.
+ *
+ * Fix strategy:
+ * 1. Modal backdrop uses dvh so it shrinks with the keyboard.
+ * 2. Modal card uses max-h with dvh fallback + overflow-y:auto.
+ * 3. On xs screens (≤480px) modals anchor to the bottom as sheets.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* Base modal overlay — dvh-aware */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  /* dvh shrinks when keyboard opens, keeping the overlay within the visible area */
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Modal card — constrained height, scrollable content */
+.modal-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  margin-top: auto;
+  margin-bottom: auto;
+  /* Max height leaves room for safe areas and keyboard */
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* On small screens (≤480px) — anchor modal to bottom as a sheet */
+@media (max-width: 480px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-card {
+    margin-top: 0;
+    margin-bottom: 0;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    /* Sheet takes up to 92% of the dynamic viewport */
+    max-height: calc(92vh - env(safe-area-inset-bottom, 0px));
+    max-height: calc(92dvh - env(safe-area-inset-bottom, 0px));
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding-bottom: max(env(safe-area-inset-bottom), 1.25rem);
+  }
+}
+
+/* ─── Responsive Breakpoint Design Tokens ─────────────────────────────────────
+ * xs:  360px  — smallest Android (Galaxy A series, Moto G)
+ * sm:  480px  — mid-range Android (Pixel 6a, OnePlus Nord)
+ * md:  768px  — tablets (iPad Mini, Galaxy Tab)
+ * lg: 1024px  — desktop/laptop
+ * xl: 1280px  — large desktop
+ *
+ * Spacing scale adapts: tighter on xs, comfortable on sm+
+ * ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Breakpoint reference values (read-only, for JS via getComputedStyle) */
+  --bp-xs: 360px;
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+
+  /* Adaptive spacing scale */
+  --space-page-x: 1rem;       /* horizontal page padding */
+  --space-section-y: 1.5rem;  /* vertical section gap */
+  --modal-max-w: 28rem;       /* max modal width */
+  --modal-radius: 1.5rem;     /* modal corner radius */
+}
+
+@media (min-width: 480px) {
+  :root {
+    --space-page-x: 1.5rem;
+    --space-section-y: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --space-page-x: 2rem;
+    --space-section-y: 3rem;
+    --modal-max-w: 32rem;
+  }
+}
+
+/* ─── XS Screen Density Adjustments (360px – 479px) ────────────────────────────
+ * Compact layout for the smallest Android devices.
+ * Reduces padding, font sizes, and touch target heights slightly
+ * while maintaining WCAG 2.5.5 (44×44px minimum tap target).
+ * ─────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 359px) {
+  .mobile-cta {
+    min-height: 48px;
+    font-size: 0.875rem;
+    padding: 0 1rem;
+  }
+  .mobile-input {
+    min-height: 48px;
+    padding: 0 0.875rem 0 2.5rem;
+  }
+  .mobile-card {
+    border-radius: 1rem;
+  }
+  .mobile-action-bar {
+    padding: 0.625rem 0.875rem max(env(safe-area-inset-bottom), 0.875rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
