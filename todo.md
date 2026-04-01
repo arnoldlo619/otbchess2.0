@@ -3945,3 +3945,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Rating Type Label in Print View
 - [x] Show active rating type label (⚡ Rapid / 🔥 Blitz) on printed pairings slips and standings
+
+## New User QR Code Onboarding Flow
+- [x] Sign-up gate on Join page for unauthenticated users (Email, Full Name, chess.com username optional, Password)
+- [x] After sign-up, auto-redirect back to the tournament join page they scanned
+- [x] Post-tournament CTA: prompt players to join the hosting club's ChessOTB group page

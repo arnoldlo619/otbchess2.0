@@ -4,7 +4,7 @@
  * public tournament page. The current player's row is highlighted in the table.
  */
 import { Link } from "wouter";
-import { Trophy, ChevronRight } from "lucide-react";
+import { Trophy, ChevronRight, Users } from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { Player } from "@/lib/tournamentData";
 
@@ -14,6 +14,8 @@ interface TournamentCompleteProps {
   username: string;
   players: Player[];
   isDark: boolean;
+  clubId?: string | null;
+  clubName?: string | null;
 }
 
 const PODIUM_MEDALS = ["🥈", "🥇", "🥉"];
@@ -26,6 +28,8 @@ export function TournamentCompleteScreen({
   username,
   players,
   isDark,
+  clubId,
+  clubName,
 }: TournamentCompleteProps) {
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-gray-900";
@@ -235,7 +239,34 @@ export function TournamentCompleteScreen({
         </div>
       </div>
 
-      {/* ── Footer CTA ─────────────────────────────────────────────────────── */}
+      {/* ── Club CTA ────────────────────────────────────────────────────────────────── */}
+      {clubId && clubName && (
+        <div className="mx-4 mt-5">
+          <Link
+            href={`/clubs/${clubId}`}
+            className={`flex items-center gap-4 rounded-2xl border p-4 transition-all ${
+              isDark
+                ? "bg-[#1a2e1e] border-white/10 hover:border-[#4CAF50]/40"
+                : "bg-white border-gray-200 hover:border-[#3D6B47]/40"
+            }`}
+          >
+            <div className="w-12 h-12 bg-[#3D6B47] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+              <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`font-bold text-sm ${textMain}`}>
+                Join {clubName}
+              </p>
+              <p className={`text-xs mt-0.5 ${textMuted}`}>
+                Follow this club for future tournaments and events
+              </p>
+            </div>
+            <ChevronRight className={`w-5 h-5 flex-shrink-0 ${textMuted}`} />
+          </Link>
+        </div>
+      )}
+
+      {/* ── Footer CTA ───────────────────────────────────────────────────────────────── */}
       <div className="px-4 pb-safe-bottom pb-8 pt-5 mt-auto">
         <Link
           href={`/tournament/${tournamentId}`}
@@ -245,7 +276,6 @@ export function TournamentCompleteScreen({
           View Full Tournament Page
           <ChevronRight className="w-5 h-5" />
         </Link>
-      </div>
-    </div>
+      </div>    </div>
   );
 }

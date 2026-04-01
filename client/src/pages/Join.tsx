@@ -23,6 +23,8 @@ import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { useLichessProfile } from "@/hooks/useLichessProfile";
 import { useParams, Link, useLocation, useSearch } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuthContext } from "@/context/AuthContext";
+import { validateEmail, validatePassword, validateDisplayName, scorePassword } from "@/components/AuthModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
@@ -71,6 +73,9 @@ import {
   ArrowLeft,
   Phone,
   Mail,
+  Eye,
+  EyeOff,
+  LogIn,
 } from "lucide-react";
 
 // --- Types --------------------------------------------------------------------
@@ -295,6 +300,8 @@ interface EmbeddedTournamentMeta {
   maxPlayers: number;
   timePreset: string;
   inviteCode: string;
+  clubId?: string;
+  clubName?: string;
 }
 
 function decodeEmbeddedMeta(search: string): EmbeddedTournamentMeta | null {
@@ -371,6 +378,8 @@ export default function JoinPage() {
       timePreset: embeddedMeta.timePreset,
       ratingSystem: "chess.com",
       createdAt: new Date().toISOString(),
+      clubId: embeddedMeta.clubId ?? null,
+      clubName: embeddedMeta.clubName ?? null,
     });
     setServerResolved(true); // bootstrapped from ?t= param
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -475,6 +484,22 @@ export default function JoinPage() {
   const [, navigate] = useLocation();
   // QR mode: code came from URL — show single-screen streamlined join form
   const isQrMode = Boolean(urlCode);
+
+  // Auth context — used for the sign-up gate on QR scan flow
+  const { user: authUser, register: authRegister, login: authLogin } = useAuthContext();
+  // Inline sign-up form state (shown before chess.com username step for unauthenticated QR users)
+  const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [authShowPw, setAuthShowPw] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  // Track whether the user completed auth during this session (to skip the gate)
+  const [authCompleted, setAuthCompleted] = useState(false);
+  // Show the auth gate when: QR mode + not logged in + hasn't just completed auth
+  const needsAuth = isQrMode && !authUser && !authCompleted;
+
   const nameRef = useRef<HTMLInputElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -673,6 +698,50 @@ export default function JoinPage() {
   function showCapToast(type: "full" | "duplicate") {
     setCapToast({ type });
     setTimeout(() => setCapToast(null), 5000);
+  }
+
+  // Inline auth handler — sign up or sign in before the chess.com username step
+  async function handleAuthSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError("");
+    if (authMode === "signup") {
+      const nameErr = validateDisplayName(authName);
+      if (nameErr) { setAuthError(nameErr); return; }
+      const emailErr = validateEmail(authEmail);
+      if (emailErr) { setAuthError(emailErr); return; }
+      const pwErr = validatePassword(authPassword, true);
+      if (pwErr) { setAuthError(pwErr); return; }
+      setAuthLoading(true);
+      try {
+        await authRegister(authEmail, authPassword, authName, username || undefined);
+        // Pre-fill the player name from the auth name if not already set
+        if (!playerName) setPlayerName(authName);
+        setAuthCompleted(true);
+        haptic(50);
+      } catch (err: unknown) {
+        setAuthError(err instanceof Error ? err.message : "Registration failed. Try again.");
+      } finally {
+        setAuthLoading(false);
+      }
+    } else {
+      // Sign in
+      const emailErr = validateEmail(authEmail);
+      if (emailErr) { setAuthError(emailErr); return; }
+      const pwErr = validatePassword(authPassword);
+      if (pwErr) { setAuthError(pwErr); return; }
+      setAuthLoading(true);
+      try {
+        const u = await authLogin(authEmail, authPassword);
+        if (!playerName && u.displayName) setPlayerName(u.displayName);
+        if (!username && u.chesscomUsername) setUsername(u.chesscomUsername);
+        setAuthCompleted(true);
+        haptic(50);
+      } catch (err: unknown) {
+        setAuthError(err instanceof Error ? err.message : "Sign in failed. Check your credentials.");
+      } finally {
+        setAuthLoading(false);
+      }
+    }
   }
 
   // QR mode: single-button join — lookup ELO then register immediately
@@ -1094,8 +1163,163 @@ export default function JoinPage() {
               </div>
             </div>
           )}
+          {/* == QR MODE — AUTH GATE (shown before chess.com form for unauthenticated users) */}
+          {isQrMode && step === "username" && needsAuth && (
+            <div key={`auth-gate-${stepKey}`} className="animate-spring-in space-y-5">
+              {/* Hero */}
+              <div className="text-center pt-6 pb-2">
+                <div className="w-20 h-20 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-[#3D6B47]/30">
+                  <Crown className="w-10 h-10 text-white" strokeWidth={1.5} />
+                </div>
+                <h1 className={`text-3xl font-bold tracking-tight ${textMain}`}
+                  style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                  {tournamentDisplay.name || "Join Tournament"}
+                </h1>
+                {tournamentDisplay.venue && (
+                  <p className={`text-sm mt-1.5 flex items-center justify-center gap-1.5 ${textMuted}`}>
+                    <MapPin className="w-3.5 h-3.5" />{tournamentDisplay.venue}
+                  </p>
+                )}
+              </div>
+
+              {/* Auth form card */}
+              <form onSubmit={handleAuthSubmit} className={`mobile-card border ${card} p-6 space-y-5`}>
+                <div className="text-center">
+                  <h2 className={`text-lg font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {authMode === "signup" ? "Create your account" : "Welcome back"}
+                  </h2>
+                  <p className={`text-xs mt-1 ${textMuted}`}>
+                    {authMode === "signup" ? "Quick sign-up to join this tournament" : "Sign in to continue"}
+                  </p>
+                </div>
+
+                {authMode === "signup" && (
+                  <div>
+                    <label className={`mobile-section-label block mb-2 ${labelCls}`}>Full Name</label>
+                    <div className="relative">
+                      <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
+                      <input
+                        type="text"
+                        value={authName}
+                        onChange={(e) => { setAuthName(e.target.value); setAuthError(""); }}
+                        placeholder="e.g. Magnus Carlsen"
+                        className={`${inputBase} !pl-10 text-base`}
+                        autoComplete="name"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className={`mobile-section-label block mb-2 ${labelCls}`}>Email</label>
+                  <div className="relative">
+                    <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${textMuted} pointer-events-none`} />
+                    <input
+                      type="email"
+                      value={authEmail}
+                      onChange={(e) => { setAuthEmail(e.target.value); setAuthError(""); }}
+                      placeholder="you@example.com"
+                      className={`${inputBase} !pl-10 text-base`}
+                      autoComplete="email"
+                      autoFocus={authMode === "signin"}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={`mobile-section-label block mb-2 ${labelCls}`}>Password</label>
+                  <div className="relative">
+                    <input
+                      type={authShowPw ? "text" : "password"}
+                      value={authPassword}
+                      onChange={(e) => { setAuthPassword(e.target.value); setAuthError(""); }}
+                      placeholder={authMode === "signup" ? "Min 8 characters" : "Password"}
+                      className={`${inputBase} !pr-10 text-base`}
+                      autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAuthShowPw((s) => !s)}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition ${isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"}`}
+                      tabIndex={-1}
+                    >
+                      {authShowPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {authMode === "signup" && authPassword && (
+                    <div className="mt-2 space-y-1">
+                      <div className={`h-1.5 w-full rounded-full ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+                        <div className={`h-full rounded-full transition-all duration-300 ${
+                          scorePassword(authPassword) === "weak" ? "w-1/3 bg-red-400" :
+                          scorePassword(authPassword) === "fair" ? "w-2/3 bg-yellow-400" :
+                          scorePassword(authPassword) === "strong" ? "w-full bg-emerald-400" : "w-0"
+                        }`} />
+                      </div>
+                      <p className={`text-xs ${
+                        scorePassword(authPassword) === "weak" ? "text-red-400" :
+                        scorePassword(authPassword) === "fair" ? "text-yellow-400" : "text-emerald-500"
+                      }`}>
+                        {scorePassword(authPassword) === "weak" ? "Weak" : scorePassword(authPassword) === "fair" ? "Fair" : "Strong"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {authMode === "signup" && (
+                  <div>
+                    <label className={`mobile-section-label block mb-2 ${labelCls}`}>Chess.com Username <span className={textMuted}>(optional)</span></label>
+                    <div className="relative">
+                      <span className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-base pointer-events-none ${textMuted}`}>&#9812;</span>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => { setUsername(e.target.value); }}
+                        placeholder="e.g. hikaru"
+                        className={`${inputBase} !pl-10 text-base`}
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                    </div>
+                    <p className={`text-xs mt-1.5 ${textMuted}`}>We'll pull your ELO for optimal pairings</p>
+                  </div>
+                )}
+
+                {authError && (
+                  <div className="flex items-start gap-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{authError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="mobile-cta w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {authLoading ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> {authMode === "signup" ? "Creating account…" : "Signing in…"}</>
+                  ) : (
+                    <><LogIn className="w-4 h-4" /> {authMode === "signup" ? "Create Account & Join" : "Sign In & Join"}</>
+                  )}
+                </button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode(authMode === "signup" ? "signin" : "signup"); setAuthError(""); }}
+                    className={`text-sm font-medium underline underline-offset-2 ${isDark ? "text-white/50 hover:text-white/80" : "text-gray-500 hover:text-gray-700"}`}
+                  >
+                    {authMode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
           {/* == QR MODE — streamlined single-screen join ==================== */}
-          {isQrMode && step === "username" && (
+          {isQrMode && step === "username" && !needsAuth && (
             <div key={`qr-join-${stepKey}`} className="animate-spring-in space-y-5">
               {/* Hero */}
               <div className="text-center pt-6 pb-2">
@@ -1547,6 +1771,28 @@ export default function JoinPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Club CTA — prompt player to join the hosting club's group page */}
+              {resolvedConfig?.clubId && resolvedConfig?.clubName && (
+                <Link
+                  href={`/clubs/${resolvedConfig.clubId}`}
+                  className={`mobile-card border ${card} p-5 flex items-center gap-4 group hover:border-[#4CAF50]/40 transition-all`}
+                >
+                  <div className="w-12 h-12 bg-[#3D6B47] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+                    <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-bold text-sm ${textMain}`}
+                      style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      Join {resolvedConfig.clubName}
+                    </p>
+                    <p className={`text-xs mt-0.5 ${textMuted}`}>
+                      Follow this club for future tournaments and events
+                    </p>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30 group-hover:text-white/60" : "text-gray-300 group-hover:text-gray-500"} transition-colors`} />
+                </Link>
+              )}
             </div>
           )}
         </div>

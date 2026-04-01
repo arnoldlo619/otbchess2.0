@@ -917,6 +917,8 @@ export default function PlayerView() {
         username={username}
         players={endedPayload.players}
         isDark={isDark}
+        clubId={resolveTournament(tournamentId ?? "")?.clubId}
+        clubName={resolveTournament(tournamentId ?? "")?.clubName}
       />
     );
   }

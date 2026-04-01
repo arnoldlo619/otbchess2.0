@@ -46,6 +46,7 @@ import {
   MessageCircle,
   CheckCheck,
   Palette,
+  ChevronRight,
 } from "lucide-react";
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -808,6 +809,32 @@ export default function ReportPage() {
           tournamentName={tournamentName}
           isDark={isDark}
         />
+
+        {/* Club CTA — prompt player to join the hosting club */}
+        {config?.clubId && config?.clubName && (
+          <Link
+            href={`/clubs/${config.clubId}`}
+            className={`flex items-center gap-4 rounded-2xl border p-4 mb-6 transition-all ${
+              isDark
+                ? "bg-[#1a2e1e] border-white/10 hover:border-[#4CAF50]/40"
+                : "bg-white border-gray-200 hover:border-[#3D6B47]/40"
+            }`}
+          >
+            <div className="w-12 h-12 bg-[#3D6B47] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+              <Users className="w-6 h-6 text-white" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`font-bold text-sm ${isDark ? "text-white" : "text-gray-900"}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                Join {config.clubName}
+              </p>
+              <p className={`text-xs mt-0.5 ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                Follow this club for future tournaments and events
+              </p>
+            </div>
+            <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+          </Link>
+        )}
 
         {/* ── Tab: Player Cards ── */}
         {activeTab === "cards" && (

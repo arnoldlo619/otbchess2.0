@@ -1316,6 +1316,8 @@ export default function Director() {
         maxPlayers: tournamentConfig.maxPlayers,
         timePreset: tournamentConfig.timePreset,
         inviteCode: tournamentConfig.inviteCode,
+        ...(tournamentConfig.clubId ? { clubId: tournamentConfig.clubId } : {}),
+        ...(tournamentConfig.clubName ? { clubName: tournamentConfig.clubName } : {}),
       };
       // Use encodeURIComponent to make the base64 URL-safe.
       // Standard btoa can produce +, /, = which URLSearchParams decodes incorrectly
