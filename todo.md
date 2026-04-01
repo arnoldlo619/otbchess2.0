@@ -4046,3 +4046,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add tournament link to Home.tsx mobile menu — the mobile nav in Home.tsx is missing the tournament link
 - [x] Add "active tournament" indicator dot to the Tournaments nav tab in AppNavBar
 - [x] Write unit tests for useActiveTournament hook
+
+## QR Code Modal — Close Button UX Fix
+- [x] Increase close button tap target from 32px to 44px minimum
+- [x] Add persistent visible background to the close button (not just on hover)
+- [x] Increase X icon opacity from 50% to full contrast
+- [x] Add "Close" text label beside the X for clarity
+- [x] Ensure close button stands out visually from the header background

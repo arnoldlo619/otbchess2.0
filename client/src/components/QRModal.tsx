@@ -93,13 +93,19 @@ export function QRModal({ open, onClose, tournamentName, joinUrl, code }: QRModa
               </p>
             </div>
           </div>
+
+          {/* Close button — 44px tap target, always-visible background, labelled */}
           <button
             onClick={onClose}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-              isDark ? "hover:bg-white/10 text-white/50" : "hover:bg-gray-100 text-gray-400"
+            aria-label="Close QR code"
+            className={`group flex items-center gap-1.5 h-11 px-3 rounded-xl font-semibold text-sm transition-all active:scale-95 ${
+              isDark
+                ? "bg-white/10 text-white hover:bg-white/18 border border-white/15"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
             }`}
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} />
+            <span>Close</span>
           </button>
         </div>
 
