@@ -24,7 +24,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import {
   X,
-  MessageCircle,
   Mail,
   Copy,
   CheckCheck,
@@ -43,7 +42,7 @@ import type { PlayerPerformance } from "@/lib/performanceStats";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type ShareChannel = "whatsapp" | "email" | "qr";
+export type ShareChannel = "email" | "qr";
 
 const OTB_LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo_54fb3385.png";
@@ -73,33 +72,6 @@ function platformProfileUrl(perf: PlayerPerformance): string {
   return `https://www.chess.com/member/${username}`;
 }
 
-function buildWhatsAppMessage(
-  perf: PlayerPerformance,
-  tournamentName: string,
-  reportUrl: string
-): string {
-  const rank = ordinal(perf.rank);
-  const record = `${perf.wins}W / ${perf.draws}D / ${perf.losses}L`;
-  const profileUrl = platformProfileUrl(perf);
-
-  const lines = [
-    `♟️ *${tournamentName}* — Final Results`,
-    ``,
-    `Hi ${perf.player.name}! Here are your results:`,
-    ``,
-    `🏅 Rank: *${rank}* place`,
-    `📊 Score: *${perf.points} pts* (${record})`,
-    `📈 Performance Rating: *${perf.performanceRating}*`,
-    ``,
-    `🔗 Your profile: ${profileUrl}`,
-    reportUrl ? `📋 Full report: ${reportUrl}` : "",
-    ``,
-    `Great game! See you at the next tournament. 🏆`,
-  ].filter((l) => l !== null);
-
-  return lines.join("\n");
-}
-
 function buildEmailBody(
   perf: PlayerPerformance,
   tournamentName: string,
@@ -108,6 +80,8 @@ function buildEmailBody(
   const rank = ordinal(perf.rank);
   const record = `${perf.wins}W / ${perf.draws}D / ${perf.losses}L`;
   const profileUrl = platformProfileUrl(perf);
+  // Direct anchor link to this player's card on the report page
+  const cardUrl = reportUrl ? `${reportUrl}#player-${perf.player.id}` : "";
 
   return [
     `Hi ${perf.player.name},`,
@@ -119,32 +93,20 @@ function buildEmailBody(
     `  Performance Rating:  ${perf.performanceRating}`,
     `  Buchholz:            ${perf.buchholz.toFixed(1)}`,
     ``,
-    `Your profile: ${profileUrl}`,
-    reportUrl ? `Full report: ${reportUrl}` : "",
+    cardUrl ? `📊 Download your Player Card: ${cardUrl}` : "",
+    reportUrl ? `📋 Full tournament results: ${reportUrl}` : "",
+    profileUrl ? `♟️  Your chess.com profile: ${profileUrl}` : "",
     ``,
     `Thanks for playing — see you at the next tournament!`,
     ``,
-    `— Sent via OTB Chess`,
+    `— Sent via ChessOTB.club`,
   ]
-    .filter((l) => l !== null)
+    .filter((l) => l !== "")
     .join("\n");
 }
 
 function buildEmailSubject(perf: PlayerPerformance, tournamentName: string): string {
   return `Your results from ${tournamentName} — ${ordinal(perf.rank)} place`;
-}
-
-// ─── WhatsApp link builder ────────────────────────────────────────────────────
-
-function whatsAppLink(phone: string | undefined, message: string): string {
-  const encoded = encodeURIComponent(message);
-  if (phone) {
-    // Strip non-digits and leading zeros; wa.me expects E.164 without +
-    const digits = phone.replace(/\D/g, "").replace(/^0+/, "");
-    return `https://wa.me/${digits}?text=${encoded}`;
-  }
-  // No phone — open WhatsApp with pre-filled text but no recipient
-  return `https://wa.me/?text=${encoded}`;
 }
 
 // ─── mailto link builder ──────────────────────────────────────────────────────
@@ -175,16 +137,10 @@ function PlayerShareRow({
 }) {
   const [copied, setCopied] = useState(false);
 
-  const message = buildWhatsAppMessage(perf, tournamentName, reportUrl);
   const emailBody = buildEmailBody(perf, tournamentName, reportUrl);
   const emailSubject = buildEmailSubject(perf, tournamentName);
-
-  const link =
-    channel === "whatsapp"
-      ? whatsAppLink(perf.player.phone, message)
-      : mailtoLink(perf.player.email, emailSubject, emailBody);
-
-  const rawText = channel === "whatsapp" ? message : emailBody;
+  const link = mailtoLink(perf.player.email, emailSubject, emailBody);
+  const rawText = emailBody;
 
   const handleCopy = useCallback(async () => {
     try {
@@ -210,12 +166,7 @@ function PlayerShareRow({
         <div className="flex items-center gap-2">
           <span className="text-sm">{rankEmoji}</span>
           <span className={`text-sm font-semibold truncate ${textMain}`}>{perf.player.name}</span>
-          {perf.player.phone && channel === "whatsapp" && (
-            <span className="text-[10px] text-emerald-500 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded flex-shrink-0">
-              {perf.player.phone}
-            </span>
-          )}
-          {perf.player.email && channel === "email" && (
+          {perf.player.email && (
             <span className={`text-[10px] truncate ${textSub} flex-shrink-0 max-w-[120px]`}>
               {perf.player.email}
             </span>
@@ -245,17 +196,9 @@ function PlayerShareRow({
           href={link}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            channel === "whatsapp"
-              ? "bg-[#25D366]/15 text-[#25D366] hover:bg-[#25D366]/25"
-              : "bg-blue-500/15 text-blue-500 hover:bg-blue-500/25"
-          }`}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors bg-blue-500/15 text-blue-500 hover:bg-blue-500/25"
         >
-          {channel === "whatsapp" ? (
-            <MessageCircle className="w-3 h-3" />
-          ) : (
-            <Mail className="w-3 h-3" />
-          )}
+          <Mail className="w-3 h-3" />
           Send
           <ExternalLink className="w-2.5 h-2.5 opacity-60" />
         </a>
@@ -639,30 +582,27 @@ export function ShareResultsModal({
   onClose,
   singlePlayer,
 }: ShareResultsModalProps) {
-  const [channel, setChannel] = useState<ShareChannel>("whatsapp");
+  const [channel, setChannel] = useState<ShareChannel>("email");
   const [copiedAll, setCopiedAll] = useState(false);
 
   const targets = singlePlayer ? [singlePlayer] : performances;
 
-  // Copy all messages to clipboard as a single block
+  // Copy all email messages to clipboard as a single block
   const handleCopyAll = useCallback(async () => {
     const allMessages = targets
-      .map((perf) => {
-        if (channel === "whatsapp") {
-          return `--- ${perf.player.name} ---\n${buildWhatsAppMessage(perf, tournamentName, reportUrl)}`;
-        }
-        return `--- ${perf.player.name} ---\nTo: ${perf.player.email ?? "(no email)"}\nSubject: ${buildEmailSubject(perf, tournamentName)}\n\n${buildEmailBody(perf, tournamentName, reportUrl)}`;
-      })
+      .map((perf) =>
+        `--- ${perf.player.name} ---\nTo: ${perf.player.email ?? "(no email)"}\nSubject: ${buildEmailSubject(perf, tournamentName)}\n\n${buildEmailBody(perf, tournamentName, reportUrl)}`
+      )
       .join("\n\n");
     try {
       await navigator.clipboard.writeText(allMessages);
       setCopiedAll(true);
       setTimeout(() => setCopiedAll(false), 2500);
-      toast.success("All messages copied to clipboard");
+      toast.success("All email messages copied to clipboard");
     } catch {
       toast.error("Clipboard not available");
     }
-  }, [targets, channel, tournamentName, reportUrl]);
+  }, [targets, tournamentName, reportUrl]);
 
   const bg = isDark
     ? "bg-[oklch(0.20_0.06_145)] border-white/10"
@@ -672,7 +612,6 @@ export function ShareResultsModal({
   const divider = isDark ? "border-white/08" : "border-gray-100";
 
   const isQR = channel === "qr";
-  const playersWithPhone = performances.filter((p) => p.player.phone).length;
   const playersWithEmail = performances.filter((p) => p.player.email).length;
 
   return (
@@ -700,7 +639,7 @@ export function ShareResultsModal({
                 {isQR
                   ? "Generate a QR code for players to scan at the venue"
                   : singlePlayer
-                  ? `Send ${singlePlayer.player.name}'s stats card via WhatsApp or email`
+                  ? `Send ${singlePlayer.player.name}'s results and player card link via email`
                   : `Broadcast results to all ${performances.length} players`}
               </p>
             </div>
@@ -714,14 +653,12 @@ export function ShareResultsModal({
             </button>
           </div>
 
-          {/* Channel toggle — 3 tabs */}
+          {/* Channel toggle — 2 tabs: Email + QR Code */}
           <div className={`flex gap-1 mt-4 p-1 rounded-xl ${isDark ? "bg-white/06" : "bg-gray-100"}`}>
-            {(["whatsapp", "email", "qr"] as ShareChannel[]).map((ch) => {
+            {(["email", "qr"] as ShareChannel[]).map((ch) => {
               const isActive = channel === ch;
               const activeClass =
-                ch === "whatsapp"
-                  ? "bg-[#25D366] text-white shadow-sm"
-                  : ch === "email"
+                ch === "email"
                   ? "bg-blue-500 text-white shadow-sm"
                   : "bg-[#3D6B47] text-white shadow-sm";
               const inactiveClass = isDark
@@ -735,37 +672,27 @@ export function ShareResultsModal({
                     isActive ? activeClass : inactiveClass
                   }`}
                 >
-                  {ch === "whatsapp" ? (
-                    <MessageCircle className="w-3.5 h-3.5" />
-                  ) : ch === "email" ? (
+                  {ch === "email" ? (
                     <Mail className="w-3.5 h-3.5" />
                   ) : (
                     <QrCode className="w-3.5 h-3.5" />
                   )}
-                  {ch === "whatsapp" ? "WhatsApp" : ch === "email" ? "Email" : "QR Code"}
+                  {ch === "email" ? "Email" : "QR Code"}
                 </button>
               );
             })}
           </div>
 
-          {/* Contact info hint — only for WhatsApp/Email */}
+          {/* Contact info hint — only for Email */}
           {!singlePlayer && !isQR && (
             <div className={`mt-3 flex items-center gap-3 text-[11px] ${textSub}`}>
               <div className="flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                {channel === "whatsapp" ? (
-                  <span>
-                    {playersWithPhone > 0
-                      ? `${playersWithPhone} players have phone numbers saved`
-                      : "No phone numbers saved — links will open WhatsApp without a recipient"}
-                  </span>
-                ) : (
-                  <span>
-                    {playersWithEmail > 0
-                      ? `${playersWithEmail} players have email addresses saved`
-                      : "No email addresses saved — links will open your email client without a recipient"}
-                  </span>
-                )}
+                <span>
+                  {playersWithEmail > 0
+                    ? `${playersWithEmail} of ${performances.length} players have email addresses saved`
+                    : "No email addresses saved — links will open your email client without a recipient"}
+                </span>
               </div>
             </div>
           )}
@@ -795,42 +722,57 @@ export function ShareResultsModal({
           </div>
         )}
 
-        {/* Footer — only for WhatsApp/Email */}
+        {/* Footer — only for Email */}
         {!isQR && (
-          <div className={`px-5 py-4 border-t ${divider} flex-shrink-0 flex items-center justify-between gap-3`}>
-            <p className={`text-[11px] ${textSub} flex items-center gap-1`}>
-              <ChevronRight className="w-3 h-3" />
-              Click Send to open {channel === "whatsapp" ? "WhatsApp" : "your email client"}
-            </p>
-            <div className="flex items-center gap-2">
-              {!singlePlayer && (
-                <button
-                  onClick={handleCopyAll}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                    isDark
-                      ? "bg-white/08 text-white/70 hover:bg-white/14"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {copiedAll ? (
-                    <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                  Copy All
-                </button>
-              )}
-              <button
-                onClick={onClose}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                  isDark
-                    ? "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-                    : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
-                }`}
+          <div className={`px-5 py-4 border-t ${divider} flex-shrink-0`}>
+            {/* Email All BCC button — opens one mailto with all addresses in BCC */}
+            {!singlePlayer && (
+              <a
+                href={`mailto:?bcc=${encodeURIComponent(
+                  targets.map((p) => p.player.email).filter(Boolean).join(",")
+                )}&subject=${encodeURIComponent(`Results: ${tournamentName}`)}&body=${encodeURIComponent(
+                  `Hi everyone,\n\nHere are the final results from ${tournamentName}:\n\n${reportUrl}\n\nYou can also view and download your personal player card at the link above.\n\nThanks for playing — see you at the next tournament!\n\n— Sent via ChessOTB.club`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors mb-3"
               >
-                <Send className="w-3.5 h-3.5" />
-                Done
-              </button>
+                <Mail className="w-4 h-4" />
+                Email All Players
+                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+              </a>
+            )}
+            <div className="flex items-center justify-between gap-3">
+              <p className={`text-[11px] ${textSub} flex items-center gap-1`}>
+                <ChevronRight className="w-3 h-3" />
+                {singlePlayer ? "Click Send to open your email client" : "Or click Send on each player to send individually"}
+              </p>
+              <div className="flex items-center gap-2">
+                {!singlePlayer && (
+                  <button
+                    onClick={handleCopyAll}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                      isDark
+                        ? "bg-white/08 text-white/70 hover:bg-white/14"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {copiedAll ? (
+                      <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    Copy All
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5235] transition-colors"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         )}

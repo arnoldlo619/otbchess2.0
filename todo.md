@@ -3964,3 +3964,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Personalized Tiebreak Examples in Print View
 - [x] Populate TiebreakersGuide with real tournament players, scores, Bch, Bch1, SB values
 - [x] Fall back to demo data when fewer than 3 players or no completed rounds
+
+## Share Results Modal Refactor
+- [ ] Remove WhatsApp tab, keep only Email and QR Code tabs
+- [ ] Email tab: per-player send button + bulk "Email All" with player card download link
+- [ ] Server-side email endpoint: personalized results email with report URL + player card link
+- [ ] QR Code tab: QR linking to tournament results/report page
