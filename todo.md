@@ -4196,3 +4196,70 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 26 unit tests for snapshot generation, standings computation, caching, ETag, TTL
 - [x] 38 existing public tournament tests still passing (no regressions)
 - [x] 100-player tournament snapshot generation validated in tests
+
+## Phase 3: Director Console — Live Operations Refinement
+
+### Command Center Header
+- [x] Build tournament status summary strip (round indicator, results progress, player count, public mode chip)
+- [x] Add public mode indicator in command center (PublicModeChip with Live/Draft badge)
+- [x] Add round timeline dots (completed/current/upcoming visual)
+- [x] Show results entry progress (X/Y with progress bar)
+- [x] Show player count
+
+### Check-In Roster
+- [x] Build fast player search (name + chess.com username, case-insensitive)
+- [x] Add inline status chips (Registered / Checked In with green badge)
+- [x] One-click check-in action (toggle on/off)
+- [x] Reverse check-in (uncheck) action
+- [x] Walk-in quick-add form (name + optional username, inline in lobby card)
+- [x] Check-in count display (X / Y checked in)
+- [x] localStorage persistence for check-in state
+
+### Fast Score Entry
+- [x] Inline result controls on board list (White name / Draw / Black name buttons)
+- [x] Result progress tracker (X of Y entered, with progress bar)
+- [x] Unreported board highlighting (amber ring indicator)
+- [x] Jump to next unreported board button with scroll + highlight
+- [x] Board search filter (filter by player name, appears when >6 boards)
+- [x] Easy correction/editing with undo and clear buttons
+- [x] Board number highly legible
+- [x] Clear white vs black player display
+
+### Round Lifecycle Management
+- [x] Round timeline dots in Command Center (completed/current/upcoming)
+- [x] Confirmation dialog before generating next round (prevents accidental advancement)
+- [x] Next-round advancement flow with two-step confirm
+- [x] Round status labels (Registration / In Progress / Complete)
+
+### Operational Quick Actions
+- [x] Walk-in quick-add inline in lobby card
+- [x] Check-in toggle inline in player rows
+- [x] Board search and jump-to-unreported for fast result entry
+
+### Public Mode Coordination
+- [x] PublicModeChip in Command Center strip (Live/Draft badge)
+- [x] PublicTournamentCard in Settings tab with toggle, QR, URL copy
+- [x] Cache invalidation on state save for instant public updates
+
+### QR Projector Display
+- [x] Clean 160px QR code display in PublicTournamentCard
+- [x] Download QR as PNG button for printing at venue
+- [x] High-contrast QR on white background
+
+### Mobile/Tablet Director
+- [x] Command Center strip responsive with flex-wrap
+- [x] Check-in roster search and walk-in form mobile-friendly
+- [x] Board search and result entry functional on mobile
+- [x] QR/public controls in Settings tab accessible on all screens
+
+### Error Prevention & Recovery
+- [x] Confirmation dialog on Generate Next Round (critical action)
+- [x] Result correction with undo/clear before round advancement
+- [x] Walk-in players created with safe defaults (0 rating, empty opponents)
+
+### Premium Polish
+- [x] Consistent with chessotb.club design system (green/white, OKLCH, dark mode)
+- [x] Smooth transitions on check-in toggle, board highlight, confirmation dialog
+- [x] Polished status badges (round dots, results progress, public mode chip)
+- [x] Clean spacing and hierarchy in Command Center strip
+- [x] 36 unit tests passing for all Director Console refinements

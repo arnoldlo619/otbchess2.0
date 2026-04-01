@@ -1310,6 +1310,28 @@ function PublicTournamentCard({
   );
 }
 
+/** Tiny chip that shows public/private status in the Command Center strip */
+function PublicModeChip({ tournamentId, isDark }: { tournamentId: string; isDark: boolean }) {
+  const [isPublic, setIsPublic] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setIsPublic(!!d.isPublic); })
+      .catch(() => {});
+  }, [tournamentId]);
+  if (isPublic === null) return null;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+      isPublic
+        ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-green-50 text-green-600"
+        : isDark ? "bg-white/06 text-white/30" : "bg-gray-100 text-gray-400"
+    }`}>
+      {isPublic ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+      {isPublic ? "Public" : "Private"}
+    </span>
+  );
+}
+
 function SpectatorCodeCard({ spectatorUrl, isDark }: { spectatorUrl: string; isDark: boolean }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -1572,6 +1594,30 @@ export default function Director() {
   const [showUploadRSVP, setShowUploadRSVP] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
+
+  // ── Check-in roster state ─────────────────────────────────────────────────
+  const [rosterSearch, setRosterSearch] = useState("");
+  const [walkInName, setWalkInName] = useState("");
+  const checkInKey = `otb-checkin-${tournamentId}`;
+  const [checkedInIds, setCheckedInIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(checkInKey);
+      return raw ? new Set(JSON.parse(raw) as string[]) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
+  const toggleCheckIn = useCallback((playerId: string) => {
+    setCheckedInIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(playerId)) next.delete(playerId);
+      else next.add(playerId);
+      try { localStorage.setItem(checkInKey, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  }, [checkInKey]);
+
+  // ── Board search filter state ───────────────────────────────────────────────────────
+  const [boardSearch, setBoardSearch] = useState("");
+  const [showNextRoundConfirm, setShowNextRoundConfirm] = useState(false);
 
   // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
   // When the Boards tab is active, pressing 1 / D / 0 records the result for
@@ -2027,28 +2073,72 @@ export default function Director() {
                     </span>
                   )}
                 </div>
-                {/* Meta chips — time control, players, format */}
+                {/* Command Center — operational status strip */}
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  {tournamentConfig?.timePreset && (
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                      isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                    }`}>
-                      <Clock className="w-3 h-3" />
-                      {tournamentConfig.timePreset}
-                    </span>
-                  )}
-                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                    isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
-                  }`}>
-                    <Users className="w-3 h-3" />
-                    {state.players.length} players
-                  </span>
+                  {/* Format + Time */}
                   <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
                     isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
                   }`}>
                     <Trophy className="w-3 h-3" />
-                    {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} · {state.totalRounds}R
+                    {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"}
+                    {tournamentConfig?.timePreset ? ` · ${tournamentConfig.timePreset}` : ""}
                   </span>
+                  {/* Round indicator */}
+                  {!isRegistration && (
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                      isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                    }`}>
+                      <Circle className="w-2.5 h-2.5 fill-current" />
+                      Round {state.currentRound} / {state.totalRounds}
+                    </span>
+                  )}
+                  {/* Round timeline dots */}
+                  {!isRegistration && state.totalRounds > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5">
+                      {Array.from({ length: state.totalRounds }, (_, i) => i + 1).map((rn) => {
+                        const isCompleted = rn < state.currentRound;
+                        const isCurrent = rn === state.currentRound;
+                        const isUpcoming = rn > state.currentRound;
+                        return (
+                          <span
+                            key={rn}
+                            title={`Round ${rn}${isCompleted ? " (complete)" : isCurrent ? " (current)" : " (upcoming)"}`}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              isCompleted
+                                ? isDark ? "bg-[#4CAF50]" : "bg-[#3D6B47]"
+                                : isCurrent
+                                ? allResultsIn
+                                  ? isDark ? "bg-[#4CAF50] ring-2 ring-[#4CAF50]/30" : "bg-[#3D6B47] ring-2 ring-[#3D6B47]/25"
+                                  : "bg-amber-400 ring-2 ring-amber-400/30 animate-pulse"
+                                : isDark ? "bg-white/12" : "bg-gray-200"
+                            }`}
+                          />
+                        );
+                      })}
+                    </span>
+                  )}
+                  {/* Players */}
+                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                    isDark ? "bg-white/06 text-white/50" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    <Users className="w-3 h-3" />
+                    {state.players.length}
+                  </span>
+                  {/* Results progress — only during active round */}
+                  {!isRegistration && totalGames > 0 && (
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                      allResultsIn
+                        ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                        : isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"
+                    }`}>
+                      <CheckCircle2 className="w-3 h-3" />
+                      {completedGames}/{totalGames}
+                    </span>
+                  )}
+                  {/* Public mode indicator */}
+                  {!isRegistration && tournamentId !== "otb-demo-2026" && (
+                    <PublicModeChip tournamentId={tournamentId} isDark={isDark} />
+                  )}
                 </div>
               </div>
 
@@ -2129,15 +2219,19 @@ export default function Director() {
                         } animate-pulse`} />
                         <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}
                           style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                          Waiting for Players
+                          Check-In Roster
                         </span>
                       </div>
-                      {/* Player count badge */}
-                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                        isDark ? "bg-white/08 text-white/70" : "bg-gray-100 text-gray-600"
-                      }`}>
-                        <Users className="w-3.5 h-3.5" />
-                        <span>{state.players.length}{tournamentConfig?.maxPlayers ? ` / ${tournamentConfig.maxPlayers}` : ""} registered</span>
+                      {/* Check-in count badge */}
+                      <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                          checkedInIds.size === state.players.length && state.players.length > 0
+                            ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                            : isDark ? "bg-white/08 text-white/70" : "bg-gray-100 text-gray-600"
+                        }`}>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>{checkedInIds.size} / {state.players.length} checked in</span>
+                        </div>
                       </div>
                     </div>
 
@@ -2159,12 +2253,36 @@ export default function Director() {
                             <Copy className="w-3.5 h-3.5" />
                           </button>
                         </div>
-
                       </div>
                     </div>
 
-                    {/* Live player list */}
-                    <div className="px-4 sm:px-6 py-4">
+                    {/* Inline search bar */}
+                    {state.players.length > 4 && (
+                      <div className={`px-4 sm:px-6 pt-3 pb-1`}>
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                          isDark ? "bg-white/04 border-white/08" : "bg-gray-50 border-gray-200"
+                        }`}>
+                          <Search className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/30" : "text-gray-400"}`} />
+                          <input
+                            type="text"
+                            value={rosterSearch}
+                            onChange={(e) => setRosterSearch(e.target.value)}
+                            placeholder="Search by name or username..."
+                            className={`flex-1 bg-transparent text-sm outline-none placeholder:text-current/40 ${
+                              isDark ? "text-white/80 placeholder:text-white/25" : "text-gray-800 placeholder:text-gray-400"
+                            }`}
+                          />
+                          {rosterSearch && (
+                            <button onClick={() => setRosterSearch("")} className={`p-0.5 rounded ${isDark ? "hover:bg-white/10 text-white/40" : "hover:bg-gray-200 text-gray-400"}`}>
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Player roster with check-in chips */}
+                    <div className="px-4 sm:px-6 py-3">
                       {state.players.length === 0 ? (
                         <div className={`flex flex-col items-center justify-center py-10 gap-3 ${
                           isDark ? "text-white/20" : "text-gray-300"
@@ -2173,109 +2291,215 @@ export default function Director() {
                           <p className="text-sm">No players yet — share the QR code or join link</p>
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          {state.players.map((p, idx) => (
-                            <div
-                              key={p.id}
-                              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors group ${
-                                isDark ? "hover:bg-white/04" : "hover:bg-gray-50"
-                              }`}
-                            >
-                              {/* Rank number */}
-                              <span className={`text-xs font-mono w-5 flex-shrink-0 text-right ${
-                                isDark ? "text-white/25" : "text-gray-300"
-                              }`}>{idx + 1}</span>
-                              {/* Avatar */}
-                              <PlayerAvatar
-                                username={p.username}
-                                name={p.name}
-                                size={32}
-                                showBadge
-                                platform={p.platform}
-                                avatarUrl={p.avatarUrl}
-                                flairEmoji={p.flairEmoji}
-                              />
-                              {/* Name + username */}
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</p>
-                                {p.username && (
-                                  <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-gray-400"}`}>@{p.username}</p>
-                                )}
-                              </div>
-                              {/* ELO — show both Rapid and Blitz if available */}
-                              {(p.rapidElo || p.blitzElo) ? (
-                                <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                                  {p.rapidElo ? (
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                      (tournamentConfig?.ratingType ?? "rapid") === "rapid"
-                                        ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                                        : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
-                                    }`}>⚡{p.rapidElo}</span>
+                        <div className="space-y-1">
+                          {state.players
+                            .filter((p) => {
+                              if (!rosterSearch) return true;
+                              const q = rosterSearch.toLowerCase();
+                              return p.name.toLowerCase().includes(q) || p.username.toLowerCase().includes(q);
+                            })
+                            .map((p, idx) => {
+                              const isCheckedIn = checkedInIds.has(p.id);
+                              return (
+                                <div
+                                  key={p.id}
+                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all group cursor-pointer ${
+                                    isCheckedIn
+                                      ? isDark ? "bg-[#3D6B47]/08 hover:bg-[#3D6B47]/15" : "bg-green-50/60 hover:bg-green-50"
+                                      : isDark ? "hover:bg-white/04" : "hover:bg-gray-50"
+                                  }`}
+                                  onClick={() => toggleCheckIn(p.id)}
+                                >
+                                  {/* Check-in indicator */}
+                                  <button
+                                    className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                                      isCheckedIn
+                                        ? "bg-[#3D6B47] text-white"
+                                        : isDark ? "border border-white/15 hover:border-white/30" : "border border-gray-300 hover:border-gray-400"
+                                    }`}
+                                    onClick={(e) => { e.stopPropagation(); toggleCheckIn(p.id); }}
+                                  >
+                                    {isCheckedIn && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                  </button>
+                                  {/* Rank number */}
+                                  <span className={`text-xs font-mono w-4 flex-shrink-0 text-right ${
+                                    isDark ? "text-white/25" : "text-gray-300"
+                                  }`}>{idx + 1}</span>
+                                  {/* Avatar */}
+                                  <PlayerAvatar
+                                    username={p.username}
+                                    name={p.name}
+                                    size={30}
+                                    showBadge
+                                    platform={p.platform}
+                                    avatarUrl={p.avatarUrl}
+                                    flairEmoji={p.flairEmoji}
+                                  />
+                                  {/* Name + username */}
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{p.name}</p>
+                                    {p.username && (
+                                      <p className={`text-xs truncate ${isDark ? "text-white/35" : "text-gray-400"}`}>@{p.username}</p>
+                                    )}
+                                  </div>
+                                  {/* Status chip */}
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                                    isCheckedIn
+                                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-100 text-green-700"
+                                      : isDark ? "bg-white/06 text-white/35" : "bg-gray-100 text-gray-400"
+                                  }`}>
+                                    {isCheckedIn ? "Checked In" : "Registered"}
+                                  </span>
+                                  {/* ELO */}
+                                  {(p.rapidElo || p.blitzElo) ? (
+                                    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                                      {p.rapidElo ? (
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                          (tournamentConfig?.ratingType ?? "rapid") === "rapid"
+                                            ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                            : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                        }`}>⚡{p.rapidElo}</span>
+                                      ) : null}
+                                      {p.blitzElo ? (
+                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                          (tournamentConfig?.ratingType ?? "rapid") === "blitz"
+                                            ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                            : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                                        }`}>🔥{p.blitzElo}</span>
+                                      ) : null}
+                                    </div>
+                                  ) : p.elo != null ? (
+                                    <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg ${
+                                      isDark ? "bg-white/06 text-white/60" : "bg-gray-100 text-gray-500"
+                                    }`}>{p.elo}</span>
                                   ) : null}
-                                  {p.blitzElo ? (
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                      (tournamentConfig?.ratingType ?? "rapid") === "blitz"
-                                        ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                                        : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
-                                    }`}>🔥{p.blitzElo}</span>
-                                  ) : null}
+                                  {/* Remove button */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); removePlayer(p.id); toast.success(`${p.name} removed`); }}
+                                    className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                      isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
+                                    }`}
+                                    title="Remove player"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
-                              ) : p.elo != null ? (
-                                <span className={`text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-lg ${
-                                  isDark ? "bg-white/06 text-white/60" : "bg-gray-100 text-gray-500"
-                                }`}>{p.elo}</span>
-                              ) : null}
-                              {/* Remove button */}
-                              <button
-                                onClick={() => { removePlayer(p.id); toast.success(`${p.name} removed`); }}
-                                className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
-                                  isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
-                                }`}
-                                title="Remove player"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
+                              );
+                            })}
                         </div>
                       )}
                     </div>
 
-                    {/* Add player + Start CTA footer */}
-                    <div className={`px-4 sm:px-6 py-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${
+                    {/* Walk-in quick-add + Actions footer */}
+                    <div className={`px-4 sm:px-6 py-4 border-t space-y-3 ${
                       isDark ? "border-white/06" : "border-gray-100"
                     }`}>
-                      <button
-                        onClick={() => setShowAddPlayer(true)}
-                        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                          isDark
-                            ? "border-white/10 text-white/60 hover:bg-white/06 hover:text-white/80"
-                            : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                        }`}
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Add Player
-                      </button>
-                      <button
-                        onClick={() => canStart && setShowStartConfirm(true)}
-                        disabled={!canStart}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
-                          canStart
-                            ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-lg shadow-[#3D6B47]/25 active:scale-[0.98]"
-                            : isDark
-                            ? "bg-white/06 text-white/20 cursor-not-allowed"
-                            : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                        }`}
-                      >
-                        <Zap className="w-4 h-4" />
-                        {canStart
-                          ? `Start Tournament — Generate Round 1`
-                          : state.players.length === 0
-                          ? "Add players to start"
-                          : state.players.length === 1
-                          ? "Need at least 2 players"
-                          : "Need at least 2 players"}
-                      </button>
+                      {/* Walk-in quick-add form */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={walkInName}
+                          onChange={(e) => setWalkInName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && walkInName.trim()) {
+                              const name = walkInName.trim();
+                              const newPlayer = {
+                                id: `walkin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                                name,
+                                username: name.toLowerCase().replace(/\s+/g, ""),
+                                elo: 800,
+                                country: "",
+                                title: undefined,
+                                points: 0,
+                                wins: 0,
+                                draws: 0,
+                                losses: 0,
+                                buchholz: 0,
+                                colorHistory: [],
+                                platform: "chesscom" as const,
+                              };
+                              addPlayer(newPlayer);
+                              toggleCheckIn(newPlayer.id);
+                              toast.success(`Walk-in: ${name} added & checked in`);
+                              setWalkInName("");
+                            }
+                          }}
+                          placeholder="Walk-in name (press Enter)"
+                          className={`flex-1 px-3 py-2.5 rounded-xl border text-sm outline-none transition-colors ${
+                            isDark
+                              ? "bg-white/04 border-white/08 text-white placeholder:text-white/25 focus:border-[#4CAF50]/40"
+                              : "bg-gray-50 border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-[#3D6B47]/40"
+                          }`}
+                        />
+                        <button
+                          onClick={() => {
+                            if (!walkInName.trim()) return;
+                            const name = walkInName.trim();
+                            const newPlayer = {
+                              id: `walkin-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                              name,
+                              username: name.toLowerCase().replace(/\s+/g, ""),
+                              elo: 800,
+                              country: "",
+                              title: undefined,
+                              points: 0,
+                              wins: 0,
+                              draws: 0,
+                              losses: 0,
+                              buchholz: 0,
+                              colorHistory: [],
+                              platform: "chesscom" as const,
+                            };
+                            addPlayer(newPlayer);
+                            toggleCheckIn(newPlayer.id);
+                            toast.success(`Walk-in: ${name} added & checked in`);
+                            setWalkInName("");
+                          }}
+                          disabled={!walkInName.trim()}
+                          className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                            walkInName.trim()
+                              ? isDark ? "bg-[#3D6B47]/30 text-[#4CAF50] hover:bg-[#3D6B47]/50" : "bg-[#3D6B47]/10 text-[#3D6B47] hover:bg-[#3D6B47]/20"
+                              : isDark ? "bg-white/04 text-white/20" : "bg-gray-100 text-gray-300"
+                          }`}
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          Walk-in
+                        </button>
+                      </div>
+                      {/* Action buttons */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button
+                          onClick={() => setShowAddPlayer(true)}
+                          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                            isDark
+                              ? "border-white/10 text-white/60 hover:bg-white/06 hover:text-white/80"
+                              : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                          }`}
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Add Player
+                        </button>
+                        <button
+                          onClick={() => canStart && setShowStartConfirm(true)}
+                          disabled={!canStart}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
+                            canStart
+                              ? "bg-[#3D6B47] hover:bg-[#2d5235] text-white shadow-lg shadow-[#3D6B47]/25 active:scale-[0.98]"
+                              : isDark
+                              ? "bg-white/06 text-white/20 cursor-not-allowed"
+                              : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                          }`}
+                        >
+                          <Zap className="w-4 h-4" />
+                          {canStart
+                            ? `Start Tournament — Generate Round 1`
+                            : state.players.length === 0
+                            ? "Add players to start"
+                            : state.players.length === 1
+                            ? "Need at least 2 players"
+                            : "Need at least 2 players"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -2368,38 +2592,68 @@ export default function Director() {
                         </p>
                       </div>
                       <div className="px-4 py-3">
-                        <button
-                          onClick={() => {
-                            const nextRound = state.currentRound + 1;
-                            generateNextRound();
-                            toast.success(`Round ${nextRound} pairings generated!`);
-                            broadcastRoundStart(nextRound);
-                            setTimeout(() => {
-                              try {
-                                const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
-                                const latestState = raw ? JSON.parse(raw) : null;
-                                const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                                if (roundData && latestState?.players) {
-                                  fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      round: nextRound,
-                                      games: roundData.games,
-                                      players: latestState.players,
-                                    }),
-                                  }).catch(() => {});
-                                }
-                              } catch { /* ignore */ }
-                            }, 150);
-                          }}
-                          className="group w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-                          style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
-                        >
-                          <Zap className="w-4 h-4" />
-                          Generate Round {state.currentRound + 1} — {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} Pairings
-                          <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
-                        </button>
+                        {!showNextRoundConfirm ? (
+                          <button
+                            onClick={() => setShowNextRoundConfirm(true)}
+                            className="group w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                            style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
+                          >
+                            <Zap className="w-4 h-4" />
+                            Generate Round {state.currentRound + 1} — {state.format === "doubleswiss" ? "Double Swiss" : "Swiss"} Pairings
+                            <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
+                          </button>
+                        ) : (
+                          <div className={`flex flex-col gap-2 p-3 rounded-xl border ${
+                            isDark ? "bg-amber-500/06 border-amber-500/20" : "bg-amber-50 border-amber-200"
+                          }`}>
+                            <p className={`text-xs font-semibold text-center ${
+                              isDark ? "text-amber-300" : "text-amber-700"
+                            }`}>
+                              Generate Round {state.currentRound + 1} pairings? This cannot be undone.
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setShowNextRoundConfirm(false)}
+                                className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
+                                  isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setShowNextRoundConfirm(false);
+                                  const nextRound = state.currentRound + 1;
+                                  generateNextRound();
+                                  toast.success(`Round ${nextRound} pairings generated!`);
+                                  broadcastRoundStart(nextRound);
+                                  setTimeout(() => {
+                                    try {
+                                      const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
+                                      const latestState = raw ? JSON.parse(raw) : null;
+                                      const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                                      if (roundData && latestState?.players) {
+                                        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                          method: "POST",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({
+                                            round: nextRound,
+                                            games: roundData.games,
+                                            players: latestState.players,
+                                          }),
+                                        }).catch(() => {});
+                                      }
+                                    } catch { /* ignore */ }
+                                  }, 150);
+                                }}
+                                className="flex-1 py-2.5 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
+                                style={{ background: "#3D6B47" }}
+                              >
+                                Confirm — Generate Round {state.currentRound + 1}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -2614,35 +2868,84 @@ export default function Director() {
                     </div>
                   )}                  {/* ── Board cards grid ────────────────────────────────────────────── */}
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                       <h2 className={`text-xs font-bold uppercase tracking-widest ${
                         isDark ? "text-white/30" : "text-gray-400"
                       }`}>Round {state.currentRound} Boards</h2>
-                      {/* Edit Boards toggle — only for Swiss/RR formats (not Double Swiss) during active round */}
-                      {state.format !== "doubleswiss" && currentRoundData && !allResultsIn && (
-                        <button
-                          onClick={() => {
-                            setEditBoardsMode((prev) => !prev);
-                            setSwapSourceId(null);
-                          }}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
-                            editBoardsMode
-                              ? isDark
-                                ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
-                                : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47]"
-                              : isDark
-                              ? "bg-white/06 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/80"
-                              : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                          }`}
-                          title={editBoardsMode ? "Exit board edit mode" : "Edit board assignments"}
-                        >
-                          {editBoardsMode ? (
-                            <><ArrowLeftRight className="w-3 h-3" /> Done Editing</>
-                          ) : (
-                            <><Pencil className="w-3 h-3" /> Edit Boards</>
-                          )}
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {/* Board search filter */}
+                        {currentRoundData && currentRoundData.games.length > 6 && (
+                          <div className="relative">
+                            <Search className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none ${
+                              isDark ? "text-white/25" : "text-gray-400"
+                            }`} />
+                            <input
+                              type="text"
+                              value={boardSearch}
+                              onChange={(e) => setBoardSearch(e.target.value)}
+                              placeholder="Filter boards..."
+                              className={`pl-7 pr-3 py-1.5 rounded-lg text-xs border outline-none transition-colors w-36 ${
+                                isDark
+                                  ? "bg-white/04 border-white/08 text-white placeholder:text-white/25 focus:border-[#4CAF50]/40"
+                                  : "bg-gray-50 border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-[#3D6B47]/40"
+                              }`}
+                            />
+                          </div>
+                        )}
+                        {/* Jump to next unreported board */}
+                        {currentRoundData && !allResultsIn && (() => {
+                          const unreported = [...currentRoundData.games]
+                            .sort((a, b) => a.board - b.board)
+                            .find((g) => g.result === "*" && g.whiteId !== "BYE");
+                          if (!unreported) return null;
+                          return (
+                            <button
+                              onClick={() => {
+                                const el = document.getElementById(`board-card-${unreported.id}`);
+                                if (el) {
+                                  el.scrollIntoView({ behavior: "smooth", block: "center" });
+                                  el.classList.add("ring-2", isDark ? "ring-amber-400/60" : "ring-amber-500/50");
+                                  setTimeout(() => el.classList.remove("ring-2", isDark ? "ring-amber-400/60" : "ring-amber-500/50"), 2000);
+                                }
+                              }}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                                isDark
+                                  ? "bg-amber-500/10 border-amber-500/25 text-amber-400 hover:bg-amber-500/20"
+                                  : "bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100"
+                              }`}
+                              title={`Jump to Board ${unreported.board}`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                              Board {unreported.board}
+                            </button>
+                          );
+                        })()}
+                        {/* Edit Boards toggle — only for Swiss/RR formats (not Double Swiss) during active round */}
+                        {state.format !== "doubleswiss" && currentRoundData && !allResultsIn && (
+                          <button
+                            onClick={() => {
+                              setEditBoardsMode((prev) => !prev);
+                              setSwapSourceId(null);
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                              editBoardsMode
+                                ? isDark
+                                  ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
+                                  : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47]"
+                                : isDark
+                                ? "bg-white/06 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/80"
+                                : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                            }`}
+                            title={editBoardsMode ? "Exit board edit mode" : "Edit board assignments"}
+                          >
+                            {editBoardsMode ? (
+                              <><ArrowLeftRight className="w-3 h-3" /> Done Editing</>
+                            ) : (
+                              <><Pencil className="w-3 h-3" /> Edit Boards</>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>                    {currentRoundData ? (
                       state.format === "doubleswiss" ? (
                         // Double Swiss: group games by board number, show Game A + Game B per card
@@ -2693,10 +2996,26 @@ export default function Director() {
                         })()
                       ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {[...currentRoundData.games].sort((a, b) => a.board - b.board).map((game, cardIdx) =>
+                        {(() => {
+                          const bsLower = boardSearch.toLowerCase().trim();
+                          return [...currentRoundData.games].sort((a, b) => a.board - b.board)
+                            .filter((g) => {
+                              if (!bsLower) return true;
+                              const w = state.players.find((p) => p.id === g.whiteId);
+                              const b = state.players.find((p) => p.id === g.blackId);
+                              return (
+                                String(g.board).includes(bsLower) ||
+                                (w?.name ?? "").toLowerCase().includes(bsLower) ||
+                                (w?.username ?? "").toLowerCase().includes(bsLower) ||
+                                (b?.name ?? "").toLowerCase().includes(bsLower) ||
+                                (b?.username ?? "").toLowerCase().includes(bsLower)
+                              );
+                            })
+                            .map((game, cardIdx) =>
                           game.whiteId === "BYE" ? (
                             <div
                               key={game.id}
+                              id={`board-card-${game.id}`}
                               className="animate-in fade-in slide-in-from-bottom-3"
                               style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}
                             >
@@ -2709,7 +3028,12 @@ export default function Director() {
                           ) : (
                             <div
                               key={game.id}
-                              className="animate-in fade-in slide-in-from-bottom-3"
+                              id={`board-card-${game.id}`}
+                              className={`animate-in fade-in slide-in-from-bottom-3 rounded-2xl transition-shadow ${
+                                game.result === "*" && !editBoardsMode
+                                  ? isDark ? "ring-1 ring-amber-400/15" : "ring-1 ring-amber-500/10"
+                                  : ""
+                              }`}
                               style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}
                             >
                               <BoardCard
@@ -2756,7 +3080,8 @@ export default function Director() {
                               />
                             </div>
                           )
-                        )}
+                        );
+                        })()}
                       </div>
                       )
                     ) : (
