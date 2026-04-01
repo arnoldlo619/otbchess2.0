@@ -11,6 +11,7 @@ import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
+import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
 import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
 import clubBattlesRouter from "./clubBattles.js";
@@ -989,6 +990,8 @@ export function createApp() {
         await db.insert(tournamentState).values({ tournamentId: id, stateJson });
       }
       console.log(`[state] Saved state for tournament ${id} (${stateJson.length} bytes)`);
+      // Invalidate public snapshot cache so next public read rebuilds from fresh data
+      invalidateSnapshotCache(id);
       // Broadcast standings_updated so players see live score changes immediately
       const parsedState = state as { players?: unknown[]; currentRound?: number; status?: string };
       const subs = sseSubscribers.get(id);
@@ -1053,8 +1056,9 @@ export function createApp() {
 
   // ── Public Tournament: GET /api/public/tournament/:slug ─────────────────────
   // Returns the full live state for a publicly visible tournament.
-  // Looks up the tournament by its tournamentId or customSlug in user_tournaments,
-  // verifies isPublic=1, then returns the same shape as /api/tournament/:id/live-state.
+  // Public tournament endpoint — serves a precomputed, cached snapshot.
+  // ETag support: clients send If-None-Match, we return 304 if unchanged.
+  // Cache is invalidated when the director saves state (see PUT /api/tournament/:id/state).
   app.get("/api/public/tournament/:slug", async (req, res) => {
     const { slug } = req.params;
     if (!slug) return res.status(400).json({ error: "Missing slug" });
@@ -1075,38 +1079,53 @@ export function createApp() {
       }
       if (utRows.length === 0) return res.status(404).json({ error: "not_found" });
       const ut = utRows[0];
-      // Fetch the full tournament state
-      const stateRows = await db
-        .select()
-        .from(tournamentState)
-        .where(eq(tournamentState.tournamentId, ut.tournamentId))
-        .limit(1);
-      if (stateRows.length === 0) return res.status(404).json({ error: "no_state" });
-      const s = JSON.parse(stateRows[0].stateJson) as {
-        status?: string;
-        currentRound?: number;
-        totalRounds?: number;
-        tournamentName?: string;
-        format?: string;
-        players?: unknown[];
-        rounds?: Array<{ number: number; games: unknown[] }>;
-      };
-      const currentRoundData = s.rounds?.find((r) => r.number === (s.currentRound ?? 0));
-      res.json({
-        tournamentId: ut.tournamentId,
-        status: s.status ?? "registration",
-        currentRound: s.currentRound ?? 0,
-        totalRounds: s.totalRounds ?? 0,
-        tournamentName: s.tournamentName ?? ut.name,
-        format: s.format ?? ut.format ?? "swiss",
-        venue: ut.venue ?? "",
-        date: ut.date ?? "",
-        clubId: undefined, // Not exposing internal club IDs
-        players: s.players ?? [],
-        games: currentRoundData?.games ?? [],
-        rounds: s.rounds ?? [],
-        updatedAt: stateRows[0].updatedAt,
-      });
+
+      // Check in-memory cache first
+      let cached = getSnapshotCache(ut.tournamentId);
+      if (!cached) {
+        // Cache miss — build snapshot from DB
+        const stateRows = await db
+          .select()
+          .from(tournamentState)
+          .where(eq(tournamentState.tournamentId, ut.tournamentId))
+          .limit(1);
+        if (stateRows.length === 0) return res.status(404).json({ error: "no_state" });
+        const s = JSON.parse(stateRows[0].stateJson) as {
+          status?: string;
+          currentRound?: number;
+          totalRounds?: number;
+          tournamentName?: string;
+          format?: string;
+          players?: Array<Record<string, unknown>>;
+          rounds?: Array<{ number: number; games: Array<Record<string, unknown>> }>;
+        };
+        const snapshot = buildSnapshot({
+          tournamentId: ut.tournamentId,
+          status: s.status ?? "registration",
+          currentRound: s.currentRound ?? 0,
+          totalRounds: s.totalRounds ?? 0,
+          tournamentName: s.tournamentName ?? ut.name ?? "",
+          format: s.format ?? (ut as Record<string, unknown>).format as string ?? "swiss",
+          venue: (ut as Record<string, unknown>).venue as string ?? "",
+          date: (ut as Record<string, unknown>).date as string ?? "",
+          players: (s.players ?? []) as any[],
+          rounds: (s.rounds ?? []) as any[],
+          updatedAt: stateRows[0].updatedAt?.toISOString?.() ?? new Date().toISOString(),
+        });
+        cached = setSnapshotCache(ut.tournamentId, snapshot);
+        console.log(`[public-snapshot] Built snapshot for ${ut.tournamentId} (${cached.json.length} bytes)`);
+      }
+
+      // ETag conditional response
+      const clientEtag = req.headers["if-none-match"];
+      if (clientEtag && clientEtag === cached.etag) {
+        return res.status(304).end();
+      }
+
+      res.setHeader("ETag", cached.etag);
+      res.setHeader("Cache-Control", "public, max-age=5");
+      res.setHeader("Content-Type", "application/json");
+      res.send(cached.json);
     } catch (err) {
       console.error("[public-tournament] GET error:", err);
       res.status(500).json({ error: "Database error" });

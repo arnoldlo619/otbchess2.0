@@ -1261,12 +1261,44 @@ function PublicTournamentCard({
               </a>
             </div>
             {/* QR Code */}
-            <div className="flex justify-center">
+            <div className="flex justify-center public-qr-code">
               <div className={`p-4 rounded-2xl border ${
                 isDark ? "bg-white border-white/10" : "bg-white border-gray-200"
               }`}>
                 <QRCodeSVG value={publicUrl} size={160} level="M" />
               </div>
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  const svg = document.querySelector(".public-qr-code svg") as SVGElement | null;
+                  if (!svg) return;
+                  const svgData = new XMLSerializer().serializeToString(svg);
+                  const canvas = document.createElement("canvas");
+                  canvas.width = 640;
+                  canvas.height = 640;
+                  const ctx = canvas.getContext("2d");
+                  if (!ctx) return;
+                  const img = new Image();
+                  img.onload = () => {
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(0, 0, 640, 640);
+                    ctx.drawImage(img, 0, 0, 640, 640);
+                    const a = document.createElement("a");
+                    a.download = `tournament-qr-${tournamentId}.png`;
+                    a.href = canvas.toDataURL("image/png");
+                    a.click();
+                  };
+                  img.src = "data:image/svg+xml;base64," + btoa(svgData);
+                }}
+                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  isDark
+                    ? "text-white/50 hover:text-white/80 hover:bg-white/08"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Download QR for printing
+              </button>
             </div>
             <p className={`text-center text-[10px] ${isDark ? "text-white/25" : "text-gray-400"}`}>
               Print or project this QR code at the venue

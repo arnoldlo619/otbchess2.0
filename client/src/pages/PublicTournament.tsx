@@ -24,10 +24,25 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
-import { computeStandings, type StandingRow } from "@/lib/swiss";
 import type { Player, Game, Round, Result } from "@/lib/tournamentData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+/** Server-precomputed standing row — no client-side computeStandings needed. */
+interface PublicStandingRow {
+  playerId: string;
+  name: string;
+  username: string;
+  elo: number;
+  title?: string;
+  avatarUrl?: string;
+  rank: number;
+  points: number;
+  buchholz: number;
+  wins: number;
+  draws: number;
+  losses: number;
+}
 
 interface PublicTournamentData {
   tournamentId: string;
@@ -39,8 +54,8 @@ interface PublicTournamentData {
   venue: string;
   date: string;
   players: Player[];
-  games: Game[];
   rounds: Round[];
+  standings: PublicStandingRow[];
   updatedAt: string;
 }
 
@@ -280,15 +295,15 @@ function FollowedPlayerCard({
   isDark,
 }: {
   player: Player;
-  standings: StandingRow[];
+  standings: PublicStandingRow[];
   rounds: Round[];
   currentRound: number;
   players: Player[];
   onUnfollow: () => void;
   isDark: boolean;
 }) {
-  const rank = standings.findIndex((r) => r.player.id === player.id) + 1;
-  const standingRow = standings.find((r) => r.player.id === player.id);
+  const standingRow = standings.find((r) => r.playerId === player.id);
+  const rank = standingRow?.rank ?? 0;
   const playerMap = useMemo(() => {
     const m = new Map<string, Player>();
     players.forEach((p) => m.set(p.id, p));
@@ -614,19 +629,17 @@ function PairingsSection({
 // ─── Standings Section ────────────────────────────────────────────────────────
 
 function StandingsSection({
-  players,
-  rounds,
+  standings,
   followedPlayerId,
   onFollowPlayer,
   isDark,
 }: {
-  players: Player[];
-  rounds: Round[];
+  standings: PublicStandingRow[];
   followedPlayerId: string | null;
   onFollowPlayer: (playerId: string) => void;
   isDark: boolean;
 }) {
-  const standingRows = useMemo(() => computeStandings(players, rounds), [players, rounds]);
+  const standingRows = standings;
   const [expanded, setExpanded] = useState(true);
 
   const medalColor = (rank: number) => {
@@ -663,15 +676,15 @@ function StandingsSection({
             <span className="text-right w-14">Buch.</span>
           </div>
 
-          {standingRows.map((row, idx) => {
-            const rank = idx + 1;
-            const isFollowed = row.player.id === followedPlayerId;
+          {standingRows.map((row) => {
+            const rank = row.rank;
+            const isFollowed = row.playerId === followedPlayerId;
             const isLeader = rank === 1;
 
             return (
               <button
-                key={row.player.id}
-                onClick={() => onFollowPlayer(row.player.id)}
+                key={row.playerId}
+                onClick={() => onFollowPlayer(row.playerId)}
                 className={`w-full grid grid-cols-[2rem_1fr_auto_auto] gap-3 items-center px-4 py-3.5 rounded-2xl border transition-all duration-200 hover:scale-[1.005] relative overflow-hidden text-left ${
                   isFollowed
                     ? isDark
@@ -694,11 +707,11 @@ function StandingsSection({
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-bold text-foreground truncate">{row.player.name}</span>
-                    {row.player.title && <TitleBadge title={row.player.title} />}
+                    <span className="text-sm font-bold text-foreground truncate">{row.name}</span>
+                    {row.title && <TitleBadge title={row.title} />}
                   </div>
                   <div className="flex items-center gap-2">
-                    <ELOBadge elo={row.player.elo} />
+                    <ELOBadge elo={row.elo} />
                     <span className="text-xs text-muted-foreground">
                       {row.wins}W {row.draws}D {row.losses}L
                     </span>
@@ -902,6 +915,7 @@ export default function PublicTournament() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [followedPlayerId, setFollowedPlayerId] = useState<string | null>(null);
+  const etagRef = useRef<string | null>(null);
 
   // Mobile tab state
   type Tab = "pairings" | "standings";
@@ -914,11 +928,20 @@ export default function PublicTournament() {
     }
   }, [data?.tournamentId]);
 
-  // Fetch tournament data
+  // Fetch tournament data with ETag conditional request
   const fetchData = useCallback(async () => {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/public/tournament/${encodeURIComponent(slug)}`);
+      const headers: Record<string, string> = {};
+      if (etagRef.current) {
+        headers["If-None-Match"] = etagRef.current;
+      }
+      const res = await fetch(`/api/public/tournament/${encodeURIComponent(slug)}`, { headers });
+      // 304 Not Modified — data hasn't changed, skip state update
+      if (res.status === 304) {
+        setLoading(false);
+        return;
+      }
       if (!res.ok) {
         if (res.status === 404) {
           setError("This tournament is not publicly available or doesn't exist.");
@@ -928,6 +951,9 @@ export default function PublicTournament() {
         setLoading(false);
         return;
       }
+      // Store ETag for next conditional request
+      const newEtag = res.headers.get("etag");
+      if (newEtag) etagRef.current = newEtag;
       const json = await res.json();
       setData(json);
       setError(null);
@@ -970,11 +996,8 @@ export default function PublicTournament() {
     [data, followedPlayerId]
   );
 
-  // Derived data
-  const standings = useMemo(
-    () => (data ? computeStandings(data.players, data.rounds) : []),
-    [data]
-  );
+  // Standings are precomputed server-side — no client computation needed
+  const standings = data?.standings ?? [];
 
   const followedPlayer = useMemo(
     () => (followedPlayerId && data ? data.players.find((p) => p.id === followedPlayerId) ?? null : null),
@@ -1100,8 +1123,7 @@ export default function PublicTournament() {
         {/* Standings — visible on mobile only when tab active, always on desktop */}
         <section className={`${activeTab !== "standings" ? "hidden sm:block" : ""}`}>
           <StandingsSection
-            players={data.players}
-            rounds={data.rounds}
+            standings={standings}
             followedPlayerId={followedPlayerId}
             onFollowPlayer={handleFollow}
             isDark={isDark}

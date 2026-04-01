@@ -4142,3 +4142,57 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Unit tests for format labels, status badges, round dots, API URLs (14 tests)
 - [x] Unit tests for follow toggle logic and mobile tab logic (5 tests)
 - [x] 38 tests passing
+
+## Public Tournament Mode — Phase 2: Hardening for Chicago Event
+
+### Public Snapshot Architecture
+- [x] Build server-side precomputed snapshot (metadata, pairings, standings, player index) in single payload
+- [x] Add in-memory snapshot cache with 5-min TTL, invalidated on director state save
+- [x] Serve snapshot from GET /api/public/tournament/:slug with ETag + Cache-Control headers
+- [x] Eliminate per-request standings computation for public viewers
+
+### Publish-Based Event Updates
+- [x] Cache invalidation on director state save serves as implicit publish trigger
+- [x] Snapshot cache isolates public reads from admin writes
+- [x] Director state saves invalidate cache; next public read rebuilds from fresh data
+
+### Query & Payload Optimization
+- [x] Reduce public dashboard to single API fetch (no fan-out)
+- [x] Strip unnecessary fields from public payload (colorHistory, phone, email, extra fields)
+- [x] Add HTTP ETag/If-None-Match for conditional fetching (304 responses)
+
+### Precomputed Standings & Pairings
+- [x] Compute standings server-side with Buchholz tiebreaks, store in snapshot
+- [x] Remove client-side computeStandings() import and call on public dashboard
+- [x] Pairings stored as stripped PublicGame objects (id, board, whiteId, blackId, result)
+
+### Search Performance
+- [x] Search operates purely on client-side snapshot player index (no backend calls)
+- [x] Forgiving matching (case-insensitive, partial, name + username) confirmed
+
+### Follow Player Efficiency
+- [x] Follow-player is fully local-first (localStorage only, no server writes)
+- [x] Followed-player view renders entirely from snapshot data (precomputed standings)
+
+### Public Dashboard Load Behavior
+- [x] ETag conditional fetch: 304 responses skip state update, minimize bandwidth
+- [x] Visibility change handler refreshes on phone unlock
+- [x] Removed duplicate computeStandings call, standings from server snapshot
+
+### Director Console Safety
+- [x] Snapshot cache isolates public reads from DB writes
+- [x] Cache invalidation on state save ensures fresh data without blocking director
+
+### QR / Projector Event Readiness
+- [x] QR code with download button for printing at venue
+- [x] Public mode Live badge indicator in Director Console
+
+### Codebase Cleanup
+- [x] Removed duplicate computeStandings import and call from PublicTournament
+- [x] StandingsSection now accepts precomputed PublicStandingRow[] instead of raw data
+- [x] Clean separation: server computes, client renders
+
+### Tests & Validation
+- [x] 26 unit tests for snapshot generation, standings computation, caching, ETag, TTL
+- [x] 38 existing public tournament tests still passing (no regressions)
+- [x] 100-player tournament snapshot generation validated in tests
