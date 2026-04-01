@@ -36,6 +36,7 @@ import { UndoSnackbar } from "@/components/UndoSnackbar";
 import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
+import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
 import {
@@ -1282,6 +1283,9 @@ export default function Director() {
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   // Look up real tournament config for invite code and extra metadata
   const tournamentConfig = getTournamentConfig(tournamentId);
+
+  // Fetch club avatar for PDF branding (best-effort, non-blocking)
+  const { avatarUrl: clubAvatarUrl } = useClubAvatar(tournamentConfig?.clubId ?? null);
 
   // ── Server-side customSlug hydration ────────────────────────────────────────
   // On mount, fetch the tournament meta from the server and sync the customSlug
@@ -3522,6 +3526,8 @@ export default function Director() {
                         timeControl: tournamentConfig?.timePreset,
                         players: state.players,
                         rounds: state.rounds,
+                        clubName: tournamentConfig?.clubName ?? undefined,
+                        clubLogoUrl: clubAvatarUrl ?? undefined,
                       }); },
                     },
                   ].map(({ icon: Icon, label, onClick }) => (

@@ -62,6 +62,8 @@ interface ShareResultsModalProps {
   pdfRounds?: Round[];
   /** Optional: club name for PDF branding */
   pdfClubName?: string;
+  /** Optional: club logo URL for PDF branding */
+  pdfClubLogoUrl?: string;
 }
 
 // ─── Message generators ───────────────────────────────────────────────────────
@@ -550,6 +552,7 @@ export function ShareResultsModal({
   pdfPlayers,
   pdfRounds,
   pdfClubName,
+  pdfClubLogoUrl,
 }: ShareResultsModalProps) {
   const [channel, setChannel] = useState<ShareChannel>("email");
   const [copiedAll, setCopiedAll] = useState(false);
@@ -622,6 +625,7 @@ export function ShareResultsModal({
             players: pdfPlayers,
             rounds: pdfRounds,
             clubName: pdfClubName,
+            clubLogoUrl: pdfClubLogoUrl,
           });
         } catch (pdfErr) {
           console.warn("[ShareResultsModal] PDF generation failed, sending without attachment:", pdfErr);

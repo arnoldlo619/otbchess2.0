@@ -9,6 +9,7 @@
  */
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useChessAvatars, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
+import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { useParams, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { toast } from "sonner";
@@ -588,6 +589,9 @@ export default function ReportPage() {
 
   const performances = computeAllPerformances(players, rounds);
 
+  // Fetch club avatar for PDF branding
+  const { avatarUrl: clubAvatarUrl } = useClubAvatar(config?.clubId ?? null);
+
   // Pre-fetch all player avatars in parallel
   const usernames = performances.map((p) => p.player.username);
   const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
@@ -661,6 +665,7 @@ export default function ReportPage() {
         players,
         rounds,
         clubName: config?.clubName ?? undefined,
+        clubLogoUrl: clubAvatarUrl ?? undefined,
       });
     } finally {
       setDownloadingPdf(false);
@@ -1036,6 +1041,7 @@ export default function ReportPage() {
           pdfPlayers={players}
           pdfRounds={rounds}
           pdfClubName={config?.clubName ?? undefined}
+          pdfClubLogoUrl={clubAvatarUrl ?? undefined}
         />
       )}
     </div>

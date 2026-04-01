@@ -102,24 +102,43 @@ export function buildStandingsRows(sortedPlayers: Player[]): string[][] {
 
 /** Draws the standard OTB Chess page header (green bar + tournament info). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function drawPageHeader(doc: any, tournamentName: string, pageW: number, clubName?: string): void {
+function drawPageHeader(doc: any, tournamentName: string, pageW: number, clubName?: string, clubLogoBase64?: string): void {
   // Green header bar
   doc.setFillColor(...GREEN_DARK);
   doc.rect(0, 0, pageW, 22, "F");
 
-  // Brand name (left) — club name if provided, otherwise "OTB Chess"
+  // Club logo (left side) — rendered as a small square image if available
+  const logoSize = 14; // mm — fits neatly in the 22mm header
+  const logoX = 14;
+  const logoY = 4;
+  let textStartX = 14;
+
+  if (clubLogoBase64) {
+    try {
+      // Detect image format from base64 prefix
+      const format = clubLogoBase64.startsWith("data:image/png") ? "PNG"
+        : clubLogoBase64.startsWith("data:image/webp") ? "WEBP"
+        : "JPEG";
+      doc.addImage(clubLogoBase64, format, logoX, logoY, logoSize, logoSize);
+      textStartX = logoX + logoSize + 4; // shift text right of logo
+    } catch {
+      // Logo failed to render — fall through to text-only
+    }
+  }
+
+  // Brand name — club name if provided, otherwise "OTB Chess"
   const brandName = clubName ? clubName : "OTB Chess";
   const subLabel  = clubName ? "Powered by chessotb.club" : "chessotb.club";
 
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(clubName ? 11 : 14);
-  doc.text(brandName, 14, 10);
+  doc.text(brandName, textStartX, 10);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(200, 230, 200);
-  doc.text(subLabel, 14, 16.5);
+  doc.text(subLabel, textStartX, 16.5);
 
   // Tournament name (right-aligned)
   doc.setTextColor(255, 255, 255);
@@ -166,13 +185,13 @@ function drawCard(doc: any, x: number, y: number, w: number, h: number, fillColo
 
 // ─── Page 3: Scoring System ───────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addScoringSystemPage(doc: any, tournamentName: string, clubName?: string): void {
+function addScoringSystemPage(doc: any, tournamentName: string, clubName?: string, clubLogoBase64?: string): void {
   doc.addPage("a4", "portrait");
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   let y = 30;
 
-  drawPageHeader(doc, tournamentName, pageW, clubName);
+  drawPageHeader(doc, tournamentName, pageW, clubName, clubLogoBase64);
 
   // Section title
   doc.setFont("helvetica", "bold");
@@ -302,13 +321,13 @@ function addScoringSystemPage(doc: any, tournamentName: string, clubName?: strin
 
 // ─── Page 4: Swiss Pairing System ────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addSwissPairingPage(doc: any, tournamentName: string, totalRounds: number, playerCount: number, clubName?: string): void {
+function addSwissPairingPage(doc: any, tournamentName: string, totalRounds: number, playerCount: number, clubName?: string, clubLogoBase64?: string): void {
   doc.addPage("a4", "portrait");
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   let y = 30;
 
-  drawPageHeader(doc, tournamentName, pageW, clubName);
+  drawPageHeader(doc, tournamentName, pageW, clubName, clubLogoBase64);
 
   // Section title
   doc.setFont("helvetica", "bold");
@@ -446,6 +465,29 @@ function addSwissPairingPage(doc: any, tournamentName: string, totalRounds: numb
   });
 }
 
+// ─── Image helper ────────────────────────────────────────────────────────────
+
+/**
+ * Fetches an image URL and converts it to a base64 data URI string.
+ * Returns undefined on failure (network error, CORS, etc.) so callers can
+ * fall back to text-only rendering gracefully.
+ */
+export async function fetchImageAsBase64(url: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) return undefined;
+    const blob = await response.blob();
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("FileReader error"));
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export interface PdfOptions {
@@ -480,7 +522,11 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
     players,
     rounds,
     clubName,
+    clubLogoUrl,
   } = opts;
+
+  // Fetch club logo as base64 (best-effort — falls back to undefined on error)
+  const clubLogoBase64 = clubLogoUrl ? await fetchImageAsBase64(clubLogoUrl) : undefined;
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -489,7 +535,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
 
   // ── Page 1: Header + Final Standings ──────────────────────────────────────
 
-  drawPageHeader(doc, tournamentName, pageW, clubName);
+  drawPageHeader(doc, tournamentName, pageW, clubName, clubLogoBase64);
   cursorY = 30;
 
   // Meta row
@@ -577,7 +623,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   const pageW2 = doc.internal.pageSize.getWidth();
   cursorY = margin;
 
-  drawPageHeader(doc, tournamentName, pageW2, clubName);
+  drawPageHeader(doc, tournamentName, pageW2, clubName, clubLogoBase64);
   cursorY = 30;
 
   doc.setFont("helvetica", "bold");
@@ -638,10 +684,10 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   });
 
   // ── Page 3: Scoring System ─────────────────────────────────────────────────
-  addScoringSystemPage(doc, tournamentName, clubName);
+  addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
 
   // ── Page 4: Swiss Pairing System ──────────────────────────────────────────
-  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName);
+  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
 
   // ── Footers on every page ──────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
@@ -678,7 +724,11 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
     players,
     rounds,
     clubName,
+    clubLogoUrl,
   } = opts;
+
+  // Fetch club logo as base64 (best-effort — falls back to undefined on error)
+  const clubLogoBase64 = clubLogoUrl ? await fetchImageAsBase64(clubLogoUrl) : undefined;
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -686,7 +736,7 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
   let cursorY = margin;
 
   // Page 1: Header + Final Standings
-  drawPageHeader(doc, tournamentName, pageW, clubName);
+  drawPageHeader(doc, tournamentName, pageW, clubName, clubLogoBase64);
   cursorY = 30;
 
   doc.setTextColor(...TEXT_MID);
@@ -741,7 +791,7 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
   if (needsLandscape) { doc.addPage("a4", "landscape"); } else { doc.addPage("a4", "portrait"); }
   const pageW2 = doc.internal.pageSize.getWidth();
   cursorY = margin;
-  drawPageHeader(doc, tournamentName, pageW2, clubName);
+  drawPageHeader(doc, tournamentName, pageW2, clubName, clubLogoBase64);
   cursorY = 30;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -784,8 +834,8 @@ export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string
   });
 
   // Pages 3 & 4: Explanation pages
-  addScoringSystemPage(doc, tournamentName, clubName);
-  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName);
+  addScoringSystemPage(doc, tournamentName, clubName, clubLogoBase64);
+  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName, clubLogoBase64);
 
   // Footers
   const totalPages = doc.getNumberOfPages();

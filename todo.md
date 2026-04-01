@@ -4073,3 +4073,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Feature 3: Attach PDF to nodemailer sendMail in email.ts
 - [x] Feature 3: Add "Send PDF" toggle in ShareResultsModal server-send flow
 - [x] Write unit tests for all three features
+
+## PDF Club Logo in Header
+
+- [ ] Audit club avatarUrl field in DB schema and /api/clubs/:id endpoint
+- [ ] Fetch club avatarUrl in Director.tsx and Report.tsx when clubId is present
+- [ ] Convert image URL to base64 data URI for jsPDF addImage compatibility
+- [ ] Render club logo in PDF header beside club name (right-aligned, 28px height)
+- [ ] Graceful fallback: if logo fetch fails, render club name text only
+- [ ] Write unit tests for logo fetch and base64 conversion helpers
