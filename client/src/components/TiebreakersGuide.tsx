@@ -8,8 +8,8 @@ interface Props {
 }
 
 export function TiebreakersGuide({ isDark }: Props) {
-  const card = `rounded-2xl border overflow-hidden ${isDark ? "border-white/08" : "border-gray-100"}`;
-  const cardHeader = `px-5 py-4 border-b ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-gray-100 bg-[#F0F5EE]"}`;
+  const card = `guide-card rounded-2xl border overflow-hidden ${isDark ? "border-white/08" : "border-gray-100"}`;
+  const cardHeader = `guide-card-header px-5 py-4 border-b ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-gray-100 bg-[#F0F5EE]"}`;
   const title = `font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`;
   const sub = `text-sm mt-1.5 ${isDark ? "text-white/50" : "text-gray-500"}`;
   const innerTable = `rounded-xl overflow-hidden border ${isDark ? "border-white/06" : "border-gray-100"}`;
@@ -191,7 +191,7 @@ export function TiebreakersGuide({ isDark }: Props) {
               Bch1 = Bch − min(opponent score)
             </p>
           </div>
-          <div className={`flex gap-3 rounded-xl p-4 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
+          <div className={`guide-highlight flex gap-3 rounded-xl p-4 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
             <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm ${isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-orange-600"}`}>
               ⚠️
             </div>
@@ -277,7 +277,7 @@ export function TiebreakersGuide({ isDark }: Props) {
             { rank: 4, label: "SB", desc: "Sonneborn-Berger — quality of wins weighted", color: "text-purple-500" },
             { rank: 5, label: "W", desc: "Number of wins — final fallback", color: "text-emerald-500" },
           ].map((row) => (
-            <div key={row.rank} className={`flex items-center gap-3 rounded-xl px-4 py-3 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
+            <div key={row.rank} className={`guide-list-item flex items-center gap-3 rounded-xl px-4 py-3 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isDark ? "bg-white/08 text-white/40" : "bg-gray-200 text-gray-500"}`}>
                 {row.rank}
               </span>

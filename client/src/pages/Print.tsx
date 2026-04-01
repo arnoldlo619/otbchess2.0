@@ -67,13 +67,132 @@ function opponentFor(playerId: string, game: Game, players: Player[]): Player | 
 // ─── Print Styles (injected via <style> tag) ──────────────────────────────────
 const PRINT_CSS = `
 @media print {
+  /* ── Chrome & layout ── */
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  body { background: white !important; color: black !important; }
+
+  /* Force white paper background everywhere */
+  html, body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Remove screen padding from the outer wrapper */
   .print-page { padding: 0 !important; }
-  .print-break { page-break-after: always; }
-  .pairing-slip { break-inside: avoid; }
+
+  /* ── Section page breaks ── */
+  /* Each major section starts on a fresh page */
+  .print-section {
+    page-break-before: always;
+    break-before: page;
+  }
+  /* The very first section must NOT get a forced break */
+  .print-section:first-of-type {
+    page-break-before: auto;
+    break-before: auto;
+  }
+
+  /* ── Pairing slips ── */
+  .print-break { page-break-after: always; break-after: page; }
+  .pairing-slip {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ccc !important;
+    background: white !important;
+  }
+
+  /* ── Tiebreakers & Cross-Table guide cards ── */
+  /* Each card (rounded-2xl) should not split across pages */
+  .guide-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ddd !important;
+    background: white !important;
+    margin-bottom: 1rem;
+  }
+  /* Card headers keep their light background tint */
+  .guide-card-header {
+    background: #f5f7f5 !important;
+    border-bottom: 1px solid #ddd !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Tables ── */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 9pt;
+  }
+  th, td {
+    border: 1px solid #e0e0e0 !important;
+    padding: 4pt 6pt !important;
+    background: white !important;
+    color: black !important;
+  }
+  thead tr {
+    background: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Avoid table rows splitting across pages */
+  tr { break-inside: avoid; page-break-inside: avoid; }
+
+  /* ── Standings table ── */
+  .standings-table { font-size: 9pt; }
+
+  /* ── Cross-table overflow ── */
+  /* Allow horizontal scroll tables to wrap on print */
+  .overflow-x-auto { overflow: visible !important; }
+
+  /* ── Typography ── */
+  h1, h2, h3 { color: black !important; }
+  a { color: black !important; text-decoration: none !important; }
+
+  /* ── Color pill badges — preserve background tints ── */
+  .print-badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    border: 1px solid #ccc !important;
+  }
+
+  /* ── Footer ── */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 8pt;
+    color: #999;
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding: 4pt 0;
+    background: white;
+  }
+
+  /* ── Info/highlight boxes ── */
+  .guide-highlight {
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ── Tiebreak order summary list items ── */
+  .guide-list-item {
+    background: #f8f8f8 !important;
+    border: 1px solid #e8e8e8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    break-inside: avoid;
+  }
 }
+
 @media screen {
   .print-only { display: none; }
 }
@@ -723,7 +842,7 @@ export default function PrintPage() {
 
           {/* ── Pairing Slips ─────────────────────────────────────────────── */}
           {activeSection === "slips" && (
-            <div className="space-y-6">
+            <div className="space-y-6 print-section">
               <div className="flex items-center justify-between">
                 <div>
                   <h2
@@ -836,7 +955,7 @@ export default function PrintPage() {
 
           {/* ── Wall Chart ────────────────────────────────────────────────── */}
           {activeSection === "wallchart" && (
-            <div className="space-y-4">
+            <div className="space-y-4 print-section">
               <div>
                 <h2
                   className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}
@@ -858,7 +977,7 @@ export default function PrintPage() {
 
           {/* ── Standings ─────────────────────────────────────────────────── */}
           {activeSection === "standings" && (
-            <div className="space-y-4">
+            <div className="space-y-4 print-section">
               <div>
                 <h2
                   className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}
@@ -879,12 +998,12 @@ export default function PrintPage() {
 
           {/* ── Tiebreakers Guide ──────────────────────────────────────────── */}
           {activeSection === "tiebreakers" && (
-            <TiebreakersGuide isDark={isDark} />
+            <div className="print-section"><TiebreakersGuide isDark={isDark} /></div>
           )}
 
           {/* ── Cross-Table Guide ─────────────────────────────────────────────── */}
           {activeSection === "crosstable-guide" && (
-            <CrossTableGuide isDark={isDark} />
+            <div className="print-section"><CrossTableGuide isDark={isDark} /></div>
           )}
 
           {/* ── Footer ────────────────────────────────────────────────────── */}

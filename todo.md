@@ -3957,3 +3957,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Print View Explainer Pages
 - [x] Add Tiebreakers Guide tab to Print view (Pts, Bch, Bch1, SB, W/D/L with real examples)
 - [x] Add Cross-Table Guide tab to Print view (grid layout, cell reading, symmetry rule, Pts column)
+
+## Print-Optimized CSS for Explainer Pages
+- [x] Add @media print styles to Print.tsx, TiebreakersGuide, and CrossTableGuide for clean pagination

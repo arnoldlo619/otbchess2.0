@@ -8,8 +8,8 @@ interface Props {
 }
 
 export function CrossTableGuide({ isDark }: Props) {
-  const card = `rounded-2xl border overflow-hidden ${isDark ? "border-white/08" : "border-gray-100"}`;
-  const cardHeader = `px-5 py-4 border-b ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-gray-100 bg-[#F0F5EE]"}`;
+  const card = `guide-card rounded-2xl border overflow-hidden ${isDark ? "border-white/08" : "border-gray-100"}`;
+  const cardHeader = `guide-card-header px-5 py-4 border-b ${isDark ? "border-white/08 bg-[oklch(0.20_0.06_145)]" : "border-gray-100 bg-[#F0F5EE]"}`;
   const title = `font-bold text-base ${isDark ? "text-white" : "text-gray-900"}`;
   const sub = `text-sm mt-1.5 ${isDark ? "text-white/50" : "text-gray-500"}`;
   const innerTable = `rounded-xl overflow-hidden border ${isDark ? "border-white/06" : "border-gray-100"}`;
@@ -64,7 +64,7 @@ export function CrossTableGuide({ isDark }: Props) {
               { symbol: "0", label: "Loss", desc: "You lost to this opponent", color: isDark ? "text-white/40" : "text-gray-400", bg: isDark ? "bg-white/06" : "bg-gray-50" },
               { symbol: "—", label: "Diagonal / Not Played", desc: "Can't play yourself, or no game this round", color: isDark ? "text-white/20" : "text-gray-300", bg: isDark ? "bg-white/04" : "bg-gray-50" },
             ].map((item) => (
-              <div key={item.symbol} className={`rounded-xl p-4 text-center ${item.bg}`}>
+              <div key={item.symbol} className={`guide-highlight rounded-xl p-4 text-center ${item.bg}`}>
                 <div className={`text-3xl font-bold tabular-nums mb-2 ${item.color}`}>{item.symbol}</div>
                 <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{item.label}</p>
                 <p className={`text-xs mt-0.5 ${muted}`}>{item.desc}</p>
@@ -128,7 +128,7 @@ export function CrossTableGuide({ isDark }: Props) {
             { row: "Ken (#1)", col: "Column 1 (self)", value: "—", meaning: "Diagonal — a player can't play themselves", color: isDark ? "text-white/20" : "text-gray-300" },
             { row: "Kyle Hugo (#4)", col: "Column 1 (Ken)", value: "(empty)", meaning: "These two never played each other in this tournament", color: isDark ? "text-white/20" : "text-gray-300" },
           ].map((item, i) => (
-            <div key={i} className={`flex items-start gap-3 rounded-xl px-4 py-3 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
+            <div key={i} className={`guide-highlight flex items-start gap-3 rounded-xl px-4 py-3 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
               <span className={`text-lg font-bold tabular-nums flex-shrink-0 w-8 text-center ${item.color}`}>{item.value}</span>
               <div>
                 <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
@@ -142,7 +142,7 @@ export function CrossTableGuide({ isDark }: Props) {
       </div>
 
       {/* ── Symmetry rule ── */}
-      <div className={`rounded-2xl border p-5 ${isDark ? "border-[#4CAF50]/20 bg-[#3D6B47]/10" : "border-[#3D6B47]/20 bg-[#3D6B47]/04"}`}>
+      <div className={`guide-highlight rounded-2xl border p-5 ${isDark ? "border-[#4CAF50]/20 bg-[#3D6B47]/10" : "border-[#3D6B47]/20 bg-[#3D6B47]/04"}`}>
         <div className="flex items-start gap-3">
           <span className="text-xl flex-shrink-0">🔄</span>
           <div>
@@ -203,7 +203,7 @@ export function CrossTableGuide({ isDark }: Props) {
       </div>
 
       {/* ── Swiss pairing note ── */}
-      <div className={`rounded-2xl border p-5 ${isDark ? "border-white/08" : "border-gray-100"}`}>
+      <div className={`guide-card rounded-2xl border p-5 ${isDark ? "border-white/08" : "border-gray-100"}`}>
         <div className="flex items-start gap-3">
           <span className="text-xl flex-shrink-0">♟️</span>
           <div>
