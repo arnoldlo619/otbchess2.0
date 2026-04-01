@@ -997,9 +997,18 @@ export default function PrintPage() {
           )}
 
           {/* ── Tiebreakers Guide ──────────────────────────────────────────── */}
-          {activeSection === "tiebreakers" && (
-            <div className="print-section"><TiebreakersGuide isDark={isDark} /></div>
-          )}
+          {activeSection === "tiebreakers" && (() => {
+            const liveStandings = computeStandings(players, tournament.roundData as Round[]);
+            return (
+              <div className="print-section">
+                <TiebreakersGuide
+                  isDark={isDark}
+                  standings={liveStandings}
+                  rounds={tournament.roundData as Round[]}
+                />
+              </div>
+            );
+          })()}
 
           {/* ── Cross-Table Guide ─────────────────────────────────────────────── */}
           {activeSection === "crosstable-guide" && (

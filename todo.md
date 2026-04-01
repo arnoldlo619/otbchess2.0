@@ -3960,3 +3960,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Print-Optimized CSS for Explainer Pages
 - [x] Add @media print styles to Print.tsx, TiebreakersGuide, and CrossTableGuide for clean pagination
+
+## Personalized Tiebreak Examples in Print View
+- [x] Populate TiebreakersGuide with real tournament players, scores, Bch, Bch1, SB values
+- [x] Fall back to demo data when fewer than 3 players or no completed rounds
