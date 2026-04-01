@@ -4021,3 +4021,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update slide count from 5→6 across modal header, dot nav, and slide counters
 - [x] Pass match/round data through InstagramCarouselModal props
 - [x] Write unit tests for Slide 6 grid logic
+
+## Instagram Story Format (1080×1920) Toggle
+
+- [x] Add Square/Story format toggle UI in the carousel modal header
+- [x] Introduce SLIDE_W=1080 / SLIDE_H (1080 square or 1920 story) dimension system
+- [x] Redesign SlideWrapper to accept height param and render correct aspect ratio
+- [x] Redesign Slide 1 (Cover) for 1920px tall canvas — champion hero section fills top half
+- [x] Redesign Slide 2 (Podium) for 1920px — taller podium blocks, more breathing room
+- [x] Redesign Slide 3 (Standings) for 1920px — show more rows, larger text
+- [x] Redesign Slide 4 (Stats) for 1920px — larger stat numbers, more vertical space
+- [x] Redesign Slide 5 (CTA) for 1920px — full-bleed hero layout
+- [x] Redesign Slide 6 (Rounds) for 1920px — show more player rows in the taller canvas
+- [x] Update preview scale for story format (narrower, taller preview)
+- [x] Update export (html2canvas) to use correct width/height per format
+- [x] Write unit tests for format toggle and dimension system
