@@ -15,6 +15,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { NotifyBell } from "@/components/NotifyBell";
 
@@ -343,6 +344,7 @@ export default function JoinPage() {
   const search = useSearch();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const { triggerForJoin, canPromptNatively } = usePwaInstall();
 
   // Decode embedded tournament metadata from ?t= query param (set by Director QR)
   const embeddedMeta = decodeEmbeddedMeta(search ?? "");
@@ -613,6 +615,9 @@ export default function JoinPage() {
     if (isValidCode) {
       setError("");
       advanceStep("username");
+      // Contextual PWA install prompt: surface after successful code entry
+      // (only fires on Android Chrome when a native prompt is available)
+      if (canPromptNatively) triggerForJoin();
       return;
     }
 
@@ -659,6 +664,8 @@ export default function JoinPage() {
       setServerResolved(true);
       setCodeLoading(false);
       advanceStep("username");
+      // Contextual PWA install prompt: surface after successful server-side code resolution
+      if (canPromptNatively) triggerForJoin();
     } catch {
       setCodeLoading(false);
       setError("Could not verify tournament code. Check your connection and try again.");

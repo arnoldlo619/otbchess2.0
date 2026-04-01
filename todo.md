@@ -3993,3 +3993,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix 9: Ensure all form inputs have `autocomplete`, `inputMode`, and `enterKeyHint` for Android keyboard optimization
 - [x] Fix 10: Add `font-size: 16px` guard on all non-.mobile-input inputs to prevent Android zoom
 - [x] Write unit tests for mobile design system changes
+
+## PWA Install Prompt — Android "Add to Home Screen"
+
+- [x] Audit manifest.json and service worker for PWA installability compliance
+- [x] Build usePwaInstall hook (beforeinstallprompt listener + localStorage dismissal)
+- [x] Build InstallBanner component (animated bottom banner, dismiss/install actions)
+- [x] Integrate InstallBanner into Join page (shown after step 1 code entry)
+- [x] Add global beforeinstallprompt capture in main.tsx / App.tsx
+- [x] Smart re-prompt logic: show again after 7 days if dismissed, never if installed
+- [x] Write unit tests for usePwaInstall hook
