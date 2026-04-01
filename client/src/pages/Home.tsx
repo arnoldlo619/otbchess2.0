@@ -25,6 +25,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { useActiveTournament } from "@/hooks/useActiveTournament";
 import AuthModal from "../components/AuthModal";
 import { useAuthContext } from "../context/AuthContext";
 import {
@@ -443,6 +444,7 @@ function Nav({
 function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const activeTournament = useActiveTournament();
 
   return (
     <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 sm:pt-24 md:pt-16 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
@@ -492,6 +494,63 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             <span className="sm:hidden">Set up in minutes. Pairings generated automatically.</span>
             <span className="hidden sm:inline">Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.</span>
           </p>
+
+          {/* ── Return to Tournament CTA (mobile-first, shown when user has active tournament) ── */}
+          {activeTournament && (
+            <div
+              className="opacity-0-init animate-fade-in-up mb-5"
+              style={{ animationDelay: "0.40s", animationFillMode: "forwards" }}
+            >
+              <a
+                href={activeTournament.href}
+                onClick={(e) => { e.preventDefault(); window.location.href = activeTournament.href; }}
+                className={`group inline-flex items-center gap-3 w-full sm:w-auto px-5 py-4 rounded-2xl border-2 transition-all duration-200 active:scale-[0.97] shadow-lg ${
+                  isDark
+                    ? "bg-[#4CAF50]/12 border-[#4CAF50]/40 hover:bg-[#4CAF50]/20 hover:border-[#4CAF50]/70 shadow-[#4CAF50]/10"
+                    : "bg-[#3D6B47]/06 border-[#3D6B47]/30 hover:bg-[#3D6B47]/10 hover:border-[#3D6B47]/50 shadow-[#3D6B47]/08"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/12 text-[#3D6B47]"
+                }`}>
+                  {activeTournament.role === "director"
+                    ? <Shield className="w-5 h-5" />
+                    : <Trophy className="w-5 h-5" />}
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    {activeTournament.status === "in_progress" && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#4CAF50]/15 text-[#4CAF50]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
+                        LIVE
+                      </span>
+                    )}
+                    {activeTournament.status === "registration" && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400">LOBBY</span>
+                    )}
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                      isDark ? "text-white/35" : "text-gray-400"
+                    }`}>
+                      {activeTournament.role === "director" ? "Your Tournament" : "Active Tournament"}
+                    </span>
+                  </div>
+                  <p className={`text-sm font-bold truncate leading-tight ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {activeTournament.name}
+                  </p>
+                  <p className={`text-xs mt-0.5 ${
+                    isDark ? "text-white/45" : "text-gray-500"
+                  }`}>
+                    {activeTournament.role === "director" ? "Tap to manage" : "Tap to view standings"}
+                  </p>
+                </div>
+                <ChevronRight className={`w-5 h-5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform ${
+                  isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/50"
+                }`} />
+              </a>
+            </div>
+          )}
 
           <div
             className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto"

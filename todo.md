@@ -4036,3 +4036,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update preview scale for story format (narrower, taller preview)
 - [x] Update export (html2canvas) to use correct width/height per format
 - [x] Write unit tests for format toggle and dimension system
+
+## Mobile Tournament Navigation — Return to Tournament UX
+
+- [x] Build useActiveTournament hook — single source of truth for active tournament detection (director + player)
+- [x] Upgrade ActiveTournamentBanner — fix bottom positioning for Android system nav, add tournament status badge, make it non-dismissible on landing page
+- [x] Add "Return to Tournament" hero CTA on Home page — large green button shown when user has an active tournament
+- [x] Add tournament link to GuestMobileMenu — the hamburger menu for unauthenticated mobile users must show "Back to Tournament"
+- [x] Add tournament link to Home.tsx mobile menu — the mobile nav in Home.tsx is missing the tournament link
+- [x] Add "active tournament" indicator dot to the Tournaments nav tab in AppNavBar
+- [x] Write unit tests for useActiveTournament hook

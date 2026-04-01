@@ -10,8 +10,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Building2, Swords, Video, LogIn } from "lucide-react";
+import { Building2, Swords, Video, LogIn, Trophy, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useActiveTournament } from "@/hooks/useActiveTournament";
 
 const NAV_ITEMS = [
   { name: "Clubs",   href: "/clubs",  icon: Building2 },
@@ -27,6 +28,7 @@ interface GuestMobileMenuProps {
 export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
+  const activeTournament = useActiveTournament();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -71,7 +73,7 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
         position: "fixed",
         top: dropdownPos.top,
         right: dropdownPos.right,
-        width: 192,
+        width: 220,
         zIndex: 99999,
         borderRadius: 16,
         overflow: "hidden",
@@ -82,6 +84,37 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
         boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
       }}
     >
+      {/* Active Tournament — shown first if user has one */}
+      {activeTournament && (
+        <>
+          <div style={{ paddingTop: 6, paddingBottom: 6 }}>
+            <a
+              href={activeTournament.href}
+              onClick={(e) => { e.preventDefault(); setOpen(false); window.location.href = activeTournament.href; }}
+              className="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors duration-100"
+              style={{ color: "#4CAF50" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(76,175,80,0.10)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(76,175,80,0.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {activeTournament.role === "director"
+                  ? <Shield size={14} style={{ color: "#4CAF50" }} />
+                  : <Trophy size={14} style={{ color: "#4CAF50" }} />}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(76,175,80,0.7)", marginBottom: 1 }}>
+                  {activeTournament.status === "in_progress" ? "● LIVE" : activeTournament.role === "director" ? "Your Tournament" : "Active Tournament"}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {activeTournament.name}
+                </div>
+              </div>
+            </a>
+          </div>
+          <div style={{ margin: "0 12px", height: 1, background: "rgba(255,255,255,0.08)" }} />
+        </>
+      )}
+
       {/* Nav links */}
       <div style={{ paddingTop: 6, paddingBottom: 6 }}>
         {NAV_ITEMS.map(({ name, href, icon: Icon }) => (

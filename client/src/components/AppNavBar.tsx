@@ -22,6 +22,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/tournamentRegistry";
 import { getAllRegistrations } from "@/lib/registrationStore";
+import { useActiveTournament } from "@/hooks/useActiveTournament";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
@@ -78,9 +79,15 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   const isDark = theme === "dark";
   const { user } = useAuthContext();
   const [activeTab, setActiveTab] = useState(defaultActive);
+  const activeTournament = useActiveTournament();
 
   const dashboardUrl     = getDashboardUrl();
   const dashboardTooltip = getDashboardTooltip();
+
+  // Active indicator dot — shown on the Tournaments tab when user has a live/lobby tournament
+  const showActiveDot =
+    !!activeTournament &&
+    (activeTournament.status === "in_progress" || activeTournament.status === "registration" || activeTournament.status === "unknown");
 
   const navItems = [
     {
@@ -88,6 +95,12 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       url: dashboardUrl,
       icon: LayoutDashboard,
       tooltip: dashboardTooltip,
+      badge: showActiveDot ? (
+        <span
+          className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#4CAF50] shadow-[0_0_6px_rgba(76,175,80,0.8)]"
+          style={{ animation: activeTournament?.status === "in_progress" ? "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite" : "none" }}
+        />
+      ) : undefined,
       dropdown: <DashboardDropdown />,
       onClick: (e: React.MouseEvent) => {
         e.preventDefault();
