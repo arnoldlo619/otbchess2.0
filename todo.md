@@ -4003,3 +4003,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add global beforeinstallprompt capture in main.tsx / App.tsx
 - [x] Smart re-prompt logic: show again after 7 days if dismissed, never if installed
 - [x] Write unit tests for usePwaInstall hook
+
+## Instagram Carousel — Full-Bleed Redesign
+
+- [x] Redesign Slide 1 (Cover): full-bleed champion spotlight, massive tournament name, bold typography
+- [x] Redesign Slide 2 (Podium): taller podium blocks filling full height, larger player names and scores
+- [x] Redesign Slide 3 (Standings): larger row text, bigger rank numbers, use full 1080px height
+- [x] Redesign Slide 4 (Stats): bigger stat numbers, full-bleed grid, more prominent highlight rows
+- [x] Redesign Slide 5 (CTA): full-bleed OTB watermark, larger headline, centered bold layout
+- [x] Fix mobile download: use share sheet (Web Share API) on mobile for individual slide downloads
+- [x] Increase preview scale for better in-modal visibility
