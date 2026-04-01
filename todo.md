@@ -4013,3 +4013,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Redesign Slide 5 (CTA): full-bleed OTB watermark, larger headline, centered bold layout
 - [x] Fix mobile download: use share sheet (Web Share API) on mobile for individual slide downloads
 - [x] Increase preview scale for better in-modal visibility
+
+## Instagram Carousel — Slide 6 (Round-by-Round Results)
+
+- [x] Audit StandingRow and match data for per-round W/D/L availability
+- [x] Build Slide6RoundResults: player rows × round columns W/D/L grid
+- [x] Update slide count from 5→6 across modal header, dot nav, and slide counters
+- [x] Pass match/round data through InstagramCarouselModal props
+- [x] Write unit tests for Slide 6 grid logic

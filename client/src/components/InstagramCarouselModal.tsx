@@ -1,12 +1,13 @@
 /**
  * InstagramCarouselModal — Tournament Recap Instagram Carousel Generator
  *
- * Generates 5 branded 1080×1080 Instagram slides from tournament data:
+ * Generates 6 branded 1080×1080 Instagram slides from tournament data:
  *   1. Cover    — Tournament name, club, date, champion (full-bleed hero)
  *   2. Podium   — Top 3 players with ELO, points, medals (tall podium blocks)
  *   3. Standings — Full ranked player list with scores (dense, readable rows)
  *   4. Stats    — Players, rounds, format, avg ELO, top performer (big numbers)
  *   5. CTA      — "Play at [Club]" with OTB branding (bold centered)
+ *   6. Round-by-Round — W/D/L/BYE grid per player per round (optional, needs rounds data)
  *
  * Export: individual PNG or ZIP of all slides via html-to-image + JSZip
  * Mobile: uses Web Share API for individual slide downloads on mobile
@@ -20,6 +21,7 @@ import { X, Download, Instagram, ChevronLeft, ChevronRight, Loader2, Share2 } fr
 import { useTheme } from "@/contexts/ThemeContext";
 import type { StandingRow } from "@/lib/swiss";
 import type { TournamentConfig } from "@/lib/tournamentRegistry";
+import type { Round } from "@/lib/tournamentData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +32,8 @@ interface Props {
   config: TournamentConfig | null;
   tournamentName: string;
   totalRounds: number;
+  /** Optional: completed round data for Slide 6 (Round-by-Round grid) */
+  rounds?: Round[];
 }
 
 // ─── Design tokens (OTB brand) ────────────────────────────────────────────────
@@ -172,6 +176,8 @@ interface SlideProps {
   scale?: number;
   hostLogoUrl?: string | null;
   theme?: SlideTheme;
+  /** Optional round data for Slide 6 */
+  rounds?: Round[];
 }
 
 /** Shared slide wrapper — themed background with chess board texture */
@@ -908,6 +914,261 @@ function Slide5CTA({ rows: _rows, config, tournamentName: _tournamentName, total
   );
 }
 
+// ─── Slide 6 — Round-by-Round Results ────────────────────────────────────────
+
+/**
+ * Builds a per-player, per-round outcome map from raw Round[] data.
+ * Returns: Map<playerId, Array<"W"|"D"|"L"|"BYE"|"—">>
+ */
+function buildRoundGrid(
+  rows: StandingRow[],
+  rounds: Round[],
+  totalRounds: number
+): Map<string, ("W" | "D" | "L" | "BYE" | "—")[]> {
+  const grid = new Map<string, ("W" | "D" | "L" | "BYE" | "—")[]>();
+
+  // Initialise all players with "—" for every round
+  for (const row of rows) {
+    grid.set(row.player.id, Array(totalRounds).fill("—"));
+  }
+
+  // Fill in results from completed rounds
+  for (const round of rounds) {
+    if (round.status !== "completed") continue;
+    const rIdx = round.number - 1; // 0-based index
+    if (rIdx < 0 || rIdx >= totalRounds) continue;
+
+    for (const game of round.games) {
+      const { whiteId, blackId, result } = game;
+
+      // Bye game (blackId is empty or "BYE")
+      if (!blackId || blackId === "BYE" || blackId === "") {
+        const byeRow = grid.get(whiteId);
+        if (byeRow) byeRow[rIdx] = "BYE";
+        continue;
+      }
+
+      const whiteRow = grid.get(whiteId);
+      const blackRow = grid.get(blackId);
+
+      if (result === "1-0") {
+        if (whiteRow) whiteRow[rIdx] = "W";
+        if (blackRow) blackRow[rIdx] = "L";
+      } else if (result === "0-1") {
+        if (whiteRow) whiteRow[rIdx] = "L";
+        if (blackRow) blackRow[rIdx] = "W";
+      } else if (result === "½-½") {
+        if (whiteRow) whiteRow[rIdx] = "D";
+        if (blackRow) blackRow[rIdx] = "D";
+      }
+      // "*" (unfinished) stays as "—"
+    }
+  }
+
+  return grid;
+}
+
+function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale = 1, hostLogoUrl, theme = DEFAULT_THEME, rounds = [] }: SlideProps) {
+  const s = scale;
+  const FOOTER = 80 * s;
+  const PAD = 52 * s;
+  const HEADER_H = 148 * s;
+
+  // Build the round-result grid
+  const grid = buildRoundGrid(rows, rounds, totalRounds);
+
+  // Fit as many players as the canvas allows
+  // Each row: ~68px at scale=1; header row: ~40px
+  const ROW_H = 68 * s;
+  const COL_HEADER_H = 44 * s;
+  const availH = SLIDE_SIZE * s - FOOTER - HEADER_H - COL_HEADER_H;
+  const maxPlayers = Math.min(rows.length, Math.floor(availH / ROW_H));
+  const displayRows = rows.slice(0, maxPlayers);
+
+  // Column width — distribute evenly between name column and round columns
+  const NAME_COL = 280 * s;
+  const RANK_COL = 44 * s;
+  const PTS_COL = 56 * s;
+  const tableW = SLIDE_SIZE * s - PAD * 2;
+  const roundColsW = tableW - NAME_COL - RANK_COL - PTS_COL;
+  const roundColW = Math.min(72 * s, roundColsW / Math.max(1, totalRounds));
+
+  // Result cell styles
+  const cellStyle = (outcome: string): React.CSSProperties => {
+    if (outcome === "W") return { background: "#2D5A3A", color: "#6FCF97", border: "1.5px solid #3D7A4A" };
+    if (outcome === "L") return { background: "#5A2D2D", color: "#EB5757", border: "1.5px solid #7A3D3D" };
+    if (outcome === "D") return { background: "#3A3A1A", color: "#F2C94C", border: "1.5px solid #5A5A2A" };
+    if (outcome === "BYE") return { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.30)", border: "1.5px solid rgba(255,255,255,0.08)" };
+    return { background: "transparent", color: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.06)" };
+  };
+
+  return (
+    <SlideWrapper scale={scale} theme={theme}>
+      {/* Slide counter */}
+      <div style={{ position: "absolute", top: 36 * s, right: 44 * s, fontSize: 14 * s, color: "rgba(255,255,255,0.25)", fontWeight: 700, letterSpacing: "0.12em" }}>
+        6 / 6
+      </div>
+
+      {/* Header */}
+      <div style={{ paddingTop: 52 * s, paddingLeft: PAD, paddingRight: PAD, marginBottom: 20 * s }}>
+        <div style={{ fontSize: 13 * s, color: "rgba(255,255,255,0.32)", letterSpacing: "0.2em", fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 10 * s }}>
+          {tournamentName}
+        </div>
+        <div style={{ fontSize: 58 * s, fontWeight: 900, color: BRAND.white, letterSpacing: "-0.025em", lineHeight: 1 }}>
+          Round by Round
+        </div>
+      </div>
+
+      {/* Column header row */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: `0 ${PAD}px`,
+          height: COL_HEADER_H,
+          borderBottom: "1.5px solid rgba(255,255,255,0.10)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.15)",
+        }}
+      >
+        <div style={{ width: RANK_COL, fontSize: 11 * s, color: "rgba(255,255,255,0.28)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>#</div>
+        <div style={{ width: NAME_COL, fontSize: 11 * s, color: "rgba(255,255,255,0.28)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Player</div>
+        {Array.from({ length: totalRounds }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              width: roundColW,
+              textAlign: "center",
+              fontSize: 11 * s,
+              color: "rgba(255,255,255,0.28)",
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+            }}
+          >
+            R{i + 1}
+          </div>
+        ))}
+        <div style={{ width: PTS_COL, textAlign: "right", fontSize: 11 * s, color: "rgba(255,255,255,0.28)", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Pts</div>
+      </div>
+
+      {/* Player rows */}
+      {displayRows.map((row, idx) => {
+        const outcomes = grid.get(row.player.id) ?? Array(totalRounds).fill("—");
+        const isTop3 = row.rank <= 3;
+        const rankColors: Record<number, string> = { 1: BRAND.gold, 2: BRAND.silver, 3: BRAND.bronze };
+        const rankColor = isTop3 ? rankColors[row.rank] : "rgba(255,255,255,0.40)";
+        const nameSize = clampFont(18 * s, row.player.name, 20);
+
+        return (
+          <div
+            key={row.player.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: `0 ${PAD}px`,
+              height: ROW_H,
+              background: idx % 2 === 0 ? "rgba(255,255,255,0.022)" : "transparent",
+              borderLeft: isTop3 ? `4px solid ${rankColor}` : "4px solid transparent",
+            }}
+          >
+            {/* Rank */}
+            <div style={{ width: RANK_COL, fontSize: 14 * s, color: rankColor, fontWeight: 800 }}>
+              {row.rank}
+            </div>
+
+            {/* Name */}
+            <div style={{ width: NAME_COL, minWidth: 0 }}>
+              <div style={{ fontSize: nameSize, fontWeight: 800, color: BRAND.white, lineHeight: 1.2, whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>
+                {row.player.name}
+              </div>
+              <div style={{ fontSize: 11 * s, color: "rgba(255,255,255,0.30)", marginTop: 2 * s }}>@{row.player.username}</div>
+            </div>
+
+            {/* Round result cells */}
+            {outcomes.map((outcome, rIdx) => (
+              <div
+                key={rIdx}
+                style={{
+                  width: roundColW,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: Math.min(48 * s, roundColW * 0.78),
+                    height: Math.min(48 * s, ROW_H * 0.68),
+                    borderRadius: 8 * s,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: outcome === "BYE" ? 9 * s : 16 * s,
+                    fontWeight: 900,
+                    letterSpacing: outcome === "BYE" ? "0.04em" : 0,
+                    ...cellStyle(outcome),
+                  }}
+                >
+                  {outcome}
+                </div>
+              </div>
+            ))}
+
+            {/* Points */}
+            <div style={{ width: PTS_COL, textAlign: "right", fontSize: 22 * s, fontWeight: 900, color: isTop3 ? rankColor : BRAND.white }}>
+              {row.points}
+            </div>
+          </div>
+        );
+      })}
+
+      {rows.length > maxPlayers && (
+        <div style={{ textAlign: "center", marginTop: 10 * s, fontSize: 14 * s, color: "rgba(255,255,255,0.22)", fontWeight: 600 }}>
+          +{rows.length - maxPlayers} more players
+        </div>
+      )}
+
+      {/* Legend */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: FOOTER + 12 * s,
+          left: PAD,
+          right: PAD,
+          display: "flex",
+          gap: 16 * s,
+          alignItems: "center",
+        }}
+      >
+        {(["W", "D", "L", "BYE"] as const).map((label) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 * s }}>
+            <div
+              style={{
+                width: 20 * s,
+                height: 20 * s,
+                borderRadius: 4 * s,
+                fontSize: 9 * s,
+                fontWeight: 900,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                ...cellStyle(label),
+              }}
+            >
+              {label === "BYE" ? "B" : label}
+            </div>
+            <div style={{ fontSize: 11 * s, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>
+              {label === "W" ? "Win" : label === "D" ? "Draw" : label === "L" ? "Loss" : "Bye"}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+    </SlideWrapper>
+  );
+}
+
 // ─── Slide registry ───────────────────────────────────────────────────────────
 
 const SLIDES = [
@@ -916,6 +1177,7 @@ const SLIDES = [
   { id: "standings", label: "Standings", Component: Slide3Standings },
   { id: "stats", label: "Stats", Component: Slide4Stats },
   { id: "cta", label: "CTA", Component: Slide5CTA },
+  { id: "rounds", label: "Rounds", Component: Slide6RoundResults },
 ];
 
 // ─── Mobile detection ─────────────────────────────────────────────────────────
@@ -927,7 +1189,7 @@ function isMobileDevice(): boolean {
 
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
-export function InstagramCarouselModal({ open, onClose, rows, config, tournamentName, totalRounds }: Props) {
+export function InstagramCarouselModal({ open, onClose, rows, config, tournamentName, totalRounds, rounds = [] }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeSlide, setActiveSlide] = useState(0);
@@ -940,7 +1202,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  const slideProps: SlideProps = { rows, config, tournamentName, totalRounds, scale: 1, hostLogoUrl, theme: activeTheme };
+  const slideProps: SlideProps = { rows, config, tournamentName, totalRounds, scale: 1, hostLogoUrl, theme: activeTheme, rounds };
 
   // Preview scale — larger so the design is clearly visible in the modal
   // On mobile screens we use a smaller scale to fit the viewport

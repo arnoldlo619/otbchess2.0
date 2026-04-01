@@ -3865,6 +3865,7 @@ export default function Director() {
           config={getTournamentConfig(tournamentId) ?? null}
           tournamentName={state.tournamentName}
           totalRounds={state.totalRounds}
+          rounds={state.rounds}
         />
       )}
 
