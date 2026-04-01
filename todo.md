@@ -4061,3 +4061,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Page 4: Swiss Pairing System visual explanation (score groups, color balance)
 - [x] Ensure all print pages use the target design (OTB Chess header, green accent bar, clean typography)
 - [x] Remove dark theme from print output entirely — always white background for PDF
+
+## PDF Enhancements — Three Features
+
+- [x] Feature 1: Add PDF download button to public Report page header
+- [x] Feature 2: Add clubName and clubLogoUrl to PdfOptions interface
+- [x] Feature 2: Render club name in PDF header when present (replaces "OTB Chess" text)
+- [x] Feature 2: Pass clubName from tournamentConfig in both Director and Report page PDF calls
+- [x] Feature 3: Add generateResultsPdfBuffer() variant returning Uint8Array
+- [x] Feature 3: Add pdfBase64 field to send-results-email request body
+- [x] Feature 3: Attach PDF to nodemailer sendMail in email.ts
+- [x] Feature 3: Add "Send PDF" toggle in ShareResultsModal server-send flow
+- [x] Write unit tests for all three features

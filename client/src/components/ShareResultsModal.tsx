@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
+import type { Round, Player } from "@/lib/tournamentData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,12 @@ interface ShareResultsModalProps {
   onClose: () => void;
   /** If provided, modal opens in single-player mode */
   singlePlayer?: PlayerPerformance;
+  /** Optional: raw player list for PDF generation */
+  pdfPlayers?: Player[];
+  /** Optional: rounds data for PDF generation */
+  pdfRounds?: Round[];
+  /** Optional: club name for PDF branding */
+  pdfClubName?: string;
 }
 
 // ─── Message generators ───────────────────────────────────────────────────────
@@ -540,6 +547,9 @@ export function ShareResultsModal({
   isDark,
   onClose,
   singlePlayer,
+  pdfPlayers,
+  pdfRounds,
+  pdfClubName,
 }: ShareResultsModalProps) {
   const [channel, setChannel] = useState<ShareChannel>("email");
   const [copiedAll, setCopiedAll] = useState(false);
@@ -602,8 +612,25 @@ export function ShareResultsModal({
     setSendStates(initial);
 
     try {
+      // Generate PDF buffer if player/round data is available
+      let pdfBase64: string | undefined;
+      if (pdfPlayers && pdfPlayers.length > 0 && pdfRounds) {
+        try {
+          const { generateResultsPdfBuffer } = await import("@/lib/generateResultsPdf");
+          pdfBase64 = await generateResultsPdfBuffer({
+            tournamentName,
+            players: pdfPlayers,
+            rounds: pdfRounds,
+            clubName: pdfClubName,
+          });
+        } catch (pdfErr) {
+          console.warn("[ShareResultsModal] PDF generation failed, sending without attachment:", pdfErr);
+        }
+      }
+
       const payload = {
         tournamentName,
+        pdfBase64,
         players: playersWithEmail.map((perf) => ({
           name: perf.player.name,
           email: perf.player.email!,

@@ -102,22 +102,27 @@ export function buildStandingsRows(sortedPlayers: Player[]): string[][] {
 
 /** Draws the standard OTB Chess page header (green bar + tournament info). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function drawPageHeader(doc: any, tournamentName: string, pageW: number): void {
+function drawPageHeader(doc: any, tournamentName: string, pageW: number, clubName?: string): void {
   // Green header bar
   doc.setFillColor(...GREEN_DARK);
   doc.rect(0, 0, pageW, 22, "F");
 
-  // OTB Chess logo text (left)
+  // Brand name (left) — club name if provided, otherwise "OTB Chess"
+  const brandName = clubName ? clubName : "OTB Chess";
+  const subLabel  = clubName ? "Powered by chessotb.club" : "chessotb.club";
+
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("OTB Chess", 14, 10);
+  doc.setFontSize(clubName ? 11 : 14);
+  doc.text(brandName, 14, 10);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.text("chessotb.club", 14, 16.5);
+  doc.setFontSize(7.5);
+  doc.setTextColor(200, 230, 200);
+  doc.text(subLabel, 14, 16.5);
 
   // Tournament name (right-aligned)
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   const name = tournamentName.toUpperCase();
@@ -161,13 +166,13 @@ function drawCard(doc: any, x: number, y: number, w: number, h: number, fillColo
 
 // ─── Page 3: Scoring System ───────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addScoringSystemPage(doc: any, tournamentName: string): void {
+function addScoringSystemPage(doc: any, tournamentName: string, clubName?: string): void {
   doc.addPage("a4", "portrait");
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   let y = 30;
 
-  drawPageHeader(doc, tournamentName, pageW);
+  drawPageHeader(doc, tournamentName, pageW, clubName);
 
   // Section title
   doc.setFont("helvetica", "bold");
@@ -297,13 +302,13 @@ function addScoringSystemPage(doc: any, tournamentName: string): void {
 
 // ─── Page 4: Swiss Pairing System ────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addSwissPairingPage(doc: any, tournamentName: string, totalRounds: number, playerCount: number): void {
+function addSwissPairingPage(doc: any, tournamentName: string, totalRounds: number, playerCount: number, clubName?: string): void {
   doc.addPage("a4", "portrait");
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   let y = 30;
 
-  drawPageHeader(doc, tournamentName, pageW);
+  drawPageHeader(doc, tournamentName, pageW, clubName);
 
   // Section title
   doc.setFont("helvetica", "bold");
@@ -452,6 +457,10 @@ export interface PdfOptions {
   format?: string;
   players: Player[];
   rounds: Round[];
+  /** Optional club branding — replaces "OTB Chess" in the header when present */
+  clubName?: string;
+  /** Optional club logo URL — rendered as a small image in the header */
+  clubLogoUrl?: string;
 }
 
 export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
@@ -470,6 +479,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
     format = "Swiss",
     players,
     rounds,
+    clubName,
   } = opts;
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -479,7 +489,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
 
   // ── Page 1: Header + Final Standings ──────────────────────────────────────
 
-  drawPageHeader(doc, tournamentName, pageW);
+  drawPageHeader(doc, tournamentName, pageW, clubName);
   cursorY = 30;
 
   // Meta row
@@ -567,7 +577,7 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   const pageW2 = doc.internal.pageSize.getWidth();
   cursorY = margin;
 
-  drawPageHeader(doc, tournamentName, pageW2);
+  drawPageHeader(doc, tournamentName, pageW2, clubName);
   cursorY = 30;
 
   doc.setFont("helvetica", "bold");
@@ -628,10 +638,10 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   });
 
   // ── Page 3: Scoring System ─────────────────────────────────────────────────
-  addScoringSystemPage(doc, tournamentName);
+  addScoringSystemPage(doc, tournamentName, clubName);
 
   // ── Page 4: Swiss Pairing System ──────────────────────────────────────────
-  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length);
+  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName);
 
   // ── Footers on every page ──────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
@@ -643,4 +653,147 @@ export async function generateResultsPdf(opts: PdfOptions): Promise<void> {
   // ── Save ───────────────────────────────────────────────────────────────────
   const safeName = tournamentName.replace(/[^a-z0-9]/gi, "-").toLowerCase();
   doc.save(`otb-${safeName}-results.pdf`);
+}
+
+/**
+ * generateResultsPdfBuffer
+ *
+ * Same as generateResultsPdf but returns the PDF as a base64-encoded string
+ * instead of triggering a browser download. Used for attaching the PDF to
+ * server-side emails via the SMTP system.
+ */
+export async function generateResultsPdfBuffer(opts: PdfOptions): Promise<string> {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+
+  const {
+    tournamentName,
+    date = "",
+    location = "",
+    timeControl = "",
+    totalRounds,
+    format = "Swiss",
+    players,
+    rounds,
+    clubName,
+  } = opts;
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 14;
+  let cursorY = margin;
+
+  // Page 1: Header + Final Standings
+  drawPageHeader(doc, tournamentName, pageW, clubName);
+  cursorY = 30;
+
+  doc.setTextColor(...TEXT_MID);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  const metaParts: string[] = [];
+  if (date) metaParts.push(`Date: ${date}`);
+  if (location) metaParts.push(`Venue: ${location}`);
+  if (timeControl) metaParts.push(`Time Control: ${timeControl}`);
+  if (totalRounds) metaParts.push(`Rounds: ${totalRounds}`);
+  metaParts.push(`Players: ${players.length}`);
+  if (format) metaParts.push(`Format: ${format}`);
+  doc.text(metaParts.join("   •   "), margin, cursorY);
+  cursorY += 3;
+  doc.setDrawColor(...GREY_MED);
+  doc.setLineWidth(0.3);
+  doc.line(margin, cursorY, pageW - margin, cursorY);
+  cursorY += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...GREEN_DARK);
+  doc.text("Final Standings", margin, cursorY);
+  cursorY += 4;
+
+  const sortedPlayers = getStandings(players);
+  const standingsRows = buildStandingsRows(sortedPlayers);
+
+  autoTable(doc, {
+    startY: cursorY,
+    head: [["#", "Player", "ELO", "Pts", "W", "D", "L", "Buch."]],
+    body: standingsRows,
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 9, cellPadding: 3, font: "helvetica", textColor: TEXT_DARK },
+    headStyles: { fillColor: GREEN_DARK, textColor: [255, 255, 255], fontStyle: "bold" },
+    alternateRowStyles: { fillColor: GREY_LIGHT },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.row.index < 3 && data.column.index === 0) {
+        const colors = [GOLD, SILVER, BRONZE];
+        data.cell.styles.fillColor = colors[data.row.index];
+        data.cell.styles.textColor = [30, 30, 30];
+        data.cell.styles.fontStyle = "bold";
+      }
+      if (data.section === "body" && data.column.index === 3) {
+        data.cell.styles.fontStyle = "bold";
+      }
+    },
+  });
+
+  // Page 2: Cross-Table
+  const needsLandscape = sortedPlayers.length > 10;
+  if (needsLandscape) { doc.addPage("a4", "landscape"); } else { doc.addPage("a4", "portrait"); }
+  const pageW2 = doc.internal.pageSize.getWidth();
+  cursorY = margin;
+  drawPageHeader(doc, tournamentName, pageW2, clubName);
+  cursorY = 30;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...GREEN_DARK);
+  doc.text("Cross-Table", margin, cursorY);
+  cursorY += 4;
+  const { headers: ctHeaders, rows: ctRows } = buildCrossTableMatrix(sortedPlayers, rounds);
+  const resultCellW = Math.max(6, Math.min(10, (pageW2 - margin * 2 - 10 - 40 - 10) / sortedPlayers.length));
+  const nameCellW = Math.min(50, pageW2 - margin * 2 - 10 - resultCellW * sortedPlayers.length - 10);
+  const ctColumnStyles: Record<number, object> = {
+    0: { halign: "center" as const, cellWidth: 8 },
+    1: { halign: "left" as const, cellWidth: nameCellW },
+  };
+  for (let i = 0; i < sortedPlayers.length; i++) {
+    ctColumnStyles[i + 2] = { halign: "center" as const, cellWidth: resultCellW };
+  }
+  ctColumnStyles[sortedPlayers.length + 2] = { halign: "center" as const, cellWidth: 10, fontStyle: "bold" as const };
+  autoTable(doc, {
+    startY: cursorY,
+    head: [ctHeaders],
+    body: ctRows,
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 7.5, cellPadding: 2, font: "helvetica", textColor: TEXT_DARK },
+    headStyles: { fillColor: GREEN_DARK, textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+    columnStyles: ctColumnStyles,
+    alternateRowStyles: { fillColor: GREY_LIGHT },
+    didParseCell: (data) => {
+      if (data.section === "body") {
+        const colIdx = data.column.index;
+        const rowIdx = data.row.index;
+        if (colIdx >= 2 && colIdx < sortedPlayers.length + 2 && colIdx - 2 === rowIdx) {
+          data.cell.styles.fillColor = GREY_DIAG;
+          data.cell.styles.textColor = [160, 160, 160];
+        }
+        if (data.cell.raw === "1") { data.cell.styles.textColor = WIN_GREEN; data.cell.styles.fontStyle = "bold"; }
+        else if (data.cell.raw === "0") { data.cell.styles.textColor = LOSS_RED; }
+        else if (data.cell.raw === "½") { data.cell.styles.textColor = DRAW_BLUE; }
+      }
+    },
+  });
+
+  // Pages 3 & 4: Explanation pages
+  addScoringSystemPage(doc, tournamentName, clubName);
+  addSwissPairingPage(doc, tournamentName, totalRounds ?? rounds.length, players.length, clubName);
+
+  // Footers
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawFooter(doc, p, totalPages);
+  }
+
+  // Return as base64 string (no browser download)
+  return doc.output("datauristring").split(",")[1];
 }

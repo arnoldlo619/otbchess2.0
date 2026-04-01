@@ -182,7 +182,7 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
       auth: { user: cfg.smtpUser, pass },
     });
 
-    const { players, tournamentName } = req.body as {
+    const { players, tournamentName, pdfBase64 } = req.body as {
       players: Array<{
         name: string;
         email: string;
@@ -193,6 +193,8 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
         cardUrl?: string;
       }>;
       tournamentName: string;
+      /** Optional base64-encoded PDF to attach to every email */
+      pdfBase64?: string;
     };
 
     if (!Array.isArray(players) || players.length === 0) {
@@ -245,12 +247,22 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
         </div>
       `;
 
+      // Build PDF attachment if provided
+      const attachments = pdfBase64
+        ? [{
+            filename: `${tournamentName.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-results.pdf`,
+            content: Buffer.from(pdfBase64, "base64"),
+            contentType: "application/pdf",
+          }]
+        : [];
+
       try {
         await transporter.sendMail({
           from: `"${cfg.fromName}" <${cfg.fromEmail}>`,
           to: p.email,
           subject: `Your results from ${tournamentName} — ${rankLabel}`,
           html,
+          attachments,
         });
         results.push({ email: p.email, status: "sent" });
       } catch (err: any) {

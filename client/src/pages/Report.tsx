@@ -19,6 +19,7 @@ import { loadTournamentState } from "@/lib/directorState";
 import { getTournamentConfig } from "@/lib/tournamentRegistry";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 import { computeAllPerformances, type PlayerPerformance } from "@/lib/performanceStats";
+import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import PlayerStatsCard, {
   ACCENT_PALETTE,
@@ -47,6 +48,7 @@ import {
   CheckCheck,
   Palette,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 
 // ─── Tab type ─────────────────────────────────────────────────────────────────
@@ -646,6 +648,25 @@ export default function ReportPage() {
     p.player.username.toLowerCase().includes(search.toLowerCase())
   );
 
+  // PDF download
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      await generateResultsPdf({
+        tournamentName,
+        location: config?.venue,
+        date: config?.date,
+        timeControl: config?.timePreset,
+        players,
+        rounds,
+        clubName: config?.clubName ?? undefined,
+      });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   // Download all
   const [downloadingAll, setDownloadingAll] = useState(false);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -790,6 +811,24 @@ export default function ReportPage() {
               </button>
             </div>
           )}
+
+          {/* PDF download button — always visible */}
+          <button
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            title="Download PDF results"
+            className={`p-2 rounded-lg transition-colors disabled:opacity-40 ${
+              isDark
+                ? "text-[#4CAF50]/80 hover:text-[#4CAF50] hover:bg-[#4CAF50]/10"
+                : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
+            }`}
+          >
+            {downloadingPdf ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4" />
+            )}
+          </button>
 
           {/* Theme toggle */}
           <ThemeToggle />
@@ -994,6 +1033,9 @@ export default function ReportPage() {
           isDark={isDark}
           onClose={shareModal.close}
           singlePlayer={shareModal.singlePlayer}
+          pdfPlayers={players}
+          pdfRounds={rounds}
+          pdfClubName={config?.clubName ?? undefined}
         />
       )}
     </div>
