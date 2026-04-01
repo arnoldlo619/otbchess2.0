@@ -812,3 +812,30 @@ export const prepCache = mysqlTable('prep_cache', {
 }));
 export type PrepCacheRow = typeof prepCache.$inferSelect;
 export type NewPrepCacheRow = typeof prepCache.$inferInsert;
+
+// ─── director_smtp_config ─────────────────────────────────────────────────────
+// Stores per-user SMTP configuration for sending tournament results emails
+// directly from the platform. Password is AES-256 encrypted server-side.
+export const directorSmtpConfig = mysqlTable("director_smtp_config", {
+  id: int("id").primaryKey().autoincrement(),
+  /** Owner user ID — one config per user */
+  userId: varchar("user_id", { length: 36 }).notNull().unique(),
+  /** SMTP host, e.g. smtp.gmail.com */
+  host: varchar("host", { length: 255 }).notNull(),
+  /** SMTP port, e.g. 587 (STARTTLS) or 465 (SSL) */
+  port: int("port").notNull().default(587),
+  /** Whether to use TLS/SSL */
+  secure: boolean("secure").notNull().default(false),
+  /** SMTP username / login */
+  smtpUser: varchar("smtp_user", { length: 255 }).notNull(),
+  /** AES-256-CBC encrypted SMTP password (hex-encoded IV:ciphertext) */
+  smtpPassEncrypted: text("smtp_pass_encrypted").notNull(),
+  /** Display name shown in From field, e.g. "Brooklyn Chess Club" */
+  fromName: varchar("from_name", { length: 100 }).notNull().default("ChessOTB Director"),
+  /** From email address, e.g. director@mychessclub.com */
+  fromEmail: varchar("from_email", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export type DirectorSmtpConfig = typeof directorSmtpConfig.$inferSelect;
+export type NewDirectorSmtpConfig = typeof directorSmtpConfig.$inferInsert;

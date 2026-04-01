@@ -37,6 +37,7 @@ import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
+import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
 import {
   Crown,
   ChevronLeft,
@@ -3697,6 +3698,9 @@ export default function Director() {
                 spectatorUrl={spectatorUrl}
                 isDark={isDark}
               />
+
+              {/* ── SMTP Email Settings ──────────────────────────────────────── */}
+              <SmtpSettingsCard isDark={isDark} />
 
               {/* Danger zone */}
               <div

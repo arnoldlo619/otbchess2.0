@@ -2,22 +2,17 @@
  * OTB Chess — ShareResultsModal
  *
  * A modal that lets tournament directors broadcast player stats to all
- * participants via WhatsApp or email. Two modes:
+ * participants via email (mailto: or server-side SMTP) or QR code.
  *
- *   1. Broadcast All — generates one WhatsApp / email link per player,
- *      displayed as a list the director can click through one by one.
- *
- *   2. Share Single — called from an individual card's action menu,
- *      opens the share options for just that player.
- *
- * Since browsers cannot auto-send WhatsApp messages or emails on behalf of
- * the user, we generate pre-filled deep-links (wa.me and mailto:) that open
- * in the system app. The director clicks each link to send.
+ * Email modes:
+ *   1. mailto: links — opens the director's local email client per player
+ *   2. Send via Server — uses the director's saved SMTP config to send
+ *      emails directly from the platform; shows per-player sent/failed status
  *
  * The message body includes:
  *   - Tournament name, player rank, score
- *   - A profile link on chess.com or Lichess
- *   - A call-to-action to view the full report
+ *   - A direct link to the player's card on the report page
+ *   - A call-to-action to view the full results
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -31,11 +26,15 @@ import {
   Send,
   ChevronRight,
   Users,
-  Trophy,
   QrCode,
   Download,
   Maximize2,
   Minimize2,
+  Server,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Settings,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
@@ -50,6 +49,7 @@ const OTB_LOGO_URL =
 interface ShareResultsModalProps {
   performances: PlayerPerformance[];
   tournamentName: string;
+  tournamentId?: string;
   reportUrl?: string;
   isDark: boolean;
   onClose: () => void;
@@ -80,7 +80,6 @@ function buildEmailBody(
   const rank = ordinal(perf.rank);
   const record = `${perf.wins}W / ${perf.draws}D / ${perf.losses}L`;
   const profileUrl = platformProfileUrl(perf);
-  // Direct anchor link to this player's card on the report page
   const cardUrl = reportUrl ? `${reportUrl}#player-${perf.player.id}` : "";
 
   return [
@@ -111,13 +110,17 @@ function buildEmailSubject(perf: PlayerPerformance, tournamentName: string): str
 
 // ─── mailto link builder ──────────────────────────────────────────────────────
 
-function mailtoLink(
-  email: string | undefined,
-  subject: string,
-  body: string
-): string {
+function mailtoLink(email: string | undefined, subject: string, body: string): string {
   const to = email ?? "";
   return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// ─── Per-player send status ───────────────────────────────────────────────────
+
+type SendStatus = "idle" | "sending" | "sent" | "failed";
+
+interface PlayerSendState {
+  [playerId: string]: { status: SendStatus; error?: string };
 }
 
 // ─── Single player share row ──────────────────────────────────────────────────
@@ -127,13 +130,13 @@ function PlayerShareRow({
   tournamentName,
   reportUrl,
   isDark,
-  channel,
+  sendState,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
   reportUrl: string;
   isDark: boolean;
-  channel: ShareChannel;
+  sendState?: { status: SendStatus; error?: string };
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -159,6 +162,16 @@ function PlayerShareRow({
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textSub = isDark ? "text-white/40" : "text-gray-500";
 
+  // Server send status indicator
+  const statusIcon =
+    sendState?.status === "sending" ? (
+      <Loader2 size={13} className="animate-spin text-blue-400" />
+    ) : sendState?.status === "sent" ? (
+      <CheckCircle size={13} className="text-green-500" />
+    ) : sendState?.status === "failed" ? (
+      <AlertCircle size={13} className="text-red-400" />
+    ) : null;
+
   return (
     <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${rowBg}`}>
       {/* Rank + name */}
@@ -171,10 +184,14 @@ function PlayerShareRow({
               {perf.player.email}
             </span>
           )}
+          {statusIcon}
         </div>
         <span className={`text-[11px] ${textSub}`}>
           {perf.points}pts · {perf.wins}W {perf.draws}D {perf.losses}L · Perf {perf.performanceRating}
         </span>
+        {sendState?.status === "failed" && sendState.error && (
+          <span className="text-[10px] text-red-400 block truncate">{sendState.error}</span>
+        )}
       </div>
 
       {/* Actions */}
@@ -223,7 +240,6 @@ function QRCodePanel({
   const [copied, setCopied] = useState(false);
   const [projecting, setProjecting] = useState(false);
 
-  // Close projection overlay on Escape key
   useEffect(() => {
     if (!projecting) return;
     const handler = (e: KeyboardEvent) => {
@@ -313,12 +329,12 @@ function QRCodePanel({
               fontSize: 13,
               fontWeight: 700,
               color: "rgba(255,255,255,0.7)",
-              letterSpacing: "0.08em",
+              letterSpacing: "0.1em",
               textTransform: "uppercase",
               fontFamily: "'Clash Display', sans-serif",
             }}
           >
-            OTBchess.club
+            ChessOTB.club
           </span>
         </div>
 
@@ -329,176 +345,120 @@ function QRCodePanel({
             fontWeight: 800,
             color: "#fff",
             textAlign: "center",
-            lineHeight: 1.25,
+            lineHeight: 1.3,
+            fontFamily: "'Clash Display', sans-serif",
+            maxWidth: 220,
             position: "relative",
             zIndex: 1,
-            fontFamily: "'Clash Display', sans-serif",
-            maxWidth: 200,
           }}
         >
           {tournamentName}
         </div>
 
-        {/* QR code on white card */}
+        {/* QR code */}
         <div
           style={{
             background: "#fff",
-            borderRadius: 14,
-            padding: 14,
+            borderRadius: 12,
+            padding: 12,
             position: "relative",
             zIndex: 1,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
           }}
         >
           <QRCodeSVG
             value={qrValue}
-            size={160}
+            size={180}
             bgColor="#ffffff"
-            fgColor="#0f2d1a"
+            fgColor="#0a1f10"
             level="H"
             imageSettings={{
               src: OTB_LOGO_URL,
-              height: 28,
-              width: 28,
+              height: 32,
+              width: 32,
               excavate: true,
             }}
           />
         </div>
 
-        {/* CTA label */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <span
+        {/* CTA */}
+        <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div
             style={{
               fontSize: 11,
               fontWeight: 700,
               color: "#6ee7a0",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.08em",
               textTransform: "uppercase",
+              fontFamily: "'Clash Display', sans-serif",
             }}
           >
             Scan to view results
-          </span>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
+          </div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
             View standings · Download your player card
-          </span>
-        </div>
-
-        {/* Divider row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, position: "relative", zIndex: 1 }}>
-          <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.1)" }} />
-          <Trophy size={12} color="rgba(255,255,255,0.25)" />
-          <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.1)" }} />
+          </div>
         </div>
       </div>
 
-      {/* No URL warning */}
-      {!hasUrl && (
-        <p className={`text-[11px] text-center ${textSub} max-w-[240px]`}>
-          The report page URL will be available once the tournament is published. The QR code currently links to this page.
-        </p>
-      )}
-
-      {/* Project on screen button */}
-      <button
-        onClick={() => setProjecting(true)}
-        className="flex items-center justify-center gap-2 w-full max-w-[280px] px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-[#3D6B47] text-[#3D6B47] hover:bg-[#3D6B47] hover:text-white transition-colors"
-      >
-        <Maximize2 className="w-4 h-4" />
-        Project on Screen
-      </button>
-
       {/* Action buttons */}
-      <div className="flex items-center gap-2 w-full max-w-[280px]">
-        <button
-          onClick={handleCopyLink}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-            isDark
-              ? "bg-white/08 text-white/70 hover:bg-white/14"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          {copied ? (
-            <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
-          {copied ? "Copied!" : "Copy Link"}
-        </button>
+      <div className="flex items-center gap-2 w-full max-w-xs">
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5235] transition-colors disabled:opacity-60"
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
         >
-          <Download className="w-3.5 h-3.5" />
-          {downloading ? "Saving…" : "Download Card"}
+          {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          {downloading ? "Generating…" : "Download PNG"}
+        </button>
+        <button
+          onClick={handleCopyLink}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          {copied ? <CheckCheck className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? "Copied!" : "Copy Link"}
+        </button>
+        <button
+          onClick={() => setProjecting(true)}
+          title="Project fullscreen"
+          className={`p-2 rounded-xl transition-colors ${
+            isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <p className={`text-[10px] text-center ${textSub} max-w-[260px] leading-relaxed`}>
-        Print or display this card at your venue. Players scan the QR code to view the final standings and download their personal performance card.
-      </p>
+      {!hasUrl && (
+        <p className={`text-xs text-center ${textSub}`}>
+          Finish the tournament to generate a permanent results link.
+        </p>
+      )}
 
       {/* Fullscreen projection overlay */}
       {projecting && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            background: "#0a1f10",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 40,
-          }}
+          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+          style={{ background: "linear-gradient(145deg, #0f2d1a 0%, #1a3d25 60%, #0d2518 100%)" }}
+          onClick={() => setProjecting(false)}
         >
-          {/* Close button */}
           <button
             onClick={() => setProjecting(false)}
-            style={{
-              position: "absolute",
-              top: 24,
-              right: 24,
-              background: "rgba(255,255,255,0.08)",
-              border: "none",
-              borderRadius: 12,
-              padding: "10px 16px",
-              color: "rgba(255,255,255,0.6)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-              fontWeight: 600,
-            }}
+            className="absolute top-6 right-6 p-2 rounded-xl bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
           >
-            <Minimize2 size={16} />
-            Exit Projection
+            <Minimize2 className="w-5 h-5" />
           </button>
 
-          {/* OTB!! logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <img
-              src={OTB_LOGO_URL}
-              alt="OTB!!"
-              crossOrigin="anonymous"
-              style={{ width: 52, height: 52, objectFit: "contain" }}
-            />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
+            <img src={OTB_LOGO_URL} alt="OTB!!" style={{ width: 48, height: 48, objectFit: "contain" }} />
             <span
               style={{
-                fontSize: 22,
-                fontWeight: 800,
-                color: "rgba(255,255,255,0.65)",
+                fontSize: 20,
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.7)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 fontFamily: "'Clash Display', sans-serif",
@@ -508,7 +468,6 @@ function QRCodePanel({
             </span>
           </div>
 
-          {/* Tournament name */}
           <div
             style={{
               fontSize: 42,
@@ -524,13 +483,13 @@ function QRCodePanel({
             {tournamentName}
           </div>
 
-          {/* Large QR code */}
           <div
             style={{
               background: "#fff",
               borderRadius: 24,
               padding: 28,
               boxShadow: "0 16px 80px rgba(0,0,0,0.6)",
+              marginTop: 32,
             }}
           >
             <QRCodeSVG
@@ -548,8 +507,7 @@ function QRCodePanel({
             />
           </div>
 
-          {/* CTA */}
-          <div style={{ textAlign: "center" }}>
+          <div style={{ textAlign: "center", marginTop: 32 }}>
             <div
               style={{
                 fontSize: 22,
@@ -577,6 +535,7 @@ function QRCodePanel({
 export function ShareResultsModal({
   performances,
   tournamentName,
+  tournamentId,
   reportUrl = "",
   isDark,
   onClose,
@@ -585,13 +544,28 @@ export function ShareResultsModal({
   const [channel, setChannel] = useState<ShareChannel>("email");
   const [copiedAll, setCopiedAll] = useState(false);
 
+  // Server-send state
+  const [smtpConfigured, setSmtpConfigured] = useState<boolean | null>(null); // null = loading
+  const [sendStates, setSendStates] = useState<PlayerSendState>({});
+  const [isSendingAll, setIsSendingAll] = useState(false);
+  const [sendSummary, setSendSummary] = useState<{ sent: number; failed: number } | null>(null);
+
   const targets = singlePlayer ? [singlePlayer] : performances;
+
+  // Check if SMTP is configured on mount
+  useEffect(() => {
+    fetch("/api/email/smtp-config", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setSmtpConfigured(d.configured === true))
+      .catch(() => setSmtpConfigured(false));
+  }, []);
 
   // Copy all email messages to clipboard as a single block
   const handleCopyAll = useCallback(async () => {
     const allMessages = targets
-      .map((perf) =>
-        `--- ${perf.player.name} ---\nTo: ${perf.player.email ?? "(no email)"}\nSubject: ${buildEmailSubject(perf, tournamentName)}\n\n${buildEmailBody(perf, tournamentName, reportUrl)}`
+      .map(
+        (perf) =>
+          `--- ${perf.player.name} ---\nTo: ${perf.player.email ?? "(no email)"}\nSubject: ${buildEmailSubject(perf, tournamentName)}\n\n${buildEmailBody(perf, tournamentName, reportUrl)}`
       )
       .join("\n\n");
     try {
@@ -604,15 +578,97 @@ export function ShareResultsModal({
     }
   }, [targets, tournamentName, reportUrl]);
 
-  const bg = isDark
-    ? "bg-[oklch(0.20_0.06_145)] border-white/10"
-    : "bg-white border-gray-200";
+  // ── Server-side send ──────────────────────────────────────────────────────
+  const handleSendViaServer = useCallback(async () => {
+    if (!smtpConfigured) {
+      toast.error("Configure SMTP in Director Settings → Email Settings first");
+      return;
+    }
+
+    const playersWithEmail = targets.filter((p) => p.player.email);
+    if (playersWithEmail.length === 0) {
+      toast.error("No players have email addresses saved");
+      return;
+    }
+
+    setIsSendingAll(true);
+    setSendSummary(null);
+
+    // Mark all as sending
+    const initial: PlayerSendState = {};
+    for (const p of playersWithEmail) {
+      initial[p.player.id] = { status: "sending" };
+    }
+    setSendStates(initial);
+
+    try {
+      const payload = {
+        tournamentName,
+        players: playersWithEmail.map((perf) => ({
+          name: perf.player.name,
+          email: perf.player.email!,
+          rank: perf.rank,
+          points: perf.points,
+          wdl: `${perf.wins}W / ${perf.draws}D / ${perf.losses}L`,
+          reportUrl,
+          cardUrl: reportUrl ? `${reportUrl}#player-${perf.player.id}` : undefined,
+        })),
+      };
+
+      const tid = tournamentId ?? "unknown";
+      const res = await fetch(`/api/tournament/${tid}/send-results-email`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to send emails");
+      }
+
+      // Update per-player status
+      const updated: PlayerSendState = {};
+      for (const p of playersWithEmail) {
+        const result = (data.results as Array<{ email: string; status: string; error?: string }>).find(
+          (r) => r.email === p.player.email
+        );
+        updated[p.player.id] = {
+          status: result?.status === "sent" ? "sent" : "failed",
+          error: result?.error,
+        };
+      }
+      setSendStates(updated);
+      setSendSummary({ sent: data.sent, failed: data.failed });
+
+      if (data.failed === 0) {
+        toast.success(`✓ Sent to all ${data.sent} players`);
+      } else {
+        toast.warning(`Sent ${data.sent}, failed ${data.failed}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to send emails");
+      // Mark all as failed
+      const failed: PlayerSendState = {};
+      for (const p of playersWithEmail) {
+        failed[p.player.id] = { status: "failed", error: err.message };
+      }
+      setSendStates(failed);
+    } finally {
+      setIsSendingAll(false);
+    }
+  }, [smtpConfigured, targets, tournamentName, tournamentId, reportUrl]);
+
+  const bg = isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-gray-200";
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textSub = isDark ? "text-white/40" : "text-gray-500";
   const divider = isDark ? "border-white/08" : "border-gray-100";
 
   const isQR = channel === "qr";
   const playersWithEmail = performances.filter((p) => p.player.email).length;
+  const hasSendResults = Object.keys(sendStates).length > 0;
 
   return (
     /* Backdrop */
@@ -716,7 +772,7 @@ export function ShareResultsModal({
                 tournamentName={tournamentName}
                 reportUrl={reportUrl}
                 isDark={isDark}
-                channel={channel}
+                sendState={sendStates[perf.player.id]}
               />
             ))}
           </div>
@@ -724,7 +780,75 @@ export function ShareResultsModal({
 
         {/* Footer — only for Email */}
         {!isQR && (
-          <div className={`px-5 py-4 border-t ${divider} flex-shrink-0`}>
+          <div className={`px-5 py-4 border-t ${divider} flex-shrink-0 space-y-3`}>
+            {/* Send summary */}
+            {sendSummary && (
+              <div
+                className={`flex items-center gap-2 text-xs rounded-xl px-3 py-2 ${
+                  sendSummary.failed === 0
+                    ? isDark
+                      ? "bg-green-500/10 text-green-400"
+                      : "bg-green-50 text-green-700"
+                    : isDark
+                    ? "bg-amber-500/10 text-amber-400"
+                    : "bg-amber-50 text-amber-700"
+                }`}
+              >
+                {sendSummary.failed === 0 ? (
+                  <CheckCircle size={13} />
+                ) : (
+                  <AlertCircle size={13} />
+                )}
+                {sendSummary.failed === 0
+                  ? `All ${sendSummary.sent} emails sent successfully`
+                  : `${sendSummary.sent} sent · ${sendSummary.failed} failed`}
+              </div>
+            )}
+
+            {/* Server-side send button (primary, when SMTP configured) */}
+            {!singlePlayer && smtpConfigured && (
+              <button
+                onClick={handleSendViaServer}
+                disabled={isSendingAll || playersWithEmail === 0}
+                className={`flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isSendingAll || playersWithEmail === 0
+                    ? "opacity-50 cursor-not-allowed bg-green-600 text-white"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
+              >
+                {isSendingAll ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : hasSendResults ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <Server className="w-4 h-4" />
+                )}
+                {isSendingAll
+                  ? "Sending…"
+                  : hasSendResults
+                  ? "Resend via Server"
+                  : `Send via Server (${playersWithEmail} players)`}
+              </button>
+            )}
+
+            {/* SMTP not configured hint */}
+            {!singlePlayer && smtpConfigured === false && (
+              <div
+                className={`flex items-center gap-2 text-xs rounded-xl px-3 py-2 ${
+                  isDark ? "bg-white/05 text-white/40" : "bg-gray-50 text-gray-500"
+                }`}
+              >
+                <Settings size={12} />
+                <span>
+                  Configure SMTP in{" "}
+                  <strong className={isDark ? "text-white/60" : "text-gray-700"}>
+                    Settings → Email Settings
+                  </strong>{" "}
+                  to send emails directly from the platform
+                </span>
+              </div>
+            )}
+
             {/* Email All BCC button — opens one mailto with all addresses in BCC */}
             {!singlePlayer && (
               <a
@@ -735,17 +859,26 @@ export function ShareResultsModal({
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors mb-3"
+                className={`flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  smtpConfigured
+                    ? isDark
+                      ? "bg-white/06 text-white/60 hover:bg-white/10"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
               >
                 <Mail className="w-4 h-4" />
-                Email All Players
+                {smtpConfigured ? "Email All (via your email client)" : "Email All Players"}
                 <ExternalLink className="w-3.5 h-3.5 opacity-70" />
               </a>
             )}
+
             <div className="flex items-center justify-between gap-3">
               <p className={`text-[11px] ${textSub} flex items-center gap-1`}>
                 <ChevronRight className="w-3 h-3" />
-                {singlePlayer ? "Click Send to open your email client" : "Or click Send on each player to send individually"}
+                {singlePlayer
+                  ? "Click Send to open your email client"
+                  : "Or click Send on each player to send individually"}
               </p>
               <div className="flex items-center gap-2">
                 {!singlePlayer && (

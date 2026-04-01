@@ -3966,7 +3966,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fall back to demo data when fewer than 3 players or no completed rounds
 
 ## Share Results Modal Refactor
-- [ ] Remove WhatsApp tab, keep only Email and QR Code tabs
-- [ ] Email tab: per-player send button + bulk "Email All" with player card download link
+- [x] Remove WhatsApp tab, keep only Email and QR Code tabs
+- [x] Email tab: per-player send button + bulk "Email All" with player card download link
 - [ ] Server-side email endpoint: personalized results email with report URL + player card link
 - [ ] QR Code tab: QR linking to tournament results/report page
+
+## SMTP Server-Side Email
+- [x] Add SMTP config storage in user settings (host, port, user, pass, from name) — encrypted server-side
+- [x] POST /api/email/smtp-config endpoint to save/update SMTP settings
+- [x] GET /api/email/smtp-config endpoint to fetch current SMTP config (masked password)
+- [x] POST /api/tournament/:id/send-results-email endpoint — sends personalized emails via nodemailer
+- [x] SMTP Settings panel in Director Settings tab (form + test connection button)
+- [x] "Send via Server" button in ShareResultsModal when SMTP is configured
+- [x] Per-player send status tracking (sent/failed/pending) in the modal

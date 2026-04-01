@@ -989,6 +989,7 @@ export default function ReportPage() {
         <ShareResultsModal
           performances={performances}
           tournamentName={tournamentName}
+          tournamentId={tournamentId}
           reportUrl={reportUrl}
           isDark={isDark}
           onClose={shareModal.close}
