@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import clubMessagingRouter from "./clubMessaging.js";
 import clubInvitesRouter, { createInviteRouter } from "./clubInvites.js";
@@ -1047,6 +1047,119 @@ export function createApp() {
       });
     } catch (err) {
       console.error("[live-state] GET error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Public Tournament: GET /api/public/tournament/:slug ─────────────────────
+  // Returns the full live state for a publicly visible tournament.
+  // Looks up the tournament by its tournamentId or customSlug in user_tournaments,
+  // verifies isPublic=1, then returns the same shape as /api/tournament/:id/live-state.
+  app.get("/api/public/tournament/:slug", async (req, res) => {
+    const { slug } = req.params;
+    if (!slug) return res.status(400).json({ error: "Missing slug" });
+    try {
+      const db = await getDb();
+      // Look up by tournamentId first, then by customSlug
+      let utRows = await db
+        .select()
+        .from(userTournaments)
+        .where(and(eq(userTournaments.tournamentId, slug), eq(userTournaments.isPublic, 1)))
+        .limit(1);
+      if (utRows.length === 0) {
+        utRows = await db
+          .select()
+          .from(userTournaments)
+          .where(and(eq(userTournaments.customSlug, slug), eq(userTournaments.isPublic, 1)))
+          .limit(1);
+      }
+      if (utRows.length === 0) return res.status(404).json({ error: "not_found" });
+      const ut = utRows[0];
+      // Fetch the full tournament state
+      const stateRows = await db
+        .select()
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, ut.tournamentId))
+        .limit(1);
+      if (stateRows.length === 0) return res.status(404).json({ error: "no_state" });
+      const s = JSON.parse(stateRows[0].stateJson) as {
+        status?: string;
+        currentRound?: number;
+        totalRounds?: number;
+        tournamentName?: string;
+        format?: string;
+        players?: unknown[];
+        rounds?: Array<{ number: number; games: unknown[] }>;
+      };
+      const currentRoundData = s.rounds?.find((r) => r.number === (s.currentRound ?? 0));
+      res.json({
+        tournamentId: ut.tournamentId,
+        status: s.status ?? "registration",
+        currentRound: s.currentRound ?? 0,
+        totalRounds: s.totalRounds ?? 0,
+        tournamentName: s.tournamentName ?? ut.name,
+        format: s.format ?? ut.format ?? "swiss",
+        venue: ut.venue ?? "",
+        date: ut.date ?? "",
+        clubId: undefined, // Not exposing internal club IDs
+        players: s.players ?? [],
+        games: currentRoundData?.games ?? [],
+        rounds: s.rounds ?? [],
+        updatedAt: stateRows[0].updatedAt,
+      });
+    } catch (err) {
+      console.error("[public-tournament] GET error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Public Tournament: GET /api/tournament/:id/public ──────────────────────
+  // Returns the current public visibility status for the tournament.
+  // Requires auth — only the tournament owner can read.
+  app.get("/api/tournament/:id/public", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    try {
+      const db = await getDb();
+      const userId = (req as any).userId as string;
+      const utRows = await db
+        .select()
+        .from(userTournaments)
+        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, userId)))
+        .limit(1);
+      if (utRows.length === 0) return res.status(404).json({ error: "not_found" });
+      res.json({ isPublic: utRows[0].isPublic === 1 });
+    } catch (err) {
+      console.error("[public-status] GET error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Public Tournament: PUT /api/tournament/:id/public ──────────────────────
+  // Director toggles public visibility for their tournament.
+  // Requires auth — only the tournament owner can toggle.
+  app.put("/api/tournament/:id/public", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { isPublic } = req.body as { isPublic: boolean };
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    if (typeof isPublic !== "boolean") return res.status(400).json({ error: "isPublic must be boolean" });
+    try {
+      const db = await getDb();
+      const userId = (req as any).userId as string;
+      // Verify ownership
+      const utRows = await db
+        .select()
+        .from(userTournaments)
+        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, userId)))
+        .limit(1);
+      if (utRows.length === 0) return res.status(403).json({ error: "Not the tournament owner" });
+      await db
+        .update(userTournaments)
+        .set({ isPublic: isPublic ? 1 : 0 })
+        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, userId)));
+      res.json({ ok: true, isPublic });
+    } catch (err) {
+      console.error("[public-toggle] PUT error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });

@@ -4076,9 +4076,69 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## PDF Club Logo in Header
 
-- [ ] Audit club avatarUrl field in DB schema and /api/clubs/:id endpoint
-- [ ] Fetch club avatarUrl in Director.tsx and Report.tsx when clubId is present
-- [ ] Convert image URL to base64 data URI for jsPDF addImage compatibility
-- [ ] Render club logo in PDF header beside club name (right-aligned, 28px height)
-- [ ] Graceful fallback: if logo fetch fails, render club name text only
-- [ ] Write unit tests for logo fetch and base64 conversion helpers
+- [x] Audit club avatarUrl field in DB schema and /api/clubs/:id endpoint
+- [x] Fetch club avatarUrl in Director.tsx and Report.tsx when clubId is present
+- [x] Convert image URL to base64 data URI for jsPDF addImage compatibility
+- [x] Render club logo in PDF header beside club name (right-aligned, 28px height)
+- [x] Graceful fallback: if logo fetch fails, render club name text only
+- [x] Write unit tests for logo fetch and base64 conversion helpers
+
+## Club Logo in Instagram Carousel
+
+- [x] Add clubLogoUrl prop to InstagramCarouselModal Props interface
+- [x] Pre-seed hostLogoUrl state from clubLogoUrl on mount with useEffect guard
+- [x] Render circular club avatar in Cover slide club badge pill
+- [x] Pass clubLogoUrl from useClubAvatar in Director.tsx
+- [x] Update logo panel description for auto-loaded state
+- [x] Write 24 unit tests for carousel club logo feature
+
+## Public Tournament Mode
+
+### Data Model & API
+- [x] Add isPublic column to user_tournaments table (default 0)
+- [x] Build GET /api/public/tournament/:slug endpoint (returns live state, no auth)
+- [x] Build GET /api/tournament/:id/public status endpoint (auth required)
+- [x] Build PUT /api/tournament/:id/public toggle endpoint (auth required)
+
+### Director Console Enhancements
+- [x] Add "Publish to Public" toggle in Director Dashboard settings tab
+- [x] Add QR code display card for public tournament URL
+- [x] Add public page status indicator (Live badge when public)
+- [x] Toggle auto-publishes/unpublishes live data (no separate snapshot needed)
+
+### Public Tournament Dashboard Page
+- [x] Build /live/:slug route and PublicTournament page component
+- [x] Tournament hero header (name, venue, date, status, format, round indicator)
+- [x] Spotlight search component (name + chess.com username, premium feel)
+- [x] Current round pairings table (board, white, black, result, mobile-friendly)
+- [x] Live standings table (rank, name, score, buchholz, mobile-friendly)
+- [x] Round timeline / progress indicator (round dots)
+- [x] Loading skeletons for all sections
+
+### Follow Player Feature
+- [x] "Follow This Player" button on player cards and search results
+- [x] localStorage persistence for followed player (playerId per tournament)
+- [x] Followed player summary panel (opponent, board, score, standings position, round history)
+- [x] Unfollow action
+- [x] Followed player persists across page refreshes
+
+### Post-Event Conversion Module
+- [x] Post-tournament CTA card group (appears after final results published)
+- [x] "Get Your Player Performance Card" — link to report page
+- [x] "Create an account to save your tournament history" — signup CTA
+- [x] Trust-building copy and polished design
+
+### Polish & Responsiveness
+- [x] Mobile-first responsive design for all public dashboard sections
+- [x] Subtle premium transitions and hover states
+- [x] Smooth state changes and loading skeletons
+- [x] Desktop/tablet polish for Director console PublicTournamentCard
+- [x] QR scan flow feels instant and intuitive
+
+### Tests
+- [x] Unit tests for follow-player localStorage helpers (5 tests)
+- [x] Unit tests for search/filter logic (5 tests)
+- [x] Unit tests for standings computation integration (3 tests)
+- [x] Unit tests for format labels, status badges, round dots, API URLs (14 tests)
+- [x] Unit tests for follow toggle logic and mobile tab logic (5 tests)
+- [x] 38 tests passing

@@ -87,7 +87,9 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  Globe,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1097,6 +1099,180 @@ function DirectorCodeCard({ directorCode, isDark }: { directorCode: string; isDa
             {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PublicTournamentCard({
+  tournamentId,
+  isDark,
+}: {
+  tournamentId: string;
+  isDark: boolean;
+}) {
+  const [isPublic, setIsPublic] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const publicUrl = `${window.location.origin}/live/${tournamentId}`;
+
+  // Fetch current public status on mount
+  useEffect(() => {
+    if (tournamentId === "otb-demo-2026") {
+      setLoading(false);
+      return;
+    }
+    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) setIsPublic(!!data.isPublic);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [tournamentId]);
+
+  const toggle = async () => {
+    if (tournamentId === "otb-demo-2026") {
+      toast.info("Public mode is not available for the demo tournament");
+      return;
+    }
+    setToggling(true);
+    try {
+      const res = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isPublic: !isPublic }),
+      });
+      if (res.ok) {
+        setIsPublic(!isPublic);
+        toast.success(!isPublic ? "Tournament is now public" : "Tournament is now private");
+      } else {
+        toast.error("Failed to update visibility");
+      }
+    } catch {
+      toast.error("Network error");
+    }
+    setToggling(false);
+  };
+
+  const copyUrl = () => {
+    navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (tournamentId === "otb-demo-2026") return null;
+
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${
+      isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+    }`}>
+      <div className={`px-5 py-3 border-b flex items-center justify-between ${
+        isDark ? "border-white/06" : "border-gray-100"
+      }`}>
+        <div className="flex items-center gap-2">
+          <Globe className={`w-3.5 h-3.5 ${isDark ? "text-[#4CAF50]/70" : "text-[#3D6B47]/70"}`} />
+          <h2 className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-white/35" : "text-gray-400"}`}>Public Tournament</h2>
+        </div>
+        {isPublic && (
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+            isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-green-50 text-green-600"
+          }`}>● Live</span>
+        )}
+      </div>
+      <div className="px-5 py-4 space-y-3">
+        <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>
+          Share a public link or QR code so attendees can follow pairings, standings, and individual players — no account needed.
+        </p>
+
+        {/* Toggle */}
+        <button
+          onClick={toggle}
+          disabled={loading || toggling}
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+            isPublic
+              ? isDark
+                ? "border-[#3D6B47]/40 bg-[#3D6B47]/10"
+                : "border-[#3D6B47]/30 bg-[#F0F8F2]"
+              : isDark
+              ? "border-white/10 bg-white/03 hover:bg-white/06"
+              : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              isPublic
+                ? isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+                : isDark ? "bg-white/08" : "bg-gray-200"
+            }`}>
+              {isPublic
+                ? <Eye className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                : <EyeOff className={`w-4 h-4 ${isDark ? "text-white/40" : "text-gray-400"}`} />}
+            </div>
+            <div className="text-left">
+              <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
+                {isPublic ? "Public" : "Private"}
+              </p>
+              <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                {isPublic ? "Anyone with the link can view" : "Only you can see this tournament"}
+              </p>
+            </div>
+          </div>
+          <div className={`w-11 h-6 rounded-full transition-colors relative ${
+            isPublic ? "bg-[#3D6B47]" : isDark ? "bg-white/15" : "bg-gray-300"
+          }`}>
+            <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+              isPublic ? "translate-x-5" : "translate-x-0.5"
+            }`} />
+          </div>
+        </button>
+
+        {/* URL + QR when public */}
+        {isPublic && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className={`flex-1 flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono text-xs truncate ${
+                isDark ? "bg-[oklch(0.25_0.07_145)] border-white/10 text-white/60" : "bg-gray-50 border-gray-200 text-gray-600"
+              }`}>
+                <span className="truncate">{publicUrl}</span>
+              </div>
+              <button
+                onClick={copyUrl}
+                className={`p-2.5 rounded-xl border transition-colors ${
+                  copied
+                    ? isDark ? "border-[#4CAF50]/40 bg-[#4CAF50]/15 text-[#4CAF50]" : "border-green-300 bg-green-50 text-green-700"
+                    : isDark ? "border-white/10 hover:bg-white/08 text-white/50" : "border-gray-200 hover:bg-gray-50 text-gray-500"
+                }`}
+              >
+                {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`p-2.5 rounded-xl border transition-colors ${
+                  isDark ? "border-white/10 hover:bg-white/08 text-white/50" : "border-gray-200 hover:bg-gray-50 text-gray-500"
+                }`}
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+            {/* QR Code */}
+            <div className="flex justify-center">
+              <div className={`p-4 rounded-2xl border ${
+                isDark ? "bg-white border-white/10" : "bg-white border-gray-200"
+              }`}>
+                <QRCodeSVG value={publicUrl} size={160} level="M" />
+              </div>
+            </div>
+            <p className={`text-center text-[10px] ${isDark ? "text-white/25" : "text-gray-400"}`}>
+              Print or project this QR code at the venue
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -3702,6 +3878,12 @@ export default function Director() {
               {/* ── Spectator / Watch Live ────────────────────────────────────── */}
               <SpectatorCodeCard
                 spectatorUrl={spectatorUrl}
+                isDark={isDark}
+              />
+
+              {/* ── Public Tournament Mode ─────────────────────────────────────── */}
+              <PublicTournamentCard
+                tournamentId={tournamentId}
                 isDark={isDark}
               />
 

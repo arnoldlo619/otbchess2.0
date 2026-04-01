@@ -178,6 +178,8 @@ export const userTournaments = mysqlTable(
     status: varchar("status", { length: 20 }).default("registration"),
     /** Optional host-chosen short URL slug, e.g. "ThursdayOTBNight" */
     customSlug: varchar("custom_slug", { length: 80 }),
+    /** Whether this tournament has a public live dashboard accessible via QR code */
+    isPublic: tinyint("is_public").notNull().default(0),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
