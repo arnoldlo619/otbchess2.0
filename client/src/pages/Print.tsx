@@ -84,6 +84,7 @@ function PairingSlip({
   tournamentName,
   round,
   timeControl,
+  ratingType,
   isDark,
 }: {
   game: Game;
@@ -91,8 +92,10 @@ function PairingSlip({
   tournamentName: string;
   round: number;
   timeControl: string;
+  ratingType: "rapid" | "blitz";
   isDark: boolean;
 }) {
+  const ratingLabel = ratingType === "blitz" ? "\u{1F525} Blitz" : "\u26A1 Rapid";
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
 
@@ -167,7 +170,7 @@ function PairingSlip({
               <span className="text-xs">{FLAG_EMOJI[white.country]}</span>
             </div>
             <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-              @{white.username} · {white.elo} ELO
+              @{white.username} · {white.elo} {ratingLabel}
             </span>
           </div>
           <div className={`text-right ${isDark ? "text-white/60" : "text-gray-500"}`}>
@@ -214,7 +217,7 @@ function PairingSlip({
               <span className="text-xs">{FLAG_EMOJI[black.country]}</span>
             </div>
             <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-              @{black.username} · {black.elo} ELO
+              @{black.username} · {black.elo} {ratingLabel}
             </span>
           </div>
           <div className={`text-right ${isDark ? "text-white/60" : "text-gray-500"}`}>
@@ -533,6 +536,8 @@ export default function PrintPage() {
   const realState = useMemo(() => loadTournamentState(tournamentId), [tournamentId]);
   const realConfig = useMemo(() => getTournamentConfig(tournamentId), [tournamentId]);
 
+  const ratingType: "rapid" | "blitz" = realConfig?.ratingType === "blitz" ? "blitz" : "rapid";
+
   const isDemo = tournamentId === "otb-demo-2026" || !realState;
   const tournament = isDemo ? DEMO_TOURNAMENT : {
     name: realConfig?.name ?? "Tournament",
@@ -662,6 +667,7 @@ export default function PrintPage() {
                       { icon: Clock, text: `Time Control: ${tournament.timeControl}` },
                       { icon: Trophy, text: `${tournament.format} · ${tournament.rounds} Rounds` },
                       { icon: Users, text: `${players.length} Players` },
+                      { icon: Trophy, text: `${ratingType === "blitz" ? "\u{1F525} Blitz" : "\u26A1 Rapid"} ELO` },
                     ].map(({ icon: Icon, text }) => (
                       <div key={text} className="flex items-center gap-1.5">
                         <Icon className={`w-3.5 h-3.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
@@ -754,6 +760,7 @@ export default function PrintPage() {
                     tournamentName={tournament.name}
                     round={tournament.currentRound}
                     timeControl={tournament.timeControl}
+                    ratingType={ratingType}
                     isDark={isDark}
                   />
                 ))}
@@ -856,7 +863,7 @@ export default function PrintPage() {
                   Current Standings
                 </h2>
                 <p className={`text-sm mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
-                  Sorted by points, then Buchholz tiebreak, then ELO. Updated after Round {tournament.currentRound - 1}.
+                  Sorted by points, then Buchholz tiebreak, then {ratingType === "blitz" ? "Blitz" : "Rapid"} ELO. Updated after Round {tournament.currentRound - 1}.
                 </p>
               </div>
               <StandingsTable players={players} rounds={tournament.roundData as Round[]} isDark={isDark} />

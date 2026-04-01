@@ -3942,3 +3942,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Nav Bar "Dashboard" → "Tournaments"
 - [x] Rename "Dashboard" to "Tournaments" in header nav
 - [x] Navigate to most recent active tournament dashboard, or Join page if none
+
+## Rating Type Label in Print View
+- [x] Show active rating type label (⚡ Rapid / 🔥 Blitz) on printed pairings slips and standings
