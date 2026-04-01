@@ -17,7 +17,7 @@
  * Mobile: uses Web Share API for individual slide downloads on mobile
  */
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { X, Download, Instagram, ChevronLeft, ChevronRight, Loader2, Share2, LayoutGrid, Smartphone } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { StandingRow } from "@/lib/swiss";
@@ -37,6 +37,8 @@ interface Props {
   totalRounds: number;
   /** Optional: completed round data for Slide 6 (Round-by-Round grid) */
   rounds?: Round[];
+  /** Optional: club avatar URL — pre-seeds the host logo slot; director can override */
+  clubLogoUrl?: string | null;
 }
 
 // ─── Design tokens (OTB brand) ────────────────────────────────────────────────
@@ -374,16 +376,17 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
 
       {/* ── TOP SECTION: Club pill + Tournament name ── */}
       <div style={{ position: "absolute", top: isStory ? PAD * 1.5 : PAD, left: PAD, right: PAD }}>
-        {/* Club badge */}
+        {/* Club badge — shows logo image when available, falls back to text-only */}
         {clubName && (
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
+              gap: hostLogoUrl ? 10 * s : 0,
               background: `${theme.accent}44`,
               border: `1.5px solid ${theme.accentLight}55`,
               borderRadius: 100 * s,
-              padding: `${9 * s}px ${22 * s}px`,
+              padding: hostLogoUrl ? `${7 * s}px ${18 * s}px ${7 * s}px ${7 * s}px` : `${9 * s}px ${22 * s}px`,
               fontSize: 13 * s,
               color: theme.accentLight,
               fontWeight: 800,
@@ -392,6 +395,21 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
               marginBottom: 28 * s,
             }}
           >
+            {hostLogoUrl && (
+              <img
+                src={hostLogoUrl}
+                alt={clubName}
+                crossOrigin="anonymous"
+                style={{
+                  width: 30 * s,
+                  height: 30 * s,
+                  borderRadius: 50 * s,
+                  objectFit: "cover",
+                  flexShrink: 0,
+                  border: `1px solid ${theme.accentLight}40`,
+                }}
+              />
+            )}
             {clubName}
           </div>
         )}
@@ -1349,13 +1367,25 @@ function isMobileDevice(): boolean {
 
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 
-export function InstagramCarouselModal({ open, onClose, rows, config, tournamentName, totalRounds, rounds = [] }: Props) {
+export function InstagramCarouselModal({ open, onClose, rows, config, tournamentName, totalRounds, rounds = [], clubLogoUrl }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeSlide, setActiveSlide] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
-  const [hostLogoUrl, setHostLogoUrl] = useState<string | null>(null);
+  const [hostLogoUrl, setHostLogoUrl] = useState<string | null>(clubLogoUrl ?? null);
+
+  // When the club avatar loads asynchronously (useClubAvatar hook), pre-seed it
+  // only if the director hasn't manually set or cleared a custom logo yet.
+  const clubLogoSeedRef = useRef<string | null | undefined>(clubLogoUrl);
+  useEffect(() => {
+    // Only auto-update when the incoming URL changes and the director hasn't
+    // overridden it with a different custom upload.
+    if (clubLogoUrl !== clubLogoSeedRef.current) {
+      clubLogoSeedRef.current = clubLogoUrl;
+      setHostLogoUrl(clubLogoUrl ?? null);
+    }
+  }, [clubLogoUrl]);
   const [logoDragging, setLogoDragging] = useState(false);
   const [activeTheme, setActiveTheme] = useState<SlideTheme>(DEFAULT_THEME);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -1656,7 +1686,9 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className={`text-xs font-bold ${isDark ? "text-white/70" : "text-gray-700"}`}>Club / Host Logo</p>
-                  <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>Appears on every slide alongside the OTB!! mark</p>
+                  <p className={`text-[10px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    {clubLogoUrl ? "Auto-loaded from your club profile — override or remove below" : "Appears on every slide alongside the OTB!! mark"}
+                  </p>
                 </div>
                 {hostLogoUrl && (
                   <button

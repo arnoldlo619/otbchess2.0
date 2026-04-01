@@ -3872,6 +3872,7 @@ export default function Director() {
           tournamentName={state.tournamentName}
           totalRounds={state.totalRounds}
           rounds={state.rounds}
+          clubLogoUrl={clubAvatarUrl}
         />
       )}
 
