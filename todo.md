@@ -3950,3 +3950,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Sign-up gate on Join page for unauthenticated users (Email, Full Name, chess.com username optional, Password)
 - [x] After sign-up, auto-redirect back to the tournament join page they scanned
 - [x] Post-tournament CTA: prompt players to join the hosting club's ChessOTB group page
+
+## Player Cards Button in Report Page Footer
+- [x] Add "Player Cards" button between "Tournament Page" and "Create Recap" in Report page footer

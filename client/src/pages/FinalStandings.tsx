@@ -14,7 +14,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { Trophy, ArrowLeft, Download, Share2, Medal, Instagram } from "lucide-react";
+import { Trophy, ArrowLeft, Download, Share2, Medal, Instagram, LayoutGrid } from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import type { TournamentConfig } from "@/lib/tournamentRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -418,6 +418,18 @@ export default function FinalStandings() {
               >
                 <ArrowLeft className="w-4 h-4" />
                 Tournament Page
+              </Link>
+              {/* Player Cards */}
+              <Link
+                href={`/tournament/${id}/report`}
+                className={`flex items-center justify-center gap-2 flex-1 py-3.5 rounded-xl text-sm font-semibold border transition-colors ${
+                  isDark
+                    ? "border-white/12 text-white/70 hover:bg-white/06"
+                    : "border-[#E8F0E8] text-gray-600 hover:bg-[#F0F5EE]"
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Player Cards
               </Link>
               {/* Instagram Carousel export */}
               <button
