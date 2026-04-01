@@ -9,7 +9,7 @@
  *             Nav links are inside the avatar dropdown — no hamburger button.
  *
  * Usage:
- *   <AppNavBar defaultActive="Dashboard" />
+ *   <AppNavBar defaultActive="Tournaments" />
  *   <AppNavBar defaultActive="Clubs" />
  */
 
@@ -30,7 +30,7 @@ const LOGO_URL =
   "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png";
 
 interface AppNavBarProps {
-  /** Which nav tab should be highlighted on mount. Defaults to "Dashboard". */
+  /** Which nav tab should be highlighted on mount. Defaults to "Tournaments". */
   defaultActive?: string;
   /** Called when the user opens the auth modal (e.g. clicks Sign In). */
   onSignInClick?: () => void;
@@ -73,7 +73,7 @@ function getDashboardTooltip(): string | undefined {
   return undefined;
 }
 
-export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, className }: AppNavBarProps) {
+export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, className }: AppNavBarProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user } = useAuthContext();
@@ -84,7 +84,7 @@ export function AppNavBar({ defaultActive = "Dashboard", onSignInClick, classNam
 
   const navItems = [
     {
-      name: "Dashboard",
+      name: "Tournaments",
       url: dashboardUrl,
       icon: LayoutDashboard,
       tooltip: dashboardTooltip,

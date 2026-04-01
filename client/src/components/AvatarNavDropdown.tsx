@@ -40,7 +40,7 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "Dashboard", href: "/join",    icon: LayoutDashboard },
+  { name: "Tournaments", href: "/join",    icon: LayoutDashboard },
   { name: "Clubs",     href: "/clubs",   icon: Building2 },
   { name: "Battle",    href: "/battle",  icon: Swords },
   { name: "Analyze",   href: "/record",  icon: Video },
@@ -382,7 +382,7 @@ export function AvatarNavDropdown({
 
   // Build nav items — use smart dashboardUrl if provided, else fall back to /join
   const resolvedNavItems = NAV_ITEMS.map((item) =>
-    item.name === "Dashboard" && dashboardUrl
+    item.name === "Tournaments" && dashboardUrl
       ? { ...item, href: dashboardUrl }
       : item
   );

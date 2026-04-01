@@ -3938,3 +3938,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add ELO rating selector (Rapid/Blitz) to tournament settings, defaulting to time control
 - [ ] Update Swiss pairing logic to use the selected rating type
 - [ ] Update standings display to show the active rating type
+
+## Nav Bar "Dashboard" → "Tournaments"
+- [x] Rename "Dashboard" to "Tournaments" in header nav
+- [x] Navigate to most recent active tournament dashboard, or Join page if none

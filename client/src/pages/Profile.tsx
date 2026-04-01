@@ -349,7 +349,7 @@ export default function ProfilePage() {
           Home
         </button>
         <NavLogo linked={false} />
-        <AvatarNavDropdown currentPage="Dashboard" />
+        <AvatarNavDropdown currentPage="Tournaments" />
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">

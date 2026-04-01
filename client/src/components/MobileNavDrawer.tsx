@@ -14,7 +14,7 @@ import { Menu, X, LayoutDashboard, Building2, Swords, Video } from "lucide-react
 import { Link, useLocation } from "wouter";
 
 const NAV_ITEMS = [
-  { name: "Dashboard", href: "/join",    icon: LayoutDashboard },
+  { name: "Tournaments", href: "/join",    icon: LayoutDashboard },
   { name: "Clubs",     href: "/clubs",   icon: Building2 },
   { name: "Battle",    href: "/battle",  icon: Swords },
   { name: "Analyze",   href: "/record",  icon: Video },

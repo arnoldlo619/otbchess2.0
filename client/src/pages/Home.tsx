@@ -1291,7 +1291,7 @@ export default function Home() {
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
-  const [activeNavTab, setActiveNavTab] = useState("Dashboard");
+  const [activeNavTab, setActiveNavTab] = useState("Tournaments");
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
@@ -1329,7 +1329,7 @@ export default function Home() {
 
   // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
-    { name: "Dashboard", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
+    { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
     { name: "Battle", url: "/battle", icon: Swords },
     { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },
@@ -1408,7 +1408,7 @@ export default function Home() {
                 <div className="px-2 pt-2 pb-1">
                   <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Navigate</p>
                   {[
-                    { name: "Dashboard", href: getDashboardUrl(), Icon: LayoutDashboard },
+                    { name: "Tournaments", href: getDashboardUrl(), Icon: LayoutDashboard },
                     { name: "Clubs",     href: "/clubs",          Icon: Building2 },
                     { name: "Battle",    href: "/battle",         Icon: Swords },
                     { name: "Analyze",   href: "/record",         Icon: Video },
@@ -1521,7 +1521,7 @@ export default function Home() {
             <div className="px-3 pb-1">
               <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">Navigate</p>
               {[
-                { name: "Dashboard", href: getDashboardUrl(), Icon: LayoutDashboard },
+                { name: "Tournaments", href: getDashboardUrl(), Icon: LayoutDashboard },
                 { name: "Clubs",     href: "/clubs",          Icon: Building2 },
                 { name: "Battle",    href: "/battle",         Icon: Swords },
                 { name: "Analyze",   href: "/record",         Icon: Video },
