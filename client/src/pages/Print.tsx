@@ -35,6 +35,8 @@ import {
   Users,
   Trophy,
 } from "lucide-react";
+import { TiebreakersGuide } from "@/components/TiebreakersGuide";
+import { CrossTableGuide } from "@/components/CrossTableGuide";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function resultSymbol(result: string, side: "white" | "black"): string {
@@ -528,7 +530,7 @@ function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds
 export default function PrintPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [activeSection, setActiveSection] = useState<"slips" | "wallchart" | "standings">("slips");
+  const [activeSection, setActiveSection] = useState<"slips" | "wallchart" | "standings" | "tiebreakers" | "crosstable-guide">("slips");
   const params = useParams<{ id: string }>();
   const tournamentId = params?.id ?? "otb-demo-2026";
 
@@ -557,6 +559,8 @@ export default function PrintPage() {
     { id: "slips" as const, label: "Pairing Slips", icon: "📋" },
     { id: "wallchart" as const, label: "Wall Chart", icon: "📊" },
     { id: "standings" as const, label: "Standings", icon: "🏆" },
+    { id: "tiebreakers" as const, label: "Tiebreakers", icon: "⚖️" },
+    { id: "crosstable-guide" as const, label: "Cross-Table Guide", icon: "🔢" },
   ];
 
   return (
@@ -871,6 +875,16 @@ export default function PrintPage() {
                 Tiebreak: Buchholz (sum of opponents' scores) · W = Wins · D = Draws · L = Losses
               </p>
             </div>
+          )}
+
+          {/* ── Tiebreakers Guide ──────────────────────────────────────────── */}
+          {activeSection === "tiebreakers" && (
+            <TiebreakersGuide isDark={isDark} />
+          )}
+
+          {/* ── Cross-Table Guide ─────────────────────────────────────────────── */}
+          {activeSection === "crosstable-guide" && (
+            <CrossTableGuide isDark={isDark} />
           )}
 
           {/* ── Footer ────────────────────────────────────────────────────── */}

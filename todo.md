@@ -3953,3 +3953,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Player Cards Button in Report Page Footer
 - [x] Add "Player Cards" button between "Tournament Page" and "Create Recap" in Report page footer
+
+## Print View Explainer Pages
+- [x] Add Tiebreakers Guide tab to Print view (Pts, Bch, Bch1, SB, W/D/L with real examples)
+- [x] Add Cross-Table Guide tab to Print view (grid layout, cell reading, symmetry rule, Pts column)
