@@ -4053,3 +4053,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Increase X icon opacity from 50% to full contrast
 - [x] Add "Close" text label beside the X for clarity
 - [x] Ensure close button stands out visually from the header background
+
+## Print Page PDF Restoration
+- [x] Fix @media print CSS to force white background and black text on all elements
+- [x] Restructure print layout: Page 1 = header + Final Standings, Page 2 = Cross-Table
+- [x] Add Page 3: Scoring System visual explanation (Win/Draw/Loss/Bye points + Buchholz)
+- [x] Add Page 4: Swiss Pairing System visual explanation (score groups, color balance)
+- [x] Ensure all print pages use the target design (OTB Chess header, green accent bar, clean typography)
+- [x] Remove dark theme from print output entirely — always white background for PDF
