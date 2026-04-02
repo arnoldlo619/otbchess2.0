@@ -1,26 +1,27 @@
 /**
  * Matchup Prep Page — /prep/:username
  *
- * Phase 3: Mobile UX Optimization
- * - Touch-first header with icon-only fallbacks on mobile
- * - Summary-first information hierarchy on small screens
- * - Progressive disclosure on openings (show more)
- * - Fixed PrepLineCard moves overflow
- * - Tablet-aware 2-col layout layer
- * - Reduced empty state padding on mobile
- * - Touch-friendly tab bar and controls
+ * Phase 4: Opponent Prep Workspace
+ * - Guided study flow: Scout → Key Lines → Practice
+ * - Opponent snapshot hero with 3 key prep signals
+ * - Key Lines with Must Know / Likely / Useful priority tiers
+ * - Memorization cues and "why this matters" context
+ * - Flashcard-style Practice mode (one line at a time)
+ * - "What to study next" nudge at bottom of each tab
+ * - Apple-like minimalist design: disciplined whitespace, quiet secondary data
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import {
-  ArrowLeft, Search, Swords, Target, BarChart3,
-  Shield, Zap, Clock, Crown,
-  TrendingUp, BookOpen, Eye, AlertTriangle, Loader2,
-  CircleDot, RefreshCw, ChevronRight, Trophy, Flame,
-  Activity, Bookmark, BookmarkCheck, ChevronDown, ChevronUp,
-  Trash2
+  ArrowLeft, Search, Target, BookOpen,
+  Shield, Clock, Crown,
+  TrendingUp, Eye, Loader2,
+  CircleDot, RefreshCw, ChevronRight, Trophy,
+  Activity, Bookmark, BookmarkCheck,
+  Trash2, ChevronLeft, Check, RotateCcw,
+  Zap, AlertCircle, Info
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ interface PrepReport {
   _cached?: boolean;
 }
 
-type Tab = "overview" | "openings" | "prep";
+type Tab = "scout" | "lines" | "practice";
 
 interface SavedReportMeta {
   id: number;
@@ -78,24 +79,68 @@ interface SavedReportMeta {
   savedAt: string;
 }
 
+// Priority tier derived from confidence
+type Priority = "must-know" | "likely" | "useful";
+
+function getPriority(confidence: PrepLine["confidence"]): Priority {
+  if (confidence === "high") return "must-know";
+  if (confidence === "medium") return "likely";
+  return "useful";
+}
+
+const PRIORITY_CONFIG: Record<Priority, {
+  label: string;
+  shortLabel: string;
+  darkBg: string;
+  lightBg: string;
+  dot: string;
+  order: number;
+}> = {
+  "must-know": {
+    label: "Must Know",
+    shortLabel: "Must Know",
+    darkBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    lightBg: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    dot: "bg-emerald-500",
+    order: 0,
+  },
+  "likely": {
+    label: "Likely",
+    shortLabel: "Likely",
+    darkBg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+    lightBg: "bg-amber-50 border-amber-200 text-amber-700",
+    dot: "bg-amber-500",
+    order: 1,
+  },
+  "useful": {
+    label: "Useful",
+    shortLabel: "Useful",
+    darkBg: "bg-white/05 border-white/10 text-white/35",
+    lightBg: "bg-gray-50 border-gray-200 text-gray-400",
+    dot: "bg-gray-400",
+    order: 2,
+  },
+};
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
 function useDesignTokens(isDark: boolean) {
   return {
-    page:         isDark ? "bg-[#0d1a0f]"                                          : "bg-[#f8faf8]",
-    card:         isDark ? "bg-[#111f13] border border-[#2a4030]/60 rounded-2xl"  : "bg-white border border-gray-200/80 rounded-2xl shadow-sm",
-    cardInner:    isDark ? "bg-[#0d1a0f]/70 rounded-xl"                           : "bg-gray-50/80 rounded-xl",
-    header:       isDark ? "bg-[#0d1a0f]/92 border-b border-[#2a4030]/50"         : "bg-white/92 border-b border-gray-200/70",
-    input:        isDark ? "bg-[#0d1a0f] border-[#2a4030]/60 text-white placeholder:text-white/25 focus:border-[#5B9A6A]/70" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
-    textPrimary:  isDark ? "text-white"       : "text-gray-900",
-    textSecondary:isDark ? "text-white/60"    : "text-gray-500",
-    textTertiary: isDark ? "text-white/35"    : "text-gray-400",
-    accent:       "text-[#5B9A6A]",
-    accentBg:     isDark ? "bg-[#5B9A6A]/12 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]",
-    divider:      isDark ? "border-[#2a4030]/40" : "border-gray-200/70",
-    tabActive:    isDark ? "bg-[#1a2e1c] text-white border-[#3D6B47]/40"          : "bg-white text-gray-900 border-gray-300 shadow-sm",
-    tabInactive:  isDark ? "text-white/45 hover:text-white/70 hover:bg-white/04"  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/60",
-    rowHover:     isDark ? "hover:bg-[#1a2e1c]/60"                                : "hover:bg-gray-50",
+    page:          isDark ? "bg-[#0a1409]"                                           : "bg-[#f8faf8]",
+    card:          isDark ? "bg-[#0f1c11] border border-[#243028]/70 rounded-2xl"   : "bg-white border border-gray-200/80 rounded-2xl shadow-sm",
+    cardSubtle:    isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60 rounded-xl" : "bg-gray-50/70 border border-gray-200/60 rounded-xl",
+    header:        isDark ? "bg-[#0a1409]/95 border-b border-[#1e2e22]/80"          : "bg-white/95 border-b border-gray-200/70",
+    input:         isDark ? "bg-[#0a1409] border-[#243028]/70 text-white placeholder:text-white/20 focus:border-[#4a8a5a]/60" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
+    textPrimary:   isDark ? "text-white"       : "text-gray-900",
+    textSecondary: isDark ? "text-white/55"    : "text-gray-500",
+    textTertiary:  isDark ? "text-white/30"    : "text-gray-400",
+    accent:        "text-[#5B9A6A]",
+    accentBg:      isDark ? "bg-[#5B9A6A]/10 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]",
+    divider:       isDark ? "border-[#1e2e22]/70" : "border-gray-200/70",
+    tabActive:     isDark ? "bg-[#162018] text-white border-[#2e4a34]/50"           : "bg-white text-gray-900 border-gray-300 shadow-sm",
+    tabInactive:   isDark ? "text-white/35 hover:text-white/60 hover:bg-white/03"   : "text-gray-400 hover:text-gray-700 hover:bg-gray-100/50",
+    rowHover:      isDark ? "hover:bg-[#162018]/50"                                 : "hover:bg-gray-50/80",
+    monoBlock:     isDark ? "bg-[#060e07] text-[#5B9A6A] border border-[#1e2e22]/60" : "bg-[#3D6B47]/04 text-[#3D6B47] border border-[#3D6B47]/10",
   };
 }
 
@@ -114,12 +159,20 @@ export default function MatchupPrep() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [activeTab, setActiveTab] = useState<Tab>("scout");
+
+  // Save / saved reports
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(null);
   const [savedReports, setSavedReports] = useState<SavedReportMeta[]>([]);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [loadingSaved, setLoadingSaved] = useState(false);
+
+  // Practice mode state
+  const [practiceIndex, setPracticeIndex] = useState(0);
+  const [practiceRevealed, setPracticeRevealed] = useState(false);
+  const [practiceCompleted, setPracticeCompleted] = useState<Set<number>>(new Set());
+  const [practiceQueue, setPracticeQueue] = useState<number[]>([]);
 
   useEffect(() => {
     if (params.username) {
@@ -135,7 +188,7 @@ export default function MatchupPrep() {
     } else {
       setLoading(true);
       setReport(null);
-      setActiveTab("overview");
+      setActiveTab("scout");
     }
     setError(null);
     try {
@@ -147,6 +200,15 @@ export default function MatchupPrep() {
       }
       const data: PrepReport = await res.json();
       setReport(data);
+      // Initialize practice queue sorted by priority
+      const sorted = data.prepLines
+        .map((_, i) => i)
+        .sort((a, b) => PRIORITY_CONFIG[getPriority(data.prepLines[a].confidence)].order
+                      - PRIORITY_CONFIG[getPriority(data.prepLines[b].confidence)].order);
+      setPracticeQueue(sorted);
+      setPracticeIndex(0);
+      setPracticeRevealed(false);
+      setPracticeCompleted(new Set());
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to fetch prep report");
     } finally {
@@ -167,7 +229,6 @@ export default function MatchupPrep() {
     }
   }, [report, savedReports, user]);
 
-  // Fetch saved reports list when user is logged in
   const fetchSavedReports = useCallback(async () => {
     if (!user) return;
     setLoadingSaved(true);
@@ -225,203 +286,246 @@ export default function MatchupPrep() {
     fetchReport(u);
   }
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "overview",  label: "Overview",   icon: <BarChart3 className="w-4 h-4" /> },
-    { id: "openings",  label: "Openings",   icon: <BookOpen  className="w-4 h-4" /> },
-    { id: "prep",      label: "Prep Lines", icon: <Zap       className="w-4 h-4" /> },
+  // Practice mode helpers
+  function practiceNext() {
+    setPracticeRevealed(false);
+    if (practiceIndex < practiceQueue.length - 1) {
+      setPracticeIndex(i => i + 1);
+    }
+  }
+  function practicePrev() {
+    setPracticeRevealed(false);
+    if (practiceIndex > 0) {
+      setPracticeIndex(i => i - 1);
+    }
+  }
+  function markCompleted(idx: number) {
+    setPracticeCompleted(prev => new Set(Array.from(prev).concat(idx)));
+    practiceNext();
+  }
+  function resetPractice() {
+    setPracticeCompleted(new Set());
+    setPracticeIndex(0);
+    setPracticeRevealed(false);
+  }
+
+  const tabs: { id: Tab; label: string; step: string }[] = [
+    { id: "scout",    label: "Scout",     step: "1" },
+    { id: "lines",    label: "Key Lines", step: "2" },
+    { id: "practice", label: "Practice",  step: "3" },
   ];
+
+  // Derive 3 key prep signals from the report
+  function getKeySignals(r: PrepReport): { icon: React.ReactNode; label: string; value: string; highlight?: boolean }[] {
+    const signals: { icon: React.ReactNode; label: string; value: string; highlight?: boolean }[] = [];
+    const opp = r.opponent;
+
+    // Signal 1: Dominant color tendency
+    const whiteDiff = opp.asWhite.winRate - opp.asBlack.winRate;
+    if (Math.abs(whiteDiff) >= 8) {
+      signals.push({
+        icon: <CircleDot className="w-4 h-4" />,
+        label: whiteDiff > 0 ? "Stronger as White" : "Stronger as Black",
+        value: whiteDiff > 0
+          ? `${opp.asWhite.winRate}% vs ${opp.asBlack.winRate}%`
+          : `${opp.asBlack.winRate}% vs ${opp.asWhite.winRate}%`,
+        highlight: true,
+      });
+    } else {
+      signals.push({
+        icon: <CircleDot className="w-4 h-4" />,
+        label: "Balanced both sides",
+        value: `W ${opp.asWhite.winRate}% · B ${opp.asBlack.winRate}%`,
+      });
+    }
+
+    // Signal 2: Game length tendency
+    if (opp.avgGameLength <= 30) {
+      signals.push({
+        icon: <Clock className="w-4 h-4" />,
+        label: "Plays short games",
+        value: `Avg ${opp.avgGameLength} moves`,
+        highlight: true,
+      });
+    } else if (opp.avgGameLength >= 50) {
+      signals.push({
+        icon: <Clock className="w-4 h-4" />,
+        label: "Plays long games",
+        value: `Avg ${opp.avgGameLength} moves`,
+      });
+    } else {
+      signals.push({
+        icon: <Clock className="w-4 h-4" />,
+        label: "Medium game length",
+        value: `Avg ${opp.avgGameLength} moves`,
+      });
+    }
+
+    // Signal 3: Endgame tendency
+    const ep = opp.endgameProfile;
+    if (ep.total > 0) {
+      const resignPct = Math.round((ep.resignations / ep.total) * 100);
+      const matePct = Math.round((ep.checkmates / ep.total) * 100);
+      if (resignPct >= 40) {
+        signals.push({
+          icon: <Shield className="w-4 h-4" />,
+          label: "Resigns often",
+          value: `${resignPct}% of losses`,
+          highlight: resignPct >= 55,
+        });
+      } else if (matePct >= 20) {
+        signals.push({
+          icon: <Crown className="w-4 h-4" />,
+          label: "Fights to checkmate",
+          value: `${matePct}% checkmates`,
+        });
+      } else {
+        signals.push({
+          icon: <Activity className="w-4 h-4" />,
+          label: "Draw tendency",
+          value: `${Math.round((ep.draws / ep.total) * 100)}% draws`,
+        });
+      }
+    }
+
+    return signals.slice(0, 3);
+  }
 
   return (
     <div className={`min-h-screen ${t.page}`}>
 
       {/* ── Sticky Header ── */}
       <div className={`sticky top-0 z-40 backdrop-blur-xl ${t.header}`}>
-        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
 
-          {/* Back button — always visible, always touch-friendly */}
           <button
             onClick={() => navigate("/")}
             className={`p-2.5 rounded-xl transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-              isDark ? "hover:bg-white/06 text-white/60 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-gray-900"
+              isDark ? "hover:bg-white/05 text-white/50 hover:text-white" : "hover:bg-gray-100 text-gray-400 hover:text-gray-900"
             }`}
             aria-label="Go back"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
 
-          {/* Title — hidden on very small screens when report is loaded to save space */}
-          <div className={`flex items-center gap-2 ${report ? "hidden xs:flex sm:flex" : "flex"}`}>
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/10"}`}>
-              <Target className="w-3.5 h-3.5 text-[#5B9A6A]" />
+          {/* Search bar */}
+          <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${t.textTertiary}`} />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="chess.com username"
+                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none focus:ring-1 focus:ring-[#3D6B47]/30 ${t.input}`}
+                autoComplete="off"
+                autoCapitalize="none"
+              />
             </div>
-            <h1 className={`text-sm font-semibold tracking-tight whitespace-nowrap ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              {report ? <span className="hidden sm:inline">Matchup Prep · </span> : "Matchup Prep"}
-              {report && <span className={`${t.textSecondary} font-normal`}>{report.opponent.username}</span>}
-            </h1>
-          </div>
+            <button
+              type="submit"
+              disabled={!searchInput.trim() || loading}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all min-h-[40px] shrink-0 ${
+                searchInput.trim() && !loading
+                  ? isDark
+                    ? "bg-[#3D6B47] text-white hover:bg-[#4a8a5a] active:scale-95"
+                    : "bg-[#3D6B47] text-white hover:bg-[#2d5237] active:scale-95"
+                  : isDark ? "bg-white/05 text-white/20 cursor-not-allowed" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+            </button>
+          </form>
 
-          {/* Right-side actions — grouped cleanly */}
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-
-            {/* Refresh — only when report loaded */}
-            {report && (
+          {/* Action buttons — only when report is loaded */}
+          {report && (
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Refresh */}
               <button
                 onClick={() => fetchReport(report.opponent.username, true)}
                 disabled={refreshing}
-                className={`p-2.5 rounded-xl transition-colors disabled:opacity-40 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                  isDark ? "hover:bg-white/06 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                  isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
                 }`}
                 title="Refresh report"
-                aria-label="Refresh report"
               >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
               </button>
-            )}
 
-            {/* Save — only when report loaded and user logged in */}
-            {report && user && (
-              <button
-                onClick={savedId ? () => handleDeleteSaved(savedId) : handleSaveReport}
-                disabled={saving}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-all duration-150 disabled:opacity-40 min-h-[40px] ${
-                  savedId
-                    ? isDark
-                      ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
-                      : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47] hover:bg-red-50 hover:border-red-200 hover:text-red-500"
-                    : isDark
-                      ? "bg-white/04 border-white/10 text-white/50 hover:bg-[#3D6B47]/15 hover:border-[#3D6B47]/30 hover:text-[#5B9A6A]"
-                      : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/25 hover:text-[#3D6B47]"
-                }`}
-                title={savedId ? "Remove from saved" : "Save this report"}
-              >
-                {saving
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : savedId
-                    ? <BookmarkCheck className="w-4 h-4" />
-                    : <Bookmark className="w-4 h-4" />
-                }
-                <span className="hidden sm:inline">{savedId ? "Saved" : "Save"}</span>
-              </button>
-            )}
-
-            {/* Saved reports toggle — visible when logged in */}
-            {user && (
-              <button
-                onClick={() => setShowSavedPanel((o) => !o)}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-all duration-150 min-h-[40px] ${
-                  showSavedPanel
-                    ? isDark
-                      ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A]"
-                      : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47]"
-                    : isDark
-                      ? "bg-white/04 border-white/10 text-white/50 hover:bg-white/08"
-                      : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-                }`}
-                title="Saved prep reports"
-              >
-                <Bookmark className="w-4 h-4" />
-                {savedReports.length > 0 && (
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                    isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                  }`}>{savedReports.length}</span>
-                )}
-                <ChevronDown className={`w-3 h-3 transition-transform duration-150 hidden sm:block ${showSavedPanel ? "rotate-180" : ""}`} />
-              </button>
-            )}
-          </div>
+              {/* Save — only for logged-in users */}
+              {user && (
+                <button
+                  onClick={savedId ? () => setShowSavedPanel(p => !p) : handleSaveReport}
+                  disabled={saving}
+                  className={`p-2.5 rounded-xl transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                    savedId
+                      ? isDark ? "text-[#5B9A6A] hover:bg-[#3D6B47]/10" : "text-[#3D6B47] hover:bg-[#3D6B47]/08"
+                      : isDark ? "hover:bg-white/05 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                  }`}
+                  title={savedId ? "Saved — view saved reports" : "Save this report"}
+                >
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedId ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
-
-        {/* ── Search Bar ── */}
-        <form onSubmit={handleSearch}>
-          <div className={`${t.card} p-3 sm:p-4`}>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${t.textTertiary}`} />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="chess.com username…"
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none transition-all duration-150 ${t.input}`}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading || !searchInput.trim()}
-                className="px-4 sm:px-5 py-3 rounded-xl bg-[#3D6B47] text-white font-semibold text-sm hover:bg-[#4a7d55] active:scale-[0.97] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shrink-0 min-w-[48px] min-h-[48px] justify-center"
-              >
-                {loading
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Swords className="w-4 h-4" />
-                }
-                <span className="hidden sm:inline">Analyze</span>
-              </button>
-            </div>
-          </div>
-        </form>
+      {/* ── Page Content ── */}
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-5 sm:py-7 space-y-4 sm:space-y-5">
 
         {/* ── Saved Reports Panel ── */}
-        {user && showSavedPanel && (
-          <div className={`${t.card} overflow-hidden`}>
-            <div className={`px-4 py-3 border-b ${isDark ? "border-[#2a4030]/40" : "border-gray-100"} flex items-center justify-between`}>
+        {showSavedPanel && user && (
+          <div className={`${t.card} p-4 sm:p-5`}>
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <BookmarkCheck className="w-4 h-4 text-[#5B9A6A]" />
-                <span className={`text-sm font-semibold ${t.textPrimary}`}>Saved Reports</span>
-                {savedReports.length > 0 && (
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                    isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                  }`}>{savedReports.length}</span>
-                )}
+                <BookmarkCheck className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Saved Reports</h3>
               </div>
-              {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5B9A6A]" />}
+              <button
+                onClick={() => setShowSavedPanel(false)}
+                className={`text-xs ${t.textTertiary} hover:${t.textSecondary} transition-colors`}
+              >
+                Close
+              </button>
             </div>
-            {savedReports.length === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <Bookmark className={`w-8 h-8 mx-auto mb-2 ${t.textTertiary}`} />
-                <p className={`text-sm font-medium ${t.textSecondary}`}>No saved reports yet</p>
-                <p className={`text-xs mt-1 ${t.textTertiary}`}>Load a prep report and tap Save to keep it here</p>
+            {loadingSaved ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className={`w-5 h-5 animate-spin ${t.textTertiary}`} />
               </div>
+            ) : savedReports.length === 0 ? (
+              <p className={`text-sm text-center py-4 ${t.textTertiary}`}>No saved reports yet.</p>
             ) : (
-              <div className="divide-y divide-[#2a4030]/20">
+              <div className="space-y-2">
                 {savedReports.map((r) => (
                   <div
                     key={r.id}
-                    className={`flex items-center gap-3 px-4 py-3.5 transition-colors ${t.rowHover}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${t.cardSubtle} ${t.rowHover}`}
                   >
-                    <div
-                      className="flex-1 min-w-0 cursor-pointer"
+                    <button
+                      className="flex-1 flex items-center gap-3 text-left min-w-0"
                       onClick={() => {
-                        setShowSavedPanel(false);
                         navigate(`/prep/${encodeURIComponent(r.opponentUsername)}`);
-                        fetchReport(r.opponentUsername);
+                        setShowSavedPanel(false);
                       }}
                     >
-                      <div className={`text-sm font-semibold ${t.textPrimary} truncate`}>{r.opponentUsername}</div>
-                      {/* Metadata — wraps gracefully on mobile */}
-                      <div className={`flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-0.5 text-[11px] ${t.textTertiary}`}>
-                        {r.winRate != null && (
-                          <span className={`font-bold ${
-                            r.winRate >= 60 ? "text-red-400" : r.winRate >= 45 ? "text-amber-400" : "text-[#5B9A6A]"
-                          }`}>{r.winRate}% WR</span>
-                        )}
-                        {r.gamesAnalyzed != null && <span>{r.gamesAnalyzed} games</span>}
-                        {r.prepLinesCount != null && r.prepLinesCount > 0 && <span>{r.prepLinesCount} lines</span>}
-                        <span>{new Date(r.savedAt).toLocaleDateString()}</span>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/08"}`}>
+                        <Target className="w-4 h-4 text-[#5B9A6A]" />
                       </div>
-                    </div>
+                      <div className="min-w-0">
+                        <p className={`text-sm font-medium truncate ${t.textPrimary}`}>{r.opponentUsername}</p>
+                        <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${t.textTertiary} mt-0.5`}>
+                          {r.winRate !== null && <span>{r.winRate}% win rate</span>}
+                          {r.gamesAnalyzed !== null && <span>{r.gamesAnalyzed} games</span>}
+                          {r.prepLinesCount !== null && r.prepLinesCount > 0 && <span>{r.prepLinesCount} lines</span>}
+                        </div>
+                      </div>
+                    </button>
                     <button
                       onClick={() => handleDeleteSaved(r.id)}
-                      className={`p-2.5 rounded-xl transition-colors flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                        isDark ? "text-white/25 hover:text-red-400 hover:bg-red-500/10" : "text-gray-300 hover:text-red-500 hover:bg-red-50"
-                      }`}
-                      title="Remove saved report"
-                      aria-label="Remove saved report"
+                      className={`p-1.5 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-red-500/10 text-white/20 hover:text-red-400" : "hover:bg-red-50 text-gray-300 hover:text-red-500"}`}
+                      title="Delete saved report"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -434,36 +538,24 @@ export default function MatchupPrep() {
 
         {/* ── Loading State ── */}
         {loading && (
-          <div className={`${t.card} py-12 px-6 flex flex-col items-center gap-5`}>
-            <div className="relative">
-              <div className={`w-12 h-12 rounded-full border-2 ${isDark ? "border-[#3D6B47]/20" : "border-[#3D6B47]/15"} border-t-[#5B9A6A] animate-spin`} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Target className="w-4.5 h-4.5 text-[#5B9A6A]" />
-              </div>
+          <div className={`${t.card} py-16 flex flex-col items-center gap-4`}>
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
+              <Loader2 className="w-6 h-6 text-[#5B9A6A] animate-spin" />
             </div>
             <div className="text-center space-y-1">
-              <p className={`font-semibold text-sm ${t.textPrimary}`}>Analyzing opponent</p>
-              <p className={`text-xs ${t.textSecondary}`}>Fetching recent games and computing play style</p>
-            </div>
-            <div className="w-full max-w-xs space-y-2">
-              {[75, 55, 65].map((w, i) => (
-                <div key={i} className={`h-1.5 rounded-full animate-pulse ${isDark ? "bg-white/06" : "bg-gray-200"}`} style={{ width: `${w}%` }} />
-              ))}
+              <p className={`text-sm font-medium ${t.textPrimary}`}>Analyzing {searchInput}</p>
+              <p className={`text-xs ${t.textTertiary}`}>Fetching games and building prep report…</p>
             </div>
           </div>
         )}
 
         {/* ── Error State ── */}
         {error && !loading && (
-          <div className={`${t.card} p-4 sm:p-6`}>
-            <div className="flex items-start gap-3.5">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isDark ? "bg-amber-500/12" : "bg-amber-50"}`}>
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-              </div>
-              <div>
-                <p className={`font-semibold text-sm ${t.textPrimary}`}>Could not generate report</p>
-                <p className={`text-sm ${t.textSecondary} mt-0.5`}>{error}</p>
-              </div>
+          <div className={`${t.card} p-5 flex items-start gap-3`}>
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className={`text-sm font-medium ${t.textPrimary}`}>Could not load report</p>
+              <p className={`text-xs mt-0.5 ${t.textTertiary}`}>{error}</p>
             </div>
           </div>
         )}
@@ -472,260 +564,271 @@ export default function MatchupPrep() {
         {report && !loading && (
           <div className="space-y-4 sm:space-y-5">
 
-            {/* Opponent Hero Card */}
-            <div className={`${t.card} overflow-hidden`}>
-              {/* Accent top strip */}
-              <div className={`h-1 w-full ${isDark ? "bg-gradient-to-r from-[#3D6B47]/60 via-[#5B9A6A]/40 to-transparent" : "bg-gradient-to-r from-[#3D6B47]/20 via-[#5B9A6A]/10 to-transparent"}`} />
-              <div className="p-4 sm:p-6">
-
-                {/* Identity + ratings — stacks on mobile, side-by-side on sm+ */}
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
-                      <Crown className="w-5 h-5 text-[#5B9A6A]" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                          {report.opponent.username}
-                        </h2>
-                        {report._cached && (
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.accentBg}`}>Cached</span>
-                        )}
-                      </div>
-                      <p className={`text-xs sm:text-sm ${t.textSecondary} mt-0.5`}>
-                        {report.opponent.gamesAnalyzed} games analyzed
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Ratings — horizontal scroll on mobile if needed */}
-                  <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                    {report.opponent.rating.rapid  && <RatingBadge label="Rapid"  value={report.opponent.rating.rapid}  isDark={isDark} />}
-                    {report.opponent.rating.blitz  && <RatingBadge label="Blitz"  value={report.opponent.rating.blitz}  isDark={isDark} />}
-                    {report.opponent.rating.bullet && <RatingBadge label="Bullet" value={report.opponent.rating.bullet} isDark={isDark} />}
-                  </div>
+            {/* Opponent Snapshot Hero */}
+            <div className={`${t.card} p-5 sm:p-6`}>
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <p className={`text-[11px] font-semibold uppercase tracking-widest mb-1 ${t.textTertiary}`}>Opponent</p>
+                  <h2 className={`text-xl sm:text-2xl font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                    {report.opponent.username}
+                  </h2>
+                  <p className={`text-xs mt-1 ${t.textTertiary}`}>
+                    {report.opponent.gamesAnalyzed} games analyzed
+                    {report._cached && <span className="ml-2 opacity-60">· cached</span>}
+                  </p>
                 </div>
+                {/* Ratings */}
+                <div className="flex gap-2 shrink-0">
+                  {report.opponent.rating.rapid  && <RatingBadge label="Rapid"  value={report.opponent.rating.rapid}  isDark={isDark} />}
+                  {report.opponent.rating.blitz  && <RatingBadge label="Blitz"  value={report.opponent.rating.blitz}  isDark={isDark} />}
+                  {report.opponent.rating.bullet && <RatingBadge label="Bullet" value={report.opponent.rating.bullet} isDark={isDark} />}
+                </div>
+              </div>
 
-                {/* Summary stat row — 2 cols on mobile, 6 on desktop */}
-                <div className={`mt-4 pt-4 border-t ${t.divider} grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3`}>
-                  <SummaryChip
-                    label="Win Rate"
-                    value={`${report.opponent.overall.winRate}%`}
-                    highlight={report.opponent.overall.winRate >= 55}
-                    isDark={isDark}
-                  />
-                  <SummaryChip
-                    label="W / D / L"
-                    value={`${report.opponent.overall.wins}·${report.opponent.overall.draws}·${report.opponent.overall.losses}`}
-                    isDark={isDark}
-                  />
-                  <SummaryChip
-                    label="As White"
-                    value={`${report.opponent.asWhite.winRate}%`}
-                    highlight={report.opponent.asWhite.winRate >= 55}
-                    isDark={isDark}
-                  />
-                  <SummaryChip
-                    label="As Black"
-                    value={`${report.opponent.asBlack.winRate}%`}
-                    highlight={report.opponent.asBlack.winRate >= 55}
-                    isDark={isDark}
-                  />
-                  <SummaryChip
-                    label="Avg Length"
-                    value={`${report.opponent.avgGameLength}m`}
-                    isDark={isDark}
-                  />
-                  <SummaryChip
-                    label="Prep Lines"
-                    value={`${report.prepLines.length}`}
-                    highlight={report.prepLines.length > 0}
-                    isDark={isDark}
-                  />
+              {/* 3 Key Prep Signals */}
+              <div className={`pt-4 border-t ${t.divider}`}>
+                <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>Key Signals</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {getKeySignals(report).map((sig, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-xl ${
+                        sig.highlight
+                          ? isDark ? "bg-[#3D6B47]/12 border border-[#3D6B47]/25" : "bg-[#3D6B47]/06 border border-[#3D6B47]/15"
+                          : isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50" : "bg-gray-50/80 border border-gray-200/60"
+                      }`}
+                    >
+                      <span className={sig.highlight ? "text-[#5B9A6A]" : t.textTertiary}>{sig.icon}</span>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-medium truncate ${sig.highlight ? (isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]") : t.textSecondary}`}>{sig.label}</p>
+                        <p className={`text-[11px] truncate ${t.textTertiary}`}>{sig.value}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Tab Navigation — touch-friendly, min 44px height */}
-            <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
+            {/* Tab Navigation — step-based */}
+            <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-gray-100/80 border border-gray-200/60"}`}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 min-h-[44px] ${
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 min-h-[44px] ${
                     activeTab === tab.id ? t.tabActive + " border" : t.tabInactive
                   }`}
                 >
-                  {tab.icon}
-                  <span className="hidden xs:inline sm:inline">{tab.label}</span>
-                  {/* On very small screens, show icon only */}
-                  {tab.id === "prep" && report.prepLines.length > 0 && (
+                  <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
+                    activeTab === tab.id
+                      ? isDark ? "bg-[#3D6B47]/30 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                      : isDark ? "bg-white/06 text-white/30" : "bg-gray-300/60 text-gray-400"
+                  }`}>
+                    {tab.step}
+                  </span>
+                  <span>{tab.label}</span>
+                  {tab.id === "lines" && report.prepLines.length > 0 && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      activeTab === "prep"
-                        ? isDark ? "bg-[#3D6B47]/30 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                        : isDark ? "bg-white/08 text-white/40" : "bg-gray-300/60 text-gray-500"
+                      activeTab === "lines"
+                        ? isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        : isDark ? "bg-white/06 text-white/30" : "bg-gray-300/50 text-gray-400"
                     }`}>
                       {report.prepLines.length}
+                    </span>
+                  )}
+                  {tab.id === "practice" && practiceCompleted.size > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+                    }`}>
+                      {practiceCompleted.size}/{report.prepLines.length}
                     </span>
                   )}
                 </button>
               ))}
             </div>
 
-            {/* ── Tab: Overview ── */}
-            {activeTab === "overview" && (
-              <div className="space-y-4 sm:space-y-5">
+            {/* ── Tab 1: Scout ── */}
+            {activeTab === "scout" && (
+              <div className="space-y-4">
 
-                {/* Win/Draw/Loss breakdown — 1 col on mobile, 3 on sm+ */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <ColorStatCard
-                    title="Overall Record"
-                    icon={<BarChart3 className="w-4 h-4" />}
-                    wins={report.opponent.overall.wins}
-                    draws={report.opponent.overall.draws}
-                    losses={report.opponent.overall.losses}
-                    winRate={report.opponent.overall.winRate}
-                    isDark={isDark}
-                  />
+                {/* Win/Draw/Loss by color — compact 2-col */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <ColorStatCard
                     title="As White"
-                    icon={<CircleDot className="w-4 h-4" />}
+                    icon={<CircleDot className="w-3.5 h-3.5" />}
                     wins={report.opponent.asWhite.wins}
                     draws={report.opponent.asWhite.draws}
                     losses={report.opponent.asWhite.losses}
                     winRate={report.opponent.asWhite.winRate}
                     games={report.opponent.asWhite.games}
                     isDark={isDark}
+                    t={t}
                   />
                   <ColorStatCard
                     title="As Black"
-                    icon={<CircleDot className="w-4 h-4 fill-current opacity-70" />}
+                    icon={<CircleDot className="w-3.5 h-3.5 fill-current opacity-60" />}
                     wins={report.opponent.asBlack.wins}
                     draws={report.opponent.asBlack.draws}
                     losses={report.opponent.asBlack.losses}
                     winRate={report.opponent.asBlack.winRate}
                     games={report.opponent.asBlack.games}
                     isDark={isDark}
+                    t={t}
                   />
                 </div>
+
+                {/* Opening tendencies — top 3 each side */}
+                {(report.opponent.whiteOpenings.length > 0 || report.opponent.blackOpenings.length > 0) && (
+                  <div className={`${t.card} p-4 sm:p-5`}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Tendencies</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <OpeningMiniList
+                        title="Plays as White"
+                        openings={report.opponent.whiteOpenings.slice(0, 3)}
+                        firstMoves={report.opponent.firstMoveAsWhite}
+                        isDark={isDark}
+                        t={t}
+                      />
+                      <OpeningMiniList
+                        title="Plays as Black"
+                        openings={report.opponent.blackOpenings.slice(0, 3)}
+                        isDark={isDark}
+                        t={t}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Key Insights */}
                 {report.insights.length > 0 && (
                   <div className={`${t.card} p-4 sm:p-5`}>
-                    <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
-                        <Eye className="w-3.5 h-3.5 text-[#5B9A6A]" />
-                      </div>
-                      <h3 className={`font-semibold text-sm ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                        Key Insights
-                      </h3>
-                      <span className={`text-xs ${t.textTertiary}`}>{report.insights.length} signals</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Eye className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Scouting Notes</h3>
                     </div>
                     <div className="space-y-2">
                       {report.insights.map((insight, i) => (
-                        <div
-                          key={i}
-                          className={`flex items-start gap-3 p-3 rounded-xl transition-colors duration-100 ${t.cardInner} ${t.rowHover}`}
-                        >
-                          <span className={`text-xs font-bold w-5 h-5 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
+                        <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${t.cardSubtle}`}>
+                          <span className={`text-[10px] font-bold w-4 h-4 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
                             {i + 1}
                           </span>
-                          <span className={`text-sm leading-relaxed ${t.textPrimary}`}>{insight}</span>
+                          <span className={`text-sm leading-relaxed ${t.textSecondary}`}>{insight}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Endgame Profile — 2 cols on mobile, 5 on sm+ */}
-                <div className={`${t.card} p-4 sm:p-5`}>
-                  <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
-                      <Shield className="w-3.5 h-3.5 text-[#5B9A6A]" />
-                    </div>
-                    <h3 className={`font-semibold text-sm ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                      Endgame Profile
-                    </h3>
-                    <span className={`text-xs ${t.textTertiary}`}>{report.opponent.endgameProfile.total} games</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                    <EndgameBar
-                      label="Checkmates"
-                      value={report.opponent.endgameProfile.checkmates}
-                      total={report.opponent.endgameProfile.total}
-                      color="emerald"
-                      isDark={isDark}
-                    />
-                    <EndgameBar
-                      label="Resignations"
-                      value={report.opponent.endgameProfile.resignations}
-                      total={report.opponent.endgameProfile.total}
-                      color="blue"
-                      isDark={isDark}
-                    />
-                    <EndgameBar
-                      label="Timeouts"
-                      value={report.opponent.endgameProfile.timeouts}
-                      total={report.opponent.endgameProfile.total}
-                      color="amber"
-                      isDark={isDark}
-                    />
-                    <EndgameBar
-                      label="Draws"
-                      value={report.opponent.endgameProfile.draws}
-                      total={report.opponent.endgameProfile.total}
-                      color="gray"
-                      isDark={isDark}
-                    />
-                    <AvgLengthStat
-                      value={report.opponent.avgGameLength}
-                      isDark={isDark}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── Tab: Openings ── */}
-            {activeTab === "openings" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <OpeningPanel
-                  title="White Repertoire"
-                  openings={report.opponent.whiteOpenings}
-                  firstMoves={report.opponent.firstMoveAsWhite}
+                {/* Next step nudge */}
+                <NextStepNudge
+                  label="Ready to study key lines?"
+                  action="Go to Key Lines"
+                  onClick={() => setActiveTab("lines")}
                   isDark={isDark}
-                />
-                <OpeningPanel
-                  title="Black Repertoire"
-                  openings={report.opponent.blackOpenings}
-                  isDark={isDark}
+                  t={t}
                 />
               </div>
             )}
 
-            {/* ── Tab: Prep Lines ── */}
-            {activeTab === "prep" && (
-              <div className="space-y-3">
+            {/* ── Tab 2: Key Lines ── */}
+            {activeTab === "lines" && (
+              <div className="space-y-4">
                 {report.prepLines.length === 0 ? (
                   <EmptyState
-                    icon={<Zap className="w-7 h-7 text-[#5B9A6A]" />}
-                    title="No prep lines generated"
-                    description="Not enough opening data was found to generate specific preparation lines."
+                    icon={<Target className="w-6 h-6 text-[#5B9A6A]" />}
+                    title="No key lines generated"
+                    description="Not enough opening data was found to generate preparation lines."
                     isDark={isDark}
+                    t={t}
                   />
                 ) : (
                   <>
-                    <div className="flex items-center gap-2 px-1">
-                      <Zap className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                      <p className={`text-sm font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>
-                        {report.prepLines.length} suggested lines based on opponent tendencies
-                      </p>
+                    {/* Priority legend */}
+                    <div className={`flex items-center gap-3 px-1`}>
+                      {(["must-know", "likely", "useful"] as Priority[]).map((p) => {
+                        const cfg = PRIORITY_CONFIG[p];
+                        const count = report.prepLines.filter(l => getPriority(l.confidence) === p).length;
+                        if (count === 0) return null;
+                        return (
+                          <div key={p} className="flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                            <span className={`text-xs ${t.textTertiary}`}>{cfg.label} <span className={t.textTertiary}>({count})</span></span>
+                          </div>
+                        );
+                      })}
                     </div>
-                    {report.prepLines.map((line, i) => (
-                      <PrepLineCard key={i} line={line} index={i} isDark={isDark} />
-                    ))}
+
+                    {/* Lines sorted by priority */}
+                    {(["must-know", "likely", "useful"] as Priority[]).map((priority) => {
+                      const lines = report.prepLines
+                        .map((line, i) => ({ line, i }))
+                        .filter(({ line }) => getPriority(line.confidence) === priority);
+                      if (lines.length === 0) return null;
+                      return (
+                        <div key={priority} className="space-y-2.5">
+                          <div className="flex items-center gap-2 px-1">
+                            <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_CONFIG[priority].dot}`} />
+                            <span className={`text-xs font-semibold uppercase tracking-wide ${t.textTertiary}`}>
+                              {PRIORITY_CONFIG[priority].label}
+                            </span>
+                          </div>
+                          {lines.map(({ line, i }) => (
+                            <KeyLineCard
+                              key={i}
+                              line={line}
+                              index={i}
+                              priority={priority}
+                              isDark={isDark}
+                              t={t}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })}
+
+                    {/* Next step nudge */}
+                    <NextStepNudge
+                      label="Ready to practice these lines?"
+                      action="Start Practice"
+                      onClick={() => setActiveTab("practice")}
+                      isDark={isDark}
+                      t={t}
+                    />
                   </>
+                )}
+              </div>
+            )}
+
+            {/* ── Tab 3: Practice ── */}
+            {activeTab === "practice" && (
+              <div className="space-y-4">
+                {report.prepLines.length === 0 ? (
+                  <EmptyState
+                    icon={<Trophy className="w-6 h-6 text-[#5B9A6A]" />}
+                    title="No lines to practice"
+                    description="Generate prep lines first by running a report on an opponent with enough game history."
+                    isDark={isDark}
+                    t={t}
+                  />
+                ) : practiceQueue.length > 0 && (
+                  <PracticeMode
+                    lines={report.prepLines}
+                    queue={practiceQueue}
+                    currentIndex={practiceIndex}
+                    revealed={practiceRevealed}
+                    completed={practiceCompleted}
+                    onReveal={() => setPracticeRevealed(true)}
+                    onGotIt={() => markCompleted(practiceQueue[practiceIndex])}
+                    onReviewAgain={practiceNext}
+                    onPrev={practicePrev}
+                    onNext={practiceNext}
+                    onReset={resetPractice}
+                    isDark={isDark}
+                    t={t}
+                  />
                 )}
               </div>
             )}
@@ -733,25 +836,24 @@ export default function MatchupPrep() {
           </div>
         )}
 
-        {/* ── Empty / Welcome State ── */}
+        {/* ── Welcome / Empty State ── */}
         {!report && !loading && !error && (
-          <div className={`${t.card} py-10 px-6 sm:py-14 flex flex-col items-center gap-4 sm:gap-5 text-center`}>
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#1a2e1c]" : "bg-[#3D6B47]/06"}`}>
+          <div className={`${t.card} py-12 px-6 sm:py-16 flex flex-col items-center gap-5 text-center`}>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
               <Target className="w-7 h-7 text-[#5B9A6A]" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 max-w-xs">
               <h3 className={`text-base sm:text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 Prepare for your next match
               </h3>
-              <p className={`text-sm ${t.textSecondary} max-w-xs mx-auto leading-relaxed`}>
-                Enter your opponent's chess.com username to get a full analysis of their opening repertoire, play style, and prep lines.
+              <p className={`text-sm ${t.textSecondary} leading-relaxed`}>
+                Enter your opponent's chess.com username to scout their tendencies, study key lines, and practice before match day.
               </p>
             </div>
-            {/* Feature chips — wrap on mobile */}
-            <div className={`flex flex-wrap justify-center gap-3 mt-1 text-xs ${t.textTertiary}`}>
-              <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Openings</span>
-              <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> Play style</span>
-              <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Prep lines</span>
+            <div className={`flex flex-wrap justify-center gap-4 text-xs ${t.textTertiary}`}>
+              <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> Scout</span>
+              <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Key Lines</span>
+              <span className="flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Practice</span>
             </div>
           </div>
         )}
@@ -762,270 +864,402 @@ export default function MatchupPrep() {
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
+type Tokens = ReturnType<typeof useDesignTokens>;
+
 function RatingBadge({ label, value, isDark }: { label: string; value: number; isDark: boolean }) {
   return (
-    <div className={`px-3 py-2 rounded-xl text-center min-w-[58px] ${isDark ? "bg-[#0d1a0f] border border-[#2a4030]/60" : "bg-gray-50 border border-gray-200"}`}>
-      <div className={`text-[10px] font-medium uppercase tracking-wide ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</div>
-      <div className={`text-base font-bold mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
-    </div>
-  );
-}
-
-function SummaryChip({ label, value, highlight, isDark }: { label: string; value: string; highlight?: boolean; isDark: boolean }) {
-  return (
-    <div className={`rounded-xl p-3 text-center ${isDark ? "bg-[#0d1a0f]/70" : "bg-gray-50/80"}`}>
-      <div className={`text-[10px] font-medium uppercase tracking-wide mb-1 ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</div>
-      <div className={`text-sm font-bold ${
-        highlight ? "text-[#5B9A6A]" : isDark ? "text-white" : "text-gray-900"
-      }`}>{value}</div>
+    <div className={`px-2.5 py-1.5 rounded-xl text-center min-w-[50px] ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/70" : "bg-gray-50 border border-gray-200"}`}>
+      <div className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? "text-white/25" : "text-gray-400"}`}>{label}</div>
+      <div className={`text-sm font-bold mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
     </div>
   );
 }
 
 function ColorStatCard({
-  title, icon, wins, draws, losses, winRate, games, isDark
+  title, icon, wins, draws, losses, winRate, games, isDark, t
 }: {
   title: string; icon: React.ReactNode;
-  wins: number; draws: number; losses: number; winRate: number;
-  games?: number; isDark: boolean;
+  wins: number; draws: number; losses: number; winRate: number; games?: number;
+  isDark: boolean; t: Tokens;
 }) {
   const total = wins + draws + losses;
-  const winPct  = total > 0 ? (wins  / total) * 100 : 0;
-  const drawPct = total > 0 ? (draws / total) * 100 : 0;
-  const lossPct = total > 0 ? (losses / total) * 100 : 0;
+  const wPct = total > 0 ? (wins / total) * 100 : 0;
+  const dPct = total > 0 ? (draws / total) * 100 : 0;
+  const lPct = total > 0 ? (losses / total) * 100 : 0;
 
   return (
-    <div className={`p-4 rounded-2xl ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
+    <div className={`${t.card} p-4`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-[#5B9A6A]">{icon}</span>
-          <h3 className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{title}</h3>
+          <span className={t.textTertiary}>{icon}</span>
+          <span className={`text-sm font-semibold ${t.textPrimary}`}>{title}</span>
         </div>
-        <span className={`text-lg font-bold ${winRate >= 55 ? "text-[#5B9A6A]" : winRate >= 45 ? (isDark ? "text-white" : "text-gray-900") : "text-red-400"}`}>
+        <span className={`text-lg font-bold ${winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textPrimary}`}>
           {winRate}%
         </span>
       </div>
-      {/* Win/draw/loss bar */}
-      <div className="h-1.5 rounded-full overflow-hidden flex mb-3">
-        <div className="bg-emerald-500 h-full transition-all" style={{ width: `${winPct}%` }} />
-        <div className={`h-full transition-all ${isDark ? "bg-white/20" : "bg-gray-300"}`} style={{ width: `${drawPct}%` }} />
-        <div className="bg-red-400 h-full transition-all" style={{ width: `${lossPct}%` }} />
+      {/* Bar */}
+      <div className="h-1.5 rounded-full overflow-hidden flex gap-px mb-2.5" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}>
+        <div className="bg-emerald-500 rounded-l-full transition-all" style={{ width: `${wPct}%` }} />
+        <div className="bg-amber-400 transition-all" style={{ width: `${dPct}%` }} />
+        <div className="bg-red-400 rounded-r-full transition-all" style={{ width: `${lPct}%` }} />
       </div>
-      <div className="flex justify-between text-xs">
-        <span className="text-emerald-500 font-medium">{wins}W</span>
-        <span className={isDark ? "text-white/35" : "text-gray-400"}>{draws}D</span>
-        <span className="text-red-400 font-medium">{losses}L</span>
+      <div className={`flex gap-3 text-xs ${t.textTertiary}`}>
+        <span><span className="text-emerald-500 font-semibold">{wins}</span> W</span>
+        <span><span className="text-amber-400 font-semibold">{draws}</span> D</span>
+        <span><span className="text-red-400 font-semibold">{losses}</span> L</span>
+        {games !== undefined && <span className="ml-auto">{games} games</span>}
       </div>
-      {games !== undefined && (
-        <div className={`text-xs mt-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>{games} games</div>
-      )}
     </div>
   );
 }
 
-function EndgameBar({
-  label, value, total, color, isDark
+function OpeningMiniList({
+  title, openings, firstMoves, isDark, t
 }: {
-  label: string; value: number; total: number; color: "emerald" | "blue" | "amber" | "gray"; isDark: boolean;
+  title: string;
+  openings: OpeningStat[];
+  firstMoves?: { move: string; count: number; pct: number }[];
+  isDark: boolean;
+  t: Tokens;
 }) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-  const colorMap = {
-    emerald: "bg-emerald-500",
-    blue:    "bg-blue-400",
-    amber:   "bg-amber-400",
-    gray:    isDark ? "bg-white/20" : "bg-gray-300",
-  };
-  const textMap = {
-    emerald: "text-emerald-500",
-    blue:    "text-blue-400",
-    amber:   "text-amber-400",
-    gray:    isDark ? "text-white/50" : "text-gray-500",
-  };
-
-  return (
-    <div className={`p-3 rounded-xl ${isDark ? "bg-[#0d1a0f]/70" : "bg-gray-50/80"}`}>
-      <div className={`text-xl font-bold ${textMap[color]}`}>{pct}<span className="text-sm font-normal opacity-60">%</span></div>
-      <div className={`text-xs mt-1 mb-2 ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</div>
-      <div className={`h-1 rounded-full ${isDark ? "bg-white/06" : "bg-gray-200"} overflow-hidden`}>
-        <div className={`h-full rounded-full ${colorMap[color]} transition-all duration-500`} style={{ width: `${pct}%` }} />
+  if (openings.length === 0 && (!firstMoves || firstMoves.length === 0)) {
+    return (
+      <div>
+        <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>{title}</p>
+        <p className={`text-xs ${t.textTertiary}`}>No data</p>
       </div>
-      <div className={`text-[10px] mt-1.5 ${isDark ? "text-white/25" : "text-gray-400"}`}>{value} games</div>
-    </div>
-  );
-}
-
-function AvgLengthStat({ value, isDark }: { value: number; isDark: boolean }) {
+    );
+  }
   return (
-    <div className={`p-3 rounded-xl ${isDark ? "bg-[#0d1a0f]/70" : "bg-gray-50/80"}`}>
-      <div className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
-      <div className={`text-xs mt-1 mb-2 ${isDark ? "text-white/40" : "text-gray-500"}`}>Avg Length</div>
-      <div className={`h-1 rounded-full ${isDark ? "bg-white/06" : "bg-gray-200"}`} />
-      <div className={`text-[10px] mt-1.5 ${isDark ? "text-white/25" : "text-gray-400"}`}>moves avg</div>
-    </div>
-  );
-}
-
-function OpeningPanel({
-  title, openings, firstMoves, isDark
-}: {
-  title: string; openings: OpeningStat[]; firstMoves?: { move: string; count: number; pct: number }[]; isDark: boolean;
-}) {
-  const [showAll, setShowAll] = useState(false);
-  const INITIAL_COUNT = 4;
-  const displayedOpenings = showAll ? openings : openings.slice(0, INITIAL_COUNT);
-  const hasMore = openings.length > INITIAL_COUNT;
-
-  return (
-    <div className={`p-4 sm:p-5 rounded-2xl ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
-      <div className="flex items-center gap-2.5 mb-4">
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
-          <BookOpen className="w-3.5 h-3.5 text-[#5B9A6A]" />
-        </div>
-        <h3 className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-          {title}
-        </h3>
-        {openings.length > 0 && (
-          <span className={`text-xs ml-auto ${isDark ? "text-white/30" : "text-gray-400"}`}>{openings.length} openings</span>
-        )}
-      </div>
-
-      {/* First move preference chips */}
+    <div>
+      <p className={`text-xs font-semibold mb-2.5 ${t.textTertiary}`}>{title}</p>
       {firstMoves && firstMoves.length > 0 && (
-        <div className="mb-4">
-          <p className={`text-xs font-medium uppercase tracking-wide mb-2 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-            First Move Preference
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            {firstMoves.slice(0, 3).map((fm) => (
-              <span
-                key={fm.move}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium min-h-[32px] flex items-center ${
-                  isDark ? "bg-[#0d1a0f] text-[#5B9A6A] border border-[#2a4030]/60" : "bg-[#3D6B47]/06 text-[#3D6B47] border border-[#3D6B47]/15"
-                }`}
-              >
-                1.{fm.move} <span className={`ml-1 ${isDark ? "text-white/35" : "text-gray-400"}`}>({fm.pct}%)</span>
-              </span>
-            ))}
-          </div>
+        <div className="flex gap-1.5 mb-2.5 flex-wrap">
+          {firstMoves.slice(0, 3).map((fm) => (
+            <span
+              key={fm.move}
+              className={`font-mono text-[11px] px-2 py-1 rounded-lg font-semibold ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}
+            >
+              {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
+            </span>
+          ))}
         </div>
       )}
-
-      {openings.length === 0 ? (
-        <p className={`text-sm ${isDark ? "text-white/35" : "text-gray-400"} py-4 text-center`}>
-          No opening data available
-        </p>
-      ) : (
-        <>
-          <div className="space-y-1.5">
-            {displayedOpenings.map((op) => (
-              <div
-                key={op.name}
-                className={`p-3 rounded-xl transition-colors duration-100 cursor-default ${
-                  isDark ? "hover:bg-[#1a2e1c]/60" : "hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <span className={`text-sm font-medium block truncate ${isDark ? "text-white" : "text-gray-900"}`}>{op.name}</span>
-                    <span className={`text-[11px] font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>{op.eco} · {op.count} games</span>
-                  </div>
-                  <span className={`text-sm font-bold shrink-0 ${
-                    op.winRate >= 60 ? "text-emerald-500" : op.winRate >= 40 ? "text-amber-500" : "text-red-400"
-                  }`}>
-                    {op.winRate}%
-                  </span>
-                </div>
-                {/* W/D/L bar */}
-                <div className="h-1 rounded-full overflow-hidden flex">
-                  <div className="bg-emerald-500 h-full" style={{ width: `${(op.wins / op.count) * 100}%` }} />
-                  <div className={`h-full ${isDark ? "bg-white/15" : "bg-gray-300"}`} style={{ width: `${(op.draws / op.count) * 100}%` }} />
-                  <div className="bg-red-400 h-full" style={{ width: `${(op.losses / op.count) * 100}%` }} />
-                </div>
-              </div>
-            ))}
+      <div className="space-y-1.5">
+        {openings.map((o, i) => (
+          <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg ${t.cardSubtle}`}>
+            <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
+            <span className={`text-xs font-semibold shrink-0 ${o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary}`}>
+              {o.winRate}%
+            </span>
           </div>
-
-          {/* Progressive disclosure — show more / show less */}
-          {hasMore && (
-            <button
-              onClick={() => setShowAll((s) => !s)}
-              className={`mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-medium transition-colors min-h-[40px] ${
-                isDark ? "text-white/40 hover:text-white/70 hover:bg-white/04" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {showAll ? (
-                <><ChevronUp className="w-3.5 h-3.5" /> Show less</>
-              ) : (
-                <><ChevronDown className="w-3.5 h-3.5" /> Show {openings.length - INITIAL_COUNT} more</>
-              )}
-            </button>
-          )}
-        </>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
 
-function PrepLineCard({ line, index, isDark }: { line: PrepLine; index: number; isDark: boolean }) {
-  const conf = {
-    high:   { bg: isDark ? "bg-emerald-500/12 border-emerald-500/25 text-emerald-400" : "bg-emerald-50 border-emerald-200 text-emerald-700", dot: "bg-emerald-500", label: "High" },
-    medium: { bg: isDark ? "bg-amber-500/12 border-amber-500/25 text-amber-400"       : "bg-amber-50 border-amber-200 text-amber-700",       dot: "bg-amber-500",   label: "Medium" },
-    low:    { bg: isDark ? "bg-white/06 border-white/12 text-white/40"                : "bg-gray-50 border-gray-200 text-gray-500",           dot: isDark ? "bg-white/30" : "bg-gray-400", label: "Low" },
-  }[line.confidence];
+function KeyLineCard({
+  line, index, priority, isDark, t
+}: {
+  line: PrepLine; index: number; priority: Priority; isDark: boolean; t: Tokens;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const cfg = PRIORITY_CONFIG[priority];
+  const priorityStyle = isDark ? cfg.darkBg : cfg.lightBg;
 
   return (
-    <div className={`rounded-2xl overflow-hidden ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
-      <div className="p-4 sm:p-5">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className={`text-xs font-bold w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
-              {index + 1}
-            </span>
-            <div className="min-w-0">
-              <h4 className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"} truncate`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+    <div className={`rounded-2xl overflow-hidden border transition-all duration-150 ${
+      isDark ? "bg-[#0f1c11] border-[#1e2e22]/70" : "bg-white border-gray-200/80 shadow-sm"
+    }`}>
+      <button
+        className={`w-full text-left p-4 sm:p-5 transition-colors ${t.rowHover}`}
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex items-start gap-3">
+          <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
+            {index + 1}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h4 className={`font-semibold text-sm ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 {line.name}
               </h4>
-              {line.eco !== "---" && (
-                <span className={`text-[11px] font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>{line.eco}</span>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${priorityStyle}`}>
+                <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+                {cfg.shortLabel}
+              </span>
+            </div>
+            {line.eco !== "---" && (
+              <span className={`text-[11px] font-mono ${t.textTertiary}`}>{line.eco}</span>
+            )}
+          </div>
+          <ChevronRight className={`w-4 h-4 shrink-0 transition-transform duration-150 ${t.textTertiary} ${expanded ? "rotate-90" : ""}`} />
+        </div>
+      </button>
+
+      {expanded && (
+        <div className={`px-4 sm:px-5 pb-4 sm:pb-5 pt-0 space-y-3 border-t ${t.divider}`}>
+          {/* Move sequence */}
+          {line.eco !== "---" && line.moves && (
+            <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl overflow-x-auto whitespace-nowrap mt-3 ${t.monoBlock}`}>
+              {line.moves}
+            </div>
+          )}
+
+          {/* Why this matters */}
+          <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? "bg-[#0a1409]/80" : "bg-gray-50/80"}`}>
+            <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`} />
+            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{line.rationale}</p>
+          </div>
+
+          {/* Memorization cue */}
+          {priority === "must-know" && (
+            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-emerald-400/70" : "text-emerald-700/70"}`}>
+              <Zap className="w-3 h-3" />
+              <span>Memorize this line — it's the most likely scenario you'll face.</span>
+            </div>
+          )}
+          {priority === "likely" && (
+            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-amber-400/70" : "text-amber-700/70"}`}>
+              <Eye className="w-3 h-3" />
+              <span>Review this line — you'll probably encounter it.</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PracticeMode({
+  lines, queue, currentIndex, revealed, completed,
+  onReveal, onGotIt, onReviewAgain, onPrev, onNext, onReset,
+  isDark, t
+}: {
+  lines: PrepLine[];
+  queue: number[];
+  currentIndex: number;
+  revealed: boolean;
+  completed: Set<number>;
+  onReveal: () => void;
+  onGotIt: () => void;
+  onReviewAgain: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onReset: () => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  const totalLines = queue.length;
+  const completedCount = completed.size;
+  const allDone = completedCount >= totalLines;
+
+  if (allDone) {
+    return (
+      <div className={`${t.card} py-14 px-6 flex flex-col items-center gap-5 text-center`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-emerald-500/10" : "bg-emerald-50"}`}>
+          <Trophy className="w-7 h-7 text-emerald-500" />
+        </div>
+        <div className="space-y-2">
+          <h3 className={`text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            Prep complete
+          </h3>
+          <p className={`text-sm ${t.textSecondary} max-w-xs mx-auto`}>
+            You've reviewed all {totalLines} lines. You're ready for this matchup.
+          </p>
+        </div>
+        <button
+          onClick={onReset}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
+            isDark ? "bg-[#162018] border border-[#2e4a34]/50 text-white hover:bg-[#1e2e22]" : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Practice again
+        </button>
+      </div>
+    );
+  }
+
+  const lineIndex = queue[currentIndex];
+  const line = lines[lineIndex];
+  const priority = getPriority(line.confidence);
+  const cfg = PRIORITY_CONFIG[priority];
+  const priorityStyle = isDark ? cfg.darkBg : cfg.lightBg;
+  const isCompleted = completed.has(lineIndex);
+
+  return (
+    <div className="space-y-3">
+      {/* Progress bar */}
+      <div className="flex items-center gap-3 px-1">
+        <div className={`flex-1 h-1 rounded-full overflow-hidden ${isDark ? "bg-white/06" : "bg-gray-200"}`}>
+          <div
+            className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+            style={{ width: `${(completedCount / totalLines) * 100}%` }}
+          />
+        </div>
+        <span className={`text-xs font-medium shrink-0 ${t.textTertiary}`}>
+          {completedCount}/{totalLines}
+        </span>
+      </div>
+
+      {/* Card */}
+      <div className={`${t.card} overflow-hidden`}>
+        {/* Card header */}
+        <div className={`px-5 pt-5 pb-4 border-b ${t.divider}`}>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
+                {lineIndex + 1}
+              </span>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${priorityStyle}`}>
+                <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+              </span>
+              {isCompleted && (
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"}`}>
+                  <Check className="w-2.5 h-2.5" /> Done
+                </span>
               )}
             </div>
+            <span className={`text-xs ${t.textTertiary}`}>{currentIndex + 1} of {totalLines}</span>
           </div>
-          {/* Confidence badge — shortened label on mobile */}
-          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 flex items-center gap-1.5 ${conf.bg}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${conf.dot}`} />
-            <span className="hidden sm:inline">{conf.label} confidence</span>
-            <span className="sm:hidden">{conf.label}</span>
-          </span>
+          <h3 className={`text-base sm:text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            {line.name}
+          </h3>
+          {line.eco !== "---" && (
+            <span className={`text-xs font-mono ${t.textTertiary}`}>{line.eco}</span>
+          )}
         </div>
 
-        {/* Moves — overflow-x-auto for long sequences on narrow screens */}
+        {/* Move sequence — always visible */}
         {line.eco !== "---" && line.moves && (
-          <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl mb-3 overflow-x-auto whitespace-nowrap ${
-            isDark ? "bg-[#0d1a0f] text-[#5B9A6A] border border-[#2a4030]/40" : "bg-[#3D6B47]/04 text-[#3D6B47] border border-[#3D6B47]/12"
-          }`}>
-            {line.moves}
+          <div className="px-5 py-4">
+            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-2 ${t.textTertiary}`}>Moves</p>
+            <div className={`font-mono text-sm px-4 py-3 rounded-xl overflow-x-auto whitespace-nowrap ${t.monoBlock}`}>
+              {line.moves}
+            </div>
           </div>
         )}
 
-        {/* Rationale */}
-        <p className={`text-sm leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>
-          {line.rationale}
-        </p>
+        {/* Rationale — hidden until revealed */}
+        {!revealed ? (
+          <div className="px-5 pb-5">
+            <button
+              onClick={onReveal}
+              className={`w-full py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
+                isDark
+                  ? "border-[#2e4a34]/50 text-[#5B9A6A] hover:bg-[#162018]"
+                  : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/04"
+              }`}
+            >
+              Why does this matter?
+            </button>
+          </div>
+        ) : (
+          <div className="px-5 pb-5 space-y-4">
+            <div className={`flex items-start gap-2.5 p-3.5 rounded-xl ${isDark ? "bg-[#0a1409]/80" : "bg-gray-50/80"}`}>
+              <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`} />
+              <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{line.rationale}</p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={onReviewAgain}
+                className={`py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
+                  isDark
+                    ? "border-[#2e4a34]/40 text-white/50 hover:bg-[#162018] hover:text-white/70"
+                    : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                }`}
+              >
+                Review again
+              </button>
+              <button
+                onClick={onGotIt}
+                className={`py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+                  isDark
+                    ? "bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20"
+                    : "bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                }`}
+              >
+                <Check className="w-4 h-4" />
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between px-1">
+        <button
+          onClick={onPrev}
+          disabled={currentIndex === 0}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+            currentIndex === 0
+              ? `${t.textTertiary} opacity-30 cursor-not-allowed`
+              : `${t.textSecondary} hover:${t.textPrimary} ${t.rowHover}`
+          }`}
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          Previous
+        </button>
+        <button
+          onClick={onNext}
+          disabled={currentIndex >= queue.length - 1}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+            currentIndex >= queue.length - 1
+              ? `${t.textTertiary} opacity-30 cursor-not-allowed`
+              : `${t.textSecondary} hover:${t.textPrimary} ${t.rowHover}`
+          }`}
+        >
+          Next
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
 }
 
-function EmptyState({ icon, title, description, isDark }: { icon: React.ReactNode; title: string; description: string; isDark: boolean }) {
+function NextStepNudge({
+  label, action, onClick, isDark, t
+}: {
+  label: string; action: string; onClick: () => void; isDark: boolean; t: Tokens;
+}) {
   return (
-    <div className={`py-10 px-6 sm:py-12 rounded-2xl flex flex-col items-center gap-4 text-center ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#1a2e1c]" : "bg-[#3D6B47]/06"}`}>
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] group ${
+        isDark
+          ? "border-[#2e4a34]/40 hover:border-[#3D6B47]/50 hover:bg-[#162018]/50"
+          : "border-gray-200/80 hover:border-[#3D6B47]/20 hover:bg-[#3D6B47]/02"
+      }`}
+    >
+      <span className={`text-sm ${t.textTertiary} group-hover:${t.textSecondary} transition-colors`}>{label}</span>
+      <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`}>
+        {action}
+        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </button>
+  );
+}
+
+function EmptyState({
+  icon, title, description, isDark, t
+}: {
+  icon: React.ReactNode; title: string; description: string; isDark: boolean; t: Tokens;
+}) {
+  return (
+    <div className={`py-12 px-6 rounded-2xl flex flex-col items-center gap-4 text-center ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-white border border-gray-200/80 shadow-sm"}`}>
+      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
         {icon}
       </div>
       <div>
-        <h3 className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{title}</h3>
-        <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-gray-500"} max-w-xs mx-auto`}>{description}</p>
+        <h3 className={`font-semibold text-sm ${t.textPrimary}`}>{title}</h3>
+        <p className={`text-sm mt-1 ${t.textTertiary} max-w-xs mx-auto leading-relaxed`}>{description}</p>
       </div>
     </div>
   );

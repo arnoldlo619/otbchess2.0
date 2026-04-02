@@ -4453,3 +4453,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] On final round completion: scroll to top first, then fire confetti after short delay
 - [x] Ensure confetti fires while Tournament Complete section is visible
 - [x] Write tests for completion detection logic
+
+## Phase 14: Matchup Prep Phase 4 — Opponent Prep Workspace
+
+- [x] Restructure tabs to Scout → Key Lines → Practice (guided study journey)
+- [x] Build opponent snapshot hero card with 3 key prep signals
+- [x] Build Key Lines tab with Must Know / Likely / Useful priority tiers
+- [x] Add memorization cues and "why this matters" context to each line
+- [x] Build Practice mode — flashcard-style one-line-at-a-time review
+- [x] Add "What to study next" nudge at bottom of each tab
+- [x] Apply Apple-like minimalist design: reduce noise, increase whitespace
+- [x] Quiet secondary data, elevate primary prep signals
+- [x] Write tests for new priority tier logic and practice flow
