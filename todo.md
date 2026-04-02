@@ -4445,3 +4445,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Ensure tab bar is touch-friendly and handles small screens
 - [x] Tablet layer: intentional 2-col layout for overview cards
 - [x] Write tests for mobile UX logic
+
+## Phase 13: Final Round Completion — Scroll-to-Top + Confetti Focus
+
+- [x] Add pageTopRef to the top of the Director Console main content area
+- [x] Add tournamentCompleteRef to the Tournament Complete section
+- [x] On final round completion: scroll to top first, then fire confetti after short delay
+- [x] Ensure confetti fires while Tournament Complete section is visible
+- [x] Write tests for completion detection logic

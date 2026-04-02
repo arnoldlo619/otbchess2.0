@@ -1875,36 +1875,51 @@ export default function Director() {
     prevAllResultsIn.current = allResultsIn;
   }, [allResultsIn, isRegistration, state.currentRound, broadcastResultsPosted]);
 
-  // 🎉 Confetti burst when the final round's last result is entered
+  // 🎉 Confetti burst + scroll-to-top when the final round's last result is entered
   const confettiFiredRef = useRef<number>(-1);
+  const pageTopRef = useRef<HTMLDivElement>(null);
+  const tournamentCompleteRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const isFinalRound = state.currentRound >= state.totalRounds && state.totalRounds > 0;
     const justCompleted = allResultsIn && !prevAllResultsIn.current;
     // Only fire once per tournament (track by totalRounds so it resets if rounds change)
     if (isFinalRound && justCompleted && confettiFiredRef.current !== state.totalRounds) {
       confettiFiredRef.current = state.totalRounds;
-      // Two-cannon burst from both sides
-      const duration = 3000;
-      const end = Date.now() + duration;
-      const colors = ["#4CAF50", "#ffffff", "#3D6B47", "#a3e635", "#fbbf24"];
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors,
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors,
-        });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
+
+      // Step 1: Scroll to the top of the page so the Tournament Complete section is visible
+      const scrollTarget = pageTopRef.current;
+      if (scrollTarget) {
+        scrollTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // Step 2: After scroll settles (~600ms), fire the confetti burst from both sides
+      const confettiTimer = setTimeout(() => {
+        const duration = 4000;
+        const end = Date.now() + duration;
+        const colors = ["#4CAF50", "#ffffff", "#3D6B47", "#a3e635", "#fbbf24"];
+        const frame = () => {
+          confetti({
+            particleCount: 4,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.6 },
+            colors,
+          });
+          confetti({
+            particleCount: 4,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.6 },
+            colors,
+          });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        };
+        frame();
+      }, 600);
+
+      return () => clearTimeout(confettiTimer);
     }
   }, [allResultsIn, state.currentRound, state.totalRounds]);
 
@@ -2072,8 +2087,8 @@ export default function Director() {
         }
       />
 
-      {/* Spacer to push content below the fixed minimal nav */}
-      <div style={{ height: 56 }} aria-hidden />
+      {/* Spacer to push content below the fixed minimal nav — pageTopRef anchor for scroll-to-top */}
+      <div ref={pageTopRef} style={{ height: 56 }} aria-hidden />
 
       {/* QR sub-toolbar removed — Join QR moved to tournament header title row; Project QR moved to post-round action buttons */}      {/* ── Sticky "All Results In" Banner ────────────────────────────────────────── */}
       {!isRegistration && allResultsIn && canGenerateNext && (
@@ -2798,7 +2813,7 @@ export default function Director() {
                       { rank: 3, idx: 2, medalDark: "bg-orange-400/15 text-orange-300", medalLight: "bg-orange-50 text-orange-500 border border-orange-200", scoreSize: "text-2xl" },
                     ];
                     return (
-                      <div className={`rounded-2xl border overflow-hidden animate-in fade-in slide-in-from-bottom-2 ${
+                      <div ref={tournamentCompleteRef} className={`rounded-2xl border overflow-hidden animate-in fade-in slide-in-from-bottom-2 ${
                         isDark
                           ? "bg-[#3D6B47]/18 border-[#4CAF50]/35"
                           : "bg-gradient-to-br from-[#3D6B47]/08 to-[#3D6B47]/04 border-[#3D6B47]/25 shadow-sm"
