@@ -81,6 +81,18 @@ function persistFollowedPlayer(tournamentId: string, playerId: string | null) {
   } catch { /* silent */ }
 }
 
+// ─── Analytics Tracking ──────────────────────────────────────────────────────
+
+function trackEvent(tournamentId: string, eventType: string, metadata?: Record<string, unknown>) {
+  try {
+    fetch("/api/analytics/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tournamentId, eventType, metadata }),
+    }).catch(() => {});
+  } catch { /* fire-and-forget */ }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getResultLabel(result: Result, perspective: "white" | "black") {
@@ -1082,10 +1094,12 @@ function PersonalRecap({
 function PostEventCTAs({
   isDark,
   tournamentName,
+  tournamentId,
   hasFollowedPlayer,
 }: {
   isDark: boolean;
   tournamentName: string;
+  tournamentId: string;
   hasFollowedPlayer: boolean;
 }) {
   const [email, setEmail] = useState("");
@@ -1100,6 +1114,7 @@ function PostEventCTAs({
       localStorage.setItem("otb-email-captures", JSON.stringify(existing));
     } catch { /* silent */ }
     setSubmitted(true);
+    trackEvent(tournamentId, "email_capture", { email: email.trim() });
   };
 
   return (
@@ -1167,8 +1182,9 @@ function PostEventCTAs({
           <p className="text-xs text-muted-foreground mt-0.5">Take the next step</p>
         </div>
         <div className="p-3 space-y-1">
-          <Link
+            <Link
             href="/profile"
+            onClick={() => trackEvent(tournamentId, "cta_click", { cta: "save_results" })}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
@@ -1189,6 +1205,7 @@ function PostEventCTAs({
 
           <Link
             href="/clubs"
+            onClick={() => trackEvent(tournamentId, "cta_click", { cta: "join_club" })}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
@@ -1209,6 +1226,7 @@ function PostEventCTAs({
 
           <a
             href="https://chessotb.club"
+            onClick={() => trackEvent(tournamentId, "cta_click", { cta: "explore_chessotb" })}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
@@ -1364,6 +1382,10 @@ export default function PublicTournament() {
       const newId = followedPlayerId === playerId ? null : playerId;
       setFollowedPlayerId(newId);
       persistFollowedPlayer(data.tournamentId, newId);
+      const player = data.players.find((p) => p.id === playerId);
+      trackEvent(data.tournamentId, newId ? "follow" : "unfollow", {
+        playerName: player?.name ?? playerId,
+      });
     },
     [data, followedPlayerId]
   );
@@ -1443,7 +1465,10 @@ export default function PublicTournament() {
         {/* Spotlight Search */}        <section>
           <SpotlightSearch
             players={data.players}
-            onSelect={(player) => handleFollow(player.id)}
+            onSelect={(player) => {
+              handleFollow(player.id);
+              trackEvent(data.tournamentId, "search", { playerName: player.name });
+            }}
             isDark={isDark}
           />
         </section>
@@ -1519,7 +1544,7 @@ export default function PublicTournament() {
         {/* Post-Event CTAs */}
         {isCompleted && (
           <section>
-            <PostEventCTAs isDark={isDark} tournamentName={data.tournamentName} hasFollowedPlayer={!!followedPlayer} />
+            <PostEventCTAs isDark={isDark} tournamentName={data.tournamentName} tournamentId={data.tournamentId} hasFollowedPlayer={!!followedPlayer} />
           </section>
         )}
 

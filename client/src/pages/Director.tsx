@@ -1303,6 +1303,18 @@ function PublicTournamentCard({
             <p className={`text-center text-[10px] ${isDark ? "text-white/25" : "text-gray-400"}`}>
               Print or project this QR code at the venue
             </p>
+            {/* Analytics Link */}
+            <a
+              href={`/tournament/${tournamentId}/analytics`}
+              className={`flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border text-xs font-semibold transition-colors mt-1 ${
+                isDark
+                  ? "border-[#3D6B47]/30 bg-[#3D6B47]/08 text-[#7BC88F] hover:bg-[#3D6B47]/15"
+                  : "border-[#3D6B47]/20 bg-[#F0F8F2] text-[#3D6B47] hover:bg-[#E0F0E4]"
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              View Analytics
+            </a>
           </>
         )}
       </div>

@@ -4330,3 +4330,45 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Unit tests for CTA contextual copy logic (5 tests)
 - [x] Unit tests for hero mode switching (3 tests)
 - [x] 31 tests passing
+
+## Phase 5: Tournament Analytics & Organizer Intelligence
+
+### Data Collection Layer
+- [x] Create tournament_analytics DB table (tournamentId, event type, metadata, timestamp)
+- [x] Add server-side event tracking endpoints (POST /api/analytics/event)
+- [x] Track public page views, searches, follows, email captures, account creations, club joins
+- [x] Track check-in counts, walk-in counts, no-show counts from director state
+
+### Analytics API
+- [x] Build GET /api/tournament/:id/analytics endpoint (aggregated metrics)
+- [x] Compute attendance insights (registered vs checked-in vs walk-in vs no-show)
+- [x] Compute public engagement metrics (views, searches, follows)
+- [x] Compute conversion funnel (page view → search → follow → email → account → club join)
+- [x] Compute operational quality signals (results entry rate, round timing)
+
+### Tournament Analytics Page
+- [x] Build /director/:slug/analytics route and TournamentAnalytics page
+- [x] Overview metrics card group (attendance, engagement, conversion headline numbers)
+- [x] Attendance Insights section (registered vs checked-in vs walk-in vs no-show)
+- [x] Public Engagement section (page views, searches, follows, peak activity)
+- [x] Conversion Funnel visualization (clean horizontal funnel)
+- [x] Post-Event Conversion metrics (emails, accounts, club joins, conversion rates)
+- [x] Operational Quality signals (results entry rate, round timing)
+- [x] Organizer Recommendations cards (data-driven insight cards)
+
+### Retention & Comparison Foundation
+- [x] Retention signals (net follows, card claims, email/CTA/search-to-follow conversion rates)
+- [x] Tournament comparison foundation (compare key metrics across events)
+- [x] Club growth contribution summary
+
+### Polish & UX
+- [x] Premium card-based layout matching chessotb.club design system
+- [x] Elegant empty states for tournaments with no analytics data
+- [x] Mobile-friendly responsive design
+- [x] Clean chart usage (only where it genuinely helps)
+
+### Tests
+- [x] Unit tests for analytics event tracking
+- [x] Unit tests for metric computation functions (36 tests)
+- [x] Unit tests for funnel calculation logic
+- [x] Unit tests for recommendation generation

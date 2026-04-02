@@ -841,3 +841,34 @@ export const directorSmtpConfig = mysqlTable("director_smtp_config", {
 });
 export type DirectorSmtpConfig = typeof directorSmtpConfig.$inferSelect;
 export type NewDirectorSmtpConfig = typeof directorSmtpConfig.$inferInsert;
+
+
+// ─── tournament_analytics ────────────────────────────────────────────────────
+// Lightweight event tracking for tournament organizer analytics.
+// Each row represents one trackable event (page view, search, follow, etc.)
+// Aggregated at query time for the analytics dashboard.
+export const tournamentAnalytics = mysqlTable(
+  "tournament_analytics",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    // The tournament this event belongs to
+    tournamentId: varchar("tournament_id", { length: 255 }).notNull(),
+    // Event type: page_view | search | follow | email_capture | account_create | club_join | card_claim
+    eventType: varchar("event_type", { length: 30 }).notNull(),
+    // Optional JSON metadata (e.g., search query, player name)
+    metadata: text("metadata"),
+    // When the event occurred
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    tournamentIdx: index("ta_tournament_id_idx").on(table.tournamentId),
+    eventTypeIdx: index("ta_event_type_idx").on(table.eventType),
+    tournamentEventIdx: index("ta_tid_event_idx").on(
+      table.tournamentId,
+      table.eventType
+    ),
+  })
+);
+
+export type TournamentAnalyticsRow = typeof tournamentAnalytics.$inferSelect;
+export type NewTournamentAnalyticsRow = typeof tournamentAnalytics.$inferInsert;

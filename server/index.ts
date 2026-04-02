@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -1122,6 +1122,14 @@ export function createApp() {
         return res.status(304).end();
       }
 
+      // Fire-and-forget page_view tracking (only on full responses, not 304s)
+      db.insert(tournamentAnalytics).values({
+        id: nanoid(),
+        tournamentId: ut.tournamentId,
+        eventType: "page_view",
+        metadata: null,
+      }).catch(() => {});
+
       res.setHeader("ETag", cached.etag);
       res.setHeader("Cache-Control", "public, max-age=5");
       res.setHeader("Content-Type", "application/json");
@@ -1129,6 +1137,248 @@ export function createApp() {
     } catch (err) {
       console.error("[public-tournament] GET error:", err);
       res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // ── Analytics: POST /api/analytics/event ────────────────────────────────────
+  // Lightweight client-side event tracking endpoint (no auth required).
+  // Accepts: { tournamentId, eventType, metadata? }
+  // Rate-limited to prevent abuse.
+  const analyticsLimiter = rateLimit({ windowMs: 60_000, max: 60, keyGenerator: (req) => req.ip ?? "unknown" });
+  app.post("/api/analytics/event", analyticsLimiter, async (req, res) => {
+    const { tournamentId, eventType, metadata } = req.body ?? {};
+    if (!tournamentId || !eventType) return res.status(400).json({ error: "Missing fields" });
+    const validTypes = ["search", "follow", "unfollow", "email_capture", "card_claim", "cta_click"];
+    if (!validTypes.includes(eventType)) return res.status(400).json({ error: "Invalid event type" });
+    try {
+      const db = await getDb();
+      await db.insert(tournamentAnalytics).values({
+        id: nanoid(),
+        tournamentId: String(tournamentId),
+        eventType: String(eventType),
+        metadata: metadata ? JSON.stringify(metadata) : null,
+      });
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[analytics] POST error:", err);
+      res.status(500).json({ error: "Failed" });
+    }
+  });
+
+  // ── Analytics: GET /api/tournament/:id/analytics ────────────────────────────
+  // Aggregate analytics for the tournament organizer dashboard.
+  // Returns event counts, funnel metrics, and attendance data.
+  // Requires auth — only the tournament owner can read.
+  app.get("/api/tournament/:id/analytics", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    try {
+      const db = await getDb();
+      const userId = (req as any).userId as string;
+      // Verify ownership
+      const utRows = await db
+        .select()
+        .from(userTournaments)
+        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, userId)))
+        .limit(1);
+      if (!utRows.length) return res.status(403).json({ error: "Not authorized" });
+
+      // Fetch all analytics events for this tournament
+      const events = await db
+        .select()
+        .from(tournamentAnalytics)
+        .where(eq(tournamentAnalytics.tournamentId, id));
+
+      // Aggregate by event type
+      const eventCounts: Record<string, number> = {};
+      const uniqueIps = new Set<string>();
+      const emailsCaptured: string[] = [];
+      const ctaClicks: Record<string, number> = {};
+      const searchQueries: string[] = [];
+      const followedPlayers: string[] = [];
+      const timeline: { date: string; views: number; interactions: number }[] = [];
+      const dateMap = new Map<string, { views: number; interactions: number }>();
+
+      for (const event of events) {
+        // Count by type
+        eventCounts[event.eventType] = (eventCounts[event.eventType] ?? 0) + 1;
+
+        // Parse metadata
+        let meta: Record<string, any> = {};
+        if (event.metadata) {
+          try { meta = JSON.parse(event.metadata); } catch { /* silent */ }
+        }
+
+        // Track unique IPs from page views
+        if (event.eventType === "page_view" && meta.ip) {
+          uniqueIps.add(meta.ip);
+        }
+
+        // Track email captures
+        if (event.eventType === "email_capture" && meta.email) {
+          emailsCaptured.push(meta.email);
+        }
+
+        // Track CTA clicks by type
+        if (event.eventType === "cta_click" && meta.cta) {
+          ctaClicks[meta.cta] = (ctaClicks[meta.cta] ?? 0) + 1;
+        }
+
+        // Track search queries
+        if (event.eventType === "search" && meta.playerName) {
+          searchQueries.push(meta.playerName);
+        }
+
+        // Track followed players
+        if (event.eventType === "follow" && meta.playerId) {
+          followedPlayers.push(meta.playerId);
+        }
+
+        // Build timeline (group by date)
+        const dateStr = event.createdAt ? new Date(event.createdAt).toISOString().slice(0, 10) : "unknown";
+        if (!dateMap.has(dateStr)) dateMap.set(dateStr, { views: 0, interactions: 0 });
+        const day = dateMap.get(dateStr)!;
+        if (event.eventType === "page_view") {
+          day.views++;
+        } else {
+          day.interactions++;
+        }
+      }
+
+      // Convert dateMap to sorted timeline array
+      for (const [date, counts] of Array.from(dateMap.entries()).sort()) {
+        timeline.push({ date, ...counts });
+      }
+
+      // Fetch tournament state for attendance metrics
+      const stateRows = await db
+        .select()
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id))
+        .limit(1);
+      let attendance = { registered: 0, totalRounds: 0, currentRound: 0, gamesPlayed: 0 };
+      if (stateRows.length && stateRows[0].stateJson) {
+        try {
+          const state = JSON.parse(stateRows[0].stateJson);
+          attendance.registered = state.players?.length ?? 0;
+          attendance.totalRounds = state.totalRounds ?? 0;
+          attendance.currentRound = state.currentRound ?? 0;
+          const rounds = state.rounds ?? [];
+          for (const round of rounds) {
+            for (const game of round.games ?? []) {
+              if (game.result && game.result !== "*") attendance.gamesPlayed++;
+            }
+          }
+        } catch { /* silent */ }
+      }
+
+      // Compute funnel
+      const totalViews = eventCounts["page_view"] ?? 0;
+      const totalSearches = eventCounts["search"] ?? 0;
+      const totalFollows = eventCounts["follow"] ?? 0;
+      const totalUnfollows = eventCounts["unfollow"] ?? 0;
+      const totalEmails = emailsCaptured.length;
+      const totalCtaClicks = Object.values(ctaClicks).reduce((a, b) => a + b, 0);
+      const totalCardClaims = eventCounts["card_claim"] ?? 0;
+
+      // ── Top searches by frequency ──────────────────────────────────
+      const searchFreq = new Map<string, number>();
+      for (const q of searchQueries) {
+        const key = q.toLowerCase().trim();
+        searchFreq.set(key, (searchFreq.get(key) ?? 0) + 1);
+      }
+      const topSearchesSorted = Array.from(searchFreq.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([name, count]) => ({ name, count }));
+
+      // ── Top followed players by frequency ──────────────────────────
+      const followFreq = new Map<string, number>();
+      for (const p of followedPlayers) {
+        followFreq.set(p, (followFreq.get(p) ?? 0) + 1);
+      }
+      const topFollowedSorted = Array.from(followFreq.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([playerId, count]) => ({ playerId, count }));
+
+      // ── Operational quality metrics ────────────────────────────────
+      let operationalQuality = {
+        completionRate: 0,
+        avgGamesPerRound: 0,
+        roundsCompleted: 0,
+        totalGamesExpected: 0,
+        byeCount: 0,
+      };
+      if (stateRows.length && stateRows[0].stateJson) {
+        try {
+          const state = JSON.parse(stateRows[0].stateJson);
+          const rounds = state.rounds ?? [];
+          const totalRounds = state.totalRounds ?? 0;
+          let completedRounds = 0;
+          let totalGames = 0;
+          let reportedGames = 0;
+          let byes = 0;
+          for (const round of rounds) {
+            const games = round.games ?? [];
+            let allReported = true;
+            for (const game of games) {
+              totalGames++;
+              if (game.result && game.result !== "*") {
+                reportedGames++;
+              } else {
+                allReported = false;
+              }
+              if (game.isBye) byes++;
+            }
+            if (allReported && games.length > 0) completedRounds++;
+          }
+          operationalQuality = {
+            completionRate: totalGames > 0 ? Math.round((reportedGames / totalGames) * 100) : 0,
+            avgGamesPerRound: rounds.length > 0 ? Math.round(totalGames / rounds.length) : 0,
+            roundsCompleted: completedRounds,
+            totalGamesExpected: totalGames,
+            byeCount: byes,
+          };
+        } catch { /* silent */ }
+      }
+
+      // ── Retention signals ──────────────────────────────────────────
+      const retentionSignals = {
+        netFollows: totalFollows - totalUnfollows,
+        cardClaims: totalCardClaims,
+        emailConversionRate: totalViews > 0 ? Math.round((totalEmails / totalViews) * 100) : 0,
+        ctaConversionRate: totalViews > 0 ? Math.round((totalCtaClicks / totalViews) * 100) : 0,
+        searchToFollowRate: totalSearches > 0 ? Math.round((totalFollows / totalSearches) * 100) : 0,
+      };
+
+      res.json({
+        overview: {
+          totalViews,
+          uniqueVisitors: uniqueIps.size,
+          totalInteractions: events.length - totalViews,
+          engagementRate: totalViews > 0 ? Math.round(((events.length - totalViews) / totalViews) * 100) : 0,
+        },
+        attendance,
+        funnel: {
+          views: totalViews,
+          searches: totalSearches,
+          follows: totalFollows,
+          emailCaptures: totalEmails,
+          ctaClicks: totalCtaClicks,
+        },
+        ctaBreakdown: ctaClicks,
+        emailsCaptured,
+        topSearches: topSearchesSorted,
+        topFollowedPlayers: topFollowedSorted,
+        eventCounts,
+        timeline,
+        operationalQuality,
+        retentionSignals,
+      });
+    } catch (err) {
+      console.error("[analytics] GET aggregate error:", err);
+      res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });
 
