@@ -4397,3 +4397,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add Tournaments dropdown to AnimeNavBar showing active tournament (name, role, status)
 - [x] Dropdown routes to /manage for directors, /tournament/:id for participants, /join if none
 - [x] Show live pulse indicator on Tournaments button when active tournament exists
+
+## Phase 9: Green Winner Highlight in Director Results Flow
+
+- [x] Audit director results reporting component for winner selection styling
+- [x] Selected winner button always highlights green (both white and black player buttons)
+- [x] Loser button dims/greys out when a winner is selected
+- [x] Draw button uses a neutral amber/yellow highlight (not green)

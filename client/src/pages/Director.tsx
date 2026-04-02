@@ -441,11 +441,14 @@ function BoardCard({
         className={`px-4 pb-4 pt-1.5 flex gap-2 ${isComplete ? "opacity-55" : ""}`}
       >
         {([
-          { value: "1-0"  as Result, label: white?.name?.split(" ")[0] ?? "White", color: "green" },
-          { value: "½-½" as Result, label: "Draw",                              color: "blue"  },
-          { value: "0-1"  as Result, label: black?.name?.split(" ")[0] ?? "Black", color: "red"   },
+          { value: "1-0"  as Result, label: white?.name?.split(" ")[0] ?? "White", isWinner: true,  isDraw: false },
+          { value: "½-½" as Result, label: "Draw",                              isWinner: false, isDraw: true  },
+          { value: "0-1"  as Result, label: black?.name?.split(" ")[0] ?? "Black", isWinner: true,  isDraw: false },
         ] as const).map((opt) => {
           const isSelected = game.result === opt.value;
+          // When a result is set, dim the non-selected buttons
+          const hasResult = game.result && game.result !== "*";
+          const isDimmed = !isSelected && !!hasResult;
           return (
             <button
               key={opt.value}
@@ -460,17 +463,17 @@ function BoardCard({
               }}
               className={`flex-1 py-3.5 px-2 text-sm font-bold rounded-xl border transition-all duration-150 active:scale-[0.97] truncate ${
                 isSelected
-                  ? opt.color === "green"
+                  ? opt.isDraw
                     ? isDark
+                      ? "bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_0_1px_rgba(245,158,11,0.2)] scale-[1.02]"
+                      : "bg-amber-50 border-amber-300 text-amber-600 shadow-[0_0_0_1px_rgba(245,158,11,0.15)] scale-[1.02]"
+                    : isDark
                       ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50] shadow-[0_0_0_1px_rgba(76,175,80,0.2)] scale-[1.02]"
                       : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47] shadow-[0_0_0_1px_rgba(61,107,71,0.15)] scale-[1.02]"
-                    : opt.color === "red"
-                    ? isDark
-                      ? "bg-red-500/15 border-red-500/40 text-red-400 shadow-[0_0_0_1px_rgba(239,68,68,0.15)] scale-[1.02]"
-                      : "bg-red-50 border-red-300 text-red-600 shadow-[0_0_0_1px_rgba(239,68,68,0.1)] scale-[1.02]"
-                    : isDark
-                    ? "bg-blue-500/15 border-blue-500/40 text-blue-400 shadow-[0_0_0_1px_rgba(59,130,246,0.15)] scale-[1.02]"
-                    : "bg-blue-50 border-blue-300 text-blue-600 shadow-[0_0_0_1px_rgba(59,130,246,0.1)] scale-[1.02]"
+                  : isDimmed
+                  ? isDark
+                    ? "bg-white/02 border-white/05 text-white/20 cursor-default"
+                    : "bg-gray-50/40 border-gray-100 text-gray-300 cursor-default"
                   : isDark
                   ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80 hover:border-white/15"
                   : "bg-gray-50/80 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300"
@@ -598,10 +601,12 @@ function DoubleSwissBoardCard({
         </div>
         {/* Result buttons */}
         <div className={`flex gap-1.5 ${isComplete ? "opacity-60" : ""}`}>
-          {(["1-0", "½-½", "0-1"] as Result[]).map((v) => {
+           {(["1-0", "½-½", "0-1"] as Result[]).map((v) => {
             const isSelected = game.result === v;
             const label = v === "1-0" ? white.name.split(" ")[0] : v === "0-1" ? black.name.split(" ")[0] : "Draw";
-            const color = v === "1-0" ? "green" : v === "0-1" ? "red" : "blue";
+            const isDrawOpt = v === "½-½";
+            const hasResult = game.result && game.result !== "*";
+            const isDimmed = !isSelected && !!hasResult;
             return (
               <button
                 key={v}
@@ -611,17 +616,17 @@ function DoubleSwissBoardCard({
                 }}
                 className={`flex-1 py-2.5 px-1 text-xs font-bold rounded-lg border transition-all duration-150 active:scale-[0.97] truncate ${
                   isSelected
-                    ? color === "green"
+                    ? isDrawOpt
                       ? isDark
+                        ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                        : "bg-amber-50 border-amber-300 text-amber-600"
+                      : isDark
                         ? "bg-[#4CAF50]/20 border-[#4CAF50]/50 text-[#4CAF50]"
                         : "bg-[#3D6B47]/10 border-[#3D6B47]/40 text-[#3D6B47]"
-                      : color === "red"
-                      ? isDark
-                        ? "bg-red-500/15 border-red-500/40 text-red-400"
-                        : "bg-red-50 border-red-300 text-red-600"
-                      : isDark
-                      ? "bg-blue-500/15 border-blue-500/40 text-blue-400"
-                      : "bg-blue-50 border-blue-300 text-blue-600"
+                    : isDimmed
+                    ? isDark
+                      ? "bg-white/02 border-white/05 text-white/20 cursor-default"
+                      : "bg-gray-50/40 border-gray-100 text-gray-300 cursor-default"
                     : isDark
                     ? "bg-white/04 border-white/08 text-white/50 hover:bg-white/08 hover:text-white/80"
                     : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
