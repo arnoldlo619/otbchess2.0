@@ -159,6 +159,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       logo={logoEl}
       rightSlot={rightSlotEl}
       onActiveChange={setActiveTab}
+      isDark={isDark}
       className={className}
     />
   );

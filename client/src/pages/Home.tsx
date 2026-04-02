@@ -1441,6 +1441,7 @@ export default function Home() {
           logo={logoEl}
           rightSlot={rightSlotEl}
           onActiveChange={setActiveNavTab}
+          isDark={isDark}
         />
       )}
       <Hero onCreateTournament={() => setWizardOpen(true)} />

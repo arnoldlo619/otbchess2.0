@@ -51,6 +51,8 @@ interface AnimeNavBarProps {
   rightSlot?: React.ReactNode
   /** Called whenever the active tab changes (via click or IntersectionObserver) */
   onActiveChange?: (name: string) => void
+  /** Whether the current theme is dark. Controls all nav colors. */
+  isDark?: boolean
 }
 
 // ─── Mascot ───────────────────────────────────────────────────────────────────
@@ -171,6 +173,7 @@ export function AnimeNavBar({
   logo,
   rightSlot,
   onActiveChange,
+  isDark = true,
 }: AnimeNavBarProps) {
   const [mounted, setMounted]               = useState(false)
   const [hoveredTab, setHoveredTab]         = useState<string | null>(null)
@@ -226,10 +229,33 @@ export function AnimeNavBar({
     onActiveChange?.(item.name)
   }
 
-  // ── Glassmorphic background values ───────────────────────────────────────
+  // ── Glassmorphic background values — theme-aware ───────────────────────────
   const bgAlpha1 = (0.40 + 0.45 * scrollProgress).toFixed(2)
   const bgAlpha2 = (0.15 + 0.25 * scrollProgress).toFixed(2)
   const blurPx   = (4 + scrollProgress * 12).toFixed(1)
+
+  // Light mode uses a warm white/cream gradient; dark uses deep forest green
+  const outerBg = isDark
+    ? `linear-gradient(to bottom, rgba(10,31,10,${bgAlpha1}) 0%, rgba(10,31,10,${bgAlpha2}) 100%)`
+    : `linear-gradient(to bottom, rgba(248,250,248,${bgAlpha1}) 0%, rgba(248,250,248,${bgAlpha2}) 100%)`
+
+  // Pill container
+  const pillBg     = isDark ? "rgba(0,0,0,0.45)"          : "rgba(255,255,255,0.82)"
+  const pillBorder = isDark ? "rgba(61,107,71,0.30)"      : "rgba(61,107,71,0.22)"
+  const pillShadow = isDark
+    ? "0 0 18px rgba(61,107,71,0.22), 0 0 6px rgba(76,175,80,0.12), inset 0 1px 0 rgba(255,255,255,0.06)"
+    : "0 2px 16px rgba(61,107,71,0.10), 0 1px 4px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.90)"
+
+  // Tab text
+  const tabActiveText   = isDark ? "text-white"     : "text-gray-900"
+  const tabInactiveText = isDark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-800"
+
+  // Dropdown caret & tooltip backgrounds
+  const dropdownCaretBg = isDark ? "rgba(10,31,10,0.95)"  : "rgba(255,255,255,0.98)"
+  const dropdownCaretBorder = isDark ? "border-white/12" : "border-gray-200/80"
+  const tooltipBg       = isDark ? "rgba(10,31,10,0.92)"  : "rgba(255,255,255,0.96)"
+  const tooltipText     = isDark ? "text-white/90"         : "text-gray-800"
+  const tooltipBorder   = isDark ? "border-white/12"       : "border-gray-200/70"
 
   return (
     <div className={cn("fixed top-0 left-0 right-0 z-[9999] overflow-visible", className)}>
@@ -239,7 +265,7 @@ export function AnimeNavBar({
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
         className="w-full px-3 md:px-6 pt-3 md:pt-10 pb-2 overflow-visible"
         style={{
-          background: `linear-gradient(to bottom, rgba(10,31,10,${bgAlpha1}) 0%, rgba(10,31,10,${bgAlpha2}) 100%)`,
+          background: outerBg,
           backdropFilter: `blur(${blurPx}px)`,
           WebkitBackdropFilter: `blur(${blurPx}px)`,
         }}
@@ -259,11 +285,11 @@ export function AnimeNavBar({
               <motion.div
                 className="flex items-center gap-1 md:gap-1.5 rounded-full px-1.5 py-1.5 relative"
                 style={{
-                  background: "rgba(0,0,0,0.45)",
-                  border: "1px solid rgba(61,107,71,0.30)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  boxShadow: "0 0 18px rgba(61,107,71,0.22), 0 0 6px rgba(76,175,80,0.12), inset 0 1px 0 rgba(255,255,255,0.06)",
+                  background: pillBg,
+                  border: `1px solid ${pillBorder}`,
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  boxShadow: pillShadow,
                 }}
               >
                 {items.map((item) => {
@@ -279,7 +305,7 @@ export function AnimeNavBar({
                       onMouseLeave={() => setHoveredTab(null)}
                       className={cn(
                         "relative cursor-pointer text-xs md:text-sm font-semibold px-4 md:px-5 py-2 rounded-full transition-colors duration-200 select-none overflow-visible",
-                        isActive ? "text-white" : "text-white/60 hover:text-white"
+                        isActive ? tabActiveText : tabInactiveText
                       )}
                     >
                       {/* ── Floating mascot above active tab ── */}
@@ -340,7 +366,10 @@ export function AnimeNavBar({
                             initial={{ opacity: 0, scale: 0.85 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.85 }}
-                            className="absolute inset-0 bg-white/[0.07] rounded-full -z-10"
+                            className={cn(
+                              "absolute inset-0 rounded-full -z-10",
+                              isDark ? "bg-white/[0.07]" : "bg-gray-100/80"
+                            )}
                           />
                         )}
                       </AnimatePresence>
@@ -368,8 +397,8 @@ export function AnimeNavBar({
                           >
                             <div className="flex justify-center mb-0.5">
                               <div
-                                className="w-2.5 h-2.5 rotate-45 border-t border-l border-white/12"
-                                style={{ background: "rgba(10,31,10,0.95)" }}
+                                className={cn("w-2.5 h-2.5 rotate-45 border-t border-l", dropdownCaretBorder)}
+                                style={{ background: dropdownCaretBg }}
                               />
                             </div>
                             {item.dropdown}
@@ -388,9 +417,9 @@ export function AnimeNavBar({
                             className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[10000]"
                           >
                             <div
-                              className="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold text-white/90 border border-white/12 shadow-xl"
+                              className={cn("whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold border shadow-xl", tooltipText, tooltipBorder)}
                               style={{
-                                background: "rgba(10,31,10,0.92)",
+                                background: tooltipBg,
                                 backdropFilter: "blur(12px)",
                                 WebkitBackdropFilter: "blur(12px)",
                               }}
@@ -398,8 +427,8 @@ export function AnimeNavBar({
                               {item.tooltip}
                               <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 overflow-hidden">
                                 <div
-                                  className="w-2 h-2 rotate-45 border border-white/12 mx-auto"
-                                  style={{ background: "rgba(10,31,10,0.92)", marginTop: "2px" }}
+                                  className={cn("w-2 h-2 rotate-45 border mx-auto", tooltipBorder)}
+                                  style={{ background: tooltipBg, marginTop: "2px" }}
                                 />
                               </div>
                             </div>
