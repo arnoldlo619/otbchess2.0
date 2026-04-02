@@ -4433,3 +4433,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build Saved Prep panel/section accessible from the Analyze nav or MatchupPrep page
 - [x] Show saved reports as cards with opponent name, date, key stats, and delete option
 - [x] Write tests for saved prep API endpoints and UI logic
+
+## Phase 12: Matchup Prep Phase 3 — Mobile UX Optimization
+- [x] Rebuild sticky header for mobile (compact, no overflow, icon-only fallbacks)
+- [x] Fix summary stat row for mobile (2-col grid, larger tap targets, readable values)
+- [x] Fix endgame profile grid for mobile (2-col clean stacking)
+- [x] Add "show more" progressive disclosure to OpeningPanel
+- [x] Fix PrepLineCard moves overflow on narrow screens
+- [x] Fix Saved Reports metadata row overflow on mobile
+- [x] Reduce empty state padding on mobile
+- [x] Ensure tab bar is touch-friendly and handles small screens
+- [x] Tablet layer: intentional 2-col layout for overview cards
+- [x] Write tests for mobile UX logic

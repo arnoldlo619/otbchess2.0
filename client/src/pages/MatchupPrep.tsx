@@ -1,11 +1,14 @@
 /**
  * Matchup Prep Page — /prep/:username
  *
- * Fully redesigned with a premium, unified design system:
- * - Summary-first hero panel with key matchup stats
- * - Tab navigation for progressive disclosure
- * - Polished cards, typography hierarchy, and interaction states
- * - Responsive across desktop, tablet, and mobile
+ * Phase 3: Mobile UX Optimization
+ * - Touch-first header with icon-only fallbacks on mobile
+ * - Summary-first information hierarchy on small screens
+ * - Progressive disclosure on openings (show more)
+ * - Fixed PrepLineCard moves overflow
+ * - Tablet-aware 2-col layout layer
+ * - Reduced empty state padding on mobile
+ * - Touch-friendly tab bar and controls
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
@@ -16,7 +19,8 @@ import {
   Shield, Zap, Clock, Crown,
   TrendingUp, BookOpen, Eye, AlertTriangle, Loader2,
   CircleDot, RefreshCw, ChevronRight, Trophy, Flame,
-  Activity, Bookmark, BookmarkCheck, ChevronDown
+  Activity, Bookmark, BookmarkCheck, ChevronDown, ChevronUp,
+  Trash2
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -78,20 +82,20 @@ interface SavedReportMeta {
 
 function useDesignTokens(isDark: boolean) {
   return {
-    page:      isDark ? "bg-[#0d1a0f]"                                          : "bg-[#f8faf8]",
-    card:      isDark ? "bg-[#111f13] border border-[#2a4030]/60 rounded-2xl"  : "bg-white border border-gray-200/80 rounded-2xl shadow-sm",
-    cardInner: isDark ? "bg-[#0d1a0f]/70 rounded-xl"                           : "bg-gray-50/80 rounded-xl",
-    header:    isDark ? "bg-[#0d1a0f]/92 border-b border-[#2a4030]/50"         : "bg-white/92 border-b border-gray-200/70",
-    input:     isDark ? "bg-[#0d1a0f] border-[#2a4030]/60 text-white placeholder:text-white/25 focus:border-[#5B9A6A]/70" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
-    textPrimary: isDark ? "text-white"       : "text-gray-900",
-    textSecondary: isDark ? "text-white/60"  : "text-gray-500",
-    textTertiary: isDark ? "text-white/35"   : "text-gray-400",
-    accent:    "text-[#5B9A6A]",
-    accentBg:  isDark ? "bg-[#5B9A6A]/12 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]",
-    divider:   isDark ? "border-[#2a4030]/40" : "border-gray-200/70",
-    tabActive: isDark ? "bg-[#1a2e1c] text-white border-[#3D6B47]/40"          : "bg-white text-gray-900 border-gray-300 shadow-sm",
-    tabInactive: isDark ? "text-white/45 hover:text-white/70 hover:bg-white/04" : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/60",
-    rowHover:  isDark ? "hover:bg-[#1a2e1c]/60"                                : "hover:bg-gray-50",
+    page:         isDark ? "bg-[#0d1a0f]"                                          : "bg-[#f8faf8]",
+    card:         isDark ? "bg-[#111f13] border border-[#2a4030]/60 rounded-2xl"  : "bg-white border border-gray-200/80 rounded-2xl shadow-sm",
+    cardInner:    isDark ? "bg-[#0d1a0f]/70 rounded-xl"                           : "bg-gray-50/80 rounded-xl",
+    header:       isDark ? "bg-[#0d1a0f]/92 border-b border-[#2a4030]/50"         : "bg-white/92 border-b border-gray-200/70",
+    input:        isDark ? "bg-[#0d1a0f] border-[#2a4030]/60 text-white placeholder:text-white/25 focus:border-[#5B9A6A]/70" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
+    textPrimary:  isDark ? "text-white"       : "text-gray-900",
+    textSecondary:isDark ? "text-white/60"    : "text-gray-500",
+    textTertiary: isDark ? "text-white/35"    : "text-gray-400",
+    accent:       "text-[#5B9A6A]",
+    accentBg:     isDark ? "bg-[#5B9A6A]/12 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]",
+    divider:      isDark ? "border-[#2a4030]/40" : "border-gray-200/70",
+    tabActive:    isDark ? "bg-[#1a2e1c] text-white border-[#3D6B47]/40"          : "bg-white text-gray-900 border-gray-300 shadow-sm",
+    tabInactive:  isDark ? "text-white/45 hover:text-white/70 hover:bg-white/04"  : "text-gray-500 hover:text-gray-700 hover:bg-gray-100/60",
+    rowHover:     isDark ? "hover:bg-[#1a2e1c]/60"                                : "hover:bg-gray-50",
   };
 }
 
@@ -222,105 +226,135 @@ export default function MatchupPrep() {
   }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "overview",  label: "Overview",   icon: <BarChart3 className="w-3.5 h-3.5" /> },
-    { id: "openings",  label: "Openings",   icon: <BookOpen  className="w-3.5 h-3.5" /> },
-    { id: "prep",      label: "Prep Lines", icon: <Zap       className="w-3.5 h-3.5" /> },
+    { id: "overview",  label: "Overview",   icon: <BarChart3 className="w-4 h-4" /> },
+    { id: "openings",  label: "Openings",   icon: <BookOpen  className="w-4 h-4" /> },
+    { id: "prep",      label: "Prep Lines", icon: <Zap       className="w-4 h-4" /> },
   ];
 
   return (
     <div className={`min-h-screen ${t.page}`}>
+
       {/* ── Sticky Header ── */}
       <div className={`sticky top-0 z-40 backdrop-blur-xl ${t.header}`}>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
+
+          {/* Back button — always visible, always touch-friendly */}
           <button
             onClick={() => navigate("/")}
-            className={`p-2 rounded-xl transition-colors ${isDark ? "hover:bg-white/06 text-white/60 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-gray-900"}`}
+            className={`p-2.5 rounded-xl transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center ${
+              isDark ? "hover:bg-white/06 text-white/60 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-gray-900"
+            }`}
+            aria-label="Go back"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/10"}`}>
+
+          {/* Title — hidden on very small screens when report is loaded to save space */}
+          <div className={`flex items-center gap-2 ${report ? "hidden xs:flex sm:flex" : "flex"}`}>
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/10"}`}>
               <Target className="w-3.5 h-3.5 text-[#5B9A6A]" />
             </div>
-            <h1 className={`text-sm font-semibold tracking-tight ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-              Matchup Prep
+            <h1 className={`text-sm font-semibold tracking-tight whitespace-nowrap ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {report ? <span className="hidden sm:inline">Matchup Prep · </span> : "Matchup Prep"}
+              {report && <span className={`${t.textSecondary} font-normal`}>{report.opponent.username}</span>}
             </h1>
           </div>
-          {/* Saved Reports toggle button — visible when logged in */}
-          {user && (
-            <button
-              onClick={() => setShowSavedPanel((o) => !o)}
-              className={`ml-auto flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all duration-150 ${
-                showSavedPanel
-                  ? isDark ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A]" : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47]"
-                  : isDark ? "bg-white/04 border-white/10 text-white/50 hover:bg-white/08" : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
-              }`}
-              title="Saved prep reports"
-            >
-              <Bookmark className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Saved</span>
-              {savedReports.length > 0 && (
-                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                  isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                }`}>{savedReports.length}</span>
-              )}
-              <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${showSavedPanel ? "rotate-180" : ""}`} />
-            </button>
-          )}
-          {report && (
-            <div className={`${user ? "" : "ml-auto "}flex items-center gap-2`}>
-              {/* Save / Saved button */}
-              {user && (
-                <button
-                  onClick={savedId ? () => handleDeleteSaved(savedId) : handleSaveReport}
-                  disabled={saving}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all duration-150 disabled:opacity-40 ${
-                    savedId
-                      ? isDark ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400" : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47] hover:bg-red-50 hover:border-red-200 hover:text-red-500"
-                      : isDark ? "bg-white/04 border-white/10 text-white/50 hover:bg-[#3D6B47]/15 hover:border-[#3D6B47]/30 hover:text-[#5B9A6A]" : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/25 hover:text-[#3D6B47]"
-                  }`}
-                  title={savedId ? "Remove from saved" : "Save this report"}
-                >
-                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedId ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">{savedId ? "Saved" : "Save"}</span>
-                </button>
-              )}
-              <span className={`text-xs ${t.textTertiary}`}>
-                {report.opponent.username}
-              </span>
+
+          {/* Right-side actions — grouped cleanly */}
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+
+            {/* Refresh — only when report loaded */}
+            {report && (
               <button
                 onClick={() => fetchReport(report.opponent.username, true)}
                 disabled={refreshing}
-                className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${isDark ? "hover:bg-white/06 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"}`}
+                className={`p-2.5 rounded-xl transition-colors disabled:opacity-40 min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                  isDark ? "hover:bg-white/06 text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                }`}
                 title="Refresh report"
+                aria-label="Refresh report"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
               </button>
-            </div>
-          )}
+            )}
+
+            {/* Save — only when report loaded and user logged in */}
+            {report && user && (
+              <button
+                onClick={savedId ? () => handleDeleteSaved(savedId) : handleSaveReport}
+                disabled={saving}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-all duration-150 disabled:opacity-40 min-h-[40px] ${
+                  savedId
+                    ? isDark
+                      ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
+                      : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47] hover:bg-red-50 hover:border-red-200 hover:text-red-500"
+                    : isDark
+                      ? "bg-white/04 border-white/10 text-white/50 hover:bg-[#3D6B47]/15 hover:border-[#3D6B47]/30 hover:text-[#5B9A6A]"
+                      : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/25 hover:text-[#3D6B47]"
+                }`}
+                title={savedId ? "Remove from saved" : "Save this report"}
+              >
+                {saving
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : savedId
+                    ? <BookmarkCheck className="w-4 h-4" />
+                    : <Bookmark className="w-4 h-4" />
+                }
+                <span className="hidden sm:inline">{savedId ? "Saved" : "Save"}</span>
+              </button>
+            )}
+
+            {/* Saved reports toggle — visible when logged in */}
+            {user && (
+              <button
+                onClick={() => setShowSavedPanel((o) => !o)}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border transition-all duration-150 min-h-[40px] ${
+                  showSavedPanel
+                    ? isDark
+                      ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A]"
+                      : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47]"
+                    : isDark
+                      ? "bg-white/04 border-white/10 text-white/50 hover:bg-white/08"
+                      : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+                }`}
+                title="Saved prep reports"
+              >
+                <Bookmark className="w-4 h-4" />
+                {savedReports.length > 0 && (
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                    isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                  }`}>{savedReports.length}</span>
+                )}
+                <ChevronDown className={`w-3 h-3 transition-transform duration-150 hidden sm:block ${showSavedPanel ? "rotate-180" : ""}`} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
         {/* ── Search Bar ── */}
         <form onSubmit={handleSearch}>
-          <div className={`${t.card} p-4`}>
-            <div className="flex gap-2.5">
+          <div className={`${t.card} p-3 sm:p-4`}>
+            <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${t.textTertiary}`} />
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Enter chess.com username to analyze..."
-                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all duration-150 ${t.input}`}
+                  placeholder="chess.com username…"
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none transition-all duration-150 ${t.input}`}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading || !searchInput.trim()}
-                className="px-5 py-2.5 rounded-xl bg-[#3D6B47] text-white font-semibold text-sm hover:bg-[#4a7d55] active:scale-[0.97] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+                className="px-4 sm:px-5 py-3 rounded-xl bg-[#3D6B47] text-white font-semibold text-sm hover:bg-[#4a7d55] active:scale-[0.97] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shrink-0 min-w-[48px] min-h-[48px] justify-center"
               >
                 {loading
                   ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -340,25 +374,25 @@ export default function MatchupPrep() {
                 <BookmarkCheck className="w-4 h-4 text-[#5B9A6A]" />
                 <span className={`text-sm font-semibold ${t.textPrimary}`}>Saved Reports</span>
                 {savedReports.length > 0 && (
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"}`}>
-                    {savedReports.length}
-                  </span>
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                    isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                  }`}>{savedReports.length}</span>
                 )}
               </div>
               {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5B9A6A]" />}
             </div>
             {savedReports.length === 0 ? (
-              <div className={`px-4 py-8 text-center`}>
+              <div className="px-4 py-8 text-center">
                 <Bookmark className={`w-8 h-8 mx-auto mb-2 ${t.textTertiary}`} />
                 <p className={`text-sm font-medium ${t.textSecondary}`}>No saved reports yet</p>
-                <p className={`text-xs mt-1 ${t.textTertiary}`}>Load a prep report and click Save to keep it here</p>
+                <p className={`text-xs mt-1 ${t.textTertiary}`}>Load a prep report and tap Save to keep it here</p>
               </div>
             ) : (
               <div className="divide-y divide-[#2a4030]/20">
                 {savedReports.map((r) => (
                   <div
                     key={r.id}
-                    className={`flex items-center gap-3 px-4 py-3 transition-colors ${t.rowHover}`}
+                    className={`flex items-center gap-3 px-4 py-3.5 transition-colors ${t.rowHover}`}
                   >
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
@@ -369,25 +403,27 @@ export default function MatchupPrep() {
                       }}
                     >
                       <div className={`text-sm font-semibold ${t.textPrimary} truncate`}>{r.opponentUsername}</div>
-                      <div className={`flex items-center gap-3 mt-0.5 text-[11px] ${t.textTertiary}`}>
+                      {/* Metadata — wraps gracefully on mobile */}
+                      <div className={`flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-0.5 text-[11px] ${t.textTertiary}`}>
                         {r.winRate != null && (
                           <span className={`font-bold ${
                             r.winRate >= 60 ? "text-red-400" : r.winRate >= 45 ? "text-amber-400" : "text-[#5B9A6A]"
                           }`}>{r.winRate}% WR</span>
                         )}
                         {r.gamesAnalyzed != null && <span>{r.gamesAnalyzed} games</span>}
-                        {r.prepLinesCount != null && <span>{r.prepLinesCount} prep lines</span>}
+                        {r.prepLinesCount != null && r.prepLinesCount > 0 && <span>{r.prepLinesCount} lines</span>}
                         <span>{new Date(r.savedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteSaved(r.id)}
-                      className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                      className={`p-2.5 rounded-xl transition-colors flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center ${
                         isDark ? "text-white/25 hover:text-red-400 hover:bg-red-500/10" : "text-gray-300 hover:text-red-500 hover:bg-red-50"
                       }`}
                       title="Remove saved report"
+                      aria-label="Remove saved report"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -398,21 +434,20 @@ export default function MatchupPrep() {
 
         {/* ── Loading State ── */}
         {loading && (
-          <div className={`${t.card} p-14 flex flex-col items-center gap-5`}>
+          <div className={`${t.card} py-12 px-6 flex flex-col items-center gap-5`}>
             <div className="relative">
-              <div className={`w-14 h-14 rounded-full border-2 ${isDark ? "border-[#3D6B47]/20" : "border-[#3D6B47]/15"} border-t-[#5B9A6A] animate-spin`} />
-              <div className={`absolute inset-0 flex items-center justify-center`}>
-                <Target className="w-5 h-5 text-[#5B9A6A]" />
+              <div className={`w-12 h-12 rounded-full border-2 ${isDark ? "border-[#3D6B47]/20" : "border-[#3D6B47]/15"} border-t-[#5B9A6A] animate-spin`} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Target className="w-4.5 h-4.5 text-[#5B9A6A]" />
               </div>
             </div>
             <div className="text-center space-y-1">
-              <p className={`font-semibold ${t.textPrimary}`}>Analyzing opponent</p>
-              <p className={`text-sm ${t.textSecondary}`}>Fetching recent games and computing play style profile</p>
+              <p className={`font-semibold text-sm ${t.textPrimary}`}>Analyzing opponent</p>
+              <p className={`text-xs ${t.textSecondary}`}>Fetching recent games and computing play style</p>
             </div>
-            {/* Skeleton shimmer */}
-            <div className="w-full max-w-sm space-y-2 mt-2">
-              {[80, 60, 70].map((w, i) => (
-                <div key={i} className={`h-2 rounded-full animate-pulse ${isDark ? "bg-white/06" : "bg-gray-200"}`} style={{ width: `${w}%` }} />
+            <div className="w-full max-w-xs space-y-2">
+              {[75, 55, 65].map((w, i) => (
+                <div key={i} className={`h-1.5 rounded-full animate-pulse ${isDark ? "bg-white/06" : "bg-gray-200"}`} style={{ width: `${w}%` }} />
               ))}
             </div>
           </div>
@@ -420,7 +455,7 @@ export default function MatchupPrep() {
 
         {/* ── Error State ── */}
         {error && !loading && (
-          <div className={`${t.card} p-6`}>
+          <div className={`${t.card} p-4 sm:p-6`}>
             <div className="flex items-start gap-3.5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isDark ? "bg-amber-500/12" : "bg-amber-50"}`}>
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
@@ -435,45 +470,45 @@ export default function MatchupPrep() {
 
         {/* ── Report ── */}
         {report && !loading && (
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
 
             {/* Opponent Hero Card */}
             <div className={`${t.card} overflow-hidden`}>
-              {/* Top strip */}
+              {/* Accent top strip */}
               <div className={`h-1 w-full ${isDark ? "bg-gradient-to-r from-[#3D6B47]/60 via-[#5B9A6A]/40 to-transparent" : "bg-gradient-to-r from-[#3D6B47]/20 via-[#5B9A6A]/10 to-transparent"}`} />
-              <div className="p-5 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  {/* Left: identity */}
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
-                      <Crown className="w-6 h-6 text-[#5B9A6A]" />
+              <div className="p-4 sm:p-6">
+
+                {/* Identity + ratings — stacks on mobile, side-by-side on sm+ */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
+                      <Crown className="w-5 h-5 text-[#5B9A6A]" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className={`text-xl font-bold tracking-tight ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                        <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                           {report.opponent.username}
                         </h2>
                         {report._cached && (
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.accentBg}`}>
-                            Cached
-                          </span>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${t.accentBg}`}>Cached</span>
                         )}
                       </div>
-                      <p className={`text-sm ${t.textSecondary} mt-0.5`}>
+                      <p className={`text-xs sm:text-sm ${t.textSecondary} mt-0.5`}>
                         {report.opponent.gamesAnalyzed} games analyzed
                       </p>
                     </div>
                   </div>
-                  {/* Right: ratings */}
-                  <div className="flex gap-2 flex-wrap">
+
+                  {/* Ratings — horizontal scroll on mobile if needed */}
+                  <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                     {report.opponent.rating.rapid  && <RatingBadge label="Rapid"  value={report.opponent.rating.rapid}  isDark={isDark} />}
                     {report.opponent.rating.blitz  && <RatingBadge label="Blitz"  value={report.opponent.rating.blitz}  isDark={isDark} />}
                     {report.opponent.rating.bullet && <RatingBadge label="Bullet" value={report.opponent.rating.bullet} isDark={isDark} />}
                   </div>
                 </div>
 
-                {/* Summary stat row */}
-                <div className={`mt-5 pt-5 border-t ${t.divider} grid grid-cols-3 sm:grid-cols-6 gap-3`}>
+                {/* Summary stat row — 2 cols on mobile, 6 on desktop */}
+                <div className={`mt-4 pt-4 border-t ${t.divider} grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3`}>
                   <SummaryChip
                     label="Win Rate"
                     value={`${report.opponent.overall.winRate}%`}
@@ -482,7 +517,7 @@ export default function MatchupPrep() {
                   />
                   <SummaryChip
                     label="W / D / L"
-                    value={`${report.opponent.overall.wins}/${report.opponent.overall.draws}/${report.opponent.overall.losses}`}
+                    value={`${report.opponent.overall.wins}·${report.opponent.overall.draws}·${report.opponent.overall.losses}`}
                     isDark={isDark}
                   />
                   <SummaryChip
@@ -512,18 +547,19 @@ export default function MatchupPrep() {
               </div>
             </div>
 
-            {/* Tab Navigation */}
+            {/* Tab Navigation — touch-friendly, min 44px height */}
             <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-150 ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 min-h-[44px] ${
                     activeTab === tab.id ? t.tabActive + " border" : t.tabInactive
                   }`}
                 >
                   {tab.icon}
-                  <span>{tab.label}</span>
+                  <span className="hidden xs:inline sm:inline">{tab.label}</span>
+                  {/* On very small screens, show icon only */}
                   {tab.id === "prep" && report.prepLines.length > 0 && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                       activeTab === "prep"
@@ -539,9 +575,9 @@ export default function MatchupPrep() {
 
             {/* ── Tab: Overview ── */}
             {activeTab === "overview" && (
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
 
-                {/* Win/Draw/Loss breakdown */}
+                {/* Win/Draw/Loss breakdown — 1 col on mobile, 3 on sm+ */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <ColorStatCard
                     title="Overall Record"
@@ -576,8 +612,8 @@ export default function MatchupPrep() {
 
                 {/* Key Insights */}
                 {report.insights.length > 0 && (
-                  <div className={`${t.card} p-5`}>
-                    <div className="flex items-center gap-2.5 mb-4">
+                  <div className={`${t.card} p-4 sm:p-5`}>
+                    <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
                         <Eye className="w-3.5 h-3.5 text-[#5B9A6A]" />
                       </div>
@@ -602,9 +638,9 @@ export default function MatchupPrep() {
                   </div>
                 )}
 
-                {/* Endgame Profile */}
-                <div className={`${t.card} p-5`}>
-                  <div className="flex items-center gap-2.5 mb-4">
+                {/* Endgame Profile — 2 cols on mobile, 5 on sm+ */}
+                <div className={`${t.card} p-4 sm:p-5`}>
+                  <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
                       <Shield className="w-3.5 h-3.5 text-[#5B9A6A]" />
                     </div>
@@ -613,7 +649,7 @@ export default function MatchupPrep() {
                     </h3>
                     <span className={`text-xs ${t.textTertiary}`}>{report.opponent.endgameProfile.total} games</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                     <EndgameBar
                       label="Checkmates"
                       value={report.opponent.endgameProfile.checkmates}
@@ -680,7 +716,7 @@ export default function MatchupPrep() {
                   />
                 ) : (
                   <>
-                    <div className={`flex items-center gap-2 px-1`}>
+                    <div className="flex items-center gap-2 px-1">
                       <Zap className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
                       <p className={`text-sm font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>
                         {report.prepLines.length} suggested lines based on opponent tendencies
@@ -697,24 +733,24 @@ export default function MatchupPrep() {
           </div>
         )}
 
-        {/* ── Empty State ── */}
+        {/* ── Empty / Welcome State ── */}
         {!report && !loading && !error && (
-          <div className={`${t.card} p-14 flex flex-col items-center gap-5 text-center`}>
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#1a2e1c]" : "bg-[#3D6B47]/06"}`}>
-              <Target className="w-8 h-8 text-[#5B9A6A]" />
+          <div className={`${t.card} py-10 px-6 sm:py-14 flex flex-col items-center gap-4 sm:gap-5 text-center`}>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#1a2e1c]" : "bg-[#3D6B47]/06"}`}>
+              <Target className="w-7 h-7 text-[#5B9A6A]" />
             </div>
             <div className="space-y-2">
-              <h3 className={`text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              <h3 className={`text-base sm:text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 Prepare for your next match
               </h3>
-              <p className={`text-sm ${t.textSecondary} max-w-sm mx-auto leading-relaxed`}>
-                Enter your opponent's chess.com username to get a full analysis of their
-                opening repertoire, play style tendencies, and strategic preparation lines.
+              <p className={`text-sm ${t.textSecondary} max-w-xs mx-auto leading-relaxed`}>
+                Enter your opponent's chess.com username to get a full analysis of their opening repertoire, play style, and prep lines.
               </p>
             </div>
-            <div className={`flex gap-4 mt-2 text-xs ${t.textTertiary}`}>
-              <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Opening repertoire</span>
-              <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> Play style profile</span>
+            {/* Feature chips — wrap on mobile */}
+            <div className={`flex flex-wrap justify-center gap-3 mt-1 text-xs ${t.textTertiary}`}>
+              <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Openings</span>
+              <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> Play style</span>
               <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Prep lines</span>
             </div>
           </div>
@@ -728,7 +764,7 @@ export default function MatchupPrep() {
 
 function RatingBadge({ label, value, isDark }: { label: string; value: number; isDark: boolean }) {
   return (
-    <div className={`px-3 py-2 rounded-xl text-center min-w-[60px] ${isDark ? "bg-[#0d1a0f] border border-[#2a4030]/60" : "bg-gray-50 border border-gray-200"}`}>
+    <div className={`px-3 py-2 rounded-xl text-center min-w-[58px] ${isDark ? "bg-[#0d1a0f] border border-[#2a4030]/60" : "bg-gray-50 border border-gray-200"}`}>
       <div className={`text-[10px] font-medium uppercase tracking-wide ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</div>
       <div className={`text-base font-bold mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
     </div>
@@ -740,9 +776,7 @@ function SummaryChip({ label, value, highlight, isDark }: { label: string; value
     <div className={`rounded-xl p-3 text-center ${isDark ? "bg-[#0d1a0f]/70" : "bg-gray-50/80"}`}>
       <div className={`text-[10px] font-medium uppercase tracking-wide mb-1 ${isDark ? "text-white/35" : "text-gray-400"}`}>{label}</div>
       <div className={`text-sm font-bold ${
-        highlight
-          ? "text-[#5B9A6A]"
-          : isDark ? "text-white" : "text-gray-900"
+        highlight ? "text-[#5B9A6A]" : isDark ? "text-white" : "text-gray-900"
       }`}>{value}</div>
     </div>
   );
@@ -771,14 +805,12 @@ function ColorStatCard({
           {winRate}%
         </span>
       </div>
-
       {/* Win/draw/loss bar */}
       <div className="h-1.5 rounded-full overflow-hidden flex mb-3">
         <div className="bg-emerald-500 h-full transition-all" style={{ width: `${winPct}%` }} />
         <div className={`h-full transition-all ${isDark ? "bg-white/20" : "bg-gray-300"}`} style={{ width: `${drawPct}%` }} />
         <div className="bg-red-400 h-full transition-all" style={{ width: `${lossPct}%` }} />
       </div>
-
       <div className="flex justify-between text-xs">
         <span className="text-emerald-500 font-medium">{wins}W</span>
         <span className={isDark ? "text-white/35" : "text-gray-400"}>{draws}D</span>
@@ -838,8 +870,13 @@ function OpeningPanel({
 }: {
   title: string; openings: OpeningStat[]; firstMoves?: { move: string; count: number; pct: number }[]; isDark: boolean;
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL_COUNT = 4;
+  const displayedOpenings = showAll ? openings : openings.slice(0, INITIAL_COUNT);
+  const hasMore = openings.length > INITIAL_COUNT;
+
   return (
-    <div className={`p-5 rounded-2xl ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
+    <div className={`p-4 sm:p-5 rounded-2xl ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
       <div className="flex items-center gap-2.5 mb-4">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"}`}>
           <BookOpen className="w-3.5 h-3.5 text-[#5B9A6A]" />
@@ -847,8 +884,12 @@ function OpeningPanel({
         <h3 className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
           {title}
         </h3>
+        {openings.length > 0 && (
+          <span className={`text-xs ml-auto ${isDark ? "text-white/30" : "text-gray-400"}`}>{openings.length} openings</span>
+        )}
       </div>
 
+      {/* First move preference chips */}
       {firstMoves && firstMoves.length > 0 && (
         <div className="mb-4">
           <p className={`text-xs font-medium uppercase tracking-wide mb-2 ${isDark ? "text-white/35" : "text-gray-400"}`}>
@@ -858,11 +899,11 @@ function OpeningPanel({
             {firstMoves.slice(0, 3).map((fm) => (
               <span
                 key={fm.move}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium min-h-[32px] flex items-center ${
                   isDark ? "bg-[#0d1a0f] text-[#5B9A6A] border border-[#2a4030]/60" : "bg-[#3D6B47]/06 text-[#3D6B47] border border-[#3D6B47]/15"
                 }`}
               >
-                1.{fm.move} <span className={isDark ? "text-white/35" : "text-gray-400"}>({fm.pct}%)</span>
+                1.{fm.move} <span className={`ml-1 ${isDark ? "text-white/35" : "text-gray-400"}`}>({fm.pct}%)</span>
               </span>
             ))}
           </div>
@@ -874,34 +915,52 @@ function OpeningPanel({
           No opening data available
         </p>
       ) : (
-        <div className="space-y-1.5">
-          {openings.slice(0, 6).map((op) => (
-            <div
-              key={op.name}
-              className={`p-3 rounded-xl transition-colors duration-100 cursor-default ${
-                isDark ? "hover:bg-[#1a2e1c]/60" : "hover:bg-gray-50"
+        <>
+          <div className="space-y-1.5">
+            {displayedOpenings.map((op) => (
+              <div
+                key={op.name}
+                className={`p-3 rounded-xl transition-colors duration-100 cursor-default ${
+                  isDark ? "hover:bg-[#1a2e1c]/60" : "hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-sm font-medium block truncate ${isDark ? "text-white" : "text-gray-900"}`}>{op.name}</span>
+                    <span className={`text-[11px] font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>{op.eco} · {op.count} games</span>
+                  </div>
+                  <span className={`text-sm font-bold shrink-0 ${
+                    op.winRate >= 60 ? "text-emerald-500" : op.winRate >= 40 ? "text-amber-500" : "text-red-400"
+                  }`}>
+                    {op.winRate}%
+                  </span>
+                </div>
+                {/* W/D/L bar */}
+                <div className="h-1 rounded-full overflow-hidden flex">
+                  <div className="bg-emerald-500 h-full" style={{ width: `${(op.wins / op.count) * 100}%` }} />
+                  <div className={`h-full ${isDark ? "bg-white/15" : "bg-gray-300"}`} style={{ width: `${(op.draws / op.count) * 100}%` }} />
+                  <div className="bg-red-400 h-full" style={{ width: `${(op.losses / op.count) * 100}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progressive disclosure — show more / show less */}
+          {hasMore && (
+            <button
+              onClick={() => setShowAll((s) => !s)}
+              className={`mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-medium transition-colors min-h-[40px] ${
+                isDark ? "text-white/40 hover:text-white/70 hover:bg-white/04" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1 min-w-0">
-                  <span className={`text-sm font-medium block truncate ${isDark ? "text-white" : "text-gray-900"}`}>{op.name}</span>
-                  <span className={`text-[11px] font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>{op.eco} · {op.count} games</span>
-                </div>
-                <span className={`text-sm font-bold shrink-0 ${
-                  op.winRate >= 60 ? "text-emerald-500" : op.winRate >= 40 ? "text-amber-500" : "text-red-400"
-                }`}>
-                  {op.winRate}%
-                </span>
-              </div>
-              {/* W/D/L bar */}
-              <div className="h-1 rounded-full overflow-hidden flex">
-                <div className="bg-emerald-500 h-full" style={{ width: `${(op.wins / op.count) * 100}%` }} />
-                <div className={`h-full ${isDark ? "bg-white/15" : "bg-gray-300"}`} style={{ width: `${(op.draws / op.count) * 100}%` }} />
-                <div className="bg-red-400 h-full" style={{ width: `${(op.losses / op.count) * 100}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
+              {showAll ? (
+                <><ChevronUp className="w-3.5 h-3.5" /> Show less</>
+              ) : (
+                <><ChevronDown className="w-3.5 h-3.5" /> Show {openings.length - INITIAL_COUNT} more</>
+              )}
+            </button>
+          )}
+        </>
       )}
     </div>
   );
@@ -909,9 +968,9 @@ function OpeningPanel({
 
 function PrepLineCard({ line, index, isDark }: { line: PrepLine; index: number; isDark: boolean }) {
   const conf = {
-    high:   { bg: isDark ? "bg-emerald-500/12 border-emerald-500/25 text-emerald-400" : "bg-emerald-50 border-emerald-200 text-emerald-700", dot: "bg-emerald-500", label: "High confidence" },
-    medium: { bg: isDark ? "bg-amber-500/12 border-amber-500/25 text-amber-400"       : "bg-amber-50 border-amber-200 text-amber-700",       dot: "bg-amber-500",   label: "Medium confidence" },
-    low:    { bg: isDark ? "bg-white/06 border-white/12 text-white/40"                : "bg-gray-50 border-gray-200 text-gray-500",           dot: isDark ? "bg-white/30" : "bg-gray-400", label: "Low confidence" },
+    high:   { bg: isDark ? "bg-emerald-500/12 border-emerald-500/25 text-emerald-400" : "bg-emerald-50 border-emerald-200 text-emerald-700", dot: "bg-emerald-500", label: "High" },
+    medium: { bg: isDark ? "bg-amber-500/12 border-amber-500/25 text-amber-400"       : "bg-amber-50 border-amber-200 text-amber-700",       dot: "bg-amber-500",   label: "Medium" },
+    low:    { bg: isDark ? "bg-white/06 border-white/12 text-white/40"                : "bg-gray-50 border-gray-200 text-gray-500",           dot: isDark ? "bg-white/30" : "bg-gray-400", label: "Low" },
   }[line.confidence];
 
   return (
@@ -932,15 +991,17 @@ function PrepLineCard({ line, index, isDark }: { line: PrepLine; index: number; 
               )}
             </div>
           </div>
+          {/* Confidence badge — shortened label on mobile */}
           <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border shrink-0 flex items-center gap-1.5 ${conf.bg}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${conf.dot}`} />
-            {conf.label}
+            <span className="hidden sm:inline">{conf.label} confidence</span>
+            <span className="sm:hidden">{conf.label}</span>
           </span>
         </div>
 
-        {/* Moves */}
+        {/* Moves — overflow-x-auto for long sequences on narrow screens */}
         {line.eco !== "---" && line.moves && (
-          <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl mb-3 ${
+          <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl mb-3 overflow-x-auto whitespace-nowrap ${
             isDark ? "bg-[#0d1a0f] text-[#5B9A6A] border border-[#2a4030]/40" : "bg-[#3D6B47]/04 text-[#3D6B47] border border-[#3D6B47]/12"
           }`}>
             {line.moves}
@@ -958,12 +1019,12 @@ function PrepLineCard({ line, index, isDark }: { line: PrepLine; index: number; 
 
 function EmptyState({ icon, title, description, isDark }: { icon: React.ReactNode; title: string; description: string; isDark: boolean }) {
   return (
-    <div className={`p-12 rounded-2xl flex flex-col items-center gap-4 text-center ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#1a2e1c]" : "bg-[#3D6B47]/06"}`}>
+    <div className={`py-10 px-6 sm:py-12 rounded-2xl flex flex-col items-center gap-4 text-center ${isDark ? "bg-[#111f13] border border-[#2a4030]/60" : "bg-white border border-gray-200/80 shadow-sm"}`}>
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#1a2e1c]" : "bg-[#3D6B47]/06"}`}>
         {icon}
       </div>
       <div>
-        <h3 className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{title}</h3>
+        <h3 className={`font-semibold text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{title}</h3>
         <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-gray-500"} max-w-xs mx-auto`}>{description}</p>
       </div>
     </div>
