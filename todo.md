@@ -4263,3 +4263,70 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Polished status badges (round dots, results progress, public mode chip)
 - [x] Clean spacing and hierarchy in Command Center strip
 - [x] 36 unit tests passing for all Director Console refinements
+
+## Phase 4: Post-Event Conversion & Player Performance Card
+
+### Post-Event Mode Transition
+- [x] Detect tournament finalized state on public dashboard (isCompleted flag)
+- [x] Transition hero from live tracking to CompletedHero with trophy, podium, celebration
+- [x] Show tournament completion badge/status ("Tournament Complete" label)
+- [x] Preserve final standings and round history access (tabs remain)
+- [x] Introduce personal recap pathway (PersonalRecap component)
+
+### Final Results Experience
+- [x] Build polished final standings summary section (CompletedHero with podium top-3)
+- [x] Show final round completion state (all round dots green)
+- [x] Elegant results recap area with clean hierarchy (medal emojis, gold accent for 1st)
+- [x] Mobile-friendly final results layout (responsive cards)
+
+### Player Performance Card
+- [x] Build premium performance card component (name, username, ELO, score, placement, W/D/L)
+- [x] Round-by-round timeline with opponents, board numbers, color indicators, result labels
+- [x] Performance labels (Champion/Podium Finish/Strong Performance/Solid Result/Well Played)
+- [x] Event name, date, venue footer
+- [x] Subtle chessotb.club branding in footer
+- [x] Shareable-looking collectible card with green accent header
+- [x] Mobile-first card design with responsive grid
+
+### Personal Recap Flow
+- [x] Followed player panel transitions to PersonalRecap after finalization
+- [x] Show followed player full PlayerPerformanceCard
+- [x] "Your Tournament Recap" header with clear/unfollow button
+- [x] Performance card visible immediately (no gate)
+
+### Email Capture
+- [x] Build tasteful email capture form (inline, optional, localStorage)
+- [x] Contextual copy: "Get Your Performance Card by Email" when player followed
+- [x] Generic copy: "Get Tournament Results by Email" when no player followed
+- [x] Trust-building copy, not pushy ("We'll send..." subtitle)
+- [x] Results never blocked behind email gate
+
+### Account Creation CTA
+- [x] "Save Your Results" CTA card with UserPlus icon
+- [x] "Create an account to track your tournament history" subtitle
+- [x] Value-based framing linking to /profile
+
+### Join Club CTA
+- [x] "Join the Club" CTA card with Crown icon
+- [x] "Stay connected for future events and community updates" subtitle
+- [x] Links to /clubs page
+
+### Multi-CTA Post-Event Card Group
+- [x] Grouped CTA section: email capture (primary) + 3 action cards
+- [x] Premium visual design with icon boxes, subtle hover states
+- [x] Email capture most prominent, then Save Results, Join Club, Explore ChessOTB
+- [x] Clean hierarchy, not overloaded
+
+### Copywriting & Polish
+- [x] Encouraging, premium, clear, lightly celebratory tone
+- [x] Not cheesy, not salesy, not overhyped
+- [x] Mobile-first post-event UX with responsive cards
+- [x] Premium product-led growth feel
+
+### Tests
+- [x] Unit tests for post-event state detection (6 tests)
+- [x] Unit tests for performance card data computation (14 tests)
+- [x] Unit tests for email capture localStorage (3 tests)
+- [x] Unit tests for CTA contextual copy logic (5 tests)
+- [x] Unit tests for hero mode switching (3 tests)
+- [x] 31 tests passing

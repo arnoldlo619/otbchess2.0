@@ -734,16 +734,366 @@ function StandingsSection({
   );
 }
 
-// ─── Post-Event CTAs ──────────────────────────────────────────────────────────
+// ─── Completed Hero ─────────────────────────────────────────────────────────
 
-function PostEventCTAs({ isDark, tournamentName }: { isDark: boolean; tournamentName: string }) {
+function CompletedHero({
+  data,
+  standings,
+  isDark,
+}: {
+  data: PublicTournamentData;
+  standings: PublicStandingRow[];
+  isDark: boolean;
+}) {
+  const podium = standings.slice(0, 3);
+  const medalEmoji = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
+
+  return (
+    <section>
+      {/* Celebration header */}
+      <div className={`rounded-2xl border overflow-hidden mb-6 ${
+        isDark ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#3D6B47]/20 bg-white"
+      }`}>
+        <div className={`px-5 py-6 text-center border-b ${
+          isDark ? "border-white/08 bg-[#3D6B47]/15" : "border-[#EEEED2] bg-[#F0F8F2]"
+        }`}>
+          <div className="flex justify-center mb-3">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+              isDark ? "bg-[#3D6B47]/30" : "bg-[#3D6B47]/10"
+            }`}>
+              <Trophy className="w-7 h-7 text-[#3D6B47]" />
+            </div>
+          </div>
+          <h1
+            className="text-2xl sm:text-3xl font-bold text-foreground mb-1"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            {data.tournamentName}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-3">Tournament Complete</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            {data.venue && (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" />
+                {data.venue}
+              </span>
+            )}
+            {data.date && (
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                {data.date}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
+              {data.players.length} players
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Hash className="w-3.5 h-3.5" />
+              {data.totalRounds} rounds · {formatLabel(data.format)}
+            </span>
+          </div>
+        </div>
+
+        {/* Podium */}
+        {podium.length > 0 && (
+          <div className="px-5 py-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 text-center">Final Podium</p>
+            <div className="space-y-2">
+              {podium.map((row, i) => (
+                <div
+                  key={row.playerId}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    i === 0
+                      ? isDark
+                        ? "bg-amber-500/08 border border-amber-500/20"
+                        : "bg-amber-50/80 border border-amber-200/60"
+                      : isDark
+                      ? "bg-white/03 border border-white/06"
+                      : "bg-[#F9FAF8] border border-[#EEEED2]"
+                  }`}
+                >
+                  <span className="text-xl w-8 text-center">{medalEmoji[i]}</span>
+                  <PlayerAvatar username={row.username} name={row.name} size={36} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-foreground truncate">{row.name}</span>
+                      {row.title && <TitleBadge title={row.title} />}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {row.wins}W {row.draws}D {row.losses}L
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-foreground font-mono" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      {scoreFraction(row.points)}
+                    </span>
+                    <p className="text-xs text-muted-foreground">pts</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── Player Performance Card ─────────────────────────────────────────────────
+
+function PlayerPerformanceCard({
+  player,
+  standings,
+  rounds,
+  players,
+  tournamentName,
+  venue,
+  date,
+  totalRounds,
+  totalPlayers,
+  isDark,
+}: {
+  player: Player;
+  standings: PublicStandingRow[];
+  rounds: Round[];
+  players: Player[];
+  tournamentName: string;
+  venue: string;
+  date: string;
+  totalRounds: number;
+  totalPlayers: number;
+  isDark: boolean;
+}) {
+  const standingRow = standings.find((r) => r.playerId === player.id);
+  const rank = standingRow?.rank ?? 0;
+  const playerMap = useMemo(() => {
+    const m = new Map<string, Player>();
+    players.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [players]);
+
+  // Round-by-round timeline
+  const roundTimeline = rounds.map((r) => {
+    const game = r.games.find((g) => g.whiteId === player.id || g.blackId === player.id);
+    if (!game) return null;
+    const persp = game.whiteId === player.id ? "white" : "black";
+    const oppId = persp === "white" ? game.blackId : game.whiteId;
+    return {
+      round: r.number,
+      opponent: playerMap.get(oppId),
+      result: game.result,
+      perspective: persp as "white" | "black",
+      board: game.board,
+    };
+  }).filter(Boolean);
+
+  // Performance label
+  const getPerformanceLabel = () => {
+    if (!standingRow) return null;
+    const pct = standingRow.points / totalRounds;
+    if (rank === 1) return { text: "Champion", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" };
+    if (rank <= 3) return { text: "Podium Finish", color: "text-amber-600 bg-amber-500/08 border-amber-500/15" };
+    if (pct >= 0.75) return { text: "Strong Performance", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" };
+    if (pct >= 0.5) return { text: "Solid Result", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" };
+    return { text: "Well Played", color: "text-[#3D6B47] bg-[#3D6B47]/10 border-[#3D6B47]/20" };
+  };
+  const perfLabel = getPerformanceLabel();
+
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${
+      isDark ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#3D6B47]/20 bg-white"
+    }`}>
+      {/* Card header — green accent */}
+      <div className={`px-5 py-5 ${
+        isDark ? "bg-[#3D6B47]/15" : "bg-[#F0F8F2]"
+      }`}>
+        <div className="flex items-center gap-2 mb-3">
+          <Trophy className="w-4 h-4 text-[#3D6B47]" />
+          <span className="text-xs font-bold uppercase tracking-wider text-[#3D6B47]">Player Performance Card</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <PlayerAvatar username={player.username} name={player.name} size={56} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                {player.name}
+              </span>
+              {player.title && <TitleBadge title={player.title} />}
+            </div>
+            {player.username && (
+              <span className="text-sm text-muted-foreground">@{player.username}</span>
+            )}
+            <ELOBadge elo={player.elo} />
+          </div>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="px-5 py-4">
+        {perfLabel && (
+          <div className="flex justify-center mb-4">
+            <span className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-1.5 rounded-full border ${perfLabel.color}`}>
+              {perfLabel.text}
+            </span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-4 gap-2 mb-5">
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+            <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>#{rank}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Place</p>
+          </div>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+            <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {standingRow ? scoreFraction(standingRow.points) : "0"}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Score</p>
+          </div>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+            <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {standingRow ? `${standingRow.wins}/${standingRow.draws}/${standingRow.losses}` : "—"}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">W/D/L</p>
+          </div>
+          <div className={`text-center px-2 py-3 rounded-xl ${isDark ? "bg-white/05" : "bg-[#F0F5EE]"}`}>
+            <p className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {totalPlayers}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Field</p>
+          </div>
+        </div>
+
+        {/* Round-by-round timeline */}
+        {roundTimeline.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Round by Round</p>
+            <div className="space-y-1.5">
+              {roundTimeline.map((rh) => {
+                if (!rh) return null;
+                const { label, color } = getResultLabel(rh.result, rh.perspective);
+                return (
+                  <div
+                    key={rh.round}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm ${
+                      isDark ? "bg-white/03" : "bg-[#F9FAF8]"
+                    }`}
+                  >
+                    <span className="text-xs font-mono text-muted-foreground w-7">R{rh.round}</span>
+                    <div className={`w-3 h-3 rounded-full border flex-shrink-0 ${rh.perspective === "white" ? "bg-white border-gray-300" : "bg-gray-800 border-gray-600"}`} />
+                    <span className="flex-1 truncate text-foreground">
+                      {rh.opponent?.name ?? "BYE"}
+                    </span>
+                    {rh.board > 0 && (
+                      <span className="text-xs text-muted-foreground">Bd {rh.board}</span>
+                    )}
+                    <span className={`font-semibold ${color}`}>{label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Event info footer */}
+        <div className={`border-t pt-4 mt-2 ${isDark ? "border-white/08" : "border-[#EEEED2]"}`}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span>{tournamentName}</span>
+            {venue && <><span className="opacity-30">·</span><span>{venue}</span></>}
+            {date && <><span className="opacity-30">·</span><span>{date}</span></>}
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-2">chessotb.club</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Personal Recap (Followed Player Post-Event) ─────────────────────────────
+
+function PersonalRecap({
+  player,
+  standings,
+  rounds,
+  players,
+  data,
+  onUnfollow,
+  isDark,
+}: {
+  player: Player;
+  standings: PublicStandingRow[];
+  rounds: Round[];
+  players: Player[];
+  data: PublicTournamentData;
+  onUnfollow: () => void;
+  isDark: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Recap header */}
+      <div className={`rounded-2xl border overflow-hidden ${
+        isDark ? "border-[#3D6B47]/40 bg-[oklch(0.22_0.06_145)]" : "border-[#3D6B47]/20 bg-white"
+      }`}>
+        <div className={`px-5 py-4 flex items-center gap-3 border-b ${
+          isDark ? "border-white/08 bg-[#3D6B47]/15" : "border-[#EEEED2] bg-[#F0F8F2]"
+        }`}>
+          <Star className="w-4 h-4 text-[#3D6B47] flex-shrink-0" />
+          <span className="text-sm font-bold text-[#3D6B47]" style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            Your Tournament Recap
+          </span>
+          <div className="flex-1" />
+          <button
+            onClick={onUnfollow}
+            className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors ${
+              isDark
+                ? "text-white/50 hover:text-white/80 hover:bg-white/08"
+                : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Clear
+          </button>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-sm text-muted-foreground">
+            Great effort, <span className="font-semibold text-foreground">{player.name}</span>. Here's how your tournament went.
+          </p>
+        </div>
+      </div>
+
+      {/* Performance Card */}
+      <PlayerPerformanceCard
+        player={player}
+        standings={standings}
+        rounds={rounds}
+        players={players}
+        tournamentName={data.tournamentName}
+        venue={data.venue}
+        date={data.date}
+        totalRounds={data.totalRounds}
+        totalPlayers={data.players.length}
+        isDark={isDark}
+      />
+    </div>
+  );
+}
+
+// ─── Post-Event CTAs ─────────────────────────────────────────────────────────
+
+function PostEventCTAs({
+  isDark,
+  tournamentName,
+  hasFollowedPlayer,
+}: {
+  isDark: boolean;
+  tournamentName: string;
+  hasFollowedPlayer: boolean;
+}) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    // Store email locally for now — can be sent to server later
     try {
       const existing = JSON.parse(localStorage.getItem("otb-email-captures") ?? "[]");
       existing.push({ email, tournament: tournamentName, capturedAt: new Date().toISOString() });
@@ -753,26 +1103,30 @@ function PostEventCTAs({ isDark, tournamentName }: { isDark: boolean; tournament
   };
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-white"}`}>
-      {/* Header */}
-      <div className={`px-5 py-4 border-b ${isDark ? "border-white/08 bg-[#3D6B47]/10" : "border-[#EEEED2] bg-[#F0F8F2]"}`}>
-        <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-          Tournament Complete
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Save your results and stay connected
-        </p>
-      </div>
-
-      <div className="p-5 space-y-4">
-        {/* Email capture */}
-        {!submitted ? (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Mail className="w-4 h-4 text-[#3D6B47]" />
-              <span className="text-sm font-semibold text-foreground">Get Your Results by Email</span>
-            </div>
-            <div className="flex gap-2">
+    <div className="space-y-4">
+      {/* Email Capture */}
+      <div className={`rounded-2xl border overflow-hidden ${
+        isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-white"
+      }`}>
+        <div className={`px-5 py-4 border-b ${
+          isDark ? "border-white/08 bg-[#3D6B47]/10" : "border-[#EEEED2] bg-[#F0F8F2]"
+        }`}>
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4 text-[#3D6B47]" />
+            <h3 className="text-sm font-bold text-foreground">
+              {hasFollowedPlayer ? "Get Your Performance Card by Email" : "Get Tournament Results by Email"}
+            </h3>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {hasFollowedPlayer
+              ? "We'll send your full performance card and tournament results."
+              : "Receive the final standings and results in your inbox."
+            }
+          </p>
+        </div>
+        <div className="p-5">
+          {!submitted ? (
+            <form onSubmit={handleSubmit} className="flex gap-2">
               <input
                 type="email"
                 value={email}
@@ -786,71 +1140,89 @@ function PostEventCTAs({ isDark, tournamentName }: { isDark: boolean; tournament
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 rounded-xl bg-[#3D6B47] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors active:scale-95"
+                className="px-5 py-2.5 rounded-xl bg-[#3D6B47] text-white text-sm font-semibold hover:bg-[#2A4A32] transition-colors active:scale-95"
               >
                 Send
               </button>
+            </form>
+          ) : (
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${
+              isDark ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"
+            }`}>
+              <span className="text-emerald-500 text-lg">\u2713</span>
+              <span className="text-sm font-medium text-emerald-600">We'll send your results shortly</span>
             </div>
-          </form>
-        ) : (
-          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl ${isDark ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"}`}>
-            <span className="text-emerald-500 text-lg">✓</span>
-            <span className="text-sm font-medium text-emerald-600">Results will be sent to your email</span>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
 
-        {/* CTA cards */}
-        <div className="space-y-2">
+      {/* Action Cards */}
+      <div className={`rounded-2xl border overflow-hidden ${
+        isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-white"
+      }`}>
+        <div className={`px-5 py-4 border-b ${
+          isDark ? "border-white/08" : "border-[#EEEED2]"
+        }`}>
+          <h3 className="text-sm font-bold text-foreground">Continue Your Chess Journey</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Take the next step</p>
+        </div>
+        <div className="p-3 space-y-1">
           <Link
             href="/profile"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all hover:scale-[1.01] active:scale-[0.99] ${
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
-                ? "border-white/10 bg-white/03 hover:bg-white/06"
-                : "border-[#EEEED2] bg-[#F9FAF8] hover:bg-[#F0F5EE]"
+                ? "hover:bg-white/05"
+                : "hover:bg-[#F0F5EE]"
             }`}
           >
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"}`}>
-              <UserPlus className="w-4 h-4 text-[#3D6B47]" />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+            }`}>
+              <UserPlus className="w-4.5 h-4.5 text-[#3D6B47]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Create an Account</p>
-              <p className="text-xs text-muted-foreground">Save your tournament history and track progress</p>
+              <p className="text-sm font-semibold text-foreground">Save Your Results</p>
+              <p className="text-xs text-muted-foreground">Create an account to track your tournament history and progress</p>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </Link>
 
           <Link
             href="/clubs"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all hover:scale-[1.01] active:scale-[0.99] ${
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
-                ? "border-white/10 bg-white/03 hover:bg-white/06"
-                : "border-[#EEEED2] bg-[#F9FAF8] hover:bg-[#F0F5EE]"
+                ? "hover:bg-white/05"
+                : "hover:bg-[#F0F5EE]"
             }`}
           >
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"}`}>
-              <Crown className="w-4 h-4 text-[#3D6B47]" />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+            }`}>
+              <Crown className="w-4.5 h-4.5 text-[#3D6B47]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Join a Club</p>
-              <p className="text-xs text-muted-foreground">Connect with your local chess community</p>
+              <p className="text-sm font-semibold text-foreground">Join the Club</p>
+              <p className="text-xs text-muted-foreground">Stay connected for future events and community updates</p>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </Link>
 
           <a
             href="https://chessotb.club"
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all hover:scale-[1.01] active:scale-[0.99] ${
+            className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
-                ? "border-white/10 bg-white/03 hover:bg-white/06"
-                : "border-[#EEEED2] bg-[#F9FAF8] hover:bg-[#F0F5EE]"
+                ? "hover:bg-white/05"
+                : "hover:bg-[#F0F5EE]"
             }`}
           >
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"}`}>
-              <ExternalLink className="w-4 h-4 text-[#3D6B47]" />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/10"
+            }`}>
+              <ExternalLink className="w-4.5 h-4.5 text-[#3D6B47]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Explore ChessOTB</p>
-              <p className="text-xs text-muted-foreground">Discover tournaments, battles, and more</p>
+              <p className="text-xs text-muted-foreground">Discover more tournaments, battles, and your chess community</p>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </a>
@@ -1032,41 +1404,43 @@ export default function PublicTournament() {
 
       {/* ── Content ────────────────────────────────────────────────────────────── */}
       <main className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Hero */}
-        <section>
-          <h1
-            className="text-2xl sm:text-3xl font-bold text-foreground mb-2"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            {data.tournamentName}
-          </h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-3">
-            {data.venue && (
+        {/* Hero — switches to CompletedHero when tournament is finalized */}
+        {isCompleted ? (
+          <CompletedHero data={data} standings={standings} isDark={isDark} />
+        ) : (
+          <section>
+            <h1
+              className="text-2xl sm:text-3xl font-bold text-foreground mb-2"
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              {data.tournamentName}
+            </h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-3">
+              {data.venue && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {data.venue}
+                </span>
+              )}
+              {data.date && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {data.date}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" />
-                {data.venue}
+                <Users className="w-3.5 h-3.5" />
+                {data.players.length} players
               </span>
-            )}
-            {data.date && (
               <span className="inline-flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
-                {data.date}
+                <Hash className="w-3.5 h-3.5" />
+                {formatLabel(data.format)}
               </span>
-            )}
-            <span className="inline-flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              {data.players.length} players
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Hash className="w-3.5 h-3.5" />
-              {formatLabel(data.format)}
-            </span>
-          </div>
-          <RoundDots currentRound={data.currentRound} totalRounds={data.totalRounds} isDark={isDark} />
-        </section>
-
-        {/* Spotlight Search */}
-        <section>
+            </div>
+            <RoundDots currentRound={data.currentRound} totalRounds={data.totalRounds} isDark={isDark} />
+          </section>
+        )}
+        {/* Spotlight Search */}        <section>
           <SpotlightSearch
             players={data.players}
             onSelect={(player) => handleFollow(player.id)}
@@ -1074,18 +1448,30 @@ export default function PublicTournament() {
           />
         </section>
 
-        {/* Followed Player Card */}
+        {/* Followed Player — switches to PersonalRecap when completed */}
         {followedPlayer && (
           <section>
-            <FollowedPlayerCard
-              player={followedPlayer}
-              standings={standings}
-              rounds={data.rounds}
-              currentRound={data.currentRound}
-              players={data.players}
-              onUnfollow={() => handleFollow(followedPlayer.id)}
-              isDark={isDark}
-            />
+            {isCompleted ? (
+              <PersonalRecap
+                player={followedPlayer}
+                standings={standings}
+                rounds={data.rounds}
+                players={data.players}
+                data={data}
+                onUnfollow={() => handleFollow(followedPlayer.id)}
+                isDark={isDark}
+              />
+            ) : (
+              <FollowedPlayerCard
+                player={followedPlayer}
+                standings={standings}
+                rounds={data.rounds}
+                currentRound={data.currentRound}
+                players={data.players}
+                onUnfollow={() => handleFollow(followedPlayer.id)}
+                isDark={isDark}
+              />
+            )}
           </section>
         )}
 
@@ -1133,7 +1519,7 @@ export default function PublicTournament() {
         {/* Post-Event CTAs */}
         {isCompleted && (
           <section>
-            <PostEventCTAs isDark={isDark} tournamentName={data.tournamentName} />
+            <PostEventCTAs isDark={isDark} tournamentName={data.tournamentName} hasFollowedPlayer={!!followedPlayer} />
           </section>
         )}
 
