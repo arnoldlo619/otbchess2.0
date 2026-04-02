@@ -25,6 +25,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { Player, Game, Round, Result } from "@/lib/tournamentData";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,17 +82,7 @@ function persistFollowedPlayer(tournamentId: string, playerId: string | null) {
   } catch { /* silent */ }
 }
 
-// ─── Analytics Tracking ──────────────────────────────────────────────────────
-
-function trackEvent(tournamentId: string, eventType: string, metadata?: Record<string, unknown>) {
-  try {
-    fetch("/api/analytics/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tournamentId, eventType, metadata }),
-    }).catch(() => {});
-  } catch { /* fire-and-forget */ }
-}
+// trackEvent is now provided by useAnalytics hook — see main component
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -187,15 +178,18 @@ function TitleBadge({ title }: { title: string }) {
 function SpotlightSearch({
   players,
   onSelect,
+  onTrack,
   isDark,
 }: {
   players: Player[];
   onSelect: (player: Player) => void;
+  onTrack: (query: string) => void;
   isDark: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -229,7 +223,17 @@ function SpotlightSearch({
           ref={inputRef}
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setQuery(val);
+            // Debounced search tracking — fires 800ms after user stops typing
+            if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+            if (val.trim().length >= 2) {
+              searchDebounceRef.current = setTimeout(() => {
+                onTrack(val.trim());
+              }, 800);
+            }
+          }}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
           placeholder="Search by name or chess.com username..."
@@ -1094,13 +1098,13 @@ function PersonalRecap({
 function PostEventCTAs({
   isDark,
   tournamentName,
-  tournamentId,
   hasFollowedPlayer,
+  onTrack,
 }: {
   isDark: boolean;
   tournamentName: string;
-  tournamentId: string;
   hasFollowedPlayer: boolean;
+  onTrack: (event: string, meta?: Record<string, unknown>) => void;
 }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -1114,7 +1118,7 @@ function PostEventCTAs({
       localStorage.setItem("otb-email-captures", JSON.stringify(existing));
     } catch { /* silent */ }
     setSubmitted(true);
-    trackEvent(tournamentId, "email_capture", { email: email.trim() });
+    onTrack("email_capture", { email: email.trim() });
   };
 
   return (
@@ -1184,7 +1188,7 @@ function PostEventCTAs({
         <div className="p-3 space-y-1">
             <Link
             href="/profile"
-            onClick={() => trackEvent(tournamentId, "cta_click", { cta: "save_results" })}
+            onClick={() => onTrack("cta_click", { cta: "save_results" })}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
@@ -1205,7 +1209,7 @@ function PostEventCTAs({
 
           <Link
             href="/clubs"
-            onClick={() => trackEvent(tournamentId, "cta_click", { cta: "join_club" })}
+            onClick={() => onTrack("cta_click", { cta: "join_club" })}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
@@ -1226,7 +1230,7 @@ function PostEventCTAs({
 
           <a
             href="https://chessotb.club"
-            onClick={() => trackEvent(tournamentId, "cta_click", { cta: "explore_chessotb" })}
+            onClick={() => onTrack("cta_click", { cta: "explore_chessotb" })}
             className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all hover:scale-[1.005] active:scale-[0.995] ${
               isDark
                 ? "hover:bg-white/05"
@@ -1307,6 +1311,9 @@ export default function PublicTournament() {
   const [followedPlayerId, setFollowedPlayerId] = useState<string | null>(null);
   const etagRef = useRef<string | null>(null);
 
+  // Analytics — tournamentId becomes available after first successful fetch
+  const { track } = useAnalytics(data?.tournamentId ?? null);
+
   // Mobile tab state
   type Tab = "pairings" | "standings";
   const [activeTab, setActiveTab] = useState<Tab>("pairings");
@@ -1317,6 +1324,18 @@ export default function PublicTournament() {
       setFollowedPlayerId(getFollowedPlayerId(data.tournamentId));
     }
   }, [data?.tournamentId]);
+
+  // Fire page_view once when tournament data first loads
+  useEffect(() => {
+    if (data?.tournamentId) {
+      track("page_view", {
+        tournamentName: data.tournamentName,
+        status: data.status,
+        playerCount: data.players.length,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.tournamentId]); // Only fire once per tournament load
 
   // Fetch tournament data with ETag conditional request
   const fetchData = useCallback(async () => {
@@ -1383,11 +1402,12 @@ export default function PublicTournament() {
       setFollowedPlayerId(newId);
       persistFollowedPlayer(data.tournamentId, newId);
       const player = data.players.find((p) => p.id === playerId);
-      trackEvent(data.tournamentId, newId ? "follow" : "unfollow", {
+      track(newId ? "follow" : "unfollow", {
+        playerId,
         playerName: player?.name ?? playerId,
       });
     },
-    [data, followedPlayerId]
+    [data, followedPlayerId, track]
   );
 
   // Standings are precomputed server-side — no client computation needed
@@ -1466,9 +1486,11 @@ export default function PublicTournament() {
           <SpotlightSearch
             players={data.players}
             onSelect={(player) => {
+              // track search-to-follow conversion: the search event was already
+              // fired by the debounce; here we fire a follow (handled in handleFollow)
               handleFollow(player.id);
-              trackEvent(data.tournamentId, "search", { playerName: player.name });
             }}
+            onTrack={(query) => track("search", { query })}
             isDark={isDark}
           />
         </section>
@@ -1544,7 +1566,12 @@ export default function PublicTournament() {
         {/* Post-Event CTAs */}
         {isCompleted && (
           <section>
-            <PostEventCTAs isDark={isDark} tournamentName={data.tournamentName} tournamentId={data.tournamentId} hasFollowedPlayer={!!followedPlayer} />
+            <PostEventCTAs
+              isDark={isDark}
+              tournamentName={data.tournamentName}
+              hasFollowedPlayer={!!followedPlayer}
+              onTrack={(event, meta) => track(event as Parameters<typeof track>[0], meta)}
+            />
           </section>
         )}
 

@@ -4372,3 +4372,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Unit tests for metric computation functions (36 tests)
 - [x] Unit tests for funnel calculation logic
 - [x] Unit tests for recommendation generation
+
+## Phase 6: Client-Side Event Tracking
+
+- [x] Build useAnalytics hook with fire-and-forget fetch, keepalive, and page_view deduplication
+- [x] Export trackAnalyticsEvent standalone helper for use outside React components
+- [x] Wire page_view event on tournament data first load (fires once per session)
+- [x] Wire debounced search tracking (fires 800ms after user stops typing, min 2 chars)
+- [x] Wire follow/unfollow events with playerId and playerName metadata
+- [x] Wire email_capture event on form submission in PostEventCTAs
+- [x] Wire cta_click events for save_results, join_club, and explore_chessotb CTAs
+- [x] Remove old inline trackEvent stub and replace with hook-based tracking throughout
+- [x] 21 unit tests for trackAnalyticsEvent covering all event types, payload structure, keepalive, error handling
