@@ -25,7 +25,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
-import { useActiveTournament } from "@/hooks/useActiveTournament";
+
 import AuthModal from "../components/AuthModal";
 import { useAuthContext } from "../context/AuthContext";
 import {
@@ -155,33 +155,6 @@ function Nav({
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-  // Detect if the user has an active tournament registration
-  const [activeTournamentUrl, setActiveTournamentUrl] = useState<string | null>(null);
-  const [activeTournamentName, setActiveTournamentName] = useState<string | null>(null);
-
-  useEffect(() => {
-    function detectActiveTournament() {
-      try {
-        const regs = getAllRegistrations();
-        for (const reg of regs) {
-          const config = resolveTournament(reg.tournamentId);
-          if (config) {
-            setActiveTournamentUrl(`/tournament/${config.id}`);
-            setActiveTournamentName(config.name);
-            return;
-          }
-        }
-      } catch {
-        // ignore
-      }
-      setActiveTournamentUrl(null);
-      setActiveTournamentName(null);
-    }
-    detectActiveTournament();
-    window.addEventListener("storage", detectActiveTournament);
-    return () => window.removeEventListener("storage", detectActiveTournament);
-  }, []);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -330,20 +303,7 @@ function Nav({
             </span>
           </Link>
           <ThemeToggle />
-          {activeTournamentUrl && (
-            <Link
-              href={activeTournamentUrl}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all active:scale-95 ${
-                isDark
-                  ? "bg-[#3D6B47]/30 text-[#4CAF50] border border-[#4CAF50]/30 hover:bg-[#3D6B47]/50"
-                  : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20 hover:bg-[#3D6B47]/20"
-              }`}
-              title={activeTournamentName ?? "Your tournament"}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse flex-shrink-0" />
-              Tournament Dashboard
-            </Link>
-          )}
+
         </div>
 
         {/* Mobile: toggle + menu */}
@@ -422,18 +382,7 @@ function Nav({
               Analyze
             </span>
           </Link>
-          {activeTournamentUrl && (
-            <Link
-              href={activeTournamentUrl}
-              className={`flex items-center gap-2 w-full py-3 text-sm font-semibold ${
-                isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-              }`}
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
-              Tournament Dashboard
-            </Link>
-          )}
+
         </div>
       )}
     </nav>
@@ -444,7 +393,6 @@ function Nav({
 function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const activeTournament = useActiveTournament();
 
   return (
     <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 sm:pt-24 md:pt-16 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
@@ -494,63 +442,6 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             <span className="sm:hidden">Set up in minutes. Pairings generated automatically.</span>
             <span className="hidden sm:inline">Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.</span>
           </p>
-
-          {/* ── Return to Tournament CTA (mobile-first, shown when user has active tournament) ── */}
-          {activeTournament && (
-            <div
-              className="opacity-0-init animate-fade-in-up mb-5"
-              style={{ animationDelay: "0.40s", animationFillMode: "forwards" }}
-            >
-              <a
-                href={activeTournament.href}
-                onClick={(e) => { e.preventDefault(); window.location.href = activeTournament.href; }}
-                className={`group inline-flex items-center gap-3 w-full sm:w-auto px-5 py-4 rounded-2xl border-2 transition-all duration-200 active:scale-[0.97] shadow-lg ${
-                  isDark
-                    ? "bg-[#4CAF50]/12 border-[#4CAF50]/40 hover:bg-[#4CAF50]/20 hover:border-[#4CAF50]/70 shadow-[#4CAF50]/10"
-                    : "bg-[#3D6B47]/06 border-[#3D6B47]/30 hover:bg-[#3D6B47]/10 hover:border-[#3D6B47]/50 shadow-[#3D6B47]/08"
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/12 text-[#3D6B47]"
-                }`}>
-                  {activeTournament.role === "director"
-                    ? <Shield className="w-5 h-5" />
-                    : <Trophy className="w-5 h-5" />}
-                </div>
-                <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    {activeTournament.status === "in_progress" && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#4CAF50]/15 text-[#4CAF50]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
-                        LIVE
-                      </span>
-                    )}
-                    {activeTournament.status === "registration" && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400">LOBBY</span>
-                    )}
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-                      isDark ? "text-white/35" : "text-gray-400"
-                    }`}>
-                      {activeTournament.role === "director" ? "Your Tournament" : "Active Tournament"}
-                    </span>
-                  </div>
-                  <p className={`text-sm font-bold truncate leading-tight ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {activeTournament.name}
-                  </p>
-                  <p className={`text-xs mt-0.5 ${
-                    isDark ? "text-white/45" : "text-gray-500"
-                  }`}>
-                    {activeTournament.role === "director" ? "Tap to manage" : "Tap to view standings"}
-                  </p>
-                </div>
-                <ChevronRight className={`w-5 h-5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform ${
-                  isDark ? "text-[#4CAF50]/60" : "text-[#3D6B47]/50"
-                }`} />
-              </a>
-            </div>
-          )}
 
           <div
             className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto"
@@ -1362,27 +1253,48 @@ export default function Home() {
     }
   }, []);
 
-  // ── Dashboard smart routing ─────────────────────────────────────────────────
-  // Priority: 1. Most recent directed tournament → /tournament/:id/manage
-  //           2. Most recent joined tournament   → /tournament/:id
-  //           3. Fallback                        → /join
+  // ── Dashboard smart routing ──────────────────────────────────────────────────────────────────────────────────────────
+  // Priority: 1. Active (non-completed) directed tournament → /tournament/:id/manage
+  //           2. Active (non-completed) joined tournament   → /tournament/:id
+  //           3. Not signed in or no live tournament        → /join
+  //
+  // "Active" means status is registration, in_progress, or paused (NOT completed).
+  // Users can only be in one tournament at a time.
   const getDashboardUrl = (): string => {
-    // Check director sessions — listTournaments returns newest-first
     const allTournaments = listTournaments();
-    const directedTournament = allTournaments.find((t) => hasDirectorSession(t.id));
+
+    // Helper: read tournament status from director state in localStorage
+    const getTournamentStatus = (id: string): string => {
+      try {
+        const raw = localStorage.getItem(`otb-director-state-v2-${id}`);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { status?: string };
+          return parsed.status ?? "unknown";
+        }
+      } catch { /* ignore */ }
+      return "unknown";
+    };
+
+    // Priority 1: Active directed tournament (director has a session AND it’s not completed)
+    const directedTournament = allTournaments.find((t) => {
+      if (!hasDirectorSession(t.id)) return false;
+      const status = getTournamentStatus(t.id);
+      return status !== "completed"; // registration, in_progress, paused, unknown all qualify
+    });
     if (directedTournament) return `/tournament/${directedTournament.id}/manage`;
 
-    // Check participant registrations — getAllRegistrations returns newest-first
+    // Priority 2: Active participant registration (not completed)
     const registrations = getAllRegistrations();
-    if (registrations.length > 0) {
-      const reg = registrations[0];
-      // Try to resolve the tournament slug from the stored tournamentId
+    for (const reg of registrations) {
       const config = resolveTournament(reg.tournamentId);
-      const slug = config?.id ?? reg.tournamentId;
-      return `/tournament/${slug}`;
+      const tournamentId = config?.id ?? reg.tournamentId;
+      const status = getTournamentStatus(tournamentId);
+      if (status !== "completed") {
+        return `/tournament/${tournamentId}`;
+      }
     }
 
-    // No history — send to the join page
+    // No live tournament — send to join page
     return "/join";
   };
 

@@ -4384,3 +4384,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire cta_click events for save_results, join_club, and explore_chessotb CTAs
 - [x] Remove old inline trackEvent stub and replace with hook-based tracking throughout
 - [x] 21 unit tests for trackAnalyticsEvent covering all event types, payload structure, keepalive, error handling
+
+## Phase 7: Remove Duplicate Tournament Nav Cards & Fix Header Routing
+
+- [x] Remove both duplicate tournament navigation cards from the landing page hero section
+- [x] Wire header "Tournaments" nav button to route to active tournament or join page
+- [x] Enforce single-tournament-at-a-time rule in nav routing logic
