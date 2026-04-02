@@ -21,7 +21,6 @@ import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
@@ -303,13 +302,11 @@ function Nav({
               Analyze
             </span>
           </Link>
-          <ThemeToggle />
 
         </div>
 
         {/* Mobile: toggle + menu */}
         <div className="md:hidden flex items-center gap-2">
-          <ThemeToggle />
           <button
             className="p-2 text-foreground"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -1319,7 +1316,6 @@ export default function Home() {
 
   const rightSlotEl = (
     <div className="flex items-center gap-3">
-      <ThemeToggle />
       {/* No user at all: show hamburger on mobile, Sign In button on desktop */}
       {!user && (
         <>

@@ -28,10 +28,13 @@ import {
   LogIn,
   Ghost,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
 import { useChessAvatar } from "@/hooks/useChessAvatar";
+import { useTheme } from "@/contexts/ThemeContext";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 import AuthModal from "@/components/AuthModal";
 
@@ -289,6 +292,8 @@ export function AvatarNavDropdown({
   dashboardUrl,
 }: AvatarNavDropdownProps) {
   const { user, logout } = useAuthContext();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const [open, setOpen]   = useState(false);
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
@@ -733,6 +738,35 @@ export function AvatarNavDropdown({
               style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
             />
 
+            {/* ── Section: Appearance ── */}
+            <div className="px-2 pb-1">
+              <button
+                onClick={() => toggleTheme?.()}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                style={{ border: "1px solid transparent" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+              >
+                {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+                <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                <div
+                  className="ml-auto w-8 h-4 rounded-full flex items-center transition-colors flex-shrink-0"
+                  style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full bg-white shadow transition-transform mx-0.5"
+                    style={{ transform: isDark ? "translateX(0)" : "translateX(16px)" }}
+                  />
+                </div>
+              </button>
+            </div>
+
+            {/* ── Divider ── */}
+            <div
+              className="mx-3 my-1 h-px"
+              style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+            />
+
             {/* ── Section: User actions ── */}
             <div className="px-2 pb-2">
               {user && !user.isGuest && (
@@ -898,6 +932,32 @@ export function AvatarNavDropdown({
                     </motion.div>
                   );
                 })}
+              </div>
+
+              {/* Divider */}
+              <div className="mx-4 my-2 h-px" style={{ background: `${OTB_GREEN_GLOW}0.15)` }} />
+
+              {/* Appearance toggle */}
+              <div className="px-3 pb-1">
+                <button
+                  onClick={() => toggleTheme?.()}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                  style={{ border: "1px solid transparent" }}
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    {isDark ? <Sun className="w-4 h-4 text-white/50" /> : <Moon className="w-4 h-4 text-white/50" />}
+                  </div>
+                  <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                  <div
+                    className="ml-auto w-9 h-5 rounded-full flex items-center transition-colors flex-shrink-0"
+                    style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}
+                  >
+                    <div
+                      className="w-3.5 h-3.5 rounded-full bg-white shadow transition-transform mx-0.5"
+                      style={{ transform: isDark ? "translateX(0)" : "translateX(20px)" }}
+                    />
+                  </div>
+                </button>
               </div>
 
               {/* Divider */}

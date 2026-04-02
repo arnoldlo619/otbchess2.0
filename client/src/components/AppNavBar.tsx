@@ -17,7 +17,6 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Building2, Swords, Video, LayoutDashboard } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/tournamentRegistry";
@@ -124,14 +123,13 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   );
 
   // Right slot:
-  //   Desktop / signed-in: theme toggle + avatar dropdown
-  //   Mobile + guest:      theme toggle + hamburger menu (GuestMobileMenu)
+  //   Desktop / signed-in: avatar dropdown (theme toggle is inside the dropdown)
+  //   Mobile + guest:      hamburger menu (GuestMobileMenu)
   //                        (avatar dropdown hidden — no avatar to tap)
   const isGuest = !user || user.isGuest;
 
   const rightSlotEl = (
     <div className="flex items-center gap-2">
-      <ThemeToggle />
       {/* Hamburger — mobile only, unauthenticated only */}
       {isGuest && (
         <div className="flex md:hidden">
