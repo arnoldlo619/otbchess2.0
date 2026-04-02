@@ -25,6 +25,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
+import { DashboardDropdown } from "@/components/DashboardDropdown";
 
 import AuthModal from "../components/AuthModal";
 import { useAuthContext } from "../context/AuthContext";
@@ -1300,7 +1301,7 @@ export default function Home() {
 
   // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
-    { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
+    { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
     { name: "Battle", url: "/battle", icon: Swords },
     { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },

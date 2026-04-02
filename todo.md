@@ -4390,3 +4390,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove both duplicate tournament navigation cards from the landing page hero section
 - [x] Wire header "Tournaments" nav button to route to active tournament or join page
 - [x] Enforce single-tournament-at-a-time rule in nav routing logic
+
+## Phase 8: Tournaments Nav Dropdown
+
+- [x] Remove floating active director card from hero/landing page
+- [x] Add Tournaments dropdown to AnimeNavBar showing active tournament (name, role, status)
+- [x] Dropdown routes to /manage for directors, /tournament/:id for participants, /join if none
+- [x] Show live pulse indicator on Tournaments button when active tournament exists
