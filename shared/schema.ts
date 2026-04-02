@@ -872,3 +872,36 @@ export const tournamentAnalytics = mysqlTable(
 
 export type TournamentAnalyticsRow = typeof tournamentAnalytics.$inferSelect;
 export type NewTournamentAnalyticsRow = typeof tournamentAnalytics.$inferInsert;
+
+// ─── saved_prep_reports ───────────────────────────────────────────────────────
+// Stores prep reports saved by logged-in users for quick re-access.
+// The full report JSON is stored so it can be displayed instantly without
+// re-fetching from the chess.com API.
+export const savedPrepReports = mysqlTable(
+  "saved_prep_reports",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    /** The user who saved this report */
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    /** The opponent's chess.com username */
+    opponentUsername: varchar("opponent_username", { length: 100 }).notNull(),
+    /** The opponent's display name (from the report) */
+    opponentName: varchar("opponent_name", { length: 100 }),
+    /** Snapshot of key stats for display in the saved list */
+    winRate: int("win_rate"),
+    gamesAnalyzed: int("games_analyzed"),
+    prepLinesCount: int("prep_lines_count"),
+    /** Full report JSON for instant re-display */
+    reportJson: text("report_json").notNull(),
+    savedAt: timestamp("saved_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("spr_user_id_idx").on(table.userId),
+    userOpponentIdx: index("spr_user_opponent_idx").on(
+      table.userId,
+      table.opponentUsername
+    ),
+  })
+);
+export type SavedPrepReport = typeof savedPrepReports.$inferSelect;
+export type NewSavedPrepReport = typeof savedPrepReports.$inferInsert;

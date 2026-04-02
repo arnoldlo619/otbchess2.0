@@ -4419,3 +4419,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Improve empty, loading, and error states to feel premium
 - [x] Add micro-interactions (card hover, row highlight, tab transitions)
 - [x] Improve mobile/tablet responsiveness across all sections
+
+## Phase 11: Director Console Prep Button & Saved Prep Reports
+
+- [x] Add Prep button to each board card in Director Console (standard boards)
+- [x] Add Prep button to each board card in Director Console (Double Swiss boards)
+- [ ] Prep button navigates to /prep/:opponentUsername pre-filled
+- [ ] Create saved_prep_reports DB table (userId, opponentUsername, reportData, savedAt)
+- [ ] Build POST /api/prep/save endpoint to save a report
+- [ ] Build GET /api/prep/saved endpoint to list saved reports for current user
+- [ ] Build DELETE /api/prep/saved/:id endpoint to delete a saved report
+- [x] Add Save Report button to MatchupPrep page (visible when logged in and report loaded)
+- [x] Build Saved Prep panel/section accessible from the Analyze nav or MatchupPrep page
+- [x] Show saved reports as cards with opponent name, date, key stats, and delete option
+- [x] Write tests for saved prep API endpoints and UI logic

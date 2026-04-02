@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -378,6 +378,129 @@ export function createApp() {
       } else {
         res.status(502).json({ error: "Could not fetch opening data" });
       }
+    }
+  });
+
+  // ── Saved Prep Reports: POST /api/prep/saved ────────────────────────────
+  // Save a prep report for the current user (requires auth).
+  app.post("/api/prep/saved", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
+      const { opponentUsername, opponentName, winRate, gamesAnalyzed, prepLinesCount, reportJson } = req.body;
+      if (!opponentUsername || !reportJson) {
+        res.status(400).json({ error: "opponentUsername and reportJson are required" }); return;
+      }
+      const db = await getDb();
+      // Upsert: if user already saved a report for this opponent, replace it
+      const [existing] = await db.select({ id: savedPrepReports.id })
+        .from(savedPrepReports)
+        .where(and(
+          eq(savedPrepReports.userId, userId),
+          eq(savedPrepReports.opponentUsername, opponentUsername.toLowerCase().trim())
+        ))
+        .limit(1);
+      if (existing) {
+        await db.update(savedPrepReports)
+          .set({
+            opponentName: opponentName ?? null,
+            winRate: winRate ?? null,
+            gamesAnalyzed: gamesAnalyzed ?? null,
+            prepLinesCount: prepLinesCount ?? null,
+            reportJson: typeof reportJson === "string" ? reportJson : JSON.stringify(reportJson),
+            savedAt: new Date(),
+          })
+          .where(eq(savedPrepReports.id, existing.id));
+        res.json({ id: existing.id, updated: true });
+      } else {
+        const [result] = await db.insert(savedPrepReports).values({
+          userId,
+          opponentUsername: opponentUsername.toLowerCase().trim(),
+          opponentName: opponentName ?? null,
+          winRate: winRate ?? null,
+          gamesAnalyzed: gamesAnalyzed ?? null,
+          prepLinesCount: prepLinesCount ?? null,
+          reportJson: typeof reportJson === "string" ? reportJson : JSON.stringify(reportJson),
+        });
+        res.json({ id: (result as any).insertId, updated: false });
+      }
+    } catch (err) {
+      console.error("[saved-prep] save error:", err);
+      res.status(500).json({ error: "Failed to save prep report" });
+    }
+  });
+
+  // ── Saved Prep Reports: GET /api/prep/saved ──────────────────────────────
+  // List all saved prep reports for the current user.
+  app.get("/api/prep/saved", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
+      const db = await getDb();
+      const rows = await db.select({
+        id: savedPrepReports.id,
+        opponentUsername: savedPrepReports.opponentUsername,
+        opponentName: savedPrepReports.opponentName,
+        winRate: savedPrepReports.winRate,
+        gamesAnalyzed: savedPrepReports.gamesAnalyzed,
+        prepLinesCount: savedPrepReports.prepLinesCount,
+        savedAt: savedPrepReports.savedAt,
+      })
+        .from(savedPrepReports)
+        .where(eq(savedPrepReports.userId, userId))
+        .orderBy(desc(savedPrepReports.savedAt))
+        .limit(50);
+      res.json({ reports: rows });
+    } catch (err) {
+      console.error("[saved-prep] list error:", err);
+      res.status(500).json({ error: "Failed to fetch saved reports" });
+    }
+  });
+
+  // ── Saved Prep Reports: GET /api/prep/saved/:id ──────────────────────────
+  // Get the full report JSON for a single saved report.
+  app.get("/api/prep/saved/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const id = parseInt(req.params.id, 10);
+      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
+      if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+      const db = await getDb();
+      const [row] = await db.select()
+        .from(savedPrepReports)
+        .where(and(eq(savedPrepReports.id, id), eq(savedPrepReports.userId, userId)))
+        .limit(1);
+      if (!row) { res.status(404).json({ error: "Report not found" }); return; }
+      res.json({ report: JSON.parse(row.reportJson), meta: {
+        id: row.id,
+        opponentUsername: row.opponentUsername,
+        opponentName: row.opponentName,
+        winRate: row.winRate,
+        gamesAnalyzed: row.gamesAnalyzed,
+        prepLinesCount: row.prepLinesCount,
+        savedAt: row.savedAt,
+      }});
+    } catch (err) {
+      console.error("[saved-prep] get error:", err);
+      res.status(500).json({ error: "Failed to fetch saved report" });
+    }
+  });
+
+  // ── Saved Prep Reports: DELETE /api/prep/saved/:id ───────────────────────
+  // Delete a saved prep report (only the owner can delete).
+  app.delete("/api/prep/saved/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const id = parseInt(req.params.id, 10);
+      if (!userId) { res.status(401).json({ error: "Not authenticated" }); return; }
+      if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+      const db = await getDb();
+      await db.delete(savedPrepReports)
+        .where(and(eq(savedPrepReports.id, id), eq(savedPrepReports.userId, userId)));
+      res.json({ deleted: true });
+    } catch (err) {
+      console.error("[saved-prep] delete error:", err);
+      res.status(500).json({ error: "Failed to delete saved report" });
     }
   });
 

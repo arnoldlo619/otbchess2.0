@@ -7,15 +7,16 @@
  * - Polished cards, typography hierarchy, and interaction states
  * - Responsive across desktop, tablet, and mobile
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuthContext } from "@/context/AuthContext";
 import {
   ArrowLeft, Search, Swords, Target, BarChart3,
   Shield, Zap, Clock, Crown,
   TrendingUp, BookOpen, Eye, AlertTriangle, Loader2,
   CircleDot, RefreshCw, ChevronRight, Trophy, Flame,
-  Activity
+  Activity, Bookmark, BookmarkCheck, ChevronDown
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -63,6 +64,16 @@ interface PrepReport {
 
 type Tab = "overview" | "openings" | "prep";
 
+interface SavedReportMeta {
+  id: number;
+  opponentUsername: string;
+  opponentName: string | null;
+  winRate: number | null;
+  gamesAnalyzed: number | null;
+  prepLinesCount: number | null;
+  savedAt: string;
+}
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
 function useDesignTokens(isDark: boolean) {
@@ -93,12 +104,18 @@ export default function MatchupPrep() {
   const isDark = theme === "dark";
   const t = useDesignTokens(isDark);
 
+  const { user } = useAuthContext();
   const [searchInput, setSearchInput] = useState(params.username || "");
   const [report, setReport] = useState<PrepReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const [savedReports, setSavedReports] = useState<SavedReportMeta[]>([]);
+  const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [loadingSaved, setLoadingSaved] = useState(false);
 
   useEffect(() => {
     if (params.username) {
@@ -134,6 +151,68 @@ export default function MatchupPrep() {
     }
   }
 
+  // When a new report loads, check if this opponent is already saved
+  useEffect(() => {
+    if (report && user) {
+      const match = savedReports.find(
+        (r) => r.opponentUsername === report.opponent.username.toLowerCase()
+      );
+      setSavedId(match?.id ?? null);
+    } else {
+      setSavedId(null);
+    }
+  }, [report, savedReports, user]);
+
+  // Fetch saved reports list when user is logged in
+  const fetchSavedReports = useCallback(async () => {
+    if (!user) return;
+    setLoadingSaved(true);
+    try {
+      const res = await fetch("/api/prep/saved", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setSavedReports(data.reports ?? []);
+      }
+    } catch { /* non-fatal */ }
+    finally { setLoadingSaved(false); }
+  }, [user]);
+
+  useEffect(() => { fetchSavedReports(); }, [fetchSavedReports]);
+
+  async function handleSaveReport() {
+    if (!report || !user) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/prep/saved", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          opponentUsername: report.opponent.username,
+          opponentName: report.opponent.username,
+          winRate: report.opponent.overall.winRate,
+          gamesAnalyzed: report.opponent.gamesAnalyzed,
+          prepLinesCount: report.prepLines.length,
+          reportJson: report,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSavedId(data.id);
+        await fetchSavedReports();
+      }
+    } catch { /* non-fatal */ }
+    finally { setSaving(false); }
+  }
+
+  async function handleDeleteSaved(id: number) {
+    try {
+      await fetch(`/api/prep/saved/${id}`, { method: "DELETE", credentials: "include" });
+      if (savedId === id) setSavedId(null);
+      await fetchSavedReports();
+    } catch { /* non-fatal */ }
+  }
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const u = searchInput.trim();
@@ -167,8 +246,45 @@ export default function MatchupPrep() {
               Matchup Prep
             </h1>
           </div>
+          {/* Saved Reports toggle button — visible when logged in */}
+          {user && (
+            <button
+              onClick={() => setShowSavedPanel((o) => !o)}
+              className={`ml-auto flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all duration-150 ${
+                showSavedPanel
+                  ? isDark ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A]" : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47]"
+                  : isDark ? "bg-white/04 border-white/10 text-white/50 hover:bg-white/08" : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100"
+              }`}
+              title="Saved prep reports"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Saved</span>
+              {savedReports.length > 0 && (
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                  isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                }`}>{savedReports.length}</span>
+              )}
+              <ChevronDown className={`w-3 h-3 transition-transform duration-150 ${showSavedPanel ? "rotate-180" : ""}`} />
+            </button>
+          )}
           {report && (
-            <div className="ml-auto flex items-center gap-2">
+            <div className={`${user ? "" : "ml-auto "}flex items-center gap-2`}>
+              {/* Save / Saved button */}
+              {user && (
+                <button
+                  onClick={savedId ? () => handleDeleteSaved(savedId) : handleSaveReport}
+                  disabled={saving}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all duration-150 disabled:opacity-40 ${
+                    savedId
+                      ? isDark ? "bg-[#3D6B47]/20 border-[#3D6B47]/40 text-[#5B9A6A] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400" : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47] hover:bg-red-50 hover:border-red-200 hover:text-red-500"
+                      : isDark ? "bg-white/04 border-white/10 text-white/50 hover:bg-[#3D6B47]/15 hover:border-[#3D6B47]/30 hover:text-[#5B9A6A]" : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/25 hover:text-[#3D6B47]"
+                  }`}
+                  title={savedId ? "Remove from saved" : "Save this report"}
+                >
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : savedId ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+                  <span className="hidden sm:inline">{savedId ? "Saved" : "Save"}</span>
+                </button>
+              )}
               <span className={`text-xs ${t.textTertiary}`}>
                 {report.opponent.username}
               </span>
@@ -215,6 +331,70 @@ export default function MatchupPrep() {
             </div>
           </div>
         </form>
+
+        {/* ── Saved Reports Panel ── */}
+        {user && showSavedPanel && (
+          <div className={`${t.card} overflow-hidden`}>
+            <div className={`px-4 py-3 border-b ${isDark ? "border-[#2a4030]/40" : "border-gray-100"} flex items-center justify-between`}>
+              <div className="flex items-center gap-2">
+                <BookmarkCheck className="w-4 h-4 text-[#5B9A6A]" />
+                <span className={`text-sm font-semibold ${t.textPrimary}`}>Saved Reports</span>
+                {savedReports.length > 0 && (
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"}`}>
+                    {savedReports.length}
+                  </span>
+                )}
+              </div>
+              {loadingSaved && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5B9A6A]" />}
+            </div>
+            {savedReports.length === 0 ? (
+              <div className={`px-4 py-8 text-center`}>
+                <Bookmark className={`w-8 h-8 mx-auto mb-2 ${t.textTertiary}`} />
+                <p className={`text-sm font-medium ${t.textSecondary}`}>No saved reports yet</p>
+                <p className={`text-xs mt-1 ${t.textTertiary}`}>Load a prep report and click Save to keep it here</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#2a4030]/20">
+                {savedReports.map((r) => (
+                  <div
+                    key={r.id}
+                    className={`flex items-center gap-3 px-4 py-3 transition-colors ${t.rowHover}`}
+                  >
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => {
+                        setShowSavedPanel(false);
+                        navigate(`/prep/${encodeURIComponent(r.opponentUsername)}`);
+                        fetchReport(r.opponentUsername);
+                      }}
+                    >
+                      <div className={`text-sm font-semibold ${t.textPrimary} truncate`}>{r.opponentUsername}</div>
+                      <div className={`flex items-center gap-3 mt-0.5 text-[11px] ${t.textTertiary}`}>
+                        {r.winRate != null && (
+                          <span className={`font-bold ${
+                            r.winRate >= 60 ? "text-red-400" : r.winRate >= 45 ? "text-amber-400" : "text-[#5B9A6A]"
+                          }`}>{r.winRate}% WR</span>
+                        )}
+                        {r.gamesAnalyzed != null && <span>{r.gamesAnalyzed} games</span>}
+                        {r.prepLinesCount != null && <span>{r.prepLinesCount} prep lines</span>}
+                        <span>{new Date(r.savedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteSaved(r.id)}
+                      className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                        isDark ? "text-white/25 hover:text-red-400 hover:bg-red-500/10" : "text-gray-300 hover:text-red-500 hover:bg-red-50"
+                      }`}
+                      title="Remove saved report"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Loading State ── */}
         {loading && (
