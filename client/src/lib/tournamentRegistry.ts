@@ -14,8 +14,12 @@ export interface TournamentConfig {
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
   rounds: number;
+  /** For swiss_elim: number of Swiss rounds before elimination cutoff. */
+  swissRounds?: number;
+  /** For swiss_elim: number of players to advance to elimination bracket. */
+  elimCutoff?: number;
   maxPlayers: number;
   timeBase: number;       // minutes
   timeIncrement: number;  // seconds

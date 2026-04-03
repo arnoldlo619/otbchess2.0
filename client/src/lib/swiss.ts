@@ -527,3 +527,218 @@ export function generateDoubleSwissPairings(
 export function isDoubleSwissRoundComplete(games: Game[]): boolean {
   return games.every((g) => g.result !== "*");
 }
+
+// ─── Elimination Bracket Engine ───────────────────────────────────────────────
+
+/**
+ * Find the smallest power of 2 that is >= n.
+ */
+function nextPowerOf2(n: number): number {
+  if (n <= 1) return 1;
+  return Math.pow(2, Math.ceil(Math.log2(n)));
+}
+
+/**
+ * Find the largest power of 2 that is <= n.
+ */
+function nearestPowerOf2(n: number): number {
+  if (n <= 1) return 1;
+  let p = 1;
+  while (p * 2 <= n) p *= 2;
+  return p;
+}
+
+/**
+ * Compute the number of elimination rounds needed for a given bracket size.
+ * e.g. 64 → 6, 32 → 5, 16 → 4, 8 → 3
+ */
+export function elimRoundsNeeded(bracketSize: number): number {
+  return Math.ceil(Math.log2(bracketSize));
+}
+
+/**
+ * Get the label for an elimination round based on remaining players.
+ * e.g. 2 remaining → "Final", 4 → "Semifinals", 8 → "Quarterfinals"
+ */
+export function elimRoundLabel(playersRemaining: number): string {
+  if (playersRemaining <= 2) return "Final";
+  if (playersRemaining <= 4) return "Semifinals";
+  if (playersRemaining <= 8) return "Quarterfinals";
+  return `Round of ${playersRemaining}`;
+}
+
+/**
+ * Generate the first-round elimination bracket pairings from a seeded list.
+ *
+ * Seeding follows standard tournament bracket convention:
+ *   - Seed 1 vs Seed N, Seed 2 vs Seed N-1, etc.
+ *   - For non-power-of-2 fields, the top seeds receive first-round byes.
+ *
+ * @param seededPlayers - Players sorted by seed (index 0 = seed 1 = best)
+ * @param roundNumber - The round number to assign to the generated games
+ * @returns Array of Game objects for the first elimination round
+ */
+export function generateEliminationFirstRound(
+  seededPlayers: Player[],
+  roundNumber: number
+): Game[] {
+  const n = seededPlayers.length;
+  if (n < 2) return [];
+
+  const fullBracketSize = nextPowerOf2(n);
+  const byeCount = fullBracketSize - n;
+
+  const games: Game[] = [];
+  let board = 1;
+
+  // Create the full bracket slots: seed 1 vs seed S, seed 2 vs S-1, etc.
+  const halfBracket = fullBracketSize / 2;
+  for (let i = 0; i < halfBracket; i++) {
+    const topSeedIdx = i;
+    const bottomSeedIdx = fullBracketSize - 1 - i;
+
+    // If the bottom seed doesn't exist (bye), the top seed advances automatically
+    if (bottomSeedIdx >= n) {
+      games.push({
+        id: `r${roundNumber}b${board}`,
+        round: roundNumber,
+        board,
+        whiteId: "BYE",
+        blackId: seededPlayers[topSeedIdx].id,
+        result: "½-½" as Result, // bye = auto-advance
+      });
+      board++;
+      continue;
+    }
+
+    const topPlayer = seededPlayers[topSeedIdx];
+    const bottomPlayer = seededPlayers[bottomSeedIdx];
+
+    // Higher seed gets White
+    games.push({
+      id: `r${roundNumber}b${board}`,
+      round: roundNumber,
+      board,
+      whiteId: topPlayer.id,
+      blackId: bottomPlayer.id,
+      result: "*" as Result,
+    });
+    board++;
+  }
+
+  return games;
+}
+
+/**
+ * Generate the next elimination round by advancing winners from the previous round.
+ *
+ * Winners are determined by game results:
+ *   - "1-0" → White wins
+ *   - "0-1" → Black wins
+ *   - Bye games → the non-BYE player advances
+ *   - Draws are not valid in elimination (director must pick a winner)
+ *
+ * Winners are paired in order: winner of board 1 vs winner of board 2, etc.
+ *
+ * @param previousRoundGames - Games from the previous elimination round (must all have results)
+ * @param allPlayers - Full player list for looking up Player objects
+ * @param roundNumber - The round number to assign
+ * @returns Array of Game objects for the next elimination round
+ */
+export function generateEliminationNextRound(
+  previousRoundGames: Game[],
+  allPlayers: Player[],
+  roundNumber: number
+): Game[] {
+  const playerMap = new Map(allPlayers.map((p) => [p.id, p]));
+
+  // Determine winners from previous round, preserving board order
+  const sortedGames = [...previousRoundGames].sort((a, b) => a.board - b.board);
+  const winners: Player[] = [];
+
+  for (const game of sortedGames) {
+    let winnerId: string | null = null;
+
+    if (game.whiteId === "BYE") {
+      winnerId = game.blackId;
+    } else if (game.blackId === "BYE") {
+      winnerId = game.whiteId;
+    } else if (game.result === "1-0") {
+      winnerId = game.whiteId;
+    } else if (game.result === "0-1") {
+      winnerId = game.blackId;
+    } else {
+      // Draw in elimination — shouldn't happen, but treat as unresolved
+      continue;
+    }
+
+    const winner = playerMap.get(winnerId);
+    if (winner) winners.push(winner);
+  }
+
+  if (winners.length < 2) return []; // Tournament is over
+
+  // Pair winners in bracket order: winner 1 vs winner 2, winner 3 vs winner 4, etc.
+  const games: Game[] = [];
+  let board = 1;
+
+  for (let i = 0; i < winners.length; i += 2) {
+    if (i + 1 >= winners.length) {
+      // Odd number of winners — bye for the last one
+      games.push({
+        id: `r${roundNumber}b${board}`,
+        round: roundNumber,
+        board,
+        whiteId: "BYE",
+        blackId: winners[i].id,
+        result: "½-½" as Result,
+      });
+      board++;
+      continue;
+    }
+
+    const p1 = winners[i];
+    const p2 = winners[i + 1];
+
+    games.push({
+      id: `r${roundNumber}b${board}`,
+      round: roundNumber,
+      board,
+      whiteId: p1.id,
+      blackId: p2.id,
+      result: "*" as Result,
+    });
+    board++;
+  }
+
+  return games;
+}
+
+/**
+ * Get the list of players who should advance from Swiss to Elimination.
+ * Takes the top N players from the Swiss standings.
+ *
+ * @param standings - Computed Swiss standings (already sorted by rank)
+ * @param cutoff - Number of players to advance (should be a power of 2 for clean brackets)
+ * @returns Array of Players in seed order (rank 1 = seed 1)
+ */
+export function getSwissCutoffPlayers(
+  standings: StandingRow[],
+  cutoff: number
+): Player[] {
+  return standings.slice(0, cutoff).map((row) => row.player);
+}
+
+/**
+ * Suggest the best cutoff size for a Swiss-to-Elimination transition.
+ * Returns the largest power of 2 that is ≤ playerCount, capped at 64.
+ *
+ * @param playerCount - Total number of players in the tournament
+ * @returns Suggested cutoff (always a power of 2)
+ */
+export function suggestElimCutoff(playerCount: number): number {
+  if (playerCount <= 2) return 2;
+  if (playerCount <= 4) return 4;
+  const maxCutoff = nearestPowerOf2(playerCount);
+  return Math.min(maxCutoff, 64);
+}

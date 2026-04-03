@@ -166,8 +166,10 @@ function avgElo(rows: StandingRow[]): number {
 
 function formatFormat(fmt?: string): string {
   if (fmt === "swiss") return "Swiss";
+  if (fmt === "doubleswiss") return "Double Swiss";
   if (fmt === "roundrobin") return "Round Robin";
   if (fmt === "elimination") return "Elimination";
+  if (fmt === "swiss_elim") return "Swiss + Elimination";
   return fmt ?? "Swiss";
 }
 

@@ -64,15 +64,19 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type WizardMode = "select" | "quickstart" | "schedule";
+type WizardMode = "select" | "quickstart" | "schedule" | "large_event";
 
 interface WizardData {
   name: string;
   venue: string;
   date: string;
   description: string;
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
   rounds: number;
+  /** For swiss_elim: number of Swiss rounds before elimination cutoff. */
+  swissRounds?: number;
+  /** For swiss_elim: number of players to advance to elimination bracket. */
+  elimCutoff?: number;
   maxPlayers: number;
   timeBase: number;
   timeIncrement: number;
@@ -241,7 +245,7 @@ function HeroPanel({
 }: {
   step: number;
   isDark: boolean;
-  mode: "quickstart" | "schedule";
+  mode: "quickstart" | "schedule" | "large_event";
   onClose?: () => void;
 }) {
   const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
@@ -451,7 +455,7 @@ function ModeSelect({
   onClose,
 }: {
   isDark: boolean;
-  onSelect: (mode: "quickstart" | "schedule") => void;
+  onSelect: (mode: "quickstart" | "schedule" | "large_event") => void;
   onClose: () => void;
 }) {
   return (
@@ -505,7 +509,7 @@ function ModeSelect({
         </div>
 
         {/* Mode cards */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {/* Quickstart */}
           <button
             type="button"
@@ -619,6 +623,71 @@ function ModeSelect({
             <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
               <Clock className="w-3.5 h-3.5" />
               ~2 minutes · 4 steps
+            </div>
+
+            {/* Arrow */}
+            <ArrowRight
+              className="absolute bottom-6 right-6 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1"
+              style={{ color: "rgba(255,255,255,0.25)" }}
+            />
+          </button>
+
+          {/* Large Event */}
+          <button
+            type="button"
+            onClick={() => onSelect("large_event")}
+            className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
+            style={{
+              padding: "16px 16px",
+              background: "rgba(255,255,255,0.06)",
+              border: "2px solid rgba(255,255,255,0.12)",
+              backdropFilter: "blur(8px)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+              (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+            }}
+          >
+            {/* Badge */}
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+              style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.70)" }}
+            >
+              New
+            </span>
+
+            {/* Icon */}
+            <div
+              className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.10)" }}
+            >
+              <Crown className="w-6 h-6 text-white" strokeWidth={1.8} />
+            </div>
+
+            <div>
+              <h3
+                className="text-xl font-bold text-white mb-1.5"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Large Event
+              </h3>
+              <p className="text-white/55 text-sm leading-relaxed">
+                Swiss rounds to seed players, then a single-elimination bracket. Built for 30+ player events.
+              </p>
+            </div>
+
+            {/* Details */}
+            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <Users className="w-3.5 h-3.5" />
+              Up to 100 players
             </div>
 
             {/* Arrow */}
@@ -779,7 +848,7 @@ function QuickstartForm({
                 className="text-xs lg:text-sm font-semibold"
                 style={{ color: data.format !== "swiss" ? T.green : isDark ? T.dText : T.lText }}
               >
-                {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination"}
+                {data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : "Elimination"}
               </span>
               <ChevronDown
                 className="w-3.5 h-3.5 transition-transform duration-200"
@@ -1950,7 +2019,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     setTimeout(() => setSlugSaved(false), 2000);
   };
 
-  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "roundrobin" ? "Round Robin" : "Elimination";
+  const formatLabel = data.format === "swiss" ? "Swiss" : data.format === "doubleswiss" ? "Double Swiss" : data.format === "roundrobin" ? "Round Robin" : data.format === "swiss_elim" ? "Swiss + Elimination" : "Elimination";
   const timeLabel = data.timePreset === "custom" ? `${data.timeBase}+${data.timeIncrement}` : data.timePreset;
 
   return (
@@ -2291,9 +2360,26 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
   }, [open]);
 
   // When entering quickstart mode, auto-fill today's date
-  const handleSelectMode = (m: "quickstart" | "schedule") => {
+  const handleSelectMode = (m: "quickstart" | "schedule" | "large_event") => {
     if (m === "quickstart") {
       setData((d) => ({ ...d, date: todayIso() }));
+    }
+    if (m === "large_event") {
+      // Pre-configure swiss_elim defaults: 100 max, 3 Swiss rounds, top-64 cutoff
+      setData((d) => ({
+        ...d,
+        date: todayIso(),
+        format: "swiss_elim" as const,
+        rounds: 3,
+        swissRounds: 3,
+        maxPlayers: 100,
+        elimCutoff: 64,
+      }));
+      // Use quickstart flow with pre-filled large event defaults
+      setMode("quickstart");
+      setStep(0);
+      setDirection(1);
+      return;
     }
     setMode(m);
     setStep(0);
@@ -2334,6 +2420,8 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       description: data.description,
       format: data.format,
       rounds: data.rounds,
+      ...(data.swissRounds ? { swissRounds: data.swissRounds } : {}),
+      ...(data.elimCutoff ? { elimCutoff: data.elimCutoff } : {}),
       maxPlayers: data.maxPlayers,
       timeBase: data.timeBase,
       timeIncrement: data.timeIncrement,

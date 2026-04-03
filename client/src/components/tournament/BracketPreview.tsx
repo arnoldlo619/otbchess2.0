@@ -15,7 +15,7 @@ import React, { useMemo } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Format = "swiss" | "doubleswiss" | "roundrobin" | "elimination";
+type Format = "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
 
 interface BracketPreviewProps {
   format: Format;
@@ -595,9 +595,14 @@ const FORMAT_META: Record<
     desc: "Every player faces every other player. Most comprehensive format.",
   },
   elimination: {
-    icon: "🏆",
+    icon: "\uD83C\uDFC6",
     label: "Single Elimination",
     desc: "Lose once and you're out. High-stakes bracket drama.",
+  },
+  swiss_elim: {
+    icon: "\uD83C\uDFC6",
+    label: "Swiss + Elimination",
+    desc: "Swiss rounds to seed players, then a single-elimination bracket for the top finishers.",
   },
 };
 

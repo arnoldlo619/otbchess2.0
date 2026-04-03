@@ -296,7 +296,7 @@ interface EmbeddedTournamentMeta {
   id: string;
   name: string;
   venue?: string;
-  format: "swiss" | "roundrobin" | "elimination";
+  format: "swiss" | "roundrobin" | "elimination" | "swiss_elim";
   rounds: number;
   maxPlayers: number;
   timePreset: string;

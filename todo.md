@@ -4465,3 +4465,40 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Apply Apple-like minimalist design: reduce noise, increase whitespace
 - [x] Quiet secondary data, elevate primary prep signals
 - [x] Write tests for new priority tier logic and practice flow
+
+## Phase 15: Swiss-to-Elimination Hybrid Format
+
+### Elimination Bracket Engine
+- [x] Build generateEliminationFirstRound() in swiss.ts (seed by rank, 1vN pairing, bye handling for non-power-of-2)
+- [x] Build generateEliminationNextRound() in swiss.ts (winner advancement, bracket order preservation)
+- [x] Handle first-round byes for non-power-of-2 fields
+- [x] Advance winners to next round, eliminate losers
+- [x] Add elimRoundsNeeded(), elimRoundLabel(), suggestElimCutoff(), getSwissCutoffPlayers() helpers
+
+### Swiss-Elim Hybrid Format
+- [x] Add "swiss_elim" format type to directorState
+- [x] Add elimCutoff, elimPhase, and swissRounds config to TournamentState
+- [x] Implement Swiss → Elimination phase transition logic in directorState reducer
+- [x] Generate elimination bracket seeded from Swiss standings
+
+### Director Console UI
+- [x] Add swiss_elim format to TournamentSettingsPanel format picker
+- [x] Show format label "Swiss + Elimination" in BracketPreview
+- [x] Show format label in InstagramCarouselModal
+- [x] Show format label in wizard review step
+
+### Large Event Wizard Card
+- [x] Add third "Large Event" card to ModeSelect screen (3-column grid)
+- [x] Pre-configure swiss_elim format with sensible defaults (100 max, 3 Swiss rounds, top-64 cutoff)
+- [x] Wire swissRounds and elimCutoff into registerTournament call
+
+### Integration
+- [x] Wire swiss_elim format into Join.tsx format type
+- [x] Wire swiss_elim format into tournamentRegistry TournamentConfig type
+
+### Tests
+- [x] 49 tests for elimination bracket engine — all passing
+- [x] Tests for generateEliminationFirstRound (power-of-2, non-power-of-2, byes, seeding, board numbers)
+- [x] Tests for generateEliminationNextRound (white/black winners, bye advancement, bracket order, odd winners)
+- [x] Tests for elimRoundsNeeded, elimRoundLabel, suggestElimCutoff, getSwissCutoffPlayers
+- [x] Integration tests: full 8-player QF→SF→Final flow, upset scenarios, 64-player bracket

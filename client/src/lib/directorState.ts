@@ -10,7 +10,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
-import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings } from "./swiss";
+import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, suggestElimCutoff, elimRoundLabel } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
 
@@ -28,7 +28,17 @@ export interface DirectorState {
   tournamentName: string;
   totalRounds: number;
   /** Tournament format — used to select the correct pairing engine. */
-  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination";
+  format: "swiss" | "doubleswiss" | "roundrobin" | "elimination" | "swiss_elim";
+  /** For swiss_elim: number of Swiss rounds before the elimination cutoff. */
+  swissRounds?: number;
+  /** For swiss_elim: current phase — starts in "swiss", transitions to "elimination" after cutoff. */
+  elimPhase?: "swiss" | "cutoff" | "elimination";
+  /** For swiss_elim: how many players advance to the elimination bracket. */
+  elimCutoff?: number;
+  /** For swiss_elim: label for the current elimination round (e.g. "Quarterfinals"). */
+  elimRoundLabelText?: string;
+  /** For swiss_elim: the players who advanced to the elimination bracket (seeded order). */
+  elimPlayers?: Player[];
   players: Player[];
   rounds: Round[];
   currentRound: number;
@@ -72,6 +82,10 @@ function getNewTournamentState(config: TournamentConfig): DirectorState {
     currentRound: 0,
     status: "registration",
     roundMinutes: 25,
+    ...(config.format === "swiss_elim" ? {
+      swissRounds: config.swissRounds ?? config.rounds,
+      elimPhase: "swiss" as const,
+    } : {}),
   };
 }
 
@@ -375,9 +389,23 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const startTournament = useCallback(() => {
     setState((prev) => {
       if (prev.players.length < 2) return prev;
-      const games = prev.format === "doubleswiss"
-        ? generateDoubleSwissPairings(prev.players, [], 1)
-        : generateSwissPairings(prev.players, [], 1);
+      let games: Game[];
+      if (prev.format === "doubleswiss") {
+        games = generateDoubleSwissPairings(prev.players, [], 1);
+      } else if (prev.format === "swiss_elim") {
+        games = generateSwissPairings(prev.players, [], 1);
+        const round1: Round = { number: 1, status: "in_progress", games };
+        return {
+          ...prev,
+          rounds: [round1],
+          currentRound: 1,
+          status: "in_progress",
+          elimPhase: "swiss",
+          swissRounds: prev.swissRounds ?? prev.totalRounds,
+        };
+      } else {
+        games = generateSwissPairings(prev.players, [], 1);
+      }
       const round1: Round = { number: 1, status: "in_progress", games };
       return { ...prev, rounds: [round1], currentRound: 1, status: "in_progress" };
     });
@@ -429,12 +457,55 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const generateNextRound = useCallback(() => {
     setState((prev) => {
       const nextRoundNum = prev.currentRound + 1;
-      if (nextRoundNum > prev.totalRounds) return prev;
 
       // Ensure current round is complete
       const currentRoundData = prev.rounds.find((r) => r.number === prev.currentRound);
       const allDone = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
       if (!allDone) return prev;
+
+      // ── Swiss-Elim format ──────────────────────────────────────────────
+      if (prev.format === "swiss_elim") {
+        const swissRoundCount = prev.swissRounds ?? prev.totalRounds;
+
+        // Still in Swiss phase
+        if (prev.elimPhase === "swiss" && prev.currentRound < swissRoundCount) {
+          const newGames = generateSwissPairings(prev.players, prev.rounds, nextRoundNum);
+          const newRound: Round = { number: nextRoundNum, status: "in_progress", games: newGames };
+          return {
+            ...prev,
+            rounds: [...prev.rounds, newRound],
+            currentRound: nextRoundNum,
+          };
+        }
+
+        // Swiss phase just completed — transition to cutoff
+        if (prev.elimPhase === "swiss" && prev.currentRound >= swissRoundCount) {
+          return { ...prev, elimPhase: "cutoff" };
+        }
+
+        // In elimination phase — advance winners
+        if (prev.elimPhase === "elimination") {
+          const lastRound = prev.rounds.find((r) => r.number === prev.currentRound);
+          if (!lastRound) return prev;
+          const allPlayersForLookup = prev.elimPlayers ?? prev.players;
+          const newGames = generateEliminationNextRound(lastRound.games, allPlayersForLookup, nextRoundNum);
+          if (newGames.length === 0) return prev; // tournament over
+          const playersRemaining = newGames.filter(g => g.whiteId !== "BYE" && g.blackId !== "BYE").length * 2;
+          const newRound: Round = { number: nextRoundNum, status: "in_progress", games: newGames };
+          return {
+            ...prev,
+            rounds: [...prev.rounds, newRound],
+            currentRound: nextRoundNum,
+            totalRounds: nextRoundNum + (newGames.length === 1 ? 0 : Math.ceil(Math.log2(playersRemaining))),
+            elimRoundLabelText: elimRoundLabel(newGames.length * 2),
+          };
+        }
+
+        return prev;
+      }
+
+      // ── Standard formats ───────────────────────────────────────────────
+      if (nextRoundNum > prev.totalRounds) return prev;
 
       // Use the correct pairing engine based on format
       const newGames = prev.format === "doubleswiss"
@@ -446,14 +517,40 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         games: newGames,
       };
 
-      // Mark tournament complete if this was the last round
-      const isLastRound = nextRoundNum === prev.totalRounds;
+      return {
+        ...prev,
+        rounds: [...prev.rounds, newRound],
+        currentRound: nextRoundNum,
+      };
+    });
+  }, []);
+
+  // Advance from Swiss to Elimination phase (swiss_elim format only)
+  const advanceToElimination = useCallback((cutoffSize: number) => {
+    setState((prev) => {
+      if (prev.format !== "swiss_elim" || prev.elimPhase !== "cutoff") return prev;
+
+      // Get standings from the Swiss phase
+      const standings = computeStandings(prev.players, prev.rounds);
+      const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
+
+      // Generate first elimination round
+      const nextRoundNum = prev.currentRound + 1;
+      const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
+      const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
+
+      // Calculate total rounds needed
+      const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
 
       return {
         ...prev,
         rounds: [...prev.rounds, newRound],
         currentRound: nextRoundNum,
-        status: isLastRound ? "in_progress" : "in_progress",
+        totalRounds: prev.currentRound + elimRoundsCount,
+        elimPhase: "elimination",
+        elimCutoff: cutoffSize,
+        elimPlayers: advancingPlayers,
+        elimRoundLabelText: elimRoundLabel(cutoffSize),
       };
     });
   }, []);
@@ -587,7 +684,11 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   // Derived values
   const currentRoundData = state.rounds.find((r) => r.number === state.currentRound);
   const allResultsIn = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
-  const canGenerateNext = allResultsIn && state.currentRound < state.totalRounds && state.status !== "registration";
+  // For swiss_elim in cutoff phase, block normal "Next Round" — director must use advanceToElimination
+  const isSwissElimCutoff = state.format === "swiss_elim" && state.elimPhase === "cutoff";
+  const isSwissElimSwissPhaseComplete = state.format === "swiss_elim" && state.elimPhase === "swiss" && state.currentRound >= (state.swissRounds ?? state.totalRounds);
+  const canGenerateNext = allResultsIn && state.status !== "registration" && !isSwissElimCutoff && !isSwissElimSwissPhaseComplete
+    && (state.format === "swiss_elim" ? state.elimPhase === "elimination" || state.currentRound < (state.swissRounds ?? state.totalRounds) : state.currentRound < state.totalRounds);
   const isRegistration = state.status === "registration";
   const canStart = isRegistration && state.players.length >= 2;
 
@@ -603,6 +704,8 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     canStart,
     liveStandings,
     lastSaved,
+    isSwissElimCutoff,
+    isSwissElimSwissPhaseComplete,
     addPlayer,
     addLatePlayer,
     updatePlayer,
@@ -613,6 +716,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     startTournament,
     enterResult,
     generateNextRound,
+    advanceToElimination,
     completeTournament,
     togglePause,
     resetTournament,
