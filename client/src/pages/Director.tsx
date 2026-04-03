@@ -39,6 +39,7 @@ import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
+import { EliminationBracketView, SwissElimCutoffScreen } from "@/components/EliminationBracketView";
 import {
   Crown,
   ChevronLeft,
@@ -1561,10 +1562,12 @@ export default function Director() {
     startTournament,
     enterResult,
     generateNextRound,
+    advanceToElimination,
     togglePause,
     resetTournament,
     completeTournament,
     updateSettings,
+    isSwissElimCutoff,
   } = useDirectorState(tournamentId);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
@@ -1608,16 +1611,21 @@ export default function Director() {
   }, [user?.id, tournamentId, state.tournamentName]);
 
   const [resetConfirm, setResetConfirm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"home" | "players" | "standings" | "settings">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "players" | "standings" | "bracket" | "settings">("home");
   const [swipeFlash, setSwipeFlash] = useState<"left" | "right" | null>(null);
   const [showQR, setShowQR] = useState(false);
 
+  // Show bracket tab only for elimination or swiss_elim formats
+  const isElimFormat = state.format === "elimination" || state.format === "swiss_elim";
+
   // Tab order for swipe navigation
-  const TAB_ORDER = ["home", "players", "standings", "settings"] as const;
-  type TabId = typeof TAB_ORDER[number];
+  type TabId = "home" | "players" | "standings" | "bracket" | "settings";
+  const TAB_ORDER: TabId[] = isElimFormat
+    ? ["home", "players", "standings", "bracket", "settings"]
+    : ["home", "players", "standings", "settings"];
 
   const navigateTab = useCallback((direction: "prev" | "next") => {
-    const idx = TAB_ORDER.indexOf(activeTab as TabId);
+    const idx = TAB_ORDER.indexOf(activeTab);
     const nextIdx = direction === "prev" ? idx - 1 : idx + 1;
     if (nextIdx < 0 || nextIdx >= TAB_ORDER.length) return;
     setActiveTab(TAB_ORDER[nextIdx]);
@@ -2311,8 +2319,9 @@ export default function Director() {
                 { id: "home", label: "Home" },
                 { id: "players", label: "Players" },
                 { id: "standings", label: "Standings" },
+                ...(isElimFormat ? [{ id: "bracket" as const, label: "Bracket" }] : []),
                 { id: "settings", label: "Settings" },
-              ] as const).map((tab) => (
+              ] as { id: TabId; label: string }[]).map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -2334,6 +2343,22 @@ export default function Director() {
                         : isDark ? "bg-white/08 text-white/50" : "bg-gray-200 text-gray-500"
                     }`}>
                       {state.players.length}
+                    </span>
+                  )}
+                  {tab.id === "bracket" && state.elimPhase === "elimination" && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                      activeTab === "bracket"
+                        ? isDark ? "bg-white/20 text-white" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        : isDark ? "bg-amber-400/20 text-amber-400" : "bg-amber-50 text-amber-600"
+                    }`}>
+                      Live
+                    </span>
+                  )}
+                  {tab.id === "bracket" && state.elimPhase === "cutoff" && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                      isDark ? "bg-amber-400/20 text-amber-400" : "bg-amber-50 text-amber-600"
+                    }`}>
+                      !
                     </span>
                   )}
                 </button>
@@ -2799,6 +2824,42 @@ export default function Director() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Swiss-to-Elimination cutoff banner — shown on Home tab when Swiss phase is done */}
+                  {allResultsIn && isSwissElimCutoff && (
+                    <div className={`rounded-xl border overflow-hidden ${
+                      isDark
+                        ? "bg-amber-500/08 border-amber-400/25"
+                        : "bg-amber-50 border-amber-200"
+                    }`}>
+                      <div className={`flex items-center gap-3 px-4 py-3 border-b ${
+                        isDark ? "border-amber-400/15" : "border-amber-200"
+                      }`}>
+                        <Trophy className={`w-4 h-4 flex-shrink-0 ${
+                          isDark ? "text-amber-400" : "text-amber-600"
+                        }`} />
+                        <p className={`text-sm font-semibold ${
+                          isDark ? "text-amber-300" : "text-amber-800"
+                        }`}>
+                          Swiss phase complete — ready to advance to Elimination
+                        </p>
+                      </div>
+                      <div className="px-4 py-3">
+                        <button
+                          onClick={() => setActiveTab("bracket")}
+                          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                            isDark
+                              ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/30"
+                              : "bg-amber-500 hover:bg-amber-600 text-white"
+                          }`}
+                        >
+                          <Trophy className="w-4 h-4" />
+                          Go to Bracket Tab — Generate Elimination Bracket
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   )}
@@ -4095,6 +4156,64 @@ export default function Director() {
               )}
             </div>
           )}
+          {/* ── Bracket Tab ─────────────────────────────────────────────────── */}
+          {activeTab === "bracket" && isElimFormat && (
+            <div className="flex flex-col gap-5 w-full">
+              {/* Swiss-to-Elimination cutoff screen */}
+              {state.format === "swiss_elim" && state.elimPhase === "cutoff" && (
+                <SwissElimCutoffScreen
+                  standings={liveStandings}
+                  defaultCutoff={state.elimCutoff ?? 8}
+                  isDark={isDark}
+                  onAdvance={(cutoff) => {
+                    advanceToElimination(cutoff);
+                  }}
+                />
+              )}
+
+              {/* Elimination bracket view */}
+              {(state.elimPhase === "elimination" || state.format === "elimination") && (() => {
+                // Determine which rounds are elimination rounds
+                const elimStartRound = state.format === "swiss_elim"
+                  ? (state.swissRounds ?? 0) + 1
+                  : 1;
+                const elimRounds = state.rounds.filter((r) => r.number >= elimStartRound);
+                return (
+                  <EliminationBracketView
+                    rounds={elimRounds}
+                    players={state.players}
+                    elimPlayers={state.elimPlayers ?? state.players}
+                    currentRound={state.currentRound}
+                    allResultsIn={allResultsIn}
+                    elimRoundLabelText={state.elimRoundLabelText}
+                    isDark={isDark}
+                    elimStartRound={elimStartRound}
+                    onEnterResult={(gameId, result) => {
+                      recordWithUndo(gameId, result, "*", `Elimination result recorded`);
+                      pushStandingsNow();
+                    }}
+                    onAdvanceRound={() => {
+                      generateNextRound();
+                    }}
+                    onCompleteTournament={() => {
+                      completeTournament();
+                    }}
+                  />
+                );
+              })()}
+
+              {/* Prompt for pure elimination format before bracket exists */}
+              {state.format === "elimination" && state.rounds.length === 0 && (
+                <div className={`flex flex-col items-center justify-center py-16 gap-3 rounded-2xl border ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                }`}>
+                  <Trophy className={`w-10 h-10 ${isDark ? "text-white/15" : "text-gray-200"}`} />
+                  <p className={`text-sm font-semibold ${isDark ? "text-white/30" : "text-gray-400"}`}>Start the tournament to generate the bracket</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Settings Tab ─────────────────────────────────────────────────── */}
           {activeTab === "settings" && (
             <div className="space-y-4">

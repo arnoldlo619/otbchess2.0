@@ -4502,3 +4502,62 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Tests for generateEliminationNextRound (white/black winners, bye advancement, bracket order, odd winners)
 - [x] Tests for elimRoundsNeeded, elimRoundLabel, suggestElimCutoff, getSwissCutoffPlayers
 - [x] Integration tests: full 8-player QF→SF→Final flow, upset scenarios, 64-player bracket
+
+## Phase 16: Director Console — Elimination Bracket UI
+
+- [ ] Build EliminationBracketView component with full bracket tree layout
+- [ ] Show round labels (Round of 64, Round of 32, QF, SF, Final) per column
+- [ ] Render match cards with player names, seeds, and ELO
+- [ ] Show match result inline (1-0 / 0-1 / ½-½) with winner highlighted
+- [ ] Add result entry buttons on each pending match card
+- [ ] Add "Advance to Next Round" button after all matches in a round are complete
+- [ ] Handle bye matches (auto-advance, visually distinct)
+- [ ] Wire EliminationBracketView into Director Console tab system
+- [ ] Show bracket tab only when format is "elimination" or "swiss_elim"
+- [ ] Add Swiss→Elimination cutoff transition screen for swiss_elim format
+- [ ] Write tests for bracket rendering logic
+
+## Phase 16: Director Console Elimination Bracket UI
+
+### EliminationBracketView Component
+- [x] Build EliminationBracketView component with full bracket tree layout
+- [x] Round columns with QF/SF/Final labels (computed from match count)
+- [x] Match cards showing player names, seeds, scores, and result buttons
+- [x] Result entry buttons (White wins / Draw / Black wins) per match card
+- [x] Bye match cards auto-advance top seeds (shown as "BYE" opponent)
+- [x] "Advance to Next Round" CTA after all results in current round are entered
+- [x] "Complete Tournament" CTA on the Final round
+- [x] Winner highlight (green glow) on completed matches
+- [x] Pending matches shown with amber "Pending" badge
+- [x] Responsive horizontal scroll for wide brackets
+
+### SwissElimCutoffScreen Component
+- [x] Build SwissElimCutoffScreen component for swiss_elim format
+- [x] Show full standings table with rank, name, score, and W/D/L
+- [x] Cutoff selector (slider + number input) to choose how many advance
+- [x] Preview of which players will advance (highlighted in green)
+- [x] "Generate Elimination Bracket" confirm button
+- [x] Cutoff defaults to state.elimCutoff (set in wizard)
+
+### Director Console Integration
+- [x] Add "Bracket" tab to Director Console tab bar (visible only for elimination/swiss_elim formats)
+- [x] "Live" badge on Bracket tab when elimination phase is active
+- [x] "!" badge on Bracket tab when Swiss phase is done and cutoff screen is pending
+- [x] Bracket tab shows SwissElimCutoffScreen when swiss_elim + elimPhase === "cutoff"
+- [x] Bracket tab shows EliminationBracketView when elimPhase === "elimination"
+- [x] Swiss-to-Elimination cutoff banner on Home tab with "Go to Bracket Tab" CTA
+- [x] advanceToElimination and isSwissElimCutoff wired from useDirectorState
+
+### Tests
+- [x] 47 unit/integration tests for EliminationBracketView logic (all passing)
+- [x] resultWinner logic (white win, black win, bye, draw, pending)
+- [x] getSeed and getPlayer lookup logic
+- [x] Round label computation (QF/SF/Final/R16/R32/R64)
+- [x] elimRoundsNeeded for various player counts
+- [x] suggestElimCutoff for various player counts
+- [x] getSwissCutoffPlayers with correct StandingRow signature
+- [x] Full 8-player bracket flow (QF → SF → Final)
+- [x] 6-player bracket with byes (top seeds get byes)
+- [x] Upset scenarios (lower seeds winning)
+- [x] 16-player bracket round labels
+- [x] Empty bracket edge cases
