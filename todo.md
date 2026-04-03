@@ -4561,3 +4561,41 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Upset scenarios (lower seeds winning)
 - [x] 16-player bracket round labels
 - [x] Empty bracket edge cases
+
+## Phase 17: Public Spectator Elimination Bracket View
+
+### PublicBracketView Component
+- [x] Build PublicBracketView component — read-only spectator bracket tree
+- [x] Round columns with Quarterfinals/Semifinals/Final/Round of N labels
+- [x] Match cards with player names, seeds, ELO, avatars, and result display
+- [x] Winner highlight (green row + crown icon) on completed matches
+- [x] Live badge (pulsing dot) on current round column header
+- [x] Completed round checkmark on past round column headers
+- [x] "Upcoming" label on future round match cards
+- [x] Bye cards shown as greyed-out "—" opponent
+- [x] Champion banner at bottom when the Final is complete (gold crown + player name)
+- [x] "Swiss Phase Complete — Awaiting bracket generation" state for swiss_elim cutoff phase
+- [x] "Bracket not yet generated" empty state for pure elimination before start
+- [x] Responsive horizontal scroll for wide brackets (overflow-x-auto)
+- [x] ChevronRight connector arrows between round columns
+
+### Tournament Spectator Page Integration
+- [x] Add "Bracket" tab to mobile tab bar (visible for elimination/swiss_elim formats)
+- [x] Bracket tab is the default active tab for elimination/swiss_elim formats
+- [x] Pulsing green dot on Bracket tab when not active (draws attention)
+- [x] Bracket tab content renders PublicBracketView with live state
+- [x] Desktop: full-width bracket view above pairings/standings columns
+- [x] elimStartRound computed from swissRounds config for swiss_elim
+- [x] isAwaitingCutoff computed from currentRound vs swissRounds vs existing elim rounds
+- [x] elimPlayers passed from DirectorState to PublicBracketView for seeding display
+
+### Tests
+- [x] 37 unit/integration tests for PublicBracketView logic (all passing)
+- [x] elimRoundLabel for Final/Semifinals/Quarterfinals/Round of N
+- [x] elimRoundsNeeded for 2/4/8/16/64 players
+- [x] generateEliminationFirstRound: 8 players (no byes), 6 players (2 byes), 5 players (3 byes), 2 players, 16 players
+- [x] generateEliminationNextRound: winner advancement, bye advancement, draw handling
+- [x] Full 8-player QF → SF → Final flow
+- [x] Upset scenario (lower seeds winning)
+- [x] isAwaitingCutoff logic (true/false conditions)
+- [x] elimStartRound computation for elimination vs swiss_elim vs swiss formats

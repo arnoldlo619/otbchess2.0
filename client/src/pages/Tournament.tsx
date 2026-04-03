@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
+import { PublicBracketView } from "@/components/PublicBracketView";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -1298,10 +1299,22 @@ export default function TournamentPage() {
     .find((r) => r.number === displayState.currentRound)
     ?.games.filter((g) => g.result === "*").length ?? 0;
 
-  // Mobile tab state for Pairings / Standings / Players
-  type MobileTab = "pairings" | "standings" | "players";
-  const MOBILE_TABS: MobileTab[] = ["pairings", "standings", "players"];
-  const [mobileTab, setMobileTab] = useState<MobileTab>("pairings");
+  // Determine if this is an elimination or swiss_elim format
+  const isElimFormat = config?.format === "elimination" || config?.format === "swiss_elim";
+  // For swiss_elim: determine where the elimination rounds start
+  const swissRounds = (config as { swissRounds?: number } | undefined)?.swissRounds ?? 0;
+  const elimStartRound = isElimFormat && config?.format === "swiss_elim" ? swissRounds + 1 : 1;
+  // Awaiting cutoff: swiss_elim format, swiss rounds done, no elim rounds generated yet
+  const isAwaitingCutoff = config?.format === "swiss_elim" &&
+    displayState.currentRound > swissRounds &&
+    displayState.rounds.filter((r) => r.number > swissRounds).length === 0;
+
+  // Mobile tab state for Pairings / Standings / Players [/ Bracket]
+  type MobileTab = "pairings" | "standings" | "players" | "bracket";
+  const MOBILE_TABS: MobileTab[] = isElimFormat
+    ? ["bracket", "pairings", "standings", "players"]
+    : ["pairings", "standings", "players"];
+  const [mobileTab, setMobileTab] = useState<MobileTab>(isElimFormat ? "bracket" : "pairings");
   const [swipeFlash, setSwipeFlash] = useState<"left" | "right" | null>(null);
 
   const navigateMobileTab = useCallback((direction: "prev" | "next") => {
@@ -1515,11 +1528,11 @@ export default function TournamentPage() {
             {/* ── Mobile tab bar (hidden on lg+) ─────────────────────────── */}
             <div className="flex lg:hidden mb-4 rounded-2xl overflow-hidden border p-1 gap-1"
               style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#F0F5EE", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#EEEED2" }}>
-              {(["pairings", "standings", "players"] as const).map((tab) => (
+              {MOBILE_TABS.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setMobileTab(tab)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 capitalize ${
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 capitalize relative ${
                     mobileTab === tab
                       ? isDark
                         ? "bg-[#3D6B47] text-white shadow-sm"
@@ -1529,7 +1542,11 @@ export default function TournamentPage() {
                       : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "bracket" ? "Bracket" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {/* Live dot for bracket tab when elim is active */}
+                  {tab === "bracket" && isElimFormat && mobileTab !== "bracket" && (
+                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
+                  )}
                 </button>
               ))}
             </div>
@@ -1551,6 +1568,18 @@ export default function TournamentPage() {
               ref={swipeContainerRef}
               className="block lg:hidden"
             >
+              {mobileTab === "bracket" && isElimFormat && (
+                <PublicBracketView
+                  rounds={displayState.rounds}
+                  players={displayState.players}
+                  elimPlayers={(displayState as DirectorState & { elimPlayers?: typeof displayState.players }).elimPlayers ?? []}
+                  currentRound={displayState.currentRound}
+                  elimStartRound={elimStartRound}
+                  isAwaitingCutoff={isAwaitingCutoff}
+                  format={config?.format}
+                  isDark={isDark}
+                />
+              )}
               {mobileTab === "pairings" && (
                 <PairingsPanel
                   players={displayState.players}
@@ -1599,7 +1628,24 @@ export default function TournamentPage() {
               )}
             </div>
 
-            {/* ── Desktop layout (unchanged) ────────────────────────────── */}
+            {/* ── Desktop layout ───────────────────────────────────── */}
+
+            {/* Bracket view — full width above pairings for elim formats (desktop) */}
+            {isElimFormat && (
+              <div className="hidden lg:block mb-8">
+                <PublicBracketView
+                  rounds={displayState.rounds}
+                  players={displayState.players}
+                  elimPlayers={(displayState as DirectorState & { elimPlayers?: typeof displayState.players }).elimPlayers ?? []}
+                  currentRound={displayState.currentRound}
+                  elimStartRound={elimStartRound}
+                  isAwaitingCutoff={isAwaitingCutoff}
+                  format={config?.format}
+                  isDark={isDark}
+                />
+              </div>
+            )}
+
             <div className="hidden lg:grid lg:grid-cols-[1fr_380px] gap-8">
               {/* Left: Pairings */}
               <div>
