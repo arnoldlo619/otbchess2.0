@@ -4732,3 +4732,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add ClubGrowthContribution section to TournamentAnalytics page (leads summary + pipeline insight)
 - [x] Upgrade Recommendations engine with no-show and returning-player signals
 - [x] Write 50 unit tests for new analytics computation logic (attendance, post-event, club growth, comparison, repeat-event, extended recommendations)
+
+## Phase 28: Style-Aware Pairings Engine (COMPLETED)
+
+- [x] Audit codebase — confirmed no prior Style-Aware Pairings implementation existed
+- [x] Build styleAwarePairings.ts engine: 3 pairing modes (Balanced, Style-Aware, Sharp)
+- [x] Implement style-signal scoring: aggression, tactical, opening sharpness, volatility, game length tendency, confidence
+- [x] Implement synthesiseStyleProfile: primary/secondary tags, summary, status (ready/limited/low_confidence/fallback)
+- [x] Implement computeStyleCompatScore with mode-specific logic (contrast for style_aware, combined sharpness for sharp)
+- [x] Implement computeDynamismScore for sharp game potential
+- [x] Implement computeEloProximityScore with configurable tolerance
+- [x] Implement evaluateCandidatePairing with validity checks, rematch penalty, auto-fallback on weak data
+- [x] Implement generateStyleAwarePairings: greedy best-candidate algorithm, bye assignment, color alternation
+- [x] Implement assessPoolReadiness: aggregate style data quality across player pool
+- [x] Implement buildPairingExplanation: human-readable labels + chips + confidence notes
+- [x] Build StyleAwarePairingsPanel.tsx component: mode selector, organizer controls, style profile chips, pairing preview
+- [x] Integrate StyleAwarePairingsPanel into Director Dashboard registration phase (collapsible Pro section)
+- [x] Add showStylePanel state to Director.tsx
+- [x] Write 61 unit tests — all passing, 0 regressions introduced
