@@ -514,6 +514,8 @@ function PairingsSection({
   isDark: boolean;
 }) {
   const [activeRound, setActiveRound] = useState(currentRound);
+  const [boardSearch, setBoardSearch] = useState("");
+  const boardSearchRef = useRef<HTMLInputElement>(null);
   useEffect(() => setActiveRound(currentRound), [currentRound]);
 
   const round = rounds.find((r) => r.number === activeRound);
@@ -523,14 +525,67 @@ function PairingsSection({
     return m;
   }, [players]);
 
+  // Filter games by player name/username search
+  const filteredGames = useMemo(() => {
+    if (!round) return [];
+    if (!boardSearch.trim()) return round.games;
+    const q = boardSearch.toLowerCase().trim();
+    return round.games.filter((game) => {
+      const white = playerMap.get(game.whiteId);
+      const black = playerMap.get(game.blackId);
+      return (
+        white?.name.toLowerCase().includes(q) ||
+        white?.username?.toLowerCase().includes(q) ||
+        black?.name.toLowerCase().includes(q) ||
+        black?.username?.toLowerCase().includes(q) ||
+        String(game.board) === q
+      );
+    });
+  }, [round, boardSearch, playerMap]);
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
           Pairings
         </h3>
         <span className="text-sm text-muted-foreground">{round?.games.length ?? 0} boards</span>
       </div>
+
+      {/* Board search filter */}
+      {round && round.games.length > 0 && (
+        <div
+          className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border mb-3 transition-all ${
+            isDark
+              ? "bg-[oklch(0.22_0.06_145)] border-white/10 focus-within:border-[#3D6B47]/50 focus-within:ring-1 focus-within:ring-[#3D6B47]/20"
+              : "bg-white border-[#EEEED2] focus-within:border-[#3D6B47]/40 focus-within:ring-1 focus-within:ring-[#3D6B47]/10"
+          }`}
+        >
+          <Search className={`w-4 h-4 flex-shrink-0 transition-colors ${
+            boardSearch ? "text-[#3D6B47]" : "text-muted-foreground"
+          }`} />
+          <input
+            ref={boardSearchRef}
+            type="text"
+            value={boardSearch}
+            onChange={(e) => setBoardSearch(e.target.value)}
+            placeholder="Find a player or board number…"
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+          />
+          {boardSearch && (
+            <button
+              onClick={() => { setBoardSearch(""); boardSearchRef.current?.focus(); }}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Round tabs */}
       {rounds.length > 1 && (
@@ -561,9 +616,15 @@ function PairingsSection({
           <Swords className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Pairings not yet published</p>
         </div>
+      ) : filteredGames.length === 0 ? (
+        <div className={`text-center py-8 rounded-2xl border ${isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
+          <Search className="w-7 h-7 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm font-semibold text-foreground mb-1">No match found</p>
+          <p className="text-xs text-muted-foreground">Try a different name or board number</p>
+        </div>
       ) : (
         <div className="space-y-2">
-          {round.games.map((game) => {
+          {filteredGames.map((game) => {
             const white = playerMap.get(game.whiteId);
             const black = playerMap.get(game.blackId);
             const isFollowed = followedPlayerId === game.whiteId || followedPlayerId === game.blackId;

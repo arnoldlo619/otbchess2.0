@@ -267,7 +267,7 @@ export function SpectatorQRScreen({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-[110] flex flex-col"
+      className="fixed inset-0 z-[10000] flex flex-col"
       style={{ background: "oklch(0.13 0.06 240)" }}
       role="dialog"
       aria-modal="true"

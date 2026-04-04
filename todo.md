@@ -4750,3 +4750,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Integrate StyleAwarePairingsPanel into Director Dashboard registration phase (collapsible Pro section)
 - [x] Add showStylePanel state to Director.tsx
 - [x] Write 61 unit tests — all passing, 0 regressions introduced
+
+## Phase 29: QR Projection Screen Fix + Spectator Board Search
+
+- [x] Fix SpectatorQRScreen: bumped z-index to z-[10000] (above MinimalTournamentNav's z-[9999]) so the X close button is never obscured
+- [x] Add board/player search filter to PairingsSection in PublicTournament.tsx — searches by player name, chess.com username, or board number with empty-state handling
