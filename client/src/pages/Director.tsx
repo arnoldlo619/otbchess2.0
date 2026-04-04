@@ -43,6 +43,8 @@ import { EliminationBracketView, SwissElimCutoffScreen } from "@/components/Elim
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 import { StyleAwarePairingsPanel } from "@/components/StyleAwarePairingsPanel";
 import { computeStyleSignals, synthesiseStyleProfile, type StylePairingPlayer } from "@/lib/styleAwarePairings";
+import { EditPlayerModal } from "@/components/EditPlayerModal";
+import { PairingSwapModal } from "@/components/PairingSwapModal";
 import {
   Crown,
   ChevronLeft,
@@ -1560,6 +1562,7 @@ export default function Director() {
     updatePlayer,
     removePlayer,
     swapBoards,
+    replaceRoundGames,
     assignBye,
     revokeBye,
     startTournament,
@@ -1760,6 +1763,10 @@ export default function Director() {
   const [boardSearch, setBoardSearch] = useState("");
   const [showNextRoundConfirm, setShowNextRoundConfirm] = useState(false);
   const [showStylePanel, setShowStylePanel] = useState(false);
+  // ── Edit Player modal state ───────────────────────────────────────────────
+  const [editingPlayer, setEditingPlayer] = useState<import("@/lib/tournamentData").Player | null>(null);
+  // ── Pairing Swap modal state ──────────────────────────────────────────────
+  const [swapModalOpen, setSwapModalOpen] = useState(false);
 
   // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
   // When the Boards tab is active, pressing 1 / D / 0 records the result for
@@ -2547,6 +2554,16 @@ export default function Director() {
                                       isDark ? "bg-white/06 text-white/60" : "bg-gray-100 text-gray-500"
                                     }`}>{p.elo}</span>
                                   ) : null}
+                                  {/* Edit player button */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setEditingPlayer(p); }}
+                                    className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                      isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-gray-100 text-gray-400"
+                                    }`}
+                                    title="Edit player name / ELO"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
                                   {/* Remove button */}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); removePlayer(p.id); toast.success(`${p.name} removed`); }}
@@ -3038,6 +3055,16 @@ export default function Director() {
                                   </div>
                                 </div>
 
+                                {/* Edit player button (in-progress) */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEditingPlayer(player); }}
+                                  className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                    isDark ? "hover:bg-white/08 text-white/40" : "hover:bg-gray-100 text-gray-400"
+                                  }`}
+                                  title="Edit player name / ELO"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
                                 {/* Score */}
                                 <div className="flex-shrink-0 text-right">
                                   <span className={`${scoreSize} font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
@@ -3047,10 +3074,9 @@ export default function Director() {
                                   <p className={`text-[11px] font-semibold ${ isDark ? "text-white/35" : "text-gray-400"}`}>pts</p>
                                 </div>
                               </div>
-                            );
+                             );
                           })}
                         </div>
-
                         {/* Action buttons */}
                         <div className={`flex flex-wrap gap-2 px-5 pb-4 pt-3 border-t ${ isDark ? "border-white/06" : "border-[#3D6B47]/08"}`}>
                           <Link href={`/tournament/${tournamentId}`}>
@@ -3188,6 +3214,20 @@ export default function Director() {
                             </button>
                           );
                         })()}
+                        {/* Swap Pairings button — opens PairingSwapModal */}
+                        {currentRoundData && !allResultsIn && (
+                          <button
+                            onClick={() => setSwapModalOpen(true)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+                              isDark
+                                ? "bg-white/06 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/80"
+                                : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                            }`}
+                            title="Swap player board assignments"
+                          >
+                            <ArrowLeftRight className="w-3 h-3" /> Swap Pairings
+                          </button>
+                        )}
                         {/* Edit Boards toggle — only for Swiss/RR formats (not Double Swiss) during active round */}
                         {state.format !== "doubleswiss" && currentRoundData && !allResultsIn && (
                           <button
@@ -4853,6 +4893,38 @@ export default function Director() {
         onDismiss={dismissUndo}
         isDark={isDark}
       />
+
+      {/* ── Edit Player Modal ─────────────────────────────────────────────── */}
+      <EditPlayerModal
+        open={editingPlayer !== null}
+        player={editingPlayer}
+        tournamentRatingType={tournamentConfig?.ratingType ?? "rapid"}
+        onSave={(updated) => {
+          updatePlayer(updated.id, {
+            name: updated.name,
+            elo: updated.elo,
+            rapidElo: updated.rapidElo,
+            blitzElo: updated.blitzElo,
+          });
+          toast.success(`${updated.name} updated`);
+        }}
+        onClose={() => setEditingPlayer(null)}
+      />
+
+      {/* ── Pairing Swap Modal ──────────────────────────────────────────────── */}
+      {currentRoundData && (
+        <PairingSwapModal
+          open={swapModalOpen}
+          games={currentRoundData.games}
+          players={state.players}
+          roundNumber={state.currentRound}
+          onSwap={(updatedGames) => {
+            replaceRoundGames(updatedGames);
+            toast.success("Board assignments updated");
+          }}
+          onClose={() => setSwapModalOpen(false)}
+        />
+      )}
 
       {/* ── Mobile floating "Back to Home" pill ─────────────────────────── */}
       {/* Visible on mobile only when on a non-home tab, so the director can quickly jump back */}

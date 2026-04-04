@@ -590,6 +590,16 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     }));
   }, []);
 
+  // Replace the games array for the current round (used by PairingSwapModal)
+  const replaceRoundGames = useCallback((updatedGames: Game[]) => {
+    setState((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((r) =>
+        r.number === prev.currentRound ? { ...r, games: updatedGames } : r
+      ),
+    }));
+  }, []);
+
   // Update an existing player's mutable fields (name, elo, title) in the roster
   const updatePlayer = useCallback(
     (playerId: string, patch: Partial<Pick<Player, "name" | "elo" | "title" | "rapidElo" | "blitzElo">>) => {
@@ -711,6 +721,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     updatePlayer,
     removePlayer,
     swapBoards,
+    replaceRoundGames,
     assignBye,
     revokeBye,
     startTournament,
