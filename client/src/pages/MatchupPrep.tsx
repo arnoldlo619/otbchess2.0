@@ -24,6 +24,7 @@ import {
   Zap, AlertCircle, Info, Crosshair, Flame
 } from "lucide-react";
 import { UserRepertoirePanel } from "../components/UserRepertoirePanel";
+import { CoachInsightCard } from "../components/CoachInsightCard";
 import {
   UserRepertoire,
   loadUserRepertoire,
@@ -31,6 +32,14 @@ import {
   generateMatchupSummary,
   type EnrichedPrepLine,
 } from "../lib/userRepertoire";
+import {
+  type InsightContext,
+  type QuotaState,
+  type CoachInsight,
+  getQuotaState,
+  getSavedInsights,
+  getInsightsForOpponent,
+} from "../lib/coachInsight";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -202,6 +211,12 @@ export default function MatchupPrep() {
       gamesAnalyzed: report.opponent.gamesAnalyzed,
     }, enrichedLines);
   }, [report, repertoire, enrichedLines]);
+
+  // Coach insight quota state
+  const [quota, setQuota] = useState<QuotaState>(() => getQuotaState("free"));
+  const refreshQuota = useCallback(() => {
+    setQuota(getQuotaState("free"));
+  }, []);
 
   // Practice mode state
   const [practiceIndex, setPracticeIndex] = useState(0);
@@ -819,6 +834,58 @@ export default function MatchupPrep() {
                   </div>
                 )}
 
+                {/* Coach Insight Card — only when report is loaded */}
+                {report && (
+                  <CoachInsightCard
+                    context={{
+                      opponentUsername: report.opponent.username,
+                      insightType: "matchup_overview",
+                      gamesAnalyzed: report.opponent.gamesAnalyzed,
+                      overallWinRate: report.opponent.overall.winRate,
+                      asWhiteWinRate: report.opponent.asWhite.winRate,
+                      asBlackWinRate: report.opponent.asBlack.winRate,
+                      avgGameLength: report.opponent.avgGameLength,
+                      topWhiteOpenings: report.opponent.whiteOpenings.slice(0, 3).map(o => ({
+                        name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
+                      })),
+                      topBlackOpenings: report.opponent.blackOpenings.slice(0, 3).map(o => ({
+                        name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
+                      })),
+                      firstMoveAsWhite: report.opponent.firstMoveAsWhite.map(m => ({
+                        move: m.move, pct: m.pct,
+                      })),
+                      endgameProfile: {
+                        checkmates: report.opponent.endgameProfile.checkmates,
+                        resignations: report.opponent.endgameProfile.resignations,
+                        timeouts: report.opponent.endgameProfile.timeouts,
+                        total: report.opponent.endgameProfile.total,
+                      },
+                      userRepertoire: repertoire.whiteFirstMove !== null ? {
+                        whiteFirstMove: repertoire.whiteFirstMove,
+                        blackVsE4: repertoire.blackVsE4,
+                        blackVsD4: repertoire.blackVsD4,
+                        expectedColor: repertoire.expectedColor,
+                      } : undefined,
+                      topPrepLines: enrichedLines.slice(0, 3).map(l => ({
+                        name: l.name, moves: l.moves, rationale: l.rationale,
+                        confidence: l.confidence, collisionScore: l.collisionScore,
+                      })),
+                      matchupSummary: matchupSummary ? {
+                        likelyBattle: matchupSummary.likelyBattle,
+                        studyFirst: matchupSummary.studyFirst ?? "",
+                        prepRisk: matchupSummary.prepRisk ?? "",
+                        colorAdvice: matchupSummary.colorAdvice ?? "",
+                      } : undefined,
+                    }}
+                    quota={quota}
+                    onQuotaConsumed={refreshQuota}
+                    existingInsight={
+                      getInsightsForOpponent(report.opponent.username)
+                        .find(i => i.insightType === "matchup_overview") ?? null
+                    }
+                  />
+                )}
+
                 {/* Next step nudge */}
                 <NextStepNudge
                   label="Ready to study key lines?"
@@ -877,6 +944,50 @@ export default function MatchupPrep() {
                         />
                       ))}
                     </div>
+
+                    {/* Coach Insight for top Train First line */}
+                    {report && enrichedLines.length > 0 && (() => {
+                      const topLine = enrichedLines[0];
+                      return (
+                        <CoachInsightCard
+                          context={{
+                            opponentUsername: report.opponent.username,
+                            insightType: "key_line",
+                            gamesAnalyzed: report.opponent.gamesAnalyzed,
+                            overallWinRate: report.opponent.overall.winRate,
+                            asWhiteWinRate: report.opponent.asWhite.winRate,
+                            asBlackWinRate: report.opponent.asBlack.winRate,
+                            avgGameLength: report.opponent.avgGameLength,
+                            topWhiteOpenings: report.opponent.whiteOpenings.slice(0, 2).map(o => ({
+                              name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
+                            })),
+                            topBlackOpenings: report.opponent.blackOpenings.slice(0, 2).map(o => ({
+                              name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
+                            })),
+                            firstMoveAsWhite: report.opponent.firstMoveAsWhite.map(m => ({ move: m.move, pct: m.pct })),
+                            endgameProfile: {
+                              checkmates: report.opponent.endgameProfile.checkmates,
+                              resignations: report.opponent.endgameProfile.resignations,
+                              timeouts: report.opponent.endgameProfile.timeouts,
+                              total: report.opponent.endgameProfile.total,
+                            },
+                            userRepertoire: repertoire.whiteFirstMove !== null ? {
+                              whiteFirstMove: repertoire.whiteFirstMove,
+                              blackVsE4: repertoire.blackVsE4,
+                              blackVsD4: repertoire.blackVsD4,
+                              expectedColor: repertoire.expectedColor,
+                            } : undefined,
+                            focusLine: { name: topLine.name, moves: topLine.moves, rationale: topLine.rationale },
+                          }}
+                          quota={quota}
+                          onQuotaConsumed={refreshQuota}
+                          existingInsight={
+                            getInsightsForOpponent(report.opponent.username)
+                              .find(i => i.insightType === "key_line") ?? null
+                          }
+                        />
+                      );
+                    })()}
 
                     {/* Next step nudge */}
                     <NextStepNudge

@@ -4702,3 +4702,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] "or set manually" divider — manual selectors still available for override
 - [x] Persist chesscomUsername to localStorage alongside repertoire choices
 - [x] 44 unit tests: classifyWhiteFirstMove (9), classifyBlackVsE4 (9), classifyBlackVsD4 (10), parsePgnHeaders (8), integration pipeline (5), edge cases (3)
+
+## Phase 26: Matchup Prep Phase 7 — Coach Insight Engine (COMPLETED)
+
+- [x] Built coachInsight.ts lib: QUOTA_CONFIG (free=1/month, pro=10/month), CoachInsight type, InsightType union, QuotaState interface, InsightContext interface
+- [x] Usage tracking: getUsageRecord(), incrementUsage(), resetUsageForTesting() — localStorage-persisted monthly counter with auto-reset
+- [x] getQuotaState(plan): returns { used, limit, remaining, exhausted, resetDate } — drives UI gating
+- [x] Saved insights: getSavedInsights(), saveInsight(), unsaveInsight(), getInsightsForOpponent() — localStorage-persisted per-opponent insight library
+- [x] buildCoachPrompt(ctx): rich context-aware prompt builder — includes opponent stats, user repertoire, top prep lines, matchup summary signals, and focus line for key_line type
+- [x] generateInsightId(): unique ID generator for insight deduplication
+- [x] INSIGHT_TYPE_LABELS / INSIGHT_TYPE_DESCRIPTIONS: human-readable labels and descriptions for all 4 insight types
+- [x] Server endpoint POST /api/prep/coach-insight: receives InsightContext, builds prompt, calls BUILT_IN_FORGE_API (LLM), returns coaching text — API key stays server-side
+- [x] Built CoachInsightCard component: premium Apple-like UI — generate button with Sparkles icon, loading skeleton, insight text display, save/bookmark toggle, quota meter, exhausted state with upgrade CTA
+- [x] Wire CoachInsightCard into Scout tab (matchup_overview insight)
+- [x] Wire CoachInsightCard into Key Lines tab (key_line insight for top collision-ranked line)
+- [x] 38 unit tests: QUOTA_CONFIG structure, usage tracking, getQuotaState (all states), saved insights CRUD, buildCoachPrompt (content, personalization, focus line), generateInsightId uniqueness, INSIGHT_TYPE_LABELS/DESCRIPTIONS completeness

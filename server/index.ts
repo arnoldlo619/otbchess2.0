@@ -504,6 +504,76 @@ export function createApp() {
     }
   });
 
+  // ── Coach Insight: POST /api/prep/coach-insight ─────────────────────────────
+  // Generates a coach-like insight from prep data using the built-in LLM.
+  // Rate-limited to prevent abuse. No auth required (quota tracked client-side).
+  app.post("/api/prep/coach-insight", rateLimit({ windowMs: 60_000, max: 10 }), async (req: any, res) => {
+    try {
+      const { promptJson } = req.body;
+      if (!promptJson || typeof promptJson !== "string") {
+        res.status(400).json({ error: "promptJson is required" }); return;
+      }
+
+      let parsed: { system: string; user: string };
+      try {
+        parsed = JSON.parse(promptJson);
+      } catch {
+        res.status(400).json({ error: "Invalid promptJson format" }); return;
+      }
+
+      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY;
+      const forgeApiUrl = process.env.BUILT_IN_FORGE_API_URL;
+
+      if (!forgeApiKey || !forgeApiUrl) {
+        // Fallback: return a structured placeholder when LLM is unavailable
+        res.json({
+          insight: "Coach insight is not available in this environment. Please configure the LLM API credentials.",
+          model: "unavailable",
+        });
+        return;
+      }
+
+      // Call the Forge/OpenAI-compatible chat completions endpoint
+      const llmRes = await fetch(`${forgeApiUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${forgeApiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: parsed.system },
+            { role: "user", content: parsed.user },
+          ],
+          max_tokens: 600,
+          temperature: 0.7,
+        }),
+      });
+
+      if (!llmRes.ok) {
+        const errText = await llmRes.text().catch(() => "unknown error");
+        console.error("[coach-insight] LLM error:", llmRes.status, errText);
+        res.status(502).json({ error: "Coach insight generation failed. Please try again." }); return;
+      }
+
+      const llmData = await llmRes.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+        model?: string;
+      };
+
+      const content = llmData.choices?.[0]?.message?.content;
+      if (!content) {
+        res.status(502).json({ error: "No insight returned from LLM" }); return;
+      }
+
+      res.json({ insight: content.trim(), model: llmData.model ?? "unknown" });
+    } catch (err) {
+      console.error("[coach-insight] error:", err);
+      res.status(500).json({ error: "Failed to generate coach insight" });
+    }
+  });
+
   // ── Proxy: GET /api/chess/player/:username ──────────────────────────────────
   // IMPORTANT: These must be registered BEFORE the recordings router, which
   // applies requireAuth to all routes and would otherwise intercept these
