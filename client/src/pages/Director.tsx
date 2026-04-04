@@ -1767,6 +1767,10 @@ export default function Director() {
   const [editingPlayer, setEditingPlayer] = useState<import("@/lib/tournamentData").Player | null>(null);
   // ── Pairing Swap modal state ──────────────────────────────────────────────
   const [swapModalOpen, setSwapModalOpen] = useState(false);
+  // ── End / Delete tournament confirm state ────────────────────────────────
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
   // When the Boards tab is active, pressing 1 / D / 0 records the result for
@@ -4637,41 +4641,131 @@ export default function Director() {
                   )}
                 </div>
                 {/* End Tournament */}
-                <div className="px-5 py-4 flex items-center justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>End Tournament</p>
-                    <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                      Finalizes all results and locks the bracket
-                    </p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      if (!window.confirm("End tournament? This will finalize all results and lock the bracket.")) return;
-                      completeTournament();
-                      syncStatusToServer("completed");
-                      // Broadcast tournament_ended SSE event to all connected player screens
-                      try {
-                        await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            players: standings,
-                            tournamentName: state.tournamentName,
-                          }),
-                        });
-                      } catch {
-                        console.error("[director] Failed to broadcast tournament_ended");
-                      }
-                      toast.success("Tournament finalized!");
-                      // Redirect director to the final standings page
-                      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
-                    }}
-                    className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    End Tournament
-                  </button>
+                <div className="px-5 py-4">
+                  {!showEndConfirm ? (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>End Tournament</p>
+                        <p className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                          Finalizes all results and locks the bracket
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowEndConfirm(true)}
+                        className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        End Tournament
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`rounded-xl p-4 border ${isDark ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200"}`}>
+                      <p className={`text-sm font-semibold mb-1 ${isDark ? "text-red-400" : "text-red-700"}`}>End this tournament?</p>
+                      <p className={`text-xs mb-3 ${isDark ? "text-red-400/70" : "text-red-600/80"}`}>
+                        This will finalize all results, lock the bracket, and notify all connected players. This cannot be undone.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            setShowEndConfirm(false);
+                            completeTournament();
+                            syncStatusToServer("completed");
+                            try {
+                              await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ players: standings, tournamentName: state.tournamentName }),
+                              });
+                            } catch {
+                              console.error("[director] Failed to broadcast tournament_ended");
+                            }
+                            toast.success("Tournament finalized!");
+                            setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
+                          }}
+                          className="flex-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition-colors"
+                        >
+                          Yes, End Tournament
+                        </button>
+                        <button
+                          onClick={() => setShowEndConfirm(false)}
+                          className={`flex-1 text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+            {/* ── Delete Tournament (inside Danger Zone) ──────────────────────── */}
+            {tournamentId !== "otb-demo-2026" && (
+              <div className={`rounded-xl border overflow-hidden ${isDark ? "bg-[oklch(0.22_0.06_145)] border-red-500/20" : "bg-white border-red-100"}`}>
+                <div className={`px-5 py-3 border-b ${isDark ? "border-red-500/20" : "border-red-50"}`}>
+                  <h2 className="text-sm font-semibold text-red-500">Delete Tournament</h2>
+                </div>
+                <div className="px-5 py-4">
+                  {!showDeleteConfirm ? (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-sm font-medium ${isDark ? "text-white/70" : "text-gray-700"}`}>Permanently delete this tournament</p>
+                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                          Removes all players, pairings, results, and analytics
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="text-xs font-semibold text-red-500 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`rounded-xl p-4 border ${isDark ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200"}`}>
+                      <p className={`text-sm font-bold mb-1 ${isDark ? "text-red-400" : "text-red-800"}`}>Permanently delete "{state.tournamentName}"?</p>
+                      <p className={`text-xs mb-3 ${isDark ? "text-red-400/70" : "text-red-700/80"}`}>
+                        All players, pairings, results, and analytics will be erased forever. There is no undo.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          disabled={isDeleting}
+                          onClick={async () => {
+                            setIsDeleting(true);
+                            try {
+                              const r = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}`, {
+                                method: "DELETE",
+                                credentials: "include",
+                              });
+                              if (r.ok) {
+                                toast.success("Tournament deleted");
+                                setTimeout(() => navigate("/"), 800);
+                              } else {
+                                const err = await r.json().catch(() => ({}));
+                                toast.error((err as any).error ?? "Failed to delete tournament");
+                                setIsDeleting(false);
+                                setShowDeleteConfirm(false);
+                              }
+                            } catch {
+                              toast.error("Network error — could not delete tournament");
+                              setIsDeleting(false);
+                            }
+                          }}
+                          className="flex-1 text-xs font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 px-3 py-2 rounded-lg transition-colors"
+                        >
+                          {isDeleting ? "Deleting…" : "Yes, Delete Forever"}
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteConfirm(false)}
+                          disabled={isDeleting}
+                          className={`flex-1 text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             </div>
           )}
           </main>

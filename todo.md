@@ -4785,3 +4785,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add referrer-aware back destination: pass ?from=director or ?from=player via the clock link so the back button knows where to return
 - [x] Add Chess Clock link to AvatarNavDropdown NAV_ITEMS (authenticated mobile dropdown)
 - [x] Add Chess Clock link to GuestMobileMenu NAV_ITEMS (guest mobile dropdown)
+
+### Phase 33: Tournament Auto-Expiry + Director End/Delete Controls (COMPLETED)
+- [x] Add startedAt column to userTournaments schema
+- [x] Run DB migration for startedAt column (add-started-at.mjs raw SQL migration)
+- [x] Update POST /api/tournament/:id/start to set startedAt timestamp
+- [x] Add server-side 30-min interval job to auto-expire in_progress tournaments older than 24h
+- [x] Add DELETE /api/tournament/:id endpoint (owner-only, cascades state + players)
+- [x] Upgrade Director Settings tab: proper End Tournament inline confirmation UI
+- [x] Add Delete Tournament card to Director Settings tab (double-confirm, disabled for demo)
+- [x] Write 30 unit tests for auto-expiry logic, delete permission, end transition, batch processing

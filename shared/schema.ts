@@ -180,6 +180,8 @@ export const userTournaments = mysqlTable(
     customSlug: varchar("custom_slug", { length: 80 }),
     /** Whether this tournament has a public live dashboard accessible via QR code */
     isPublic: tinyint("is_public").notNull().default(0),
+    /** Timestamp when the tournament transitioned to in_progress (used for 24h auto-expiry) */
+    startedAt: timestamp("started_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({

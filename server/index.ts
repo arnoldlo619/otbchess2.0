@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
-import { eq, and, or, inArray, desc } from "drizzle-orm";
+import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
 import { rateLimit } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
@@ -1917,7 +1917,7 @@ export function createApp() {
   // Broadcasts a tournament_started SSE event to all connected player clients
   // so they can transition from the Lobby waiting screen to the My Board view.
   // Body: { round: number; games: Game[]; players: Player[] }
-  app.post("/api/tournament/:id/start", (req, res) => {
+  app.post("/api/tournament/:id/start", async (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
     const { round, games, players } = req.body as {
@@ -1930,7 +1930,47 @@ export function createApp() {
     }
     broadcastTournamentStarted(id, { round, games, players });
     console.log(`[start] Tournament ${id} started — Round ${round}, ${games.length} games, ${players.length} players`);
+    // Record startedAt for 24h auto-expiry (only set once, on first start)
+    try {
+      const db = await getDb();
+      await db
+        .update(userTournaments)
+        .set({ startedAt: new Date(), status: "in_progress" })
+        .where(and(
+          eq(userTournaments.tournamentId, id),
+          isNull(userTournaments.startedAt)
+        ));
+    } catch (e) {
+      console.warn("[start] Failed to set startedAt:", e);
+    }
     res.json({ ok: true });
+  });
+
+  // ── Tournament: DELETE /api/tournament/:id ────────────────────────────────
+  // Permanently deletes a tournament (owner-only).
+  // Cascades: removes tournament_state, tournament_players, and userTournaments row.
+  app.delete("/api/tournament/:id", requireAuth, async (req: any, res) => {
+    const { id } = req.params;
+    const userId = req.userId as string;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    try {
+      const db = await getDb();
+      const utRows = await db
+        .select({ userId: userTournaments.userId })
+        .from(userTournaments)
+        .where(eq(userTournaments.tournamentId, id))
+        .limit(1);
+      if (utRows.length === 0) return res.status(404).json({ error: "Tournament not found" });
+      if (utRows[0].userId !== userId) return res.status(403).json({ error: "Not the tournament owner" });
+      await db.delete(tournamentPlayers).where(eq(tournamentPlayers.tournamentId, id));
+      await db.delete(tournamentState).where(eq(tournamentState.tournamentId, id));
+      await db.delete(userTournaments).where(eq(userTournaments.tournamentId, id));
+      console.log(`[delete] Tournament ${id} fully deleted by user ${userId}`);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("[delete] Tournament delete error:", err);
+      res.status(500).json({ error: "Failed to delete tournament" });
+    }
   });
 
   // ── Tournament: POST /api/tournament/:id/round ───────────────────────────────────────────────
@@ -2303,6 +2343,47 @@ async function startServer() {
 
   // Start the CV job queue background worker
   _startCvJobQueue();
+
+  // ── 24h Auto-Expiry Job ────────────────────────────────────────────────────
+  // Every 30 minutes, mark any in_progress tournament whose startedAt is
+  // older than 24 hours as completed. This prevents stale "live" tournaments
+  // from accumulating in the database (especially Quickstart events).
+  const EXPIRY_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+  const EXPIRY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  async function runAutoExpiry() {
+    try {
+      const db = await getDb();
+      const cutoff = new Date(Date.now() - EXPIRY_TTL_MS);
+      const expired = await db
+        .select({ tournamentId: userTournaments.tournamentId })
+        .from(userTournaments)
+        .where(and(
+          eq(userTournaments.status, "in_progress"),
+          lt(userTournaments.startedAt, cutoff)
+        ));
+      if (expired.length === 0) return;
+      for (const { tournamentId } of expired) {
+        await db
+          .update(userTournaments)
+          .set({ status: "completed" })
+          .where(eq(userTournaments.tournamentId, tournamentId));
+        // Broadcast tournament_ended SSE so any still-connected clients transition
+        const subs = sseSubscribers.get(tournamentId);
+        if (subs && subs.size > 0) {
+          const data = `event: tournament_ended\ndata: ${JSON.stringify({ autoExpired: true, tournamentName: "Tournament" })}\n\n`;
+          for (const sub of Array.from(subs)) {
+            try { sub.write(data); } catch { /* disconnected */ }
+          }
+        }
+        console.log(`[auto-expiry] Tournament ${tournamentId} auto-completed after 24h`);
+      }
+    } catch (err) {
+      console.error("[auto-expiry] Error:", err);
+    }
+  }
+  // Run once at startup, then every 30 minutes
+  runAutoExpiry();
+  setInterval(runAutoExpiry, EXPIRY_INTERVAL_MS);
 
   // Serve static files from dist/public in production
   const staticPath =
