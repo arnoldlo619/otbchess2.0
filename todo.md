@@ -4656,3 +4656,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Bracket slide is the 7th and final slide in the carousel for elimination formats
 - [x] Placeholder shown when bracket isn't complete yet (tournament still in progress)
 - [x] 18 unit tests: champion detection, runner-up, semifinalists, byes, swiss_elim elimStartRound, unresolved final, unknown players, finalRoundLabel
+
+## Phase 23: Tiebreak Explanation Tooltips
+
+- [x] Found standings table in Tournament.tsx (Buch. header), FinalStandings.tsx (Bch1/Bch/SB headers), Director.tsx (Buch. header)
+- [x] Built TiebreakTooltip component: ? badge trigger, hover/focus/tap popover, auto-position above/below, keyboard accessible (Escape/focus/blur), touch-friendly
+- [x] Popover shows: color-coded abbr badge, label, order (1st/2nd/3rd tiebreak), plain-English description, monospace example
+- [x] Wired into Tournament.tsx: Buch. header with position="above"
+- [x] Wired into FinalStandings.tsx: Bch1, Bch, SB headers with position="below"
+- [x] Wired into Director.tsx: Buch. header with position="above"
+- [x] 39 unit tests: all 6 type definitions, label/abbr/order/description/example/color completeness, uniqueness, ordering, description quality

@@ -40,6 +40,7 @@ import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
 import { EliminationBracketView, SwissElimCutoffScreen } from "@/components/EliminationBracketView";
+import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 import {
   Crown,
   ChevronLeft,
@@ -3475,13 +3476,16 @@ export default function Director() {
                   } gap-x-2 px-4 py-2.5 border-b ${
                     isDark ? "border-white/08 bg-white/02" : "border-gray-100 bg-gray-50/60"
                   }`}>
-                    {["#", "Player", "Pts", "W / D / L", ...(isDoubleSwiss ? ["Match"] : []), "Buch."].map((col, ci) => (
+                    {["#", "Player", "Pts", "W / D / L", ...(isDoubleSwiss ? ["Match"] : [])].map((col, ci) => (
                       <span key={ci} className={`text-[10px] font-black uppercase tracking-[0.1em] ${
                         ci === 0 ? "text-center" : ci >= 2 ? "text-right" : ""
                       } ${
                         isDark ? "text-white/30" : "text-gray-400"
                       }`}>{col}</span>
                     ))}
+                    <span className={`text-[10px] font-black uppercase tracking-[0.1em] text-right inline-flex items-center justify-end gap-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                      Buch.<TiebreakTooltip type="buchholz" position="above" />
+                    </span>
                   </div>
 
                   {/* Rows */}

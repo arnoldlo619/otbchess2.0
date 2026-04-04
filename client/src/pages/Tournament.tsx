@@ -64,6 +64,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 import { PublicBracketView } from "@/components/PublicBracketView";
+import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -750,7 +751,10 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
         <span>Player</span>
         <span className="text-center w-12">Pts</span>
         {isDoubleSwiss && <span className="text-right w-14">Match</span>}
-        <span className="text-right w-14">Buch.</span>
+        <span className="text-right w-14 inline-flex items-center justify-end gap-0.5">
+          Buch.
+          <TiebreakTooltip type="buchholz" position="above" />
+        </span>
       </div>
 
       {/* Player rows */}
@@ -826,9 +830,8 @@ function StandingsPanel({ players, rounds, myPlayerId, format }: { players: Play
       })}
 
       {/* Legend */}
-      <div className={`mt-2 px-4 py-3 rounded-xl text-sm text-muted-foreground space-y-1 border ${isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
-        <p className="font-semibold text-foreground mb-1">Tiebreak: Buchholz</p>
-        <p>Sum of opponents' scores. Higher = stronger opposition faced.</p>
+      <div className={`mt-2 px-4 py-3 rounded-xl text-xs text-muted-foreground border ${isDark ? "border-white/08 bg-white/03" : "border-[#EEEED2] bg-[#F9FAF8]"}`}>
+        Tiebreak order: <span className="font-semibold">Pts</span> → <span className="font-semibold">Buch.</span> → <span className="font-semibold">Rating</span> · Hover the <span className="font-mono font-bold">?</span> for details
       </div>
     </div>
   );
