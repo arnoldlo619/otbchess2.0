@@ -736,26 +736,6 @@ export function StyleAwarePairingsPanel({
 
   return (
     <div className="space-y-4">
-      {/* Pro badge header */}
-      <div className="flex items-center gap-2">
-        <Crown className="w-4 h-4" style={{ color: "#D97706" }} />
-        <span
-          className="text-sm font-bold"
-          style={{
-            fontFamily: "'Clash Display', sans-serif",
-            color: isDark ? T.dText : T.lText,
-          }}
-        >
-          Style-Aware Pairings
-        </span>
-        <span
-          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-          style={{ background: "#D97706", color: "#fff" }}
-        >
-          Pro
-        </span>
-      </div>
-
       <p className="text-xs" style={{ color: isDark ? T.dMuted : T.lMuted }}>
         Combines player strength with recent play-style tendencies to create more
         engaging matchups. Designed for smarter club competition.

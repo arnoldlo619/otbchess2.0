@@ -2657,64 +2657,6 @@ export default function Director() {
                           Walk-in
                         </button>
                       </div>
-                      {/* Style-Aware Pairings Panel */}
-                      <div
-                        className="rounded-xl border overflow-hidden"
-                        style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E8EDE8" }}
-                      >
-                        <button
-                          onClick={() => setShowStylePanel((v) => !v)}
-                          className="w-full flex items-center justify-between px-4 py-3 transition-colors"
-                          style={{
-                            background: isDark ? "rgba(255,255,255,0.03)" : "#F8FAF8",
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Crown className="w-4 h-4" style={{ color: "#D97706" }} />
-                            <span
-                              className="text-sm font-semibold"
-                              style={{
-                                fontFamily: "'Clash Display', sans-serif",
-                                color: isDark ? "rgba(255,255,255,0.92)" : "#1A2B1E",
-                              }}
-                            >
-                              Style-Aware Pairings
-                            </span>
-                            <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                              style={{ background: "#D97706", color: "#fff" }}
-                            >
-                              Pro
-                            </span>
-                          </div>
-                          <ChevronDown
-                            className="w-4 h-4 transition-transform duration-200"
-                            style={{
-                              color: isDark ? "rgba(255,255,255,0.45)" : "#6B7B6E",
-                              transform: showStylePanel ? "rotate(180deg)" : "rotate(0deg)",
-                            }}
-                          />
-                        </button>
-                        {showStylePanel && (
-                          <div
-                            className="px-4 py-4 border-t"
-                            style={{ borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E8EDE8" }}
-                          >
-                            <StyleAwarePairingsPanel
-                              players={state.players
-                                .filter((p) => checkedInIds.has(p.id))
-                                .map((p): StylePairingPlayer => ({
-                                  id: p.id,
-                                  name: p.name,
-                                  elo: p.elo,
-                                  styleProfile: undefined,
-                                  previousOpponents: [],
-                                }))}
-                              isDark={isDark}
-                            />
-                          </div>
-                        )}
-                      </div>
                       {/* Action buttons */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <button
@@ -4554,6 +4496,37 @@ export default function Director() {
                   </div>
                 </div>
               )}
+
+              {/* ── Style-Aware Pairings ──────────────────────────────────── */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+              }`}>
+                <div className={`px-5 py-3 border-b ${
+                  isDark ? "border-white/06" : "border-gray-100"
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-3.5 h-3.5" style={{ color: "#D97706" }} />
+                    <h2 className={`text-xs font-bold uppercase tracking-widest ${
+                      isDark ? "text-white/35" : "text-gray-400"
+                    }`}>Style-Aware Pairings</h2>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#D97706", color: "#fff" }}>Pro</span>
+                  </div>
+                </div>
+                <div className="px-5 py-4">
+                  <StyleAwarePairingsPanel
+                    players={state.players
+                      .filter((p) => checkedInIds.has(p.id))
+                      .map((p): StylePairingPlayer => ({
+                        id: p.id,
+                        name: p.name,
+                        elo: p.elo,
+                        styleProfile: undefined,
+                        previousOpponents: [],
+                      }))}
+                    isDark={isDark}
+                  />
+                </div>
+              </div>
 
               {/* Editable tournament settings panel */}
               {tournamentId !== "otb-demo-2026" ? (
