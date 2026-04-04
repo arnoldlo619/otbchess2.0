@@ -4610,3 +4610,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Pause polling when SSE is connected (SSE is primary; polling is fallback)
 - [x] Wire polling into Tournament.tsx alongside SSE (complementary, not replacing)
 - [x] 27 unit tests for polling hook logic (merge, visibility, SSE pause, interval, concurrent guard, label)
+
+## Phase 19: Push Notifications for Round Start
+
+- [x] Read existing VAPID infrastructure and service worker — all infrastructure already in place
+- [x] push_subscriptions DB table already exists in shared/schema.ts
+- [x] POST /api/push/subscribe endpoint already exists on server
+- [x] DELETE /api/push/subscribe endpoint already exists on server
+- [x] Server already auto-dispatches push via broadcastRoundStart() in Director.tsx on round generation
+- [x] Server already auto-dispatches push when all results are in (broadcastResultsPosted)
+- [x] usePushSubscription hook already exists in client/src/hooks/usePushSubscription.ts
+- [x] Bell icon opt-in button added to spectator page header (Bell/BellRing/BellOff states)
+- [x] Show subscription state: idle=Bell, subscribed=BellRing (green), denied=BellOff (red/disabled)
+- [x] Service worker already handles push event and notificationclick with tournament URL
+- [x] 32 unit tests for push notification logic (visibility, tooltip, icon, click, payload, stale cleanup)

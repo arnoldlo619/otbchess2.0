@@ -38,6 +38,7 @@ import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { usePollTournament } from "@/hooks/usePollTournament";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 import {
   Crown,
   ArrowLeft,
@@ -55,6 +56,9 @@ import {
   Radio,
   Zap,
   RefreshCw,
+  Bell,
+  BellOff,
+  BellRing,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
@@ -1357,6 +1361,18 @@ export default function TournamentPage() {
     if (authUser && config?.ownerId != null && String(authUser.id) === String(config.ownerId)) return true;
     return false;
   }, [tournamentId, authUser, config?.ownerId, isDemo]);
+  // ── Push notification subscription ──────────────────────────────────────────
+  // Only available for real tournaments (not demo), and only when the tournament
+  // is in progress (not registration or completed).
+  const pushEnabled = tournamentId !== "otb-demo-2026" && !!tournamentState;
+  const {
+    status: pushStatus,
+    subscribe: pushSubscribe,
+    unsubscribe: pushUnsubscribe,
+    isSubscribed: isPushSubscribed,
+    isLoading: isPushLoading,
+  } = usePushSubscription({ tournamentId, enabled: pushEnabled });
+
   const displayState = tournamentState ?? {
     tournamentId: DEMO_TOURNAMENT.id,
     tournamentName: DEMO_TOURNAMENT.name,
@@ -1530,6 +1546,50 @@ export default function TournamentPage() {
                 <Shield className="w-4 h-4" />
                 <span className="hidden sm:inline">Director</span>
               </Link>
+            )}
+            {/* Push notification bell — only for real, in-progress tournaments */}
+            {pushEnabled && pushStatus !== "unsupported" && (
+              <button
+                onClick={() => {
+                  if (isPushSubscribed) {
+                    pushUnsubscribe();
+                    toast.success("Notifications turned off");
+                  } else {
+                    pushSubscribe();
+                  }
+                }}
+                disabled={isPushLoading}
+                title={
+                  pushStatus === "denied"
+                    ? "Notifications blocked — enable in browser settings"
+                    : isPushSubscribed
+                    ? "Turn off round notifications"
+                    : "Get notified when a new round starts"
+                }
+                className={`touch-target flex items-center justify-center w-9 h-9 rounded-xl border transition-all active:scale-90 ${
+                  isPushSubscribed
+                    ? isDark
+                      ? "border-[#4CAF50]/40 text-[#4CAF50] bg-[#3D6B47]/20 hover:bg-[#3D6B47]/30"
+                      : "border-[#3D6B47]/40 text-[#3D6B47] bg-[#3D6B47]/08 hover:bg-[#3D6B47]/15"
+                    : pushStatus === "denied"
+                    ? isDark
+                      ? "border-red-500/30 text-red-400/60 cursor-not-allowed"
+                      : "border-red-400/30 text-red-500/60 cursor-not-allowed"
+                    : isDark
+                    ? "border-white/15 text-white/60 hover:bg-white/08 hover:text-white/90"
+                    : "border-black/15 text-black/50 hover:bg-black/05 hover:text-black/80"
+                }`}
+              >
+                {isPushLoading ? (
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                ) : isPushSubscribed ? (
+                  <BellRing className="w-4 h-4" />
+                ) : pushStatus === "denied" ? (
+                  <BellOff className="w-4 h-4" />
+                ) : (
+                  <Bell className="w-4 h-4" />
+                )}
+              </button>
             )}
             <Link
               href={`/tournament/${tournamentId}/print`}
