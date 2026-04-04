@@ -4686,3 +4686,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Practice queue re-sorted by collision score via useEffect when enrichedLines change
 - [x] PracticeMode updated to accept EnrichedPrepLine | PrepLine union type
 - [x] 48 unit tests: localStorage, getColorContext, computeRepertoireFit, computeCollisionScore, rankLinesByCollision, enrichPrepLines, getStructureLabel, generateMatchupSummary, constants completeness
+
+## Phase 25: chess.com Username Sync in Repertoire Panel
+
+- [x] Built useChessComRepertoire hook: fetchs last 2 monthly archives (~150 games), analyzes White first moves and Black responses
+- [x] classifyWhiteFirstMove(): detects e4/d4/c4/Nf3/other from PGN moves string
+- [x] classifyBlackVsE4(): classifies Sicilian/French/Caro-Kann/e5/Pirc-Modern/Alekhine/Scandinavian from ECO+name
+- [x] classifyBlackVsD4(): classifies King's Indian/Nimzo/QGD/Grünfeld/Dutch/Benoni/Queen's Indian/Slav from ECO+name
+- [x] parsePgnHeaders(): extracts ECO, Opening, White, Black, and first moves from chess.com PGN format
+- [x] topEntry(): frequency counter with minimum game threshold (3 games) and confidence %
+- [x] sessionStorage cache with 10-minute TTL to avoid redundant API calls
+- [x] NOT_FOUND error handling (404 → user-friendly message)
+- [x] Wire username input + Sync button into UserRepertoirePanel (loading spinner, RefreshCw on re-sync)
+- [x] DetectedResultCard: shows detected White/e4/d4 openings with confidence %, Apply button, dismiss X
+- [x] "or set manually" divider — manual selectors still available for override
+- [x] Persist chesscomUsername to localStorage alongside repertoire choices
+- [x] 44 unit tests: classifyWhiteFirstMove (9), classifyBlackVsE4 (9), classifyBlackVsD4 (10), parsePgnHeaders (8), integration pipeline (5), edge cases (3)
