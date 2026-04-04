@@ -1545,6 +1545,142 @@ export function createApp() {
         searchToFollowRate: totalSearches > 0 ? Math.round((totalFollows / totalSearches) * 100) : 0,
       };
 
+      // ── Attendance Breakdown ──────────────────────────────────────
+      let attendanceBreakdown = {
+        preRegistered: 0, walkIns: 0, lateAdds: 0, finalField: 0,
+        noShows: 0, walkInRate: 0, noShowRate: 0,
+      };
+      if (stateRows.length && stateRows[0].stateJson) {
+        try {
+          const state = JSON.parse(stateRows[0].stateJson);
+          const players: any[] = state.players ?? [];
+          const rounds: any[] = state.rounds ?? [];
+          // Determine round 1 start time from first game timestamp
+          let round1StartMs: number | null = null;
+          if (rounds.length > 0) {
+            for (const g of rounds[0].games ?? []) {
+              if (g.startedAt && (!round1StartMs || g.startedAt < round1StartMs))
+                round1StartMs = g.startedAt;
+            }
+          }
+          let preReg = 0; let walkIn = 0;
+          for (const p of players) {
+            if (round1StartMs && p.joinedAt && p.joinedAt > round1StartMs) walkIn++;
+            else preReg++;
+          }
+          // No-shows: players who never appeared in any completed game
+          let noShows = 0;
+          if (rounds.length > 0) {
+            const playedIds = new Set<string>();
+            for (const r of rounds) {
+              for (const g of r.games ?? []) {
+                if (g.result && g.result !== "*") {
+                  if (g.whiteId) playedIds.add(g.whiteId);
+                  if (g.blackId) playedIds.add(g.blackId);
+                }
+              }
+            }
+            for (const p of players) {
+              if (!playedIds.has(p.id) && p.id !== "BYE") noShows++;
+            }
+          }
+          const finalField = players.length;
+          attendanceBreakdown = {
+            preRegistered: preReg, walkIns: walkIn, lateAdds: walkIn,
+            finalField, noShows,
+            walkInRate: finalField > 0 ? Math.round((walkIn / finalField) * 100) : 0,
+            noShowRate: finalField > 0 ? Math.round((noShows / finalField) * 100) : 0,
+          };
+        } catch { /* silent */ }
+      }
+
+      // ── Post-Event Conversion Metrics ─────────────────────────────
+      const postEventConversion = {
+        emailsOptedIn: totalEmails,
+        cardsClaimed: totalCardClaims,
+        joinClubClicks: ctaClicks["join_club"] ?? 0,
+        createAccountClicks: ctaClicks["create_account"] ?? 0,
+        anonToLeadRate: totalViews > 0
+          ? Math.round(((totalEmails + totalCardClaims) / totalViews) * 100) : 0,
+        emailCaptureRate: totalViews > 0 ? Math.round((totalEmails / totalViews) * 100) : 0,
+        cardClaimRate: totalViews > 0 ? Math.round((totalCardClaims / totalViews) * 100) : 0,
+      };
+
+      // ── Club Growth Contribution ──────────────────────────────────
+      const clubGrowth = {
+        totalLeadsGenerated: totalEmails + totalCardClaims,
+        emailLeads: totalEmails,
+        cardClaimLeads: totalCardClaims,
+        clubJoinClicks: ctaClicks["join_club"] ?? 0,
+        createAccountClicks: ctaClicks["create_account"] ?? 0,
+        totalCtaConversions: Object.values(ctaClicks).reduce((a: number, b: number) => a + b, 0),
+        leadConversionRate: totalViews > 0
+          ? Math.round(((totalEmails + totalCardClaims) / totalViews) * 100) : 0,
+      };
+
+      // ── Tournament Comparison (past 5 events by this organizer) ───
+      let tournamentComparison: {
+        pastEvents: { id: string; name: string; date: string | null; format: string | null; playerCount: number; status: string | null }[];
+        avgAttendance: number; thisEventRank: number;
+      } = { pastEvents: [], avgAttendance: 0, thisEventRank: 1 };
+      try {
+        const allUserTmts = await db.select().from(userTournaments)
+          .where(eq(userTournaments.userId, userId)).limit(20);
+        const pastEvents: { id: string; name: string; date: string | null; format: string | null; playerCount: number; status: string | null }[] = [];
+        for (const ut of allUserTmts) {
+          if (ut.tournamentId === id) continue;
+          const psr = await db.select({ stateJson: tournamentState.stateJson })
+            .from(tournamentState).where(eq(tournamentState.tournamentId, ut.tournamentId)).limit(1);
+          let playerCount = 0;
+          if (psr.length && psr[0].stateJson) {
+            try { playerCount = JSON.parse(psr[0].stateJson).players?.length ?? 0; } catch { /* silent */ }
+          }
+          pastEvents.push({ id: ut.tournamentId, name: ut.name, date: ut.date ?? null,
+            format: ut.format ?? null, playerCount, status: ut.status ?? null });
+        }
+        const sorted = pastEvents.slice(-5).reverse();
+        const avgAttendance = sorted.length > 0
+          ? Math.round(sorted.reduce((s, e) => s + e.playerCount, 0) / sorted.length) : 0;
+        const allCounts = [...sorted.map(e => e.playerCount), attendanceBreakdown.finalField].sort((a, b) => b - a);
+        const thisEventRank = allCounts.indexOf(attendanceBreakdown.finalField) + 1;
+        tournamentComparison = { pastEvents: sorted, avgAttendance, thisEventRank };
+      } catch { /* silent */ }
+
+      // ── Repeat-Event Growth Signals ───────────────────────────────
+      let repeatEventGrowth = { newPlayers: 0, returningPlayers: 0, repeatRate: 0, multiEventPlayers: 0 };
+      if (stateRows.length && stateRows[0].stateJson) {
+        try {
+          const state = JSON.parse(stateRows[0].stateJson);
+          const currentUsernames = new Set<string>(
+            (state.players ?? []).map((p: any) => (p.username ?? "").toLowerCase()).filter(Boolean)
+          );
+          const seenInPast = new Set<string>();
+          const allUserTmts2 = await db.select().from(userTournaments)
+            .where(eq(userTournaments.userId, userId)).limit(20);
+          for (const ut of allUserTmts2) {
+            if (ut.tournamentId === id) continue;
+            const psr2 = await db.select({ stateJson: tournamentState.stateJson })
+              .from(tournamentState).where(eq(tournamentState.tournamentId, ut.tournamentId)).limit(1);
+            if (psr2.length && psr2[0].stateJson) {
+              try {
+                const s = JSON.parse(psr2[0].stateJson);
+                for (const p of s.players ?? []) {
+                  const u = (p.username ?? "").toLowerCase();
+                  if (u && currentUsernames.has(u)) seenInPast.add(u);
+                }
+              } catch { /* silent */ }
+            }
+          }
+          const returning = seenInPast.size;
+          const total = currentUsernames.size;
+          repeatEventGrowth = {
+            newPlayers: total - returning, returningPlayers: returning,
+            repeatRate: total > 0 ? Math.round((returning / total) * 100) : 0,
+            multiEventPlayers: returning,
+          };
+        } catch { /* silent */ }
+      }
+
       res.json({
         overview: {
           totalViews,
@@ -1553,6 +1689,7 @@ export function createApp() {
           engagementRate: totalViews > 0 ? Math.round(((events.length - totalViews) / totalViews) * 100) : 0,
         },
         attendance,
+        attendanceBreakdown,
         funnel: {
           views: totalViews,
           searches: totalSearches,
@@ -1568,6 +1705,10 @@ export function createApp() {
         timeline,
         operationalQuality,
         retentionSignals,
+        postEventConversion,
+        clubGrowth,
+        tournamentComparison,
+        repeatEventGrowth,
       });
     } catch (err) {
       console.error("[analytics] GET aggregate error:", err);

@@ -17,6 +17,12 @@ import {
   ChevronDown,
   ChevronUp,
   Activity,
+  UserCheck,
+  UserPlus,
+  Repeat2,
+  GitCompare,
+  Sprout,
+  CalendarCheck,
 } from "lucide-react";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { NavLogo } from "../components/NavLogo";
@@ -62,6 +68,51 @@ interface AnalyticsData {
     emailConversionRate: number;
     ctaConversionRate: number;
     searchToFollowRate: number;
+  };
+  attendanceBreakdown?: {
+    preRegistered: number;
+    walkIns: number;
+    lateAdds: number;
+    finalField: number;
+    noShows: number;
+    walkInRate: number;
+    noShowRate: number;
+  };
+  postEventConversion?: {
+    emailsOptedIn: number;
+    cardsClaimed: number;
+    joinClubClicks: number;
+    createAccountClicks: number;
+    anonToLeadRate: number;
+    emailCaptureRate: number;
+    cardClaimRate: number;
+  };
+  clubGrowth?: {
+    totalLeadsGenerated: number;
+    emailLeads: number;
+    cardClaimLeads: number;
+    clubJoinClicks: number;
+    createAccountClicks: number;
+    totalCtaConversions: number;
+    leadConversionRate: number;
+  };
+  tournamentComparison?: {
+    pastEvents: {
+      id: string;
+      name: string;
+      date: string | null;
+      format: string | null;
+      playerCount: number;
+      status: string | null;
+    }[];
+    avgAttendance: number;
+    thisEventRank: number;
+  };
+  repeatEventGrowth?: {
+    newPlayers: number;
+    returningPlayers: number;
+    repeatRate: number;
+    multiEventPlayers: number;
   };
 }
 
@@ -150,6 +201,48 @@ function SmallStat({
         )}
       </p>
       <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+// ─── Progress Bar Row ─────────────────────────────────────────────────────────
+
+function ProgressRow({
+  label,
+  value,
+  total,
+  color = "#3D6B47",
+  isDark,
+  suffix = "",
+}: {
+  label: string;
+  value: number;
+  total: number;
+  color?: string;
+  isDark: boolean;
+  suffix?: string;
+}) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-foreground font-medium">{label}</span>
+        <span className="font-mono font-bold text-foreground tabular-nums">
+          {value}
+          {suffix}
+          <span className="text-muted-foreground font-normal ml-1">({pct}%)</span>
+        </span>
+      </div>
+      <div
+        className={`h-2 rounded-full overflow-hidden ${
+          isDark ? "bg-white/08" : "bg-gray-100"
+        }`}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${Math.max(pct, value > 0 ? 2 : 0)}%`, backgroundColor: color }}
+        />
+      </div>
     </div>
   );
 }
@@ -467,6 +560,20 @@ export default function TournamentAnalytics() {
       });
     }
 
+    if (data.attendanceBreakdown && data.attendanceBreakdown.noShowRate > 20) {
+      recs.push({
+        title: "Reduce No-Shows",
+        description: `${data.attendanceBreakdown.noShowRate}% of registered players didn't appear in any game. Consider sending a reminder the day before and confirming attendance.`,
+      });
+    }
+
+    if (data.repeatEventGrowth && data.repeatEventGrowth.repeatRate > 30) {
+      recs.push({
+        title: "Strong Returning Player Base",
+        description: `${data.repeatEventGrowth.repeatRate}% of players have attended a previous event. These loyal regulars are the foundation of a thriving club — reward them with recognition.`,
+      });
+    }
+
     if (recs.length === 0) {
       recs.push({
         title: "Looking Good",
@@ -707,6 +814,204 @@ export default function TournamentAnalytics() {
             </div>
           )}
         </Section>
+
+        {/* Attendance Breakdown */}
+        {data.attendanceBreakdown && (
+          <Section title="Attendance Breakdown" icon={CalendarCheck} isDark={isDark}>
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <SmallStat label="Final Field" value={data.attendanceBreakdown.finalField} isDark={isDark} />
+                <SmallStat label="Pre-Registered" value={data.attendanceBreakdown.preRegistered} isDark={isDark} />
+                <SmallStat label="Walk-Ins" value={data.attendanceBreakdown.walkIns} isDark={isDark} />
+                <SmallStat label="No-Shows" value={data.attendanceBreakdown.noShows} isDark={isDark} />
+              </div>
+              {data.attendanceBreakdown.finalField > 0 && (
+                <div className="space-y-3">
+                  <ProgressRow
+                    label="Pre-Registered"
+                    value={data.attendanceBreakdown.preRegistered}
+                    total={data.attendanceBreakdown.finalField}
+                    color="#3D6B47"
+                    isDark={isDark}
+                  />
+                  <ProgressRow
+                    label="Walk-Ins / Late Adds"
+                    value={data.attendanceBreakdown.walkIns}
+                    total={data.attendanceBreakdown.finalField}
+                    color="#5A9A68"
+                    isDark={isDark}
+                  />
+                  {data.attendanceBreakdown.noShows > 0 && (
+                    <ProgressRow
+                      label="No-Shows"
+                      value={data.attendanceBreakdown.noShows}
+                      total={data.attendanceBreakdown.finalField + data.attendanceBreakdown.noShows}
+                      color="#EF4444"
+                      isDark={isDark}
+                    />
+                  )}
+                </div>
+              )}
+              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03" : "bg-gray-50"}`}>
+                <UserCheck className="w-3.5 h-3.5 text-[#3D6B47] flex-shrink-0 mt-0.5" />
+                <p className="text-muted-foreground">
+                  {data.attendanceBreakdown.walkInRate}% of players registered on the day.
+                  Walk-in rate above 30% suggests strong word-of-mouth but may strain pairing capacity — consider capping early.
+                </p>
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* Player Retention (Repeat-Event Growth) */}
+        {data.repeatEventGrowth && (
+          <Section title="Player Retention" icon={Repeat2} isDark={isDark}>
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <SmallStat label="New Players" value={data.repeatEventGrowth.newPlayers} isDark={isDark} />
+                <SmallStat label="Returning" value={data.repeatEventGrowth.returningPlayers} isDark={isDark} />
+                <SmallStat label="Repeat Rate" value={data.repeatEventGrowth.repeatRate} suffix="%" isDark={isDark} />
+                <SmallStat label="Multi-Event" value={data.repeatEventGrowth.multiEventPlayers} isDark={isDark} />
+              </div>
+              {(data.repeatEventGrowth.newPlayers + data.repeatEventGrowth.returningPlayers) > 0 && (
+                <div className="space-y-3">
+                  <ProgressRow
+                    label="New Players"
+                    value={data.repeatEventGrowth.newPlayers}
+                    total={data.repeatEventGrowth.newPlayers + data.repeatEventGrowth.returningPlayers}
+                    color="#5A9A68"
+                    isDark={isDark}
+                  />
+                  <ProgressRow
+                    label="Returning Players"
+                    value={data.repeatEventGrowth.returningPlayers}
+                    total={data.repeatEventGrowth.newPlayers + data.repeatEventGrowth.returningPlayers}
+                    color="#3D6B47"
+                    isDark={isDark}
+                  />
+                </div>
+              )}
+              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-white/03" : "bg-gray-50"}`}>
+                <UserPlus className="w-3.5 h-3.5 text-[#3D6B47] flex-shrink-0 mt-0.5" />
+                <p className="text-muted-foreground">
+                  {data.repeatEventGrowth.returningPlayers > 0
+                    ? `${data.repeatEventGrowth.returningPlayers} player${data.repeatEventGrowth.returningPlayers !== 1 ? "s" : ""} have attended a previous event by this organizer. Retention is the strongest signal of a healthy tournament series.`
+                    : "This appears to be your first event or player names haven't been matched across events yet. Repeat-rate tracking improves as you run more tournaments."}
+                </p>
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* Post-Event Conversion */}
+        {data.postEventConversion && (
+          <Section title="Post-Event Conversion" icon={UserPlus} isDark={isDark}>
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                <SmallStat label="Emails Opted In" value={data.postEventConversion.emailsOptedIn} isDark={isDark} />
+                <SmallStat label="Cards Claimed" value={data.postEventConversion.cardsClaimed} isDark={isDark} />
+                <SmallStat label="Club Join Clicks" value={data.postEventConversion.joinClubClicks} isDark={isDark} />
+                <SmallStat label="Account Clicks" value={data.postEventConversion.createAccountClicks} isDark={isDark} />
+                <SmallStat label="Anon → Lead Rate" value={data.postEventConversion.anonToLeadRate} suffix="%" isDark={isDark} />
+                <SmallStat label="Email Capture Rate" value={data.postEventConversion.emailCaptureRate} suffix="%" isDark={isDark} />
+              </div>
+              {data.overview.totalViews > 0 && (
+                <div className="space-y-3">
+                  <ProgressRow label="Email Opt-In" value={data.postEventConversion.emailsOptedIn} total={data.overview.totalViews} color="#3D6B47" isDark={isDark} />
+                  <ProgressRow label="Card Claims" value={data.postEventConversion.cardsClaimed} total={data.overview.totalViews} color="#5A9A68" isDark={isDark} />
+                  <ProgressRow label="Club Join Clicks" value={data.postEventConversion.joinClubClicks} total={data.overview.totalViews} color="#8BC4A0" isDark={isDark} />
+                </div>
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* Club Growth Contribution */}
+        {data.clubGrowth && (
+          <Section title="Club Growth Contribution" icon={Sprout} isDark={isDark}>
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                <MetricCard
+                  icon={Users}
+                  label="Total Leads"
+                  value={data.clubGrowth.totalLeadsGenerated}
+                  subtitle="emails + card claims"
+                  isDark={isDark}
+                  accent
+                />
+                <SmallStat label="Email Leads" value={data.clubGrowth.emailLeads} isDark={isDark} />
+                <SmallStat label="Card Claim Leads" value={data.clubGrowth.cardClaimLeads} isDark={isDark} />
+                <SmallStat label="Club Join Clicks" value={data.clubGrowth.clubJoinClicks} isDark={isDark} />
+                <SmallStat label="Account Clicks" value={data.clubGrowth.createAccountClicks} isDark={isDark} />
+                <SmallStat label="Lead Conv. Rate" value={data.clubGrowth.leadConversionRate} suffix="%" isDark={isDark} />
+              </div>
+              <div className={`flex items-start gap-3 p-3 rounded-xl text-xs ${isDark ? "bg-[#3D6B47]/08 border border-[#3D6B47]/15" : "bg-[#F0F8F2] border border-[#3D6B47]/15"}`}>
+                <Sprout className="w-3.5 h-3.5 text-[#3D6B47] flex-shrink-0 mt-0.5" />
+                <p className="text-muted-foreground">
+                  This tournament contributed{" "}
+                  <span className="font-semibold text-foreground">
+                    {data.clubGrowth.totalLeadsGenerated} lead{data.clubGrowth.totalLeadsGenerated !== 1 ? "s" : ""}
+                  </span>{" "}
+                  to your club pipeline. Each lead represents a real person who engaged with your brand — follow up within 48 hours for best conversion results.
+                </p>
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* Tournament Comparison */}
+        {data.tournamentComparison && data.tournamentComparison.pastEvents.length > 0 && (
+          <Section title="Tournament Comparison" icon={GitCompare} isDark={isDark} defaultOpen={false}>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <SmallStat label="Avg Attendance (past)" value={data.tournamentComparison.avgAttendance} isDark={isDark} />
+                <SmallStat label="This Event Rank" value={`#${data.tournamentComparison.thisEventRank}`} isDark={isDark} />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recent Events</p>
+                {data.tournamentComparison.pastEvents.map((evt) => {
+                  const maxCount = Math.max(
+                    ...data.tournamentComparison!.pastEvents.map((e) => e.playerCount),
+                    data.attendance.registered,
+                    1
+                  );
+                  const pct = Math.round((evt.playerCount / maxCount) * 100);
+                  return (
+                    <div key={evt.id} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-foreground font-medium truncate max-w-[60%]">{evt.name}</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {evt.date && <span className="text-muted-foreground font-mono text-[10px]">{evt.date}</span>}
+                          <span className="font-mono font-bold text-foreground tabular-nums">{evt.playerCount}p</span>
+                        </div>
+                      </div>
+                      <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
+                        <div className="h-full rounded-full bg-[#3D6B47]/50 transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="space-y-1 mt-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#3D6B47] font-semibold">This Event</span>
+                    <span className="font-mono font-bold text-[#3D6B47] tabular-nums">{data.attendance.registered}p</span>
+                  </div>
+                  <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-100"}`}>
+                    <div
+                      className="h-full rounded-full bg-[#3D6B47] transition-all duration-500"
+                      style={{
+                        width: `${Math.max(Math.round((data.attendance.registered / Math.max(
+                          ...data.tournamentComparison.pastEvents.map((e) => e.playerCount),
+                          data.attendance.registered, 1
+                        )) * 100), 2)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Section>
+        )}
 
         {/* Retention Signals */}
         <Section title="Retention Signals" icon={TrendingUp} isDark={isDark}>

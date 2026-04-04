@@ -4717,3 +4717,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire CoachInsightCard into Scout tab (matchup_overview insight)
 - [x] Wire CoachInsightCard into Key Lines tab (key_line insight for top collision-ranked line)
 - [x] 38 unit tests: QUOTA_CONFIG structure, usage tracking, getQuotaState (all states), saved insights CRUD, buildCoachPrompt (content, personalization, focus line), generateInsightId uniqueness, INSIGHT_TYPE_LABELS/DESCRIPTIONS completeness
+
+## Phase 27: Tournament Analytics Phase 5 Completion (COMPLETED)
+
+- [x] Extend server analytics API: attendance breakdown (preRegistered, walkIns, noShows, lateAdds, finalField, walkInRate, noShowRate)
+- [x] Extend server analytics API: post-event conversion (emailsOptedIn, cardsClaimed, joinClubClicks, createAccountClicks, anonToLeadRate, emailCaptureRate, cardClaimRate)
+- [x] Extend server analytics API: repeat-event growth (newPlayers, returningPlayers, repeatRate, multiEventPlayers)
+- [x] Extend server analytics API: tournament comparison (past 5 tournaments summary, avgAttendance, thisEventRank)
+- [x] Extend server analytics API: club growth contribution (totalLeadsGenerated, emailLeads, cardClaimLeads, clubJoinClicks, createAccountClicks, totalCtaConversions, leadConversionRate)
+- [x] Add AttendanceBreakdown section to TournamentAnalytics page (stat cards + progress bars + insight note)
+- [x] Add PostEventConversion section to TournamentAnalytics page (stat cards + progress bars)
+- [x] Add PlayerRetention section to TournamentAnalytics page (new vs returning, repeat rate, progress bars)
+- [x] Add TournamentComparison section to TournamentAnalytics page (avg attendance, rank, event bars)
+- [x] Add ClubGrowthContribution section to TournamentAnalytics page (leads summary + pipeline insight)
+- [x] Upgrade Recommendations engine with no-show and returning-player signals
+- [x] Write 50 unit tests for new analytics computation logic (attendance, post-event, club growth, comparison, repeat-event, extended recommendations)
