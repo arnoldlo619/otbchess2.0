@@ -607,11 +607,24 @@ export default function ChessClock() {
 
   const handleBack = useCallback(() => {
     if (tournamentId) {
-      navigate(`/tournament/${tournamentId}/play`);
+      // Honour the ?from= referrer so directors return to their dashboard
+      // and players return to their player view.
+      const params = new URLSearchParams(search);
+      const from = params.get("from");
+      if (from === "director") {
+        navigate(`/tournament/${tournamentId}/manage`);
+      } else if (from === "player") {
+        navigate(`/tournament/${tournamentId}/play`);
+      } else if (window.history.length > 1) {
+        // Fallback: use browser history when no referrer is set
+        window.history.back();
+      } else {
+        navigate(`/tournament/${tournamentId}/play`);
+      }
     } else {
       navigate("/");
     }
-  }, [tournamentId, navigate]);
+  }, [tournamentId, navigate, search]);
 
   const isFlagged = clockState === "p1_flagged" || clockState === "p2_flagged";
   const isIdle = clockState === "idle";

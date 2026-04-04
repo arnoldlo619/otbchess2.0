@@ -30,6 +30,7 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  Timer,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
@@ -43,10 +44,11 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "Tournaments", href: "/join",    icon: LayoutDashboard },
-  { name: "Clubs",     href: "/clubs",   icon: Building2 },
-  { name: "Battle",    href: "/battle",  icon: Swords },
-  { name: "Analyze",   href: "/record",  icon: Video },
+  { name: "Tournaments",  href: "/join",    icon: LayoutDashboard },
+  { name: "Clubs",        href: "/clubs",   icon: Building2 },
+  { name: "Battle",       href: "/battle",  icon: Swords },
+  { name: "Chess Clock",  href: "/clock",   icon: Timer },
+  { name: "Analyze",      href: "/record",  icon: Video },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────

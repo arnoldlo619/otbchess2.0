@@ -692,7 +692,7 @@ function MyBoardScreen({
             {/* Chess Clock shortcut */}
             {opponent && (
               <a
-                href={`/tournament/${tournamentId}/clock`}
+                href={`/tournament/${tournamentId}/clock?from=player`}
                 className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
                   isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
                 } transition-colors`}

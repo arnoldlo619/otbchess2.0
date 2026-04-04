@@ -10,14 +10,15 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Building2, Swords, Video, LogIn, Trophy, Shield } from "lucide-react";
+import { Building2, Swords, Video, LogIn, Trophy, Shield, Timer } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
 
 const NAV_ITEMS = [
-  { name: "Clubs",   href: "/clubs",  icon: Building2 },
-  { name: "Battle",  href: "/battle", icon: Swords },
-  { name: "Analyze", href: "/record", icon: Video },
+  { name: "Clubs",        href: "/clubs",  icon: Building2 },
+  { name: "Battle",      href: "/battle", icon: Swords },
+  { name: "Chess Clock", href: "/clock",  icon: Timer },
+  { name: "Analyze",     href: "/record", icon: Video },
 ] as const;
 
 interface GuestMobileMenuProps {

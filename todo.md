@@ -4778,3 +4778,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Swap Pairings" button to Boards tab header (visible during active round)
 - [x] Wire EditPlayerModal and PairingSwapModal into Director.tsx render tree
 - [x] Write 22 unit tests: applyPairingSwap (14 cases) + parseElo validation (8 cases) — all passing
+
+## Phase 32: Chess Clock Navigation Fixes (COMPLETED)
+
+- [x] Fix ChessClock back-navigation: when accessed from /tournament/:id/clock, back button returns to /tournament/:id/manage (Director) or /tournament/:id/play (Player), not /tournament/:id/play only
+- [x] Add referrer-aware back destination: pass ?from=director or ?from=player via the clock link so the back button knows where to return
+- [x] Add Chess Clock link to AvatarNavDropdown NAV_ITEMS (authenticated mobile dropdown)
+- [x] Add Chess Clock link to GuestMobileMenu NAV_ITEMS (guest mobile dropdown)
