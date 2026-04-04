@@ -1349,9 +1349,456 @@ function Slide6RoundResults({ rows, config, tournamentName, totalRounds, scale =
   );
 }
 
+// ─── Slide 7 — Bracket Results ───────────────────────────────────────────────
+
+/**
+ * Extract bracket results from elimination rounds.
+ * Returns champion, runner-up, and semifinalists.
+ */
+export function extractBracketResults(
+  rounds: Round[],
+  players: { id: string; name: string; username: string; elo: number }[],
+  elimStartRound = 1
+): {
+  champion: { id: string; name: string; username: string; elo: number } | null;
+  runnerUp: { id: string; name: string; username: string; elo: number } | null;
+  semifinalists: { id: string; name: string; username: string; elo: number }[];
+  finalRoundLabel: string;
+  hasBracketData: boolean;
+} {
+  const playerMap = new Map(players.map((p) => [p.id, p]));
+
+  // Only look at elimination rounds
+  const elimRounds = rounds
+    .filter((r) => r.number >= elimStartRound && r.status === "completed")
+    .sort((a, b) => a.number - b.number);
+
+  if (!elimRounds.length) {
+    return { champion: null, runnerUp: null, semifinalists: [], finalRoundLabel: "", hasBracketData: false };
+  }
+
+  // Find the final round (last completed elim round with exactly 1 real game)
+  const finalRound = [...elimRounds].reverse().find((r) => {
+    const realGames = r.games.filter((g) => g.whiteId !== "BYE" && g.blackId !== "BYE");
+    return realGames.length === 1;
+  }) ?? elimRounds[elimRounds.length - 1];
+
+  const finalGame = finalRound.games.find((g) => g.whiteId !== "BYE" && g.blackId !== "BYE");
+  if (!finalGame) {
+    return { champion: null, runnerUp: null, semifinalists: [], finalRoundLabel: "", hasBracketData: false };
+  }
+
+  // Champion = winner of the final; Runner-up = loser
+  let championId: string | null = null;
+  let runnerUpId: string | null = null;
+
+  if (finalGame.result === "1-0") {
+    championId = finalGame.whiteId;
+    runnerUpId = finalGame.blackId;
+  } else if (finalGame.result === "0-1") {
+    championId = finalGame.blackId;
+    runnerUpId = finalGame.whiteId;
+  } else {
+    // Unresolved final — show both as finalists
+    championId = finalGame.whiteId;
+    runnerUpId = finalGame.blackId;
+  }
+
+  const champion = championId ? (playerMap.get(championId) ?? null) : null;
+  const runnerUp = runnerUpId ? (playerMap.get(runnerUpId) ?? null) : null;
+
+  // Semifinalists = losers of the round before the final
+  const semifinalists: { id: string; name: string; username: string; elo: number }[] = [];
+  const finalRoundIdx = elimRounds.findIndex((r) => r.number === finalRound.number);
+  if (finalRoundIdx > 0) {
+    const semiRound = elimRounds[finalRoundIdx - 1];
+    for (const game of semiRound.games) {
+      if (game.whiteId === "BYE" || game.blackId === "BYE") continue;
+      let loserId: string | null = null;
+      if (game.result === "1-0") loserId = game.blackId;
+      else if (game.result === "0-1") loserId = game.whiteId;
+      if (loserId) {
+        const p = playerMap.get(loserId);
+        if (p) semifinalists.push(p);
+      }
+    }
+  }
+
+  // Determine the label for the final round based on player count
+  const finalRoundPlayerCount = finalRound.games.filter(
+    (g) => g.whiteId !== "BYE" && g.blackId !== "BYE"
+  ).length * 2;
+  const finalRoundLabel = finalRoundPlayerCount <= 2 ? "Final" : `Round of ${finalRoundPlayerCount}`;
+
+  return {
+    champion,
+    runnerUp,
+    semifinalists,
+    finalRoundLabel,
+    hasBracketData: champion !== null,
+  };
+}
+
+function Slide7BracketResults({
+  rows,
+  config,
+  tournamentName,
+  scale = 1,
+  hostLogoUrl,
+  theme = DEFAULT_THEME,
+  rounds = [],
+  format = "square",
+}: SlideProps) {
+  const s = scale;
+  const isStory = format === "story";
+  const FOOTER = 80 * s;
+  const PAD = 56 * s;
+  const H = SLIDE_H[format] * s;
+  const W = SLIDE_W * s;
+
+  // Compute elimStartRound — for swiss_elim, elim rounds start after swiss rounds
+  const swissRounds = (config as (typeof config & { swissRounds?: number }))?.swissRounds ?? 0;
+  const elimStartRound = swissRounds > 0 ? swissRounds + 1 : 1;
+
+  const players = rows.map((r) => r.player);
+  const { champion, runnerUp, semifinalists, hasBracketData } = extractBracketResults(
+    rounds,
+    players,
+    elimStartRound
+  );
+
+  const date = formatDate(config?.date);
+
+  // ── Layout helpers ──────────────────────────────────────────────────────────
+  const CONTENT_TOP = isStory ? 160 * s : 100 * s;
+  const CONTENT_H = H - FOOTER - CONTENT_TOP;
+
+  // Champion card dimensions
+  const CHAMP_H = isStory ? 340 * s : 280 * s;
+  const CHAMP_W = W - PAD * 2;
+
+  // Runner-up / semifinalist card dimensions
+  const CARD_H = isStory ? 180 * s : 150 * s;
+  const CARD_GAP = 16 * s;
+  const RUNNER_W = CHAMP_W;
+  const SEMI_W = (CHAMP_W - CARD_GAP) / 2;
+
+  return (
+    <SlideWrapper scale={scale} theme={theme} format={format}>
+      <SlideCounter current={7} total={7} scale={scale} />
+
+      {/* ── Header ── */}
+      <div
+        style={{
+          paddingTop: isStory ? 90 * s : 52 * s,
+          paddingLeft: PAD,
+          paddingRight: PAD,
+          marginBottom: 24 * s,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 13 * s,
+            color: "rgba(255,255,255,0.35)",
+            letterSpacing: "0.22em",
+            fontWeight: 700,
+            textTransform: "uppercase" as const,
+            marginBottom: 10 * s,
+          }}
+        >
+          {tournamentName}{date ? ` · ${date}` : ""}
+        </div>
+        <div
+          style={{
+            fontSize: isStory ? 88 * s : 72 * s,
+            fontWeight: 900,
+            color: BRAND.white,
+            letterSpacing: "-0.03em",
+            lineHeight: 1,
+          }}
+        >
+          Final Results
+        </div>
+        {/* Accent underline */}
+        <div
+          style={{
+            width: 80 * s,
+            height: 5 * s,
+            borderRadius: 3 * s,
+            background: theme.accentBright,
+            marginTop: 14 * s,
+          }}
+        />
+      </div>
+
+      {hasBracketData ? (
+        <div
+          style={{
+            position: "absolute",
+            top: CONTENT_TOP,
+            left: PAD,
+            right: PAD,
+            display: "flex",
+            flexDirection: "column" as const,
+            gap: CARD_GAP,
+          }}
+        >
+          {/* ── Champion card ── */}
+          {champion && (
+            <div
+              style={{
+                width: CHAMP_W,
+                height: CHAMP_H,
+                borderRadius: 20 * s,
+                background: `linear-gradient(135deg, ${theme.accent}CC 0%, ${theme.bg}EE 100%)`,
+                border: `3px solid ${BRAND.gold}`,
+                boxShadow: `0 0 ${60 * s}px ${BRAND.gold}40`,
+                display: "flex",
+                alignItems: "center",
+                padding: `0 ${40 * s}px`,
+                gap: 28 * s,
+                position: "relative" as const,
+                overflow: "hidden",
+              }}
+            >
+              {/* Gold glow behind */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-30%",
+                  right: "-10%",
+                  width: CHAMP_H * 1.2,
+                  height: CHAMP_H * 1.2,
+                  background: `radial-gradient(circle, ${BRAND.gold}22 0%, transparent 65%)`,
+                }}
+              />
+              {/* Trophy icon */}
+              <div
+                style={{
+                  width: isStory ? 100 * s : 80 * s,
+                  height: isStory ? 100 * s : 80 * s,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${BRAND.gold}33, ${BRAND.gold}11)`,
+                  border: `2px solid ${BRAND.gold}60`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: isStory ? 52 * s : 42 * s,
+                  flexShrink: 0,
+                }}
+              >
+                🏆
+              </div>
+              {/* Player info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 13 * s,
+                    color: BRAND.gold,
+                    fontWeight: 800,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase" as const,
+                    marginBottom: 8 * s,
+                  }}
+                >
+                  Champion
+                </div>
+                <div
+                  style={{
+                    fontSize: clampFont(isStory ? 72 * s : 58 * s, champion.name, 16),
+                    fontWeight: 900,
+                    color: BRAND.white,
+                    lineHeight: 1.1,
+                    whiteSpace: "nowrap" as const,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {champion.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: isStory ? 26 * s : 22 * s,
+                    color: "rgba(255,255,255,0.45)",
+                    marginTop: 6 * s,
+                    fontWeight: 600,
+                  }}
+                >
+                  @{champion.username} · {champion.elo} ELO
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Runner-up card ── */}
+          {runnerUp && (
+            <div
+              style={{
+                width: RUNNER_W,
+                height: CARD_H,
+                borderRadius: 16 * s,
+                background: `linear-gradient(135deg, rgba(200,208,216,0.12) 0%, rgba(0,0,0,0.18) 100%)`,
+                border: `2px solid ${BRAND.silver}60`,
+                display: "flex",
+                alignItems: "center",
+                padding: `0 ${32 * s}px`,
+                gap: 22 * s,
+              }}
+            >
+              <div
+                style={{
+                  width: isStory ? 64 * s : 52 * s,
+                  height: isStory ? 64 * s : 52 * s,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${BRAND.silver}33, ${BRAND.silver}11)`,
+                  border: `2px solid ${BRAND.silver}50`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: isStory ? 34 * s : 28 * s,
+                  flexShrink: 0,
+                }}
+              >
+                🥈
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 11 * s,
+                    color: BRAND.silver,
+                    fontWeight: 800,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase" as const,
+                    marginBottom: 6 * s,
+                  }}
+                >
+                  Runner-Up
+                </div>
+                <div
+                  style={{
+                    fontSize: clampFont(isStory ? 48 * s : 38 * s, runnerUp.name, 18),
+                    fontWeight: 800,
+                    color: BRAND.white,
+                    whiteSpace: "nowrap" as const,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {runnerUp.name}
+                </div>
+                <div style={{ fontSize: isStory ? 20 * s : 16 * s, color: "rgba(255,255,255,0.38)", marginTop: 4 * s }}>
+                  @{runnerUp.username} · {runnerUp.elo} ELO
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Semifinalists row ── */}
+          {semifinalists.length > 0 && (
+            <div style={{ display: "flex", gap: CARD_GAP }}>
+              {semifinalists.slice(0, 2).map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    width: SEMI_W,
+                    height: CARD_H * 0.85,
+                    borderRadius: 14 * s,
+                    background: `linear-gradient(135deg, rgba(205,127,50,0.10) 0%, rgba(0,0,0,0.18) 100%)`,
+                    border: `2px solid ${BRAND.bronze}40`,
+                    display: "flex",
+                    alignItems: "center",
+                    padding: `0 ${22 * s}px`,
+                    gap: 16 * s,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: isStory ? 52 * s : 42 * s,
+                      height: isStory ? 52 * s : 42 * s,
+                      borderRadius: "50%",
+                      background: `linear-gradient(135deg, ${BRAND.bronze}33, ${BRAND.bronze}11)`,
+                      border: `2px solid ${BRAND.bronze}40`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: isStory ? 28 * s : 22 * s,
+                      flexShrink: 0,
+                    }}
+                  >
+                    🥉
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 10 * s,
+                        color: BRAND.bronze,
+                        fontWeight: 800,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase" as const,
+                        marginBottom: 5 * s,
+                      }}
+                    >
+                      Semifinalist
+                    </div>
+                    <div
+                      style={{
+                        fontSize: clampFont(isStory ? 34 * s : 28 * s, p.name, 14),
+                        fontWeight: 800,
+                        color: BRAND.white,
+                        whiteSpace: "nowrap" as const,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {p.name}
+                    </div>
+                    <div style={{ fontSize: isStory ? 16 * s : 13 * s, color: "rgba(255,255,255,0.35)", marginTop: 3 * s }}>
+                      {p.elo} ELO
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Placeholder when bracket isn't complete yet */
+        <div
+          style={{
+            position: "absolute",
+            top: CONTENT_TOP,
+            left: PAD,
+            right: PAD,
+            display: "flex",
+            flexDirection: "column" as const,
+            alignItems: "center",
+            justifyContent: "center",
+            height: CONTENT_H,
+            gap: 16 * s,
+          }}
+        >
+          <div style={{ fontSize: isStory ? 80 * s : 64 * s }}>🏆</div>
+          <div
+            style={{
+              fontSize: isStory ? 32 * s : 26 * s,
+              color: "rgba(255,255,255,0.35)",
+              fontWeight: 700,
+              textAlign: "center" as const,
+            }}
+          >
+            Bracket results will appear here when the tournament is complete.
+          </div>
+        </div>
+      )}
+
+      <OTBBrand scale={scale} clubName={config?.clubName} hostLogoUrl={hostLogoUrl} theme={theme} />
+    </SlideWrapper>
+  );
+}
+
 // ─── Slide registry ───────────────────────────────────────────────────────────
 
-const SLIDES = [
+const SLIDES_BASE = [
   { id: "cover", label: "Cover", Component: Slide1Cover },
   { id: "podium", label: "Podium", Component: Slide2Podium },
   { id: "standings", label: "Standings", Component: Slide3Standings },
@@ -1359,6 +1806,17 @@ const SLIDES = [
   { id: "cta", label: "CTA", Component: Slide5CTA },
   { id: "rounds", label: "Rounds", Component: Slide6RoundResults },
 ];
+
+const SLIDES_WITH_BRACKET = [
+  ...SLIDES_BASE,
+  { id: "bracket", label: "Bracket", Component: Slide7BracketResults },
+];
+
+/** Get the slide list based on tournament format */
+function getSlides(format?: string | null) {
+  if (format === "elimination" || format === "swiss_elim") return SLIDES_WITH_BRACKET;
+  return SLIDES_BASE;
+}
 
 // ─── Mobile detection ─────────────────────────────────────────────────────────
 
@@ -1406,6 +1864,9 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     rounds,
     format: slideFormat,
   };
+
+  // Dynamic slide list — adds Bracket slide for elimination formats
+  const SLIDES = getSlides(config?.format);
 
   const isStory = slideFormat === "story";
   const slideH = SLIDE_H[slideFormat];

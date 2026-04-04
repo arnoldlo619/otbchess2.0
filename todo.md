@@ -4646,3 +4646,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Auto-hides when pushStatus changes to subscribed
 - [x] Wire banner into Tournament.tsx between timer banner and main content area
 - [x] 28 unit tests: shouldShowPushBanner (all rules), isPushBannerDismissed, dismissPushBanner, integration, edge cases
+
+## Phase 22: Bracket Share Card for Instagram
+
+- [x] Read Instagram carousel modal code — 6-slide system, SLIDES registry, SlideProps interface
+- [x] Built extractBracketResults() helper: champion (winner of Final), runner-up (loser), semifinalists (SF losers)
+- [x] Designed Slide7BracketResults: trophy header, gold champion card with glow, silver runner-up, bronze semifinalists grid
+- [x] Dynamic SLIDES registry: getSlides(format) returns 7 slides for elimination/swiss_elim, 6 for others
+- [x] Bracket slide is the 7th and final slide in the carousel for elimination formats
+- [x] Placeholder shown when bracket isn't complete yet (tournament still in progress)
+- [x] 18 unit tests: champion detection, runner-up, semifinalists, byes, swiss_elim elimStartRound, unresolved final, unknown players, finalRoundLabel
