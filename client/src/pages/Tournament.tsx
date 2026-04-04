@@ -37,6 +37,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { getRegistration } from "@/lib/registrationStore";
 import { useVisibilitySync } from "@/lib/useVisibilitySync";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { usePollTournament } from "@/hooks/usePollTournament";
 import {
   Crown,
   ArrowLeft,
@@ -53,6 +54,7 @@ import {
   Printer,
   Radio,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
@@ -974,7 +976,17 @@ function RegistrationState({ tournamentName, playerCount, tournamentId }: { tour
 }
 
 // ─── SSE Connection Badge ────────────────────────────────────────────────────
-function SSEConnectionBadge({ connected }: { connected: boolean }) {
+function SSEConnectionBadge({
+  connected,
+  isPolling,
+  secondsSinceUpdate,
+  onRefresh,
+}: {
+  connected: boolean;
+  isPolling?: boolean;
+  secondsSinceUpdate?: number;
+  onRefresh?: () => void;
+}) {
   if (connected) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/90 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">
@@ -983,11 +995,42 @@ function SSEConnectionBadge({ connected }: { connected: boolean }) {
       </span>
     );
   }
+
+  // SSE disconnected — show polling status + manual refresh button
+  const updatedLabel =
+    secondsSinceUpdate != null && secondsSinceUpdate < 60
+      ? `${secondsSinceUpdate}s ago`
+      : secondsSinceUpdate != null
+      ? `${Math.floor(secondsSinceUpdate / 60)}m ago`
+      : null;
+
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 bg-amber-500/20 border border-amber-400/30 px-2.5 py-1 rounded-full">
-      <WifiOff className="w-3 h-3" />
-      Reconnecting
-    </span>
+    <div className="flex items-center gap-1.5">
+      {/* Polling status badge */}
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 bg-amber-500/20 border border-amber-400/30 px-2.5 py-1 rounded-full">
+        {isPolling ? (
+          <>
+            <Wifi className="w-3 h-3" />
+            {updatedLabel ? `Updated ${updatedLabel}` : "Polling"}
+          </>
+        ) : (
+          <>
+            <WifiOff className="w-3 h-3" />
+            Offline
+          </>
+        )}
+      </span>
+      {/* Manual refresh button */}
+      {onRefresh && (
+        <button
+          onClick={onRefresh}
+          title="Refresh now"
+          className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 border border-white/20 text-white/70 hover:bg-white/20 hover:text-white transition-all active:scale-90"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -1245,6 +1288,59 @@ export default function TournamentPage() {
     return () => window.removeEventListener("storage", handleStorage);
   }, [tournamentId]);
 
+  // ── Polling fallback: re-fetch live-state every 15s when SSE is disconnected ──
+  // This ensures spectators on mobile (where SSE can drop in background) always
+  // see fresh data when they return to the tab.
+  const handlePollUpdate = useCallback((data: {
+    players?: Player[];
+    status?: string;
+    currentRound?: number;
+    totalRounds?: number;
+    tournamentName?: string;
+    rounds?: Round[];
+  }) => {
+    setTournamentState((prev) => {
+      if (!prev) return prev;
+      const serverRounds = data.rounds ?? [];
+      const mergedRounds = serverRounds.length > 0 ? serverRounds : prev.rounds;
+      return {
+        ...prev,
+        players: data.players ?? prev.players,
+        status: (data.status as DirectorState["status"]) ?? prev.status,
+        currentRound: data.currentRound ?? prev.currentRound,
+        totalRounds: data.totalRounds ?? prev.totalRounds,
+        tournamentName: data.tournamentName ?? prev.tournamentName,
+        rounds: mergedRounds,
+      };
+    });
+  }, []);
+
+  const { lastUpdatedAt, isPolling, refresh: manualRefresh } = usePollTournament({
+    tournamentId,
+    intervalMs: 15_000,
+    // When SSE is connected, polling is paused — SSE already provides real-time updates.
+    // When SSE drops, polling kicks in as a fallback.
+    pauseWhenConnected: sseConnected,
+    onUpdate: handlePollUpdate,
+    disabled: tournamentId === "otb-demo-2026",
+  });
+
+  // "X seconds ago" ticker — updates every second
+  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (lastUpdatedAt) {
+        setSecondsSinceUpdate(Math.floor((Date.now() - lastUpdatedAt.getTime()) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [lastUpdatedAt]);
+
+  // Reset counter when lastUpdatedAt changes
+  useEffect(() => {
+    setSecondsSinceUpdate(0);
+  }, [lastUpdatedAt]);
+
   // Get extra config (venue, date, timePreset) from registry
   const config = getTournamentConfig(tournamentId);
 
@@ -1487,7 +1583,12 @@ export default function TournamentPage() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {/* SSE connection badge — only shown for real tournaments */}
                     {tournamentId !== "otb-demo-2026" && (
-                      <SSEConnectionBadge connected={sseConnected} />
+                      <SSEConnectionBadge
+                        connected={sseConnected}
+                        isPolling={isPolling}
+                        secondsSinceUpdate={secondsSinceUpdate}
+                        onRefresh={manualRefresh}
+                      />
                     )}
                     <LiveBadge
                       currentRound={displayState.currentRound}

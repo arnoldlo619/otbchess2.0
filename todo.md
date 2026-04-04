@@ -4599,3 +4599,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Upset scenario (lower seeds winning)
 - [x] isAwaitingCutoff logic (true/false conditions)
 - [x] elimStartRound computation for elimination vs swiss_elim vs swiss formats
+
+## Phase 18: Live Auto-Refresh on Spectator Page
+
+- [x] Build usePollTournament hook — polls server every 15s, merges with localStorage state
+- [x] Show "Live" indicator badge in tournament header when SSE connected; "Updated Xs ago" + refresh button when polling
+- [x] Show "Updated X seconds ago" timestamp that ticks up (secondsSinceUpdate ticker)
+- [x] Pause polling when tab is hidden (Page Visibility API), resume on focus with immediate fetch
+- [x] Manual "Refresh" button for immediate re-fetch (RefreshCw icon in header)
+- [x] Pause polling when SSE is connected (SSE is primary; polling is fallback)
+- [x] Wire polling into Tournament.tsx alongside SSE (complementary, not replacing)
+- [x] 27 unit tests for polling hook logic (merge, visibility, SSE pause, interval, concurrent guard, label)
