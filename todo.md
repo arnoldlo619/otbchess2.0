@@ -4666,3 +4666,23 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wired into FinalStandings.tsx: Bch1, Bch, SB headers with position="below"
 - [x] Wired into Director.tsx: Buch. header with position="above"
 - [x] 39 unit tests: all 6 type definitions, label/abbr/order/description/example/color completeness, uniqueness, ordering, description quality
+
+## Phase 24: Matchup Prep Phase 6 — Repertoire-Aware Personalized Prep Engine (COMPLETED)
+
+- [x] Built userRepertoire.ts lib: UserRepertoire type, DEFAULT_REPERTOIRE, WHITE_FIRST_MOVES, BLACK_VS_E4, BLACK_VS_D4 constants
+- [x] localStorage persistence: loadUserRepertoire(), saveUserRepertoire(), clearUserRepertoire()
+- [x] computeCollisionScore(): 5-factor scoring (confidence base, color context, opponent first-move freq, opponent Black opening freq, repertoire fit)
+- [x] computeRepertoireFit(): classifies each line as core / adjacent / outside vs user's declared repertoire
+- [x] getColorContext(): infers whether a prep line is White-context, Black-context, or both
+- [x] getStructureLabel(): pawn structure / thematic label for known openings (Sicilian, French, KID, etc.)
+- [x] rankLinesByCollision(): sorts EnrichedPrepLine[] by collision score, confidence as tiebreaker
+- [x] enrichPrepLines(): full pipeline — enrich + rank + mark isTrainFirst
+- [x] generateMatchupSummary(): 4-signal strategic summary (likelyBattle, studyFirst, prepRisk, colorAdvice)
+- [x] Built UserRepertoirePanel component: minimalist Apple-like selector for White first move, Black vs e4, Black vs d4, expected color
+- [x] Wire UserRepertoirePanel into Scout tab of MatchupPrep page (persists to localStorage on change)
+- [x] Added Prep Summary section to Scout tab: Likely Battle, Study First, Prep Risk, Color Advice cards
+- [x] Built EnrichedKeyLineCard: collision score badge (%), repertoire fit label, Train First badge, structure label
+- [x] Key Lines tab uses enrichedLines (collision-ranked) instead of static confidence tiers
+- [x] Practice queue re-sorted by collision score via useEffect when enrichedLines change
+- [x] PracticeMode updated to accept EnrichedPrepLine | PrepLine union type
+- [x] 48 unit tests: localStorage, getColorContext, computeRepertoireFit, computeCollisionScore, rankLinesByCollision, enrichPrepLines, getStructureLabel, generateMatchupSummary, constants completeness

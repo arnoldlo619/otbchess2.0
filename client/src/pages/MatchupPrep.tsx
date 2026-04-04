@@ -10,7 +10,7 @@
  * - "What to study next" nudge at bottom of each tab
  * - Apple-like minimalist design: disciplined whitespace, quiet secondary data
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -21,8 +21,16 @@ import {
   CircleDot, RefreshCw, ChevronRight, Trophy,
   Activity, Bookmark, BookmarkCheck,
   Trash2, ChevronLeft, Check, RotateCcw,
-  Zap, AlertCircle, Info
+  Zap, AlertCircle, Info, Crosshair, Flame
 } from "lucide-react";
+import { UserRepertoirePanel } from "../components/UserRepertoirePanel";
+import {
+  UserRepertoire,
+  loadUserRepertoire,
+  enrichPrepLines,
+  generateMatchupSummary,
+  type EnrichedPrepLine,
+} from "../lib/userRepertoire";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -168,11 +176,50 @@ export default function MatchupPrep() {
   const [showSavedPanel, setShowSavedPanel] = useState(false);
   const [loadingSaved, setLoadingSaved] = useState(false);
 
+  // Repertoire state (persisted in localStorage)
+  const [repertoire, setRepertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
+
+  // Enriched prep lines with collision scores (recomputed when report or repertoire changes)
+  const enrichedLines = useMemo<EnrichedPrepLine[]>(() => {
+    if (!report) return [];
+    return enrichPrepLines(report.prepLines, repertoire, {
+      firstMoveAsWhite: report.opponent.firstMoveAsWhite,
+      blackOpenings: report.opponent.blackOpenings,
+      whiteOpenings: report.opponent.whiteOpenings,
+      gamesAnalyzed: report.opponent.gamesAnalyzed,
+    });
+  }, [report, repertoire]);
+
+  // Strategic matchup summary (recomputed when enrichedLines change)
+  const matchupSummary = useMemo(() => {
+    if (!report || enrichedLines.length === 0) return null;
+    return generateMatchupSummary(repertoire, {
+      firstMoveAsWhite: report.opponent.firstMoveAsWhite,
+      blackOpenings: report.opponent.blackOpenings.map(o => ({ ...o, moves: o.moves ?? "" })),
+      whiteOpenings: report.opponent.whiteOpenings.map(o => ({ ...o, moves: o.moves ?? "" })),
+      asWhite: { winRate: report.opponent.asWhite.winRate, games: report.opponent.asWhite.games },
+      asBlack: { winRate: report.opponent.asBlack.winRate, games: report.opponent.asBlack.games },
+      gamesAnalyzed: report.opponent.gamesAnalyzed,
+    }, enrichedLines);
+  }, [report, repertoire, enrichedLines]);
+
   // Practice mode state
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [practiceRevealed, setPracticeRevealed] = useState(false);
   const [practiceCompleted, setPracticeCompleted] = useState<Set<number>>(new Set());
   const [practiceQueue, setPracticeQueue] = useState<number[]>([]);
+
+  // Re-sort practice queue by collision score when enrichedLines change (repertoire updated)
+  useEffect(() => {
+    if (enrichedLines.length === 0) return;
+    const sorted = enrichedLines
+      .map((_, i) => i)
+      .sort((a, b) => enrichedLines[b].collisionScore - enrichedLines[a].collisionScore);
+    setPracticeQueue(sorted);
+    setPracticeIndex(0);
+    setPracticeRevealed(false);
+    setPracticeCompleted(new Set());
+  }, [enrichedLines]);
 
   useEffect(() => {
     if (params.username) {
@@ -200,7 +247,7 @@ export default function MatchupPrep() {
       }
       const data: PrepReport = await res.json();
       setReport(data);
-      // Initialize practice queue sorted by priority
+      // Initialize practice queue sorted by priority (will be re-sorted by collision after enrichment)
       const sorted = data.prepLines
         .map((_, i) => i)
         .sort((a, b) => PRIORITY_CONFIG[getPriority(data.prepLines[a].confidence)].order
@@ -651,6 +698,56 @@ export default function MatchupPrep() {
             {activeTab === "scout" && (
               <div className="space-y-4">
 
+                {/* My Repertoire Panel */}
+                <UserRepertoirePanel value={repertoire} onChange={setRepertoire} />
+
+                {/* Strategic Matchup Summary — only when repertoire is set */}
+                {matchupSummary && (
+                  <div className={`${t.card} p-4 sm:p-5`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Crosshair className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Prep Summary</h3>
+                    </div>
+                    <div className="space-y-2.5">
+                      {/* Likely battle */}
+                      <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"}`}>
+                        <Target className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                        <div className="min-w-0">
+                          <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`}>Likely Battle</p>
+                          <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.likelyBattle}</p>
+                        </div>
+                      </div>
+                      {/* Study first */}
+                      {matchupSummary.studyFirst && (
+                        <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-amber-500/08 border border-amber-500/15" : "bg-amber-50/80 border border-amber-200/60"}`}>
+                          <Flame className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                          <div className="min-w-0">
+                            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-amber-400/60" : "text-amber-600/50"}`}>Study First</p>
+                            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.studyFirst}</p>
+                          </div>
+                        </div>
+                      )}
+                      {/* Prep risk */}
+                      {matchupSummary.prepRisk && (
+                        <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-red-500/08 border border-red-500/15" : "bg-red-50/80 border border-red-200/60"}`}>
+                          <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-red-400" : "text-red-600"}`} />
+                          <div className="min-w-0">
+                            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-red-400/60" : "text-red-600/50"}`}>Prep Risk</p>
+                            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.prepRisk}</p>
+                          </div>
+                        </div>
+                      )}
+                      {/* Color advice */}
+                      {matchupSummary.colorAdvice && (
+                        <div className={`flex items-start gap-3 p-3 rounded-xl ${t.cardSubtle}`}>
+                          <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${t.textTertiary}`} />
+                          <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.colorAdvice}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Win/Draw/Loss by color — compact 2-col */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <ColorStatCard
@@ -736,7 +833,7 @@ export default function MatchupPrep() {
             {/* ── Tab 2: Key Lines ── */}
             {activeTab === "lines" && (
               <div className="space-y-4">
-                {report.prepLines.length === 0 ? (
+                {enrichedLines.length === 0 ? (
                   <EmptyState
                     icon={<Target className="w-6 h-6 text-[#5B9A6A]" />}
                     title="No key lines generated"
@@ -746,11 +843,11 @@ export default function MatchupPrep() {
                   />
                 ) : (
                   <>
-                    {/* Priority legend */}
-                    <div className={`flex items-center gap-3 px-1`}>
+                    {/* Legend: priority + collision */}
+                    <div className={`flex items-center gap-3 px-1 flex-wrap`}>
                       {(["must-know", "likely", "useful"] as Priority[]).map((p) => {
                         const cfg = PRIORITY_CONFIG[p];
-                        const count = report.prepLines.filter(l => getPriority(l.confidence) === p).length;
+                        const count = enrichedLines.filter(l => getPriority(l.confidence) === p).length;
                         if (count === 0) return null;
                         return (
                           <div key={p} className="flex items-center gap-1.5">
@@ -759,35 +856,27 @@ export default function MatchupPrep() {
                           </div>
                         );
                       })}
+                      {enrichedLines.some(l => l.collisionScore > 0) && (
+                        <div className="flex items-center gap-1.5 ml-auto">
+                          <Crosshair className={`w-3 h-3 ${t.textTertiary}`} />
+                          <span className={`text-xs ${t.textTertiary}`}>Sorted by collision</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Lines sorted by priority */}
-                    {(["must-know", "likely", "useful"] as Priority[]).map((priority) => {
-                      const lines = report.prepLines
-                        .map((line, i) => ({ line, i }))
-                        .filter(({ line }) => getPriority(line.confidence) === priority);
-                      if (lines.length === 0) return null;
-                      return (
-                        <div key={priority} className="space-y-2.5">
-                          <div className="flex items-center gap-2 px-1">
-                            <span className={`w-1.5 h-1.5 rounded-full ${PRIORITY_CONFIG[priority].dot}`} />
-                            <span className={`text-xs font-semibold uppercase tracking-wide ${t.textTertiary}`}>
-                              {PRIORITY_CONFIG[priority].label}
-                            </span>
-                          </div>
-                          {lines.map(({ line, i }) => (
-                            <KeyLineCard
-                              key={i}
-                              line={line}
-                              index={i}
-                              priority={priority}
-                              isDark={isDark}
-                              t={t}
-                            />
-                          ))}
-                        </div>
-                      );
-                    })}
+                    {/* Lines sorted by collision score (enrichedLines already ranked) */}
+                    <div className="space-y-2.5">
+                      {enrichedLines.map((line, i) => (
+                        <EnrichedKeyLineCard
+                          key={i}
+                          line={line}
+                          index={i}
+                          priority={getPriority(line.confidence)}
+                          isDark={isDark}
+                          t={t}
+                        />
+                      ))}
+                    </div>
 
                     {/* Next step nudge */}
                     <NextStepNudge
@@ -805,7 +894,7 @@ export default function MatchupPrep() {
             {/* ── Tab 3: Practice ── */}
             {activeTab === "practice" && (
               <div className="space-y-4">
-                {report.prepLines.length === 0 ? (
+                {enrichedLines.length === 0 ? (
                   <EmptyState
                     icon={<Trophy className="w-6 h-6 text-[#5B9A6A]" />}
                     title="No lines to practice"
@@ -815,7 +904,7 @@ export default function MatchupPrep() {
                   />
                 ) : practiceQueue.length > 0 && (
                   <PracticeMode
-                    lines={report.prepLines}
+                    lines={enrichedLines}
                     queue={practiceQueue}
                     currentIndex={practiceIndex}
                     revealed={practiceRevealed}
@@ -1033,12 +1122,121 @@ function KeyLineCard({
   );
 }
 
+function EnrichedKeyLineCard({
+  line, index, priority, isDark, t
+}: {
+  line: EnrichedPrepLine; index: number; priority: Priority; isDark: boolean; t: Tokens;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const cfg = PRIORITY_CONFIG[priority];
+  const priorityStyle = isDark ? cfg.darkBg : cfg.lightBg;
+
+  const fitColor = line.repertoireFit === "core"
+    ? isDark ? "text-emerald-400" : "text-emerald-600"
+    : line.repertoireFit === "adjacent"
+    ? isDark ? "text-amber-400" : "text-amber-600"
+    : isDark ? "text-white/30" : "text-gray-400";
+
+  const fitLabel = line.repertoireFit === "core" ? "In repertoire"
+    : line.repertoireFit === "adjacent" ? "Adjacent"
+    : "Outside";
+
+  return (
+    <div className={`rounded-2xl overflow-hidden border transition-all duration-150 ${
+      line.isTrainFirst
+        ? isDark ? "bg-[#0f1c11] border-[#3D6B47]/50 ring-1 ring-[#3D6B47]/20" : "bg-white border-[#3D6B47]/30 shadow-sm ring-1 ring-[#3D6B47]/10"
+        : isDark ? "bg-[#0f1c11] border-[#1e2e22]/70" : "bg-white border-gray-200/80 shadow-sm"
+    }`}>
+      <button
+        className={`w-full text-left p-4 sm:p-5 transition-colors ${t.rowHover}`}
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex items-start gap-3">
+          <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
+            {index + 1}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h4 className={`font-semibold text-sm ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                {line.name}
+              </h4>
+              {line.isTrainFirst && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}>
+                  <Flame className="w-2.5 h-2.5" /> Train First
+                </span>
+              )}
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${priorityStyle}`}>
+                <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+                {cfg.shortLabel}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {line.eco !== "---" && (
+                <span className={`text-[11px] font-mono ${t.textTertiary}`}>{line.eco}</span>
+              )}
+              {line.structureLabel && (
+                <span className={`text-[10px] ${t.textTertiary}`}>· {line.structureLabel}</span>
+              )}
+              {line.collisionScore > 0 && (
+                <span className={`text-[10px] font-medium flex items-center gap-1 ${fitColor}`}>
+                  <Crosshair className="w-2.5 h-2.5" />
+                  {fitLabel}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {line.collisionScore > 0 && (
+              <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                line.collisionScore >= 70 ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-700"
+                : line.collisionScore >= 40 ? isDark ? "bg-amber-500/12 text-amber-400" : "bg-amber-50 text-amber-700"
+                : isDark ? "bg-white/06 text-white/30" : "bg-gray-100 text-gray-400"
+              }`}>
+                {line.collisionScore}%
+              </div>
+            )}
+            <ChevronRight className={`w-4 h-4 transition-transform duration-150 ${t.textTertiary} ${expanded ? "rotate-90" : ""}`} />
+          </div>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className={`px-4 sm:px-5 pb-4 sm:pb-5 pt-0 space-y-3 border-t ${t.divider}`}>
+          {line.eco !== "---" && line.moves && (
+            <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl overflow-x-auto whitespace-nowrap mt-3 ${t.monoBlock}`}>
+              {line.moves}
+            </div>
+          )}
+          <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? "bg-[#0a1409]/80" : "bg-gray-50/80"}`}>
+            <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`} />
+            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{line.rationale}</p>
+          </div>
+          {priority === "must-know" && (
+            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-emerald-400/70" : "text-emerald-700/70"}`}>
+              <Zap className="w-3 h-3" />
+              <span>Memorize this line — it's the most likely scenario you'll face.</span>
+            </div>
+          )}
+          {priority === "likely" && (
+            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-amber-400/70" : "text-amber-700/70"}`}>
+              <Eye className="w-3 h-3" />
+              <span>Review this line — you'll probably encounter it.</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PracticeMode({
   lines, queue, currentIndex, revealed, completed,
   onReveal, onGotIt, onReviewAgain, onPrev, onNext, onReset,
   isDark, t
 }: {
-  lines: PrepLine[];
+  lines: (PrepLine | EnrichedPrepLine)[];
   queue: number[];
   currentIndex: number;
   revealed: boolean;
