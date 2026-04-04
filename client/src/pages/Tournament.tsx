@@ -39,6 +39,7 @@ import { useVisibilitySync } from "@/lib/useVisibilitySync";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { usePollTournament } from "@/hooks/usePollTournament";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
+import { PushOnboardingBanner } from "@/components/PushOnboardingBanner";
 import {
   Crown,
   ArrowLeft,
@@ -1683,10 +1684,25 @@ export default function TournamentPage() {
                 </div>
               )}
 
+          {/* Push notification onboarding banner */}
+          {pushEnabled && !isDirector && (
+            <div className="container pt-3 pb-0">
+              <PushOnboardingBanner
+                tournamentId={tournamentId}
+                pushStatus={pushStatus}
+                isDirector={isDirector}
+                isInProgress={displayState.status === "in_progress" && displayState.currentRound >= 1}
+                onSubscribe={pushSubscribe}
+                isLoading={isPushLoading}
+                isDark={isDark}
+              />
+            </div>
+          )}
+
           {/* Main content */}
           <div className="container py-4 sm:py-8 animate-page-in">
 
-            {/* ── Mobile tab bar (hidden on lg+) ─────────────────────────── */}
+            {/* ── Mobile tab bar (hidden on lg+) ─────────────────── */}
             <div className="flex lg:hidden mb-4 rounded-2xl overflow-hidden border p-1 gap-1"
               style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#F0F5EE", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#EEEED2" }}>
               {MOBILE_TABS.map((tab) => (

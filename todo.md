@@ -4634,3 +4634,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Handle non-elimination formats: bracket tab hidden, slips tab is default
 - [x] Default to bracket tab for elimination/swiss_elim formats
 - [x] 27 unit tests: winner detection, round labels, champion detection, visibility logic, elimStartRound
+
+## Phase 21: Push Notification Onboarding Banner
+
+- [x] Built PushOnboardingBanner component: bell icon, contextual message, Enable/Not now CTAs, X close button
+- [x] Show banner only when tournament is in_progress with currentRound >= 1
+- [x] Persist dismissal in localStorage (namespaced per tournamentId) — never shows again after dismissed
+- [x] Hide if already subscribed, permission denied, or browser unsupported
+- [x] Hide for the director (isDirector check)
+- [x] Animate in after 1.2s delay (slide-up + fade), animate out on dismiss (300ms)
+- [x] Auto-hides when pushStatus changes to subscribed
+- [x] Wire banner into Tournament.tsx between timer banner and main content area
+- [x] 28 unit tests: shouldShowPushBanner (all rules), isPushBannerDismissed, dismissPushBanner, integration, edge cases
