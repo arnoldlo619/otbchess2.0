@@ -4624,3 +4624,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show subscription state: idle=Bell, subscribed=BellRing (green), denied=BellOff (red/disabled)
 - [x] Service worker already handles push event and notificationclick with tournament URL
 - [x] 32 unit tests for push notification logic (visibility, tooltip, icon, click, payload, stale cleanup)
+
+## Phase 20: Bracket in Results PDF
+
+- [x] Read PDF generation pipeline — uses window.print() with @media print CSS (no external library)
+- [x] Built BracketPrintSection component: round columns, match cards, SVG connector lines, champion banner
+- [x] Wire bracket section into results PDF — appears as "Bracket" tab in Print page section switcher
+- [x] Handle swiss_elim: elimStartRound computed from swissRounds config, only elim rounds shown
+- [x] Handle non-elimination formats: bracket tab hidden, slips tab is default
+- [x] Default to bracket tab for elimination/swiss_elim formats
+- [x] 27 unit tests: winner detection, round labels, champion detection, visibility logic, elimStartRound

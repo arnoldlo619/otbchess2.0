@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { TiebreakersGuide } from "@/components/TiebreakersGuide";
 import { CrossTableGuide } from "@/components/CrossTableGuide";
+import { BracketPrintSection } from "@/components/BracketPrintSection";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function resultSymbol(result: string, side: "white" | "black"): string {
@@ -649,9 +650,14 @@ function StandingsTable({ players, rounds, isDark }: { players: Player[]; rounds
 export default function PrintPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const [activeSection, setActiveSection] = useState<"slips" | "wallchart" | "standings" | "tiebreakers" | "crosstable-guide">("slips");
   const params = useParams<{ id: string }>();
   const tournamentId = params?.id ?? "otb-demo-2026";
+  // Detect elimination/swiss_elim format early so we can default to bracket tab
+  const earlyConfig = useMemo(() => getTournamentConfig(tournamentId), [tournamentId]);
+  const isElimFormatEarly = earlyConfig?.format === "elimination" || earlyConfig?.format === "swiss_elim";
+  const [activeSection, setActiveSection] = useState<"slips" | "wallchart" | "standings" | "tiebreakers" | "crosstable-guide" | "bracket">(
+    isElimFormatEarly ? "bracket" : "slips"
+  );
 
   // Load real tournament state; fall back to DEMO_TOURNAMENT for the demo route
   const realState = useMemo(() => loadTournamentState(tournamentId), [tournamentId]);
@@ -674,7 +680,13 @@ export default function PrintPage() {
   const currentRound = (tournament.roundData as typeof DEMO_TOURNAMENT.roundData).find((r) => r.number === tournament.currentRound);
   const players = tournament.players;
 
+  // Detect elimination/swiss_elim format
+  const isElimFormat = realConfig?.format === "elimination" || realConfig?.format === "swiss_elim";
+  const swissRoundsCount = (realConfig as { swissRounds?: number } | undefined)?.swissRounds ?? 0;
+  const elimStartRound = realConfig?.format === "swiss_elim" ? swissRoundsCount + 1 : 1;
+
   const sectionTabs = [
+    ...(isElimFormat ? [{ id: "bracket" as const, label: "Bracket", icon: "🏆" }] : []),
     { id: "slips" as const, label: "Pairing Slips", icon: "📋" },
     { id: "wallchart" as const, label: "Wall Chart", icon: "📊" },
     { id: "standings" as const, label: "Standings", icon: "🏆" },
@@ -996,7 +1008,18 @@ export default function PrintPage() {
             </div>
           )}
 
-          {/* ── Tiebreakers Guide ──────────────────────────────────────────── */}
+          {/* ── Elimination Bracket ──────────────────────────────────────────── */}
+          {activeSection === "bracket" && isElimFormat && (
+            <BracketPrintSection
+              rounds={tournament.roundData as Round[]}
+              players={players}
+              isDark={isDark}
+              elimStartRound={elimStartRound}
+              tournamentName={tournament.name}
+            />
+          )}
+
+          {/* ── Tiebreakers Guide ────────────────────────────────────────────────── */}
           {activeSection === "tiebreakers" && (() => {
             const liveStandings = computeStandings(players, tournament.roundData as Round[]);
             return (
