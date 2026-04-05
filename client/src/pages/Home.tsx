@@ -1237,7 +1237,6 @@ export default function Home() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user, logout } = useAuthContext();
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
 
@@ -1315,117 +1314,11 @@ export default function Home() {
   );
 
   const rightSlotEl = (
-    <div className="flex items-center gap-3">
-      {/* No user at all: show hamburger on mobile, Sign In button on desktop */}
-      {!user && (
-        <>
-          <div className="flex md:hidden">
-            <GuestMobileMenu
-              currentPage={activeNavTab}
-              onSignInClick={() => setAuthOpen(true)}
-            />
-          </div>
-          <div className="relative group hidden md:flex">
-            <button
-              onClick={() => setAuthOpen(true)}
-              aria-label="Sign In"
-              className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 text-white/70 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <LogIn className="w-4 h-4" />
-            </button>
-            <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium text-white bg-black/70 backdrop-blur-sm border border-white/10 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 z-50">
-              Sign In
-            </span>
-          </div>
-        </>
-      )}
-      {user && (
-        <>
-          {/* Avatar button — same on all screen sizes */}
-          <button
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className={`flex items-center gap-1.5 rounded-full border transition-all bg-black/30 backdrop-blur-md hover:bg-white/10 active:bg-white/15 ${
-              user.isGuest ? "border-amber-500/40" : "border-white/20"
-            }`}
-            style={{ padding: "3px 8px 3px 3px" }}
-          >
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-              style={{ background: user.isGuest ? "rgba(245,158,11,0.15)" : "#3D6B47" }}
-            >
-              {user.isGuest ? (
-                <Ghost className="w-3.5 h-3.5 text-amber-400" />
-              ) : (
-                <span className="text-xs font-bold text-white">
-                  {(user.displayName || user.email).charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
-          </button>
-
-          {/* Desktop dropdown */}
-          {userMenuOpen && (
-            <>
-              <div className="fixed inset-0 z-40 hidden md:block" onClick={() => setUserMenuOpen(false)} />
-              <div
-                className="absolute right-0 top-full mt-2 w-56 rounded-2xl shadow-2xl border z-50 overflow-hidden hidden md:block"
-                style={{ background: "oklch(0.17 0.06 145 / 0.97)", borderColor: "rgba(61,107,71,0.22)", backdropFilter: "blur(20px)" }}
-              >
-                {/* Nav links */}
-                <div className="px-2 pt-2 pb-1">
-                  <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Navigate</p>
-                  {[
-                    { name: "Tournaments", href: getDashboardUrl(), Icon: LayoutDashboard },
-                    { name: "Clubs",     href: "/clubs",          Icon: Building2 },
-                    { name: "Battle",    href: "/battle",         Icon: Swords },
-                    { name: "Analyze",   href: "/record",         Icon: Video },
-                  ].map(({ name, href, Icon }) => (
-                    <Link
-                      key={name}
-                      href={href}
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
-                    >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
-                      <span>{name}</span>
-                    </Link>
-                  ))}
-                </div>
-                <div className="mx-3 my-1 h-px bg-white/08" />
-                {/* User actions */}
-                <div className="px-2 pb-2">
-                  {!user.isGuest && (
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Crown className="w-4 h-4" /> My Profile
-                    </Link>
-                  )}
-                  {user.isGuest && (
-                    <button
-                      onClick={() => { setUserMenuOpen(false); setAuthOpen(true); }}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-300 hover:bg-amber-500/10 transition-colors"
-                    >
-                      <Crown className="w-4 h-4" /> Create Free Account
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { logout(); setUserMenuOpen(false); }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" /> Sign Out
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-
-        </>
-      )}
-    </div>
+    <AvatarNavDropdown
+      currentPage={activeNavTab}
+      onSignInClick={() => setAuthOpen(true)}
+      dashboardUrl={getDashboardUrl()}
+    />
   );
 
   return (
@@ -1452,102 +1345,7 @@ export default function Home() {
       <TournamentWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark={isDark} />
 
-      {/* Mobile slide-up sheet — rendered at root level to escape backdrop-filter stacking context */}
-      {user && userMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[9990] md:hidden"
-            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-            onClick={() => setUserMenuOpen(false)}
-          />
-          <div
-            className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
-            style={{
-              background: "oklch(0.15 0.06 145 / 0.98)",
-              border: "1px solid rgba(61,107,71,0.22)",
-              backdropFilter: "blur(24px)",
-              paddingBottom: "env(safe-area-inset-bottom, 16px)",
-              boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
-            }}
-          >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
-            </div>
-            {/* Identity */}
-            <div className="flex items-center gap-3 px-5 pt-2 pb-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: user.isGuest ? "rgba(245,158,11,0.15)" : "#3D6B47" }}>
-                {user.isGuest ? <Ghost className="w-5 h-5 text-amber-400" /> : <span className="text-sm font-bold text-white">{(user.displayName || user.email).charAt(0).toUpperCase()}</span>}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{user.displayName || user.email}</p>
-                {user.isGuest && <p className="text-[11px] text-amber-400/70">Guest session</p>}
-              </div>
-            </div>
-            {/* Divider */}
-            <div className="mx-4 mb-2 h-px bg-white/08" />
-            {/* Nav links */}
-            <div className="px-3 pb-1">
-              <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">Navigate</p>
-              {[
-                { name: "Tournaments", href: getDashboardUrl(), Icon: LayoutDashboard },
-                { name: "Clubs",     href: "/clubs",          Icon: Building2 },
-                { name: "Battle",    href: "/battle",         Icon: Swords },
-                { name: "Analyze",   href: "/record",         Icon: Video },
-              ].map(({ name, href, Icon }) => (
-                <Link
-                  key={name}
-                  href={href}
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/06">
-                    <Icon className="w-4 h-4 text-white/50" />
-                  </div>
-                  <span>{name}</span>
-                </Link>
-              ))}
-            </div>
-            {/* Divider */}
-            <div className="mx-4 my-2 h-px bg-white/08" />
-            {/* User actions */}
-            <div className="px-3 pb-3">
-              {!user.isGuest && (
-                <Link
-                  href="/profile"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/06">
-                    <Crown className="w-4 h-4 text-white/50" />
-                  </div>
-                  <span>My Profile</span>
-                </Link>
-              )}
-              {user.isGuest && (
-                <button
-                  onClick={() => { setUserMenuOpen(false); setAuthOpen(true); }}
-                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-amber-300 hover:bg-amber-500/10 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-500/10">
-                    <Crown className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <span>Create Free Account</span>
-                </button>
-              )}
-              <button
-                onClick={() => { logout(); setUserMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-red-500/08">
-                  <LogOut className="w-4 h-4 text-red-400" />
-                </div>
-                <span>Sign Out</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+
     </div>
   );
 }

@@ -31,6 +31,7 @@ import {
   Sun,
   Moon,
   Timer,
+  Camera,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
@@ -232,7 +233,7 @@ function Sparkline({
   );
 }
 
-// ─── Inner avatar circle (handles chess.com photo + shimmer + fallback) ───────
+// ─── Inner avatar circle (handles chess.com photo + shimmer + fallback) ─────────────────
 function AvatarCircle({
   user,
 }: {
@@ -293,12 +294,34 @@ export function AvatarNavDropdown({
   className = "",
   dashboardUrl,
 }: AvatarNavDropdownProps) {
-  const { user, logout } = useAuthContext();
+  const { user, logout, updateProfile } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [open, setOpen]   = useState(false);
   const [location]        = useLocation();
   const wrapperRef        = useRef<HTMLDivElement>(null);
+  const avatarInputRef    = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const handleAvatarUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !updateProfile) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setAvatarUploading(true);
+      try {
+        await updateProfile({ avatarUrl: dataUrl });
+      } catch {
+        // silently ignore
+      } finally {
+        setAvatarUploading(false);
+        // reset so same file can be re-selected
+        if (avatarInputRef.current) avatarInputRef.current.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [updateProfile]);
   // Internal auth modal — used when the parent page doesn't provide onSignInClick
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
   const handleSignIn = () => {
@@ -562,13 +585,23 @@ export function AvatarNavDropdown({
             {/* ── User identity header (when logged in) ── */}
             {user && !user.isGuest && (
               <div className="flex items-center gap-3 px-4 pt-3 pb-2">
-                {/* Larger avatar preview */}
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                {/* Larger avatar preview — click to change photo */}
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="relative w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 group"
                   style={{ background: "#3D6B47" }}
+                  title="Change profile photo"
+                  disabled={avatarUploading}
                 >
                   <AvatarCircle user={user} />
-                </div>
+                  {/* Camera overlay on hover */}
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {avatarUploading
+                      ? <div className="w-3 h-3 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                      : <Camera className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                </button>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-white truncate leading-tight">
                     {user.displayName || user.email}
@@ -875,12 +908,22 @@ export function AvatarNavDropdown({
               {/* User identity */}
               {user && !user.isGuest && (
                 <div className="flex items-center gap-3 px-5 pt-2 pb-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                  {/* Avatar — click to change photo */}
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="relative w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 group"
                     style={{ background: "#3D6B47" }}
+                    title="Change profile photo"
+                    disabled={avatarUploading}
                   >
                     <AvatarCircle user={user} />
-                  </div>
+                    <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {avatarUploading
+                        ? <div className="w-3.5 h-3.5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                        : <Camera className="w-4 h-4 text-white" />}
+                    </div>
+                  </button>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-white truncate">
                       {user.displayName || user.email}
@@ -997,6 +1040,14 @@ export function AvatarNavDropdown({
       </AnimatePresence>,
         document.body
       )}
+      {/* Hidden file input for avatar upload */}
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarUpload}
+      />
     </div>
   );
 }
