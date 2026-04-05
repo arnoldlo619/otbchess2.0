@@ -167,6 +167,7 @@ import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
+import { TournamentWizard } from "@/components/TournamentWizard";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -659,24 +660,32 @@ const ACCENT_PRESETS = [
   "#4CAF50", "#2196F3", "#9C27B0", "#FF5722", "#FF9800", "#E91E63", "#00BCD4", "#795548",
 ];
 
+const OTB_LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png";
+
 function CreateEventModal({
   clubId,
+  clubName,
   userId,
   displayName,
   clubAccent,
   onCreated,
   onClose,
+  onOpenTournamentWizard,
 }: {
   clubId: string;
+  clubName: string;
   userId: string;
   displayName: string;
   clubAccent?: string;
   onCreated: () => void;
   onClose: () => void;
+  onOpenTournamentWizard: () => void;
 }) {
+  type Step = "pick" | "details";
+  const [step, setStep] = useState<Step>("pick");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [startTime, setStartTime] = useState("19:00");
   const [endTime, setEndTime] = useState("22:00");
   const [venue, setVenue] = useState("");
@@ -685,17 +694,6 @@ function CreateEventModal({
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [accentColor, setAccentColor] = useState(clubAccent ?? "#4CAF50");
   const [submitting, setSubmitting] = useState(false);
-  // Casual event type
-  type EvType = "standard" | "speed_dating" | "trivia_night" | "puzzle_relay";
-  const [eventType, setEventType] = useState<EvType>("standard");
-  const [sdRounds, setSdRounds] = useState(8);
-  const [sdMinutes, setSdMinutes] = useState(10);
-  const [triviaCategories, setTriviaCategories] = useState("Chess History, Openings, Endgames");
-  const [triviaCount, setTriviaCount] = useState(20);
-  const [relayTeams, setRelayTeams] = useState(4);
-  const [relayDifficulty, setRelayDifficulty] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
-
-  // Live preview of cover image
   const previewValid = coverImageUrl.startsWith("http");
 
   function submit(e: React.FormEvent) {
@@ -718,10 +716,6 @@ function CreateEventModal({
       creatorId: userId,
       creatorName: displayName,
       isPublished: true,
-      eventType: eventType === "standard" ? undefined : eventType,
-      ...(eventType === "speed_dating" ? { speedDatingRounds: sdRounds, speedDatingMinutes: sdMinutes } : {}),
-      ...(eventType === "trivia_night" ? { triviaCategories: triviaCategories.split(",").map(s => s.trim()).filter(Boolean), triviaQuestionCount: triviaCount } : {}),
-      ...(eventType === "puzzle_relay" ? { puzzleRelayTeams: relayTeams, puzzleRelayDifficulty: relayDifficulty } : {}),
     });
     setSubmitting(false);
     toast.success("Event created!");
@@ -732,178 +726,315 @@ function CreateEventModal({
   const inputCls = "w-full bg-white/07 border border-white/12 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-[#4CAF50]/60 transition-colors";
   const labelCls = "block text-white/60 text-xs font-semibold uppercase tracking-wider mb-1.5";
 
-  return (
-    <div className="modal-overlay z-[100]">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+  // ── Step 1: Event type picker (full-screen wizard style) ──────────────────
+  if (step === "pick") {
+    return (
       <div
-        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: "oklch(0.14 0.05 240)", border: "1px solid rgba(255,255,255,0.10)" }}
+        className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+        style={{
+          background: "linear-gradient(160deg, oklch(0.13 0.06 160) 0%, oklch(0.09 0.04 200) 100%)",
+        }}
       >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/08"
-          style={{ background: `linear-gradient(135deg, ${accentColor}22 0%, transparent 100%)` }}
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: accentColor }}>
-              <Calendar className="w-4 h-4 text-white" />
+          <X className="w-4 h-4 text-white/60" />
+        </button>
+
+        <div className="w-full max-w-2xl px-6 flex flex-col items-center gap-8">
+          {/* Logo + headline */}
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src={OTB_LOGO_URL}
+              alt="OTB Chess"
+              style={{ height: 36, width: "auto", objectFit: "contain", filter: "brightness(0) invert(1) opacity(0.85)" }}
+            />
+            <div className="text-center">
+              <h2
+                className="text-3xl sm:text-4xl font-black text-white leading-tight mb-2"
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                Create an Event
+              </h2>
+              <p className="text-white/50 text-sm">What kind of event are you hosting?</p>
             </div>
-            <h2 className="text-white font-bold text-lg">Create Event</h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/08 hover:bg-white/15 transition-colors">
-            <X className="w-4 h-4 text-white/60" />
-          </button>
+
+          {/* Event type cards */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            {/* Standard Night */}
+            <button
+              type="button"
+              onClick={() => setStep("details")}
+              className="group relative flex flex-col items-start gap-3 rounded-3xl border text-left transition-all duration-200 overflow-hidden"
+              style={{
+                padding: "20px 20px",
+                background: "rgba(61,107,71,0.25)",
+                border: "2px solid rgba(61,107,71,0.55)",
+                backdropFilter: "blur(8px)",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.40)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "#3D6B47";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(61,107,71,0.35)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.25)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(61,107,71,0.55)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+              }}
+            >
+              <span
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                style={{ background: "#4CAF50", color: "#fff" }}
+              >
+                Recommended
+              </span>
+              <div className="hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }}>
+                <Calendar className="w-5 h-5 text-white" strokeWidth={1.8} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h3>
+                <p className="text-white/55 text-sm leading-relaxed">Casual club evening — RSVP, venue, and event details for your members.</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
+                <Clock className="w-3.5 h-3.5" />
+                Ready in under 30 seconds
+              </div>
+              <ArrowRight className="absolute bottom-5 right-5 w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.35)" }} />
+            </button>
+
+            {/* Club Tournament */}
+            <button
+              type="button"
+              onClick={() => { onClose(); onOpenTournamentWizard(); }}
+              className="group relative flex flex-col items-start gap-3 rounded-3xl border text-left transition-all duration-200 overflow-hidden"
+              style={{
+                padding: "20px 20px",
+                background: "rgba(255,255,255,0.06)",
+                border: "2px solid rgba(255,255,255,0.12)",
+                backdropFilter: "blur(8px)",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+              }}
+            >
+              <span
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.70)" }}
+              >
+                Club Exclusive
+              </span>
+              <div className="hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center" style={{ background: "rgba(255,255,255,0.10)" }}>
+                <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Club Tournament</h3>
+                <p className="text-white/55 text-sm leading-relaxed">Run a full Swiss or Quickstart tournament hosted under {clubName}.</p>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <Trophy className="w-3.5 h-3.5" />
+                Full tournament wizard
+              </div>
+              <ArrowRight className="absolute bottom-5 right-5 w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.25)" }} />
+            </button>
+
+            {/* Speed Dating — Coming Soon */}
+            <div
+              className="relative flex flex-col items-start gap-3 rounded-3xl border overflow-hidden opacity-50 cursor-not-allowed select-none"
+              style={{
+                padding: "20px 20px",
+                background: "rgba(255,255,255,0.04)",
+                border: "2px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <span
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+              >
+                Coming Soon
+              </span>
+              <div className="hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
+                <Zap className="w-5 h-5 text-white/40" strokeWidth={1.8} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white/50 mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Speed Dating</h3>
+                <p className="text-white/30 text-sm leading-relaxed">Timed round-robin social meetups for your club members.</p>
+              </div>
+              <Lock className="absolute bottom-5 right-5 w-4 h-4 text-white/20" />
+            </div>
+
+            {/* Trivia Night — Coming Soon */}
+            <div
+              className="relative flex flex-col items-start gap-3 rounded-3xl border overflow-hidden opacity-50 cursor-not-allowed select-none"
+              style={{
+                padding: "20px 20px",
+                background: "rgba(255,255,255,0.04)",
+                border: "2px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <span
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+              >
+                Coming Soon
+              </span>
+              <div className="hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
+                <Star className="w-5 h-5 text-white/40" strokeWidth={1.8} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white/50 mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Trivia Night</h3>
+                <p className="text-white/30 text-sm leading-relaxed">Chess knowledge quiz with leaderboard scoring.</p>
+              </div>
+              <Lock className="absolute bottom-5 right-5 w-4 h-4 text-white/20" />
+            </div>
+
+            {/* Puzzle Relay — Coming Soon (full width) */}
+            <div
+              className="relative sm:col-span-2 flex flex-col items-start gap-3 rounded-3xl border overflow-hidden opacity-50 cursor-not-allowed select-none"
+              style={{
+                padding: "20px 20px",
+                background: "rgba(255,255,255,0.04)",
+                border: "2px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <span
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+              >
+                Coming Soon
+              </span>
+              <div className="hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
+                <Flame className="w-5 h-5 text-white/40" strokeWidth={1.8} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white/50 mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Puzzle Relay</h3>
+                <p className="text-white/30 text-sm leading-relaxed">Team-based puzzle race — first team to solve all puzzles wins.</p>
+              </div>
+              <Lock className="absolute bottom-5 right-5 w-4 h-4 text-white/20" />
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Step 2: Standard Night details form ───────────────────────────────────
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+      style={{
+        background: "linear-gradient(160deg, oklch(0.13 0.06 160) 0%, oklch(0.09 0.04 200) 100%)",
+      }}
+    >
+      {/* Close */}
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+        style={{ background: "rgba(255,255,255,0.08)" }}
+        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+      >
+        <X className="w-4 h-4 text-white/60" />
+      </button>
+
+      {/* Back */}
+      <button
+        onClick={() => setStep("pick")}
+        className="absolute top-5 left-5 flex items-center gap-1.5 text-white/50 hover:text-white/80 text-sm font-semibold transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back
+      </button>
+
+      <div className="w-full max-w-lg px-6 flex flex-col gap-6">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-2 text-center">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: accentColor }}>
+            <Calendar className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-white" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h2>
+          <p className="text-white/50 text-sm">Fill in the details for your club event</p>
         </div>
 
-        <form onSubmit={submit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-
-          {/* Cover image preview */}
+        <form onSubmit={submit} className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+          {/* Cover preview */}
           {previewValid && (
-            <div className="relative w-full h-32 rounded-2xl overflow-hidden">
+            <div className="relative w-full h-28 rounded-2xl overflow-hidden">
               <img src={coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <span className="absolute bottom-2 left-3 text-white/70 text-xs font-semibold">Cover Preview</span>
             </div>
           )}
 
-          {/* Event Type Selector */}
-          <div>
-            <label className={labelCls}>Event Format</label>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { value: "standard", label: "Standard Night", emoji: "♟️", desc: "Tournament / casual play" },
-                { value: "speed_dating", label: "Speed Dating", emoji: "💘", desc: "Timed round-robin meetups" },
-                { value: "trivia_night", label: "Trivia Night", emoji: "🧠", desc: "Chess knowledge quiz" },
-                { value: "puzzle_relay", label: "Puzzle Relay", emoji: "🏁", desc: "Team puzzle race" },
-              ] as const).map(({ value, label, emoji, desc }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setEventType(value)}
-                  className={`flex items-start gap-2 p-3 rounded-xl border text-left transition-all ${
-                    eventType === value
-                      ? "border-[#4CAF50]/60 bg-[#4CAF50]/10 text-white"
-                      : "border-white/10 bg-white/05 text-white/50 hover:border-white/20"
-                  }`}
-                >
-                  <span className="text-lg leading-none mt-0.5">{emoji}</span>
-                  <div>
-                    <p className="text-xs font-bold">{label}</p>
-                    <p className="text-[10px] opacity-60 mt-0.5">{desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Speed Dating options */}
-          {eventType === "speed_dating" && (
-            <div className="rounded-xl border border-white/10 bg-white/05 p-4 space-y-3">
-              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Speed Dating Settings</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelCls}>Rounds</label>
-                  <input type="number" min={2} max={20} value={sdRounds} onChange={e => setSdRounds(+e.target.value)} className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Min / Round</label>
-                  <input type="number" min={3} max={30} value={sdMinutes} onChange={e => setSdMinutes(+e.target.value)} className={inputCls} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Trivia Night options */}
-          {eventType === "trivia_night" && (
-            <div className="rounded-xl border border-white/10 bg-white/05 p-4 space-y-3">
-              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Trivia Settings</p>
-              <div>
-                <label className={labelCls}>Categories (comma-separated)</label>
-                <input value={triviaCategories} onChange={e => setTriviaCategories(e.target.value)} placeholder="Chess History, Openings, Endgames" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Number of Questions</label>
-                <input type="number" min={5} max={50} value={triviaCount} onChange={e => setTriviaCount(+e.target.value)} className={inputCls} />
-              </div>
-            </div>
-          )}
-
-          {/* Puzzle Relay options */}
-          {eventType === "puzzle_relay" && (
-            <div className="rounded-xl border border-white/10 bg-white/05 p-4 space-y-3">
-              <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Puzzle Relay Settings</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelCls}>Teams</label>
-                  <input type="number" min={2} max={10} value={relayTeams} onChange={e => setRelayTeams(+e.target.value)} className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Difficulty</label>
-                  <select value={relayDifficulty} onChange={e => setRelayDifficulty(e.target.value as "beginner" | "intermediate" | "advanced")} className={inputCls}>
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Title */}
           <div>
             <label className={labelCls}>Event Title *</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
           </div>
 
           {/* Date + Start + End */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-1">
               <label className={labelCls}>Date *</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Start</label>
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>End</label>
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
 
-          {/* Venue + Address */}
+          {/* Venue + Admission */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Venue</label>
-              <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
+              <input value={venue} onChange={e => setVenue(e.target.value)} placeholder="The Chess Lounge" className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Admission</label>
-              <input value={admissionNote} onChange={(e) => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} />
+              <input value={admissionNote} onChange={e => setAdmissionNote(e.target.value)} placeholder="Free · $5 at door" className={inputCls} />
             </div>
           </div>
 
           <div>
             <label className={labelCls}>Address</label>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} />
+            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full street address" className={inputCls} />
           </div>
 
           {/* Cover image URL */}
           <div>
             <label className={labelCls}>Cover Image URL</label>
-            <input
-              value={coverImageUrl}
-              onChange={(e) => setCoverImageUrl(e.target.value)}
-              placeholder="https://… (paste an image link)"
-              className={inputCls}
-            />
+            <input value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} placeholder="https://… (paste an image link)" className={inputCls} />
           </div>
 
           {/* Accent color */}
           <div>
             <label className={labelCls}>Event Color</label>
             <div className="flex items-center gap-2 flex-wrap">
-              {ACCENT_PRESETS.map((c) => (
+              {ACCENT_PRESETS.map(c => (
                 <button
                   key={c}
                   type="button"
@@ -917,32 +1048,20 @@ function CreateEventModal({
                   }}
                 />
               ))}
-              <input
-                type="color"
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                className="w-7 h-7 rounded-full cursor-pointer border-0 bg-transparent"
-                title="Custom color"
-              />
+              <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="w-7 h-7 rounded-full cursor-pointer border-0 bg-transparent" title="Custom color" />
             </div>
           </div>
 
           {/* Description */}
           <div>
             <label className={labelCls}>Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Tell members what to expect…"
-              rows={3}
-              className={`${inputCls} resize-none`}
-            />
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell members what to expect…" rows={3} className={`${inputCls} resize-none`} />
           </div>
 
           <button
             type="submit"
             disabled={submitting || !title.trim() || !date}
-            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-98 disabled:opacity-50"
+            className="w-full py-3.5 rounded-2xl text-sm font-bold text-white transition-all active:scale-98 disabled:opacity-50"
             style={{ background: accentColor }}
           >
             {submitting ? "Creating…" : "Publish Event"}
@@ -2047,6 +2166,7 @@ export default function ClubDashboard() {
   const [tab, setTab] = useState<Tab>("events");
   const [loading, setLoading] = useState(true);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showTournamentWizard, setShowTournamentWizard] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
@@ -4524,11 +4644,21 @@ export default function ClubDashboard() {
       {showCreateEvent && user && (
         <CreateEventModal
           clubId={club.id}
+          clubName={club.name}
           userId={user.id}
           displayName={user.displayName}
           clubAccent={club.accentColor}
           onCreated={refreshEvents}
           onClose={() => setShowCreateEvent(false)}
+          onOpenTournamentWizard={() => setShowTournamentWizard(true)}
+        />
+      )}
+      {showTournamentWizard && (
+        <TournamentWizard
+          open={showTournamentWizard}
+          initialClubId={club.id}
+          initialClubName={club.name}
+          onClose={() => setShowTournamentWizard(false)}
         />
       )}
     </div>
