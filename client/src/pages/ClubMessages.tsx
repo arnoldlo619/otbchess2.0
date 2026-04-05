@@ -379,7 +379,7 @@ export default function ClubMessages() {
   return (
     <div className="min-h-screen bg-[#0d1f12] flex flex-col">
       {/* Nav */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0d1f12]/90 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0d1f12]/90 backdrop-blur-sm otb-header-safe">
         <button
           onClick={() => navigate(`/clubs/${clubId}`)}
           className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition"

@@ -736,7 +736,7 @@ export default function ReportPage() {
     >
       {/* ── Header ── */}
       <header
-        className={`sticky top-0 z-40 backdrop-blur-xl ${
+        className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${
           isDark
             ? "bg-[oklch(0.18_0.05_145/0.94)] border-b border-white/06"
             : "bg-white/92 border-b border-gray-100"

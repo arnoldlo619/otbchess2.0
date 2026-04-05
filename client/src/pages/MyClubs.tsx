@@ -720,7 +720,7 @@ export default function MyClubs() {
     <div className={`min-h-screen ${bg}`}>
 
       {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 border-b ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
+      <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">

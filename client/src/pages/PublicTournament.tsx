@@ -1490,7 +1490,7 @@ export default function PublicTournament() {
     <div className={`min-h-screen ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
       {/* ── Sticky Nav ─────────────────────────────────────────────────────────── */}
       <nav
-        className={`sticky top-0 z-40 backdrop-blur-xl border-b transition-colors ${
+        className={`sticky top-0 z-40 backdrop-blur-xl border-b otb-header-safe transition-colors ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/90 border-white/08"
             : "bg-white/90 border-[#EEEED2]"

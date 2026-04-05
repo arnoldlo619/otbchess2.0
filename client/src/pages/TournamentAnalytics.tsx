@@ -596,7 +596,7 @@ export default function TournamentAnalytics() {
         }`}
       >
         <nav
-          className={`sticky top-0 z-50 border-b backdrop-blur-xl ${
+          className={`sticky top-0 z-50 border-b backdrop-blur-xl otb-header-safe ${
             isDark
               ? "bg-[oklch(0.20_0.06_145)]/80 border-white/10"
               : "bg-white/80 border-[#EEEED2]"
@@ -671,7 +671,7 @@ export default function TournamentAnalytics() {
     >
       {/* Nav */}
       <nav
-        className={`sticky top-0 z-50 border-b backdrop-blur-xl ${
+        className={`sticky top-0 z-50 border-b backdrop-blur-xl otb-header-safe ${
           isDark
             ? "bg-[oklch(0.20_0.06_145)]/80 border-white/10"
             : "bg-white/80 border-[#EEEED2]"

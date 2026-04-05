@@ -2139,7 +2139,7 @@ function ClubDashboardSkeleton() {
     <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
       {/* Nav bar */}
       <div
-        className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08"
+        className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08 otb-header-safe"
         style={{ background: "oklch(0.20 0.06 145 / 0.92)", backdropFilter: "blur(12px)" }}
       >
         <div className="flex items-center gap-3">
@@ -2667,7 +2667,7 @@ export default function ClubDashboard() {
   return (
     <div className="min-h-screen bg-[oklch(0.20_0.06_145)] dark:bg-[oklch(0.20_0.06_145)]">
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08"
+      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08 otb-header-safe"
         style={{ background: "oklch(0.20 0.06 145 / 0.92)", backdropFilter: "blur(12px)" }}
       >
         <div className="flex items-center gap-3">

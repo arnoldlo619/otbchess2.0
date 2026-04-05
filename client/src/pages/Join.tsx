@@ -953,7 +953,7 @@ export default function JoinPage() {
       {/* -- Header ----------------------------------------------------------- */}
       <header className={`flex items-center justify-between px-4 pt-safe-top pb-3 pt-3 border-b ${
         isDark ? "border-white/06 bg-[oklch(0.18_0.05_145)]" : "border-gray-100 bg-[#F7FAF8]"
-      } sticky top-0 z-30 backdrop-blur-md`}
+      } sticky top-0 z-30 backdrop-blur-md otb-header-safe`}
         style={{ paddingTop: `max(env(safe-area-inset-top), 0.75rem)` }}>
         <div className="flex items-center gap-3">
           {step !== "code" && step !== "success" && (

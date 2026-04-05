@@ -116,7 +116,7 @@ export default function BattleHistory() {
   return (
     <div className="min-h-screen bg-[#0a1a0e] text-white flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 border-b border-white/5 bg-[#0a1a0e]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex items-center gap-3 px-4 py-3 border-b border-white/5 bg-[#0a1a0e]/90 backdrop-blur-md otb-header-safe">
         <Link href="/battle">
           <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
             <ArrowLeft className="w-4 h-4 text-white/60" />

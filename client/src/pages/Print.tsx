@@ -705,7 +705,7 @@ export default function PrintPage() {
       >
         {/* ── Top Bar (no-print) ─────────────────────────────────────────── */}
         <header
-          className={`no-print sticky top-0 z-40 border-b transition-colors duration-300 ${
+          className={`no-print sticky top-0 z-40 border-b otb-header-safe transition-colors duration-300 ${
             isDark
               ? "bg-[oklch(0.20_0.06_145)]/95 backdrop-blur-md border-white/08"
               : "bg-white/95 backdrop-blur-md border-gray-100"

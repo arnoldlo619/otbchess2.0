@@ -916,7 +916,7 @@ export default function LeagueDashboard() {
 
       {/* Sticky header */}
       <div
-        className="sticky top-0 z-30 px-4 py-3 flex items-center gap-3"
+        className="sticky top-0 z-30 px-4 py-3 flex items-center gap-3 otb-header-safe"
         style={{
           background: isDark ? "oklch(0.17 0.05 145 / 0.95)" : "rgba(255,255,255,0.95)",
           backdropFilter: "blur(12px)",

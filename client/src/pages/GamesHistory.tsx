@@ -222,7 +222,7 @@ export default function GamesHistory() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* ── Header ── */}
-      <div className="sticky top-0 z-20 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/[0.06]">
+      <div className="sticky top-0 z-20 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/[0.06] otb-header-safe">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
             <button

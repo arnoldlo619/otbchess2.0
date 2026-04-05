@@ -263,8 +263,9 @@ export function AnimeNavBar({
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 24 }}
-        className="w-full px-3 md:px-6 pt-3 md:pt-10 pb-2 overflow-visible"
+        className="w-full px-3 md:px-6 pb-2 overflow-visible"
         style={{
+          paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
           background: outerBg,
           backdropFilter: `blur(${blurPx}px)`,
           WebkitBackdropFilter: `blur(${blurPx}px)`,

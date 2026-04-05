@@ -167,7 +167,7 @@ export default function FinalStandings() {
     <div className={`min-h-screen ${bg} flex flex-col`}>
 
       {/* ── Nav bar ──────────────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 ${headerBg} border-b ${border} backdrop-blur-sm`}>
+      <header className={`sticky top-0 z-30 otb-header-safe ${headerBg} border-b ${border} backdrop-blur-sm`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           {/* Back */}
           <Link

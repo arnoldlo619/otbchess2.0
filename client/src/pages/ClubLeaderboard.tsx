@@ -604,7 +604,7 @@ export default function ClubLeaderboard() {
     <div className="min-h-screen" style={{ background: pageBg, color: textMain }}>
       {/* ── Sticky header ─────────────────────────────────────────────────── */}
       <div
-        className="sticky top-0 z-20 backdrop-blur-sm border-b"
+        className="sticky top-0 z-20 backdrop-blur-sm border-b otb-header-safe"
         style={{ background: headerBg, borderColor: headerBdr }}
       >
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">

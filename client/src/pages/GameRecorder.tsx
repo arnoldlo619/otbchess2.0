@@ -591,7 +591,7 @@ export default function GameRecorder() {
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl border-b ${
+        className={`sticky top-0 z-50 backdrop-blur-xl border-b otb-header-safe ${
           isDark ? "bg-[#0d1a0f]/80 border-white/10" : "bg-white/80 border-gray-200"
         }`}
       >

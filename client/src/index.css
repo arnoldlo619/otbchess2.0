@@ -464,6 +464,20 @@
   .safe-left   { padding-left: env(safe-area-inset-left); }
   .safe-right  { padding-right: env(safe-area-inset-right); }
 
+  /**
+   * Global safe-area-inset-top guard.
+   * Prevents any sticky/fixed header from overlapping the iOS notch,
+   * Dynamic Island, or Android status bar.
+   * Uses CSS custom property --_pt to preserve any inline padding-top
+   * already set on the element (e.g. via style= or Tailwind pt-*).
+   * The max() ensures at least 12px on devices without a notch.
+   */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .otb-header-safe {
+      padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+    }
+  }
+
   /* Touch target enforcement */
   .touch-target {
     min-height: 48px;

@@ -954,7 +954,7 @@ export default function ClubProfile() {
     <div className={`min-h-screen ${bg}`}>
 
       {/* ── Sticky top nav ─────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 border-b ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
+      <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate("/clubs")}

@@ -55,11 +55,16 @@ export function MinimalTournamentNav({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[9999] h-14 flex items-center px-3 sm:px-6 border-b transition-colors ${
+      className={`fixed top-0 left-0 right-0 z-[9999] flex items-center px-3 sm:px-6 border-b transition-colors ${
         isDark
           ? "bg-[oklch(0.18_0.05_145)]/90 border-white/08 backdrop-blur-md"
           : "bg-white/90 border-black/08 backdrop-blur-md"
       }`}
+      style={{
+        paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "0.5rem",
+        minHeight: "3.5rem",
+      }}
     >
       {/* Left slot — logo only (links to home) */}
       <div className="flex-1 flex items-center">

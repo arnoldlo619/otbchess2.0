@@ -457,7 +457,7 @@ export default function MatchupPrep() {
     <div className={`min-h-screen ${t.page}`}>
 
       {/* ── Sticky Header ── */}
-      <div className={`sticky top-0 z-40 backdrop-blur-xl ${t.header}`}>
+      <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
         <div className="max-w-3xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
 
           <button

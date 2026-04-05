@@ -337,7 +337,7 @@ export default function ProfilePage() {
     <div className={`min-h-screen ${bg}`}>
       {/* Top nav */}
       <div
-        className={`sticky top-0 z-10 flex items-center justify-between px-4 py-4 border-b ${
+        className={`sticky top-0 z-10 flex items-center justify-between px-4 py-4 border-b otb-header-safe ${
           isDark ? "border-white/10 bg-[#0d1f12]/90" : "border-gray-200 bg-white/90"
         } backdrop-blur-sm`}
       >
