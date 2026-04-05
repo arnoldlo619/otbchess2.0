@@ -125,11 +125,14 @@ const DEFAULT_DATA: WizardData = {
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
 
+const OTB_LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png";
+
 const SCHEDULE_STEPS = [
   {
     id: 0,
     label: "Details",
     icon: Trophy,
+    iconImg: OTB_LOGO_URL,
     hero: {
       eyebrow: "Step 1 of 4",
       title: "Name your\ntournament",
@@ -250,6 +253,7 @@ function HeroPanel({
 }) {
   const s = mode === "quickstart" ? QUICKSTART_HERO : SCHEDULE_STEPS[step];
   const Icon = s.icon;
+  const iconImg = (s as { iconImg?: string }).iconImg;
 
   const dots = mode === "quickstart" ? 2 : SCHEDULE_STEPS.length; // quickstart: mode-select + quickstart form
   const activeDot = mode === "quickstart" ? 1 : step;
@@ -303,7 +307,11 @@ function HeroPanel({
             className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-1"
             style={{ background: "rgba(255,255,255,0.15)" }}
           >
-            <Icon className="w-5 h-5 text-white" strokeWidth={1.8} />
+            {iconImg ? (
+              <img src={iconImg} alt="OTB" className="w-5 h-5 object-contain drop-shadow-sm" />
+            ) : (
+              <Icon className="w-5 h-5 text-white" strokeWidth={1.8} />
+            )}
           </div>
           <h2
             className="text-4xl font-bold text-white leading-tight"
