@@ -524,6 +524,27 @@ function EventCard({
           )}
         </div>
 
+        {/* Linked tournament CTA */}
+        {event.tournamentId && (
+          <div className="flex items-center gap-2 pt-1">
+            <a
+              href={`/tournament/${event.tournamentId}/play`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 active:scale-95"
+              style={{ background: accent + "22", color: accent, border: `1px solid ${accent}44` }}
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              View Tournament
+            </a>
+            {isOwner && (
+              <a
+                href={`/tournament/${event.tournamentId}/manage`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white/50 border border-white/10 hover:text-white/80 hover:border-white/20 transition-all"
+              >
+                Manage
+              </a>
+            )}
+          </div>
+        )}
         {/* Comments toggle */}
         <button
           onClick={() => setShowComments((v) => !v)}
@@ -4653,12 +4674,31 @@ export default function ClubDashboard() {
           onOpenTournamentWizard={() => setShowTournamentWizard(true)}
         />
       )}
-      {showTournamentWizard && (
+      {showTournamentWizard && user && (
         <TournamentWizard
           open={showTournamentWizard}
           initialClubId={club.id}
           initialClubName={club.name}
-          onClose={() => setShowTournamentWizard(false)}
+          onClose={(createdTournamentId, createdTournamentName) => {
+            setShowTournamentWizard(false);
+            if (createdTournamentId && createdTournamentName) {
+              // Auto-create a linked club event so it appears in the Events tab
+              createClubEvent({
+                clubId: club.id,
+                title: createdTournamentName,
+                description: `Club tournament hosted by ${club.name}. Join and track results live.`,
+                startAt: new Date().toISOString(),
+                creatorId: user.id,
+                creatorName: user.displayName,
+                accentColor: club.accentColor,
+                isPublished: true,
+                eventType: "standard",
+                tournamentId: createdTournamentId,
+              });
+              refreshEvents();
+              setTab("events");
+            }
+          }}
         />
       )}
     </div>
