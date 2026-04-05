@@ -30,8 +30,11 @@ import {
   X,
   TrendingUp,
   Download,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { toast } from "sonner";
 import { NavLogo } from "@/components/NavLogo";
 import {
   ARCHIVE_TOURNAMENTS,
@@ -39,7 +42,7 @@ import {
   type ArchiveTournament,
   type ArchivePlayer,
 } from "@/lib/archiveData";
-import { listTournaments, type TournamentConfig } from "@/lib/tournamentRegistry";
+import { listTournaments, deleteTournament, type TournamentConfig } from "@/lib/tournamentRegistry";
 import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { exportStandingsCsv } from "@/lib/exportCsv";
@@ -407,10 +410,14 @@ function TournamentCard({
 function UserTournamentCard({
   config,
   isDark,
+  onDelete,
 }: {
   config: TournamentConfig;
   isDark: boolean;
+  onDelete?: (id: string) => Promise<void>;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const state = loadTournamentState(config.id);
   const standings = state ? computeStandings(state.players, state.rounds) : [];
   const winner = standings[0];
@@ -525,7 +532,65 @@ function UserTournamentCard({
             <span className="hidden sm:inline">CSV</span>
           </button>
         )}
+        {onDelete && (
+          <button
+            title="Delete tournament"
+            onClick={() => setConfirmDelete(true)}
+            disabled={isDeleting}
+            className={`flex-shrink-0 flex items-center justify-center px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-40 ${
+              isDark
+                ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+            }`}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
+      {/* ── Inline delete confirmation ──────────────────────────────────── */}
+      {confirmDelete && (
+        <div className={`mx-5 mb-4 rounded-xl border px-4 py-3 ${
+          isDark ? "bg-red-500/08 border-red-500/25" : "bg-red-50 border-red-200"
+        }`}>
+          <div className="flex items-start gap-2 mb-3">
+            <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className={`text-xs font-semibold mb-0.5 ${
+                isDark ? "text-red-300" : "text-red-700"
+              }`}>Delete "{config.name}"?</p>
+              <p className={`text-[11px] ${
+                isDark ? "text-red-400/70" : "text-red-600/80"
+              }`}>All players, pairings, and results will be erased forever. There is no undo.</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={isDeleting}
+              onClick={async () => {
+                setIsDeleting(true);
+                try {
+                  await onDelete!(config.id);
+                } catch {
+                  setIsDeleting(false);
+                  setConfirmDelete(false);
+                }
+              }}
+              className="flex-1 text-xs font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 px-3 py-2 rounded-lg transition-colors"
+            >
+              {isDeleting ? "Deleting…" : "Yes, Delete Forever"}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              disabled={isDeleting}
+              className={`flex-1 text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${
+                isDark ? "bg-white/08 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -589,6 +654,36 @@ export default function Archive() {
   useEffect(() => {
     setUserTournaments(listTournaments());
   }, []);
+
+  // Delete a user tournament: call server API, then remove from localStorage
+  const handleDeleteTournament = async (id: string): Promise<void> => {
+    // Optimistic: remove from list immediately
+    setUserTournaments((prev) => prev.filter((t) => t.id !== id));
+    try {
+      const r = await fetch(`/api/tournament/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (r.ok) {
+        // Also clean up localStorage registry
+        deleteTournament(id);
+        toast.success("Tournament deleted");
+      } else {
+        // Restore on failure
+        setUserTournaments(listTournaments());
+        const err = await r.json().catch(() => ({}));
+        toast.error((err as { error?: string }).error ?? "Failed to delete tournament");
+        throw new Error("delete failed");
+      }
+    } catch (e) {
+      if ((e as Error).message !== "delete failed") {
+        // Network error — restore
+        setUserTournaments(listTournaments());
+        toast.error("Network error — could not delete tournament");
+      }
+      throw e;
+    }
+  };
 
   const filtered = useMemo(() => {
     let list = [...ARCHIVE_TOURNAMENTS];
@@ -873,7 +968,7 @@ export default function Archive() {
             </div>
             <div className="space-y-3">
               {userTournaments.map((config) => (
-                <UserTournamentCard key={config.id} config={config} isDark={isDark} />
+                <UserTournamentCard key={config.id} config={config} isDark={isDark} onDelete={handleDeleteTournament} />
               ))}
             </div>
             <div className={`border-b ${

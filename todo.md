@@ -4795,3 +4795,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Upgrade Director Settings tab: proper End Tournament inline confirmation UI
 - [x] Add Delete Tournament card to Director Settings tab (double-confirm, disabled for demo)
 - [x] Write 30 unit tests for auto-expiry logic, delete permission, end transition, batch processing
+
+## Phase 34: Delete Button on Archive "Your Tournaments" Cards (COMPLETED)
+
+- [x] Add onDelete prop to UserTournamentCard component
+- [x] Add inline delete confirmation UI to UserTournamentCard (trash icon button → confirm/cancel inline)
+- [x] Wire DELETE /api/tournament/:id API call from Archive page
+- [x] Remove tournament from local registry (localStorage) on successful delete
+- [x] Update "Your Tournaments" count after deletion
+- [x] Optimistic UI: remove card immediately on confirm, restore on API error
