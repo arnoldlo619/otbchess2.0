@@ -787,184 +787,205 @@ function CreateEventModal({
               <p className="text-white/50 text-sm">What kind of event are you hosting?</p>
             </div>
 
-            {/* Event type cards */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* ── Active event cards: horizontal scroll on mobile, 2-col grid on sm+ ── */}
+            <div className="w-full flex flex-col gap-3">
 
-              {/* Standard Night */}
-              <button
-                type="button"
-                onClick={() => setStep("details")}
-                className="group relative flex flex-col items-start gap-3 rounded-3xl text-left transition-all duration-200 overflow-hidden"
+              {/* Scroll row on mobile / side-by-side grid on sm+ */}
+              <div
+                className="scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:mx-0 sm:px-0"
                 style={{
-                  padding: "22px 22px 20px",
-                  background: "rgba(61,107,71,0.25)",
-                  border: "2px solid rgba(61,107,71,0.55)",
-                  backdropFilter: "blur(8px)",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.40)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#3D6B47";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(61,107,71,0.35)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.25)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(61,107,71,0.55)";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                  /* mobile: horizontal scroll strip */
+                  display: "flex",
+                  flexDirection: "row",
+                  overflowX: "auto",
+                  gap: "12px",
+                  scrollbarWidth: "none",
+                  WebkitOverflowScrolling: "touch",
+                  /* bleed to screen edges on mobile so second card peeks */
+                  marginLeft: "-24px",
+                  marginRight: "-24px",
+                  paddingLeft: "24px",
+                  paddingRight: "24px",
+                  paddingBottom: "4px",
                 }}
               >
-                {/* Badge row */}
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-                  style={{ background: "#4CAF50", color: "#fff" }}
+                {/* Standard Night */}
+                <button
+                  type="button"
+                  onClick={() => setStep("details")}
+                  className="group relative flex flex-col items-start gap-3 rounded-3xl text-left transition-all duration-200 overflow-hidden flex-shrink-0 sm:flex-shrink sm:w-auto"
+                  style={{
+                    padding: "22px 22px 20px",
+                    /* on mobile: 80vw wide so the second card peeks; on sm+ fill grid cell */
+                    width: "min(80vw, 100%)",
+                    minWidth: "260px",
+                    background: "rgba(61,107,71,0.25)",
+                    border: "2px solid rgba(61,107,71,0.55)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.40)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#3D6B47";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(61,107,71,0.35)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(61,107,71,0.25)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(61,107,71,0.55)";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                  }}
                 >
-                  Recommended
-                </span>
-                {/* Icon */}
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }}>
-                  <Calendar className="w-5 h-5 text-white" strokeWidth={1.8} />
-                </div>
-                {/* Text */}
-                <div className="pr-8">
-                  <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h3>
-                  <p className="text-white/55 text-sm leading-relaxed">Casual club evening — RSVP, venue, and event details for your members.</p>
-                </div>
-                {/* Footer row */}
-                <div className="flex items-center justify-between w-full mt-auto pt-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    <Clock className="w-3.5 h-3.5" />
-                    Ready in under 30 seconds
+                  <span
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                    style={{ background: "#4CAF50", color: "#fff" }}
+                  >
+                    Recommended
+                  </span>
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }}>
+                    <Calendar className="w-5 h-5 text-white" strokeWidth={1.8} />
                   </div>
-                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.35)" }} />
-                </div>
-              </button>
-
-              {/* Club Tournament */}
-              <button
-                type="button"
-                onClick={() => { onClose(); onOpenTournamentWizard(); }}
-                className="group relative flex flex-col items-start gap-3 rounded-3xl text-left transition-all duration-200 overflow-hidden"
-                style={{
-                  padding: "22px 22px 20px",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "2px solid rgba(255,255,255,0.12)",
-                  backdropFilter: "blur(8px)",
-                }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
-                }}
-              >
-                {/* Badge row */}
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-                  style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.70)" }}
-                >
-                  Club Exclusive
-                </span>
-                {/* Icon */}
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.10)" }}>
-                  <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
-                </div>
-                {/* Text */}
-                <div className="pr-8">
-                  <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Club Tournament</h3>
-                  <p className="text-white/55 text-sm leading-relaxed">Run a full Swiss or Quickstart tournament hosted under {clubName}.</p>
-                </div>
-                {/* Footer row */}
-                <div className="flex items-center justify-between w-full mt-auto pt-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    <Trophy className="w-3.5 h-3.5" />
-                    Full tournament wizard
+                  <div className="pr-6">
+                    <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h3>
+                    <p className="text-white/55 text-sm leading-relaxed">Casual club evening — RSVP, venue, and event details for your members.</p>
                   </div>
-                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.25)" }} />
-                </div>
-              </button>
+                  <div className="flex items-center justify-between w-full mt-auto pt-1">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      <Clock className="w-3.5 h-3.5" />
+                      Ready in under 30 seconds
+                    </div>
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.35)" }} />
+                  </div>
+                </button>
 
-              {/* Speed Dating — Coming Soon */}
-              <div
-                className="relative flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
-                style={{
-                  padding: "22px 22px 20px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "2px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-                  style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+                {/* Club Tournament */}
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onOpenTournamentWizard(); }}
+                  className="group relative flex flex-col items-start gap-3 rounded-3xl text-left transition-all duration-200 overflow-hidden flex-shrink-0 sm:flex-shrink sm:w-auto"
+                  style={{
+                    padding: "22px 22px 20px",
+                    width: "min(80vw, 100%)",
+                    minWidth: "260px",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "2px solid rgba(255,255,255,0.12)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.25)";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                  }}
                 >
-                  Coming Soon
-                </span>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
-                  <Zap className="w-5 h-5 text-white/40" strokeWidth={1.8} />
-                </div>
-                <div className="pr-8">
-                  <h3 className="text-lg font-bold text-white/50 mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Speed Dating</h3>
-                  <p className="text-white/30 text-sm leading-relaxed">Timed round-robin social meetups for your club members.</p>
-                </div>
-                <Lock className="absolute bottom-5 right-5 w-4 h-4 text-white/20" />
+                  <span
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                    style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.70)" }}
+                  >
+                    Club Exclusive
+                  </span>
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.10)" }}>
+                    <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
+                  </div>
+                  <div className="pr-6">
+                    <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Club Tournament</h3>
+                    <p className="text-white/55 text-sm leading-relaxed">Run a full Swiss or Quickstart tournament hosted under {clubName}.</p>
+                  </div>
+                  <div className="flex items-center justify-between w-full mt-auto pt-1">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      <Trophy className="w-3.5 h-3.5" />
+                      Full tournament wizard
+                    </div>
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" style={{ color: "rgba(255,255,255,0.25)" }} />
+                  </div>
+                </button>
               </div>
 
-              {/* Trivia Night — Coming Soon */}
-              <div
-                className="relative flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
-                style={{
-                  padding: "22px 22px 20px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "2px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-                  style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
-                >
-                  Coming Soon
-                </span>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
-                  <Star className="w-5 h-5 text-white/40" strokeWidth={1.8} />
-                </div>
-                <div className="pr-8">
-                  <h3 className="text-lg font-bold text-white/50 mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Trivia Night</h3>
-                  <p className="text-white/30 text-sm leading-relaxed">Chess knowledge quiz with leaderboard scoring.</p>
-                </div>
-                <Lock className="absolute bottom-5 right-5 w-4 h-4 text-white/20" />
-              </div>
+              {/* ── Coming Soon cards: 2-col grid always ── */}
+              <div className="grid grid-cols-2 gap-3">
 
-              {/* Puzzle Relay — Coming Soon (full width) */}
-              <div
-                className="relative sm:col-span-2 flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
-                style={{
-                  padding: "22px 22px 20px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "2px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
-                  style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+                {/* Speed Dating — Coming Soon */}
+                <div
+                  className="relative flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
+                  style={{
+                    padding: "20px 18px 18px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "2px solid rgba(255,255,255,0.08)",
+                  }}
                 >
-                  Coming Soon
-                </span>
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
-                  <Flame className="w-5 h-5 text-white/40" strokeWidth={1.8} />
+                  <span
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                    style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+                  >
+                    Coming Soon
+                  </span>
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
+                    <Zap className="w-4.5 h-4.5 text-white/40" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white/50 mb-0.5" style={{ fontFamily: "'Clash Display', sans-serif" }}>Speed Dating</h3>
+                    <p className="text-white/30 text-xs leading-relaxed">Timed round-robin social meetups for your club members.</p>
+                  </div>
+                  <Lock className="absolute bottom-4 right-4 w-3.5 h-3.5 text-white/20" />
                 </div>
-                <div className="pr-8">
-                  <h3 className="text-lg font-bold text-white/50 mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Puzzle Relay</h3>
-                  <p className="text-white/30 text-sm leading-relaxed">Team-based puzzle race — first team to solve all puzzles wins.</p>
-                </div>
-                <Lock className="absolute bottom-5 right-5 w-4 h-4 text-white/20" />
-              </div>
 
+                {/* Trivia Night — Coming Soon */}
+                <div
+                  className="relative flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
+                  style={{
+                    padding: "20px 18px 18px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "2px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                    style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+                  >
+                    Coming Soon
+                  </span>
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
+                    <Star className="w-4.5 h-4.5 text-white/40" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white/50 mb-0.5" style={{ fontFamily: "'Clash Display', sans-serif" }}>Trivia Night</h3>
+                    <p className="text-white/30 text-xs leading-relaxed">Chess knowledge quiz with leaderboard scoring.</p>
+                  </div>
+                  <Lock className="absolute bottom-4 right-4 w-3.5 h-3.5 text-white/20" />
+                </div>
+
+                {/* Puzzle Relay — Coming Soon (full width) */}
+                <div
+                  className="relative col-span-2 flex flex-col items-start gap-3 rounded-3xl overflow-hidden opacity-50 cursor-not-allowed select-none"
+                  style={{
+                    padding: "20px 18px 18px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "2px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                    style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.50)" }}
+                  >
+                    Coming Soon
+                  </span>
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.07)" }}>
+                    <Flame className="w-4.5 h-4.5 text-white/40" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white/50 mb-0.5" style={{ fontFamily: "'Clash Display', sans-serif" }}>Puzzle Relay</h3>
+                    <p className="text-white/30 text-xs leading-relaxed">Team-based puzzle race — first team to solve all puzzles wins.</p>
+                  </div>
+                  <Lock className="absolute bottom-4 right-4 w-3.5 h-3.5 text-white/20" />
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
