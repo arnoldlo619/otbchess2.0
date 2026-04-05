@@ -907,3 +907,62 @@ export const savedPrepReports = mysqlTable(
 );
 export type SavedPrepReport = typeof savedPrepReports.$inferSelect;
 export type NewSavedPrepReport = typeof savedPrepReports.$inferInsert;
+
+// ─── club_events ──────────────────────────────────────────────────────────────
+// Server-side store for club events created by directors/owners.
+export const clubEvents = mysqlTable(
+  "club_events",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description"),
+    startAt: timestamp("start_at").notNull(),
+    endAt: timestamp("end_at"),
+    venue: varchar("venue", { length: 200 }),
+    address: varchar("address", { length: 300 }),
+    admissionNote: varchar("admission_note", { length: 200 }),
+    coverImageUrl: text("cover_image_url"),
+    accentColor: varchar("accent_color", { length: 20 }).notNull().default("#4CAF50"),
+    creatorId: varchar("creator_id", { length: 64 }).notNull(),
+    creatorName: varchar("creator_name", { length: 100 }).notNull().default(""),
+    isPublished: tinyint("is_published").notNull().default(1),
+    eventType: varchar("event_type", { length: 30 }).notNull().default("standard"),
+    tournamentId: varchar("tournament_id", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    ceClubIdx: index("ce_club_idx").on(table.clubId),
+    ceStartIdx: index("ce_start_idx").on(table.startAt),
+    ceClubStartIdx: index("ce_club_start_idx").on(table.clubId, table.startAt),
+  })
+);
+export type ClubEventRow = typeof clubEvents.$inferSelect;
+export type NewClubEventRow = typeof clubEvents.$inferInsert;
+
+// ─── club_feed ────────────────────────────────────────────────────────────────
+// Server-side store for club feed posts (announcements, polls, tournament cards).
+export const clubFeed = mysqlTable(
+  "club_feed",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    type: varchar("type", { length: 40 }).notNull(),
+    actorName: varchar("actor_name", { length: 100 }).notNull().default(""),
+    actorAvatarUrl: text("actor_avatar_url"),
+    detail: text("detail"),
+    linkHref: varchar("link_href", { length: 500 }),
+    linkLabel: varchar("link_label", { length: 100 }),
+    isPinned: tinyint("is_pinned").notNull().default(0),
+    payload: text("payload"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    cfClubIdx: index("cf_club_idx").on(table.clubId),
+    cfClubCreatedIdx: index("cf_club_created_idx").on(table.clubId, table.createdAt),
+    cfPinnedIdx: index("cf_pinned_idx").on(table.clubId, table.isPinned),
+  })
+);
+export type ClubFeedRow = typeof clubFeed.$inferSelect;
+export type NewClubFeedRow = typeof clubFeed.$inferInsert;

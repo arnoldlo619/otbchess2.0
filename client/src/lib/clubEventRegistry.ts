@@ -135,7 +135,7 @@ export function getClubEvent(eventId: string): ClubEvent | null {
   return loadEvents().find((e) => e.id === eventId) ?? null;
 }
 
-/** Create a new club event. Returns the created event. */
+/** Create a new club event. Returns the created event. Also persists to server API (fire-and-forget). */
 export function createClubEvent(
   data: Omit<ClubEvent, "id" | "createdAt" | "updatedAt">
 ): ClubEvent {
@@ -144,7 +144,82 @@ export function createClubEvent(
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
+  // Persist to server (fire-and-forget)
+  _persistEventToServer(event);
   return event;
+}
+
+/** Fire-and-forget: POST a club event to the server API. */
+function _persistEventToServer(event: ClubEvent): void {
+  try {
+    const token = localStorage.getItem("otb-auth-token");
+    if (!token) return;
+    fetch(`/api/clubs/${event.clubId}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        id: event.id,
+        title: event.title,
+        description: event.description ?? null,
+        startAt: event.startAt,
+        endAt: event.endAt ?? null,
+        venue: event.venue ?? null,
+        address: event.address ?? null,
+        admissionNote: event.admissionNote ?? null,
+        coverImageUrl: event.coverImageUrl ?? null,
+        accentColor: event.accentColor ?? "#4CAF50",
+        creatorName: event.creatorName,
+        eventType: event.eventType ?? "standard",
+        tournamentId: event.tournamentId ?? null,
+      }),
+    }).catch(() => { /* server unavailable */ });
+  } catch { /* ignore */ }
+}
+
+/**
+ * Load events from the server API and merge with localStorage.
+ * Returns the merged list sorted by startAt ascending.
+ */
+export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]> {
+  try {
+    const res = await fetch(`/api/clubs/${clubId}/events`);
+    if (!res.ok) return listClubEvents(clubId, true);
+    const serverRows = await res.json() as Array<{
+      id: string; clubId: string; title: string; description?: string | null;
+      startAt: string; endAt?: string | null; venue?: string | null;
+      address?: string | null; admissionNote?: string | null;
+      coverImageUrl?: string | null; accentColor: string;
+      creatorId: string; creatorName: string; isPublished: number;
+      eventType: string; tournamentId?: string | null;
+      createdAt: string; updatedAt: string;
+    }>;
+    const local = loadEvents();
+    const localIds = new Set(local.map((e) => e.id));
+    const merged = [...local];
+    for (const row of serverRows) {
+      if (localIds.has(row.id)) continue;
+      merged.push({
+        id: row.id, clubId: row.clubId, title: row.title,
+        description: row.description ?? undefined,
+        startAt: row.startAt, endAt: row.endAt ?? undefined,
+        venue: row.venue ?? undefined, address: row.address ?? undefined,
+        admissionNote: row.admissionNote ?? undefined,
+        coverImageUrl: row.coverImageUrl ?? undefined,
+        accentColor: row.accentColor,
+        creatorId: row.creatorId, creatorName: row.creatorName,
+        isPublished: row.isPublished === 1,
+        eventType: (row.eventType as ClubEvent["eventType"]) ?? "standard",
+        tournamentId: row.tournamentId ?? undefined,
+        createdAt: row.createdAt, updatedAt: row.updatedAt,
+      });
+    }
+    saveEvents(merged);
+    return merged
+      .filter((e) => e.clubId === clubId)
+      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  } catch {
+    return listClubEvents(clubId, true);
+  }
 }
 
 /** Update an existing event. Returns updated event or null if not found. */

@@ -640,3 +640,169 @@ clubsRouter.delete(
     }
   }
 );
+
+// ─── Club Events API ──────────────────────────────────────────────────────────
+import { clubEvents, clubFeed } from "../shared/schema.js";
+
+/** GET /api/clubs/:id/events — list all events for a club */
+clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const db = await getDb();
+    const rows = await db
+      .select()
+      .from(clubEvents)
+      .where(eq(clubEvents.clubId, id))
+      .orderBy(desc(clubEvents.startAt));
+    res.json(rows.map((r: typeof clubEvents.$inferSelect) => ({
+      ...r,
+      startAt: r.startAt instanceof Date ? r.startAt.toISOString() : String(r.startAt),
+      endAt: r.endAt instanceof Date ? r.endAt.toISOString() : r.endAt ? String(r.endAt) : null,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+      updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
+    })));
+  } catch (err) {
+    console.error("[clubs] GET /:id/events error:", err);
+    res.status(500).json({ error: "Failed to fetch club events" });
+  }
+});
+
+/** POST /api/clubs/:id/events — create a club event */
+clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req as any).userId as string;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    const isOwner = club.ownerId === userId;
+    const isDirector = membership?.role === "director" || membership?.role === "owner";
+    if (!isOwner && !isDirector) { res.status(403).json({ error: "Only directors can create events" }); return; }
+    const body = req.body as any;
+    const eventId = body.id ?? nanoid(16);
+    await db.insert(clubEvents).values({
+      id: eventId, clubId: id, title: body.title,
+      description: body.description ?? null,
+      startAt: new Date(body.startAt),
+      endAt: body.endAt ? new Date(body.endAt) : null,
+      venue: body.venue ?? null, address: body.address ?? null,
+      admissionNote: body.admissionNote ?? null,
+      coverImageUrl: body.coverImageUrl ?? null,
+      accentColor: body.accentColor ?? "#4CAF50",
+      creatorId: userId, creatorName: body.creatorName ?? "",
+      isPublished: 1, eventType: body.eventType ?? "standard",
+      tournamentId: body.tournamentId ?? null,
+    });
+    const [created] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
+    res.status(201).json({
+      ...created,
+      startAt: created.startAt instanceof Date ? created.startAt.toISOString() : String(created.startAt),
+      endAt: created.endAt instanceof Date ? created.endAt.toISOString() : created.endAt ? String(created.endAt) : null,
+      createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt),
+      updatedAt: created.updatedAt instanceof Date ? created.updatedAt.toISOString() : String(created.updatedAt),
+    });
+  } catch (err) {
+    console.error("[clubs] POST /:id/events error:", err);
+    res.status(500).json({ error: "Failed to create club event" });
+  }
+});
+
+/** DELETE /api/clubs/:id/events/:eventId */
+clubsRouter.delete("/:id/events/:eventId", authMiddleware, async (req: Request, res: Response) => {
+  const { id, eventId } = req.params;
+  const userId = (req as any).userId as string;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    const isOwner = club.ownerId === userId;
+    const isDirector = membership?.role === "director" || membership?.role === "owner";
+    if (!isOwner && !isDirector) { res.status(403).json({ error: "Not authorised" }); return; }
+    await db.delete(clubEvents).where(eq(clubEvents.id, eventId));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[clubs] DELETE /:id/events/:eventId error:", err);
+    res.status(500).json({ error: "Failed to delete event" });
+  }
+});
+
+// ─── Club Feed API ────────────────────────────────────────────────────────────
+
+/** GET /api/clubs/:id/feed — list feed posts */
+clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const limit = Math.min(parseInt((req.query.limit as string) ?? "50", 10), 100);
+  try {
+    const db = await getDb();
+    const rows = await db.select().from(clubFeed)
+      .where(eq(clubFeed.clubId, id))
+      .orderBy(desc(clubFeed.isPinned), desc(clubFeed.createdAt))
+      .limit(limit);
+    res.json(rows.map((r: typeof clubFeed.$inferSelect) => ({
+      ...r,
+      isPinned: r.isPinned === 1,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    })));
+  } catch (err) {
+    console.error("[clubs] GET /:id/feed error:", err);
+    res.status(500).json({ error: "Failed to fetch club feed" });
+  }
+});
+
+/** POST /api/clubs/:id/feed — create a feed post */
+clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req as any).userId as string;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    const isOwner = club.ownerId === userId;
+    if (!isOwner && !membership) { res.status(403).json({ error: "Must be a club member to post" }); return; }
+    const body = req.body as any;
+    const feedId = body.id ?? nanoid(16);
+    await db.insert(clubFeed).values({
+      id: feedId, clubId: id, type: body.type,
+      actorName: body.actorName ?? "", actorAvatarUrl: body.actorAvatarUrl ?? null,
+      detail: body.detail ?? null, linkHref: body.linkHref ?? null,
+      linkLabel: body.linkLabel ?? null, isPinned: body.isPinned ? 1 : 0,
+      payload: body.payload ?? null,
+    });
+    const [created] = await db.select().from(clubFeed).where(eq(clubFeed.id, feedId));
+    res.status(201).json({
+      ...created,
+      isPinned: created.isPinned === 1,
+      createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt),
+    });
+  } catch (err) {
+    console.error("[clubs] POST /:id/feed error:", err);
+    res.status(500).json({ error: "Failed to create feed post" });
+  }
+});
+
+/** DELETE /api/clubs/:id/feed/:feedId */
+clubsRouter.delete("/:id/feed/:feedId", authMiddleware, async (req: Request, res: Response) => {
+  const { id, feedId } = req.params;
+  const userId = (req as any).userId as string;
+  try {
+    const db = await getDb();
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+    const [membership] = await db.select().from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    const isOwner = club.ownerId === userId;
+    const isDirector = membership?.role === "director" || membership?.role === "owner";
+    if (!isOwner && !isDirector) { res.status(403).json({ error: "Not authorised" }); return; }
+    await db.delete(clubFeed).where(eq(clubFeed.id, feedId));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[clubs] DELETE /:id/feed/:feedId error:", err);
+    res.status(500).json({ error: "Failed to delete feed post" });
+  }
+});

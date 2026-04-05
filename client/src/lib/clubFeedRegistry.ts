@@ -202,12 +202,80 @@ export function listFeedEvents(clubId: string, limit?: number): FeedEvent[] {
   return limit ? events.slice(0, limit) : events;
 }
 
-/** Add a single feed event. Returns the saved event. */
+/** Add a single feed event. Returns the saved event. Also persists to server API (fire-and-forget). */
 export function addFeedEvent(event: Omit<FeedEvent, "id">): FeedEvent {
   const saved: FeedEvent = { ...event, id: generateId() };
   const existing = loadFeed(event.clubId);
   saveFeed(event.clubId, [...existing, saved]);
+  // Persist to server (fire-and-forget)
+  _persistFeedToServer(event.clubId, saved);
   return saved;
+}
+
+/** Fire-and-forget: POST a feed event to the server API. */
+function _persistFeedToServer(clubId: string, event: FeedEvent): void {
+  try {
+    const token = localStorage.getItem("otb-auth-token");
+    if (!token) return;
+    fetch(`/api/clubs/${clubId}/feed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        id: event.id,
+        type: event.type,
+        actorName: event.actorName ?? "",
+        actorAvatarUrl: event.actorAvatarUrl ?? null,
+        detail: event.detail ?? null,
+        linkHref: event.linkHref ?? null,
+        linkLabel: event.linkLabel ?? null,
+        isPinned: event.isPinned ?? false,
+        payload: (event.pollOptions || event.rsvpEntries) ? JSON.stringify(event) : null,
+      }),
+    }).catch(() => { /* server unavailable */ });
+  } catch { /* ignore */ }
+}
+
+/**
+ * Load the feed from the server API and merge with localStorage.
+ * Server is the source of truth; any server events not in localStorage are added.
+ * Returns the merged list (newest first).
+ */
+export async function syncFeedFromServer(clubId: string): Promise<FeedEvent[]> {
+  try {
+    const res = await fetch(`/api/clubs/${clubId}/feed?limit=100`);
+    if (!res.ok) return listFeedEvents(clubId);
+    const serverRows = await res.json() as Array<{
+      id: string; type: string; actorName: string; actorAvatarUrl?: string | null;
+      detail?: string | null; linkHref?: string | null; linkLabel?: string | null;
+      isPinned: boolean; payload?: string | null; createdAt: string;
+    }>;
+    const local = loadFeed(clubId);
+    const localIds = new Set(local.map((e) => e.id));
+    const merged = [...local];
+    for (const row of serverRows) {
+      if (localIds.has(row.id)) continue;
+      let extra: Partial<FeedEvent> = {};
+      if (row.payload) { try { extra = JSON.parse(row.payload); } catch { /* ignore */ } }
+      merged.push({
+        id: row.id,
+        clubId,
+        type: row.type as FeedEventType,
+        createdAt: row.createdAt,
+        actorName: row.actorName,
+        actorAvatarUrl: row.actorAvatarUrl ?? null,
+        description: extra.description ?? row.detail ?? "",
+        detail: row.detail ?? undefined,
+        linkHref: row.linkHref ?? undefined,
+        linkLabel: row.linkLabel ?? undefined,
+        isPinned: row.isPinned,
+        ...extra,
+      });
+    }
+    saveFeed(clubId, merged);
+    return merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch {
+    return listFeedEvents(clubId);
+  }
 }
 
 /** Post an announcement from an owner or director. */

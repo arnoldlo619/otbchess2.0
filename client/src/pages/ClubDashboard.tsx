@@ -28,6 +28,7 @@ import {
 } from "@/lib/clubRegistry";
 import {
   listClubEvents,
+  syncEventsFromServer,
   getEventRSVPs,
   getUserRSVP,
   countRSVPs,
@@ -73,6 +74,7 @@ import {
 } from "@/lib/clubBattleApi";
 import {
   listFeedEvents,
+  syncFeedFromServer,
   seedFeedIfEmpty,
   postAnnouncement,
   postPoll,
@@ -168,6 +170,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { TournamentWizard } from "@/components/TournamentWizard";
+import { apiGetClub, apiListClubMembers } from "@/lib/clubsApi";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -2300,28 +2303,71 @@ export default function ClubDashboard() {
 
   // Seed and load
   useEffect(() => {
+    if (!id) { navigate("/clubs"); return; }
     seedClubsIfEmpty();
     seedClubEventsIfEmpty();
 
-    const found = id ? (getClub(id) ?? getClubBySlug(id)) : null;
-    if (!found) { navigate("/clubs"); return; }
+    async function loadClub() {
+      // ── Step 1: Resolve club (localStorage first, server fallback) ────────
+      let found: Club | null = getClub(id!) ?? getClubBySlug(id!);
+      if (!found) {
+        // Not in localStorage — fetch from server (cross-device / cache-cleared)
+        try {
+          const serverClub = await apiGetClub(id!);
+          if (serverClub) {
+            // Hydrate localStorage so subsequent loads are instant
+            const clubs = (JSON.parse(localStorage.getItem("otb-clubs-v1") || "[]") as Club[]);
+            if (!clubs.find((c) => c.id === serverClub.id)) {
+              localStorage.setItem("otb-clubs-v1", JSON.stringify([...clubs, serverClub]));
+            }
+            found = serverClub;
+          }
+        } catch { /* network error — fall through to not-found */ }
+      }
+      if (!found) { navigate("/clubs"); return; }
 
-    // Guard: must be a member or owner
-    if (user && !isMember(found.id, user.id) && found.ownerId !== user.id) {
-      navigate(`/clubs/${id}`);
-      return;
+      // ── Step 2: Membership guard (localStorage first, server fallback) ───
+      if (user) {
+        let localMember = isMember(found.id, user.id);
+        const isOwner = found.ownerId === user.id;
+        if (!localMember && !isOwner) {
+          // Not in localStorage — check server members
+          try {
+            const serverMembers = await apiListClubMembers(found.id);
+            const serverMember = serverMembers.find((m) => m.userId === user.id);
+            if (serverMember) {
+              // Hydrate localStorage so subsequent checks are instant
+              const existingMembers = (JSON.parse(localStorage.getItem("otb-club-members-v1") || "[]") as ClubMember[]);
+              if (!existingMembers.find((m) => m.clubId === found!.id && m.userId === user.id)) {
+                localStorage.setItem("otb-club-members-v1", JSON.stringify([...existingMembers, serverMember]));
+              }
+              localMember = true;
+            }
+          } catch { /* network error — deny access */ }
+        }
+        if (!localMember && !isOwner) {
+          navigate(`/clubs/${id}`);
+          return;
+        }
+      }
+
+      // ── Step 3: Populate state ────────────────────────────────────────────
+      setClub(found);
+      setMembers(getClubMembers(found.id));
+      setEvents(listClubEvents(found.id, true));
+      setFeedEvents(listFeedEvents(found.id, 50));
+      setLoading(false);
+      // Load battles from server (async) + migrate any localStorage battles
+      const cid = found.id;
+      migrateLocalBattlesToServer(cid).catch(() => {});
+      apiBattleList(cid).then(setBattles).catch(() => setBattles(listBattles(cid)));
+      apiBattleLeaderboard(cid).then(setBattleLeaderboard).catch(() => setBattleLeaderboard(getBattleLeaderboard(cid)));
+      // Sync events and feed from server (merges server records into localStorage)
+      syncEventsFromServer(cid).then((merged) => setEvents(merged)).catch(() => {});
+      syncFeedFromServer(cid).then((merged) => setFeedEvents(merged.slice(0, 50))).catch(() => {});
     }
 
-    setClub(found);
-    setMembers(getClubMembers(found.id));
-    setEvents(listClubEvents(found.id, true));
-    setFeedEvents(listFeedEvents(found.id, 50));
-    setLoading(false);
-    // Load battles from server (async) + migrate any localStorage battles
-    const cid = found.id;
-    migrateLocalBattlesToServer(cid).catch(() => {});
-    apiBattleList(cid).then(setBattles).catch(() => setBattles(listBattles(cid)));
-    apiBattleLeaderboard(cid).then(setBattleLeaderboard).catch(() => setBattleLeaderboard(getBattleLeaderboard(cid)));
+    loadClub();
   }, [id, user]);
 
   // Poll-close + scheduled-publish interval: every 30 seconds
