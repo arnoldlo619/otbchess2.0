@@ -2373,6 +2373,26 @@ export default function ClubDashboard() {
   // Poll-close + scheduled-publish interval: every 30 seconds
   // MUST be declared before any early return to comply with Rules of Hooks
   const clubId = club?.id ?? null;
+
+  // ── Sync-error toast ─────────────────────────────────────────────────────
+  // Listens for the custom event dispatched by clubEventRegistry and
+  // clubFeedRegistry when a server persist call fails (non-2xx or network error).
+  useEffect(() => {
+    let lastToastAt = 0;
+    function handleSyncError() {
+      // Debounce: at most one toast per 10 seconds to avoid spamming
+      const now = Date.now();
+      if (now - lastToastAt < 10_000) return;
+      lastToastAt = now;
+      toast("Saved locally — will sync when reconnected", {
+        description: "The server couldn't be reached. Your changes are safe in this browser.",
+        duration: 5000,
+      });
+    }
+    window.addEventListener("otb:sync-error", handleSyncError);
+    return () => window.removeEventListener("otb:sync-error", handleSyncError);
+  }, []);
+
   useEffect(() => {
     if (!clubId) return;
     // Run once immediately on mount

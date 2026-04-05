@@ -231,7 +231,13 @@ function _persistFeedToServer(clubId: string, event: FeedEvent): void {
         isPinned: event.isPinned ?? false,
         payload: (event.pollOptions || event.rsvpEntries) ? JSON.stringify(event) : null,
       }),
-    }).catch(() => { /* server unavailable */ });
+    }).then((res) => {
+      if (!res.ok) {
+        window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "feed" } }));
+      }
+    }).catch(() => {
+      window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "feed" } }));
+    });
   } catch { /* ignore */ }
 }
 

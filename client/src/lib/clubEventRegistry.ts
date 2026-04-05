@@ -172,7 +172,13 @@ function _persistEventToServer(event: ClubEvent): void {
         eventType: event.eventType ?? "standard",
         tournamentId: event.tournamentId ?? null,
       }),
-    }).catch(() => { /* server unavailable */ });
+    }).then((res) => {
+      if (!res.ok) {
+        window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "event" } }));
+      }
+    }).catch(() => {
+      window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "event" } }));
+    });
   } catch { /* ignore */ }
 }
 
