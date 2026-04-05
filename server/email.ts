@@ -144,10 +144,14 @@ emailRouter.post("/test-smtp", requireFullAuth, async (req: any, res: any) => {
       subject: "✓ ChessOTB SMTP Test — Connection Successful",
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+          <div style="background:#1a3d2b;border-radius:12px;padding:20px 24px;text-align:center;margin-bottom:24px">
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png" alt="OTB!!" width="40" height="40" style="display:block;margin:0 auto 10px;object-fit:contain" />
+            <p style="color:#6fcf7f;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:0">ChessOTB</p>
+          </div>
           <h2 style="color:#2d6a4f">✓ SMTP Connection Successful</h2>
           <p>Your SMTP configuration is working correctly. Tournament results emails will be sent from:</p>
           <p><strong>${cfg.fromName}</strong> &lt;${cfg.fromEmail}&gt;</p>
-          <p style="color:#888;font-size:12px">Sent via ChessOTB · chessotb.club</p>
+          <p style="color:#888;font-size:12px">Sent via <a href="https://chessotb.club" style="color:#2d6a4f">ChessOTB</a> · chessotb.club</p>
         </div>
       `,
     });
@@ -215,9 +219,9 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
       const html = `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#fff">
           <div style="background:#1a3d2b;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
-            <p style="color:#6fcf7f;font-size:13px;margin:0 0 4px">♟ ChessOTB</p>
-            <h1 style="color:#fff;font-size:22px;margin:0">${tournamentName}</h1>
-            <p style="color:#a8d5b5;font-size:14px;margin:8px 0 0">Tournament Results</p>
+            <img src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png" alt="OTB!!" width="44" height="44" style="display:block;margin:0 auto 12px;object-fit:contain" />
+            <h1 style="color:#fff;font-size:22px;margin:0 0 4px">${tournamentName}</h1>
+            <p style="color:#a8d5b5;font-size:13px;margin:0;letter-spacing:1px;text-transform:uppercase;font-weight:600">Tournament Results</p>
           </div>
 
           <p style="font-size:16px;color:#1a1a1a">Hi <strong>${p.name}</strong>,</p>
