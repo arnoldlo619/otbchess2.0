@@ -383,7 +383,7 @@ export function recordTournamentCreated(
     actorName: directorName,
     description: `${directorName} created a new tournament`,
     detail: tournamentName,
-    linkHref: `/tournament/${tournamentId}`,
+    linkHref: `/tournament/${tournamentId}/play`,
     linkLabel: "Join Tournament",
   });
 }

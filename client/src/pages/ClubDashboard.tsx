@@ -4695,7 +4695,15 @@ export default function ClubDashboard() {
                 eventType: "standard",
                 tournamentId: createdTournamentId,
               });
+              // Post a feed announcement so all club members are notified
+              recordTournamentCreated(
+                club.id,
+                user.displayName,
+                createdTournamentName,
+                createdTournamentId
+              );
               refreshEvents();
+              refreshFeed();
               setTab("events");
             }
           }}
