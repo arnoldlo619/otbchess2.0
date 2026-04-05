@@ -443,7 +443,11 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
 
           <div
             className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto"
-            style={{ animationDelay: "0.45s", animationFillMode: "forwards" }}
+            style={{
+              animationDelay: "0.45s",
+              animationFillMode: "forwards",
+              paddingBottom: "max(0px, env(safe-area-inset-bottom, 0px))",
+            }}
           >
             <SpinBorderButton
               variant="solid"
@@ -1186,7 +1190,7 @@ function Footer() {
   };
 
   return (
-    <footer className="bg-[#1A1A1A] text-white py-16">
+    <footer className="bg-[#1A1A1A] text-white py-16" style={{ paddingBottom: "max(4rem, calc(4rem + env(safe-area-inset-bottom, 0px)))" }}>
       <div className="container">
         <div className="grid md:grid-cols-4 gap-10 mb-12">
           <div>

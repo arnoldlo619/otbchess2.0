@@ -478,6 +478,20 @@
     }
   }
 
+  /**
+   * Bottom safe-area utilities.
+   * .otb-footer-safe  — for page footers (preserves existing py-* padding)
+   * .otb-bottom-safe  — for fixed/absolute bottom bars, modals, bottom sheets
+   */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .otb-footer-safe {
+      padding-bottom: max(4rem, calc(4rem + env(safe-area-inset-bottom, 0px)));
+    }
+    .otb-bottom-safe {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+    }
+  }
+
   /* Touch target enforcement */
   .touch-target {
     min-height: 48px;
