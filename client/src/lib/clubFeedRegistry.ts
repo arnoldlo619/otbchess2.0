@@ -402,7 +402,7 @@ export function recordTournamentCompleted(
     actorName: winnerName,
     description: `${tournamentName} concluded`,
     detail: `Winner: ${winnerName}`,
-    linkHref: `/tournament/${tournamentId}`,
+    linkHref: `/tournament/${tournamentId}/results`,
     linkLabel: "View results",
   });
 }

@@ -37,6 +37,7 @@ import { useUndoResult } from "@/hooks/useUndoResult";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { generateResultsPdf } from "@/lib/generateResultsPdf";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
+import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
 import { EliminationBracketView, SwissElimCutoffScreen } from "@/components/EliminationBracketView";
@@ -4248,6 +4249,16 @@ export default function Director() {
                     }}
                     onCompleteTournament={() => {
                       completeTournament();
+                      // Auto-post a feed card to the club if this tournament belongs to one
+                      if (tournamentConfig?.clubId) {
+                        const winnerName = standings[0]?.name ?? "Unknown";
+                        recordTournamentCompleted(
+                          tournamentConfig.clubId,
+                          state.tournamentName,
+                          winnerName,
+                          tournamentId
+                        );
+                      }
                     }}
                   />
                 );
@@ -4669,6 +4680,16 @@ export default function Director() {
                             setShowEndConfirm(false);
                             completeTournament();
                             syncStatusToServer("completed");
+                            // Auto-post a feed card to the club if this tournament belongs to one
+                            if (tournamentConfig?.clubId) {
+                              const winnerName = standings[0]?.name ?? "Unknown";
+                              recordTournamentCompleted(
+                                tournamentConfig.clubId,
+                                state.tournamentName,
+                                winnerName,
+                                tournamentId
+                              );
+                            }
                             try {
                               await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
                                 method: "POST",
