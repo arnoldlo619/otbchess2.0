@@ -4251,12 +4251,15 @@ export default function Director() {
                       completeTournament();
                       // Auto-post a feed card to the club if this tournament belongs to one
                       if (tournamentConfig?.clubId) {
-                        const winnerName = standings[0]?.name ?? "Unknown";
+                        const winner = liveStandings[0];
+                        const winnerName = winner?.player.name ?? "Unknown";
                         recordTournamentCompleted(
                           tournamentConfig.clubId,
                           state.tournamentName,
                           winnerName,
-                          tournamentId
+                          tournamentId,
+                          winner?.points,
+                          state.totalRounds
                         );
                       }
                     }}
@@ -4682,12 +4685,15 @@ export default function Director() {
                             syncStatusToServer("completed");
                             // Auto-post a feed card to the club if this tournament belongs to one
                             if (tournamentConfig?.clubId) {
-                              const winnerName = standings[0]?.name ?? "Unknown";
+                              const winner = liveStandings[0];
+                              const winnerName = winner?.player.name ?? "Unknown";
                               recordTournamentCompleted(
                                 tournamentConfig.clubId,
                                 state.tournamentName,
                                 winnerName,
-                                tournamentId
+                                tournamentId,
+                                winner?.points,
+                                state.totalRounds
                               );
                             }
                             try {

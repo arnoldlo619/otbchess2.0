@@ -393,15 +393,27 @@ export function recordTournamentCompleted(
   clubId: string,
   tournamentName: string,
   winnerName: string,
-  tournamentId: string
+  tournamentId: string,
+  winnerScore?: number,
+  totalRounds?: number
 ): FeedEvent {
+  const formatScore = (s: number) => s % 1 !== 0 ? `${Math.floor(s)}½` : String(s);
+  const scoreStr =
+    winnerScore !== undefined && totalRounds !== undefined
+      ? `${formatScore(winnerScore)}/${totalRounds} pts`
+      : winnerScore !== undefined
+      ? `${formatScore(winnerScore)} pts`
+      : null;
+  const detail = scoreStr
+    ? `🏆 ${winnerName} — ${scoreStr}`
+    : `🏆 ${winnerName}`;
   return addFeedEvent({
     clubId,
     type: "tournament_completed",
     createdAt: new Date().toISOString(),
     actorName: winnerName,
     description: `${tournamentName} concluded`,
-    detail: `Winner: ${winnerName}`,
+    detail,
     linkHref: `/tournament/${tournamentId}/results`,
     linkLabel: "View results",
   });

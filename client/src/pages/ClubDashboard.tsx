@@ -1367,7 +1367,13 @@ function FeedCard({
       </div>
       {!isPoll && !isRsvp && event.detail && (
         <div className="px-4 pb-4">
-          <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
+          {event.type === "tournament_completed" ? (
+            <div className="rounded-xl px-4 py-3 border border-amber-500/20" style={{ background: "oklch(0.20 0.08 80 / 0.35)" }}>
+              <p className="text-sm font-bold text-amber-300 leading-snug">{event.detail}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
+          )}
           {event.linkHref && (
             <a href={event.linkHref} className="inline-flex items-center gap-1 text-xs font-semibold mt-2 transition-colors hover:opacity-80" style={{ color: accent }}>
               {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
