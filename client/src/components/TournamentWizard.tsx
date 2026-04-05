@@ -750,7 +750,7 @@ function QuickstartForm({
   const DEFAULT_TIME_PRESET = "10+5";
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
   const DEFAULT_ROUNDS = 5;
-  const capOptions = [8, 12, 16, 24, 32];
+  const capOptions = [8, 12, 16, 24, 32, 48, 64, 100];
   const DEFAULT_CAP = 16;
 
   // Display label for the currently selected rating system
@@ -1454,7 +1454,7 @@ function StepFormat({
   ];
 
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
-  const playerOptions = [8, 12, 16, 20, 24, 32, 64];
+  const playerOptions = [8, 12, 16, 20, 24, 32, 48, 64, 100];
 
   return (
     <div className="space-y-8">

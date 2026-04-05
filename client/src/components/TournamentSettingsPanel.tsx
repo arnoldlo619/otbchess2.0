@@ -310,7 +310,7 @@ export function TournamentSettingsPanel({
 
   const isCustomTime = form.timePreset === "custom";
   const roundOptions = [3, 4, 5, 6, 7, 9, 11];
-  const playerOptions = [8, 12, 16, 20, 24, 32, 64];
+  const playerOptions = [8, 12, 16, 20, 24, 32, 48, 64, 100];
   const ratingOptions: { value: SettingsForm["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
     { value: "lichess",   label: "Lichess",   sub: "Lichess rating" },
