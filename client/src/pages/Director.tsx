@@ -2081,10 +2081,10 @@ export default function Director() {
             {(isRegistration || state.currentRound === 1) && (
               <button
                 onClick={() => setShowAnnounce(true)}
-                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 active:scale-95 ${
                   isDark
-                    ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-white hover:bg-[#4CAF50]/30"
-                    : "bg-[#3D6B47]/15 border-[#3D6B47]/35 text-white hover:bg-[#3D6B47]/25"
+                    ? "bg-[#4CAF50]/20 border-[#4CAF50]/40 text-[#7FD48F] hover:bg-[#4CAF50]/30 hover:border-[#4CAF50]/60"
+                    : "bg-[#3D6B47] border-[#3D6B47] text-white hover:bg-[#2d5236] hover:border-[#2d5236] shadow-sm"
                 }`}
                 title="Show join QR code full-screen for players to scan"
               >
@@ -2092,17 +2092,26 @@ export default function Director() {
                 <span>Join QR</span>
               </button>
             )}
-            {/* Project QR: visible when tournament is active or completed */}
+            {/* Live Stream QR: visible when tournament is active or completed */}
             {!isRegistration && (
               <button
                 onClick={() => setShowSpectatorQR(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all duration-150 active:scale-95 ${
                   isDark
-                    ? "bg-white/10 border-white/20 text-white hover:bg-white/18"
-                    : "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-white hover:bg-[#3D6B47]/25"
+                    ? "bg-white/08 border-white/15 text-white/80 hover:bg-white/14 hover:border-white/25"
+                    : "bg-white border-gray-200 text-gray-800 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
                 }`}
                 title="Project live standings QR on a screen or projector"
               >
+                {/* Pulsing live dot */}
+                <span className="relative flex h-2 w-2 flex-shrink-0">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${
+                    isDark ? "bg-[#4CAF50]" : "bg-[#3D6B47]"
+                  }`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                    isDark ? "bg-[#4CAF50]" : "bg-[#3D6B47]"
+                  }`} />
+                </span>
                 <Cast className="w-3.5 h-3.5" />
                 <span>Live Stream</span>
               </button>
