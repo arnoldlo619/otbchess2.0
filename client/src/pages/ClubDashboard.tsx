@@ -33,6 +33,7 @@ import {
   getUserRSVP,
   countRSVPs,
   upsertRSVP,
+  syncRSVPsFromServer,
   getEventComments,
   postComment,
   deleteComment,
@@ -364,6 +365,13 @@ function EventCard({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Sync RSVPs from server on mount so counts are cross-device accurate
+  useEffect(() => {
+    syncRSVPsFromServer(event.clubId, event.id).then((merged) => {
+      setRsvps(merged);
+    }).catch(() => { /* server unavailable, use local */ });
+  }, [event.id, event.clubId]);
 
   function refreshRSVPs() {
     setRsvps(getEventRSVPs(event.id));

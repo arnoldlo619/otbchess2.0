@@ -966,3 +966,27 @@ export const clubFeed = mysqlTable(
 );
 export type ClubFeedRow = typeof clubFeed.$inferSelect;
 export type NewClubFeedRow = typeof clubFeed.$inferInsert;
+
+// ─── club_event_rsvps ─────────────────────────────────────────────────────────
+// Server-side store for club event RSVPs (going / maybe / not_going).
+// One row per (event_id, user_id) pair — upserted on change.
+export const clubEventRsvps = mysqlTable(
+  "club_event_rsvps",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    eventId: varchar("event_id", { length: 64 }).notNull(),
+    clubId: varchar("club_id", { length: 64 }).notNull(),
+    userId: varchar("user_id", { length: 64 }).notNull(),
+    displayName: varchar("display_name", { length: 100 }).notNull().default(""),
+    avatarUrl: text("avatar_url"),
+    status: varchar("status", { length: 20 }).notNull().default("going"),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    cerEventIdx: index("idx_cer_event").on(table.eventId),
+    cerClubIdx: index("idx_cer_club").on(table.clubId),
+    cerUserIdx: index("idx_cer_user").on(table.userId),
+  })
+);
+export type ClubEventRsvpRow = typeof clubEventRsvps.$inferSelect;
+export type NewClubEventRsvpRow = typeof clubEventRsvps.$inferInsert;

@@ -806,3 +806,93 @@ clubsRouter.delete("/:id/feed/:feedId", authMiddleware, async (req: Request, res
     res.status(500).json({ error: "Failed to delete feed post" });
   }
 });
+
+
+// ── RSVP routes ───────────────────────────────────────────────────────────────
+
+/** GET /api/clubs/:id/events/:eventId/rsvps — list all RSVPs for an event */
+clubsRouter.get("/:id/events/:eventId/rsvps", async (req: Request, res: Response) => {
+  const { id, eventId } = req.params;
+  try {
+    const db = await getDb();
+    const { clubEventRsvps } = await import("../shared/schema.js");
+    const rows = await db.select().from(clubEventRsvps)
+      .where(and(eq(clubEventRsvps.clubId, id), eq(clubEventRsvps.eventId, eventId)));
+    res.json(rows.map((r: typeof clubEventRsvps.$inferSelect) => ({
+      id: r.id,
+      eventId: r.eventId,
+      clubId: r.clubId,
+      userId: r.userId,
+      displayName: r.displayName,
+      avatarUrl: r.avatarUrl ?? null,
+      status: r.status,
+      updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
+    })));
+  } catch (err) {
+    console.error("[clubs] GET /:id/events/:eventId/rsvps error:", err);
+    res.status(500).json({ error: "Failed to fetch RSVPs" });
+  }
+});
+
+/** POST /api/clubs/:id/events/:eventId/rsvps — upsert the caller's RSVP */
+clubsRouter.post("/:id/events/:eventId/rsvps", authMiddleware, async (req: Request, res: Response) => {
+  const { id, eventId } = req.params;
+  const userId = (req as any).userId as string;
+  const { status, displayName, avatarUrl } = req.body as {
+    status: "going" | "maybe" | "not_going";
+    displayName?: string;
+    avatarUrl?: string | null;
+  };
+  if (!["going", "maybe", "not_going"].includes(status)) {
+    res.status(400).json({ error: "status must be going | maybe | not_going" });
+    return;
+  }
+  try {
+    const db = await getDb();
+    const { clubEventRsvps } = await import("../shared/schema.js");
+    const [existing] = await db.select().from(clubEventRsvps)
+      .where(and(eq(clubEventRsvps.eventId, eventId), eq(clubEventRsvps.userId, userId)));
+    if (existing) {
+      await db.update(clubEventRsvps)
+        .set({ status, displayName: displayName ?? existing.displayName, avatarUrl: avatarUrl ?? existing.avatarUrl })
+        .where(and(eq(clubEventRsvps.eventId, eventId), eq(clubEventRsvps.userId, userId)));
+      const [updated] = await db.select().from(clubEventRsvps)
+        .where(and(eq(clubEventRsvps.eventId, eventId), eq(clubEventRsvps.userId, userId)));
+      res.json({
+        ...updated,
+        updatedAt: updated.updatedAt instanceof Date ? updated.updatedAt.toISOString() : String(updated.updatedAt),
+      });
+    } else {
+      const rsvpId = nanoid(16);
+      await db.insert(clubEventRsvps).values({
+        id: rsvpId, eventId, clubId: id, userId,
+        displayName: displayName ?? "", avatarUrl: avatarUrl ?? null, status,
+      });
+      const [created] = await db.select().from(clubEventRsvps)
+        .where(and(eq(clubEventRsvps.eventId, eventId), eq(clubEventRsvps.userId, userId)));
+      res.status(201).json({
+        ...created,
+        updatedAt: created.updatedAt instanceof Date ? created.updatedAt.toISOString() : String(created.updatedAt),
+      });
+    }
+  } catch (err) {
+    console.error("[clubs] POST /:id/events/:eventId/rsvps error:", err);
+    res.status(500).json({ error: "Failed to upsert RSVP" });
+  }
+});
+
+/** DELETE /api/clubs/:id/events/:eventId/rsvps — remove the caller's RSVP */
+clubsRouter.delete("/:id/events/:eventId/rsvps", authMiddleware, async (req: Request, res: Response) => {
+  const { id: _clubId, eventId } = req.params;
+  const userId = (req as any).userId as string;
+  try {
+    const db = await getDb();
+    const { clubEventRsvps } = await import("../shared/schema.js");
+    await db.delete(clubEventRsvps)
+      .where(and(eq(clubEventRsvps.eventId, eventId), eq(clubEventRsvps.userId, userId)));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[clubs] DELETE /:id/events/:eventId/rsvps error:", err);
+    res.status(500).json({ error: "Failed to remove RSVP" });
+  }
+});

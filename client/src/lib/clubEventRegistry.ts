@@ -270,7 +270,7 @@ export function countRSVPs(eventId: string): Record<RSVPStatus, number> {
   };
 }
 
-/** Set or update a user's RSVP. Returns the upserted RSVP. */
+/** Set or update a user's RSVP. Returns the upserted RSVP. Also persists to server. */
 export function upsertRSVP(
   eventId: string,
   clubId: string,
@@ -282,29 +282,89 @@ export function upsertRSVP(
   const rsvps = loadRSVPs();
   const now = new Date().toISOString();
   const existing = rsvps.findIndex((r) => r.eventId === eventId && r.userId === userId);
+  let rsvp: ClubEventRSVP;
   if (existing !== -1) {
     rsvps[existing] = { ...rsvps[existing], status, updatedAt: now };
     saveRSVPs(rsvps);
-    return rsvps[existing];
+    rsvp = rsvps[existing];
+  } else {
+    rsvp = { id: genId(), eventId, clubId, userId, displayName, avatarUrl, status, updatedAt: now };
+    rsvps.push(rsvp);
+    saveRSVPs(rsvps);
   }
-  const rsvp: ClubEventRSVP = {
-    id: genId(),
-    eventId,
-    clubId,
-    userId,
-    displayName,
-    avatarUrl,
-    status,
-    updatedAt: now,
-  };
-  rsvps.push(rsvp);
-  saveRSVPs(rsvps);
+  // Persist to server (fire-and-forget)
+  _persistRsvpToServer(clubId, eventId, status, displayName, avatarUrl ?? null);
   return rsvp;
 }
 
-/** Remove a user's RSVP. */
-export function removeRSVP(eventId: string, userId: string): void {
+/** Remove a user's RSVP. Also removes from server. */
+export function removeRSVP(eventId: string, clubId: string, userId: string): void {
   saveRSVPs(loadRSVPs().filter((r) => !(r.eventId === eventId && r.userId === userId)));
+  // Remove from server (fire-and-forget)
+  try {
+    const token = localStorage.getItem("otb-auth-token");
+    if (token) {
+      fetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => { /* server unavailable */ });
+    }
+  } catch { /* ignore */ }
+}
+
+/** Fire-and-forget: POST/PUT an RSVP to the server API. */
+function _persistRsvpToServer(
+  clubId: string,
+  eventId: string,
+  status: RSVPStatus,
+  displayName: string,
+  avatarUrl: string | null
+): void {
+  try {
+    const token = localStorage.getItem("otb-auth-token");
+    if (!token) return;
+    fetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status, displayName, avatarUrl }),
+    }).then((res) => {
+      if (!res.ok) {
+        window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "rsvp" } }));
+      }
+    }).catch(() => {
+      window.dispatchEvent(new CustomEvent("otb:sync-error", { detail: { context: "rsvp" } }));
+    });
+  } catch { /* ignore */ }
+}
+
+/**
+ * Load RSVPs for a specific event from the server and merge into localStorage.
+ * Server is the source of truth — server rows not in localStorage are added.
+ */
+export async function syncRSVPsFromServer(clubId: string, eventId: string): Promise<ClubEventRSVP[]> {
+  try {
+    const res = await fetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`);
+    if (!res.ok) return getEventRSVPs(eventId);
+    const serverRows = await res.json() as Array<{
+      id: string; eventId: string; clubId: string; userId: string;
+      displayName: string; avatarUrl?: string | null; status: string; updatedAt: string;
+    }>;
+    const local = loadRSVPs();
+    const localIds = new Set(local.map((r) => r.id));
+    const merged = [...local];
+    for (const row of serverRows) {
+      if (localIds.has(row.id)) continue;
+      merged.push({
+        id: row.id, eventId: row.eventId, clubId: row.clubId, userId: row.userId,
+        displayName: row.displayName, avatarUrl: row.avatarUrl ?? null,
+        status: row.status as RSVPStatus, updatedAt: row.updatedAt,
+      });
+    }
+    saveRSVPs(merged);
+    return merged.filter((r) => r.eventId === eventId);
+  } catch {
+    return getEventRSVPs(eventId);
+  }
 }
 
 // ── Comments API ──────────────────────────────────────────────────────────────
