@@ -1,11 +1,14 @@
 {
-  "name": "Play Chess Over The Board",
-  "short_name": "Play Chess OTB",
+  "id": "/",
+  "name": "OTB Chess — Tournaments Over The Board",
+  "short_name": "OTB Chess",
   "description": "Organize in-person chess tournaments in minutes. Built for chess clubs, powered by chess.com ELO data.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
+  "background_color": "#0D1F13",
   "theme_color": "#3D6B47",
   "lang": "en",
   "categories": ["sports", "utilities"],
@@ -26,13 +29,25 @@
       "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-512x512_8aa3d459.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-512x512_8aa3d459.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
@@ -41,7 +56,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "OTB Chess landing page"
+      "label": "OTB Chess — host and manage chess tournaments"
     }
   ],
   "shortcuts": [
@@ -49,7 +64,7 @@
       "name": "Create Tournament",
       "short_name": "New",
       "description": "Start a new tournament",
-      "url": "/?action=create",
+      "url": "/?action=create&source=pwa-shortcut",
       "icons": [
         {
           "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
@@ -61,7 +76,19 @@
       "name": "Join Tournament",
       "short_name": "Join",
       "description": "Join an existing tournament",
-      "url": "/join",
+      "url": "/join?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My Clubs",
+      "short_name": "Clubs",
+      "description": "View your chess clubs",
+      "url": "/clubs?source=pwa-shortcut",
       "icons": [
         {
           "src": "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/icon-192x192_1d5ec0c4.png",
@@ -69,5 +96,6 @@
         }
       ]
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }
