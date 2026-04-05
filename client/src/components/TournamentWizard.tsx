@@ -33,7 +33,6 @@ import { recommendedRounds, roundsHint, roundRangeLabel } from "@/lib/recommende
 import { registerTournament, makeSlug, generateDirectorCode, grantDirectorSession } from "@/lib/tournamentRegistry";
 import {
   X,
-  Crown,
   ChevronRight,
   ChevronLeft,
   Trophy,
@@ -677,7 +676,7 @@ function ModeSelect({
               className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)" }}
             >
-              <Crown className="w-6 h-6 text-white" strokeWidth={1.8} />
+              <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
             </div>
 
             <div>
@@ -2595,7 +2594,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         >
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: T.green }}>
-              <Crown className="w-4 h-4 text-white" strokeWidth={2} />
+              <img src={OTB_LOGO_URL} alt="OTB" className="w-4 h-4 object-contain" />
             </div>
             <div className="flex flex-col leading-none">
               <span className="text-[9px] font-semibold tracking-widest uppercase" style={{ color: isDark ? T.dMuted : T.lMuted }}>
