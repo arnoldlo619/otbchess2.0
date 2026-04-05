@@ -201,7 +201,7 @@ const STEP_HERO = [
     eyebrow: "Step 1 of 4",
     title: "Name your\nclub",
     body: "Give your club a name that players will remember. A great tagline tells visitors what you're about in one sentence.",
-    icon: <Crown className="w-10 h-10 text-white" strokeWidth={1.5} />,
+    icon: <img src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png" alt="OTB" className="w-10 h-10 object-contain drop-shadow-sm" />,
   },
   {
     eyebrow: "Step 2 of 4",
@@ -697,18 +697,31 @@ function Step1Identity({
       </div>
 
       {/* Visibility toggle */}
-      <div className={`flex items-center justify-between p-4 rounded-2xl border ${isDark ? "border-white/8 bg-white/3" : "border-gray-100 bg-gray-50"}`}>
-        <div>
-          <p className={`text-sm font-semibold ${textMain}`}>Public club</p>
-          <p className={`text-xs mt-0.5 ${textMuted}`}>Visible in discovery and search</p>
+      <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl border ${isDark ? "border-white/8 bg-white/3" : "border-gray-100 bg-gray-50"}`}>
+        <div className="min-w-0">
+          <p className={`text-sm font-semibold ${textMain}`}>
+            {data.isPublic ? "Public club" : "Private club"}
+          </p>
+          <p className={`text-xs mt-0.5 ${textMuted}`}>
+            {data.isPublic ? "Visible in discovery and search" : "Invite-only — not listed publicly"}
+          </p>
         </div>
+        {/* Clean iOS-style pill toggle */}
         <button
           type="button"
+          role="switch"
+          aria-checked={data.isPublic}
           onClick={() => patch({ isPublic: !data.isPublic })}
-          className={`relative w-11 h-6 rounded-full transition-colors ${data.isPublic ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-gray-200"}`}
+          className={`relative flex-shrink-0 w-12 h-7 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4CAF50] focus-visible:ring-offset-2 ${
+            data.isPublic
+              ? "bg-[#4CAF50]"
+              : isDark ? "bg-white/20" : "bg-gray-300"
+          }`}
         >
           <span
-            className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${data.isPublic ? "translate-x-5" : "translate-x-0.5"}`}
+            className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+              data.isPublic ? "translate-x-5" : "translate-x-0"
+            }`}
           />
         </button>
       </div>
