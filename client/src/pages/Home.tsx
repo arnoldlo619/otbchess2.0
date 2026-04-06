@@ -996,118 +996,208 @@ function PlayerDemo() {
               </div>
             )}
 
-            {/* Profile card */}
+            {/* Profile card — premium redesign */}
             {profile && status === "success" && (
-              <div className={`border rounded-xl p-4 animate-fade-in-up ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-[#F0F5EE]/50"}`}>
-                {/* Header row */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    {profile.avatar ? (
-                      <img src={profile.avatar} alt={profile.username} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 bg-[#3D6B47] rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {profile.username[0].toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-foreground text-sm">{profile.name || profile.username}</p>
-                        {profile.title && (
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isDark ? "text-[oklch(0.65_0.14_145)] bg-[oklch(0.65_0.14_145)]/15" : "text-[#3D6B47] bg-[#3D6B47]/10"}`}>
-                            {profile.title}
-                          </span>
+              <div
+                className="animate-fade-in-up overflow-hidden rounded-2xl"
+                style={{
+                  background: isDark
+                    ? "linear-gradient(160deg, oklch(0.24 0.07 145) 0%, oklch(0.20 0.06 145) 100%)"
+                    : "linear-gradient(160deg, #ffffff 0%, #f4f8f2 100%)",
+                  border: isDark ? "1px solid oklch(0.35 0.08 145 / 0.5)" : "1px solid #d4e4cc",
+                  boxShadow: isDark
+                    ? "0 0 0 1px oklch(0.65 0.14 145 / 0.08), 0 20px 40px oklch(0.12 0.05 145 / 0.6)"
+                    : "0 4px 24px rgba(61,107,71,0.10), 0 1px 4px rgba(61,107,71,0.06)",
+                }}
+              >
+                {/* ── Hero header ─────────────────────────────── */}
+                <div
+                  className="px-5 pt-5 pb-4"
+                  style={{
+                    background: isDark
+                      ? "linear-gradient(135deg, oklch(0.65 0.14 145 / 0.10) 0%, transparent 60%)"
+                      : "linear-gradient(135deg, rgba(61,107,71,0.06) 0%, transparent 60%)",
+                    borderBottom: isDark ? "1px solid oklch(0.35 0.08 145 / 0.4)" : "1px solid #e2eddb",
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    {/* Avatar + identity */}
+                    <div className="flex items-center gap-3.5">
+                      <div className="relative">
+                        {profile.avatar ? (
+                          <img src={profile.avatar} alt={profile.username} className="w-12 h-12 rounded-xl object-cover" style={{ boxShadow: isDark ? "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" : "0 0 0 2px rgba(61,107,71,0.2)" }} />
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-base" style={{ background: "oklch(0.45 0.14 145)", boxShadow: "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" }}>
+                            {profile.username[0].toUpperCase()}
+                          </div>
                         )}
-                        {profile.countryFlag && <span className="text-base">{profile.countryFlag}</span>}
+                        {/* Live indicator */}
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#fff" }}>
+                          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">chess.com verified · Live data</p>
+                      <div>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-bold text-foreground" style={{ fontFamily: "'Clash Display', sans-serif", fontSize: "0.95rem" }}>
+                            {profile.name || profile.username}
+                          </span>
+                          {profile.title && (
+                            <span
+                              className="text-[10px] font-black px-1.5 py-0.5 rounded-md tracking-wide"
+                              style={{ background: isDark ? "oklch(0.65 0.14 145 / 0.18)" : "rgba(61,107,71,0.12)", color: isDark ? "oklch(0.75 0.14 145)" : "#3D6B47" }}
+                            >
+                              {profile.title}
+                            </span>
+                          )}
+                          {profile.countryFlag && <span className="text-sm leading-none">{profile.countryFlag}</span>}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                          <span className="text-[11px]" style={{ color: isDark ? "oklch(0.55 0.08 145)" : "#6b8f6b" }}>chess.com · Live data</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`text-2xl font-bold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
-                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                    >
-                      {profile.rapid || profile.blitz || profile.bullet || "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Rapid ELO</p>
+                    {/* Primary ELO */}
+                    <div className="text-right">
+                      <div
+                        className="text-3xl font-black leading-none"
+                        style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#2d5a35" }}
+                      >
+                        {profile.rapid || profile.blitz || profile.bullet || "—"}
+                      </div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest mt-1" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>
+                        Rapid ELO
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Rating row */}
+                {/* ── Rating pills row ────────────────────────── */}
                 {(profile.blitz > 0 || profile.bullet > 0) && (
-                  <div className={`pt-3 pb-3 border-t border-b flex gap-4 mb-3 ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
-                    {profile.blitz > 0 && (
-                      <div className="text-center flex-1">
-                        <p className="text-sm font-bold text-foreground">{profile.blitz}</p>
-                        <p className="text-xs text-muted-foreground">Blitz</p>
-                      </div>
-                    )}
-                    {profile.bullet > 0 && (
-                      <div className="text-center flex-1">
-                        <p className="text-sm font-bold text-foreground">{profile.bullet}</p>
-                        <p className="text-xs text-muted-foreground">Bullet</p>
-                      </div>
-                    )}
+                  <div className="flex gap-px" style={{ borderBottom: isDark ? "1px solid oklch(0.30 0.07 145 / 0.5)" : "1px solid #e2eddb" }}>
+                    {[
+                      { label: "Rapid", val: profile.rapid },
+                      { label: "Blitz", val: profile.blitz },
+                      { label: "Bullet", val: profile.bullet },
+                    ]
+                      .filter((r) => r.val > 0)
+                      .map((r, i, arr) => (
+                        <div
+                          key={r.label}
+                          className="flex-1 py-3 text-center"
+                          style={{
+                            borderRight: i < arr.length - 1 ? (isDark ? "1px solid oklch(0.30 0.07 145 / 0.5)" : "1px solid #e2eddb") : "none",
+                            background: isDark ? "oklch(0.21 0.06 145 / 0.5)" : "rgba(61,107,71,0.03)",
+                          }}
+                        >
+                          <div className="text-sm font-bold" style={{ color: isDark ? "oklch(0.88 0.06 145)" : "#1a2e1a", fontFamily: "'JetBrains Mono', monospace" }}>{r.val}</div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider mt-0.5" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>{r.label}</div>
+                        </div>
+                      ))}
                   </div>
                 )}
 
-                {/* Game Analysis */}
-                {analysisLoading && (
-                  <div className={`rounded-lg p-3 mb-3 text-xs text-center ${isDark ? "bg-white/05 text-white/40" : "bg-gray-50 text-gray-400"}`}>
-                    Analyzing last 50 games…
-                  </div>
-                )}
-                {profile.analysis && !analysisLoading && (
-                  <div className="space-y-3 mb-3">
-                    {/* Openings as White */}
-                    {profile.analysis.openingsWhite.length > 0 && (
-                      <div>
-                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>⬜ Openings as White</p>
-                        <div className="space-y-1">
-                          {profile.analysis.openingsWhite.map((o) => (
-                            <div key={o.name} className="flex items-center gap-2">
-                              <div className={`flex-1 text-xs truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>{o.name}</div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <div className={`h-1.5 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} style={{ width: `${Math.max(o.pct, 4)}px` }} />
-                                <span className={`text-[10px] font-mono font-bold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>{o.pct}%</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {/* Openings as Black */}
-                    {profile.analysis.openingsBlack.length > 0 && (
-                      <div>
-                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>⬛ Openings as Black</p>
-                        <div className="space-y-1">
-                          {profile.analysis.openingsBlack.map((o) => (
-                            <div key={o.name} className="flex items-center gap-2">
-                              <div className={`flex-1 text-xs truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>{o.name}</div>
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <div className={`h-1.5 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} style={{ width: `${Math.max(o.pct, 4)}px` }} />
-                                <span className={`text-[10px] font-mono font-bold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>{o.pct}%</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {/* Endgame win % */}
-                    {profile.analysis.endgameWinPct !== null && (
-                      <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
-                        <span className={`text-xs ${isDark ? "text-white/60" : "text-gray-500"}`}>Endgame Win % <span className="text-[10px] opacity-60">({profile.analysis.endgameGames} games &gt;30 moves)</span></span>
-                        <span className={`text-sm font-bold font-mono ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>{profile.analysis.endgameWinPct}%</span>
-                      </div>
-                    )}
-                    <p className={`text-[10px] text-center ${isDark ? "text-white/25" : "text-gray-300"}`}>Based on last {profile.analysis.gamesAnalyzed} games</p>
-                  </div>
-                )}
+                {/* ── Game Analysis ───────────────────────────── */}
+                <div className="px-5 py-4 space-y-4">
+                  {analysisLoading && (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <div className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: isDark ? "oklch(0.65 0.14 145 / 0.3)" : "#3D6B47", borderTopColor: isDark ? "oklch(0.65 0.14 145)" : "#3D6B47" }} />
+                      <span className="text-xs" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Analysing last 50 games…</span>
+                    </div>
+                  )}
 
-                <div className={`pt-3 border-t ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
+                  {profile.analysis && !analysisLoading && (
+                    <>
+                      {/* Openings as White */}
+                      {profile.analysis.openingsWhite.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2.5">
+                            <div className="w-3 h-3 rounded-sm border-2" style={{ background: "#f5f5f0", borderColor: isDark ? "oklch(0.40 0.06 145)" : "#c0c0b0" }} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Openings as White</span>
+                          </div>
+                          <div className="space-y-2">
+                            {profile.analysis.openingsWhite.map((o) => (
+                              <div key={o.name}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs truncate pr-3 flex-1" style={{ color: isDark ? "oklch(0.80 0.05 145)" : "#2a3a2a" }}>{o.name}</span>
+                                  <span className="text-[11px] font-bold flex-shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#3D6B47" }}>{o.pct}%</span>
+                                </div>
+                                <div className="h-1 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.28 0.07 145 / 0.6)" : "rgba(61,107,71,0.10)" }}>
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{ width: `${o.pct}%`, background: isDark ? "linear-gradient(90deg, oklch(0.55 0.14 145), oklch(0.72 0.16 145))" : "linear-gradient(90deg, #3D6B47, #5a9e6a)" }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Openings as Black */}
+                      {profile.analysis.openingsBlack.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2.5">
+                            <div className="w-3 h-3 rounded-sm" style={{ background: isDark ? "oklch(0.25 0.05 145)" : "#2a2a2a", border: "2px solid transparent", outline: isDark ? "1px solid oklch(0.40 0.06 145)" : "1px solid #888" }} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Openings as Black</span>
+                          </div>
+                          <div className="space-y-2">
+                            {profile.analysis.openingsBlack.map((o) => (
+                              <div key={o.name}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs truncate pr-3 flex-1" style={{ color: isDark ? "oklch(0.80 0.05 145)" : "#2a3a2a" }}>{o.name}</span>
+                                  <span className="text-[11px] font-bold flex-shrink-0" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#3D6B47" }}>{o.pct}%</span>
+                                </div>
+                                <div className="h-1 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.28 0.07 145 / 0.6)" : "rgba(61,107,71,0.10)" }}>
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{ width: `${o.pct}%`, background: isDark ? "linear-gradient(90deg, oklch(0.45 0.10 145), oklch(0.62 0.14 145))" : "linear-gradient(90deg, #2d5a35, #4a8a5a)" }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Endgame win % */}
+                      {profile.analysis.endgameWinPct !== null && (
+                        <div
+                          className="flex items-center justify-between rounded-xl px-4 py-3"
+                          style={{
+                            background: isDark ? "oklch(0.65 0.14 145 / 0.08)" : "rgba(61,107,71,0.06)",
+                            border: isDark ? "1px solid oklch(0.65 0.14 145 / 0.15)" : "1px solid rgba(61,107,71,0.15)",
+                          }}
+                        >
+                          <div>
+                            <div className="text-xs font-semibold" style={{ color: isDark ? "oklch(0.80 0.05 145)" : "#2a3a2a" }}>Endgame Win Rate</div>
+                            <div className="text-[10px] mt-0.5" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>{profile.analysis.endgameGames} games &gt; 30 moves</div>
+                          </div>
+                          <div
+                            className="text-2xl font-black"
+                            style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.16 145)" : "#3D6B47" }}
+                          >
+                            {profile.analysis.endgameWinPct}%
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-center" style={{ color: isDark ? "oklch(0.40 0.06 145)" : "#a0b8a0" }}>
+                        Based on last {profile.analysis.gamesAnalyzed} games
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* ── CTA footer ──────────────────────────────── */}
+                <div
+                  className="px-5 pb-5"
+                  style={{ borderTop: isDark ? "1px solid oklch(0.30 0.07 145 / 0.5)" : "1px solid #e2eddb" }}
+                >
                   <button
                     onClick={() => toast.success(`${profile.username} added to tournament!`)}
-                    className="w-full btn-chess-primary text-sm py-2"
+                    className="w-full btn-chess-primary text-sm py-3 mt-4 rounded-xl font-semibold tracking-wide"
+                    style={{ letterSpacing: "0.03em" }}
                   >
                     Add to Tournament
                   </button>
