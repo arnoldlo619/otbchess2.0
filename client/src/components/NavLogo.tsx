@@ -21,7 +21,8 @@ export function NavLogo({ className = "", linked = true }: NavLogoProps) {
     <img
       src={LOGO_URL}
       alt="OTB Chess"
-      className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 active:opacity-60 ${className}`}
+      className={`h-9 w-auto object-contain transition-opacity hover:opacity-90 active:opacity-70 ${className}`}
+      style={{ mixBlendMode: "screen" }}
       draggable={false}
     />
   );

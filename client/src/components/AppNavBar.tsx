@@ -116,7 +116,8 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       <img
         src={LOGO_URL}
         alt="OTB Chess"
-        className={`h-8 w-auto object-contain transition-opacity hover:opacity-80 ${isDark ? "nav-logo-dark" : ""}`}
+        className="h-9 w-auto object-contain transition-opacity hover:opacity-90"
+        style={{ mixBlendMode: isDark ? "screen" : "normal" }}
         draggable={false}
       />
     </Link>

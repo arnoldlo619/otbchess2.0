@@ -72,7 +72,8 @@ export function MinimalTournamentNav({
           <img
             src={LOGO_URL}
             alt="OTB Chess — Back to Home"
-            className={`h-7 w-auto object-contain transition-opacity hover:opacity-80 active:scale-95 ${isDark ? "nav-logo-dark" : ""}`}
+            className="h-9 w-auto object-contain transition-opacity hover:opacity-90 active:scale-95"
+            style={{ mixBlendMode: isDark ? "screen" : "normal" }}
             draggable={false}
           />
         </Link>
