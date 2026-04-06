@@ -399,7 +399,7 @@ function EventCard({
     >
       {/* Cover image / gradient header */}
       <div
-        className="relative h-48 sm:h-56 flex flex-col justify-end p-5"
+        className="relative h-40 sm:h-52 flex flex-col justify-end p-4 sm:p-5"
         style={{
           background: event.coverImageUrl
             ? `url(${event.coverImageUrl}) center/cover no-repeat`
@@ -470,7 +470,7 @@ function EventCard({
 
         {/* Title */}
         <h3
-          className="relative z-10 text-white font-black text-2xl sm:text-3xl leading-tight"
+          className="relative z-10 text-white font-black text-xl sm:text-2xl leading-tight"
           style={{ fontFamily: "'Clash Display', sans-serif" }}
         >
           {event.title}
@@ -1059,17 +1059,17 @@ function CreateEventModal({
           </div>
 
           {/* Date + Start + End */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-1">
-              <label className={labelCls}>Date *</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} />
-            </div>
+          <div>
+            <label className={labelCls}>Date *</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Start</label>
+              <label className={labelCls}>Start Time</label>
               <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>End</label>
+              <label className={labelCls}>End Time</label>
               <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
@@ -1231,17 +1231,17 @@ function EditEventModal({
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thursday Night Blitz" required className={inputCls} />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-1">
-              <label className={labelCls}>Date *</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
-            </div>
+          <div>
+            <label className={labelCls}>Date *</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className={inputCls} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Start</label>
+              <label className={labelCls}>Start Time</label>
               <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>End</label>
+              <label className={labelCls}>End Time</label>
               <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputCls} />
             </div>
           </div>
@@ -2165,7 +2165,7 @@ function ClubDashboardSkeleton() {
             </div>
           </div>
           {/* Stats row */}
-          <div className="flex items-center gap-5 flex-wrap">
+          <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
             <SkeletonBlock className="w-24 h-4" />
             <SkeletonBlock className="w-28 h-4" />
             <SkeletonBlock className="w-20 h-4" />
@@ -2752,8 +2752,8 @@ export default function ClubDashboard() {
                 )}
               </div>
               <h1
-                className="text-white font-black text-3xl sm:text-4xl leading-tight truncate"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
+                className="text-white font-black text-2xl sm:text-3xl leading-tight"
+                style={{ fontFamily: "'Clash Display', sans-serif", wordBreak: "break-word" }}
               >
                 {club.name}
               </h1>
@@ -2764,7 +2764,7 @@ export default function ClubDashboard() {
           </div>
 
           {/* Stats row */}
-          <div className="flex items-center gap-5 flex-wrap">
+          <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
             <div className="flex items-center gap-1.5 text-white/60 text-sm">
               <Users className="w-4 h-4" style={{ color: accent }} />
               <span className="font-semibold text-white/80">{club.memberCount}</span>
@@ -2789,23 +2789,26 @@ export default function ClubDashboard() {
         </div>
       </div>
 
-      {/* ── Sticky tab nav ─────────────────────────────────────────────────────────────── */}
+      {/* ── Sticky tab nav ─────────────────────────────────────────────────────────────────────────────────────── */}
       <div
-        className="sticky top-[57px] z-30 border-b border-white/08"
-        style={{ background: "oklch(0.20 0.06 145 / 0.95)", backdropFilter: "blur(12px)" }}
+        className="sticky top-[56px] z-30 border-b border-white/08"
+        style={{ background: "oklch(0.20 0.06 145 / 0.97)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
       >
-        <div className="max-w-4xl mx-auto px-4 flex items-center gap-0">
+        <div
+          className="max-w-4xl mx-auto flex items-center overflow-x-auto scrollbar-none"
+          style={{ WebkitOverflowScrolling: "touch", paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}
+        >
           {(["events", "members", "feed", "battles", "leagues", "analytics", "payments"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`relative px-5 py-4 text-sm font-semibold capitalize transition-colors ${
+              className={`relative flex-shrink-0 px-4 py-3.5 text-sm font-semibold capitalize transition-colors ${
                 tab === t ? "text-white" : "text-white/40 hover:text-white/70"
               }`}
             >
               {t === "events" && upcomingEvents.length > 0 && (
                 <span
-                  className="absolute top-3 right-2 w-1.5 h-1.5 rounded-full"
+                  className="absolute top-2.5 right-1.5 w-1.5 h-1.5 rounded-full"
                   style={{ background: accent }}
                 />
               )}
@@ -2821,8 +2824,9 @@ export default function ClubDashboard() {
         </div>
       </div>
 
-      {/* ── Tab content ─────────────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20" style={{ background: "oklch(0.20 0.06 145)" }}>   {/* ── EVENTS TAB ────────────────────────────────────────────────────── */}
+      {/* ── Tab content ─────────────────────────────────────────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6" style={{ background: "oklch(0.20 0.06 145)", paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+        {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
             {/* Player of the Month */}
@@ -3107,7 +3111,7 @@ export default function ClubDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-white/20 text-xs">
+                          <span className="hidden sm:inline text-white/20 text-xs">
                             {new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                           </span>
                           {isOwnerOrDirector && m.userId !== user?.id && (
@@ -3121,11 +3125,11 @@ export default function ClubDashboard() {
                                   document.getElementById("create-battle-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
                                 }, 80);
                               }}
-                              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                              className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition-all hover:scale-105 active:scale-95"
                               style={{ background: "oklch(0.35 0.12 145 / 0.25)", color: "oklch(0.75 0.18 145)", border: "1px solid oklch(0.55 0.15 145 / 0.3)" }}
                             >
                               <Swords className="w-3 h-3" />
-                              Challenge
+                              <span className="hidden sm:inline">Challenge</span>
                             </button>
                           )}
                         </div>
@@ -3169,10 +3173,12 @@ export default function ClubDashboard() {
                           : "text-white/40 hover:text-white/70"
                       }`}
                     >
-                      {mode === "announcement" && <Megaphone className="w-3.5 h-3.5" />}
-                      {mode === "poll" && <BarChart2 className="w-3.5 h-3.5" />}
-                      {mode === "rsvp" && <ClipboardList className="w-3.5 h-3.5" />}
-                      {mode === "announcement" ? "Announce" : mode === "poll" ? "Poll" : "RSVP Form"}
+                      {mode === "announcement" && <Megaphone className="w-3.5 h-3.5 flex-shrink-0" />}
+                      {mode === "poll" && <BarChart2 className="w-3.5 h-3.5 flex-shrink-0" />}
+                      {mode === "rsvp" && <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" />}
+                      <span className="hidden xs:inline sm:inline">
+                        {mode === "announcement" ? "Announce" : mode === "poll" ? "Poll" : "RSVP"}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -3608,7 +3614,7 @@ export default function ClubDashboard() {
                                 {s.name.charAt(0).toUpperCase()}
                               </div>
                             )}
-                            <span className="text-xs text-white/70 font-medium truncate max-w-[120px]">{s.name}</span>
+                            <span className="text-xs text-white/70 font-medium truncate max-w-[80px] sm:max-w-[120px]">{s.name}</span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px]">
                             <span className="text-green-400 font-bold">{s.wins}W</span>
@@ -3665,13 +3671,13 @@ export default function ClubDashboard() {
                             <p className="text-[10px] text-white/30 capitalize">{m.role}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           {mStats && (
                             <span className="text-[10px] font-semibold" style={{ color: mStats.winRate >= 60 ? "#4ade80" : mStats.winRate >= 40 ? "#fbbf24" : "rgba(248,113,113,0.8)" }}>
-                              {mStats.winRate}% WR
+                              {mStats.winRate}%
                             </span>
                           )}
-                          <span className="text-[10px] text-white/30">{new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                          <span className="hidden sm:inline text-[10px] text-white/30">{new Date(m.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
                         </div>
                       </div>
                     );
@@ -3869,12 +3875,12 @@ export default function ClubDashboard() {
               ) : (
                 <div className="space-y-3">
                   {upcomingEvents.map((ev) => (
-                    <div key={ev.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                      <div>
-                        <p className="text-sm font-semibold text-white">{ev.title}</p>
+                    <div key={ev.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-3 border-b border-white/5 last:border-0">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{ev.title}</p>
                         <p className="text-xs text-white/40">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
                           <DollarSign className="w-3 h-3 text-white/40" />
                           <input
@@ -3886,7 +3892,7 @@ export default function ClubDashboard() {
                             disabled
                           />
                         </div>
-                        <span className="text-[10px] text-white/25">Stripe required</span>
+                        <span className="text-[10px] text-white/25 hidden sm:inline">Stripe required</span>
                       </div>
                     </div>
                   ))}
@@ -4464,7 +4470,7 @@ export default function ClubDashboard() {
         {tab === "leagues" && (
           <div className="space-y-6">
             {/* Header row */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h2 className="text-white font-bold text-lg">Club Leagues</h2>
                 <p className="text-white/40 text-sm mt-0.5">Round-robin seasons for your club members</p>
@@ -4472,7 +4478,7 @@ export default function ClubDashboard() {
               {isOwnerOrDirector && !leagueWizardOpen && (
                 <button
                   onClick={() => { setLeagueWizardOpen(true); setLeagueWizardStep(1); setLeagueName(""); setLeagueDesc(""); setLeagueMaxPlayers(6); setLeaguePickedIds(new Set()); }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
                   style={{ background: accent, color: "#0a1a0f" }}
                 >
                   <Plus className="w-4 h-4" />

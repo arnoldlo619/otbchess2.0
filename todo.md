@@ -4804,3 +4804,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove tournament from local registry (localStorage) on successful delete
 - [x] Update "Your Tournaments" count after deletion
 - [x] Optimistic UI: remove card immediately on confirm, restore on API error
+
+## Mobile-First Fixes — Club Pages
+
+- [x] ClubProfile tab nav: sticky top-[56px], horizontally scrollable on mobile, safe-area bottom padding
+- [x] ClubProfile hero identity card: reduced negative margin (-mt-14 on xs, -mt-20 on sm+)
+- [x] ClubProfile action buttons: flex-col on mobile, full-width Start Tournament button
+- [x] ClubProfile Events tab: added missing content section (was blank when clicked)
+- [x] ClubProfile tab content: safe-area-inset-bottom padding
+- [x] ClubDashboard tab bar: horizontally scrollable, flex-shrink-0 tabs, safe-area padding, sticky top-[56px]
+- [x] ClubDashboard hero: club name text-2xl sm:text-3xl with wordBreak, stats row gap-x-4 gap-y-2
+- [x] ClubDashboard EventCard: cover image h-40 sm:h-52, title text-xl sm:text-2xl
+- [x] ClubDashboard CreateEventModal + EditEventModal: date/time stacked on mobile (grid-cols-1 sm:grid-cols-3)
+- [x] ClubDashboard Feed composer mode selector: icon-only on xs, text shown on sm+
+- [x] ClubDashboard member row: join date hidden on mobile, Challenge button icon-only on mobile
+- [x] ClubDashboard analytics: chart name truncate max-w-[80px] sm:max-w-[120px], join date hidden on mobile
+- [x] ClubDashboard Payments tab: buy-in row stacks vertically on mobile
+- [x] ClubDashboard Leagues tab: header stacks vertically, New League button full-width on mobile
+- [x] ClubDashboard tab content: safe-area-inset-bottom padding

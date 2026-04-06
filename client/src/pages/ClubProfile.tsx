@@ -1026,7 +1026,7 @@ export default function ClubProfile() {
 
         {/* Club identity card — overlaps banner */}
         <div className="max-w-4xl mx-auto px-4">
-          <div className={`relative -mt-20 rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6 shadow-2xl`}>
+          <div className={`relative -mt-14 sm:-mt-20 rounded-3xl border ${cardBorder} ${card} p-4 sm:p-6 shadow-2xl`}>
             <div className="flex items-start gap-4">
               {/* Club avatar with ring */}
               <div
@@ -1093,11 +1093,11 @@ export default function ClubProfile() {
             </div>
 
             {/* Join / Leave CTA + Owner Start Tournament */}
-            <div className="mt-5 flex items-center gap-3 flex-wrap">
+            <div className="mt-4 flex flex-col sm:flex-row flex-wrap gap-2">
               {isOwner && (
                 <button
                   onClick={() => setShowWizard(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#3D6B47] text-white hover:bg-[#2d5236] active:scale-95 transition-all shadow-md shadow-[#3D6B47]/30"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#3D6B47] text-white hover:bg-[#2d5236] active:scale-95 transition-all shadow-md shadow-[#3D6B47]/30"
                 >
                   <Trophy className="w-4 h-4" />
                   Start Tournament
@@ -1197,17 +1197,22 @@ export default function ClubProfile() {
       )}
 
       {/* ── Tab navigation ──────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 mt-6">
+      <div
+        className={`sticky top-[56px] z-20 mt-6 border-b ${
+          isDark ? "border-white/08 bg-[oklch(0.12_0.04_145)]/95" : "border-gray-200/80 bg-white/95"
+        } backdrop-blur-md`}
+      >
+        <div className="max-w-4xl mx-auto px-3">
         {/* On mobile: horizontally scrollable; on md+: flex with equal-width tabs */}
         <div
-          className={`flex gap-1 p-1 rounded-2xl overflow-x-auto scrollbar-none ${isDark ? "bg-white/5" : "bg-black/5"}`}
+          className="flex gap-0.5 overflow-x-auto scrollbar-none py-2"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-shrink-0 md:flex-1 py-2.5 px-3 rounded-xl text-sm font-semibold capitalize transition-all whitespace-nowrap ${
+              className={`relative flex-shrink-0 py-2 px-3 text-sm font-semibold capitalize transition-all whitespace-nowrap rounded-xl ${
                 activeTab === tab ? tabActive : tabInactive
               }`}
             >
@@ -1240,10 +1245,11 @@ export default function ClubProfile() {
             </button>
           ))}
         </div>
+        </div>
       </div>
 
       {/* ── Tab content ─────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 mt-4 pb-24">
+      <div className="max-w-4xl mx-auto px-4 mt-4" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
 
         {/* ── About tab ───────────────────────────────────────────────────── */}
         {activeTab === "about" && (
@@ -1411,9 +1417,120 @@ export default function ClubProfile() {
           </div>
         )}
 
-        {/* ── Tournaments tab ────────────────────────────────────────────────── */}
-        {activeTab === "tournaments" && (
+        {/* ── Events tab ──────────────────────────────────────────────────────────── */}
+        {activeTab === "events" && (
           <div className="space-y-4 animate-in fade-in duration-200">
+            {clubEvents.length === 0 ? (
+              <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
+                <Calendar className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
+                <p className={`text-sm font-semibold ${textMain} mb-1`}>No upcoming events</p>
+                <p className={`text-xs ${textMuted}`}>Events hosted by this club will appear here.</p>
+              </div>
+            ) : (
+              <>
+                {/* Upcoming events */}
+                {clubEvents.filter((e) => new Date(e.startAt) >= new Date()).length > 0 && (
+                  <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                    <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
+                      <span className={`text-xs font-medium ${textMuted}`}>
+                        {clubEvents.filter((e) => new Date(e.startAt) >= new Date()).length}
+                      </span>
+                    </div>
+                    <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                      {clubEvents.filter((e) => new Date(e.startAt) >= new Date()).map((ev) => (
+                        <div key={ev.id} className={`px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+                          <div className="flex items-start gap-3">
+                            <div
+                              className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+                              style={{ background: (ev.accentColor ?? "#4CAF50") + "22" }}
+                            >
+                              <Calendar className="w-5 h-5" style={{ color: ev.accentColor ?? "#4CAF50" }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
+                              <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs ${textMuted}`}>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(ev.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                </span>
+                                {ev.venue && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    <span className="truncate max-w-[140px]">{ev.venue}</span>
+                                  </span>
+                                )}
+                              </div>
+                              {ev.description && (
+                                <p className={`text-xs mt-1.5 leading-relaxed line-clamp-2 ${textMuted}`}>{ev.description}</p>
+                              )}
+                            </div>
+                            {joined && user && (
+                              <div className="flex-shrink-0">
+                                {(() => {
+                                  const myRsvp = getUserRSVP(ev.id, user.id);
+                                  const rsvpCount = countRSVPs(ev.id);
+                                  return (
+                                    <div className="flex flex-col items-end gap-1">
+                                      <button
+                                        onClick={() => {
+                                          const next = myRsvp?.status === "going" ? "not_going" : "going";
+                                          upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
+                                        }}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                                          myRsvp?.status === "going"
+                                            ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
+                                            : isDark ? "bg-white/8 text-white/60 hover:bg-white/15" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                        }`}
+                                      >
+                                        {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
+                                      </button>
+                                      {rsvpCount.going > 0 && (
+                                        <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Past events */}
+                {clubEvents.filter((e) => new Date(e.startAt) < new Date()).length > 0 && (
+                  <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                    <div className={`px-5 py-4 border-b ${divider}`}>
+                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Past Events</h2>
+                    </div>
+                    <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                      {clubEvents.filter((e) => new Date(e.startAt) < new Date()).map((ev) => (
+                        <div key={ev.id} className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+                          <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                            <CheckCircle2 className={`w-4 h-4 ${textMuted}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium truncate ${textMain}`}>{ev.title}</p>
+                            <p className={`text-xs ${textMuted}`}>
+                              {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              {ev.venue ? ` · ${ev.venue}` : ""}
+                            </p>
+                          </div>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${isDark ? "bg-white/8 text-white/30" : "bg-gray-100 text-gray-400"}`}>Past</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Tournaments tab ─────────────────────────────────────────────────────── */}
+        {activeTab === "tournaments" && (         <div className="space-y-4 animate-in fade-in duration-200">
 
             {/* ── Owner-only Host Tournament CTA ────────────────────────────── */}
             {isOwner ? (
