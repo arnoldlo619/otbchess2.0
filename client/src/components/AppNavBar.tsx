@@ -27,7 +27,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 
 const LOGO_URL =
-  "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png";
+  "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
 
 interface AppNavBarProps {
   /** Which nav tab should be highlighted on mount. Defaults to "Tournaments". */

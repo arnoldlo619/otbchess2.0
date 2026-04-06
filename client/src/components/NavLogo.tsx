@@ -7,7 +7,7 @@
 import { Link } from "wouter";
 
 const LOGO_URL =
-  "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png";
+  "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png";
 
 interface NavLogoProps {
   /** Extra Tailwind classes to apply to the <img> element */
