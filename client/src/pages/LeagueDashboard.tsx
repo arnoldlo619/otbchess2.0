@@ -1599,19 +1599,35 @@ export default function LeagueDashboard() {
                     <span className="text-[10px]" style={{ color: textMuted }}>Black</span>
                   </div>
                 </div>
-                {/* Prep Opponent button */}
+                {/* Prep for Next Round CTA */}
                 {(() => {
                   const oppChessCom = myMatchThisWeek ? getOpponentChesscom(myMatchThisWeek) : null;
+                  const oppName = myMatchThisWeek
+                    ? (myMatchThisWeek.playerWhiteId === user?.id ? myMatchThisWeek.playerBlackName : myMatchThisWeek.playerWhiteName)
+                    : null;
                   if (!oppChessCom) return null;
                   return (
                     <div className="px-4 pb-4">
                       <button
                         onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-                        style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                        className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${accent}22 0%, ${accent}10 100%)`,
+                          color: accent,
+                          border: `1px solid ${accent}44`,
+                          boxShadow: `0 2px 12px ${accent}18`,
+                        }}
                       >
-                        <Target size={13} />
-                        Prep for {oppChessCom}
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
+                            <Target size={16} />
+                          </div>
+                          <div className="text-left">
+                            <div className="text-sm font-bold" style={{ color: accent }}>Prep for Next Round</div>
+                            <div className="text-[11px] font-normal" style={{ color: `${accent}99` }}>Analyse {oppName ?? oppChessCom}'s openings &amp; tendencies</div>
+                          </div>
+                        </div>
+                        <ChevronRight size={16} style={{ color: `${accent}88` }} />
                       </button>
                     </div>
                   );
@@ -2182,7 +2198,7 @@ export default function LeagueDashboard() {
                   borderBottom: `1px solid ${cardBorder}`,
                   color: textMuted,
                   background: isDark ? "oklch(0.18 0.05 145)" : "#f9fafb",
-                  gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
+                  gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 5rem",
                   gap: "0.5rem",
                 }}
               >
@@ -2194,6 +2210,7 @@ export default function LeagueDashboard() {
                 <span className="text-center">L</span>
                 <span className="text-center">Pts</span>
                 <span className="text-center">Form</span>
+                <span className="text-center">Prep</span>
               </div>
 
               {standings.length === 0 ? (
@@ -2216,7 +2233,7 @@ export default function LeagueDashboard() {
                       <div
                         className="hidden sm:grid items-center px-5 py-3.5 transition-colors duration-200"
                         style={{
-                          gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem",
+                          gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 5rem",
                           gap: "0.5rem",
                           borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
                           background: isMe
@@ -2302,6 +2319,22 @@ export default function LeagueDashboard() {
                             : lastArr.map((r, j) => <ResultDot key={j} r={r} />)
                           }
                         </div>
+                        {/* Prep button — only show for opponents (not yourself) */}
+                        <div className="flex justify-center">
+                          {!isMe && s.chesscomUsername ? (
+                            <button
+                              onClick={() => navigate(`/prep/${encodeURIComponent(s.chesscomUsername!)}`)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5"
+                              style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                              title={`Prep against ${s.displayName}`}
+                            >
+                              <Target size={11} />
+                              Prep
+                            </button>
+                          ) : (
+                            <span className="text-xs" style={{ color: textMuted }}>—</span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Mobile card */}
@@ -2381,6 +2414,17 @@ export default function LeagueDashboard() {
                           <div className="flex gap-1 mt-2 ml-11">
                             {lastArr.map((r, j) => <ResultDot key={j} r={r} />)}
                           </div>
+                        )}
+                        {/* Mobile prep button */}
+                        {!isMe && s.chesscomUsername && (
+                          <button
+                            onClick={() => navigate(`/prep/${encodeURIComponent(s.chesscomUsername!)}`)}
+                            className="mt-2 ml-11 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:opacity-90"
+                            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                          >
+                            <Target size={11} />
+                            Prep against {s.displayName}
+                          </button>
                         )}
                       </div>
                     </div>
