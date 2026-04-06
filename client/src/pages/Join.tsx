@@ -1124,8 +1124,13 @@ export default function JoinPage() {
               )}
               {/* Hero */}
               <div className="text-center pt-4 pb-2">
-                <div className="w-16 h-16 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-[#3D6B47]/25 animate-pulse-ring">
-                  <Crown className="w-8 h-8 text-white" strokeWidth={1.5} />
+                <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <img
+                    src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                    alt="OTB!!"
+                    className="w-16 h-16 object-contain drop-shadow-lg"
+                    style={{ mixBlendMode: "screen" }}
+                  />
                 </div>
                 <h1 className={`text-2xl font-bold tracking-tight ${textMain}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}>
@@ -1176,8 +1181,13 @@ export default function JoinPage() {
             <div key={`auth-gate-${stepKey}`} className="animate-spring-in space-y-5">
               {/* Hero */}
               <div className="text-center pt-6 pb-2">
-                <div className="w-20 h-20 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-[#3D6B47]/30">
-                  <Crown className="w-10 h-10 text-white" strokeWidth={1.5} />
+                <div className="w-20 h-20 flex items-center justify-center mx-auto mb-5">
+                  <img
+                    src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                    alt="OTB!!"
+                    className="w-20 h-20 object-contain drop-shadow-lg"
+                    style={{ mixBlendMode: "screen" }}
+                  />
                 </div>
                 <h1 className={`text-3xl font-bold tracking-tight ${textMain}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}>
@@ -1338,8 +1348,13 @@ export default function JoinPage() {
             <div key={`qr-join-${stepKey}`} className="animate-spring-in space-y-5">
               {/* Hero */}
               <div className="text-center pt-6 pb-2">
-                <div className="w-20 h-20 bg-[#3D6B47] rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-[#3D6B47]/30">
-                  <Crown className="w-10 h-10 text-white" strokeWidth={1.5} />
+                <div className="w-20 h-20 flex items-center justify-center mx-auto mb-5">
+                  <img
+                    src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                    alt="OTB!!"
+                    className="w-20 h-20 object-contain drop-shadow-lg"
+                    style={{ mixBlendMode: "screen" }}
+                  />
                 </div>
                 <h1 className={`text-3xl font-bold tracking-tight ${textMain}`}
                   style={{ fontFamily: "'Clash Display', sans-serif" }}>
