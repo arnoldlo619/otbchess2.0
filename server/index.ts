@@ -588,6 +588,97 @@ export function createApp() {
     }
   });
 
+  // ── Proxy: GET /api/chess/player/:username/analysis ───────────────────────────
+  // Fetches the player's last 50 games from chess.com, analyzes openings for
+  // white and black, and calculates endgame win percentage.
+  app.get("/api/chess/player/:username/analysis", chessProxyLimiter, async (req, res) => {
+    try {
+      const username = req.params.username.toLowerCase().trim();
+      const headers = {
+        "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
+        "Accept": "application/json",
+      };
+
+      // Fetch the last 2 months of game archives to get recent games
+      const archivesRes = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`, { headers });
+      if (!archivesRes.ok) {
+        res.status(archivesRes.status === 404 ? 404 : 502).json({ error: "Player not found" });
+        return;
+      }
+      const archivesData = await archivesRes.json() as { archives: string[] };
+      const archives: string[] = archivesData.archives ?? [];
+
+      // Take the last 2 archive months to get enough games
+      const recentArchives = archives.slice(-2);
+      const gameArrays = await Promise.all(
+        recentArchives.map(async (url) => {
+          const r = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+          if (!r.ok) return [];
+          const d = await r.json() as { games: Record<string, unknown>[] };
+          return d.games ?? [];
+        })
+      );
+
+      // Flatten and take the last 50 games
+      const allGames = gameArrays.flat();
+      const last50 = allGames.slice(-50);
+
+      // Analyze openings and endgame results
+      const openingsWhite: Record<string, number> = {};
+      const openingsBlack: Record<string, number> = {};
+      let endgameTotal = 0;
+      let endgameWins = 0;
+
+      for (const game of last50) {
+        const pgn = (game.pgn as string) ?? "";
+        const whitePlayer = (game.white as Record<string, unknown>);
+        const blackPlayer = (game.black as Record<string, unknown>);
+        const isWhite = (whitePlayer?.username as string)?.toLowerCase() === username;
+        const isBlack = (blackPlayer?.username as string)?.toLowerCase() === username;
+        const result = isWhite ? (whitePlayer?.result as string) : (blackPlayer?.result as string);
+
+        // Extract opening name from PGN ECO URL or Opening header
+        const ecoMatch = pgn.match(/\[ECOUrl "[^"]*\/([^"]+)"\]/);
+        const openingName = ecoMatch ? ecoMatch[1].replace(/-/g, " ") : null;
+
+        if (openingName) {
+          // Capitalize first letter of each word
+          const formatted = openingName.split(" ").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+          if (isWhite) {
+            openingsWhite[formatted] = (openingsWhite[formatted] ?? 0) + 1;
+          } else if (isBlack) {
+            openingsBlack[formatted] = (openingsBlack[formatted] ?? 0) + 1;
+          }
+        }
+
+        // Endgame: games that went past move 30 (rough heuristic for endgame)
+        const moveCount = (pgn.match(/\d+\./g) ?? []).length;
+        if (moveCount >= 30) {
+          endgameTotal++;
+          if (result === "win") endgameWins++;
+        }
+      }
+
+      // Sort openings by frequency and take top 3
+      const sortByFreq = (obj: Record<string, number>) =>
+        Object.entries(obj)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([name, count]) => ({ name, count, pct: Math.round((count / last50.length) * 100) }));
+
+      res.json({
+        gamesAnalyzed: last50.length,
+        openingsWhite: sortByFreq(openingsWhite),
+        openingsBlack: sortByFreq(openingsBlack),
+        endgameWinPct: endgameTotal > 0 ? Math.round((endgameWins / endgameTotal) * 100) : null,
+        endgameGames: endgameTotal,
+      });
+    } catch (err) {
+      console.error("[chess analysis proxy]", err);
+      res.status(502).json({ error: "Could not analyze games" });
+    }
+  });
+
   // ── Proxy: GET /api/avatar-proxy?url=... ─────────────────────────────────────
   // Fetches a remote avatar image (chess.com, lichess, etc.) server-side and
   // re-serves it with permissive CORS headers so html2canvas can draw it onto

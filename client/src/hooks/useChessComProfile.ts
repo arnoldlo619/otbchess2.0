@@ -1,19 +1,30 @@
 /**
  * useChessComProfile
  *
- * Fetches a player's profile and ratings via the OTB Chess server-side proxy
- * (/api/chess/player/:username), which calls the chess.com public API with a
- * proper User-Agent header. This avoids:
- *   1. Browser blocking of custom User-Agent (forbidden header in fetch)
- *   2. Cloudflare rate-limiting direct browser requests on production domains
- * - In-memory cache prevents duplicate requests within the same session
- * - Distinguishes between "not found" (404) and generic network errors
- * - Country code → flag emoji mapping for all ISO 3166-1 alpha-2 codes
+ * Fetches a player's profile, ratings, and game analysis via the OTB Chess
+ * server-side proxy. Analysis includes:
+ *   - Top 3 openings as White (from last 50 games)
+ *   - Top 3 openings as Black (from last 50 games)
+ *   - Endgame win percentage (games > 30 moves)
  */
 
 import { useState, useCallback } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export interface OpeningEntry {
+  name: string;
+  count: number;
+  pct: number;
+}
+
+export interface ChessComAnalysis {
+  gamesAnalyzed: number;
+  openingsWhite: OpeningEntry[];
+  openingsBlack: OpeningEntry[];
+  endgameWinPct: number | null;
+  endgameGames: number;
+}
+
 export interface ChessComProfile {
   username: string;
   name?: string;
@@ -30,26 +41,24 @@ export interface ChessComProfile {
   joined?: number;
   /** Source platform identifier */
   platform: "chesscom";
+  /** Game analysis — populated after lookup */
+  analysis?: ChessComAnalysis;
 }
 
 export type FetchStatus = "idle" | "loading" | "success" | "not_found" | "error";
 
 // ─── In-memory cache ──────────────────────────────────────────────────────────
 const cache = new Map<string, ChessComProfile>();
+const analysisCache = new Map<string, ChessComAnalysis>();
 
 // ─── Country code → flag emoji ────────────────────────────────────────────────
 function countryCodeToFlag(code: string): string {
-  // chess.com returns country as either:
-  //   - A URL like https://api.chess.com/pub/country/US  (no extension)
-  //   - A flag PNG URL like https://www.chess.com/member/flags/US.png
-  //   - A bare 2-letter code like "US"
   const match =
     code.match(/\/([A-Z]{2})\.png$/i) ||
     code.match(/\/country\/([A-Z]{2})$/i) ||
     code.match(/^([A-Z]{2})$/i);
   if (!match) return "";
   const letters = match[1].toUpperCase();
-  // Regional indicator symbols: A = 0x1F1E6, so offset from 'A' (65)
   return Array.from(letters)
     .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
     .join("");
@@ -61,8 +70,6 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
 
   if (cache.has(key)) return cache.get(key)!;
 
-  // Route through the server-side proxy to avoid browser User-Agent restrictions
-  // and Cloudflare rate-limiting on direct browser → api.chess.com calls
   const res = await fetch(`/api/chess/player/${encodeURIComponent(key)}`);
 
   if (res.status === 404) {
@@ -76,13 +83,11 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
   const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
   const { profile: profileData, stats: statsData } = data;
 
-  // Extract ratings — chess.com nests them under chess_rapid, chess_blitz, chess_bullet
   const rapid = (statsData?.chess_rapid as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
   const blitz = (statsData?.chess_blitz as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
   const bullet = (statsData?.chess_bullet as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
   const elo = rapid || blitz || bullet || 0;
 
-  // Country: chess.com returns a URL like https://api.chess.com/pub/country/US
   const countryCode = profileData.country
     ? (profileData.country as string).split("/").pop() ?? ""
     : "";
@@ -108,11 +113,27 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
   return profile;
 }
 
+async function fetchAnalysis(username: string): Promise<ChessComAnalysis | null> {
+  const key = username.toLowerCase().trim();
+  if (analysisCache.has(key)) return analysisCache.get(key)!;
+
+  try {
+    const res = await fetch(`/api/chess/player/${encodeURIComponent(key)}/analysis`);
+    if (!res.ok) return null;
+    const data = await res.json() as ChessComAnalysis;
+    analysisCache.set(key, data);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useChessComProfile() {
   const [status, setStatus] = useState<FetchStatus>("idle");
   const [profile, setProfile] = useState<ChessComProfile | null>(null);
   const [error, setError] = useState<string>("");
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   const lookup = useCallback(async (username: string) => {
     if (!username.trim()) return;
@@ -123,6 +144,15 @@ export function useChessComProfile() {
       const p = await fetchFromChessCom(username.trim());
       setProfile(p);
       setStatus("success");
+
+      // Kick off analysis fetch in the background
+      setAnalysisLoading(true);
+      fetchAnalysis(username.trim()).then((analysis) => {
+        setAnalysisLoading(false);
+        if (analysis) {
+          setProfile((prev) => prev ? { ...prev, analysis } : prev);
+        }
+      });
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "not_found") {
         setStatus("not_found");
@@ -138,9 +168,10 @@ export function useChessComProfile() {
     setStatus("idle");
     setProfile(null);
     setError("");
+    setAnalysisLoading(false);
   }, []);
 
-  return { status, profile, error, lookup, reset };
+  return { status, profile, error, lookup, reset, analysisLoading };
 }
 
 /** Standalone fetch for use outside React (e.g. in event handlers) */

@@ -619,8 +619,8 @@ function HowItWorks() {
     {
       number: "01",
       icon: <Trophy className="w-6 h-6" />,
-      title: "Create Your Tournament",
-      description: "Set the format (Swiss, Round Robin, Knockout), number of rounds, time control, and venue. Takes under 3 minutes.",
+      title: "Create Your Tournament, Share QR Code",
+      description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code — players scan and register on the spot.",
     },
     {
       number: "02",
@@ -654,9 +654,9 @@ function HowItWorks() {
                 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                From zero to tournament
+                From Signups to Round 1
                 <br />
-                in three moves.
+                in three steps.
               </h2>
             </div>
             <div className="grid md:grid-cols-3 gap-6 relative">
@@ -699,12 +699,12 @@ function Features() {
   const isDark = theme === "dark";
 
   const features = [
-    { icon: <Globe className="w-5 h-5" />, title: "chess.com API Integration", description: "Players sign up with their chess.com username. ELO ratings are pulled automatically — no manual entry, no disputes.", tag: "Live ELO Sync" },
-    { icon: <Zap className="w-5 h-5" />, title: "Smart Pairing Engine", description: "Swiss system pairings optimized by ELO, color balance, and previous opponents. Handles tiebreaks automatically.", tag: "Algorithm-Powered" },
-    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results are submitted. Shareable public link for spectators and club members.", tag: "Real-Time" },
-    { icon: <Clock className="w-5 h-5" />, title: "Multiple Formats", description: "Swiss, Round Robin, Single Elimination, and Double Elimination. Set time controls, bye rules, and scoring systems.", tag: "Flexible" },
-    { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Manage your club's roster, track member ELO history over time, and organize recurring weekly or monthly events.", tag: "For Clubs" },
-    { icon: <CheckCircle2 className="w-5 h-5" />, title: "Result Verification", description: "Players confirm results from their device. Disputes are flagged for the tournament director to resolve instantly.", tag: "Verified" },
+    { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs" },
+    { icon: <Swords className="w-5 h-5" />, title: "Chess Club League", description: "Run a structured season-long league within your club. Track standings, head-to-head records, and crown a champion.", tag: "New" },
+    { icon: <Brain className="w-5 h-5" />, title: "Match Prep Analysis & Coach", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, patterns, and weaknesses before you sit down.", tag: "AI-Powered" },
+    { icon: <Zap className="w-5 h-5" />, title: "Smart Pairings Engine", description: "Swiss pairings optimized by ELO, color balance, and prior opponents. Tiebreaks handled automatically, every round.", tag: "Algorithm-Powered" },
+    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time" },
+    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready" },
   ];
 
   return (
@@ -867,19 +867,19 @@ function Showcase() {
           <div className={`transition-all duration-700 delay-200 ${inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
             <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
               style={{ animationFillMode: "forwards" }}>
-              Chess Club Chess League
+              Chess Club League
             </p>
             <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
               style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "120ms", animationFillMode: "forwards" }}>
-              Prep like the
+              Like a Chessable course
               <br />
-              pros do.
+              to beat your club mates.
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Professional chess players spend hours studying their opponents before every tournament round. The Chess Club Chess League brings that same preparation edge to your local club.
+              Your club. A real season. Real stakes. The Chess Club League turns your weekly games into a structured competition with standings, rivalries, and a champion.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-8">
-              Using the chess.com API, we pull your club members' game history, analyze their opening choices, tactical patterns, and weaknesses — then generate strategic preparation lines tailored to your next matchup. It's like having a personal coach for every round.
+              Before each round, our Match Prep Coach analyzes your opponent's game history — their openings, patterns, and weaknesses — and hands you tailored preparation lines. Study them. Then win.
             </p>
 
             <div className="space-y-4 mb-8">
@@ -931,7 +931,7 @@ function PlayerDemo() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [username, setUsername] = useState("");
-  const { status, profile, error: lookupError, lookup, reset } = useChessComProfile();
+  const { status, profile, error: lookupError, lookup, reset, analysisLoading } = useChessComProfile();
   const loading = status === "loading";
 
   const handleLookup = () => {
@@ -951,10 +951,12 @@ function PlayerDemo() {
             chess.com Integration
           </p>
           <h2 className="text-4xl font-semibold tracking-tight mb-4 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Seamless User Onboarding
+            Improving How You Play Online,
+            <br />
+            Over The Board!!
           </h2>
           <p className="text-muted-foreground">
-            Enter a chess.com username below to see how player registration works. Try{" "}
+            Enter your chess.com username to see your OTB Profile. Try{" "}
             <code className={`px-1.5 py-0.5 rounded text-xs border ${isDark ? "bg-[oklch(0.28_0.08_145)] text-[oklch(0.65_0.14_145)] border-white/10" : "bg-white text-[#3D6B47] border-[#EEEED2]"}`}>hikaru</code>{" "}
             or{" "}
             <code className={`px-1.5 py-0.5 rounded text-xs border ${isDark ? "bg-[oklch(0.28_0.08_145)] text-[oklch(0.65_0.14_145)] border-white/10" : "bg-white text-[#3D6B47] border-[#EEEED2]"}`}>gothamchess</code>.
@@ -997,7 +999,8 @@ function PlayerDemo() {
             {/* Profile card */}
             {profile && status === "success" && (
               <div className={`border rounded-xl p-4 animate-fade-in-up ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-[#F0F5EE]/50"}`}>
-                <div className="flex items-center justify-between">
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     {profile.avatar ? (
                       <img src={profile.avatar} alt={profile.username} className="w-10 h-10 rounded-full object-cover" />
@@ -1029,8 +1032,10 @@ function PlayerDemo() {
                     <p className="text-xs text-muted-foreground">Rapid ELO</p>
                   </div>
                 </div>
+
+                {/* Rating row */}
                 {(profile.blitz > 0 || profile.bullet > 0) && (
-                  <div className={`mt-3 pt-3 border-t flex gap-4 ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
+                  <div className={`pt-3 pb-3 border-t border-b flex gap-4 mb-3 ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
                     {profile.blitz > 0 && (
                       <div className="text-center flex-1">
                         <p className="text-sm font-bold text-foreground">{profile.blitz}</p>
@@ -1045,7 +1050,61 @@ function PlayerDemo() {
                     )}
                   </div>
                 )}
-                <div className={`mt-3 pt-3 border-t ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
+
+                {/* Game Analysis */}
+                {analysisLoading && (
+                  <div className={`rounded-lg p-3 mb-3 text-xs text-center ${isDark ? "bg-white/05 text-white/40" : "bg-gray-50 text-gray-400"}`}>
+                    Analyzing last 50 games…
+                  </div>
+                )}
+                {profile.analysis && !analysisLoading && (
+                  <div className="space-y-3 mb-3">
+                    {/* Openings as White */}
+                    {profile.analysis.openingsWhite.length > 0 && (
+                      <div>
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>⬜ Openings as White</p>
+                        <div className="space-y-1">
+                          {profile.analysis.openingsWhite.map((o) => (
+                            <div key={o.name} className="flex items-center gap-2">
+                              <div className={`flex-1 text-xs truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>{o.name}</div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <div className={`h-1.5 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} style={{ width: `${Math.max(o.pct, 4)}px` }} />
+                                <span className={`text-[10px] font-mono font-bold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>{o.pct}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Openings as Black */}
+                    {profile.analysis.openingsBlack.length > 0 && (
+                      <div>
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>⬛ Openings as Black</p>
+                        <div className="space-y-1">
+                          {profile.analysis.openingsBlack.map((o) => (
+                            <div key={o.name} className="flex items-center gap-2">
+                              <div className={`flex-1 text-xs truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>{o.name}</div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <div className={`h-1.5 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} style={{ width: `${Math.max(o.pct, 4)}px` }} />
+                                <span className={`text-[10px] font-mono font-bold ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>{o.pct}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Endgame win % */}
+                    {profile.analysis.endgameWinPct !== null && (
+                      <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                        <span className={`text-xs ${isDark ? "text-white/60" : "text-gray-500"}`}>Endgame Win % <span className="text-[10px] opacity-60">({profile.analysis.endgameGames} games &gt;30 moves)</span></span>
+                        <span className={`text-sm font-bold font-mono ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>{profile.analysis.endgameWinPct}%</span>
+                      </div>
+                    )}
+                    <p className={`text-[10px] text-center ${isDark ? "text-white/25" : "text-gray-300"}`}>Based on last {profile.analysis.gamesAnalyzed} games</p>
+                  </div>
+                )}
+
+                <div className={`pt-3 border-t ${isDark ? "border-white/10" : "border-[#EEEED2]"}`}>
                   <button
                     onClick={() => toast.success(`${profile.username} added to tournament!`)}
                     className="w-full btn-chess-primary text-sm py-2"
@@ -1139,12 +1198,12 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             className="text-4xl lg:text-5xl font-semibold text-white tracking-tight mb-5"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            Your next tournament
+            Growing your chess club
             <br />
             starts here.
           </h2>
           <p className="text-white/75 text-lg mb-10">
-            Free for clubs with up to 62 players. No credit card required.
+            Free for chess club owners who sign up. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
