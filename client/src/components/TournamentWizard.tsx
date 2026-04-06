@@ -564,7 +564,7 @@ function ModeSelect({
               >
                 Quickstart
               </h3>
-              <p className="text-white/55 text-sm leading-relaxed">
+              <p className="text-white/55 text-base leading-relaxed">
                 Fill in just a name and location. We handle the rest — perfect for same-day tournaments.
               </p>
             </div>
@@ -621,7 +621,7 @@ function ModeSelect({
               >
                 Schedule Tournament
               </h3>
-              <p className="text-white/55 text-sm leading-relaxed">
+              <p className="text-white/55 text-base leading-relaxed">
                 Full setup wizard — choose format, rounds, time control, and rating system.
               </p>
             </div>
@@ -686,7 +686,7 @@ function ModeSelect({
               >
                 Large Event
               </h3>
-              <p className="text-white/55 text-sm leading-relaxed">
+              <p className="text-white/55 text-base leading-relaxed">
                 Swiss rounds to seed players, then a single-elimination bracket. Built for 30+ player events.
               </p>
             </div>
