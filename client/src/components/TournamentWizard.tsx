@@ -496,7 +496,7 @@ function ModeSelect({
       </button>
 
       {/* Content */}
-      <div className="relative w-full max-w-xl mx-auto px-6 py-8 sm:py-12 flex flex-col items-center gap-6 sm:gap-8 min-h-full justify-center">
+      <div className="relative w-full max-w-4xl mx-auto px-6 sm:px-10 py-8 sm:py-12 flex flex-col items-center gap-6 sm:gap-8 min-h-full justify-center">
         {/* Logo */}
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
@@ -516,14 +516,14 @@ function ModeSelect({
         </div>
 
         {/* Mode cards */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {/* Quickstart */}
           <button
             type="button"
             onClick={() => onSelect("quickstart")}
             className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
             style={{
-              padding: "16px 16px",
+              padding: "24px 24px",
               background: "rgba(61,107,71,0.25)",
               border: "2px solid rgba(61,107,71,0.55)",
               backdropFilter: "blur(8px)",
@@ -551,10 +551,10 @@ function ModeSelect({
 
             {/* Icon */}
             <div
-              className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.15)" }}
-            >
-              <Bolt className="w-6 h-6 text-white" strokeWidth={1.8} />
+             className="flex w-14 h-14 rounded-2xl items-center justify-center"
+            style={{ background: "rgba(255,255,255,0.15)" }}
+          >
+            <Bolt className="w-6 h-6 text-white" strokeWidth={1.8} />
             </div>
 
             <div>
@@ -588,7 +588,7 @@ function ModeSelect({
             onClick={() => onSelect("schedule")}
             className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
             style={{
-              padding: "16px 16px",
+              padding: "24px 24px",
               background: "rgba(255,255,255,0.06)",
               border: "2px solid rgba(255,255,255,0.12)",
               backdropFilter: "blur(8px)",
@@ -608,7 +608,7 @@ function ModeSelect({
           >
             {/* Icon */}
             <div
-              className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center mt-0 sm:mt-7"
+              className="flex w-14 h-14 rounded-2xl items-center justify-center mt-0 sm:mt-7"
               style={{ background: "rgba(255,255,255,0.10)" }}
             >
               <Calendar className="w-6 h-6 text-white" strokeWidth={1.8} />
@@ -645,7 +645,7 @@ function ModeSelect({
             onClick={() => onSelect("large_event")}
             className="group relative flex flex-col items-start gap-3 sm:gap-4 rounded-3xl border text-left transition-all duration-250 overflow-hidden"
             style={{
-              padding: "16px 16px",
+              padding: "24px 24px",
               background: "rgba(255,255,255,0.06)",
               border: "2px solid rgba(255,255,255,0.12)",
               backdropFilter: "blur(8px)",
@@ -673,7 +673,7 @@ function ModeSelect({
 
             {/* Icon */}
             <div
-              className="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center"
+              className="flex w-14 h-14 rounded-2xl items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)" }}
             >
               <img src={OTB_LOGO_URL} alt="OTB" className="w-6 h-6 object-contain drop-shadow-sm" />
