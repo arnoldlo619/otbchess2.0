@@ -34,6 +34,9 @@ import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
 import { useMyAnalysedGames } from "../hooks/useMyAnalysedGames";
 import AnalysedGameCard from "../components/AnalysedGameCard";
+import type { Club } from "../lib/clubRegistry";
+import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
+import { Users, Settings } from "lucide-react";
 
 interface EditState {
   displayName: string;
@@ -221,6 +224,50 @@ export default function ProfilePage() {
 
   // Fetch analysed games from LNM pipeline
   const analysedGames = useMyAnalysedGames();
+
+  // ── My Clubs ────────────────────────────────────────────────────────────────
+  const [myClubs, setMyClubs] = useState<Club[] | null>(null);
+  const [clubsLoading, setClubsLoading] = useState(false);
+  const [confirmDeleteClubId, setConfirmDeleteClubId] = useState<string | null>(null);
+  const [confirmLeaveClubId, setConfirmLeaveClubId] = useState<string | null>(null);
+  const [clubActionLoading, setClubActionLoading] = useState<string | null>(null);
+  const [clubActionError, setClubActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    setClubsLoading(true);
+    apiListMyClubs()
+      .then((clubs) => setMyClubs(clubs))
+      .catch(() => setMyClubs([]))
+      .finally(() => setClubsLoading(false));
+  }, [user]);
+
+  async function handleDeleteClub(clubId: string) {
+    setClubActionLoading(clubId);
+    setClubActionError(null);
+    setConfirmDeleteClubId(null);
+    const result = await apiDeleteClub(clubId);
+    if (result.ok) {
+      setMyClubs((prev) => prev ? prev.filter((c) => c.id !== clubId) : prev);
+    } else {
+      setClubActionError(result.error ?? "Failed to delete club");
+    }
+    setClubActionLoading(null);
+  }
+
+  async function handleLeaveClub(clubId: string) {
+    if (!user) return;
+    setClubActionLoading(clubId);
+    setClubActionError(null);
+    setConfirmLeaveClubId(null);
+    const ok = await apiLeaveClub(clubId, user.id);
+    if (ok) {
+      setMyClubs((prev) => prev ? prev.filter((c) => c.id !== clubId) : prev);
+    } else {
+      setClubActionError("Failed to leave club. Please try again.");
+    }
+    setClubActionLoading(null);
+  }
 
   // Fetch tournaments from API (cross-device) when signed in; fall back to localStorage
   const [apiTournaments, setApiTournaments] = useState<Array<{
@@ -933,24 +980,220 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* My Clubs link card */}
-        <a
-          href="/clubs"
-          className={`flex items-center justify-between rounded-3xl border p-5 transition-all hover:shadow-md group ${card}`}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-              isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/10"
-            }`}>
-              <User className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+        {/* My Clubs management panel */}
+        <div className={`rounded-3xl border ${card} overflow-hidden`}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/10"
+              }`}>
+                <Users className={`w-5 h-5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+              </div>
+              <div>
+                <p className={`text-sm font-semibold ${text}`}>My Clubs</p>
+                <p className={`text-xs ${muted}`}>
+                  {clubsLoading ? "Loading..." : myClubs === null ? "" : `${myClubs.length} club${myClubs.length !== 1 ? "s" : ""}`}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className={`text-sm font-semibold ${text}`}>My Clubs</p>
-              <p className={`text-xs ${muted}`}>Manage your chess communities</p>
-            </div>
+            <a
+              href="/clubs"
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl transition ${
+                isDark ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <ExternalLink className="w-3 h-3" />
+              Discover
+            </a>
           </div>
-          <ExternalLink className={`w-4 h-4 ${muted} group-hover:text-[#2d6a4f] transition`} />
-        </a>
+
+          {/* Error banner */}
+          {clubActionError && (
+            <div className="mx-5 mb-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/10 rounded-xl px-3 py-2">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              {clubActionError}
+              <button onClick={() => setClubActionError(null)} className="ml-auto"><X className="w-3 h-3" /></button>
+            </div>
+          )}
+
+          {/* Club list */}
+          {clubsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className={`w-5 h-5 animate-spin ${muted}`} />
+            </div>
+          ) : !myClubs || myClubs.length === 0 ? (
+            <div className="px-5 pb-5">
+              <div className={`rounded-2xl border border-dashed p-6 text-center ${
+                isDark ? "border-white/10" : "border-gray-200"
+              }`}>
+                <p className={`text-sm ${muted} mb-3`}>You haven't joined any clubs yet.</p>
+                <a
+                  href="/clubs"
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl transition ${
+                    isDark ? "bg-[#4CAF50]/20 hover:bg-[#4CAF50]/30 text-[#4CAF50]" : "bg-[#3D6B47]/10 hover:bg-[#3D6B47]/20 text-[#3D6B47]"
+                  }`}
+                >
+                  Browse Clubs
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5 pb-2">
+              {myClubs.map((club) => {
+                const isOwner = club.ownerId === user?.id;
+                const isDeleting = clubActionLoading === club.id;
+                const confirmingDelete = confirmDeleteClubId === club.id;
+                const confirmingLeave = confirmLeaveClubId === club.id;
+                return (
+                  <div key={club.id} className={`px-5 py-3.5 ${
+                    isDark ? "hover:bg-white/3" : "hover:bg-gray-50"
+                  } transition`}>
+                    <div className="flex items-center gap-3">
+                      {/* Club avatar */}
+                      <div
+                        className="w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-sm font-bold"
+                        style={{ backgroundColor: club.accentColor ?? "#3D6B47" }}
+                      >
+                        {club.name.charAt(0).toUpperCase()}
+                      </div>
+                      {/* Club info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-sm font-semibold truncate ${text}`}>{club.name}</p>
+                          {isOwner && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                              isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"
+                            }`}>Owner</span>
+                          )}
+                        </div>
+                        <p className={`text-xs truncate ${muted}`}>
+                          {club.memberCount ?? 0} member{(club.memberCount ?? 0) !== 1 ? "s" : ""}
+                          {club.location ? ` · ${club.location}` : ""}
+                        </p>
+                      </div>
+                      {/* Actions */}
+                      {!confirmingDelete && !confirmingLeave && (
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <a
+                            href={`/clubs/${club.slug ?? club.id}`}
+                            className={`p-1.5 rounded-xl transition ${
+                              isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"
+                            }`}
+                            title="View club"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                          {isOwner && (
+                            <a
+                              href={`/clubs/${club.slug ?? club.id}/dashboard`}
+                              className={`p-1.5 rounded-xl transition ${
+                                isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"
+                              }`}
+                              title="Manage club"
+                            >
+                              <Settings className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          {isOwner ? (
+                            <button
+                              onClick={() => setConfirmDeleteClubId(club.id)}
+                              disabled={isDeleting}
+                              className={`p-1.5 rounded-xl transition ${
+                                isDark ? "hover:bg-red-500/20 text-white/30 hover:text-red-400" : "hover:bg-red-50 text-gray-300 hover:text-red-500"
+                              }`}
+                              title="Delete club"
+                            >
+                              {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmLeaveClubId(club.id)}
+                              disabled={isDeleting}
+                              className={`p-1.5 rounded-xl transition text-xs font-medium ${
+                                isDark ? "hover:bg-white/10 text-white/30 hover:text-white/70" : "hover:bg-gray-100 text-gray-300 hover:text-gray-600"
+                              }`}
+                              title="Leave club"
+                            >
+                              {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Delete confirmation */}
+                    {confirmingDelete && (
+                      <div className={`mt-3 rounded-2xl p-3 ${
+                        isDark ? "bg-red-500/10 border border-red-500/20" : "bg-red-50 border border-red-200"
+                      }`}>
+                        <p className="text-xs text-red-400 font-medium mb-2">
+                          Delete <strong>{club.name}</strong>? This permanently removes all events, members, leagues, and data. This cannot be undone.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeleteClub(club.id)}
+                            className="flex-1 text-xs font-semibold py-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white transition"
+                          >
+                            Yes, delete permanently
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteClubId(null)}
+                            className={`flex-1 text-xs font-medium py-1.5 rounded-xl transition ${
+                              isDark ? "bg-white/10 hover:bg-white/15 text-white/70" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Leave confirmation */}
+                    {confirmingLeave && (
+                      <div className={`mt-3 rounded-2xl p-3 ${
+                        isDark ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
+                      }`}>
+                        <p className="text-xs text-amber-400 font-medium mb-2">
+                          Leave <strong>{club.name}</strong>? You can rejoin later.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleLeaveClub(club.id)}
+                            className="flex-1 text-xs font-semibold py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition"
+                          >
+                            Yes, leave club
+                          </button>
+                          <button
+                            onClick={() => setConfirmLeaveClubId(null)}
+                            className={`flex-1 text-xs font-medium py-1.5 rounded-xl transition ${
+                              isDark ? "bg-white/10 hover:bg-white/15 text-white/70" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            }`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {/* Create new club CTA */}
+              <div className="px-5 pt-3 pb-4">
+                <a
+                  href="/clubs/new"
+                  className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl text-xs font-semibold border border-dashed transition ${
+                    isDark
+                      ? "border-[#4CAF50]/30 text-[#4CAF50]/70 hover:border-[#4CAF50]/60 hover:text-[#4CAF50] hover:bg-[#4CAF50]/5"
+                      : "border-[#3D6B47]/30 text-[#3D6B47]/70 hover:border-[#3D6B47]/60 hover:text-[#3D6B47] hover:bg-[#3D6B47]/5"
+                  }`}
+                >
+                  + Create a new club
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Danger zone */}
         <div className={`rounded-3xl border p-6 ${card}`}>

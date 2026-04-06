@@ -163,7 +163,26 @@ export async function apiLeaveClub(
   }
 }
 
-// ── Send presence heartbeat ──────────────────────────────────────────────────
+/// ── Permanently delete a club (owner only) ──────────────────────────────────
+export async function apiDeleteClub(
+  clubId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${BASE}/${clubId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, error: body.error ?? "Failed to delete club" };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error" };
+  }
+}
+
+// ── Send presence heartbeat ──────────────────────────────────────────────
 export async function apiHeartbeat(clubId: string): Promise<boolean> {
   try {
     const res = await fetch(`${BASE}/${clubId}/heartbeat`, {

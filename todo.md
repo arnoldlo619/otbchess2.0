@@ -4822,3 +4822,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] ClubDashboard Payments tab: buy-in row stacks vertically on mobile
 - [x] ClubDashboard Leagues tab: header stacks vertically, New League button full-width on mobile
 - [x] ClubDashboard tab content: safe-area-inset-bottom padding
+- [x] Club management on My Profile page (delete club for owners, leave club for members)
+- [x] DELETE /api/clubs/:id server endpoint with cascade cleanup
+- [x] Improved Club not found error pages (ClubProfile + ClubDashboard) with link to profile

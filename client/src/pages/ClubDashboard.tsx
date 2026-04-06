@@ -2660,7 +2660,38 @@ export default function ClubDashboard() {
     return <ClubDashboardSkeleton />;
   }
 
-  if (!club) return null;
+  if (!club) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6 bg-[oklch(0.20_0.06_145)]">
+        <NavLogo />
+        <div className="rounded-3xl border border-white/10 bg-[#0f1f12] p-8 max-w-sm w-full text-center">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-amber-500/15">
+            <span className="text-2xl">&#9816;</span>
+          </div>
+          <h2 className="text-base font-bold mb-2 text-white">
+            Club dashboard unavailable
+          </h2>
+          <p className="text-sm mb-5 leading-relaxed text-white/50">
+            This club may have been deleted or created before a platform update. Head to your profile to remove it or browse other clubs.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Link
+              href="/profile"
+              className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-[#4CAF50] hover:bg-[#43a047] text-white transition text-center block"
+            >
+              Manage my clubs
+            </Link>
+            <Link
+              href="/clubs"
+              className="w-full py-2.5 rounded-2xl text-sm font-medium bg-white/8 hover:bg-white/12 text-white/70 transition text-center block"
+            >
+              Browse all clubs
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const accent = club.accentColor ?? "#4CAF50";
 

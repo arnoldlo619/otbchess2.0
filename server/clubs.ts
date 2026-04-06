@@ -18,7 +18,27 @@
 
 import express, { Router } from "express";
 import { getDb } from "./db.js";
-import { dbClubs, dbClubMembers } from "../shared/schema";
+import {
+  dbClubs,
+  dbClubMembers,
+  clubConversations,
+  clubMessages,
+  clubChessGames,
+  clubInvites,
+  clubBattles,
+  clubEvents,
+  clubEvents as dbClubEvents,
+  clubFeed,
+  clubFeed as dbClubFeed,
+  clubEventRsvps,
+  leagues,
+  leaguePlayers,
+  leagueWeeks,
+  leagueMatches,
+  leagueStandings,
+  leagueJoinRequests,
+  leagueInvites,
+} from "../shared/schema";
 import { eq, and, desc, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { Request, Response } from "express";
@@ -482,6 +502,64 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
   }
 });
 
+// ── DELETE /api/clubs/:id — permanently delete a club (owner only) ────────────
+clubsRouter.delete("/:id", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (club.ownerId !== userId) {
+      res.status(403).json({ error: "Only the club owner can delete this club" });
+      return;
+    }
+    // Cascade: delete all related data in dependency order
+    // 1. League sub-tables
+    const clubLeagueRows = await db.select({ id: leagues.id }).from(leagues).where(eq(leagues.clubId, id));
+    for (const lg of clubLeagueRows) {
+      await db.delete(leagueMatches).where(eq(leagueMatches.leagueId, lg.id));
+      await db.delete(leagueStandings).where(eq(leagueStandings.leagueId, lg.id));
+      await db.delete(leagueWeeks).where(eq(leagueWeeks.leagueId, lg.id));
+      await db.delete(leaguePlayers).where(eq(leaguePlayers.leagueId, lg.id));
+      await db.delete(leagueJoinRequests).where(eq(leagueJoinRequests.leagueId, lg.id));
+      await db.delete(leagueInvites).where(eq(leagueInvites.leagueId, lg.id));
+    }
+    await db.delete(leagues).where(eq(leagues.clubId, id));
+    // 2. Club events and RSVPs
+    const evRows = await db.select({ id: dbClubEvents.id }).from(dbClubEvents).where(eq(dbClubEvents.clubId, id));
+    for (const ev of evRows) {
+      await db.delete(clubEventRsvps).where(eq(clubEventRsvps.eventId, ev.id));
+    }
+    await db.delete(dbClubEvents).where(eq(dbClubEvents.clubId, id));
+    // 3. Feed
+    await db.delete(dbClubFeed).where(eq(dbClubFeed.clubId, id));
+    // 4. Battles
+    await db.delete(clubBattles).where(eq(clubBattles.clubId, id));
+    // 5. Invites
+    await db.delete(clubInvites).where(eq(clubInvites.clubId, id));
+    // 6. Messaging
+    const convRows = await db.select({ id: clubConversations.id }).from(clubConversations).where(eq(clubConversations.clubId, id));
+    for (const conv of convRows) {
+      await db.delete(clubChessGames).where(eq(clubChessGames.conversationId, conv.id));
+      await db.delete(clubMessages).where(eq(clubMessages.conversationId, conv.id));
+    }
+    await db.delete(clubConversations).where(eq(clubConversations.clubId, id));
+    // 7. Members
+    await db.delete(dbClubMembers).where(eq(dbClubMembers.clubId, id));
+    // 8. The club itself
+    await db.delete(dbClubs).where(eq(dbClubs.id, id));
+    res.json({ success: true });
+  } catch (err) {
+    console.error("[clubs] DELETE /:id error:", err);
+    res.status(500).json({ error: "Failed to delete club" });
+  }
+});
+
 // ── GET /api/clubs/:id/members — list club members ────────────────────────────
 clubsRouter.get("/:id/members", async (req: Request, res: Response) => {
   try {
@@ -642,7 +720,6 @@ clubsRouter.delete(
 );
 
 // ─── Club Events API ──────────────────────────────────────────────────────────
-import { clubEvents, clubFeed } from "../shared/schema.js";
 
 /** GET /api/clubs/:id/events — list all events for a club */
 clubsRouter.get("/:id/events", async (req: Request, res: Response) => {

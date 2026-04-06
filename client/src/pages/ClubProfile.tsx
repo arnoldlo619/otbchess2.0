@@ -797,14 +797,39 @@ export default function ClubProfile() {
 
   if (!club) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center gap-6 ${isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]"}`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-6 px-6 ${isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]"}`}>
         <NavLogo />
-        <p className={`text-lg font-semibold ${isDark ? "text-white/60" : "text-gray-500"}`}>
-          Club not found
-        </p>
-        <Link href="/clubs" className="text-sm text-[#4CAF50] underline underline-offset-2">
-          Browse all clubs
-        </Link>
+        <div className={`rounded-3xl border p-8 max-w-sm w-full text-center ${
+          isDark ? "bg-[#0f1f12] border-white/10" : "bg-white border-gray-200"
+        }`}>
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+            isDark ? "bg-amber-500/15" : "bg-amber-50"
+          }`}>
+            <span className="text-2xl">&#9816;</span>
+          </div>
+          <h2 className={`text-base font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+            Club not found
+          </h2>
+          <p className={`text-sm mb-5 leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>
+            This club may have been deleted or created before a platform update. You can remove it from your profile to keep things tidy.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Link
+              href="/profile"
+              className="w-full py-2.5 rounded-2xl text-sm font-semibold bg-[#4CAF50] hover:bg-[#43a047] text-white transition text-center block"
+            >
+              Manage my clubs
+            </Link>
+            <Link
+              href="/clubs"
+              className={`w-full py-2.5 rounded-2xl text-sm font-medium transition text-center block ${
+                isDark ? "bg-white/8 hover:bg-white/12 text-white/70" : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+              }`}
+            >
+              Browse all clubs
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
