@@ -4841,3 +4841,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Server: compute wins/draws/losses counts from last 50 games and include in analysis response
 - [x] Client: update analysis type to include wins/draws/losses fields
 - [x] Landing page PlayerDemo: add compact horizontal W/D/L segmented bar (green/grey/red) with counts and percentages
+
+## Player Reports — chess.com Recent Form Bar
+
+- [x] Report.tsx: fetch chess.com analysis for each player on mount (parallel, non-blocking)
+- [x] Report.tsx: pass wins/draws/losses from chess.com analysis down to each player card
+- [x] PlayerStatsCard: add optional chesscomWins/Draws/Losses props and render a "Recent Form (Last 50)" mini-bar below the tournament W/D/L bar

@@ -186,6 +186,10 @@ export interface PlayerStatsCardProps {
   forExport?: boolean;
   /** Hex accent color — defaults to the badge's own color */
   accentColor?: string;
+  /** chess.com recent form — wins/draws/losses from last 50 online games */
+  chesscomWins?: number;
+  chesscomDraws?: number;
+  chesscomLosses?: number;
 }
 
 const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
@@ -198,6 +202,9 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       avatarStatus = "loaded",
       forExport = false,
       accentColor: accentColorProp,
+      chesscomWins,
+      chesscomDraws,
+      chesscomLosses,
     },
     ref
   ) => {
@@ -584,6 +591,46 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
               </div>
             </div>
           )}
+
+          {/* ── chess.com Recent Form bar ── */}
+          {chesscomWins !== undefined && chesscomDraws !== undefined && chesscomLosses !== undefined && (() => {
+            const cfTotal = chesscomWins + chesscomDraws + chesscomLosses;
+            if (cfTotal === 0) return null;
+            const cfWPct = (chesscomWins / cfTotal) * 100;
+            const cfDPct = (chesscomDraws / cfTotal) * 100;
+            const cfLPct = 100 - cfWPct - cfDPct;
+            const cfWinRate = Math.round(cfWPct);
+            return (
+              <div
+                style={{
+                  marginBottom: forExport ? 32 : 16,
+                  padding: forExport ? "20px 24px" : "10px 12px",
+                  borderRadius: forExport ? 16 : 10,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                {/* Label row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: forExport ? 12 : 6 }}>
+                  <span style={{ fontSize: forExport ? 12 : 7, fontWeight: 700, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.10em" }}>
+                    Recent Form (Last {cfTotal})
+                  </span>
+                  <div style={{ display: "flex", gap: forExport ? 12 : 6 }}>
+                    <span style={{ fontSize: forExport ? 14 : 9, fontWeight: 700, color: "#4ade80", fontFamily: "'JetBrains Mono', monospace" }}>{chesscomWins}W</span>
+                    <span style={{ fontSize: forExport ? 14 : 9, fontWeight: 700, color: "rgba(255,255,255,0.28)", fontFamily: "'JetBrains Mono', monospace" }}>{chesscomDraws}D</span>
+                    <span style={{ fontSize: forExport ? 14 : 9, fontWeight: 700, color: "rgba(239,68,68,0.65)", fontFamily: "'JetBrains Mono', monospace" }}>{chesscomLosses}L</span>
+                  </div>
+                </div>
+                {/* Segmented bar */}
+                <div style={{ display: "flex", height: forExport ? 8 : 5, borderRadius: 999, overflow: "hidden", gap: 1, marginBottom: forExport ? 8 : 4 }}>
+                  {cfWPct > 0 && <div style={{ width: `${cfWPct}%`, background: "linear-gradient(90deg, #16a34a, #4ade80)", borderRadius: 999 }} />}
+                  {cfDPct > 0 && <div style={{ width: `${cfDPct}%`, background: "rgba(255,255,255,0.18)", borderRadius: 999 }} />}
+                  {cfLPct > 0 && <div style={{ width: `${cfLPct}%`, background: "linear-gradient(90deg, #dc2626, #f87171)", borderRadius: 999 }} />}
+                </div>
+                <span style={{ fontSize: forExport ? 11 : 7, color: "rgba(255,255,255,0.22)" }}>{cfWinRate}% win rate online</span>
+              </div>
+            );
+          })()}
 
           {/* ── Footer: best win + buchholz ── */}
           <div

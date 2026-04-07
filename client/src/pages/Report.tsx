@@ -418,6 +418,9 @@ function ExportableCard({
   exportRef,
   accentColor,
   onAccentChange,
+  chesscomWins,
+  chesscomDraws,
+  chesscomLosses,
 }: {
   perf: PlayerPerformance;
   tournamentName: string;
@@ -429,6 +432,9 @@ function ExportableCard({
   exportRef: React.RefObject<HTMLDivElement | null>;
   accentColor: string;
   onAccentChange: (hex: string) => void;
+  chesscomWins?: number;
+  chesscomDraws?: number;
+  chesscomLosses?: number;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
@@ -488,6 +494,9 @@ function ExportableCard({
         avatarStatus={avatarStatus}
         forExport={false}
         accentColor={accentColor}
+        chesscomWins={chesscomWins}
+        chesscomDraws={chesscomDraws}
+        chesscomLosses={chesscomLosses}
       />
 
       {showExpanded && (
@@ -595,6 +604,29 @@ export default function ReportPage() {
   // Pre-fetch all player avatars in parallel
   const usernames = performances.map((p) => p.player.username);
   const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
+
+  // chess.com recent form — keyed by lowercase username
+  type ChesscomForm = { wins: number; draws: number; losses: number };
+  const [chesscomForm, setChesscomForm] = useState<Map<string, ChesscomForm>>(new Map());
+  useEffect(() => {
+    if (usernames.length === 0) return;
+    // Fetch analysis for each player in parallel, non-blocking
+    usernames.forEach((username) => {
+      const key = username.toLowerCase();
+      fetch(`/api/chess/player/${encodeURIComponent(key)}/analysis`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data: { wins?: number; draws?: number; losses?: number } | null) => {
+          if (!data || data.wins === undefined) return;
+          setChesscomForm((prev) => {
+            const next = new Map(prev);
+            next.set(key, { wins: data.wins!, draws: data.draws ?? 0, losses: data.losses ?? 0 });
+            return next;
+          });
+        })
+        .catch(() => { /* silently ignore */ });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usernames.join(",")]);
 
   // Per-player accent color state — keyed by player id
   const [accentColors, setAccentColors] = useState<Map<string, string>>(() => {
@@ -919,6 +951,7 @@ export default function ReportPage() {
               {filtered.map((perf) => {
                 const exportRef = getExportRef(perf.player.id);
                 const accent = getAccent(perf);
+                const form = chesscomForm.get(perf.player.username.toLowerCase());
                 return (
                   <div key={perf.player.id}>
                     {/* Hidden export-quality card — positioned off-screen but with real dimensions */}
@@ -941,6 +974,9 @@ export default function ReportPage() {
                         avatarStatus="loaded"
                         forExport
                         accentColor={accent}
+                        chesscomWins={form?.wins}
+                        chesscomDraws={form?.draws}
+                        chesscomLosses={form?.losses}
                       />
                     </div>
                     {/* Visible responsive card */}
@@ -955,6 +991,9 @@ export default function ReportPage() {
                       exportRef={exportRef}
                       accentColor={accent}
                       onAccentChange={(hex) => setAccent(perf.player.id, hex)}
+                      chesscomWins={form?.wins}
+                      chesscomDraws={form?.draws}
+                      chesscomLosses={form?.losses}
                     />
                   </div>
                 );
