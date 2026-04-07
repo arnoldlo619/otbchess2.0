@@ -182,6 +182,29 @@ export async function apiDeleteClub(
   }
 }
 
+// ── Transfer club ownership to another member ───────────────────────────────
+export async function apiTransferOwnership(
+  clubId: string,
+  newOwnerId: string
+): Promise<{ ok: boolean; club?: import("./clubRegistry").Club; error?: string }> {
+  try {
+    const res = await fetch(`${BASE}/${clubId}/transfer-ownership`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ newOwnerId }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, error: body.error ?? "Failed to transfer ownership" };
+    }
+    const club = await res.json();
+    return { ok: true, club };
+  } catch {
+    return { ok: false, error: "Network error" };
+  }
+}
+
 // ── Send presence heartbeat ──────────────────────────────────────────────
 export async function apiHeartbeat(clubId: string): Promise<boolean> {
   try {

@@ -502,6 +502,73 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
   }
 });
 
+// ── PATCH /api/clubs/:id/transfer-ownership — hand off ownership to a member ──
+clubsRouter.patch("/:id/transfer-ownership", requireFullAuth, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const { id } = req.params;
+    const { newOwnerId } = req.body as { newOwnerId: string };
+    if (!newOwnerId) {
+      res.status(400).json({ error: "newOwnerId is required" });
+      return;
+    }
+    const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    if (!club) {
+      res.status(404).json({ error: "Club not found" });
+      return;
+    }
+    if (club.ownerId !== userId) {
+      res.status(403).json({ error: "Only the current owner can transfer ownership" });
+      return;
+    }
+    if (newOwnerId === userId) {
+      res.status(400).json({ error: "You are already the owner" });
+      return;
+    }
+    // Verify the new owner is an active member of the club
+    const [newOwnerMembership] = await db
+      .select()
+      .from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, newOwnerId)));
+    if (!newOwnerMembership) {
+      res.status(400).json({ error: "New owner must be an existing club member" });
+      return;
+    }
+    // Transfer: update club ownerId, promote new owner to 'owner' role
+    await db.update(dbClubs).set({ ownerId: newOwnerId }).where(eq(dbClubs.id, id));
+    await db
+      .update(dbClubMembers)
+      .set({ role: "owner" })
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, newOwnerId)));
+    // Demote previous owner to member
+    const [prevOwnerMembership] = await db
+      .select()
+      .from(dbClubMembers)
+      .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    if (prevOwnerMembership) {
+      await db
+        .update(dbClubMembers)
+        .set({ role: "member" })
+        .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
+    } else {
+      // Insert a member row for the previous owner so they stay in the club
+      await db.insert(dbClubMembers).values({
+        clubId: id,
+        userId,
+        role: "member",
+        joinedAt: new Date(),
+      });
+    }
+    const [updated] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+    res.json(dbRowToClub(updated));
+  } catch (err) {
+    console.error("[clubs] PATCH /:id/transfer-ownership error:", err);
+    res.status(500).json({ error: "Failed to transfer ownership" });
+  }
+});
+
 // ── DELETE /api/clubs/:id — permanently delete a club (owner only) ────────────
 clubsRouter.delete("/:id", requireFullAuth, async (req: Request, res: Response) => {
   const userId = getUserId(req, res);

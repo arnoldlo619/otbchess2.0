@@ -4825,3 +4825,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Club management on My Profile page (delete club for owners, leave club for members)
 - [x] DELETE /api/clubs/:id server endpoint with cascade cleanup
 - [x] Improved Club not found error pages (ClubProfile + ClubDashboard) with link to profile
+
+## Club Management — Transfer Ownership
+
+- [x] Server endpoint: PATCH /api/clubs/:id/transfer-ownership (validates owner, updates ownerId, returns updated club)
+- [x] Client API: apiTransferOwnership(clubId, newOwnerId) in clubsApi.ts
+- [x] ClubDashboard Members tab: Transfer Ownership card (amber/gold, owner-only, visible at bottom of members list)
+- [x] Transfer Ownership modal: Step 1 — member picker with avatar, name, role badge, checkmark selection
+- [x] Transfer Ownership modal: Step 2 — confirmation screen with target member card, irreversible warning, Back/Confirm buttons
+- [x] handleTransferOwnership: calls API, updates local club state on success, shows toast, closes modal
+- [x] TypeScript: 0 errors

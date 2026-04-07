@@ -171,7 +171,7 @@ import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { TournamentWizard } from "@/components/TournamentWizard";
-import { apiGetClub, apiListClubMembers } from "@/lib/clubsApi";
+import { apiGetClub, apiListClubMembers, apiTransferOwnership } from "@/lib/clubsApi";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -2272,6 +2272,11 @@ export default function ClubDashboard() {
   const [battleResultId, setBattleResultId] = useState<string | null>(null);
   const [expandedLeaderboardId, setExpandedLeaderboardId] = useState<string | null>(null);
 
+  // Transfer ownership state
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferTargetId, setTransferTargetId] = useState<string | null>(null);
+  const [transferConfirm, setTransferConfirm] = useState(false);
+  const [transferring, setTransferring] = useState(false);
   // Invite state
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteSending, setInviteSending] = useState(false);
@@ -2629,6 +2634,27 @@ export default function ClubDashboard() {
 
   const isOwnerOrDirector =
     user && club && (club.ownerId === user.id || members.find((m) => m.userId === user.id && m.role === "director"));
+  const isClubOwner = !!(user && club && club.ownerId === user.id);
+
+  // ── Transfer Ownership handler ───────────────────────────────────────────────
+  async function handleTransferOwnership() {
+    if (!club || !transferTargetId) return;
+    setTransferring(true);
+    try {
+      const result = await apiTransferOwnership(club.id, transferTargetId);
+      if (result.ok && result.club) {
+        setClub(result.club as unknown as Club);
+        toast.success("Ownership transferred successfully!");
+        setShowTransferModal(false);
+        setTransferTargetId(null);
+        setTransferConfirm(false);
+      } else {
+        toast.error(result.error ?? "Failed to transfer ownership");
+      }
+    } finally {
+      setTransferring(false);
+    }
+  }
 
   // Load pending invites when Members tab is opened (owner/director only)
   useEffect(() => {
@@ -3178,7 +3204,193 @@ export default function ClubDashboard() {
               </div>
             )}
 
+            {/* ── Transfer Ownership (owner only) ───────────────────────────── */}
+            {isClubOwner && (
+              <div
+                className="rounded-2xl border border-amber-500/20 p-4 mt-2"
+                style={{ background: "oklch(0.14 0.04 60 / 0.5)" }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: "oklch(0.35 0.12 60 / 0.4)" }}
+                  >
+                    <Crown className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white/80 text-sm font-semibold">Transfer Ownership</p>
+                    <p className="text-white/40 text-xs mt-0.5">Hand over club ownership to another member. You will become a regular member.</p>
+                  </div>
+                  <button
+                    onClick={() => { setShowTransferModal(true); setTransferTargetId(null); setTransferConfirm(false); }}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                    style={{ background: "oklch(0.35 0.12 60 / 0.4)", color: "oklch(0.85 0.15 60)", border: "1px solid oklch(0.55 0.15 60 / 0.4)" }}
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                    Transfer
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* ── TRANSFER OWNERSHIP MODAL ──────────────────────────────────────── */}
+        {showTransferModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => { setShowTransferModal(false); setTransferConfirm(false); setTransferTargetId(null); }}
+            />
+            {/* Modal */}
+            <div
+              className="relative w-full max-w-md rounded-3xl border border-white/10 overflow-hidden shadow-2xl"
+              style={{ background: "oklch(0.13 0.05 145)" }}
+            >
+              {/* Header */}
+              <div
+                className="flex items-center justify-between px-5 py-4 border-b border-white/08"
+                style={{ background: "oklch(0.16 0.06 145)" }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Crown className="w-4 h-4 text-amber-400" />
+                  <span className="text-white font-bold text-sm">Transfer Ownership</span>
+                </div>
+                <button
+                  onClick={() => { setShowTransferModal(false); setTransferConfirm(false); setTransferTargetId(null); }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {!transferConfirm ? (
+                  <>
+                    <p className="text-white/60 text-sm">Choose a member to become the new club owner. You will be demoted to a regular member.</p>
+                    {/* Member picker */}
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {members
+                        .filter((m) => m.userId !== user?.id)
+                        .map((m) => (
+                          <button
+                            key={m.userId}
+                            onClick={() => setTransferTargetId(m.userId)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition-all text-left ${
+                              transferTargetId === m.userId
+                                ? "border-amber-400/50 bg-amber-400/08"
+                                : "border-white/06 hover:border-white/14 bg-white/02 hover:bg-white/04"
+                            }`}
+                          >
+                            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                              <PlayerAvatar
+                                username={m.displayName}
+                                name={m.displayName}
+                                avatarUrl={m.avatarUrl ?? undefined}
+                                size={36}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white text-sm font-semibold truncate">{m.displayName}</span>
+                                <RoleBadge role={m.role} />
+                              </div>
+                              {m.chesscomUsername && (
+                                <span className="text-white/40 text-xs">♟ {m.chesscomUsername}</span>
+                              )}
+                            </div>
+                            {transferTargetId === m.userId && (
+                              <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                            )}
+                          </button>
+                        ))}
+                      {members.filter((m) => m.userId !== user?.id).length === 0 && (
+                        <div className="text-center py-8 text-white/30">
+                          <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                          <p className="text-sm">No other members to transfer to</p>
+                        </div>
+                      )}
+                    </div>
+                    {/* Continue button */}
+                    <button
+                      disabled={!transferTargetId}
+                      onClick={() => setTransferConfirm(true)}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      style={{
+                        background: transferTargetId ? "oklch(0.55 0.18 60)" : "oklch(0.25 0.04 60)",
+                        color: "white",
+                      }}
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      Continue
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* Confirmation step */}
+                    {(() => {
+                      const target = members.find((m) => m.userId === transferTargetId);
+                      return (
+                        <div className="space-y-4">
+                          <div
+                            className="flex items-center gap-3 p-4 rounded-2xl border border-amber-400/20"
+                            style={{ background: "oklch(0.18 0.06 60 / 0.5)" }}
+                          >
+                            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                              <PlayerAvatar
+                                username={target?.displayName ?? ""}
+                                name={target?.displayName ?? ""}
+                                avatarUrl={target?.avatarUrl ?? undefined}
+                                size={48}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-white font-bold">{target?.displayName}</p>
+                              <p className="text-amber-400/80 text-xs font-semibold flex items-center gap-1 mt-0.5">
+                                <Crown className="w-3 h-3" /> Will become new owner
+                              </p>
+                            </div>
+                          </div>
+                          <div
+                            className="flex items-start gap-2.5 p-3 rounded-xl border border-red-500/20"
+                            style={{ background: "oklch(0.14 0.04 15 / 0.5)" }}
+                          >
+                            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-white/60 text-xs leading-relaxed">
+                              This action cannot be undone. <span className="text-white/80 font-semibold">{target?.displayName}</span> will have full control of this club, including the ability to remove members and delete the club.
+                            </p>
+                          </div>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setTransferConfirm(false)}
+                              className="flex-1 py-3 rounded-2xl text-sm font-semibold border border-white/10 text-white/60 hover:text-white hover:bg-white/05 transition-all"
+                            >
+                              Back
+                            </button>
+                            <button
+                              onClick={handleTransferOwnership}
+                              disabled={transferring}
+                              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                              style={{ background: "oklch(0.45 0.18 15)", color: "white" }}
+                            >
+                              {transferring ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Crown className="w-4 h-4" />
+                              )}
+                              {transferring ? "Transferring…" : "Confirm Transfer"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
