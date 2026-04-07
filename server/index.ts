@@ -628,6 +628,9 @@ export function createApp() {
       const openingsBlack: Record<string, number> = {};
       let endgameTotal = 0;
       let endgameWins = 0;
+      let totalWins = 0;
+      let totalDraws = 0;
+      let totalLosses = 0;
 
       for (const game of last50) {
         const pgn = (game.pgn as string) ?? "";
@@ -657,6 +660,18 @@ export function createApp() {
           endgameTotal++;
           if (result === "win") endgameWins++;
         }
+
+        // W/D/L tally — chess.com result values:
+        // win | checkmated | resigned | timeout | abandoned (loss)
+        // stalemate | insufficient | 50move | repetition | agreed | timevsinsufficient (draw)
+        if (result === "win") {
+          totalWins++;
+        } else if (["stalemate", "insufficient", "50move", "repetition", "agreed", "timevsinsufficient"].includes(result as string)) {
+          totalDraws++;
+        } else if (result) {
+          // checkmated, resigned, timeout, abandoned, etc.
+          totalLosses++;
+        }
       }
 
       // Sort openings by frequency and take top 3
@@ -672,6 +687,9 @@ export function createApp() {
         openingsBlack: sortByFreq(openingsBlack),
         endgameWinPct: endgameTotal > 0 ? Math.round((endgameWins / endgameTotal) * 100) : null,
         endgameGames: endgameTotal,
+        wins: totalWins,
+        draws: totalDraws,
+        losses: totalLosses,
       });
     } catch (err) {
       console.error("[chess analysis proxy]", err);

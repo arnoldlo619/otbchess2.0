@@ -4835,3 +4835,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Transfer Ownership modal: Step 2 — confirmation screen with target member card, irreversible warning, Back/Confirm buttons
 - [x] handleTransferOwnership: calls API, updates local club state on success, shows toast, closes modal
 - [x] TypeScript: 0 errors
+
+## chess.com Profile Card — W/D/L Mini-Bar
+
+- [x] Server: compute wins/draws/losses counts from last 50 games and include in analysis response
+- [x] Client: update analysis type to include wins/draws/losses fields
+- [x] Landing page PlayerDemo: add compact horizontal W/D/L segmented bar (green/grey/red) with counts and percentages

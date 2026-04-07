@@ -23,6 +23,9 @@ export interface ChessComAnalysis {
   openingsBlack: OpeningEntry[];
   endgameWinPct: number | null;
   endgameGames: number;
+  wins: number;
+  draws: number;
+  losses: number;
 }
 
 export interface ChessComProfile {

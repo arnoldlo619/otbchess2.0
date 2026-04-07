@@ -1108,6 +1108,80 @@ function PlayerDemo() {
 
                   {profile.analysis && !analysisLoading && (
                     <>
+                      {/* W/D/L Mini-Bar */}
+                      {(profile.analysis.wins + profile.analysis.draws + profile.analysis.losses) > 0 && (() => {
+                        const total = profile.analysis.wins + profile.analysis.draws + profile.analysis.losses;
+                        const wPct = Math.round((profile.analysis.wins / total) * 100);
+                        const dPct = Math.round((profile.analysis.draws / total) * 100);
+                        const lPct = 100 - wPct - dPct;
+                        return (
+                          <div
+                            className="rounded-xl px-4 py-3 space-y-2.5"
+                            style={{
+                              background: isDark ? "oklch(0.18 0.05 145 / 0.6)" : "rgba(61,107,71,0.05)",
+                              border: isDark ? "1px solid oklch(0.32 0.07 145 / 0.4)" : "1px solid rgba(61,107,71,0.12)",
+                            }}
+                          >
+                            {/* Label row */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: isDark ? "oklch(0.50 0.08 145)" : "#7a9e7a" }}>Form — Last {total} Games</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.72 0.18 145)" : "#2e7d32" }}>
+                                  {profile.analysis.wins}W
+                                </span>
+                                <span className="text-[11px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.70 0.04 240)" : "#888" }}>
+                                  {profile.analysis.draws}D
+                                </span>
+                                <span className="text-[11px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: isDark ? "oklch(0.65 0.18 20)" : "#c62828" }}>
+                                  {profile.analysis.losses}L
+                                </span>
+                              </div>
+                            </div>
+                            {/* Segmented bar */}
+                            <div className="flex h-2.5 rounded-full overflow-hidden gap-px">
+                              {wPct > 0 && (
+                                <div
+                                  className="h-full transition-all duration-700 rounded-l-full"
+                                  style={{
+                                    width: `${wPct}%`,
+                                    background: isDark
+                                      ? "linear-gradient(90deg, oklch(0.50 0.18 145), oklch(0.68 0.20 145))"
+                                      : "linear-gradient(90deg, #2e7d32, #43a047)",
+                                    borderRadius: dPct === 0 && lPct === 0 ? "9999px" : "9999px 0 0 9999px",
+                                  }}
+                                />
+                              )}
+                              {dPct > 0 && (
+                                <div
+                                  className="h-full transition-all duration-700"
+                                  style={{
+                                    width: `${dPct}%`,
+                                    background: isDark ? "oklch(0.40 0.04 240)" : "#bdbdbd",
+                                    borderRadius: wPct === 0 && lPct === 0 ? "9999px" : wPct === 0 ? "9999px 0 0 9999px" : lPct === 0 ? "0 9999px 9999px 0" : "0",
+                                  }}
+                                />
+                              )}
+                              {lPct > 0 && (
+                                <div
+                                  className="h-full transition-all duration-700 rounded-r-full"
+                                  style={{
+                                    width: `${lPct}%`,
+                                    background: isDark
+                                      ? "linear-gradient(90deg, oklch(0.45 0.18 20), oklch(0.58 0.20 20))"
+                                      : "linear-gradient(90deg, #c62828, #e53935)",
+                                    borderRadius: wPct === 0 && dPct === 0 ? "9999px" : "0 9999px 9999px 0",
+                                  }}
+                                />
+                              )}
+                            </div>
+                            {/* Win % label */}
+                            <p className="text-[10px]" style={{ color: isDark ? "oklch(0.45 0.06 145)" : "#9ab89a" }}>
+                              {wPct}% win rate
+                            </p>
+                          </div>
+                        );
+                      })()}
+
                       {/* Openings as White */}
                       {profile.analysis.openingsWhite.length > 0 && (
                         <div>
