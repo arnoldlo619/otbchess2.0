@@ -22,6 +22,7 @@ import {
   leagueJoinRequests,
   leaguePushSubscriptions,
   dbClubMembers,
+  dbClubs,
   users,
   prepCache,
 } from "../shared/schema.js";
@@ -597,7 +598,15 @@ leaguesRouter.get("/:leagueId", async (req: Request, res: Response) => {
       .where(eq(leaguePlayers.leagueId, req.params.leagueId))
       .orderBy(asc(leaguePlayers.displayName));
 
-    res.json({ ...league[0], players });
+    // Fetch associated club name so the client can display "[Club] League" in the header
+    const clubRow = await db
+      .select({ name: dbClubs.name })
+      .from(dbClubs)
+      .where(eq(dbClubs.id, league[0].clubId))
+      .limit(1);
+    const clubName = clubRow[0]?.name ?? null;
+
+    res.json({ ...league[0], players, clubName });
   } catch (err) {
     console.error("[leagues] GET /:leagueId error:", err);
     res.status(500).json({ error: "Failed to fetch league" });

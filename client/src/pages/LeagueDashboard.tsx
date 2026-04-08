@@ -74,6 +74,7 @@ interface League {
   id: string;
   clubId: string;
   name: string;
+  clubName?: string | null;
   description?: string | null;
   commissionerId: string;
   commissionerName: string;
@@ -931,7 +932,9 @@ export default function LeagueDashboard() {
           <ArrowLeft size={16} style={{ color: textMain }} />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-base truncate" style={{ color: textMain }}>{league.name}</h1>
+          <h1 className="font-bold text-base truncate" style={{ color: textMain }}>
+            {league.clubName ? `${league.clubName} League` : league.name}
+          </h1>
           <p className="text-xs truncate" style={{ color: textMuted }}>
             {league.status === "active"
               ? `Week ${league.currentWeek} of ${league.totalWeeks} · ${progressPct}% complete`

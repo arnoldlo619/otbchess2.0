@@ -4847,3 +4847,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Report.tsx: fetch chess.com analysis for each player on mount (parallel, non-blocking)
 - [x] Report.tsx: pass wins/draws/losses from chess.com analysis down to each player card
 - [x] PlayerStatsCard: add optional chesscomWins/Draws/Losses props and render a "Recent Form (Last 50)" mini-bar below the tournament W/D/L bar
+
+## League Dashboard Header — Club Name Fix
+
+- [x] Server: join clubs table in GET /:leagueId and return clubName in response
+- [x] Client: update league type to include clubName; display "[Club Name] League" in sticky header
