@@ -904,7 +904,7 @@ export default function LeagueDashboard() {
   const progressPct = totalMatches > 0 ? Math.round((completedMatchCount / totalMatches) * 100) : 0;
 
   return (
-    <div className="min-h-screen pb-16" style={{ background: pageBg }}>
+    <div className="min-h-screen" style={{ background: pageBg }}>
       {/* Toast */}
       {toast && (
         <div
@@ -915,163 +915,243 @@ export default function LeagueDashboard() {
         </div>
       )}
 
-      {/* Sticky header */}
-      <div
-        className="sticky top-0 z-30 px-4 py-3 flex items-center gap-3 otb-header-safe"
-        style={{
-          background: isDark ? "oklch(0.17 0.05 145 / 0.95)" : "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${cardBorder}`,
-        }}
-      >
-        <button
-          onClick={() => navigate(`/clubs/${league.clubId}`)}
-          className="p-2 rounded-xl transition-opacity hover:opacity-70"
-          style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
-        >
-          <ArrowLeft size={16} style={{ color: textMain }} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-base truncate" style={{ color: textMain }}>
-            {league.clubName ? `${league.clubName} League` : league.name}
-          </h1>
-          <p className="text-xs truncate" style={{ color: textMuted }}>
-            {league.status === "active"
-              ? `Week ${league.currentWeek} of ${league.totalWeeks} · ${progressPct}% complete`
-              : league.status === "completed" ? "Season Complete 🏆" : "Draft"}
-          </p>
-        </div>
-        <div
-          className="px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
-          style={{
-            background: league.status !== "draft" ? `${accent}22` : "oklch(0.5 0.02 145 / 0.1)",
-            color: league.status !== "draft" ? accent : textMuted,
-          }}
-        >
-          {league.status === "active" ? "Active" : league.status === "completed" ? "Complete" : "Draft"}
-        </div>
-        {/* Push notification bell — commissioner only, Draft leagues */}
-        {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
-          <button
-            onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
-            disabled={pushLoading || pushStatus === "denied"}
-            className="p-2 rounded-xl transition-opacity hover:opacity-70 flex-shrink-0 relative"
-            style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
-            title={pushStatus === "subscribed" ? "Notifications on — tap to disable" : pushStatus === "denied" ? "Notifications blocked in browser" : "Enable join-request notifications"}
-          >
-            {pushLoading ? (
-              <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke={pushStatus === "denied" ? textMuted : pushStatus === "subscribed" ? accent : textMain} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                {pushStatus === "subscribed" && <circle cx="19" cy="5" r="3" fill="#4ade80" stroke="none" />}
-              </svg>
-            )}
-          </button>
-        )}
-        {/* Share button */}
-        <button
-          onClick={() => setShowShare(true)}
-          className="p-2 rounded-xl transition-opacity hover:opacity-70 flex-shrink-0"
-          style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
-          title="Share league"
-        >
-          <Share2 size={15} style={{ color: accent }} />
-        </button>
-      </div>
+      {/* Auth modal for guest CTA */}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
 
-      {/* ── HERO BANNER ─────────────────────────────────────────────────── */}
-      <div
-        className="relative w-full overflow-hidden"
-        style={{ height: "180px" }}
-      >
-        {/* Micro-grid chess pattern background */}
-        <div
-          className="absolute inset-0"
+      {/* ── MAIN LAYOUT: sidebar + content ──────────────────────────────── */}
+      <div className="flex h-screen overflow-hidden">
+
+        {/* ── LEFT SIDEBAR (desktop) ───────────────────────────────────── */}
+        <aside
+          className="hidden lg:flex flex-col w-64 flex-shrink-0 h-full overflow-y-auto"
           style={{
-            background: isDark
-              ? `linear-gradient(135deg, oklch(0.14 0.07 145) 0%, oklch(0.18 0.09 145) 50%, oklch(0.13 0.05 145) 100%)`
-              : `linear-gradient(135deg, oklch(0.22 0.09 145) 0%, oklch(0.28 0.12 145) 50%, oklch(0.20 0.07 145) 100%)`,
+            background: isDark ? "oklch(0.17 0.05 145)" : "#ffffff",
+            borderRight: `1px solid ${cardBorder}`,
           }}
-        />
-        {/* Chess board grid overlay */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `repeating-conic-gradient(${accent} 0% 25%, transparent 0% 50%)`,
-            backgroundSize: "28px 28px",
-          }}
-        />
-        {/* Gradient fade at bottom */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-20"
-          style={{
-            background: `linear-gradient(to bottom, transparent, ${pageBg})`,
-          }}
-        />
-        {/* Status badge top-right */}
-        <div className="absolute top-4 right-4">
-          <span
-            className="px-3 py-1 rounded-full text-xs font-bold"
+        >
+          {/* Back to club */}
+          <div className="px-4 pt-5 pb-3">
+            <button
+              onClick={() => navigate(`/clubs/${league.clubId}`)}
+              className="flex items-center gap-2 text-xs font-medium transition-opacity hover:opacity-70"
+              style={{ color: textMuted }}
+            >
+              <ArrowLeft size={13} />
+              {league.clubName ?? "Back to Club"}
+            </button>
+          </div>
+
+          {/* League identity block */}
+          <div className="px-4 pb-5">
+            {/* Chess pattern accent bar */}
+            <div
+              className="rounded-xl overflow-hidden mb-3"
+              style={{ height: "56px", position: "relative" }}
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: isDark
+                    ? `linear-gradient(135deg, oklch(0.14 0.07 145), oklch(0.20 0.10 145))`
+                    : `linear-gradient(135deg, oklch(0.22 0.09 145), oklch(0.30 0.13 145))`,
+                }}
+              />
+              <div
+                className="absolute inset-0 opacity-15"
+                style={{
+                  backgroundImage: `repeating-conic-gradient(${accent} 0% 25%, transparent 0% 50%)`,
+                  backgroundSize: "16px 16px",
+                }}
+              />
+              {/* Trophy icon centered */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Trophy size={22} style={{ color: accent, opacity: 0.9 }} />
+              </div>
+            </div>
+
+            <h1 className="font-black text-base leading-tight" style={{ color: textMain }}>
+              {league.name}
+            </h1>
+            {league.clubName && (
+              <p className="text-xs mt-0.5" style={{ color: textMuted }}>{league.clubName}</p>
+            )}
+
+            {/* Status badge — shown exactly once */}
+            <div className="mt-2.5 flex items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                style={{
+                  background: league.status === "active" ? `${accent}22` : league.status === "completed" ? "oklch(0.82 0.18 85 / 0.18)" : isDark ? "oklch(0.25 0.04 145)" : "#f3f4f6",
+                  color: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : textMuted,
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.72 0.18 85)" : textMuted }}
+                />
+                {league.status === "active" ? "Active" : league.status === "completed" ? "Complete" : "Building Roster"}
+              </span>
+            </div>
+
+            {/* Season progress ring + stats */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div
+                className="rounded-xl p-3 flex flex-col items-center gap-1"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f9fafb" }}
+              >
+                <span className="text-[10px] uppercase tracking-wider" style={{ color: textMuted }}>Players</span>
+                <span className="text-lg font-black" style={{ color: textMain }}>{league.players.length}<span className="text-xs font-medium" style={{ color: textMuted }}>/{league.maxPlayers}</span></span>
+              </div>
+              <div
+                className="rounded-xl p-3 flex flex-col items-center gap-1"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f9fafb" }}
+              >
+                <span className="text-[10px] uppercase tracking-wider" style={{ color: textMuted }}>Week</span>
+                <span className="text-lg font-black" style={{ color: textMain }}>
+                  {league.status === "active" ? league.currentWeek : league.status === "completed" ? league.totalWeeks : "—"}
+                  {league.status !== "draft" && <span className="text-xs font-medium" style={{ color: textMuted }}>/{league.totalWeeks}</span>}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {league.status !== "draft" && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: textMuted }}>Season Progress</span>
+                  <span className="text-[10px] font-bold" style={{ color: accent }}>{progressPct}%</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#e5e7eb" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${progressPct}%`, background: accent }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Format pill */}
+            <div className="mt-3">
+              <span className="text-[10px] uppercase tracking-wider" style={{ color: textMuted }}>
+                {league.formatType
+                  ? league.formatType.charAt(0).toUpperCase() + league.formatType.slice(1)
+                  : "Round Robin"} · {league.totalWeeks} weeks
+              </span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: `1px solid ${cardBorder}` }} />
+
+          {/* Nav links */}
+          <nav className="px-3 py-4 flex-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5 text-sm font-medium transition-all relative"
+                  style={{
+                    background: isActive ? (isDark ? "oklch(0.24 0.08 145)" : `${accent}12`) : "transparent",
+                    color: isActive ? (isDark ? accent : accent) : textMuted,
+                  }}
+                >
+                  <Icon size={15} />
+                  <span>{tab.label}</span>
+                  {(tab as any).badge > 0 && (
+                    <span
+                      className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold"
+                      style={{ background: accent, color: "#fff" }}
+                    >
+                      {(tab as any).badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Divider */}
+          <div style={{ borderTop: `1px solid ${cardBorder}` }} />
+
+          {/* Sidebar footer actions */}
+          <div className="px-4 py-4 space-y-2">
+            {/* Push bell — commissioner only, draft */}
+            {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
+              <button
+                onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
+                disabled={pushLoading || pushStatus === "denied"}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-opacity hover:opacity-80"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: pushStatus === "subscribed" ? accent : textMuted }}
+              >
+                {pushLoading ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                )}
+                {pushStatus === "subscribed" ? "Notifications On" : "Enable Notifications"}
+              </button>
+            )}
+            <button
+              onClick={() => setShowShare(true)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-opacity hover:opacity-80"
+              style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: textMuted }}
+            >
+              <Share2 size={14} style={{ color: accent }} />
+              Share League
+            </button>
+          </div>
+        </aside>
+
+        {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+          {/* Slim top bar */}
+          <div
+            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-6 py-3 otb-header-safe"
             style={{
-              background: league.status === "active" ? `${accent}33` : league.status === "completed" ? "oklch(0.82 0.18 85 / 0.25)" : "oklch(0.5 0.02 145 / 0.3)",
-              color: league.status === "active" ? accent : league.status === "completed" ? "oklch(0.82 0.18 85)" : textMuted,
-              backdropFilter: "blur(8px)",
-              border: `1px solid ${league.status === "active" ? accent + "44" : "transparent"}`,
+              background: isDark ? "oklch(0.17 0.05 145 / 0.95)" : "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(12px)",
+              borderBottom: `1px solid ${cardBorder}`,
             }}
           >
-            {league.status === "active" ? "● Active" : league.status === "completed" ? "🏆 Complete" : "Draft"}
-          </span>
-        </div>
-        {/* League format badge bottom-left */}
-        <div className="absolute bottom-8 left-4">
-          <span className="text-xs font-medium" style={{ color: `${accent}cc` }}>
-            {league.formatType === "classical" ? "Classical" : league.formatType === "rapid" ? "Rapid" : league.formatType === "blitz" ? "Blitz" : "Round Robin"} · {league.totalWeeks} weeks
-          </span>
-        </div>
-      </div>
+            {/* Mobile back button */}
+            <button
+              onClick={() => navigate(`/clubs/${league.clubId}`)}
+              className="lg:hidden p-2 rounded-xl transition-opacity hover:opacity-70"
+              style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
+            >
+              <ArrowLeft size={15} style={{ color: textMain }} />
+            </button>
 
-      {/* ── FLOATING IDENTITY CARD ──────────────────────────────────────── */}
-      <div className="px-4 -mt-2">
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{
-            background: isDark ? "oklch(0.19 0.06 145)" : "#fff",
-            border: `1px solid ${cardBorder}`,
-            boxShadow: isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.08)",
-          }}
-        >
-          {/* League name + actions row */}
-          <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-xl font-black leading-tight truncate" style={{ color: textMain }}>{league.name}</h2>
-              <button
-                onClick={() => navigate(`/clubs/${league.clubId}`)}
-                className="text-xs mt-0.5 flex items-center gap-1 hover:underline"
-                style={{ color: accent }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                View Club
-              </button>
+            {/* Page title — just the section name on desktop, full title on mobile */}
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-sm truncate" style={{ color: textMain }}>
+                <span className="lg:hidden">{league.clubName ? `${league.clubName} League` : league.name} · </span>
+                {tabs.find(t => t.id === activeTab)?.label ?? "Overview"}
+              </h2>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Push bell — commissioner only */}
+
+            {/* Mobile tab switcher (share + bell) */}
+            <div className="flex items-center gap-1.5">
               {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
                 <button
                   onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
                   disabled={pushLoading || pushStatus === "denied"}
                   className="p-2 rounded-xl transition-opacity hover:opacity-70"
-                  style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}
-                  title={pushStatus === "subscribed" ? "Notifications on" : "Enable notifications"}
+                  style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
                 >
                   {pushLoading ? (
                     <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: `${accent} transparent ${accent} ${accent}` }} />
                   ) : (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke={pushStatus === "denied" ? textMuted : pushStatus === "subscribed" ? accent : textMain} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill={pushStatus === "subscribed" ? accent : "none"} stroke={pushStatus === "denied" ? textMuted : textMain} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                      {pushStatus === "subscribed" && <circle cx="19" cy="5" r="3" fill="#4ade80" stroke="none" />}
                     </svg>
                   )}
                 </button>
@@ -1079,161 +1159,91 @@ export default function LeagueDashboard() {
               <button
                 onClick={() => setShowShare(true)}
                 className="p-2 rounded-xl transition-opacity hover:opacity-70"
-                style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}
-                title="Share league"
+                style={{ background: isDark ? "oklch(0.23 0.06 145)" : "#f3f4f6" }}
               >
                 <Share2 size={15} style={{ color: accent }} />
               </button>
             </div>
           </div>
 
-          {/* 4-stat row — reference-style */}
-          <div
-            className="grid grid-cols-4 divide-x"
-            style={{ borderTop: `1px solid ${cardBorder}`, borderColor: cardBorder }}
-          >
-            {[
-              {
-                label: "Players",
-                value: `${league.players.length}${league.maxPlayers ? ` / ${league.maxPlayers}` : ""}`,
-              },
-              {
-                label: "Progress",
-                value: league.status === "draft" ? "Draft" : league.status === "completed" ? "Done" : `${progressPct}%`,
-              },
-              {
-                label: "Week",
-                value: league.status === "active" ? `${league.currentWeek} / ${league.totalWeeks}` : league.status === "completed" ? `${league.totalWeeks} wks` : "—",
-              },
-              {
-                label: "Format",
-                value: league.formatType
-                  ? league.formatType.charAt(0).toUpperCase() + league.formatType.slice(1)
-                  : "Classic",
-              },
-            ].map((stat) => (
-              <div key={stat.label} className="flex flex-col items-center py-3 px-2">
-                <span className="text-[10px] uppercase tracking-wider mb-1" style={{ color: textMuted }}>{stat.label}</span>
-                <span className="text-sm font-bold" style={{ color: textMain }}>{stat.value}</span>
+          {/* Guest CTA banner */}
+          {(!user || user.isGuest) && (isInviteLink || league.status === "draft") && (
+            <div
+              className="mx-4 lg:mx-6 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+              style={{
+                background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
+                border: `1px solid ${accent}44`,
+              }}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm" style={{ color: textMain }}>
+                  {isInviteLink ? "You've been invited to join this league!" : "Interested in joining this league?"}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: textMuted }}>
+                  Sign in with your chess.com account to request a spot from the commissioner.
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Auth modal for guest CTA */}
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
-
-      {/* Guest CTA banner */}
-      {(!user || user.isGuest) && (isInviteLink || league.status === "draft") && (
-        <div
-          className="mx-4 mt-3 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
-          style={{
-            background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
-            border: `1px solid ${accent}44`,
-          }}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm" style={{ color: textMain }}>
-              {isInviteLink ? "You've been invited to join this league!" : "Interested in joining this league?"}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: textMuted }}>
-              Sign in with your chess.com account to request a spot from the commissioner.
-            </p>
-          </div>
-          <button
-            onClick={() => setAuthOpen(true)}
-            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            style={{ background: accent, color: "#fff" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-            Sign In to Request a Spot
-          </button>
-        </div>
-      )}
-
-      {/* Player invite banner */}
-      {user && !isCommissioner && myInvite && (
-        <div
-          className="mx-4 mt-3 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
-          style={{
-            background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
-            border: `1px solid ${accent}55`,
-          }}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm" style={{ color: textMain }}>
-              <span style={{ color: accent }}>{myInvite.commissionerName}</span> has invited you to join this league!
-            </p>
-            {myInvite.message && (
-              <p className="text-xs mt-0.5 italic" style={{ color: textMuted }}>"{myInvite.message}"</p>
-            )}
-            <p className="text-xs mt-0.5" style={{ color: textMuted }}>Accept to be added to the roster immediately.</p>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button
-              onClick={() => handleRespondInvite("accept")}
-              disabled={respondingInvite}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-              style={{ background: accent, color: "#fff" }}
-            >
-              {respondingInvite ? (
-                <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: "#fff transparent #fff #fff" }} />
-              ) : (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              )}
-              Accept
-            </button>
-            <button
-              onClick={() => handleRespondInvite("decline")}
-              disabled={respondingInvite}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-              style={{ background: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", color: "#ef4444" }}
-            >
-              Decline
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── TAB BAR ─────────────────────────────────────────────────────── */}
-      <div className="px-4 pt-4 pb-2">
-        <div className="flex gap-1 p-1 rounded-2xl" style={{ background: tabBg }}>
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all relative"
-                style={{
-                  background: isActive ? tabActive : "transparent",
-                  color: isActive ? textMain : textMuted,
-                  boxShadow: isActive ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
-                }}
+                onClick={() => setAuthOpen(true)}
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                style={{ background: accent, color: "#fff" }}
               >
-                <Icon size={13} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                {(tab as any).badge > 0 && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                    style={{ background: accent, color: "#fff" }}
-                  >
-                    {(tab as any).badge}
-                  </span>
-                )}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                Sign In to Request a Spot
               </button>
-            );
-          })}
-        </div>
-      </div>
+            </div>
+          )}
 
-      {/* ── TWO-COLUMN LAYOUT (desktop: main left + sidebar right) ───────── */}
-      <div className="px-4 pb-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-start">
-          {/* Main content column */}
-          <div className="flex-1 min-w-0 space-y-4">
+          {/* Player invite banner */}
+          {user && !isCommissioner && myInvite && (
+            <div
+              className="mx-4 lg:mx-6 mt-4 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+              style={{
+                background: isDark ? "oklch(0.22 0.09 145 / 0.85)" : "oklch(0.94 0.06 145)",
+                border: `1px solid ${accent}55`,
+              }}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm" style={{ color: textMain }}>
+                  <span style={{ color: accent }}>{myInvite.commissionerName}</span> has invited you to join this league!
+                </p>
+                {myInvite.message && (
+                  <p className="text-xs mt-0.5 italic" style={{ color: textMuted }}>"{myInvite.message}"</p>
+                )}
+                <p className="text-xs mt-0.5" style={{ color: textMuted }}>Accept to be added to the roster immediately.</p>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button
+                  onClick={() => handleRespondInvite("accept")}
+                  disabled={respondingInvite}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                  style={{ background: accent, color: "#fff" }}
+                >
+                  {respondingInvite ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin inline-block" style={{ borderColor: "#fff transparent #fff #fff" }} />
+                  ) : (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  )}
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleRespondInvite("decline")}
+                  disabled={respondingInvite}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                  style={{ background: isDark ? "rgba(239,68,68,0.12)" : "#fef2f2", color: "#ef4444" }}
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+            <div className="px-4 lg:px-6 py-4">
+              <div className="flex flex-col lg:flex-row gap-4 items-start">
+                {/* Main content column */}
+                <div className="flex-1 min-w-0 space-y-4">
 
         {/* ── OVERVIEW ──────────────────────────────────────────────────────── */}
         {activeTab === "overview" && (
@@ -3069,9 +3079,47 @@ export default function LeagueDashboard() {
                 </div>
               </div>
             )}
-          </div>{/* end sidebar */}
-        </div>{/* end flex row */}
-      </div>{/* end two-column wrapper */}
+          </div>{/* end right sidebar */}
+              </div>{/* end flex row */}
+            </div>{/* end px wrapper */}
+          </div>{/* end scrollable content */}
+        </div>{/* end main content area */}
+      </div>{/* end flex layout */}
+
+      {/* Mobile bottom nav bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        style={{
+          background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(255,255,255,0.97)",
+          backdropFilter: "blur(12px)",
+          borderTop: `1px solid ${cardBorder}`,
+        }}
+      >
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
+              style={{ color: isActive ? accent : textMuted }}
+            >
+              <Icon size={18} />
+              <span className="text-[9px] font-medium">{tab.label}</span>
+              {(tab as any).badge > 0 && (
+                <span
+                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                  style={{ background: accent, color: "#fff" }}
+                >
+                  {(tab as any).badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Result report modal */}
       {reportingMatch && (
         <ReportResultModal

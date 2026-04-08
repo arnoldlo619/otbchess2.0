@@ -4852,3 +4852,22 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Server: join clubs table in GET /:leagueId and return clubName in response
 - [x] Client: update league type to include clubName; display "[Club Name] League" in sticky header
+
+## League Dashboard — Premium Sidebar Redesign
+
+- [ ] Replace horizontal tab bar with persistent left sidebar (desktop) / bottom drawer (mobile)
+- [ ] Sidebar: league identity block (club name, league name, status badge, season progress ring), nav links (Overview, Matchups, Standings, Schedule, Requests, History)
+- [ ] Top bar: show only [Club Name] League + back arrow — remove all redundant "Draft" / status labels from header
+- [ ] Overview tab: hero stats row (Players, Week, Format), your match card, season progress, roster list
+- [ ] Eliminate triple "Draft" label redundancy — status shown once in sidebar badge only
+- [ ] Mobile: collapsible bottom nav bar replacing sidebar
+- [ ] TypeScript: 0 errors
+
+## League Dashboard — Premium Sidebar Redesign
+
+- [x] Replace horizontal tab bar with persistent left sidebar (league identity, status badge, nav links, season progress)
+- [x] Remove hero banner and floating identity card (redundant with sidebar)
+- [x] Slim top bar shows only section title + action buttons (no redundant status labels)
+- [x] Mobile: bottom icon nav bar replaces tab bar
+- [x] Status shown exactly once in sidebar (not 3 times as before)
+- [x] TypeScript: 0 errors
