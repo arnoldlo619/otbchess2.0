@@ -1870,6 +1870,226 @@ export default function LeagueDashboard() {
         {/* ── MATCHUPS ──────────────────────────────────────────────────────── */}
         {activeTab === "matchups" && (
           <>
+            {/* ── Current Matchup Hero (shown when viewing current week + user has a match) ── */}
+            {selectedWeek === league.currentWeek && myMatchThisWeek && (
+              <div
+                className="rounded-3xl overflow-hidden mb-4"
+                style={{
+                  background: isDark
+                    ? "linear-gradient(135deg, oklch(0.18 0.09 145) 0%, oklch(0.14 0.06 145) 100%)"
+                    : "linear-gradient(135deg, oklch(0.92 0.06 145) 0%, oklch(0.96 0.03 145) 100%)",
+                  border: `1.5px solid ${accent}33`,
+                }}
+              >
+                {/* Hero header */}
+                <div
+                  className="px-6 py-3 flex items-center justify-between"
+                  style={{ borderBottom: `1px solid ${accent}22` }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accent }}>Current Matchup</span>
+                    <span className="text-xs" style={{ color: textMuted }}>• Week {league.currentWeek} • {league.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {myMatchThisWeek.resultStatus === "completed" ? (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${accent}22`, color: accent }}>
+                        <CheckCircle2 size={11} /> Complete
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.55 0.15 60)22", color: "oklch(0.65 0.18 60)" }}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        Pending
+                      </span>
+                    )}
+                    <span
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                      style={{ background: isDark ? "oklch(0.25 0.06 145)" : "oklch(0.88 0.04 145)", color: textMuted }}
+                    >
+                      {league.formatType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Player avatars hero */}
+                <div className="px-6 py-8 flex items-center justify-center gap-4">
+                  {/* White player */}
+                  {(() => {
+                    const whitePlayer = league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId);
+                    const isMe = myMatchThisWeek.playerWhiteId === user?.id;
+                    const won = myMatchThisWeek.result === "white_win";
+                    const lost = myMatchThisWeek.result === "black_win";
+                    return (
+                      <div className="flex flex-col items-center gap-3 flex-1">
+                        <div className="relative">
+                          <div
+                            className="rounded-full p-0.5"
+                            style={{
+                              background: won ? `linear-gradient(135deg, ${accent}, oklch(0.7 0.25 145))` : isMe ? `${accent}55` : "transparent",
+                              boxShadow: isMe ? `0 0 24px ${accent}44` : "none",
+                            }}
+                          >
+                            <Avatar url={whitePlayer?.avatarUrl} name={myMatchThisWeek.playerWhiteName} size={20} />
+                          </div>
+                          {won && (
+                            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
+                              <Crown size={12} color="#fff" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-base" style={{ color: textMain }}>{myMatchThisWeek.playerWhiteName}</p>
+                          {whitePlayer?.rating && (
+                            <p className="text-sm font-semibold mt-0.5" style={{ color: accent }}>{whitePlayer.rating} ELO</p>
+                          )}
+                          {whitePlayer?.chesscomUsername && (
+                            <p className="text-xs mt-0.5" style={{ color: textMuted }}>@{whitePlayer.chesscomUsername}</p>
+                          )}
+                        </div>
+                        <span
+                          className="text-[10px] font-bold px-3 py-1 rounded-full tracking-widest"
+                          style={{ background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)", color: isDark ? "#fff" : "#111" }}
+                        >
+                          WHITE
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* VS / Score */}
+                  <div className="flex flex-col items-center gap-2 flex-shrink-0 px-2">
+                    {myMatchThisWeek.resultStatus === "completed" ? (
+                      <>
+                        <span className="text-4xl font-black" style={{ color: accent }}>
+                          {myMatchThisWeek.result === "white_win" ? "1" : myMatchThisWeek.result === "draw" ? "½" : "0"}
+                        </span>
+                        <span className="text-xs font-medium" style={{ color: textMuted }}>–</span>
+                        <span className="text-4xl font-black" style={{ color: accent }}>
+                          {myMatchThisWeek.result === "black_win" ? "1" : myMatchThisWeek.result === "draw" ? "½" : "0"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-black" style={{ color: textMuted }}>VS</span>
+                        {canReport(myMatchThisWeek) && (
+                          <button
+                            onClick={() => setReportingMatch(myMatchThisWeek)}
+                            className="mt-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95"
+                            style={{ background: accent, color: "#fff" }}
+                          >
+                            Report Result
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Black player */}
+                  {(() => {
+                    const blackPlayer = league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId);
+                    const isMe = myMatchThisWeek.playerBlackId === user?.id;
+                    const won = myMatchThisWeek.result === "black_win";
+                    return (
+                      <div className="flex flex-col items-center gap-3 flex-1">
+                        <div className="relative">
+                          <div
+                            className="rounded-full p-0.5"
+                            style={{
+                              background: won ? `linear-gradient(135deg, ${accent}, oklch(0.7 0.25 145))` : isMe ? `${accent}55` : "transparent",
+                              boxShadow: isMe ? `0 0 24px ${accent}44` : "none",
+                            }}
+                          >
+                            <Avatar url={blackPlayer?.avatarUrl} name={myMatchThisWeek.playerBlackName} size={20} />
+                          </div>
+                          {won && (
+                            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
+                              <Crown size={12} color="#fff" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-base" style={{ color: textMain }}>{myMatchThisWeek.playerBlackName}</p>
+                          {blackPlayer?.rating && (
+                            <p className="text-sm font-semibold mt-0.5" style={{ color: accent }}>{blackPlayer.rating} ELO</p>
+                          )}
+                          {blackPlayer?.chesscomUsername && (
+                            <p className="text-xs mt-0.5" style={{ color: textMuted }}>@{blackPlayer.chesscomUsername}</p>
+                          )}
+                        </div>
+                        <span
+                          className="text-[10px] font-bold px-3 py-1 rounded-full tracking-widest"
+                          style={{ background: isDark ? "rgba(0,0,0,0.35)" : "rgba(0,0,0,0.12)", color: isDark ? "#ccc" : "#333" }}
+                        >
+                          BLACK
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Bottom info row: League Form + Prep button */}
+                <div
+                  className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                  style={{ borderTop: `1px solid ${accent}18` }}
+                >
+                  {/* League Form — last 5 results per player */}
+                  <div className="flex-1 flex flex-col gap-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>League Form</span>
+                    <div className="flex flex-col gap-1.5">
+                      {[myMatchThisWeek.playerWhiteId, myMatchThisWeek.playerBlackId].map((pid) => {
+                        const s = standings.find(st => st.playerId === pid);
+                        const name = pid === myMatchThisWeek.playerWhiteId ? myMatchThisWeek.playerWhiteName : myMatchThisWeek.playerBlackName;
+                        const results = parseLastResults(s?.lastResults).slice(-5);
+                        return (
+                          <div key={pid} className="flex items-center gap-2">
+                            <span className="text-[11px] font-medium w-20 truncate" style={{ color: textMuted }}>{name.split(" ")[0]}</span>
+                            <div className="flex gap-1">
+                              {results.length === 0 ? (
+                                <span className="text-[10px]" style={{ color: textMuted }}>No results yet</span>
+                              ) : (
+                                results.map((r, i) => (
+                                  <span
+                                    key={i}
+                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black"
+                                    style={{
+                                      background: r === "W" ? "oklch(0.55 0.2 145)" : r === "L" ? "oklch(0.45 0.2 25)" : "oklch(0.55 0.15 60)",
+                                      color: "#fff",
+                                    }}
+                                  >
+                                    {r}
+                                  </span>
+                                ))
+                              )}
+                            </div>
+                            {s && (
+                              <span className="text-[10px] font-semibold ml-1" style={{ color: textMuted }}>
+                                {s.wins}W {s.draws}D {s.losses}L
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Prep button */}
+                  {myMatchThisWeek.resultStatus !== "completed" && (() => {
+                    const oppChessCom = getOpponentChesscom(myMatchThisWeek);
+                    if (!oppChessCom) return null;
+                    return (
+                      <button
+                        onClick={() => navigate(`/prep/${encodeURIComponent(oppChessCom)}`)}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95 flex-shrink-0"
+                        style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                      >
+                        <Target size={14} />
+                        Prep for {oppChessCom}
+                      </button>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
             {/* Week selector */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {weeks.map((w) => (
