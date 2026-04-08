@@ -2026,6 +2026,74 @@ export default function LeagueDashboard() {
                   })()}
                 </div>
 
+                {/* H2H Record strip */}
+                {(() => {
+                  const pid1 = myMatchThisWeek.playerWhiteId;
+                  const pid2 = myMatchThisWeek.playerBlackId;
+                  const h2hMatches = allMatches.filter(
+                    (m) =>
+                      m.resultStatus === "completed" &&
+                      m.id !== myMatchThisWeek.id &&
+                      ((m.playerWhiteId === pid1 && m.playerBlackId === pid2) ||
+                        (m.playerWhiteId === pid2 && m.playerBlackId === pid1))
+                  );
+                  if (h2hMatches.length === 0) return null;
+                  // Count from pid1's perspective
+                  let h2hWins = 0, h2hDraws = 0, h2hLosses = 0;
+                  for (const m of h2hMatches) {
+                    if (m.result === "draw") { h2hDraws++; continue; }
+                    const pid1IsWhite = m.playerWhiteId === pid1;
+                    if ((pid1IsWhite && m.result === "white_win") || (!pid1IsWhite && m.result === "black_win")) h2hWins++;
+                    else h2hLosses++;
+                  }
+                  const total = h2hMatches.length;
+                  const wPct = Math.round((h2hWins / total) * 100);
+                  const dPct = Math.round((h2hDraws / total) * 100);
+                  const lPct = 100 - wPct - dPct;
+                  return (
+                    <div
+                      className="px-6 py-3 flex flex-col gap-2"
+                      style={{ borderTop: `1px solid ${accent}18` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Head to Head</span>
+                        <span className="text-[11px]" style={{ color: textMuted }}>{total} previous {total === 1 ? "match" : "matches"} in this league</span>
+                      </div>
+                      {/* Player name labels */}
+                      <div className="flex items-center justify-between text-[11px] font-semibold">
+                        <span style={{ color: textMain }}>{myMatchThisWeek.playerWhiteName.split(" ")[0]}</span>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: "oklch(0.65 0.2 145)" }}>{h2hWins}W</span>
+                          <span style={{ color: textMuted }}>{h2hDraws}D</span>
+                          <span style={{ color: "oklch(0.6 0.2 25)" }}>{h2hLosses}L</span>
+                        </div>
+                        <span style={{ color: textMain }}>{myMatchThisWeek.playerBlackName.split(" ")[0]}</span>
+                      </div>
+                      {/* Segmented bar */}
+                      <div className="flex rounded-full overflow-hidden h-2 w-full">
+                        {wPct > 0 && (
+                          <div
+                            className="transition-all duration-700"
+                            style={{ width: `${wPct}%`, background: "oklch(0.55 0.22 145)" }}
+                          />
+                        )}
+                        {dPct > 0 && (
+                          <div
+                            className="transition-all duration-700"
+                            style={{ width: `${dPct}%`, background: isDark ? "oklch(0.4 0.04 145)" : "oklch(0.75 0.04 145)" }}
+                          />
+                        )}
+                        {lPct > 0 && (
+                          <div
+                            className="transition-all duration-700"
+                            style={{ width: `${lPct}%`, background: "oklch(0.5 0.2 25)" }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Bottom info row: League Form + Prep button */}
                 <div
                   className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"

@@ -4880,3 +4880,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Matchup tab: full-width player avatar hero card (color badges, ELO, time control), Historical Record card, League Form card with W/D/L result badges
 - [ ] Standings tab: rich table with POS, avatar, name, rating, MP, W, D, L columns
 - [ ] TypeScript: 0 errors
+
+## Current Matchup Hero — Head-to-Head Record
+
+- [x] Compute H2H stats (wins for white player, wins for black player, draws) from all completed league matches between the two players
+- [x] Render H2H widget in the hero card between the VS/score and the League Form section
+- [ ] TypeScript: 0 errors
