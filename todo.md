@@ -4871,3 +4871,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Mobile: bottom icon nav bar replaces tab bar
 - [x] Status shown exactly once in sidebar (not 3 times as before)
 - [x] TypeScript: 0 errors
+
+## League Dashboard v2 — Reference-Driven Redesign
+
+- [ ] Slim 60px icon-only left sidebar with active label, bottom settings/help icons
+- [ ] Branded top bar: club logo + "[Club] League" text, centered Live pill with date, user avatar right
+- [ ] Dashboard tab: two-column layout — main area (featured matchup hero + standings table) + right panel (upcoming matchups list)
+- [ ] Matchup tab: full-width player avatar hero card (color badges, ELO, time control), Historical Record card, League Form card with W/D/L result badges
+- [ ] Standings tab: rich table with POS, avatar, name, rating, MP, W, D, L columns
+- [ ] TypeScript: 0 errors
