@@ -298,10 +298,16 @@ export function AnimeNavBar({
                   const isActive  = activeTab === item.name
                   const isHovered = hoveredTab === item.name
 
+                  // Use <div> when the item has a dropdown to avoid nested <a> violations
+                  const NavTag = item.dropdown ? "div" : "a"
+                  const navTagProps = item.dropdown
+                    ? { role: "button" as const, tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") handleNavClick(item)(e as unknown as React.MouseEvent) } }
+                    : { href: item.url }
+
                   return (
-                    <a
+                    <NavTag
                       key={item.name}
-                      href={item.url}
+                      {...navTagProps}
                       onClick={handleNavClick(item)}
                       onMouseEnter={() => setHoveredTab(item.name)}
                       onMouseLeave={() => setHoveredTab(null)}
@@ -437,7 +443,7 @@ export function AnimeNavBar({
                           </motion.div>
                         )}
                       </AnimatePresence>
-                    </a>
+                    </NavTag>
                   )
                 })}
               </motion.div>

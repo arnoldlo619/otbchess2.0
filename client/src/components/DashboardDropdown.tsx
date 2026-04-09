@@ -233,14 +233,14 @@ export function DashboardDropdown() {
 
       {/* Footer: New Tournament */}
       <div className="border-t border-white/08">
-        <a
-          href="/"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/"; }}
-          className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#4CAF50] hover:bg-[#3D6B47]/15 transition-colors"
+        <button
+          type="button"
+          onClick={() => { window.location.href = "/"; }}
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#4CAF50] hover:bg-[#3D6B47]/15 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           New Tournament
-        </a>
+        </button>
       </div>
 
       {/* ── My Leagues Section ── */}
