@@ -1367,6 +1367,60 @@ leaguesRouter.delete("/:leagueId/invites/:inviteId", requireAuth, async (req: Re
   }
 });
 
+// ── PATCH /:leagueId/settings — commissioner updates league name, maxPlayers, formatType ──────────
+leaguesRouter.patch("/:leagueId/settings", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    const userId = getUser(req, res);
+    if (!userId) return;
+    const leagueId = req.params.leagueId;
+
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    if (!league) return res.status(404).json({ error: "League not found" });
+    if (league.commissionerId !== userId) {
+      return res.status(403).json({ error: "Only the commissioner can update league settings" });
+    }
+
+    const { name, maxPlayers, formatType, description } = req.body as {
+      name?: string;
+      maxPlayers?: number;
+      formatType?: string;
+      description?: string;
+    };
+
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) {
+      const trimmed = name.trim();
+      if (!trimmed || trimmed.length > 100) return res.status(400).json({ error: "Name must be 1\u2013100 characters" });
+      updateData.name = trimmed;
+    }
+    if (maxPlayers !== undefined) {
+      const n = Number(maxPlayers);
+      if (!Number.isInteger(n) || n < 2 || n > 64) return res.status(400).json({ error: "Max players must be between 2 and 64" });
+      updateData.maxPlayers = n;
+    }
+    if (formatType !== undefined) {
+      const allowed = ["round_robin", "swiss", "double_round_robin"];
+      if (!allowed.includes(formatType)) return res.status(400).json({ error: "Invalid format type" });
+      updateData.formatType = formatType;
+    }
+    if (description !== undefined) {
+      updateData.description = description.trim() || null;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
+
+    await db.update(leagues).set(updateData as any).where(eq(leagues.id, leagueId));
+    const [updated] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
+    res.json({ success: true, league: updated });
+  } catch (err) {
+    console.error("[league-settings] PATCH error:", err);
+    res.status(500).json({ error: "Failed to update league settings" });
+  }
+});
+
 // ── GET /:leagueId/history — full season history with champion, final standings, and H2H records ──
 leaguesRouter.get("/:leagueId/history", async (req: Request, res: Response) => {
   try {

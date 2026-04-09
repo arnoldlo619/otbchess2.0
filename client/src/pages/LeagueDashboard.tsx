@@ -11,7 +11,7 @@ import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
-  Share2, Copy, Check, QrCode, X, History
+  Share2, Copy, Check, QrCode, X, History, Settings
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
@@ -416,7 +416,13 @@ export default function LeagueDashboard() {
   const [weeks, setWeeks] = useState<LeagueWeek[]>([]);
   const [standings, setStandings] = useState<LeagueStanding[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history" | "requests">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "matchups" | "standings" | "schedule" | "history" | "requests" | "settings">("overview");
+  // Settings panel state (commissioner-only)
+  const [settingsName, setSettingsName] = useState("");
+  const [settingsMaxPlayers, setSettingsMaxPlayers] = useState("");
+  const [settingsFormat, setSettingsFormat] = useState("");
+  const [settingsDescription, setSettingsDescription] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
@@ -909,6 +915,7 @@ export default function LeagueDashboard() {
     { id: "schedule" as const, label: "Schedule", icon: Calendar },
     ...(league.status === "completed" ? [{ id: "history" as const, label: "Summary", icon: History }] : []),
     ...(isCommissioner && league.status === "draft" ? [{ id: "requests" as const, label: "Requests", icon: Users, badge: joinRequests.length }] : []),
+    ...(isCommissioner ? [{ id: "settings" as const, label: "Settings", icon: Settings }] : []),
   ];
 
   const progressPct = totalMatches > 0 ? Math.round((completedMatchCount / totalMatches) * 100) : 0;
@@ -3219,6 +3226,193 @@ export default function LeagueDashboard() {
             </div>
           </div>
         )}
+          {/* ── SETTINGS TAB (commissioner-only) ─────────────────────── */}
+          {activeTab === "settings" && (
+            <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${accent}22` }}>
+                  <Settings size={16} style={{ color: accent }} />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold" style={{ color: textMain }}>League Settings</h2>
+                  <p className="text-xs" style={{ color: textMuted }}>Commissioner-only · Changes take effect immediately</p>
+                </div>
+              </div>
+
+              {/* Form card */}
+              <div className="rounded-2xl p-5 space-y-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+
+                {/* League Name */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>League Name</label>
+                  <input
+                    type="text"
+                    value={settingsName}
+                    onChange={e => setSettingsName(e.target.value)}
+                    placeholder={league.name}
+                    maxLength={100}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
+                    style={{
+                      background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
+                      border: `1.5px solid ${cardBorder}`,
+                      color: textMain,
+                    }}
+                    onFocus={e => (e.target.style.borderColor = accent)}
+                    onBlur={e => (e.target.style.borderColor = cardBorder)}
+                  />
+                  <p className="text-[11px]" style={{ color: textMuted }}>{settingsName.length}/100 characters</p>
+                </div>
+
+                {/* Max Players */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>Max Players</label>
+                  <input
+                    type="number"
+                    value={settingsMaxPlayers}
+                    onChange={e => setSettingsMaxPlayers(e.target.value)}
+                    placeholder={String(league.maxPlayers)}
+                    min={league.players.length}
+                    max={64}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all"
+                    style={{
+                      background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
+                      border: `1.5px solid ${cardBorder}`,
+                      color: textMain,
+                    }}
+                    onFocus={e => (e.target.style.borderColor = accent)}
+                    onBlur={e => (e.target.style.borderColor = cardBorder)}
+                  />
+                  <p className="text-[11px]" style={{ color: textMuted }}>Current roster: {league.players.length} player{league.players.length !== 1 ? "s" : ""}. Min is current roster size.</p>
+                </div>
+
+                {/* Format */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>Format</label>
+                  <select
+                    value={settingsFormat || league.formatType}
+                    onChange={e => setSettingsFormat(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all appearance-none"
+                    style={{
+                      background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
+                      border: `1.5px solid ${cardBorder}`,
+                      color: textMain,
+                    }}
+                  >
+                    <option value="round_robin">Round Robin</option>
+                    <option value="double_round_robin">Double Round Robin</option>
+                    <option value="swiss">Swiss</option>
+                  </select>
+                  {league.status !== "draft" && (
+                    <p className="text-[11px]" style={{ color: "#f59e0b" }}>⚠ Changing format after the season has started will not regenerate the schedule.</p>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: textMuted }}>Description <span className="normal-case font-normal">(optional)</span></label>
+                  <textarea
+                    value={settingsDescription}
+                    onChange={e => setSettingsDescription(e.target.value)}
+                    placeholder={league.description ?? "Add a description for your league…"}
+                    rows={3}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none transition-all resize-none"
+                    style={{
+                      background: isDark ? "oklch(0.20 0.05 145)" : "#f8faf8",
+                      border: `1.5px solid ${cardBorder}`,
+                      color: textMain,
+                    }}
+                    onFocus={e => (e.target.style.borderColor = accent)}
+                    onBlur={e => (e.target.style.borderColor = cardBorder)}
+                  />
+                </div>
+
+                {/* Save / Cancel */}
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={async () => {
+                      if (savingSettings) return;
+                      const body: Record<string, unknown> = {};
+                      if (settingsName.trim() && settingsName.trim() !== league.name) body.name = settingsName.trim();
+                      if (settingsMaxPlayers && Number(settingsMaxPlayers) !== league.maxPlayers) body.maxPlayers = Number(settingsMaxPlayers);
+                      if (settingsFormat && settingsFormat !== league.formatType) body.formatType = settingsFormat;
+                      if (settingsDescription !== (league.description ?? "")) body.description = settingsDescription;
+                      if (Object.keys(body).length === 0) {
+                        setToast({ msg: "No changes to save", type: "error" });
+                        setTimeout(() => setToast(null), 3000);
+                        return;
+                      }
+                      setSavingSettings(true);
+                      try {
+                        const res = await fetch(`/api/leagues/${league.id}/settings`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify(body),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error ?? "Failed to save");
+                        setLeague(prev => prev ? { ...prev, ...data.league } : prev);
+                        setSettingsName("");
+                        setSettingsMaxPlayers("");
+                        setSettingsFormat("");
+                        setSettingsDescription("");
+                        setToast({ msg: "Settings saved", type: "success" });
+                        setTimeout(() => setToast(null), 3000);
+                      } catch (err: any) {
+                        setToast({ msg: err.message ?? "Failed to save settings", type: "error" });
+                        setTimeout(() => setToast(null), 4000);
+                      } finally {
+                        setSavingSettings(false);
+                      }
+                    }}
+                    disabled={savingSettings}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2"
+                    style={{ background: accent, color: isDark ? "oklch(0.12 0.04 145)" : "#fff", opacity: savingSettings ? 0.7 : 1 }}
+                  >
+                    {savingSettings ? (
+                      <><span className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${isDark ? "oklch(0.12 0.04 145)" : "#fff"} transparent` }} /> Saving…</>
+                    ) : (
+                      <><Check size={14} /> Save Changes</>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSettingsName("");
+                      setSettingsMaxPlayers("");
+                      setSettingsFormat("");
+                      setSettingsDescription("");
+                    }}
+                    className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{ background: isDark ? "oklch(0.22 0.05 145)" : "#e8ede8", color: textMain }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              {/* Current values card */}
+              <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
+                <h3 className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: textMuted }}>Current Configuration</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "League Name", value: league.name },
+                    { label: "Club", value: league.clubName ?? "—" },
+                    { label: "Format", value: league.formatType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) },
+                    { label: "Max Players", value: `${league.maxPlayers} spots` },
+                    { label: "Status", value: league.status.charAt(0).toUpperCase() + league.status.slice(1) },
+                    { label: "Commissioner", value: league.commissionerName },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: textMuted }}>{label}</span>
+                      <span className="text-xs font-semibold" style={{ color: textMain }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           </div>{/* end main content column */}
 
           {/* ── RIGHT PANEL: Upcoming Matchups (desktop only) ─────────────── */}

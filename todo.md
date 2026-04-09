@@ -4909,3 +4909,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] LeagueDashboard: add mobile card view (sm:hidden) below the desktop table for standings
 - [x] LeagueDemo: add mobile card view (sm:hidden) below the desktop table for standings
 - [x] Each mobile card: rank badge, avatar, name, chess.com handle, PTS pill, W/D/L stats row, form dots
+
+## League Dashboard — Commissioner Settings Panel
+- [ ] Server: PATCH /leagues/:leagueId endpoint to update name, maxPlayers, formatType
+- [ ] Client: add Settings gear icon to sidebar nav (commissioner-only)
+- [ ] Client: settings panel UI with editable fields (league name, max players, format)
+- [ ] Client: save/cancel buttons with loading state and success toast
+- [ ] TypeScript: 0 errors
