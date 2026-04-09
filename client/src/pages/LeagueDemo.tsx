@@ -282,16 +282,7 @@ export default function LeagueDemo() {
               <ArrowLeft size={15} />
             </button>
 
-            {/* Club logo + name */}
-            <div className="hidden lg:flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: accent }}>
-                <Trophy size={14} style={{ color: "#fff" }} />
-              </div>
-              <div className="leading-tight">
-                <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>ChessOTB Club</span>
-                <span className="text-xs font-medium ml-1" style={{ color: "oklch(0.65 0.12 145)" }}>League</span>
-              </div>
-            </div>
+
 
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
