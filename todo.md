@@ -4904,3 +4904,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Schedule tab: mock week schedule
 - [ ] Reroute landing page "Explore Chess Leagues" button to /league-demo
 - [ ] TypeScript: 0 errors
+
+## Mobile Standings Card Layout
+- [x] LeagueDashboard: add mobile card view (sm:hidden) below the desktop table for standings
+- [x] LeagueDemo: add mobile card view (sm:hidden) below the desktop table for standings
+- [x] Each mobile card: rank badge, avatar, name, chess.com handle, PTS pill, W/D/L stats row, form dots

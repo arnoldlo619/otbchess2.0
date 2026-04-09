@@ -787,25 +787,67 @@ export default function LeagueDemo() {
 
                         {/* Mobile card */}
                         <div
-                          className="sm:hidden flex items-center gap-3 px-4 py-3"
-                          style={{ borderBottom: i < DEMO_PLAYERS.length - 1 ? `1px solid ${cardBorder}` : "none" }}
+                          className="sm:hidden px-4 py-3.5"
+                          style={{
+                            borderBottom: i < DEMO_PLAYERS.length - 1 ? `1px solid ${cardBorder}` : "none",
+                            background: i < 3 && podiumColor ? `${podiumColor}06` : "transparent",
+                          }}
                         >
-                          <div className="w-7 text-center flex-shrink-0">
-                            {podiumColor ? (
-                              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black mx-auto" style={{ background: `${podiumColor}20`, color: podiumColor }}>{i + 1}</div>
-                            ) : (
-                              <span className="text-xs font-medium" style={{ color: textMuted }}>{i + 1}</span>
-                            )}
+                          {/* Top row: rank + avatar + name + pts */}
+                          <div className="flex items-center gap-3">
+                            {/* Rank badge */}
+                            <div className="flex-shrink-0">
+                              {podiumColor ? (
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black" style={{ background: `${podiumColor}20`, color: podiumColor }}>{i + 1}</div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium" style={{ color: textMuted, background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}>{i + 1}</div>
+                              )}
+                            </div>
+                            {/* Avatar + name */}
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1">
+                                  <MovementIcon movement={p.movement} />
+                                  <span className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
+                                  {p.streak && p.streak.length >= 2 && (
+                                    <span
+                                      className="text-[10px] font-bold px-1 py-0.5 rounded flex-shrink-0"
+                                      style={{
+                                        background: p.streak.startsWith("W") ? "#4ade8022" : p.streak.startsWith("L") ? "#ef444422" : "transparent",
+                                        color: p.streak.startsWith("W") ? "#4ade80" : p.streak.startsWith("L") ? "#ef4444" : textMuted,
+                                      }}
+                                    >{p.streak}</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[11px] font-medium" style={{ color: textMuted }}>{p.rating} ELO</span>
+                                  <span className="text-[11px]" style={{ color: textMuted }}>·</span>
+                                  <span className="text-[11px]" style={{ color: textMuted }}>{p.wins}W {p.draws}D {p.losses}L</span>
+                                </div>
+                              </div>
+                            </div>
+                            {/* Points */}
+                            <div className="flex flex-col items-end flex-shrink-0">
+                              <span className="text-lg font-black" style={{ color: accent }}>{p.points}</span>
+                              <span className="text-[10px] uppercase tracking-wide" style={{ color: textMuted }}>pts</span>
+                            </div>
                           </div>
-                          <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</div>
-                            <div className="text-[11px]" style={{ color: textMuted }}>{p.rating} ELO</div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="text-base font-black" style={{ color: accent }}>{p.points}</div>
-                            <div className="text-[10px]" style={{ color: textMuted }}>{p.wins}W {p.draws}D {p.losses}L</div>
-                          </div>
+                          {/* Form dots row */}
+                          {p.lastResults && (
+                            <div className="flex gap-1 mt-2 ml-11">
+                              {p.lastResults.split(",").map((r, j) => <ResultDot key={j} r={r} />)}
+                            </div>
+                          )}
+                          {/* Prep button */}
+                          <a
+                            href={`/prep/${encodeURIComponent(p.chesscomUsername)}`}
+                            className="mt-2 ml-11 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold"
+                            style={{ background: `${accent}18`, color: accent, border: `1px solid ${accent}33` }}
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Prep vs {p.displayName.split(" ")[0]}
+                          </a>
                         </div>
                       </div>
                     );
