@@ -946,7 +946,11 @@ export default function LeagueDashboard() {
             style={{ background: accent }}
             title={league.clubName ?? "Back to Club"}
           >
-            <Trophy size={18} style={{ color: isDark ? "oklch(0.12 0.04 145)" : "#fff" }} />
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+              alt="OTB!!"
+              className="w-8 h-8 object-contain"
+            />
           </button>
 
           {/* Divider */}
