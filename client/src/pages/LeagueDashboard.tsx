@@ -2416,67 +2416,28 @@ export default function LeagueDashboard() {
 
         {/* ── STANDINGS ─────────────────────────────────────────────────────── */}
         {activeTab === "standings" && (
-          <div className="space-y-5">
-            {/* Podium — top 3 visual cards */}
-            {standings.length >= 3 && (
-              <div className="flex items-end justify-center gap-3 pt-4 pb-2">
-                {[1, 0, 2].map((idx) => {
-                  const s = standings[idx];
-                  const podiumColors = ["#f59e0b", "#9ca3af", "#cd7c2f"];
-                  const podiumLabels = ["1st", "2nd", "3rd"];
-                  const heights = ["h-32", "h-28", "h-24"];
-                  const pc = podiumColors[idx];
-                  const isMe = s.playerId === user?.id;
-                  return (
-                    <div key={s.playerId} className={`flex flex-col items-center ${idx === 0 ? "order-2" : idx === 1 ? "order-1" : "order-3"}`}>
-                      <div className="relative mb-2">
-                        <Avatar url={s.avatarUrl} name={s.displayName} size={idx === 0 ? 14 : 11} />
-                        <div
-                          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
-                          style={{ background: pc, color: "#fff", boxShadow: `0 0 8px ${pc}66` }}
-                        >
-                          {idx + 1}
-                        </div>
-                      </div>
-                      <span className="text-xs font-semibold truncate max-w-[5rem] text-center" style={{ color: isMe ? accent : textMain }}>
-                        {s.displayName}
-                      </span>
-                      <span className="text-[10px] font-bold mt-0.5" style={{ color: pc }}>{s.points} pts</span>
-                      {s.chesscomRating && (
-                        <span className="text-[10px] mt-0.5" style={{ color: textMuted }}>{s.chesscomRating} ELO</span>
-                      )}
-                      <div
-                        className={`${heights[idx]} w-16 sm:w-20 rounded-t-xl mt-2 flex items-end justify-center pb-2 transition-all`}
-                        style={{ background: `${pc}18`, borderTop: `2px solid ${pc}` }}
-                      >
-                        <span className="text-xs font-bold" style={{ color: pc }}>{podiumLabels[idx]}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Full standings table */}
+          <div className="space-y-4">
+            {/* Compact standings table */}
             <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-              {/* Desktop header */}
+              {/* Table header */}
               <div
-                className="hidden sm:grid items-center px-5 py-3 text-[11px] font-semibold uppercase tracking-wider"
+                className="hidden sm:grid items-center px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest"
                 style={{
                   borderBottom: `1px solid ${cardBorder}`,
                   color: textMuted,
-                  background: isDark ? "oklch(0.18 0.05 145)" : "#f9fafb",
-                  gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 5rem",
+                  background: isDark ? "oklch(0.17 0.05 145)" : "#f3f4f6",
+                  gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 4.5rem",
                   gap: "0.5rem",
                 }}
               >
-                <span className="text-center">#</span>
+                <span className="text-center">POS</span>
                 <span>Player</span>
                 <span className="text-center">Rating</span>
+                <span className="text-center">MP</span>
                 <span className="text-center">W</span>
                 <span className="text-center">D</span>
                 <span className="text-center">L</span>
-                <span className="text-center">Pts</span>
+                <span className="text-center">PTS</span>
                 <span className="text-center">Form</span>
                 <span className="text-center">Prep</span>
               </div>
@@ -2499,13 +2460,13 @@ export default function LeagueDashboard() {
                     <div key={s.playerId}>
                       {/* Desktop row */}
                       <div
-                        className="hidden sm:grid items-center px-5 py-3.5 transition-colors duration-200"
+                        className="hidden sm:grid items-center px-4 py-2.5 transition-colors duration-200 hover:bg-white/5"
                         style={{
-                          gridTemplateColumns: "2.5rem 1fr 5rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 5rem",
+                          gridTemplateColumns: "3rem 1fr 4.5rem 3rem 2.5rem 2.5rem 2.5rem 3.5rem 5rem 4.5rem",
                           gap: "0.5rem",
                           borderBottom: i < standings.length - 1 ? `1px solid ${cardBorder}` : "none",
                           background: isMe
-                            ? `${accent}0a`
+                            ? `${accent}0d`
                             : i < 3 && podiumColor
                             ? `${podiumColor}06`
                             : "transparent",
@@ -2569,15 +2530,20 @@ export default function LeagueDashboard() {
                           )}
                         </div>
 
+                        {/* MP */}
+                        <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{gamesPlayed}</span>
+
                         {/* W / D / L */}
-                        <span className="text-center text-sm font-semibold" style={{ color: "#4ade80" }}>{s.wins}</span>
+                        <span className="text-center text-sm font-semibold" style={{ color: "oklch(0.65 0.2 145)" }}>{s.wins}</span>
                         <span className="text-center text-sm font-medium" style={{ color: textMuted }}>{s.draws}</span>
-                        <span className="text-center text-sm font-medium" style={{ color: "#ef4444" }}>{s.losses}</span>
+                        <span className="text-center text-sm font-medium" style={{ color: "oklch(0.6 0.2 25)" }}>{s.losses}</span>
 
                         {/* Points */}
-                        <div className="flex flex-col items-center">
-                          <span className="text-base font-black" style={{ color: accent }}>{s.points}</span>
-                          <span className="text-[9px]" style={{ color: textMuted }}>{winRate}% win</span>
+                        <div className="flex items-center justify-center">
+                          <span
+                            className="text-sm font-black px-2 py-0.5 rounded-lg"
+                            style={{ color: isMe ? accent : textMain, background: isMe ? `${accent}18` : "transparent" }}
+                          >{s.points}</span>
                         </div>
 
                         {/* Form dots */}

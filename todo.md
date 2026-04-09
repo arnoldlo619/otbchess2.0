@@ -4886,3 +4886,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Compute H2H stats (wins for white player, wins for black player, draws) from all completed league matches between the two players
 - [x] Render H2H widget in the hero card between the VS/score and the League Form section
 - [ ] TypeScript: 0 errors
+
+## League Dashboard — Standings Tab Redesign
+
+- [x] Replace card-based standings with compact table: POS/PTS, avatar, player name, RATING, MP, W, D, L columns
+- [x] Highlight the logged-in user's row with accent color
+- [x] Show last-5 form badges in a Form column
+- [ ] TypeScript: 0 errors
