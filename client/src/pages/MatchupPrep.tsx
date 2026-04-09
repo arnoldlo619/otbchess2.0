@@ -481,7 +481,7 @@ export default function MatchupPrep() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="chess.com username"
-                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none focus:ring-1 focus:ring-[#3D6B47]/30 ${t.input}`}
+                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow ${t.input}`}
                 autoComplete="off"
                 autoCapitalize="none"
               />
@@ -1063,7 +1063,11 @@ export default function MatchupPrep() {
         {!report && !loading && !error && (
           <div className={`${t.card} py-12 px-6 sm:py-16 flex flex-col items-center gap-5 text-center`}>
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
-              <Target className="w-7 h-7 text-[#5B9A6A]" />
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                alt="OTB!!"
+                className="w-9 h-9 object-contain"
+              />
             </div>
             <div className="space-y-2 max-w-xs">
               <h3 className={`text-base sm:text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>

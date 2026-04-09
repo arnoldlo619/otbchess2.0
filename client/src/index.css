@@ -1537,3 +1537,26 @@ select {
     transform: none !important;
   }
 }
+
+/* ── Matchup Prep search input — premium border glow animation ─────────────── */
+@keyframes prepInputGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px oklch(0.44 0.12 145 / 0.25),
+      0 0 8px 0px oklch(0.44 0.12 145 / 0.10);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1.5px oklch(0.55 0.14 145 / 0.55),
+      0 0 18px 2px oklch(0.55 0.14 145 / 0.18);
+  }
+}
+
+.prep-input-glow:focus {
+  animation: prepInputGlow 2.4s ease-in-out infinite;
+  outline: none;
+}
+
+.dark .prep-input-glow:focus {
+  animation: prepInputGlow 2.4s ease-in-out infinite;
+}
