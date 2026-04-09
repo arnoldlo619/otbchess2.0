@@ -208,11 +208,15 @@ export default function LeagueDemo() {
         >
           {/* Club logo */}
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0"
+            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden"
             style={{ background: accent }}
             title="ChessOTB Club League"
           >
-            <Trophy size={18} style={{ color: "#fff" }} />
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+              alt="OTB!!"
+              className="w-8 h-8 object-contain"
+            />
           </div>
 
           {/* Divider */}
@@ -426,7 +430,7 @@ export default function LeagueDemo() {
 
                     {/* Table header */}
                     <div
-                      className="hidden sm:grid items-center px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
+                      className="hidden sm:grid items-center px-4 py-2 text-xs font-bold uppercase tracking-widest"
                       style={{
                         borderBottom: `1px solid ${cardBorder}`,
                         color: textMuted,
@@ -474,17 +478,17 @@ export default function LeagueDemo() {
                             <div className="min-w-0">
                               <div className="flex items-center gap-1">
                                 <MovementIcon movement={p.movement} />
-                                <span className="text-xs font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
+                                <span className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</span>
                               </div>
-                              <span className="text-[10px] truncate block" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
+                              <span className="text-xs truncate block" style={{ color: textMuted }}>@{p.chesscomUsername}</span>
                             </div>
                           </div>
-                          <span className="text-center text-xs font-bold" style={{ color: textMain }}>{p.rating}</span>
-                          <span className="text-center text-xs font-semibold" style={{ color: "oklch(0.65 0.2 145)" }}>{p.wins}</span>
-                          <span className="text-center text-xs" style={{ color: textMuted }}>{p.draws}</span>
-                          <span className="text-center text-xs" style={{ color: "oklch(0.6 0.2 25)" }}>{p.losses}</span>
+                          <span className="text-center text-sm font-bold" style={{ color: textMain }}>{p.rating}</span>
+                          <span className="text-center text-sm font-semibold" style={{ color: "oklch(0.65 0.2 145)" }}>{p.wins}</span>
+                          <span className="text-center text-sm" style={{ color: textMuted }}>{p.draws}</span>
+                          <span className="text-center text-sm" style={{ color: "oklch(0.6 0.2 25)" }}>{p.losses}</span>
                           <div className="flex justify-center">
-                            <span className="text-xs font-black px-1.5 py-0.5 rounded" style={{ color: accent, background: `${accent}18` }}>{p.points}</span>
+                            <span className="text-sm font-black px-1.5 py-0.5 rounded" style={{ color: accent, background: `${accent}18` }}>{p.points}</span>
                           </div>
                           <div className="flex gap-0.5 justify-center">
                             {lastArr.map((r, j) => <ResultDot key={j} r={r} />)}
