@@ -24,6 +24,8 @@ import {
   Zap, AlertCircle, Info, Crosshair, Flame
 } from "lucide-react";
 import { UserRepertoirePanel } from "../components/UserRepertoirePanel";
+import ChessLineViewer from "../components/ChessLineViewer";
+import ChessPracticeBoard from "../components/ChessPracticeBoard";
 import { CoachInsightCard } from "../components/CoachInsightCard";
 import {
   UserRepertoire,
@@ -931,17 +933,34 @@ export default function MatchupPrep() {
                       )}
                     </div>
 
-                    {/* Lines sorted by collision score (enrichedLines already ranked) */}
-                    <div className="space-y-2.5">
+                    {/* Interactive chessboard viewers — one per line */}
+                    <div className="space-y-4">
                       {enrichedLines.map((line, i) => (
-                        <EnrichedKeyLineCard
-                          key={i}
-                          line={line}
-                          index={i}
-                          priority={getPriority(line.confidence)}
-                          isDark={isDark}
-                          t={t}
-                        />
+                        <div key={i} className="space-y-2">
+                          {/* Priority badge row */}
+                          <div className="flex items-center gap-2 px-1">
+                            <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
+                              {i + 1}
+                            </span>
+                            {line.isTrainFirst && (
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+                                <Flame className="w-2.5 h-2.5" /> Train First
+                              </span>
+                            )}
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${isDark ? PRIORITY_CONFIG[getPriority(line.confidence)].darkBg : PRIORITY_CONFIG[getPriority(line.confidence)].lightBg}`}>
+                              <span className={`w-1 h-1 rounded-full ${PRIORITY_CONFIG[getPriority(line.confidence)].dot}`} />
+                              {PRIORITY_CONFIG[getPriority(line.confidence)].shortLabel}
+                            </span>
+                          </div>
+                          {/* Interactive board */}
+                          <ChessLineViewer
+                            moves={line.moves}
+                            lineName={line.name}
+                            rationale={line.rationale}
+                            eco={line.eco}
+                            isDark={isDark}
+                          />
+                        </div>
                       ))}
                     </div>
 
@@ -1013,22 +1032,26 @@ export default function MatchupPrep() {
                     isDark={isDark}
                     t={t}
                   />
-                ) : practiceQueue.length > 0 && (
-                  <PracticeMode
-                    lines={enrichedLines}
-                    queue={practiceQueue}
-                    currentIndex={practiceIndex}
-                    revealed={practiceRevealed}
-                    completed={practiceCompleted}
-                    onReveal={() => setPracticeRevealed(true)}
-                    onGotIt={() => markCompleted(practiceQueue[practiceIndex])}
-                    onReviewAgain={practiceNext}
-                    onPrev={practicePrev}
-                    onNext={practiceNext}
-                    onReset={resetPractice}
-                    isDark={isDark}
-                    t={t}
-                  />
+                ) : (
+                  <>
+                    {/* Intro strip */}
+                    <div className={`flex items-center gap-3 px-1`}>
+                      <span className={`text-xs ${t.textSecondary}`}>
+                        Find the correct move for each position. The computer plays the opponent's moves automatically.
+                      </span>
+                    </div>
+                    {/* Interactive SRS practice board */}
+                    <ChessPracticeBoard
+                      lines={enrichedLines.map((l, i) => ({
+                        id: String(i),
+                        name: l.name,
+                        moves: l.moves,
+                        eco: l.eco,
+                        rationale: l.rationale,
+                      }))}
+                      isDark={isDark}
+                    />
+                  </>
                 )}
               </div>
             )}
