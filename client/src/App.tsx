@@ -38,6 +38,7 @@ const InviteAccept = lazy(() => import("./pages/InviteAccept"));
 const GamesHistory = lazy(() => import("./pages/GamesHistory"));
 const LeagueDashboard = lazy(() => import("./pages/LeagueDashboard"));
 const LeagueHistory = lazy(() => import("./pages/LeagueHistory"));
+const LeagueDemo = lazy(() => import("./pages/LeagueDemo"));
 const MatchupPrep = lazy(() => import("./pages/MatchupPrep"));
 const PublicTournament = lazy(() => import("./pages/PublicTournament"));
 const TournamentAnalytics = lazy(() => import("./pages/TournamentAnalytics"));
@@ -77,6 +78,7 @@ function Router() {
         <Route path={"/clubs/:id/home"} component={ClubDashboard} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
+        <Route path={"/league-demo"} component={LeagueDemo} />
         <Route path={"/leagues/:leagueId/history"} component={LeagueHistory} />
         <Route path={"/leagues/:leagueId"} component={LeagueDashboard} />
         <Route path={"/prep/:username"} component={MatchupPrep} />

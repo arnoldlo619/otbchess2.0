@@ -904,7 +904,7 @@ function Showcase() {
 
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/clubs"
+                href="/league-demo"
                 className="btn-chess-primary flex items-center gap-2 inline-flex"
               >
                 Explore Chess Leagues

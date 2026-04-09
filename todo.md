@@ -4893,3 +4893,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Highlight the logged-in user's row with accent color
 - [x] Show last-5 form badges in a Form column
 - [ ] TypeScript: 0 errors
+
+## Chess Club League Demo Page
+
+- [ ] Create /league-demo route with LeagueDemo.tsx page
+- [ ] Mock data: 23 popular chess.com usernames with realistic ELO, W/D/L, form, standings
+- [ ] Sidebar nav: identical to LeagueDashboard (icon rail + labels)
+- [ ] Overview tab: standings table + upcoming matchups right panel
+- [ ] Matchup tab: Current Matchup hero card with H2H record and League Form
+- [ ] Schedule tab: mock week schedule
+- [ ] Reroute landing page "Explore Chess Leagues" button to /league-demo
+- [ ] TypeScript: 0 errors
