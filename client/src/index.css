@@ -1552,11 +1552,22 @@ select {
   }
 }
 
+/* Focus-only variant (legacy) */
 .prep-input-glow:focus {
   animation: prepInputGlow 2.4s ease-in-out infinite;
   outline: none;
 }
 
 .dark .prep-input-glow:focus {
+  animation: prepInputGlow 2.4s ease-in-out infinite;
+}
+
+/* Always-on variant — glow visible by default so the input stands out */
+.prep-input-glow-always {
+  animation: prepInputGlow 2.4s ease-in-out infinite;
+  outline: none;
+}
+
+.dark .prep-input-glow-always {
   animation: prepInputGlow 2.4s ease-in-out infinite;
 }

@@ -149,7 +149,7 @@ function useDesignTokens(isDark: boolean) {
     card:          isDark ? "bg-[#0f1c11] border border-[#243028]/70 rounded-2xl"   : "bg-white border border-gray-200/80 rounded-2xl shadow-sm",
     cardSubtle:    isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60 rounded-xl" : "bg-gray-50/70 border border-gray-200/60 rounded-xl",
     header:        isDark ? "bg-[#0a1409]/95 border-b border-[#1e2e22]/80"          : "bg-white/95 border-b border-gray-200/70",
-    input:         isDark ? "bg-[#0a1409] border-[#243028]/70 text-white placeholder:text-white/20 focus:border-[#4a8a5a]/60" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
+    input:         isDark ? "bg-[#0a1409] border-[#243028]/70 text-white placeholder:text-white/50 focus:border-[#4a8a5a]/60" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]",
     textPrimary:   isDark ? "text-white"       : "text-gray-900",
     textSecondary: isDark ? "text-white/55"    : "text-gray-500",
     textTertiary:  isDark ? "text-white/30"    : "text-gray-400",
@@ -475,13 +475,13 @@ export default function MatchupPrep() {
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${t.textTertiary}`} />
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="chess.com username"
-                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow ${t.input}`}
+                className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm transition-colors outline-none prep-input-glow-always ${t.input}`}
                 autoComplete="off"
                 autoCapitalize="none"
               />
