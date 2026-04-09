@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
+import { useChessAvatars } from "@/hooks/useChessAvatar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
@@ -865,6 +866,15 @@ export default function LeagueDashboard() {
 
   // My standing
   const myStanding = user ? standings.find((s) => s.playerId === user.id) : undefined;
+
+  // chess.com avatars for the current matchup hero card
+  const matchupWhitePlayer = league?.players.find(p => p.playerId === myMatchThisWeek?.playerWhiteId);
+  const matchupBlackPlayer = league?.players.find(p => p.playerId === myMatchThisWeek?.playerBlackId);
+  const matchupChesscomUsernames = [
+    matchupWhitePlayer?.chesscomUsername ?? "",
+    matchupBlackPlayer?.chesscomUsername ?? "",
+  ].filter(Boolean);
+  const { avatars: matchupChesscomAvatars } = useChessAvatars(matchupChesscomUsernames);
 
   // Recent completed matches (last 5)
   const recentResults = [...allMatches]
@@ -1918,6 +1928,10 @@ export default function LeagueDashboard() {
                     const isMe = myMatchThisWeek.playerWhiteId === user?.id;
                     const won = myMatchThisWeek.result === "white_win";
                     const lost = myMatchThisWeek.result === "black_win";
+                    const whiteChesscomAvatar = whitePlayer?.chesscomUsername
+                      ? (matchupChesscomAvatars.get(whitePlayer.chesscomUsername.toLowerCase()) ?? null)
+                      : null;
+                    const whiteAvatarUrl = whiteChesscomAvatar ?? whitePlayer?.avatarUrl ?? null;
                     return (
                       <div className="flex flex-col items-center gap-3 flex-1">
                         <div className="relative">
@@ -1928,7 +1942,7 @@ export default function LeagueDashboard() {
                               boxShadow: isMe ? `0 0 24px ${accent}44` : "none",
                             }}
                           >
-                            <Avatar url={whitePlayer?.avatarUrl} name={myMatchThisWeek.playerWhiteName} size={20} />
+                            <Avatar url={whiteAvatarUrl} name={myMatchThisWeek.playerWhiteName} size={20} />
                           </div>
                           {won && (
                             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
@@ -1988,6 +2002,10 @@ export default function LeagueDashboard() {
                     const blackPlayer = league.players.find(p => p.playerId === myMatchThisWeek.playerBlackId);
                     const isMe = myMatchThisWeek.playerBlackId === user?.id;
                     const won = myMatchThisWeek.result === "black_win";
+                    const blackChesscomAvatar = blackPlayer?.chesscomUsername
+                      ? (matchupChesscomAvatars.get(blackPlayer.chesscomUsername.toLowerCase()) ?? null)
+                      : null;
+                    const blackAvatarUrl = blackChesscomAvatar ?? blackPlayer?.avatarUrl ?? null;
                     return (
                       <div className="flex flex-col items-center gap-3 flex-1">
                         <div className="relative">
@@ -1998,7 +2016,7 @@ export default function LeagueDashboard() {
                               boxShadow: isMe ? `0 0 24px ${accent}44` : "none",
                             }}
                           >
-                            <Avatar url={blackPlayer?.avatarUrl} name={myMatchThisWeek.playerBlackName} size={20} />
+                            <Avatar url={blackAvatarUrl} name={myMatchThisWeek.playerBlackName} size={20} />
                           </div>
                           {won && (
                             <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>

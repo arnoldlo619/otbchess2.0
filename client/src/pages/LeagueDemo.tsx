@@ -5,6 +5,7 @@
  * Mirrors the exact UI design system of LeagueDashboard.tsx.
  */
 import { useState } from "react";
+import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
@@ -74,14 +75,24 @@ const CURRENT_WEEK_MATCHUPS = [
 
 // ── Helper Components ─────────────────────────────────────────────────────────
 
-function Avatar({ name, size = 9 }: { name: string; size?: number }) {
+function Avatar({ name, size = 9, url }: { name: string; size?: number; url?: string | null }) {
+  const px = size * 4;
+  if (url) {
+    return (
+      <img
+        src={url}
+        alt={name}
+        className="rounded-full object-cover flex-shrink-0"
+        style={{ width: px, height: px }}
+      />
+    );
+  }
   const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
   const colors = [
     "oklch(0.45 0.15 145)", "oklch(0.45 0.15 200)", "oklch(0.45 0.15 260)",
     "oklch(0.45 0.15 30)", "oklch(0.45 0.15 320)", "oklch(0.45 0.15 80)",
   ];
   const bg = colors[name.charCodeAt(0) % colors.length];
-  const px = size * 4;
   return (
     <div
       className="rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
@@ -154,6 +165,12 @@ export default function LeagueDemo() {
 
   const featuredMatchup = CURRENT_WEEK_MATCHUPS[0]; // Magnus vs Hikaru
   const upcomingMatchups = CURRENT_WEEK_MATCHUPS.slice(0, 5);
+  // Fetch chess.com avatars for all demo players in parallel
+  const allDemoUsernames = DEMO_PLAYERS.map(p => p.chesscomUsername);
+  const { avatars: demoAvatars } = useChessAvatars(allDemoUsernames);
+  function getAvatar(chesscomUsername: string): string | null {
+    return demoAvatars.get(chesscomUsername.toLowerCase()) ?? null;
+  }
 
   // H2H between Magnus and Hikaru (mock)
   const h2hW = 3, h2hD = 2, h2hL = 2;
@@ -335,7 +352,7 @@ export default function LeagueDemo() {
                         {/* White player */}
                         <div className="flex flex-col items-center gap-2 flex-1">
                           <div className="relative">
-                            <Avatar name={featuredMatchup.white.displayName} size={14} />
+                            <Avatar name={featuredMatchup.white.displayName} size={14} url={getAvatar(featuredMatchup.white.chesscomUsername)} />
                             <span
                               className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap"
                               style={{ background: "#f0f5ee", color: "#111827" }}
@@ -361,7 +378,7 @@ export default function LeagueDemo() {
                         {/* Black player */}
                         <div className="flex flex-col items-center gap-2 flex-1">
                           <div className="relative">
-                            <Avatar name={featuredMatchup.black.displayName} size={14} />
+                            <Avatar name={featuredMatchup.black.displayName} size={14} url={getAvatar(featuredMatchup.black.chesscomUsername)} />
                             <span
                               className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap"
                               style={{ background: "#111827", color: "#f0f5ee" }}
@@ -462,7 +479,7 @@ export default function LeagueDemo() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 min-w-0">
-                            <Avatar name={p.displayName} size={8} />
+                            <Avatar name={p.displayName} size={8} url={getAvatar(p.chesscomUsername)} />
                             <div className="min-w-0">
                               <div className="flex items-center gap-1">
                                 <MovementIcon movement={p.movement} />
@@ -493,7 +510,7 @@ export default function LeagueDemo() {
                         style={{ borderBottom: i < 7 ? `1px solid ${cardBorder}` : "none" }}
                       >
                         <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{i + 1}</span>
-                        <Avatar name={p.displayName} size={9} />
+                        <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</div>
                           <div className="text-[11px]" style={{ color: textMuted }}>{p.rating} ELO</div>
@@ -540,11 +557,11 @@ export default function LeagueDemo() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <Avatar name={m.white.displayName} size={7} />
+                            <Avatar name={m.white.displayName} size={7} url={getAvatar(m.white.chesscomUsername)} />
                             <span className="text-xs font-semibold flex-1 truncate" style={{ color: textMain }}>{m.white.displayName}</span>
                             <span className="text-[10px] font-bold" style={{ color: textMuted }}>vs</span>
                             <span className="text-xs font-semibold flex-1 truncate text-right" style={{ color: textMain }}>{m.black.displayName}</span>
-                            <Avatar name={m.black.displayName} size={7} />
+                            <Avatar name={m.black.displayName} size={7} url={getAvatar(m.black.chesscomUsername)} />
                           </div>
                           <div className="flex items-center justify-between mt-1.5">
                             <span className="text-[10px]" style={{ color: textMuted }}>{m.white.rating}</span>
@@ -588,7 +605,7 @@ export default function LeagueDemo() {
                       <div className="flex flex-col items-center gap-3 flex-1">
                         <div className="relative">
                           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden" style={{ outline: `4px solid ${accent}`, outlineOffset: "2px" }}>
-                            <Avatar name={featuredMatchup.white.displayName} size={24} />
+                            <Avatar name={featuredMatchup.white.displayName} size={24} url={getAvatar(featuredMatchup.white.chesscomUsername)} />
                           </div>
                           <span
                             className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md"
@@ -617,7 +634,7 @@ export default function LeagueDemo() {
                       <div className="flex flex-col items-center gap-3 flex-1">
                         <div className="relative">
                           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden">
-                            <Avatar name={featuredMatchup.black.displayName} size={24} />
+                            <Avatar name={featuredMatchup.black.displayName} size={24} url={getAvatar(featuredMatchup.black.chesscomUsername)} />
                           </div>
                           <span
                             className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-md"
@@ -661,7 +678,7 @@ export default function LeagueDemo() {
                       </div>
                       {[featuredMatchup.white, featuredMatchup.black].map((p) => (
                         <div key={p.id} className="flex items-center gap-3 mb-2">
-                          <Avatar name={p.displayName} size={7} />
+                          <Avatar name={p.displayName} size={7} url={getAvatar(p.chesscomUsername)} />
                           <span className="text-xs font-semibold flex-1 truncate" style={{ color: textMain }}>{p.displayName}</span>
                           <div className="flex gap-1">
                             {p.lastResults.split(",").map((r, j) => <FormBadge key={j} result={r} />)}
@@ -737,7 +754,7 @@ export default function LeagueDemo() {
                             )}
                           </div>
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <Avatar name={p.displayName} size={9} />
+                            <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
                                 <MovementIcon movement={p.movement} />
@@ -785,7 +802,7 @@ export default function LeagueDemo() {
                               <span className="text-xs font-medium" style={{ color: textMuted }}>{i + 1}</span>
                             )}
                           </div>
-                          <Avatar name={p.displayName} size={9} />
+                          <Avatar name={p.displayName} size={9} url={getAvatar(p.chesscomUsername)} />
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold truncate" style={{ color: textMain }}>{p.displayName}</div>
                             <div className="text-[11px]" style={{ color: textMuted }}>{p.rating} ELO</div>
