@@ -748,178 +748,216 @@ function Features() {
     </section>
   );
 }
-// ─── Chess Club Chess League — Matchup Prep ─────────────────────────────────
+// ─── Features Carousel — Chess Club League + Matchup Prep ───────────────────
+const CAROUSEL_SLIDES = [
+  {
+    id: "league",
+    badge: "Chess Club League",
+    badgeIcon: <Swords className="w-3.5 h-3.5" />,
+    headline: "Your club.\nA real season.",
+    sub: "Weekly matchups. Live standings. A champion. The Chess Club League turns casual games into a structured competition with rivalries, rounds, and real stakes.",
+    bullets: [
+      { icon: <Trophy className="w-4 h-4" />, text: "Fantasy-style weekly matchups between club members" },
+      { icon: <BarChart3 className="w-4 h-4" />, text: "Live standings, form guides, and head-to-head records" },
+      { icon: <Crown className="w-4 h-4" />, text: "Season champion crowned — built for your club's culture" },
+    ],
+    cta: { label: "Explore Chess Leagues", href: "/league-demo" },
+    ctaSecondary: null,
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-demo-screenshot_e55c7102.png",
+    screenshotAlt: "Chess Club League Dashboard",
+  },
+  {
+    id: "prep",
+    badge: "Matchup Prep",
+    badgeIcon: <Target className="w-3.5 h-3.5" />,
+    headline: "Know your opponent\nbefore move one.",
+    sub: "Enter your opponent's chess.com username. Get their opening tendencies, key patterns, and interactive prep lines — all before you sit down at the board.",
+    bullets: [
+      { icon: <Search className="w-4 h-4" />, text: "Scout openings, tendencies, and weaknesses instantly" },
+      { icon: <BookOpen className="w-4 h-4" />, text: "AI-generated key lines with interactive chessboard" },
+      { icon: <Brain className="w-4 h-4" />, text: "Spaced repetition practice — Chessable-style, for OTB" },
+    ],
+    cta: { label: "Try Matchup Prep", href: "/prep" },
+    ctaSecondary: null,
+    screenshot: null, // uses mock UI
+    screenshotAlt: "Matchup Prep Dashboard",
+  },
+];
+
 function Showcase() {
   const { ref, inView } = useInView();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slide = CAROUSEL_SLIDES[activeSlide];
 
-  const steps = [
-    {
-      icon: <Search className="w-5 h-5" />,
-      title: "Pull Club Member Games",
-      desc: "Connect your chess.com club and we automatically import every member's recent games for analysis.",
-    },
-    {
-      icon: <Brain className="w-5 h-5" />,
-      title: "Analyze Play Styles",
-      desc: "Our engine identifies each player's opening repertoire, tactical tendencies, and endgame patterns.",
-    },
-    {
-      icon: <Target className="w-5 h-5" />,
-      title: "Get Strategic Lines",
-      desc: "Receive tailored preparation lines and counter-strategies for your next round matchup.",
-    },
-    {
-      icon: <TrendingUp className="w-5 h-5" />,
-      title: "Track Your Progress",
-      desc: "Monitor how your prep translates to results across league rounds and club events.",
-    },
-  ];
+  const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
+  const accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
 
   return (
     <section id="for-clubs" className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
       <div className="container">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left — visual card */}
+
+        {/* ── Slide selector tabs ── */}
+        <div className={`flex justify-center mb-14 ${inView ? "animate-fade-up-soft" : "opacity-0"}`} style={{ animationFillMode: "forwards" }}>
+          <div className={`inline-flex rounded-2xl p-1.5 gap-1 ${
+            isDark ? "bg-[oklch(0.18_0.06_145)] border border-white/08" : "bg-[#F0F5EE] border border-[#3D6B47]/10"
+          }`}>
+            {CAROUSEL_SLIDES.map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => setActiveSlide(i)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  activeSlide === i
+                    ? isDark
+                      ? "bg-[oklch(0.28_0.09_145)] text-white shadow-sm"
+                      : "bg-white text-gray-900 shadow-sm"
+                    : isDark
+                      ? "text-white/40 hover:text-white/70"
+                      : "text-gray-400 hover:text-gray-700"
+                }`}
+              >
+                <span className={activeSlide === i ? accentText : ""}>{s.badgeIcon}</span>
+                {s.badge}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Slide content ── */}
+        <div key={slide.id} className="grid lg:grid-cols-2 gap-16 items-center">
+
+          {/* Left — screenshot or mock */}
           <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
-            <div
-              className={`relative rounded-2xl overflow-hidden shadow-xl ${
-                isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-[#F2F7F3]"
-              }`}
-              style={{ minHeight: "420px" }}
-            >
-              {/* Decorative chess board grid */}
-              <div className="absolute inset-0 chess-board-bg opacity-20" />
-              <div className="relative z-10 flex flex-col h-full min-h-[420px] p-8">
-                {/* Header */}
-                <div className="mb-6">
-                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${
-                    isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                  }`}>
-                    <Swords className="w-3.5 h-3.5" /> Chess League
-                  </div>
-                  <h3 className={`text-lg font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    Matchup Prep Dashboard
-                  </h3>
-                </div>
-
-                {/* Mock prep card */}
-                <div className={`rounded-xl border p-4 mb-4 ${
-                  isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
-                }`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"
-                      }`}>
-                        <Crown className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>Round 3 Opponent</p>
-                        <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>chess.com/member/opponent42</p>
-                      </div>
+            {slide.screenshot ? (
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/08" style={{ aspectRatio: "16/10" }}>
+                <img
+                  src={slide.screenshot}
+                  alt={slide.screenshotAlt}
+                  className="w-full h-full object-cover object-top"
+                />
+                {/* Subtle bottom fade */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+              </div>
+            ) : (
+              /* Matchup Prep mock UI */
+              <div
+                className={`relative rounded-2xl overflow-hidden shadow-xl ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-[#F2F7F3]"
+                }`}
+                style={{ minHeight: "420px" }}
+              >
+                <div className="absolute inset-0 chess-board-bg opacity-20" />
+                <div className="relative z-10 flex flex-col h-full min-h-[420px] p-8">
+                  <div className="mb-6">
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${accentBg}`}>
+                      <Target className="w-3.5 h-3.5" /> Matchup Prep
                     </div>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${
-                      isDark ? "bg-blue-400/15 text-blue-300" : "bg-blue-50 text-blue-600"
-                    }`}>1847 Rapid</span>
+                    <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      Round 3 — Opponent Scouted
+                    </h3>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: "Plays 1.d4", pct: "68%" },
-                      { label: "King's Indian", pct: "45%" },
-                      { label: "Endgame Win", pct: "52%" },
-                    ].map(({ label, pct }) => (
-                      <div key={label} className={`rounded-lg p-2 text-center ${
-                        isDark ? "bg-white/05" : "bg-gray-50"
-                      }`}>
-                        <p className={`text-sm font-bold ${
-                          isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"
-                        }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{pct}</p>
-                        <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
+                  <div className={`rounded-xl border p-4 mb-4 ${
+                    isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                        }`}><Crown className="w-4 h-4" /></div>
+                        <div>
+                          <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>opponent42</p>
+                          <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>1847 Rapid · 68% plays 1.d4</p>
+                        </div>
                       </div>
-                    ))}
+                      <span className={`text-xs font-bold px-2 py-1 rounded-md ${
+                        isDark ? "bg-green-400/15 text-green-300" : "bg-green-50 text-green-700"
+                      }`}>Scouted</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { label: "Plays 1.d4", pct: "68%" },
+                        { label: "King's Indian", pct: "45%" },
+                        { label: "Endgame Win", pct: "52%" },
+                      ].map(({ label, pct }) => (
+                        <div key={label} className={`rounded-lg p-2 text-center ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                          <p className={`text-sm font-bold ${accentText}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{pct}</p>
+                          <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-
-                {/* Suggested line */}
-                <div className={`rounded-xl border p-4 ${
-                  isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
-                }`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BookOpen className={`w-4 h-4 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`} />
-                    <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>Suggested Prep</p>
+                  <div className={`rounded-xl border p-4 ${
+                    isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className={`w-4 h-4 ${accentText}`} />
+                      <p className={`text-xs font-bold uppercase tracking-wider ${accentText}`}>Key Prep Line</p>
+                    </div>
+                    <p className={`text-sm font-mono ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                      1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6
+                    </p>
+                    <p className={`text-xs mt-1.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                      King's Indian — Classical Variation
+                    </p>
                   </div>
-                  <p className={`text-sm font-mono ${isDark ? "text-white/70" : "text-gray-700"}`}>
-                    1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5
-                  </p>
-                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-                    King's Indian Defense — Classical Variation
-                  </p>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Right — text content */}
+          {/* Right — text */}
           <div className={`transition-all duration-700 delay-200 ${inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
-            <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${inView ? "animate-badge-pop" : "opacity-0"} ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
-              style={{ animationFillMode: "forwards" }}>
-              Chess Club League
+            <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${accentText}`}>
+              {slide.badge}
             </p>
-            <h2 className={`text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground ${inView ? "animate-fade-up-soft" : "opacity-0"}`}
-              style={{ fontFamily: "'Clash Display', sans-serif", animationDelay: "120ms", animationFillMode: "forwards" }}>
-              Like a Chessable course
-              <br />
-              to beat your club mates.
+            <h2
+              className="text-4xl lg:text-5xl font-semibold tracking-tight mb-6 text-foreground"
+              style={{ fontFamily: "'Clash Display', sans-serif", whiteSpace: "pre-line" }}
+            >
+              {slide.headline}
             </h2>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              Your club. A real season. Real stakes. The Chess Club League turns your weekly games into a structured competition with standings, rivalries, and a champion.
-            </p>
-            <p className="text-muted-foreground leading-relaxed mb-8">
-              Before each round, our Match Prep Coach analyzes your opponent's game history — their openings, patterns, and weaknesses — and hands you tailored preparation lines. Study them. Then win.
+            <p className="text-muted-foreground leading-relaxed mb-8 text-base">
+              {slide.sub}
             </p>
 
-            <div className="space-y-4 mb-8">
-              {steps.map((step, idx) => (
-                <div
-                  key={step.title}
-                  className={`flex items-start gap-3 ${inView ? "animate-check-reveal" : "opacity-0"}`}
-                  style={{ animationDelay: `${400 + idx * 100}ms`, animationFillMode: "forwards" }}
-                >
+            <div className="space-y-4 mb-10">
+              {slide.bullets.map((b, idx) => (
+                <div key={idx} className="flex items-start gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
                     isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
-                  }`}>
-                    {step.icon}
-                  </div>
-                  <div>
-                    <p className={`text-sm font-semibold mb-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{step.title}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
-                  </div>
+                  }`}>{b.icon}</div>
+                  <p className="text-sm text-muted-foreground leading-relaxed pt-1.5">{b.text}</p>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/league-demo"
-                className="btn-chess-primary flex items-center gap-2 inline-flex"
-              >
-                Explore Chess Leagues
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/prep"
-                className="btn-chess-secondary flex items-center gap-2 inline-flex"
-              >
-                Try Matchup Prep
-                <Target className="w-4 h-4" />
-              </Link>
-            </div>
+            <Link
+              href={slide.cta.href}
+              className="btn-chess-primary flex items-center gap-2 inline-flex"
+            >
+              {slide.cta.label}
+              <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
+
+        {/* ── Dot indicators ── */}
+        <div className="flex justify-center gap-2 mt-12">
+          {CAROUSEL_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveSlide(i)}
+              className={`rounded-full transition-all duration-300 ${
+                activeSlide === i
+                  ? `w-6 h-2 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`
+                  : `w-2 h-2 ${isDark ? "bg-white/20 hover:bg-white/40" : "bg-gray-300 hover:bg-gray-400"}`
+              }`}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
       </div>
     </section>
   );
