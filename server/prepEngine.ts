@@ -874,6 +874,48 @@ const WHITE_COUNTERS: Record<string, PrepLine> = {
     rationale: "4.Qc2 avoids doubled pawns and maintains a flexible pawn structure. White keeps the bishop pair potential.",
     confidence: "high",
   },
+  "Modern Defense": {
+    name: "Modern Defense: Austrian Attack",
+    eco: "B06",
+    moves: "1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.f4 Nf6 5.Nf3",
+    rationale: "The Austrian Attack is White's most aggressive and principled response to the Modern. The f4 pawn supports a central space advantage and prepares a kingside pawn storm before Black can complete development.",
+    confidence: "high",
+  },
+  "Dutch Defense": {
+    name: "Dutch: Staunton Gambit",
+    eco: "A83",
+    moves: "1.d4 f5 2.e4 fxe4 3.Nc3 Nf6 4.Bg5 c6 5.f3",
+    rationale: "The Staunton Gambit immediately challenges the Dutch's structural concessions. White sacrifices a pawn for rapid development and open lines, putting Dutch players on the defensive from move two.",
+    confidence: "medium",
+  },
+  "Benoni Defense": {
+    name: "Modern Benoni: Four Pawns Attack",
+    eco: "A68",
+    moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.f4",
+    rationale: "The Four Pawns Attack is the most ambitious reply to the Benoni — White builds a massive pawn center and dares Black to find counterplay. Benoni players often prefer slower positional battles and can be overwhelmed by the sheer aggression.",
+    confidence: "high",
+  },
+  "Old Benoni": {
+    name: "Modern Benoni: Four Pawns Attack",
+    eco: "A68",
+    moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.f4",
+    rationale: "The Four Pawns Attack creates maximum central tension against Benoni setups, giving White a space advantage and kingside attacking chances.",
+    confidence: "high",
+  },
+  "Pirc Defense": {
+    name: "Pirc: Austrian Attack",
+    eco: "B09",
+    moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.f4 Bg7 5.Nf3 O-O 6.Bd3",
+    rationale: "The Austrian Attack is the most aggressive system against the Pirc. White builds a broad pawn center with e4+d4+f4 and launches a direct kingside attack before Black can generate counterplay.",
+    confidence: "high",
+  },
+  "Scandinavian Defense": {
+    name: "Scandinavian: Main Line (3.Nc3)",
+    eco: "B01",
+    moves: "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 Bf5 6.Bc4",
+    rationale: "Developing with Nc3 and Bc4 targets the exposed queen and creates immediate threats. Scandinavian players often struggle when White develops quickly and attacks the misplaced queen.",
+    confidence: "medium",
+  },
 };
 
 /**
