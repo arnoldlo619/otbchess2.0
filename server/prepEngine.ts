@@ -84,6 +84,8 @@ export interface PrepLine {
   rationale: string;
   /** Confidence: how strong the recommendation is */
   confidence: "high" | "medium" | "low";
+  /** Whether this is a main line or a surprise weapon */
+  lineType?: "main" | "surprise";
 }
 
 export interface PrepReport {
@@ -1170,9 +1172,14 @@ export function generatePrepLines(profile: PlayStyleProfile): PrepLine[] {
     });
   }
 
-  // Deduplicate by name
+  // Auto-tag lineType based on name prefix, then deduplicate
+  const tagged = lines.map((l) => ({
+    ...l,
+    lineType: (l.name.startsWith("Surprise Weapon:") ? "surprise" : "main") as "main" | "surprise",
+  }));
+
   const seen = new Set<string>();
-  return lines.filter((l) => {
+  return tagged.filter((l) => {
     if (seen.has(l.name)) return false;
     seen.add(l.name);
     return true;

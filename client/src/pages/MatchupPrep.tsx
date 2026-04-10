@@ -76,6 +76,7 @@ interface PrepLine {
   moves: string;
   rationale: string;
   confidence: "high" | "medium" | "low";
+  lineType?: "main" | "surprise";
 }
 
 interface PrepReport {
@@ -1217,6 +1218,23 @@ function KeyLineCard({
                 <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
                 {cfg.shortLabel}
               </span>
+              {line.lineType === "surprise" ? (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isDark
+                    ? "bg-violet-500/15 text-violet-300 border border-violet-500/25"
+                    : "bg-violet-50 text-violet-700 border border-violet-200"
+                }`}>
+                  ⚡ Surprise
+                </span>
+              ) : line.lineType === "main" ? (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isDark
+                    ? "bg-sky-500/12 text-sky-300 border border-sky-500/20"
+                    : "bg-sky-50 text-sky-700 border border-sky-200"
+                }`}>
+                  ✦ Main Line
+                </span>
+              ) : null}
             </div>
             {line.eco !== "---" && (
               <span className={`text-[11px] font-mono ${t.textTertiary}`}>{line.eco}</span>
@@ -1309,6 +1327,23 @@ function EnrichedKeyLineCard({
                 <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
                 {cfg.shortLabel}
               </span>
+              {line.lineType === "surprise" ? (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isDark
+                    ? "bg-violet-500/15 text-violet-300 border border-violet-500/25"
+                    : "bg-violet-50 text-violet-700 border border-violet-200"
+                }`}>
+                  ⚡ Surprise
+                </span>
+              ) : line.lineType === "main" ? (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                  isDark
+                    ? "bg-sky-500/12 text-sky-300 border border-sky-500/20"
+                    : "bg-sky-50 text-sky-700 border border-sky-200"
+                }`}>
+                  ✦ Main Line
+                </span>
+              ) : null}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {line.eco !== "---" && (

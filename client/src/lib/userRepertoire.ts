@@ -48,6 +48,8 @@ export interface EnrichedPrepLine {
   structureLabel?: string;
   /** Whether this is the top recommended line to study first */
   isTrainFirst?: boolean;
+  /** Whether this is a main line or a surprise weapon */
+  lineType?: "main" | "surprise";
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
