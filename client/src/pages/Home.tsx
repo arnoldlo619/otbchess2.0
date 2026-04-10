@@ -761,7 +761,7 @@ const CAROUSEL_SLIDES = [
       { icon: <TrendingUp className="w-4 h-4" />, text: "Live standings with Buchholz tiebreaks, updated instantly" },
       { icon: <Users className="w-4 h-4" />, text: "Players join with their chess.com username — no accounts needed" },
     ],
-    cta: { label: "Host a Tournament", href: "/" },
+    cta: { label: "Host a Tournament", href: "/?action=create" },
     ctaSecondary: null,
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
     screenshotAlt: "Swiss Tournament Director Dashboard — Round 5 Pairings",
