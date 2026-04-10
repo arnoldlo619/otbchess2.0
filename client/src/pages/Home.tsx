@@ -842,12 +842,13 @@ function Showcase() {
                   ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
                   : "ring-1 ring-inset ring-[#3D6B47]/15"
               }`} />
-              {/* Screenshot */}
+              {/* Screenshot — zoomed in to fill frame, minimizing black side space */}
               <div className="relative rounded-xl overflow-hidden shadow-xl" style={{ aspectRatio: "16/10" }}>
                 <img
                   src={slide.screenshot!}
                   alt={slide.screenshotAlt}
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: "center 8%", transform: "scale(1.12)", transformOrigin: "center top" }}
                 />
                 {/* Subtle bottom fade */}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
@@ -938,9 +939,9 @@ function PlayerDemo() {
             chess.com Integration
           </p>
           <h2 className="text-4xl font-semibold tracking-tight mb-4 text-foreground" style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Improving How You Play Online,
+            Play Online,
             <br />
-            Over The Board!!
+            Improve OTB.
           </h2>
           <p className="text-muted-foreground">
             Enter your chess.com username to see your OTB Profile. Try{" "}
