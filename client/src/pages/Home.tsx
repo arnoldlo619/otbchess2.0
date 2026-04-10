@@ -805,7 +805,17 @@ function Showcase() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const slide = CAROUSEL_SLIDES[activeSlide];
+
+  // Auto-advance every 6 seconds; pause on hover
+  useEffect(() => {
+    if (isHovered) return;
+    const timer = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % CAROUSEL_SLIDES.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [isHovered]);
 
   const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
   const accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
@@ -841,7 +851,12 @@ function Showcase() {
         </div>
 
         {/* ── Slide content ── */}
-        <div key={slide.id} className="grid lg:grid-cols-2 gap-16 items-center">
+        <div
+          key={slide.id}
+          className="grid lg:grid-cols-2 gap-16 items-center"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
 
           {/* Left — screenshot with chess-board backdrop */}
           <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
@@ -858,12 +873,12 @@ function Showcase() {
                   ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
                   : "ring-1 ring-inset ring-[#3D6B47]/15"
               }`} />
-              {/* Screenshot — zoomed in to fill frame, minimizing black side space */}
+              {/* Screenshot — zoomed in to fill frame; scales up on hover */}
               <div className="relative rounded-xl overflow-hidden shadow-xl" style={{ aspectRatio: "16/10" }}>
                 <img
                   src={slide.screenshot!}
                   alt={slide.screenshotAlt}
-                  className="w-full h-full object-cover object-top"
+                  className={`w-full h-full object-cover object-top transition-transform duration-700 ease-out ${isHovered ? "scale-[1.06]" : "scale-100"}`}
                 />
                 {/* Subtle bottom fade */}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
