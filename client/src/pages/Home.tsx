@@ -763,7 +763,7 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Explore Chess Leagues", href: "/league-demo" },
     ctaSecondary: null,
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-demo-screenshot_e55c7102.png",
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-final_e8a0cebf.png",
     screenshotAlt: "Chess Club League Dashboard",
   },
   {
@@ -779,8 +779,8 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Try Matchup Prep", href: "/prep" },
     ctaSecondary: null,
-    screenshot: null, // uses mock UI
-    screenshotAlt: "Matchup Prep Dashboard",
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/prep-final_b71acf7f.png",
+    screenshotAlt: "Matchup Prep Dashboard — hikaru scouted",
   },
 ];
 
@@ -827,83 +827,32 @@ function Showcase() {
         {/* ── Slide content ── */}
         <div key={slide.id} className="grid lg:grid-cols-2 gap-16 items-center">
 
-          {/* Left — screenshot or mock */}
+          {/* Left — screenshot with chess-board backdrop */}
           <div className={`transition-all duration-700 ${inView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
-            {slide.screenshot ? (
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/08" style={{ aspectRatio: "16/10" }}>
+            <div
+              className={`relative rounded-2xl p-4 shadow-2xl ${
+                isDark ? "bg-[oklch(0.18_0.06_145)]" : "bg-[#E8F0E9]"
+              }`}
+            >
+              {/* Chess-board micro-grid backdrop */}
+              <div className="absolute inset-0 rounded-2xl chess-board-bg opacity-25 pointer-events-none" />
+              {/* Subtle inner glow border */}
+              <div className={`absolute inset-0 rounded-2xl pointer-events-none ${
+                isDark
+                  ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
+                  : "ring-1 ring-inset ring-[#3D6B47]/15"
+              }`} />
+              {/* Screenshot */}
+              <div className="relative rounded-xl overflow-hidden shadow-xl" style={{ aspectRatio: "16/10" }}>
                 <img
-                  src={slide.screenshot}
+                  src={slide.screenshot!}
                   alt={slide.screenshotAlt}
                   className="w-full h-full object-cover object-top"
                 />
                 {/* Subtle bottom fade */}
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
               </div>
-            ) : (
-              /* Matchup Prep mock UI */
-              <div
-                className={`relative rounded-2xl overflow-hidden shadow-xl ${
-                  isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-[#F2F7F3]"
-                }`}
-                style={{ minHeight: "420px" }}
-              >
-                <div className="absolute inset-0 chess-board-bg opacity-20" />
-                <div className="relative z-10 flex flex-col h-full min-h-[420px] p-8">
-                  <div className="mb-6">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${accentBg}`}>
-                      <Target className="w-3.5 h-3.5" /> Matchup Prep
-                    </div>
-                    <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                      Round 3 — Opponent Scouted
-                    </h3>
-                  </div>
-                  <div className={`rounded-xl border p-4 mb-4 ${
-                    isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
-                  }`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          isDark ? "bg-amber-400/15 text-amber-400" : "bg-amber-50 text-amber-600"
-                        }`}><Crown className="w-4 h-4" /></div>
-                        <div>
-                          <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>opponent42</p>
-                          <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>1847 Rapid · 68% plays 1.d4</p>
-                        </div>
-                      </div>
-                      <span className={`text-xs font-bold px-2 py-1 rounded-md ${
-                        isDark ? "bg-green-400/15 text-green-300" : "bg-green-50 text-green-700"
-                      }`}>Scouted</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { label: "Plays 1.d4", pct: "68%" },
-                        { label: "King's Indian", pct: "45%" },
-                        { label: "Endgame Win", pct: "52%" },
-                      ].map(({ label, pct }) => (
-                        <div key={label} className={`rounded-lg p-2 text-center ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
-                          <p className={`text-sm font-bold ${accentText}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{pct}</p>
-                          <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-500"}`}>{label}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={`rounded-xl border p-4 ${
-                    isDark ? "bg-[oklch(0.25_0.06_145)] border-white/10" : "bg-white border-[#3D6B47]/12 shadow-sm"
-                  }`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className={`w-4 h-4 ${accentText}`} />
-                      <p className={`text-xs font-bold uppercase tracking-wider ${accentText}`}>Key Prep Line</p>
-                    </div>
-                    <p className={`text-sm font-mono ${isDark ? "text-white/70" : "text-gray-700"}`}>
-                      1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6
-                    </p>
-                    <p className={`text-xs mt-1.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-                      King's Indian — Classical Variation
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Right — text */}
