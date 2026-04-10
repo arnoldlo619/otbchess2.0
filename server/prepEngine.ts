@@ -798,6 +798,43 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       confidence: "medium",
     },
   ],
+  // If opponent plays 1.b3 (Nimzo-Larsen Attack)
+  "1.b3": [
+    {
+      name: "Central Counter: 1...e5",
+      eco: "A01",
+      moves: "1.b3 e5 2.Bb2 Nc6 3.e3 d5 4.Bb5 Bd6",
+      rationale: "Seizing the center immediately with 1...e5 is the most principled reply. White's fianchettoed bishop on b2 bites on granite once you establish ...d5, and Black gets a comfortable classical setup with easy development.",
+      confidence: "high",
+    },
+    {
+      name: "Solid Setup: 1...d5",
+      eco: "A01",
+      moves: "1.b3 d5 2.Bb2 Nf6 3.e3 e6 4.Nf3 Be7 5.Be2 O-O",
+      rationale: "A solid Queen's Gambit-style setup neutralizes the Nimzo-Larsen's pressure. Black completes development quickly and the b2-bishop has limited scope against a well-placed pawn on d5.",
+      confidence: "high",
+    },
+  ],
+  // If opponent plays 1.g3 (King's Fianchetto)
+  "1.g3": [
+    {
+      name: "Central Grab: 1...d5 2...e5",
+      eco: "A00",
+      moves: "1.g3 d5 2.Bg2 e5 3.d3 Nf6 4.Nd2 Bc5",
+      rationale: "Against the King's Fianchetto, occupying the center with both ...d5 and ...e5 gives Black a space advantage. White's setup is passive and Black can build a strong attack.",
+      confidence: "medium",
+    },
+  ],
+  // If opponent plays 1.f4 (Bird's Opening)
+  "1.f4": [
+    {
+      name: "From's Gambit",
+      eco: "A02",
+      moves: "1.f4 e5 2.fxe5 d6 3.exd6 Bxd6",
+      rationale: "From's Gambit is the sharpest and most dangerous reply to the Bird. Black sacrifices a pawn for rapid development and a direct attack on White's weakened kingside.",
+      confidence: "high",
+    },
+  ],
 };
 
 /** Suggest counter-openings when you play white against this opponent's black repertoire. */
