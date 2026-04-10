@@ -837,85 +837,186 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
   ],
 };
 
-/** Suggest counter-openings when you play white against this opponent's black repertoire. */
-const WHITE_COUNTERS: Record<string, PrepLine> = {
-  "Sicilian Defense": {
-    name: "Anti-Sicilian: Alapin (2.c3)",
-    eco: "B22",
-    moves: "1.e4 c5 2.c3 d5 3.exd5 Qxd5 4.d4",
-    rationale: "The Alapin avoids the main-line Sicilian theory and leads to positions where White gets a comfortable IQP game with clear plans.",
-    confidence: "high",
-  },
-  "French Defense": {
-    name: "French: Advance Variation",
-    eco: "C02",
-    moves: "1.e4 e6 2.d4 d5 3.e5 c5 4.c3",
-    rationale: "The Advance locks the center and creates a space advantage. Many French players are less comfortable in closed positions.",
-    confidence: "high",
-  },
-  "Caro-Kann Defense": {
-    name: "Caro-Kann: Fantasy Variation",
-    eco: "B12",
-    moves: "1.e4 c6 2.d4 d5 3.f3",
-    rationale: "The Fantasy Variation is aggressive and less common — many Caro-Kann players are unprepared for it, expecting the main lines.",
-    confidence: "medium",
-  },
-  "King's Indian Defense": {
-    name: "King's Indian: Samisch",
-    eco: "E80",
-    moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3",
-    rationale: "The Samisch is a solid system against the King's Indian that restricts Black's typical kingside attack plans.",
-    confidence: "medium",
-  },
-  "Nimzo-Indian Defense": {
-    name: "Nimzo-Indian: Classical (4.Qc2)",
-    eco: "E32",
-    moves: "1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.Qc2",
-    rationale: "4.Qc2 avoids doubled pawns and maintains a flexible pawn structure. White keeps the bishop pair potential.",
-    confidence: "high",
-  },
-  "Modern Defense": {
-    name: "Modern Defense: Austrian Attack",
-    eco: "B06",
-    moves: "1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.f4 Nf6 5.Nf3",
-    rationale: "The Austrian Attack is White's most aggressive and principled response to the Modern. The f4 pawn supports a central space advantage and prepares a kingside pawn storm before Black can complete development.",
-    confidence: "high",
-  },
-  "Dutch Defense": {
-    name: "Dutch: Staunton Gambit",
-    eco: "A83",
-    moves: "1.d4 f5 2.e4 fxe4 3.Nc3 Nf6 4.Bg5 c6 5.f3",
-    rationale: "The Staunton Gambit immediately challenges the Dutch's structural concessions. White sacrifices a pawn for rapid development and open lines, putting Dutch players on the defensive from move two.",
-    confidence: "medium",
-  },
-  "Benoni Defense": {
-    name: "Modern Benoni: Four Pawns Attack",
-    eco: "A68",
-    moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.f4",
-    rationale: "The Four Pawns Attack is the most ambitious reply to the Benoni — White builds a massive pawn center and dares Black to find counterplay. Benoni players often prefer slower positional battles and can be overwhelmed by the sheer aggression.",
-    confidence: "high",
-  },
-  "Old Benoni": {
-    name: "Modern Benoni: Four Pawns Attack",
-    eco: "A68",
-    moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.f4",
-    rationale: "The Four Pawns Attack creates maximum central tension against Benoni setups, giving White a space advantage and kingside attacking chances.",
-    confidence: "high",
-  },
-  "Pirc Defense": {
-    name: "Pirc: Austrian Attack",
-    eco: "B09",
-    moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.f4 Bg7 5.Nf3 O-O 6.Bd3",
-    rationale: "The Austrian Attack is the most aggressive system against the Pirc. White builds a broad pawn center with e4+d4+f4 and launches a direct kingside attack before Black can generate counterplay.",
-    confidence: "high",
-  },
-  "Scandinavian Defense": {
-    name: "Scandinavian: Main Line (3.Nc3)",
-    eco: "B01",
-    moves: "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 Bf5 6.Bc4",
-    rationale: "Developing with Nc3 and Bc4 targets the exposed queen and creates immediate threats. Scandinavian players often struggle when White develops quickly and attacks the misplaced queen.",
-    confidence: "medium",
-  },
+/** Suggest counter-openings when you play white against this opponent's black repertoire.
+ *  Each entry is [mainLine, surpriseWeapon] so the prep report always delivers two options.
+ */
+const WHITE_COUNTERS: Record<string, PrepLine[]> = {
+  "Sicilian Defense": [
+    {
+      name: "Anti-Sicilian: Alapin (2.c3)",
+      eco: "B22",
+      moves: "1.e4 c5 2.c3 d5 3.exd5 Qxd5 4.d4",
+      rationale: "The Alapin avoids the main-line Sicilian theory and leads to positions where White gets a comfortable IQP game with clear plans.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: Grand Prix Attack",
+      eco: "B23",
+      moves: "1.e4 c5 2.Nc3 Nc6 3.f4 g6 4.Nf3 Bg7 5.Bc4",
+      rationale: "The Grand Prix Attack sidesteps all main-line Sicilian theory and launches an immediate kingside attack. Most Sicilian players are unprepared for this aggressive system.",
+      confidence: "medium",
+    },
+  ],
+  "French Defense": [
+    {
+      name: "French: Advance Variation",
+      eco: "C02",
+      moves: "1.e4 e6 2.d4 d5 3.e5 c5 4.c3",
+      rationale: "The Advance locks the center and creates a space advantage. Many French players are less comfortable in closed positions.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: King's Indian Attack vs French",
+      eco: "C00",
+      moves: "1.e4 e6 2.d3 d5 3.Nd2 Nf6 4.Ngf3 c5 5.g3 Nc6 6.Bg2",
+      rationale: "The KIA against the French is a positional surprise — White avoids all theoretical battles and builds a slow kingside attack. French specialists often don't know how to handle the reversed King's Indian structure.",
+      confidence: "medium",
+    },
+  ],
+  "Caro-Kann Defense": [
+    {
+      name: "Caro-Kann: Fantasy Variation",
+      eco: "B12",
+      moves: "1.e4 c6 2.d4 d5 3.f3",
+      rationale: "The Fantasy Variation is aggressive and less common — many Caro-Kann players are unprepared for it, expecting the main lines.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Two Knights Attack",
+      eco: "B11",
+      moves: "1.e4 c6 2.Nc3 d5 3.Nf3 Bg4 4.h3 Bxf3 5.Qxf3",
+      rationale: "The Two Knights sidesteps the main-line Caro-Kann and forces Black into unfamiliar territory. The bishop pair and queen activity give White dynamic compensation.",
+      confidence: "medium",
+    },
+  ],
+  "King's Indian Defense": [
+    {
+      name: "King's Indian: Samisch",
+      eco: "E80",
+      moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.f3",
+      rationale: "The Samisch is a solid system against the King's Indian that restricts Black's typical kingside attack plans.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: London System vs KID",
+      eco: "A48",
+      moves: "1.d4 Nf6 2.Nf3 g6 3.Bf4 Bg7 4.e3 O-O 5.Be2 d6 6.O-O",
+      rationale: "Playing the London against the King's Indian denies Black the sharp e4/e5 pawn battles they love. The solid London structure is hard to attack and many KID players are uncomfortable in quiet positional games.",
+      confidence: "medium",
+    },
+  ],
+  "Nimzo-Indian Defense": [
+    {
+      name: "Nimzo-Indian: Classical (4.Qc2)",
+      eco: "E32",
+      moves: "1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.Qc2",
+      rationale: "4.Qc2 avoids doubled pawns and maintains a flexible pawn structure. White keeps the bishop pair potential.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: Nimzo-Indian Leningrad (4.Bg5)",
+      eco: "E30",
+      moves: "1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.Bg5 h6 5.Bh4 c5 6.d5",
+      rationale: "4.Bg5 is a rare and aggressive surprise — White pins the knight and creates immediate tactical complications. Nimzo players expecting 4.e3 or 4.Qc2 are often caught off guard.",
+      confidence: "medium",
+    },
+  ],
+  "Modern Defense": [
+    {
+      name: "Modern Defense: Austrian Attack",
+      eco: "B06",
+      moves: "1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.f4 Nf6 5.Nf3",
+      rationale: "The Austrian Attack is White's most aggressive and principled response to the Modern. The f4 pawn supports a central space advantage and prepares a kingside pawn storm before Black can complete development.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: 150 Attack vs Modern",
+      eco: "B06",
+      moves: "1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.Be3 a6 5.Qd2 b5 6.f3",
+      rationale: "The 150 Attack (named after its use against 150-rated club players) is a simple but devastating setup — White builds f3/g4/h4 and launches a direct kingside attack. Modern Defense players rarely prepare for this system.",
+      confidence: "medium",
+    },
+  ],
+  "Dutch Defense": [
+    {
+      name: "Dutch: Staunton Gambit",
+      eco: "A83",
+      moves: "1.d4 f5 2.e4 fxe4 3.Nc3 Nf6 4.Bg5 c6 5.f3",
+      rationale: "The Staunton Gambit immediately challenges the Dutch's structural concessions. White sacrifices a pawn for rapid development and open lines, putting Dutch players on the defensive from move two.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Anti-Dutch 2.Bg5",
+      eco: "A80",
+      moves: "1.d4 f5 2.Bg5 h6 3.Bh4 g5 4.e4 gxh4 5.exf5",
+      rationale: "2.Bg5 is a sharp and provocative surprise that forces Dutch players to weaken their kingside immediately. After 2...h6 3.Bh4 g5 4.e4, Black's position becomes structurally compromised before they've developed a single piece.",
+      confidence: "medium",
+    },
+  ],
+  "Benoni Defense": [
+    {
+      name: "Modern Benoni: Four Pawns Attack",
+      eco: "A68",
+      moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.f4",
+      rationale: "The Four Pawns Attack is the most ambitious reply to the Benoni — White builds a massive pawn center and dares Black to find counterplay. Benoni players often prefer slower positional battles and can be overwhelmed by the sheer aggression.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: Fianchetto vs Benoni",
+      eco: "A62",
+      moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.Nf3 g6 7.g3 Bg7 8.Bg2",
+      rationale: "The Fianchetto system against the Benoni is a positional surprise — White avoids the sharp Four Pawns lines and instead builds a solid structure. Benoni players who rely on tactical counterplay are often frustrated by this quiet approach.",
+      confidence: "medium",
+    },
+  ],
+  "Old Benoni": [
+    {
+      name: "Modern Benoni: Four Pawns Attack",
+      eco: "A68",
+      moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.f4",
+      rationale: "The Four Pawns Attack creates maximum central tension against Benoni setups, giving White a space advantage and kingside attacking chances.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: Taimanov Attack vs Old Benoni",
+      eco: "A43",
+      moves: "1.d4 c5 2.d5 d6 3.e4 g6 4.Nc3 Bg7 5.f4 Nf6 6.Nf3",
+      rationale: "The Taimanov Attack builds an aggressive pawn center immediately and prevents Black from establishing the standard Benoni counterplay. Many Old Benoni players are unfamiliar with this direct approach.",
+      confidence: "medium",
+    },
+  ],
+  "Pirc Defense": [
+    {
+      name: "Pirc: Austrian Attack",
+      eco: "B09",
+      moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.f4 Bg7 5.Nf3 O-O 6.Bd3",
+      rationale: "The Austrian Attack is the most aggressive system against the Pirc. White builds a broad pawn center with e4+d4+f4 and launches a direct kingside attack before Black can generate counterplay.",
+      confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: 150 Attack vs Pirc",
+      eco: "B07",
+      moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.Be3 Bg7 5.Qd2 c6 6.f3 b5 7.g4",
+      rationale: "The 150 Attack against the Pirc is a brutal kingside attack that bypasses all theory. White simply marches the g and h pawns forward. Pirc players who rely on the Austrian Attack being the main threat are completely unprepared.",
+      confidence: "medium",
+    },
+  ],
+  "Scandinavian Defense": [
+    {
+      name: "Scandinavian: Main Line (3.Nc3)",
+      eco: "B01",
+      moves: "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 Bf5 6.Bc4",
+      rationale: "Developing with Nc3 and Bc4 targets the exposed queen and creates immediate threats. Scandinavian players often struggle when White develops quickly and attacks the misplaced queen.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Icelandic Gambit Declined (2.Nf3)",
+      eco: "B01",
+      moves: "1.e4 d5 2.Nf3 dxe4 3.Ng5 Nf6 4.d3 exd3 5.Bxd3",
+      rationale: "Playing 2.Nf3 instead of 2.exd5 is a positional surprise that avoids the main Scandinavian theory entirely. White develops naturally and recovers the pawn with active piece play, leaving Scandinavian specialists in unfamiliar territory.",
+      confidence: "medium",
+    },
+  ],
 };
 
 /**
@@ -941,14 +1042,17 @@ export function generatePrepLines(profile: PlayStyleProfile): PrepLine[] {
   }
 
   // 2. Counter their most common black openings (when you play white)
+  // WHITE_COUNTERS is now [mainLine, surpriseWeapon] per opening
   if (profile.blackOpenings.length > 0) {
     const topBlackOpening = profile.blackOpenings[0];
-    const counter = WHITE_COUNTERS[topBlackOpening.name];
-    if (counter) {
-      lines.push({
-        ...counter,
-        rationale: `Opponent plays the ${topBlackOpening.name} in ${topBlackOpening.count} games (${topBlackOpening.winRate}% win rate). ${counter.rationale}`,
-      });
+    const counterLines = WHITE_COUNTERS[topBlackOpening.name];
+    if (counterLines && counterLines.length > 0) {
+      for (const counter of counterLines) {
+        lines.push({
+          ...counter,
+          rationale: `Opponent plays the ${topBlackOpening.name} in ${topBlackOpening.count} games (${topBlackOpening.winRate}% win rate). ${counter.rationale}`,
+        });
+      }
     }
   }
 
