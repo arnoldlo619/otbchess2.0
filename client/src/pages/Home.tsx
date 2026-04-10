@@ -779,8 +779,8 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Try Matchup Prep", href: "/prep" },
     ctaSecondary: null,
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/prep-tight_efc5fa22.png",
-    screenshotAlt: "Matchup Prep Dashboard — hikaru scouted",
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/key-lines-tight_e16b8df3.png",
+    screenshotAlt: "Matchup Prep — Key Lines chessboard view",
   },
 ];
 
