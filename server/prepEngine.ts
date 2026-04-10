@@ -753,6 +753,13 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       rationale: "The Winawer creates immediate tension and often leads to unbalanced pawn structures that favor the prepared player.",
       confidence: "medium",
     },
+    {
+      name: "Surprise Weapon: Alekhine's Defense",
+      eco: "B02",
+      moves: "1.e4 Nf6 2.e5 Nd5 3.d4 d6 4.Nf3 g6 5.Bc4 Nb6 6.Bb3",
+      rationale: "Alekhine's Defense is a provocative surprise that invites White to overextend the center. Most 1.e4 players are uncomfortable when their central pawns become targets. The hypermodern counterplay is hard to handle without specific preparation.",
+      confidence: "medium",
+    },
   ],
   // If opponent plays 1.d4 heavily
   "1.d4": [
@@ -777,6 +784,13 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       rationale: "The Grunfeld challenges White's center immediately, leading to open positions with dynamic piece play.",
       confidence: "medium",
     },
+    {
+      name: "Surprise Weapon: Budapest Gambit",
+      eco: "A51",
+      moves: "1.d4 Nf6 2.c4 e5 3.dxe5 Ng4 4.Nf3 Bc5 5.e3 Nc6",
+      rationale: "The Budapest Gambit is a sharp and underestimated surprise against 1.d4. Black sacrifices a pawn for rapid development and active piece play. Most 1.d4 players have never studied this gambit and can quickly find themselves in a lost position.",
+      confidence: "medium",
+    },
   ],
   // If opponent plays 1.c4
   "1.c4": [
@@ -787,6 +801,20 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       rationale: "Playing 1...e5 against the English seizes central space and often transposes into reversed Sicilian structures where Black has an extra tempo.",
       confidence: "medium",
     },
+    {
+      name: "Surprise Weapon: Agincourt Defense",
+      eco: "A13",
+      moves: "1.c4 e6 2.Nf3 d5 3.g3 Nf6 4.Bg2 Be7 5.O-O O-O 6.b3 c5",
+      rationale: "The Agincourt Defense is a solid and flexible surprise — Black builds a compact structure and waits for White to commit before striking in the center with ...d5 and ...c5. English players who expect the Symmetrical or reversed Sicilian are often caught off guard by this patient approach.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Dutch vs English (1...f5)",
+      eco: "A10",
+      moves: "1.c4 f5 2.Nc3 Nf6 3.g3 g6 4.Bg2 Bg7 5.d3 O-O",
+      rationale: "Playing the Dutch setup against 1.c4 is an aggressive surprise that denies White the typical English structures. Black aims for a Leningrad Dutch formation with kingside attacking chances, while White's c4 pawn is less useful than in a normal d4 game.",
+      confidence: "medium",
+    },
   ],
   // If opponent plays 1.Nf3
   "1.Nf3": [
@@ -795,6 +823,20 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       eco: "A04",
       moves: "1.Nf3 d5 2.g3 Nf6 3.Bg2 e6",
       rationale: "Solid central control against the Reti. Keeps options open for various pawn structures.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Dutch vs Reti (1...f5)",
+      eco: "A04",
+      moves: "1.Nf3 f5 2.g3 Nf6 3.Bg2 g6 4.O-O Bg7 5.d3 O-O",
+      rationale: "Playing 1...f5 against the Reti is a bold surprise that immediately signals aggressive intentions. Reti players who expect 1...d5 or 1...Nf6 are forced into unfamiliar territory. The Leningrad Dutch setup gives Black active kingside play.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: King's Indian vs Reti",
+      eco: "A05",
+      moves: "1.Nf3 Nf6 2.g3 g6 3.Bg2 Bg7 4.O-O O-O 5.d3 d6 6.e4 e5",
+      rationale: "Mirroring the King's Indian setup against the Reti leads to a reversed King's Indian Attack where Black has a comfortable position. The solid ...d6/...e5 structure gives Black a strong center and the Reti player often doesn't know how to handle the reversed structure.",
       confidence: "medium",
     },
   ],
@@ -814,6 +856,13 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       rationale: "A solid Queen's Gambit-style setup neutralizes the Nimzo-Larsen's pressure. Black completes development quickly and the b2-bishop has limited scope against a well-placed pawn on d5.",
       confidence: "high",
     },
+    {
+      name: "Surprise Weapon: Queenside Fianchetto Mirror (1...b6)",
+      eco: "A01",
+      moves: "1.b3 b6 2.Bb2 Bb7 3.e3 e6 4.Nf3 Nf6 5.Be2 Be7 6.O-O O-O",
+      rationale: "Mirroring White's own strategy with 1...b6 is a psychological surprise. Both sides fianchetto queenside bishops and the game becomes a battle of who can exploit the other's setup first. Nimzo-Larsen players rarely expect to face their own system.",
+      confidence: "medium",
+    },
   ],
   // If opponent plays 1.g3 (King's Fianchetto)
   "1.g3": [
@@ -822,6 +871,20 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       eco: "A00",
       moves: "1.g3 d5 2.Bg2 e5 3.d3 Nf6 4.Nd2 Bc5",
       rationale: "Against the King's Fianchetto, occupying the center with both ...d5 and ...e5 gives Black a space advantage. White's setup is passive and Black can build a strong attack.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Reversed Grob (1...g5)",
+      eco: "A00",
+      moves: "1.g3 g5 2.Bg2 g4 3.h3 gxh3 4.Bxh3 d5 5.d4 Nc6",
+      rationale: "Playing 1...g5 against the King's Fianchetto is an ultra-aggressive surprise that immediately destabilizes White's setup. While objectively risky, it forces the King's Fianchetto player completely out of their comfort zone and into chaotic positions.",
+      confidence: "low",
+    },
+    {
+      name: "Surprise Weapon: English Defense (1...b6)",
+      eco: "A00",
+      moves: "1.g3 b6 2.Bg2 Bb7 3.Nf3 e6 4.O-O Nf6 5.d3 Be7",
+      rationale: "The English Defense (1...b6) against the King's Fianchetto is a solid hypermodern surprise. Black develops the bishop to b7 and fights for central control from the flanks. The resulting positions are rich and strategic, favoring the better-prepared player.",
       confidence: "medium",
     },
   ],
@@ -833,6 +896,20 @@ const COUNTER_LINES: Record<string, PrepLine[]> = {
       moves: "1.f4 e5 2.fxe5 d6 3.exd6 Bxd6",
       rationale: "From's Gambit is the sharpest and most dangerous reply to the Bird. Black sacrifices a pawn for rapid development and a direct attack on White's weakened kingside.",
       confidence: "high",
+    },
+    {
+      name: "Surprise Weapon: Dutch Reversed (1...f5)",
+      eco: "A02",
+      moves: "1.f4 f5 2.e3 Nf6 3.Nf3 e6 4.Be2 d5 5.O-O Bd6",
+      rationale: "Playing 1...f5 against the Bird creates a double Dutch position where both sides have advanced their f-pawns. This leads to unusual, uncharted territory where Bird's Opening specialists have no theoretical advantage. Black builds a solid Stonewall-like structure.",
+      confidence: "medium",
+    },
+    {
+      name: "Surprise Weapon: Lasker's Defense (1...d5)",
+      eco: "A03",
+      moves: "1.f4 d5 2.Nf3 Nf6 3.e3 g6 4.Be2 Bg7 5.O-O O-O",
+      rationale: "Lasker's Defense is a solid and principled reply that occupies the center and develops naturally. The fianchettoed bishop on g7 creates long-term pressure on White's queenside. Bird players who rely on From's Gambit being declined are often unprepared for this quiet approach.",
+      confidence: "medium",
     },
   ],
 };
