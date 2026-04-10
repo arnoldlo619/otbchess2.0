@@ -782,6 +782,22 @@ const CAROUSEL_SLIDES = [
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/key-lines-tight_e16b8df3.png",
     screenshotAlt: "Matchup Prep — Key Lines chessboard view",
   },
+  {
+    id: "tournaments",
+    badge: "Swiss Tournaments",
+    badgeIcon: <Trophy className="w-3.5 h-3.5" />,
+    headline: "Run a tournament.\nNot a spreadsheet.",
+    sub: "Set up a Swiss or Round Robin in under 3 minutes. Auto-pairings, live standings, and result entry — all from one director dashboard.",
+    bullets: [
+      { icon: <Zap className="w-4 h-4" />, text: "Auto-pairings in seconds — Swiss or Round Robin" },
+      { icon: <TrendingUp className="w-4 h-4" />, text: "Live standings with Buchholz tiebreaks, updated instantly" },
+      { icon: <Users className="w-4 h-4" />, text: "Players join with their chess.com username — no accounts needed" },
+    ],
+    cta: { label: "Host a Tournament", href: "/" },
+    ctaSecondary: null,
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/tournament-director_3b1b3c41.png",
+    screenshotAlt: "Swiss Tournament Director Dashboard — Round 5 Pairings",
+  },
 ];
 
 function Showcase() {
