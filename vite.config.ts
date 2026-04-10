@@ -356,6 +356,12 @@ export default defineConfig({
     port: 3000,
     strictPort: false, // Will find next available port if 3000 is busy
     host: true,
+    hmr: {
+      // When accessed through the Manus proxy (e.g. 3000-xxx.manus.computer),
+      // Vite must connect the HMR WebSocket via the proxied host on port 443 (WSS).
+      // Without this, the browser tries ws://host:/ (no port) and fails.
+      clientPort: 443,
+    },
     // Prevent the browser from caching Vite dep chunks across cache generations.
     // Without this, the browser can mix old chunk-MO2SMAW5.js (CJS React) with
     // a fresh react-dom_client.js, causing "Invalid hook call" / duplicate React.
