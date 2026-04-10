@@ -687,6 +687,9 @@ export default function ClubProfile() {
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
   const [pendingBanner, setPendingBanner] = useState<string | null | undefined>(undefined);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<number>(0); // 0=hidden, 1=confirm prompt
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [liveTournaments, setLiveTournaments] = useState<TournamentConfig[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
@@ -2192,10 +2195,91 @@ export default function ClubProfile() {
               )}
             </div>
 
+            {/* Danger Zone */}
+            {isOwner && (
+              <div className={`rounded-2xl border border-red-500/20 p-5 mb-4 ${isDark ? "bg-red-500/5" : "bg-red-50"}`}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-3 text-red-400">
+                  Danger Zone
+                </p>
+                {deleteStep === 0 && (
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Delete this club</p>
+                      <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>Permanently removes the club and all its data.</p>
+                    </div>
+                    <button
+                      onClick={() => { setDeleteStep(1); setDeleteConfirmText(""); }}
+                      className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                    >
+                      Delete Club
+                    </button>
+                  </div>
+                )}
+                {deleteStep === 1 && (
+                  <div className="space-y-3">
+                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                      Type <span className="font-mono text-red-400">{club?.name}</span> to confirm
+                    </p>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder={club?.name ?? ""}
+                      className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
+                        isDark
+                          ? "bg-white/5 border-red-500/30 text-white placeholder-white/20 focus:border-red-400"
+                          : "bg-white border-red-300 text-gray-900 placeholder-gray-300 focus:border-red-500"
+                      }`}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setDeleteStep(0); setDeleteConfirmText(""); }}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        disabled={deleteConfirmText !== club?.name || isDeleting}
+                        onClick={async () => {
+                          if (!club || deleteConfirmText !== club.name) return;
+                          setIsDeleting(true);
+                          try {
+                            const res = await fetch(`/api/clubs/${encodeURIComponent(club.id)}`, {
+                              method: "DELETE",
+                              credentials: "include",
+                            });
+                            if (res.ok) {
+                              toast.success("Club deleted.");
+                              navigate("/clubs");
+                            } else {
+                              const err = await res.json().catch(() => ({}));
+                              toast.error(err.error ?? "Failed to delete club.");
+                              setIsDeleting(false);
+                            }
+                          } catch {
+                            toast.error("Network error. Please try again.");
+                            setIsDeleting(false);
+                          }
+                        }}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40"
+                      >
+                        {isDeleting ? (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                            Deleting…
+                          </span>
+                        ) : "Confirm Delete"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Save / Cancel */}
             <div className="flex gap-2">
               <button
-                onClick={() => { setShowSettings(false); setPendingAvatar(undefined); setPendingBanner(undefined); }}
+                onClick={() => { setShowSettings(false); setPendingAvatar(undefined); setPendingBanner(undefined); setDeleteStep(0); setDeleteConfirmText(""); setIsDeleting(false); }}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
                 Cancel
