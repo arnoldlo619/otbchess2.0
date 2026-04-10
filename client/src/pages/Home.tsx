@@ -763,7 +763,7 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Explore Chess Leagues", href: "/league-demo" },
     ctaSecondary: null,
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-final_e8a0cebf.png",
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
   },
   {
@@ -779,7 +779,7 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Try Matchup Prep", href: "/prep" },
     ctaSecondary: null,
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/prep-final_b71acf7f.png",
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/prep-tight_efc5fa22.png",
     screenshotAlt: "Matchup Prep Dashboard — hikaru scouted",
   },
 ];
@@ -847,8 +847,7 @@ function Showcase() {
                 <img
                   src={slide.screenshot!}
                   alt={slide.screenshotAlt}
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: "center 8%", transform: "scale(1.12)", transformOrigin: "center top" }}
+                  className="w-full h-full object-cover object-top"
                 />
                 {/* Subtle bottom fade */}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
