@@ -690,6 +690,11 @@ export default function ClubProfile() {
   const [deleteStep, setDeleteStep] = useState<number>(0); // 0=hidden, 1=confirm prompt
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [transferStep, setTransferStep] = useState<number>(0); // 0=hidden, 1=select member, 2=confirm
+  const [selectedTransferMemberId, setSelectedTransferMemberId] = useState("");
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [isLeavingClub, setIsLeavingClub] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [liveTournaments, setLiveTournaments] = useState<TournamentConfig[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
@@ -1145,22 +1150,50 @@ export default function ClubProfile() {
                   You own this club
                 </div>
               ) : joined ? (
-                <button
-                  onClick={handleLeave}
-                  disabled={joining}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    isDark
-                      ? "bg-white/8 text-white/70 hover:bg-red-500/15 hover:text-red-400"
-                      : "bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500"
-                  }`}
-                >
-                  {joining ? (
-                    <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                  ) : (
-                    <UserMinus className="w-4 h-4" />
-                  )}
-                  Leave Club
-                </button>
+                !showLeaveConfirm ? (
+                  <button
+                    onClick={() => setShowLeaveConfirm(true)}
+                    disabled={joining}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      isDark
+                        ? "bg-white/8 text-white/70 hover:bg-red-500/15 hover:text-red-400"
+                        : "bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500"
+                    }`}
+                  >
+                    {joining ? (
+                      <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                    ) : (
+                      <UserMinus className="w-4 h-4" />
+                    )}
+                    Leave Club
+                  </button>
+                ) : (
+                  <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>
+                    <p>Sure you want to leave?</p>
+                    <button
+                      onClick={() => setShowLeaveConfirm(false)}
+                      disabled={isLeavingClub}
+                      className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${isDark ? "bg-white/10 hover:bg-white/20" : "bg-white/50 hover:bg-white/70"}`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setIsLeavingClub(true);
+                        try {
+                          await handleLeave();
+                          setShowLeaveConfirm(false);
+                        } finally {
+                          setIsLeavingClub(false);
+                        }
+                      }}
+                      disabled={isLeavingClub}
+                      className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
+                    >
+                      {isLeavingClub ? "Leaving..." : "Leave"}
+                    </button>
+                  </div>
+                )
               ) : (
                 <button
                   onClick={handleJoin}
@@ -2273,13 +2306,118 @@ export default function ClubProfile() {
                     </div>
                   </div>
                 )}
+                {/* Transfer Ownership */}
+                {deleteStep === 0 && transferStep === 0 && (
+                  <div className="mt-4 pt-4 border-t border-red-500/10 flex items-center justify-between gap-3">
+                    <div>
+                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Transfer ownership</p>
+                      <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>Hand off the club to another member.</p>
+                    </div>
+                    <button
+                      onClick={() => { setTransferStep(1); setSelectedTransferMemberId(""); }}
+                      className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-colors"
+                    >
+                      Transfer
+                    </button>
+                  </div>
+                )}
+                {transferStep === 1 && (
+                  <div className="mt-4 pt-4 border-t border-red-500/10 space-y-3">
+                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Select new owner</p>
+                    <select
+                      value={selectedTransferMemberId}
+                      onChange={(e) => setSelectedTransferMemberId(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
+                        isDark
+                          ? "bg-white/5 border-orange-500/30 text-white focus:border-orange-400"
+                          : "bg-white border-orange-300 text-gray-900 focus:border-orange-500"
+                      }`}
+                    >
+                      <option value="">Choose a member...</option>
+                      {members
+                        .filter((m) => m.userId !== user?.id)
+                        .map((m) => (
+                          <option key={m.userId} value={m.userId}>
+                            {m.displayName}
+                          </option>
+                        ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setTransferStep(0); setSelectedTransferMemberId(""); }}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        disabled={!selectedTransferMemberId || isTransferring}
+                        onClick={() => setTransferStep(2)}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold bg-orange-500 text-white hover:bg-orange-600 transition-colors disabled:opacity-40"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {transferStep === 2 && (
+                  <div className="mt-4 pt-4 border-t border-red-500/10 space-y-3">
+                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                      Transfer ownership to <span className="text-orange-400">{members.find((m) => m.userId === selectedTransferMemberId)?.displayName}</span>?
+                    </p>
+                    <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>You will no longer be the owner but can remain a member.</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setTransferStep(1); }}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                      >
+                        Back
+                      </button>
+                      <button
+                        disabled={isTransferring}
+                        onClick={async () => {
+                          if (!club || !selectedTransferMemberId) return;
+                          setIsTransferring(true);
+                          try {
+                            const res = await fetch(`/api/clubs/${encodeURIComponent(club.id)}/transfer-ownership`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ newOwnerId: selectedTransferMemberId }),
+                              credentials: "include",
+                            });
+                            if (res.ok) {
+                              toast.success("Ownership transferred.");
+                              setTransferStep(0);
+                              setSelectedTransferMemberId("");
+                              // Refresh club data
+                              window.location.reload();
+                            } else {
+                              const err = await res.json().catch(() => ({}));
+                              toast.error(err.error ?? "Failed to transfer ownership.");
+                              setIsTransferring(false);
+                            }
+                          } catch {
+                            toast.error("Network error. Please try again.");
+                            setIsTransferring(false);
+                          }
+                        }}
+                        className="flex-1 py-2 rounded-xl text-xs font-semibold bg-orange-500 text-white hover:bg-orange-600 transition-colors disabled:opacity-40"
+                      >
+                        {isTransferring ? (
+                          <span className="flex items-center justify-center gap-1.5">
+                            <span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                            Transferring…
+                          </span>
+                        ) : "Confirm Transfer"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Save / Cancel */}
-            <div className="flex gap-2">
+            {/* Save / Cancel */}           <div className="flex gap-2">
               <button
-                onClick={() => { setShowSettings(false); setPendingAvatar(undefined); setPendingBanner(undefined); setDeleteStep(0); setDeleteConfirmText(""); setIsDeleting(false); }}
+                onClick={() => { setShowSettings(false); setPendingAvatar(undefined); setPendingBanner(undefined); setDeleteStep(0); setDeleteConfirmText(""); setIsDeleting(false); setTransferStep(0); setSelectedTransferMemberId(""); setIsTransferring(false); setShowLeaveConfirm(false); setIsLeavingClub(false); }}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "bg-white/8 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
                 Cancel
