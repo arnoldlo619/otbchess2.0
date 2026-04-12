@@ -1479,9 +1479,16 @@ export default function ClubProfile() {
         )}
 
         {/* ── Events tab ──────────────────────────────────────────────────────────── */}
-        {activeTab === "events" && (
+        {activeTab === "events" && (() => {
+          // Merge clubEvents and tournaments into a unified list
+          const allEvents = [
+            ...clubEvents.map((e) => ({ type: "event" as const, data: e, startAt: e.startAt })),
+            ...liveTournaments.map((t) => ({ type: "tournament" as const, data: t, startAt: t.date || new Date().toISOString() })),
+          ].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+
+          return (
           <div className="space-y-4 animate-in fade-in duration-200">
-            {clubEvents.length === 0 ? (
+            {allEvents.length === 0 ? (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
                 <Calendar className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
                 <p className={`text-sm font-semibold ${textMain} mb-1`}>No upcoming events</p>
@@ -1490,7 +1497,105 @@ export default function ClubProfile() {
             ) : (
               <>
                 {/* Upcoming events */}
-                {clubEvents.filter((e) => new Date(e.startAt) >= new Date()).length > 0 && (
+                 {allEvents.filter((e) => new Date(e.startAt) >= new Date()).length > 0 && (
+                  <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
+                    <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
+                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
+                      <span className={`text-xs font-medium ${textMuted}`}>
+                        {allEvents.filter((e) => new Date(e.startAt) >= new Date()).length}
+                      </span>
+                    </div>
+                    <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                      {allEvents.filter((e) => new Date(e.startAt) >= new Date()).map((item) => (
+                        item.type === "event" ? (() => {
+                          const ev = item.data;
+                          return (
+                          <div key={ev.id} className={`px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+                            <div className="flex items-start gap-3">
+                              <div
+                                className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+                                style={{ background: (ev.accentColor ?? "#4CAF50") + "22" }}
+                              >
+                                <Calendar className="w-5 h-5" style={{ color: ev.accentColor ?? "#4CAF50" }} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
+                                <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs ${textMuted}`}>
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {new Date(ev.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                  </span>
+                                  {ev.venue && (
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      <span className="truncate max-w-[140px]">{ev.venue}</span>
+                                    </span>
+                                  )}
+                                </div>
+                                {ev.description && (
+                                  <p className={`text-xs mt-1.5 leading-relaxed line-clamp-2 ${textMuted}`}>{ev.description}</p>
+                                )}
+                              </div>
+                              {joined && user && (
+                                <div className="flex-shrink-0">
+                                  {(() => {
+                                    const myRsvp = getUserRSVP(ev.id, user.id);
+                                    const rsvpCount = countRSVPs(ev.id);
+                                    return (
+                                      <div className="flex flex-col items-end gap-1">
+                                        <button
+                                          onClick={() => {
+                                            const next = myRsvp?.status === "going" ? "not_going" : "going";
+                                            upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
+                                          }}
+                                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                                            myRsvp?.status === "going"
+                                              ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
+                                              : isDark ? "bg-white/8 text-white/60 hover:bg-white/15" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                          }`}
+                                        >
+                                          {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
+                                        </button>
+                                        {rsvpCount.going > 0 && (
+                                          <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          );
+                        })() : (() => {
+                          const t = item.data;
+                          return (
+                          <a
+                            key={t.id}
+                            href={`/tournament/${t.id}`}
+                            className={`block px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center bg-[#4CAF50]/15">
+                                <Trophy className="w-5 h-5 text-[#4CAF50]" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-semibold ${textMain} truncate`}>{t.name}</p>
+                                <p className={`text-xs ${textMuted} mt-1`}>
+                                  {new Date(t.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                </p>
+                              </div>
+                            </div>
+                          </a>
+                          );
+                        })()
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Past events */}
+                {allEvents.filter((e) => new Date(e.startAt) < new Date()).length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                     <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                       <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
@@ -1588,7 +1693,8 @@ export default function ClubProfile() {
               </>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── Tournaments tab ─────────────────────────────────────────────────────── */}
         {activeTab === "tournaments" && (         <div className="space-y-4 animate-in fade-in duration-200">
