@@ -85,7 +85,7 @@ export default function ChessLineViewer({
 
   const currentFen =
     stepIndex === -1
-      ? "rnbqkbnr/pppppppp/8/pppppppp/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+      ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
       : positions[stepIndex]?.fen ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
   const lastMoveSquares =
