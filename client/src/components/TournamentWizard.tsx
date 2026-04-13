@@ -2562,14 +2562,14 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     mode === "quickstart"
       ? step === 0
         ? "Quickstart"
-        : "Almost there!"
+        : ""
       : SCHEDULE_STEPS[step].hero.eyebrow;
 
   const stepTitle =
     mode === "quickstart"
       ? step === 0
         ? "Start in\nseconds"
-        : "You're\nready!"
+        : ""
       : SCHEDULE_STEPS[step].hero.title.replace("\n", " ");
 
   return createPortal(
