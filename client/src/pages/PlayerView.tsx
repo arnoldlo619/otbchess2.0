@@ -584,14 +584,16 @@ function MyBoardScreen({
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
       {/* Header */}
-      <div className={`px-5 pt-safe-top pt-5 pb-3 border-b ${divider}`}>
-        <div className="flex items-center justify-between mb-0.5">
+      <div className={`px-5 pt-safe-top pt-4 pb-4 border-b ${divider}`}>
+        {/* Top row: Logo + Connection Badge */}
+        <div className="flex items-center justify-between mb-3">
           <NavLogo linked={false} />
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
-        <div className="flex items-center justify-between">
-          <h1 className={`text-base font-bold ${textMain} truncate flex-1 mr-2`}>{tournamentName}</h1>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${accentBg} ${accent} flex-shrink-0`}>
+        {/* Bottom row: Tournament name + Round */}
+        <div className="flex items-end justify-between gap-3">
+          <h1 className={`text-lg font-bold ${textMain} flex-1 leading-tight`}>{tournamentName}</h1>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${accentBg} ${accent} flex-shrink-0 whitespace-nowrap`}>
             R{round}/{totalRounds}
           </span>
         </div>
