@@ -2565,12 +2565,12 @@ export default function ClubProfile() {
                       }
                     }
 
-                    // Upload banner if changed
+                    // Upload banner if changed — use dedicated banner endpoint (8 MB limit, /uploads/banners/)
                     if (pendingBanner !== undefined && pendingBanner !== club.bannerUrl) {
                       if (pendingBanner === null) {
                         patch.bannerUrl = null;
                       } else if (pendingBanner.startsWith("data:")) {
-                        const res = await fetch("/api/clubs/upload-avatar", {
+                        const res = await fetch("/api/clubs/upload-banner", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           credentials: "include",

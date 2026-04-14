@@ -52,6 +52,9 @@ const __dirname = path.dirname(__filename);
 const AVATARS_DIR = path.resolve(__dirname, "../uploads/avatars");
 if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
 
+const BANNERS_DIR = path.resolve(__dirname, "../uploads/banners");
+if (!fs.existsSync(BANNERS_DIR)) fs.mkdirSync(BANNERS_DIR, { recursive: true });
+
 export const clubsRouter = Router();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -268,6 +271,40 @@ clubsRouter.post("/upload-avatar", requireFullAuth, avatarJsonParser, async (req
   } catch (err) {
     console.error("[clubs] POST /upload-avatar error:", err);
     res.status(500).json({ error: "Failed to upload avatar" });
+  }
+});
+
+// ── POST /api/clubs/upload-banner — upload a club banner image ──────────────
+// Accepts a base64 data URL (up to 8 MB decoded), saves to disk, returns a served URL.
+const bannerJsonParser = express.json({ limit: "15mb" });
+
+clubsRouter.post("/upload-banner", requireFullAuth, bannerJsonParser, async (req: Request, res: Response) => {
+  const userId = getUserId(req, res);
+  if (!userId) return;
+  try {
+    const { dataUrl } = req.body as { dataUrl?: string };
+    if (!dataUrl || !dataUrl.startsWith("data:image/")) {
+      res.status(400).json({ error: "Invalid image data" });
+      return;
+    }
+    const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) {
+      res.status(400).json({ error: "Malformed data URL" });
+      return;
+    }
+    const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+    const buffer = Buffer.from(matches[2], "base64");
+    if (buffer.length > 8 * 1024 * 1024) {
+      res.status(413).json({ error: "Banner too large (max 8 MB)" });
+      return;
+    }
+    const filename = `${nanoid()}.${ext}`;
+    const filepath = path.join(BANNERS_DIR, filename);
+    fs.writeFileSync(filepath, buffer);
+    res.json({ url: `/uploads/banners/${filename}` });
+  } catch (err) {
+    console.error("[clubs] POST /upload-banner error:", err);
+    res.status(500).json({ error: "Failed to upload banner" });
   }
 });
 
