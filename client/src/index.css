@@ -1571,3 +1571,9 @@ select {
 .dark .prep-input-glow-always {
   animation: prepInputGlow 2.4s ease-in-out infinite;
 }
+
+/* ── Carousel progress bar ────────────────────────────────────────────────── */
+@keyframes carousel-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}

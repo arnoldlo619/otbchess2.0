@@ -806,6 +806,7 @@ function Showcase() {
   const isDark = theme === "dark";
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [progressKey, setProgressKey] = useState(0); // bump to restart CSS animation
   const slide = CAROUSEL_SLIDES[activeSlide];
 
   // Auto-advance every 6 seconds; pause on hover
@@ -813,9 +814,16 @@ function Showcase() {
     if (isHovered) return;
     const timer = setInterval(() => {
       setActiveSlide(prev => (prev + 1) % CAROUSEL_SLIDES.length);
+      setProgressKey(k => k + 1);
     }, 6000);
     return () => clearInterval(timer);
   }, [isHovered]);
+
+  // Reset progress bar when slide changes manually
+  const goToSlide = (i: number) => {
+    setActiveSlide(i);
+    setProgressKey(k => k + 1);
+  };
 
   const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
   const accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
@@ -832,7 +840,7 @@ function Showcase() {
             {CAROUSEL_SLIDES.map((s, i) => (
               <button
                 key={s.id}
-                onClick={() => setActiveSlide(i)}
+                onClick={() => goToSlide(i)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   activeSlide === i
                     ? isDark
@@ -922,12 +930,29 @@ function Showcase() {
           </div>
         </div>
 
+        {/* ── Progress bar ── */}
+        <div className="flex justify-center mt-10 mb-2">
+          <div className={`relative w-48 h-0.5 rounded-full overflow-hidden ${
+            isDark ? "bg-white/10" : "bg-gray-200"
+          }`}>
+            <div
+              key={progressKey}
+              className={`absolute inset-y-0 left-0 rounded-full ${
+                isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"
+              } ${isHovered ? "[animation-play-state:paused]" : "[animation-play-state:running]"}`}
+              style={{
+                animation: "carousel-progress 6s linear forwards",
+              }}
+            />
+          </div>
+        </div>
+
         {/* ── Dot indicators ── */}
-        <div className="flex justify-center gap-2 mt-12">
+        <div className="flex justify-center gap-2 mt-3">
           {CAROUSEL_SLIDES.map((_, i) => (
             <button
               key={i}
-              onClick={() => setActiveSlide(i)}
+              onClick={() => goToSlide(i)}
               className={`rounded-full transition-all duration-300 ${
                 activeSlide === i
                   ? `w-6 h-2 ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`
