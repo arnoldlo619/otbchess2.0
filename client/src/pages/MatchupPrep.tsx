@@ -176,6 +176,8 @@ function useDesignTokens(isDark: boolean) {
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
+type LineFilter = "all" | "main" | "surprise" | "must-know";
+
 export default function MatchupPrep() {
   const params = useParams<{ username?: string }>();
   const [, navigate] = useLocation();
@@ -201,6 +203,9 @@ export default function MatchupPrep() {
   // Repertoire state (persisted in localStorage)
   const [repertoire, setRepertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
 
+  // Key Lines filter
+  const [lineFilter, setLineFilter] = useState<LineFilter>("all");
+
   // Enriched prep lines with collision scores (recomputed when report or repertoire changes)
   const enrichedLines = useMemo<EnrichedPrepLine[]>(() => {
     if (!report) return [];
@@ -211,6 +216,15 @@ export default function MatchupPrep() {
       gamesAnalyzed: report.opponent.gamesAnalyzed,
     });
   }, [report, repertoire]);
+
+  // Filtered lines based on active filter
+  const filteredLines = useMemo<EnrichedPrepLine[]>(() => {
+    if (lineFilter === "all") return enrichedLines;
+    if (lineFilter === "main") return enrichedLines.filter(l => l.lineType === "main" || !l.lineType);
+    if (lineFilter === "surprise") return enrichedLines.filter(l => l.lineType === "surprise");
+    if (lineFilter === "must-know") return enrichedLines.filter(l => l.confidence === "high");
+    return enrichedLines;
+  }, [enrichedLines, lineFilter]);
 
   // Strategic matchup summary (recomputed when enrichedLines change)
   const matchupSummary = useMemo(() => {
@@ -1019,30 +1033,58 @@ export default function MatchupPrep() {
                   />
                 ) : (
                   <>
-                    {/* Legend: priority + collision */}
-                    <div className={`flex items-center gap-3 px-1 flex-wrap`}>
-                      {(["must-know", "likely", "useful"] as Priority[]).map((p) => {
-                        const cfg = PRIORITY_CONFIG[p];
-                        const count = enrichedLines.filter(l => getPriority(l.confidence) === p).length;
-                        if (count === 0) return null;
-                        return (
-                          <div key={p} className="flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                            <span className={`text-xs ${t.textTertiary}`}>{cfg.label} <span className={t.textTertiary}>({count})</span></span>
-                          </div>
-                        );
-                      })}
-                      {enrichedLines.some(l => l.collisionScore > 0) && (
-                        <div className="flex items-center gap-1.5 ml-auto">
-                          <Crosshair className={`w-3 h-3 ${t.textTertiary}`} />
-                          <span className={`text-xs ${t.textTertiary}`}>Sorted by collision</span>
-                        </div>
-                      )}
+                    {/* Filter segmented control */}
+                    <div className={`flex items-center gap-1 p-1 rounded-xl ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
+                      {([
+                        { id: "all",       label: "All",        count: enrichedLines.length },
+                        { id: "main",      label: "Main Lines", count: enrichedLines.filter(l => l.lineType === "main" || !l.lineType).length },
+                        { id: "surprise",  label: "Surprises",  count: enrichedLines.filter(l => l.lineType === "surprise").length },
+                        { id: "must-know", label: "Must Know",  count: enrichedLines.filter(l => l.confidence === "high").length },
+                      ] as { id: LineFilter; label: string; count: number }[]).map(({ id, label, count }) => (
+                        <button
+                          key={id}
+                          onClick={() => setLineFilter(id)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            lineFilter === id
+                              ? isDark
+                                ? "bg-[#162018] text-white border border-[#2e4a34]/50 shadow-sm"
+                                : "bg-white text-gray-900 border border-gray-300 shadow-sm"
+                              : isDark
+                                ? "text-white/40 hover:text-white/70"
+                                : "text-gray-400 hover:text-gray-700"
+                          }`}
+                        >
+                          {label}
+                          {count > 0 && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                              lineFilter === id
+                                ? isDark ? "bg-[#5B9A6A]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                : isDark ? "bg-white/08 text-white/40" : "bg-gray-200/80 text-gray-400"
+                            }`}>{count}</span>
+                          )}
+                        </button>
+                      ))}
                     </div>
 
-                    {/* Interactive chessboard viewers — one per line */}
+                    {/* Collision sort indicator */}
+                    {enrichedLines.some(l => l.collisionScore > 0) && (
+                      <div className="flex items-center gap-1.5 px-1">
+                        <Crosshair className={`w-3 h-3 ${t.textTertiary}`} />
+                        <span className={`text-xs ${t.textTertiary}`}>Sorted by collision score</span>
+                      </div>
+                    )}
+
+                    {/* Empty filter state */}
+                    {filteredLines.length === 0 && (
+                      <div className={`flex flex-col items-center justify-center py-10 gap-2 rounded-xl ${isDark ? "bg-[#0d1a0f]/40 border border-[#1e2e22]/40" : "bg-gray-50/60 border border-gray-200/50"}`}>
+                        <span className={`text-sm ${t.textSecondary}`}>No lines match this filter</span>
+                        <button onClick={() => setLineFilter("all")} className={`text-xs underline ${t.accent}`}>Show all lines</button>
+                      </div>
+                    )}
+
+                    {/* Interactive chessboard viewers — one per filtered line */}
                     <div className="space-y-4">
-                      {enrichedLines.map((line, i) => (
+                      {filteredLines.map((line, i) => (
                         <div key={i} className="space-y-2">
                           {/* Priority badge row */}
                           <div className="flex items-center gap-2 px-1">
