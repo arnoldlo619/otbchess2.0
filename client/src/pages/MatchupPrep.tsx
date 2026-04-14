@@ -64,6 +64,7 @@ interface OpeningStat {
   losses: number;
   winRate: number;
   moves: string;
+  weaknessScore: number;
 }
 
 interface PlayStyleProfile {
@@ -833,9 +834,21 @@ export default function MatchupPrep() {
                         {report.opponent.whiteOpenings.slice(0, 3).map((o, i) => (
                           <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
                             <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-                            <span className={`text-[11px] font-semibold shrink-0 ${
-                              o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-                            }`}>{o.winRate}%</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {o.weaknessScore >= 70 && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                                  isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"
+                                }`}>High Exploit</span>
+                              )}
+                              {o.weaknessScore >= 40 && o.weaknessScore < 70 && (
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                  isDark ? "bg-yellow-500/10 text-yellow-500/70" : "bg-yellow-50 text-yellow-600/80"
+                                }`}>Moderate</span>
+                              )}
+                              <span className={`text-[11px] font-semibold ${
+                                o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+                              }`}>{o.winRate}%</span>
+                            </div>
                           </div>
                         ))}
                         {report.opponent.whiteOpenings.length === 0 && (
@@ -863,9 +876,21 @@ export default function MatchupPrep() {
                         {report.opponent.blackOpenings.slice(0, 3).map((o, i) => (
                           <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
                             <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-                            <span className={`text-[11px] font-semibold shrink-0 ${
-                              o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-                            }`}>{o.winRate}%</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {o.weaknessScore >= 70 && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                                  isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"
+                                }`}>High Exploit</span>
+                              )}
+                              {o.weaknessScore >= 40 && o.weaknessScore < 70 && (
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                                  isDark ? "bg-yellow-500/10 text-yellow-500/70" : "bg-yellow-50 text-yellow-600/80"
+                                }`}>Moderate</span>
+                              )}
+                              <span className={`text-[11px] font-semibold ${
+                                o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+                              }`}>{o.winRate}%</span>
+                            </div>
                           </div>
                         ))}
                         {report.opponent.blackOpenings.length === 0 && (
