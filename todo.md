@@ -4916,3 +4916,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Client: settings panel UI with editable fields (league name, max players, format)
 - [ ] Client: save/cancel buttons with loading state and success toast
 - [ ] TypeScript: 0 errors
+
+## Swiss-Elim Auto-Bracket Generation
+
+- [x] Auto-generate elimination bracket when final swiss round completes (no manual cutoff step)
+- [x] Auto-navigate Director to Bracket tab after bracket generation with toast notification
+- [x] Add Elimination Bracket Dashboard header in Director.tsx (round label, player count, cutoff info)
+- [x] Add "Swiss Phase in Progress" state to Bracket tab while swiss rounds are ongoing
+- [x] Update PublicBracketView empty state to reflect auto-generation ("updates automatically")
+- [x] Remove obsolete isSwissElimCutoff banner from Director Home tab
+- [x] 21 unit tests for auto-bracket generation logic (all passing)

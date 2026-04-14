@@ -2003,6 +2003,22 @@ export default function Director() {
     }
   }, [allResultsIn, activeTab, isRegistration, state.currentRound]);
 
+  // Auto-navigate to bracket tab when swiss_elim transitions to elimination phase
+  const prevElimPhaseRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevElimPhaseRef.current;
+    const curr = state.elimPhase;
+    if (prev === "swiss" && curr === "elimination" && state.format === "swiss_elim") {
+      setActiveTab("bracket");
+      const cutoff = state.elimCutoff ?? state.elimPlayers?.length ?? 0;
+      toast.success(
+        `Swiss phase complete — Elimination bracket generated! Top ${cutoff} players advancing.`,
+        { duration: 5000 }
+      );
+    }
+    prevElimPhaseRef.current = curr;
+  }, [state.elimPhase, state.format, state.elimCutoff, state.elimPlayers]);
+
   // Derived: filtered + sorted player list
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
   const allCountries = Array.from(new Set(standings.map((p) => p.country)));
@@ -2859,42 +2875,6 @@ export default function Director() {
                             </div>
                           </div>
                         )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Swiss-to-Elimination cutoff banner — shown on Home tab when Swiss phase is done */}
-                  {allResultsIn && isSwissElimCutoff && (
-                    <div className={`rounded-xl border overflow-hidden ${
-                      isDark
-                        ? "bg-amber-500/08 border-amber-400/25"
-                        : "bg-amber-50 border-amber-200"
-                    }`}>
-                      <div className={`flex items-center gap-3 px-4 py-3 border-b ${
-                        isDark ? "border-amber-400/15" : "border-amber-200"
-                      }`}>
-                        <Trophy className={`w-4 h-4 flex-shrink-0 ${
-                          isDark ? "text-amber-400" : "text-amber-600"
-                        }`} />
-                        <p className={`text-sm font-semibold ${
-                          isDark ? "text-amber-300" : "text-amber-800"
-                        }`}>
-                          Swiss phase complete — ready to advance to Elimination
-                        </p>
-                      </div>
-                      <div className="px-4 py-3">
-                        <button
-                          onClick={() => setActiveTab("bracket")}
-                          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
-                            isDark
-                              ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/30"
-                              : "bg-amber-500 hover:bg-amber-600 text-white"
-                          }`}
-                        >
-                          <Trophy className="w-4 h-4" />
-                          Go to Bracket Tab — Generate Elimination Bracket
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
                       </div>
                     </div>
                   )}
@@ -4220,16 +4200,62 @@ export default function Director() {
           {/* ── Bracket Tab ─────────────────────────────────────────────────── */}
           {activeTab === "bracket" && isElimFormat && (
             <div className="flex flex-col gap-5 w-full">
-              {/* Swiss-to-Elimination cutoff screen */}
-              {state.format === "swiss_elim" && state.elimPhase === "cutoff" && (
-                <SwissElimCutoffScreen
-                  standings={liveStandings}
-                  defaultCutoff={state.elimCutoff ?? 8}
-                  isDark={isDark}
-                  onAdvance={(cutoff) => {
-                    advanceToElimination(cutoff);
-                  }}
-                />
+              {/* Elimination Bracket Dashboard header */}
+              {(state.elimPhase === "elimination" || state.format === "elimination") && (
+                <div className={`rounded-2xl border overflow-hidden ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                }`}>
+                  <div className="flex items-center justify-between px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isDark ? "bg-[#4CAF50]/15" : "bg-green-50"
+                      }`}>
+                        <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-black tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                          style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                          Elimination Bracket
+                        </p>
+                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
+                          {state.elimRoundLabelText ?? "Bracket"}
+                          {state.elimPlayers && ` · ${state.elimPlayers.length} players`}
+                          {state.elimCutoff && ` · Top ${state.elimCutoff} from Swiss`}
+                        </p>
+                      </div>
+                    </div>
+                    {allResultsIn && (
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold ${
+                        isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                      }`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                        All results in
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Swiss phase in progress — bracket not yet generated */}
+              {state.format === "swiss_elim" && state.elimPhase === "swiss" && (
+                <div className={`flex flex-col items-center justify-center py-12 gap-3 rounded-2xl border ${
+                  isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+                }`}>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                    isDark ? "bg-amber-500/10" : "bg-amber-50"
+                  }`}>
+                    <Trophy className={`w-6 h-6 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm font-bold ${isDark ? "text-white/70" : "text-gray-700"}`}
+                      style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                      Swiss Phase in Progress
+                    </p>
+                    <p className={`text-xs mt-1 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                      The elimination bracket will auto-generate after Round {state.swissRounds ?? state.totalRounds}.
+                    </p>
+                  </div>
+                </div>
               )}
 
               {/* Elimination bracket view */}

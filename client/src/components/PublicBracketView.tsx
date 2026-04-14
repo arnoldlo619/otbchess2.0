@@ -411,20 +411,31 @@ export function PublicBracketView({
     );
   }
 
-  // ── No bracket yet ────────────────────────────────────────────────────────
+  //   // ── No bracket yet — Swiss still in progress ———————————————————————————————
   if (elimRounds.length === 0) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border ${
         isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
       }`}>
-        <Trophy className={`w-10 h-10 ${isDark ? "text-white/15" : "text-gray-200"}`} />
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+          isDark ? "bg-amber-500/10" : "bg-amber-50"
+        }`}>
+          <Trophy className={`w-7 h-7 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
+        </div>
         <div className="text-center">
-          <p className={`text-sm font-semibold ${isDark ? "text-white/30" : "text-gray-400"}`}>
-            Elimination bracket not yet generated
+          <p className={`text-base font-black ${isDark ? "text-white/80" : "text-gray-800"}`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            Swiss Phase in Progress
           </p>
-          <p className={`text-xs mt-1 ${isDark ? "text-white/20" : "text-gray-300"}`}>
-            The director will generate it when the tournament starts.
+          <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-gray-500"}`}>
+            The elimination bracket will appear here automatically after the final Swiss round.
           </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className={`text-xs font-semibold ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
+            Live · updates automatically
+          </span>
         </div>
       </div>
     );
