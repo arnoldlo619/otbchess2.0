@@ -781,145 +781,177 @@ export default function MatchupPrep() {
 
             {/* ── Tab 1: Scout ── */}
             {activeTab === "scout" && (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
 
-                {/* Pre-Round Quick Review — shown at top for game-day use */}
-                <PreRoundQuickReview
-                  report={report}
-                  enrichedLines={enrichedLines}
-                  repertoire={{
-                    whiteFirstMove: repertoire.whiteFirstMove,
-                    blackVsE4: repertoire.blackVsE4,
-                    blackVsD4: repertoire.blackVsD4,
-                    expectedColor: repertoire.expectedColor,
-                  }}
-                  quota={quota}
-                  onQuotaConsumed={refreshQuota}
-                  isDark={isDark}
-                />
+                {/* ── Section 1: What they play — White + Black side-by-side ── */}
+                <div className={`${t.card} p-4 sm:p-5`}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                    <h3 className={`font-semibold text-sm ${t.textPrimary}`}>What They Play</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
 
-                {/* My Repertoire Panel */}
-                <UserRepertoirePanel value={repertoire} onChange={setRepertoire} />
+                    {/* As White */}
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
+                        <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As White</span>
+                        <span className={`ml-auto text-[11px] font-bold ${
+                          report.opponent.asWhite.winRate >= 55
+                            ? isDark ? "text-emerald-400" : "text-emerald-600"
+                            : t.textTertiary
+                        }`}>{report.opponent.asWhite.winRate}% WR</span>
+                      </div>
+                      {/* First moves */}
+                      {report.opponent.firstMoveAsWhite.length > 0 && (
+                        <div className="flex gap-1 mb-2 flex-wrap">
+                          {report.opponent.firstMoveAsWhite.slice(0, 2).map((fm) => (
+                            <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
+                              isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                            }`}>
+                              {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Top openings */}
+                      <div className="space-y-1">
+                        {report.opponent.whiteOpenings.slice(0, 3).map((o, i) => (
+                          <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
+                            <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
+                            <span className={`text-[11px] font-semibold shrink-0 ${
+                              o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+                            }`}>{o.winRate}%</span>
+                          </div>
+                        ))}
+                        {report.opponent.whiteOpenings.length === 0 && (
+                          <p className={`text-xs ${t.textTertiary}`}>No data</p>
+                        )}
+                      </div>
+                    </div>
 
-                {/* Strategic Matchup Summary — only when repertoire is set */}
+                    {/* Divider */}
+                    <div className={`border-l ${t.divider}`} style={{ display: "none" }} />
+
+                    {/* As Black */}
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <CircleDot className={`w-3 h-3 fill-current opacity-50 ${t.textTertiary}`} />
+                        <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As Black</span>
+                        <span className={`ml-auto text-[11px] font-bold ${
+                          report.opponent.asBlack.winRate >= 55
+                            ? isDark ? "text-emerald-400" : "text-emerald-600"
+                            : t.textTertiary
+                        }`}>{report.opponent.asBlack.winRate}% WR</span>
+                      </div>
+                      {/* Top openings */}
+                      <div className="space-y-1">
+                        {report.opponent.blackOpenings.slice(0, 3).map((o, i) => (
+                          <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
+                            <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
+                            <span className={`text-[11px] font-semibold shrink-0 ${
+                              o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+                            }`}>{o.winRate}%</span>
+                          </div>
+                        ))}
+                        {report.opponent.blackOpenings.length === 0 && (
+                          <p className={`text-xs ${t.textTertiary}`}>No data</p>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* ── Section 2: Suggested Prep Lines (top 3, compact) ── */}
+                {enrichedLines.length > 0 && (
+                  <div className={`${t.card} p-4 sm:p-5`}>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+                        <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Suggested Lines</h3>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("lines")}
+                        className={`text-xs font-medium transition-colors ${
+                          isDark ? "text-[#5B9A6A] hover:text-[#7BC88A]" : "text-[#3D6B47] hover:text-[#2d5236]"
+                        }`}
+                      >
+                        View all {enrichedLines.length} →
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {enrichedLines.slice(0, 3).map((line, i) => {
+                        const priority = getPriority(line.confidence);
+                        const cfg = PRIORITY_CONFIG[priority];
+                        return (
+                          <div
+                            key={i}
+                            className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                              isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50 hover:bg-[#162018]/80" : "bg-gray-50/80 border border-gray-200/60 hover:bg-gray-100/80"
+                            }`}
+                            onClick={() => setActiveTab("lines")}
+                          >
+                            <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${
+                              isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"
+                            }`}>{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                <span className={`text-sm font-semibold truncate ${t.textPrimary}`}>{line.name}</span>
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${
+                                  isDark ? cfg.darkBg : cfg.lightBg
+                                }`}>
+                                  <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+                                  {cfg.shortLabel}
+                                </span>
+                              </div>
+                              <p className={`text-xs leading-relaxed line-clamp-2 ${t.textTertiary}`}>{line.rationale}</p>
+                            </div>
+                            <ChevronRight className={`w-3.5 h-3.5 shrink-0 mt-1 ${t.textTertiary}`} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Section 3: Prep Summary (Likely Battle + Study First only) ── */}
                 {matchupSummary && (
                   <div className={`${t.card} p-4 sm:p-5`}>
                     <div className="flex items-center gap-2 mb-3">
                       <Crosshair className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Prep Summary</h3>
+                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Summary</h3>
                     </div>
-                    <div className="space-y-2.5">
-                      {/* Likely battle */}
-                      <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"}`}>
+                    <div className="space-y-2">
+                      <div className={`flex items-start gap-3 p-3 rounded-xl ${
+                        isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"
+                      }`}>
                         <Target className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
                         <div className="min-w-0">
-                          <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`}>Likely Battle</p>
+                          <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${
+                            isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"
+                          }`}>Likely Battle</p>
                           <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.likelyBattle}</p>
                         </div>
                       </div>
-                      {/* Study first */}
                       {matchupSummary.studyFirst && (
-                        <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-amber-500/08 border border-amber-500/15" : "bg-amber-50/80 border border-amber-200/60"}`}>
+                        <div className={`flex items-start gap-3 p-3 rounded-xl ${
+                          isDark ? "bg-amber-500/08 border border-amber-500/15" : "bg-amber-50/80 border border-amber-200/60"
+                        }`}>
                           <Flame className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
                           <div className="min-w-0">
-                            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-amber-400/60" : "text-amber-600/50"}`}>Study First</p>
+                            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${
+                              isDark ? "text-amber-400/60" : "text-amber-600/50"
+                            }`}>Study First</p>
                             <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.studyFirst}</p>
                           </div>
                         </div>
                       )}
-                      {/* Prep risk */}
-                      {matchupSummary.prepRisk && (
-                        <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-red-500/08 border border-red-500/15" : "bg-red-50/80 border border-red-200/60"}`}>
-                          <AlertCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-red-400" : "text-red-600"}`} />
-                          <div className="min-w-0">
-                            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-red-400/60" : "text-red-600/50"}`}>Prep Risk</p>
-                            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.prepRisk}</p>
-                          </div>
-                        </div>
-                      )}
-                      {/* Color advice */}
-                      {matchupSummary.colorAdvice && (
-                        <div className={`flex items-start gap-3 p-3 rounded-xl ${t.cardSubtle}`}>
-                          <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${t.textTertiary}`} />
-                          <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.colorAdvice}</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Win/Draw/Loss by color — compact 2-col */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <ColorStatCard
-                    title="As White"
-                    icon={<CircleDot className="w-3.5 h-3.5" />}
-                    wins={report.opponent.asWhite.wins}
-                    draws={report.opponent.asWhite.draws}
-                    losses={report.opponent.asWhite.losses}
-                    winRate={report.opponent.asWhite.winRate}
-                    games={report.opponent.asWhite.games}
-                    isDark={isDark}
-                    t={t}
-                  />
-                  <ColorStatCard
-                    title="As Black"
-                    icon={<CircleDot className="w-3.5 h-3.5 fill-current opacity-60" />}
-                    wins={report.opponent.asBlack.wins}
-                    draws={report.opponent.asBlack.draws}
-                    losses={report.opponent.asBlack.losses}
-                    winRate={report.opponent.asBlack.winRate}
-                    games={report.opponent.asBlack.games}
-                    isDark={isDark}
-                    t={t}
-                  />
-                </div>
-
-                {/* Opening tendencies — top 3 each side */}
-                {(report.opponent.whiteOpenings.length > 0 || report.opponent.blackOpenings.length > 0) && (
-                  <div className={`${t.card} p-4 sm:p-5`}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Tendencies</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <OpeningMiniList
-                        title="Plays as White"
-                        openings={report.opponent.whiteOpenings.slice(0, 3)}
-                        firstMoves={report.opponent.firstMoveAsWhite}
-                        isDark={isDark}
-                        t={t}
-                      />
-                      <OpeningMiniList
-                        title="Plays as Black"
-                        openings={report.opponent.blackOpenings.slice(0, 3)}
-                        isDark={isDark}
-                        t={t}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Key Insights */}
-                {report.insights.length > 0 && (
-                  <div className={`${t.card} p-4 sm:p-5`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Eye className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Scouting Notes</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {report.insights.map((insight, i) => (
-                        <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${t.cardSubtle}`}>
-                          <span className={`text-[10px] font-bold w-4 h-4 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
-                            {i + 1}
-                          </span>
-                          <span className={`text-sm leading-relaxed ${t.textSecondary}`}>{insight}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Coach Insight Card — only when report is loaded */}
+                {/* ── Section 4: Coach Insight (collapsed by default) ── */}
                 {report && (
                   <CoachInsightCard
                     context={{
@@ -971,14 +1003,6 @@ export default function MatchupPrep() {
                   />
                 )}
 
-                {/* Next step nudge */}
-                <NextStepNudge
-                  label="Ready to study key lines?"
-                  action="Go to Key Lines"
-                  onClick={() => setActiveTab("lines")}
-                  isDark={isDark}
-                  t={t}
-                />
               </div>
             )}
 
