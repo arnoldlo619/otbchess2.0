@@ -786,7 +786,7 @@ const CAROUSEL_SLIDES = [
   {
     id: "prep",
     badge: "Matchup Prep",
-    badgeIcon: <Target className="w-3.5 h-3.5" />,
+    badgeIcon: <BookOpen className="w-3.5 h-3.5" />,
     headline: "Know your opponent\nbefore move one.",
     sub: "Enter your opponent's chess.com username. Get their opening tendencies, key patterns, and interactive prep lines — all before you sit down at the board.",
     bullets: [
