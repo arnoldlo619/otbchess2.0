@@ -48,6 +48,8 @@ interface ChessPracticeBoardProps {
   isDark: boolean;
   /** Called when the session is complete */
   onSessionComplete?: (results: LineResult[]) => void;
+  /** If set, start practice on this line index instead of 0 */
+  initialLineIndex?: number;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -66,9 +68,10 @@ export default function ChessPracticeBoard({
   lines,
   isDark,
   onSessionComplete,
+  initialLineIndex,
 }: ChessPracticeBoardProps) {
   // Session state
-  const [lineIndex, setLineIndex] = useState(0);
+  const [lineIndex, setLineIndex] = useState(initialLineIndex ?? 0);
   const [sessionResults, setSessionResults] = useState<LineResult[]>([]);
   const [sessionComplete, setSessionComplete] = useState(false);
 
@@ -127,9 +130,21 @@ export default function ChessPracticeBoard({
   );
 
   useEffect(() => {
-    if (lines.length > 0) initLine(0);
+    if (lines.length > 0) initLine(initialLineIndex ?? 0);
+    setLineIndex(initialLineIndex ?? 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines]);
+
+  // Jump to a specific line when initialLineIndex changes externally
+  useEffect(() => {
+    if (initialLineIndex != null && initialLineIndex !== lineIndex && initialLineIndex < lines.length) {
+      setLineIndex(initialLineIndex);
+      initLine(initialLineIndex);
+      setSessionResults([]);
+      setSessionComplete(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialLineIndex]);
 
   // ── Determine if it's the user's turn ──────────────────────────────────────
   const isUserTurn = useCallback(() => {

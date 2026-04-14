@@ -21,7 +21,7 @@ import {
   CircleDot, RefreshCw, ChevronRight, Trophy,
   Activity, Bookmark, BookmarkCheck,
   Trash2, ChevronLeft, Check, RotateCcw,
-  Zap, AlertCircle, Info, Crosshair, Flame
+  Zap, AlertCircle, Info, Crosshair, Flame, Dumbbell
 } from "lucide-react";
 import { UserRepertoirePanel } from "../components/UserRepertoirePanel";
 import ChessLineViewer from "../components/ChessLineViewer";
@@ -253,6 +253,9 @@ export default function MatchupPrep() {
 
   // Recently scouted chips
   const [recentlyScouted, setRecentlyScouted] = useState<string[]>(() => getRecentlyScouted());
+
+  // "Practice this line" — jump from Key Lines to Practice tab
+  const [practiceLineIndex, setPracticeLineIndex] = useState<number | undefined>(undefined);
 
   // Practice mode state
   const [practiceIndex, setPracticeIndex] = useState(0);
@@ -1134,6 +1137,26 @@ export default function MatchupPrep() {
                             eco={line.eco}
                             isDark={isDark}
                           />
+                          {/* Practice this line button */}
+                          <button
+                            data-testid={`practice-line-btn-${i}`}
+                            onClick={() => {
+                              // Find the index in the full enrichedLines array (not filtered)
+                              const fullIndex = enrichedLines.findIndex(
+                                (el) => el.name === line.name && el.moves === line.moves
+                              );
+                              setPracticeLineIndex(fullIndex >= 0 ? fullIndex : i);
+                              setActiveTab("practice");
+                            }}
+                            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                              isDark
+                                ? "text-[#5B9A6A] hover:bg-[#5B9A6A]/10 border border-[#5B9A6A]/20 hover:border-[#5B9A6A]/40"
+                                : "text-[#3D6B47] hover:bg-[#3D6B47]/08 border border-[#3D6B47]/15 hover:border-[#3D6B47]/30"
+                            }`}
+                          >
+                            <Dumbbell className="w-3 h-3" />
+                            Practice this line
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1224,6 +1247,7 @@ export default function MatchupPrep() {
                         rationale: l.rationale,
                       }))}
                       isDark={isDark}
+                      initialLineIndex={practiceLineIndex}
                     />
                   </>
                 )}

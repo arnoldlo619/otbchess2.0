@@ -4937,3 +4937,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Deepen Prep Lines
 - [x] Expand counter-lines from 2 moves to 8-12 moves with full main-line theory
 - [x] Add deep theory lines for all major openings (Sicilian, Ruy Lopez, QGD, KID, etc.)
+
+## Practice This Line Button
+- [x] Add "Practice this line" button on each Key Lines card
+- [x] Wire button to switch to Practice tab with that specific line pre-loaded
+- [x] Add initialLineIndex prop to ChessPracticeBoard with useEffect jump logic
+- [x] Resolve filtered→full index when clicking from filtered Key Lines view
+- [x] 19 unit tests for practice-this-line feature (all passing)
