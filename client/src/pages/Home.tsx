@@ -57,6 +57,7 @@ import {
   Search,
   TrendingUp,
   Brain,
+  Maximize2,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
@@ -807,7 +808,17 @@ function Showcase() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [progressKey, setProgressKey] = useState(0); // bump to restart CSS animation
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxAlt, setLightboxAlt] = useState("");
   const slide = CAROUSEL_SLIDES[activeSlide];
+
+  // Close lightbox on Escape key
+  useEffect(() => {
+    if (!lightboxSrc) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightboxSrc(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxSrc]);
 
   // Auto-advance every 6 seconds; pause on hover
   useEffect(() => {
@@ -881,8 +892,12 @@ function Showcase() {
                   ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
                   : "ring-1 ring-inset ring-[#3D6B47]/15"
               }`} />
-              {/* Screenshot — zoomed in to fill frame; scales up on hover */}
-              <div className="relative rounded-xl overflow-hidden shadow-xl" style={{ aspectRatio: "16/10" }}>
+              {/* Screenshot — zoomed in to fill frame; scales up on hover; click to expand */}
+              <div
+                className="relative rounded-xl overflow-hidden shadow-xl cursor-zoom-in group/img"
+                style={{ aspectRatio: "16/10" }}
+                onClick={() => { setLightboxSrc(slide.screenshot!); setLightboxAlt(slide.screenshotAlt); }}
+              >
                 <img
                   src={slide.screenshot!}
                   alt={slide.screenshotAlt}
@@ -890,6 +905,12 @@ function Showcase() {
                 />
                 {/* Subtle bottom fade */}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                {/* Expand hint — appears on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="bg-black/50 backdrop-blur-sm rounded-full p-3">
+                    <Maximize2 className="w-5 h-5 text-white" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -964,6 +985,42 @@ function Showcase() {
         </div>
 
       </div>
+
+      {/* ── Lightbox modal ── */}
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 md:p-8"
+          onClick={() => setLightboxSrc(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightboxAlt}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-2.5 transition-colors duration-150 z-10"
+            onClick={() => setLightboxSrc(null)}
+            aria-label="Close image"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+
+          {/* Image — stop propagation so clicking image itself doesn't close */}
+          <div
+            className="relative max-w-5xl w-full max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={lightboxSrc}
+              alt={lightboxAlt}
+              className="w-full h-full object-contain"
+            />
+            {/* ESC hint */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-white/50 select-none">
+              Press Esc or click outside to close
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
