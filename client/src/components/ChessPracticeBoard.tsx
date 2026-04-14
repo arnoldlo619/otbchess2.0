@@ -74,7 +74,7 @@ export default function ChessPracticeBoard({
 
   // Current line state
   const [chess] = useState(() => new Chess());
-  const [fen, setFen] = useState("start");
+  const [fen, setFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
   const [sanMoves, setSanMoves] = useState<string[]>([]);
   const [moveIndex, setMoveIndex] = useState(0); // which move in the line we're at
   const [userColor, setUserColor] = useState<"w" | "b">("w"); // user plays White by default
