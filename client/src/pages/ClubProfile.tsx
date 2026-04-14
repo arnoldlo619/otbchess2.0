@@ -2536,16 +2536,91 @@ export default function ClubProfile() {
                 }
                 onClick={async () => {
                   setSavingSettings(true);
-                  await new Promise((r) => setTimeout(r, 300));
-                  const patch: Record<string, unknown> = {};
-                  if (pendingAvatar !== undefined && pendingAvatar !== club.avatarUrl) patch.avatarUrl = pendingAvatar;
-                  if (pendingBanner !== undefined && pendingBanner !== club.bannerUrl) patch.bannerUrl = pendingBanner;
-                  if (Object.keys(patch).length > 0) {
-                    const updated = updateClub(club.id, patch);
-                    if (updated) {
-                      setClub(updated);
-                      toast.success("Club updated!");
+                  try {
+                    const patch: Record<string, unknown> = {};
+
+                    // Upload avatar if changed — convert base64 → server URL so all users see it
+                    if (pendingAvatar !== undefined && pendingAvatar !== club.avatarUrl) {
+                      if (pendingAvatar === null) {
+                        patch.avatarUrl = null;
+                      } else if (pendingAvatar.startsWith("data:")) {
+                        // base64 data URL — upload to server
+                        const res = await fetch("/api/clubs/upload-avatar", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify({ dataUrl: pendingAvatar }),
+                        });
+                        if (res.ok) {
+                          const { url } = await res.json();
+                          patch.avatarUrl = url;
+                        } else {
+                          toast.error("Avatar upload failed — please try again.");
+                          setSavingSettings(false);
+                          return;
+                        }
+                      } else {
+                        // Already a server URL (e.g. from a previous save)
+                        patch.avatarUrl = pendingAvatar;
+                      }
                     }
+
+                    // Upload banner if changed
+                    if (pendingBanner !== undefined && pendingBanner !== club.bannerUrl) {
+                      if (pendingBanner === null) {
+                        patch.bannerUrl = null;
+                      } else if (pendingBanner.startsWith("data:")) {
+                        const res = await fetch("/api/clubs/upload-avatar", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify({ dataUrl: pendingBanner }),
+                        });
+                        if (res.ok) {
+                          const { url } = await res.json();
+                          patch.bannerUrl = url;
+                        } else {
+                          toast.error("Banner upload failed — please try again.");
+                          setSavingSettings(false);
+                          return;
+                        }
+                      } else {
+                        patch.bannerUrl = pendingBanner;
+                      }
+                    }
+
+                    if (Object.keys(patch).length > 0) {
+                      // Persist to server DB (visible to all users)
+                      const res = await fetch(`/api/clubs/${club.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify(patch),
+                      });
+                      if (res.ok) {
+                        const serverClub = await res.json();
+                        // Also update localStorage so the owner sees the change immediately
+                        updateClub(club.id, patch);
+                        // Add cache-busting param so browsers reload the new image
+                        if (serverClub.avatarUrl && !serverClub.avatarUrl.startsWith("data:")) {
+                          serverClub.avatarUrl = `${serverClub.avatarUrl}?v=${Date.now()}`;
+                        }
+                        if (serverClub.bannerUrl && !serverClub.bannerUrl.startsWith("data:")) {
+                          serverClub.bannerUrl = `${serverClub.bannerUrl}?v=${Date.now()}`;
+                        }
+                        setClub(serverClub);
+                        toast.success("Club updated!");
+                      } else {
+                        const err = await res.json().catch(() => ({}));
+                        toast.error(err.error ?? "Failed to save — please try again.");
+                        setSavingSettings(false);
+                        return;
+                      }
+                    }
+                  } catch (e) {
+                    toast.error("Network error — please check your connection.");
+                    setSavingSettings(false);
+                    return;
                   }
                   setSavingSettings(false);
                   setShowSettings(false);

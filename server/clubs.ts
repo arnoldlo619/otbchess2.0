@@ -482,6 +482,8 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
       "twitter",
       "discord",
       "announcement",
+      "avatarUrl",
+      "bannerUrl",
     ];
     const updates: Record<string, unknown> = {};
     for (const key of allowed) {
