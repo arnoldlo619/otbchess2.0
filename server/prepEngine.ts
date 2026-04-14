@@ -706,124 +706,177 @@ interface CounterLine {
 }
 
 const COUNTER_LINES_AS_WHITE: CounterLine[] = [
-  // Against Sicilian sub-variations
+  // ── Against Sicilian sub-variations ────────────────────────────────────────
   {
     matchPattern: "sicilian: najdorf",
-    line: { eco: "B90", name: "English Attack", moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 6.Be3 e5 7.Nb3 Be6 8.f3", rationale: "The English Attack is the most principled response to the Najdorf. White builds a kingside attack with f3-g4 while Black's queenside play is slower.", confidence: "high", lineType: "main", exploits: "Najdorf's slow queenside counterplay" },
+    line: { eco: "B90", name: "English Attack vs Najdorf", moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 6.Be3 e5 7.Nb3 Be6 8.f3 Be7 9.Qd2 O-O 10.O-O-O Nbd7 11.g4", rationale: "The English Attack is the most principled weapon against the Najdorf. White castles queenside and launches a kingside pawn storm with f3-g4-g5. Black must counterattack on the queenside with b5-b4, but White's attack typically arrives first.", confidence: "high", lineType: "main", exploits: "Najdorf's slow queenside counterplay" },
   },
   {
     matchPattern: "sicilian: dragon",
-    line: { eco: "B76", name: "Yugoslav Attack", moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6 6.Be3 Bg7 7.f3 O-O 8.Qd2 Nc6 9.Bc4", rationale: "The Yugoslav Attack creates a direct kingside assault with opposite-side castling. White's attack is typically faster than Black's queenside counterplay.", confidence: "high", lineType: "main", exploits: "Dragon's slow queenside counterplay" },
+    line: { eco: "B76", name: "Yugoslav Attack vs Dragon", moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6 6.Be3 Bg7 7.f3 O-O 8.Qd2 Nc6 9.Bc4 Bd7 10.O-O-O Rc8 11.Bb3 Ne5 12.h4", rationale: "The Yugoslav Attack is the sharpest weapon against the Dragon. White castles queenside and storms the kingside with h4-h5-hxg6. The bishop on c4/b3 targets f7. Black's counterplay with Rc8 and Qa5 is typically one tempo slower.", confidence: "high", lineType: "main", exploits: "Dragon's exposed kingside after g6" },
   },
   {
     matchPattern: "sicilian: scheveningen",
-    line: { eco: "B81", name: "Keres Attack", moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 e6 6.g4", rationale: "The Keres Attack prevents Black from completing development and forces immediate tactical complications.", confidence: "high", lineType: "main", exploits: "Scheveningen's slow development" },
+    line: { eco: "B81", name: "Keres Attack vs Scheveningen", moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 e6 6.g4 h6 7.h4 Nc6 8.Rg1 d5 9.Bb5 Bd7 10.exd5 Nxd5 11.Nxd5 exd5", rationale: "The Keres Attack (6.g4) is a direct assault that prevents Black from completing development. White's kingside pawn storm creates immediate tactical complications. Black must react precisely or face a crushing attack.", confidence: "high", lineType: "main", exploits: "Scheveningen's cramped development" },
   },
   {
     matchPattern: "sicilian: sveshnikov",
-    line: { eco: "B33", name: "Sicilian: Sveshnikov, 9.Nd5", moves: "1.e4 c5 2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 e5 6.Ndb5 d6 7.Bg5 a6 8.Na3 b5 9.Nd5", rationale: "The critical 9.Nd5 forces Black into a complex endgame where White exploits the d5 outpost and Black's weakened d6 pawn.", confidence: "high", lineType: "main", exploits: "Weak d6 pawn and d5 outpost" },
+    line: { eco: "B33", name: "Sveshnikov Main Line 9.Nd5", moves: "1.e4 c5 2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 e5 6.Ndb5 d6 7.Bg5 a6 8.Na3 b5 9.Nd5 Be7 10.Bxf6 Bxf6 11.c3 O-O 12.Nc2", rationale: "The critical 9.Nd5 line leads to a complex middlegame where White exploits the d5 outpost and Black's weak d6 pawn. After 10.Bxf6 Bxf6 11.c3, White prepares Nc2-Be2-O-O with a lasting positional edge.", confidence: "high", lineType: "main", exploits: "Weak d6 pawn and d5 outpost" },
   },
   {
     matchPattern: "sicilian: taimanov",
-    line: { eco: "B48", name: "Sicilian: Taimanov, English Attack", moves: "1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 Nc6 5.Nc3 Qc7 6.Be3 a6 7.Qd2 Nf6 8.O-O-O", rationale: "White builds a strong center and launches a kingside attack. The Taimanov is less dynamic than the Najdorf, giving White more time to organize.", confidence: "high", lineType: "main", exploits: "Taimanov's passive queen placement" },
+    line: { eco: "B48", name: "English Attack vs Taimanov", moves: "1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 Nc6 5.Nc3 Qc7 6.Be3 a6 7.Qd2 Nf6 8.O-O-O Bb4 9.f3 Ne5 10.Nb3 b5 11.Kb1", rationale: "White builds a strong center and launches a kingside attack from behind queenside castling. The Taimanov is less dynamic than the Najdorf, giving White more time to organize the f3-g4-h4 pawn storm.", confidence: "high", lineType: "main", exploits: "Taimanov's passive queen placement" },
   },
   {
     matchPattern: "sicilian: accelerated dragon",
-    line: { eco: "B36", name: "Maroczy Bind", moves: "1.e4 c5 2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 g6 5.c4", rationale: "The Maroczy Bind restricts Black's d5 break, creating long-term positional pressure. Black's fianchettoed bishop is limited.", confidence: "high", lineType: "main", exploits: "Lack of d5 counterplay" },
+    line: { eco: "B36", name: "Maroczy Bind", moves: "1.e4 c5 2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 g6 5.c4 Bg7 6.Be3 Nf6 7.Nc3 O-O 8.Be2 d6 9.O-O Bd7 10.Qd2 Nxd4 11.Bxd4", rationale: "The Maroczy Bind (5.c4) permanently restricts Black's d5 break, creating long-term positional pressure. White controls the center and Black's fianchettoed bishop bites on granite. White aims for f3-Qd2-Rac1 with a slow squeeze.", confidence: "high", lineType: "main", exploits: "Lack of d5 counterplay" },
   },
   {
     matchPattern: "sicilian: kan",
-    line: { eco: "B43", name: "Sicilian: Kan, 5.Nc3", moves: "1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 a6 5.Nc3 Qc7 6.Bd3 Nf6 7.O-O Nc6 8.Nxc6 bxc6 9.e5", rationale: "White advances e5 to cramp Black's position. The Kan's flexibility becomes a weakness as Black lacks a clear plan.", confidence: "medium", lineType: "main", exploits: "Kan's lack of central presence" },
+    line: { eco: "B43", name: "Kan: e5 Advance", moves: "1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 a6 5.Nc3 Qc7 6.Bd3 Nf6 7.O-O Nc6 8.Nxc6 bxc6 9.e5 Nd5 10.Nxd5 cxd5 11.Qg4", rationale: "White advances e5 to cramp Black's position, then targets the weakened kingside with Qg4. The Kan's flexibility becomes a weakness as Black's pawn structure is compromised after the exchanges.", confidence: "medium", lineType: "main", exploits: "Kan's lack of central presence" },
   },
   {
     matchPattern: "sicilian: alapin",
-    line: { eco: "B22", name: "Alapin: 2.c3", moves: "1.e4 c5 2.c3 d5 3.exd5 Qxd5 4.d4 Nf6 5.Nf3 e6 6.Be3 cxd4 7.cxd4", rationale: "The Alapin avoids the Open Sicilian entirely and leads to a solid IQP position. Excellent choice against Sicilian specialists.", confidence: "high", lineType: "surprise", exploits: "Sicilian specialist's preparation" },
+    line: { eco: "B22", name: "Alapin Sicilian", moves: "1.e4 c5 2.c3 d5 3.exd5 Qxd5 4.d4 Nf6 5.Nf3 e6 6.Be3 cxd4 7.cxd4 Bb4+ 8.Nc3 O-O 9.Bd3 Nc6 10.O-O Be7 11.a3", rationale: "The Alapin avoids the Open Sicilian entirely and leads to a solid IQP position where White has active pieces and attacking chances. Excellent choice against Sicilian specialists who have deep Open Sicilian preparation.", confidence: "high", lineType: "surprise", exploits: "Sicilian specialist's preparation" },
   },
   {
     matchPattern: "sicilian",
-    line: { eco: "B22", name: "Alapin Variation", moves: "1.e4 c5 2.c3", rationale: "The Alapin sidesteps Sicilian theory and leads to solid positions. Effective surprise weapon against Sicilian players.", confidence: "medium", lineType: "surprise", exploits: "Deep Sicilian preparation" },
+    line: { eco: "B22", name: "Alapin Anti-Sicilian", moves: "1.e4 c5 2.c3 d5 3.exd5 Qxd5 4.d4 Nf6 5.Nf3 Bg4 6.Be2 e6 7.O-O Nc6 8.Be3 cxd4 9.cxd4 Be7 10.Nc3 Qd6", rationale: "The Alapin (2.c3) sidesteps all Open Sicilian theory and leads to an IQP middlegame where White has active piece play. Black's Sicilian preparation is neutralized. White aims for Nd5 breaks and kingside attacks.", confidence: "medium", lineType: "surprise", exploits: "Deep Sicilian preparation" },
   },
-  // Against French Defense
+  // ── Against French Defense ─────────────────────────────────────────────────
   {
     matchPattern: "french: winawer",
-    line: { eco: "C18", name: "French: Winawer, Poisoned Pawn", moves: "1.e4 e6 2.d4 d5 3.Nc3 Bb4 4.e5 c5 5.a3 Bxc3+ 6.bxc3 Qc7 7.Qg4", rationale: "The Poisoned Pawn variation creates maximum complications. White's initiative compensates for the structural weaknesses.", confidence: "medium", lineType: "main", exploits: "Winawer's structural weaknesses" },
+    line: { eco: "C18", name: "French Winawer: Poisoned Pawn", moves: "1.e4 e6 2.d4 d5 3.Nc3 Bb4 4.e5 c5 5.a3 Bxc3+ 6.bxc3 Qc7 7.Qg4 f5 8.Qg3 Ne7 9.Qxg7 Rg8 10.Qxh7 cxd4 11.Kd1", rationale: "The Poisoned Pawn variation creates maximum complications. White grabs two pawns and hides the king on d1. Black has compensation through central play, but White's extra material is significant if they survive the middlegame.", confidence: "medium", lineType: "main", exploits: "Winawer's structural weaknesses" },
   },
   {
     matchPattern: "french: advance",
-    line: { eco: "C02", name: "French: Advance, 5.Nf3", moves: "1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Nc6 5.Nf3 Qb6 6.a3", rationale: "The Advance Variation gives White a space advantage. The 5.Nf3 line is solid and avoids the sharp 5.f4 lines.", confidence: "high", lineType: "main", exploits: "French's passive bishop" },
+    line: { eco: "C02", name: "French Advance: Milner-Barry Gambit", moves: "1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Nc6 5.Nf3 Qb6 6.Bd3 cxd4 7.cxd4 Bd7 8.O-O Nxd4 9.Nxd4 Qxd4 10.Nc3 a6 11.Qe2", rationale: "The Milner-Barry Gambit sacrifices a pawn for rapid development and attacking chances. White's lead in development and open lines create dangerous threats against Black's king. The French bishop on c8 remains passive.", confidence: "high", lineType: "main", exploits: "French's passive light-squared bishop" },
   },
   {
     matchPattern: "french",
-    line: { eco: "C02", name: "French: Advance Variation", moves: "1.e4 e6 2.d4 d5 3.e5", rationale: "The Advance Variation gives White a space advantage and avoids the Exchange Variation's drawish tendencies.", confidence: "high", lineType: "main", exploits: "French's passive light-squared bishop" },
+    line: { eco: "C11", name: "French: Classical, Steinitz", moves: "1.e4 e6 2.d4 d5 3.Nc3 Nf6 4.e5 Nfd7 5.f4 c5 6.Nf3 Nc6 7.Be3 cxd4 8.Nxd4 Bc5 9.Qd2 O-O 10.O-O-O a6", rationale: "The Classical Steinitz variation gives White a strong pawn center and kingside attacking chances. White's plan is f4-f5 to open lines against Black's king. The French bishop on c8 remains permanently bad.", confidence: "high", lineType: "main", exploits: "French's passive light-squared bishop" },
   },
-  // Against Caro-Kann
+  // ── Against Caro-Kann ──────────────────────────────────────────────────────
   {
     matchPattern: "caro-kann: advance",
-    line: { eco: "B12", name: "Caro-Kann: Advance, Short Variation", moves: "1.e4 c6 2.d4 d5 3.e5 Bf5 4.Nf3 e6 5.Be2 Nd7 6.O-O", rationale: "The Short Variation is the modern approach. White builds a solid position and prepares c4 to challenge Black's pawn chain.", confidence: "high", lineType: "main", exploits: "Caro-Kann's passive bishop" },
+    line: { eco: "B12", name: "Caro-Kann Advance: Short System", moves: "1.e4 c6 2.d4 d5 3.e5 Bf5 4.Nf3 e6 5.Be2 Nd7 6.O-O h6 7.Nbd2 Ne7 8.Nb3 g5 9.Bd2 Ng6 10.c4", rationale: "The Short System is the modern approach. White builds a solid position and strikes with c4 to challenge Black's pawn chain. Black's kingside expansion with g5 weakens the king and White can exploit this with timely breaks.", confidence: "high", lineType: "main", exploits: "Caro-Kann's cramped position" },
   },
   {
     matchPattern: "caro-kann",
-    line: { eco: "B12", name: "Caro-Kann: Advance Variation", moves: "1.e4 c6 2.d4 d5 3.e5", rationale: "The Advance Variation avoids the Classical Caro-Kann and creates a French-like structure where White has more space.", confidence: "high", lineType: "main", exploits: "Caro-Kann's slow development" },
+    line: { eco: "B15", name: "Caro-Kann: Classical Main Line", moves: "1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Bf5 5.Ng3 Bg6 6.h4 h6 7.Nf3 Nd7 8.h5 Bh7 9.Bd3 Bxd3 10.Qxd3 e6 11.Bf4", rationale: "The Classical Main Line with h4-h5 is the most testing approach. White gains space on the kingside and the h5 pawn cramps Black's position. After trading bishops, White has a lasting initiative with Bf4 and O-O-O.", confidence: "high", lineType: "main", exploits: "Caro-Kann's slow development" },
   },
-  // Against Pirc/Modern
+  // ── Against Pirc/Modern ────────────────────────────────────────────────────
   {
     matchPattern: "pirc",
-    line: { eco: "B09", name: "Pirc: Austrian Attack", moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.f4", rationale: "The Austrian Attack is the most aggressive response to the Pirc. White builds a strong pawn center and launches a kingside attack.", confidence: "high", lineType: "main", exploits: "Pirc's slow development" },
+    line: { eco: "B09", name: "Pirc: Austrian Attack Main Line", moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.f4 Bg7 5.Nf3 O-O 6.Bd3 Na6 7.O-O c5 8.d5 Nc7 9.a4 Rb8 10.Qe1", rationale: "The Austrian Attack is the most aggressive response to the Pirc. White builds a massive pawn center with e4-d4-f4 and aims for a kingside attack. Black's hypermodern approach gives White too much space if not challenged immediately.", confidence: "high", lineType: "main", exploits: "Pirc's slow development" },
   },
   {
     matchPattern: "modern",
-    line: { eco: "B06", name: "Modern Defense: 150 Attack", moves: "1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.Be3 a6 5.Qd2 b5 6.f3", rationale: "The 150 Attack is a direct response to the Modern. White builds a strong center and prepares a kingside attack.", confidence: "medium", lineType: "main", exploits: "Modern's slow counterplay" },
+    line: { eco: "B06", name: "Modern: 150 Attack", moves: "1.e4 g6 2.d4 Bg7 3.Nc3 d6 4.Be3 a6 5.Qd2 b5 6.f3 Nd7 7.Nh3 Bb7 8.a4 b4 9.Nd1 Ngf6 10.Nf2", rationale: "The 150 Attack is a direct response to the Modern. White builds a strong center with Be3-Qd2-f3 and prepares O-O-O with a kingside pawn storm. Black's queenside expansion with b5 is met by a4.", confidence: "medium", lineType: "main", exploits: "Modern's slow counterplay" },
   },
-  // Against Scandinavian
+  // ── Against Scandinavian ───────────────────────────────────────────────────
   {
     matchPattern: "scandinavian",
-    line: { eco: "B01", name: "Scandinavian: 3.Nf3", moves: "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 Bf5 6.Bc4", rationale: "White develops naturally and exploits the time Black spent moving the queen. The bishop on c4 targets f7.", confidence: "high", lineType: "main", exploits: "Scandinavian's early queen development" },
+    line: { eco: "B01", name: "Scandinavian: Main Line", moves: "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 Bf5 6.Bc4 e6 7.Bd2 c6 8.Nd5 Qd8 9.Nxf6+ Qxf6 10.Qe2", rationale: "White develops naturally and exploits the time Black spent moving the queen. The bishop on c4 targets f7 and the Nd5 jump creates immediate tactical threats. Black's position is cramped and passive.", confidence: "high", lineType: "main", exploits: "Scandinavian's early queen development" },
+  },
+  // ── Against Alekhine ───────────────────────────────────────────────────────
+  {
+    matchPattern: "alekhine",
+    line: { eco: "B04", name: "Alekhine: Modern Variation", moves: "1.e4 Nf6 2.e5 Nd5 3.d4 d6 4.Nf3 g6 5.Bc4 Nb6 6.Bb3 Bg7 7.Qe2 Nc6 8.O-O O-O 9.h3 a5 10.a4", rationale: "The Modern Variation maintains White's space advantage without overextending. White's pawn center on d4-e5 restricts Black's pieces. The bishop on b3 is well-placed and Black struggles to find active counterplay.", confidence: "high", lineType: "main", exploits: "Alekhine's passive piece placement" },
+  },
+  // ── Against Philidor ──────────────────────────────────────────────────────
+  {
+    matchPattern: "philidor",
+    line: { eco: "C41", name: "Philidor: Hanham Variation", moves: "1.e4 e5 2.Nf3 d6 3.d4 Nf6 4.Nc3 Nbd7 5.Bc4 Be7 6.O-O O-O 7.a4 c6 8.Re1 b6 9.Ba2 Bb7 10.Bg5", rationale: "White maintains a strong center and develops naturally. The Philidor gives Black a cramped position and White can build pressure with a4, Re1, and Bg5. Black's d6 pawn is a permanent weakness.", confidence: "high", lineType: "main", exploits: "Philidor's cramped position" },
+  },
+  // ── Against 1...e5 (generic) ───────────────────────────────────────────────
+  {
+    matchPattern: "king's pawn",
+    line: { eco: "C50", name: "Italian Game: Giuoco Pianissimo", moves: "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3 Nf6 5.c3 d6 6.O-O O-O 7.Re1 a6 8.a4 Ba7 9.Nbd2 Be6 10.Bb3", rationale: "The Giuoco Pianissimo is a solid, positional approach that avoids sharp theory. White builds slowly with d3-c3-Nbd2-Bb3 and aims for a d4 break. This is the modern choice at the highest levels.", confidence: "high", lineType: "main", exploits: "Opponent's tactical preparation" },
+  },
+  // ── Against Indian Defenses (1.d4 Nf6 catchall) ───────────────────────────
+  {
+    matchPattern: "indian",
+    line: { eco: "D38", name: "Queen's Gambit: Ragozin Defense", moves: "1.d4 Nf6 2.c4 e6 3.Nf3 d5 4.Nc3 Bb4 5.Bg5 h6 6.Bxf6 Qxf6 7.e3 O-O 8.Rc1 dxc4 9.Bxc4 c5 10.O-O", rationale: "Against Indian setups, transposing into a Queen's Gambit structure with c4-Nc3 gives White a classical center. The Ragozin line leads to clear positional play where White's center and development provide a lasting edge.", confidence: "medium", lineType: "main", exploits: "Indian Defense's flexible but passive setup" },
   },
 ];
 
 const COUNTER_LINES_AS_BLACK: CounterLine[] = [
-  // Against 1.e4
+  // ── Against 1.e4 ──────────────────────────────────────────────────────────────
   {
     matchPattern: "ruy lopez: closed",
-    line: { eco: "C95", name: "Ruy Lopez: Breyer Defense", moves: "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 d6 8.c3 O-O 9.h3 Nb8", rationale: "The Breyer is the most solid response to the Ruy Lopez. Black reroutes the knight to d7 to support the center.", confidence: "high", lineType: "main", exploits: "Ruy Lopez's slow queenside expansion" },
+    line: { eco: "C95", name: "Ruy Lopez: Breyer Defense", moves: "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 d6 8.c3 O-O 9.h3 Nb8 10.d4 Nbd7 11.Nbd2 Bb7", rationale: "The Breyer is the most solid and modern response to the Closed Ruy Lopez. Black reroutes the knight via b8-d7 to support the center and prepares c5. The bishop on b7 controls the long diagonal. This is Carlsen's weapon of choice.", confidence: "high", lineType: "main", exploits: "Ruy Lopez's slow queenside expansion" },
+  },
+  {
+    matchPattern: "ruy lopez: marshall",
+    line: { eco: "C89", name: "Ruy Lopez: Marshall Attack", moves: "1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 O-O 8.c3 d5 9.exd5 Nxd5 10.Nxe5 Nxe5 11.Rxe5 c6 12.d4 Bd6", rationale: "The Marshall Attack is the most dangerous gambit against the Ruy Lopez. Black sacrifices a pawn for a powerful kingside attack. After 12...Bd6 13.Re1 Qh4, Black's initiative is extremely dangerous and White must defend precisely.", confidence: "high", lineType: "surprise", exploits: "Ruy Lopez's slow development" },
   },
   {
     matchPattern: "ruy lopez",
-    line: { eco: "C65", name: "Berlin Defense", moves: "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6", rationale: "The Berlin is the most solid response to the Ruy Lopez. The resulting endgame is slightly better for Black due to the bishop pair.", confidence: "high", lineType: "main", exploits: "Ruy Lopez's kingside pressure" },
+    line: { eco: "C67", name: "Berlin Defense: Rio de Janeiro", moves: "1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.O-O Nxe4 5.d4 Nd6 6.Bxc6 dxc6 7.dxe5 Nf5 8.Qxd8+ Kxd8 9.h3 Ke8 10.Nc3 h5 11.Bf4 Be7", rationale: "The Berlin endgame is the most solid response to the Ruy Lopez, famously used by Kramnik to dethrone Kasparov. Despite the early queen trade, the position is rich with subtle imbalances. Black's bishop pair and pawn structure provide long-term compensation.", confidence: "high", lineType: "main", exploits: "Ruy Lopez's kingside pressure" },
   },
   {
     matchPattern: "italian",
-    line: { eco: "C54", name: "Giuoco Piano: Classical", moves: "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6 5.d4 exd4 6.cxd4 Bb4+", rationale: "The Classical Giuoco Piano gives Black active piece play. The bishop check on b4 disrupts White's center.", confidence: "high", lineType: "main", exploits: "Italian's overextended center" },
+    line: { eco: "C54", name: "Giuoco Piano: Classical Main Line", moves: "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6 5.d4 exd4 6.cxd4 Bb4+ 7.Bd2 Bxd2+ 8.Nbxd2 d5 9.exd5 Nxd5 10.Qb3 Na5 11.Qa4+ Nc6", rationale: "The Classical Giuoco Piano gives Black active piece play with the central break d5. After the bishop exchange, Black's centralized knight on d5 and the pressure on d4 provide excellent counterplay. The position is dynamically balanced.", confidence: "high", lineType: "main", exploits: "Italian's overextended center" },
   },
   {
     matchPattern: "scotch",
-    line: { eco: "C45", name: "Scotch: Mieses Variation", moves: "1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nxc6 bxc6 6.e5 Qe7 7.Qe2 Nd5 8.c4 Ba6", rationale: "The Mieses Variation gives Black active counterplay. The bishop on a6 targets White's c4 pawn.", confidence: "medium", lineType: "main", exploits: "Scotch's weakened d4 square" },
+    line: { eco: "C45", name: "Scotch: Mieses Variation", moves: "1.e4 e5 2.Nf3 Nc6 3.d4 exd4 4.Nxd4 Nf6 5.Nxc6 bxc6 6.e5 Qe7 7.Qe2 Nd5 8.c4 Ba6 9.b3 g6 10.Ba3 Bg7 11.Qd2 O-O", rationale: "The Mieses Variation gives Black active counterplay with the bishop on a6 targeting c4 and the fianchettoed bishop on g7 controlling the long diagonal. Black's piece activity compensates for the doubled c-pawns.", confidence: "medium", lineType: "main", exploits: "Scotch's weakened d4 square" },
   },
   {
     matchPattern: "king's gambit",
-    line: { eco: "C30", name: "King's Gambit Declined: Classical", moves: "1.e4 e5 2.f4 Bc5", rationale: "Declining the gambit with 2...Bc5 gives Black a solid position and avoids the sharp gambit lines.", confidence: "high", lineType: "main", exploits: "King's Gambit's weakened f2" },
+    line: { eco: "C36", name: "King's Gambit: Abbazia Defense", moves: "1.e4 e5 2.f4 exf4 3.Nf3 d5 4.exd5 Nf6 5.Bc4 Nxd5 6.O-O Be7 7.d4 O-O 8.Bxd5 Qxd5 9.Nc3 Qa5 10.Bxf4", rationale: "Accepting the gambit with 2...exf4 and then striking back with 3...d5 is the most principled response. Black returns the pawn to seize the center and develop rapidly. The resulting position is dynamically balanced with active piece play for both sides.", confidence: "high", lineType: "main", exploits: "King's Gambit's weakened king" },
   },
-  // Against 1.d4
+  {
+    matchPattern: "vienna",
+    line: { eco: "C26", name: "Vienna: Falkbeer Variation", moves: "1.e4 e5 2.Nc3 Nf6 3.Bc4 Nxe4 4.Qh5 Nd6 5.Bb3 Nc6 6.Nb5 g6 7.Qf3 f5 8.Qd5 Qe7 9.Nxc7+ Kd8 10.Nxa8 b6", rationale: "The Falkbeer Variation leads to sharp tactical play where Black sacrifices the exchange for a powerful center and active pieces. White's knight on a8 is trapped and Black's central pawns are dangerous.", confidence: "medium", lineType: "surprise", exploits: "Vienna's tactical complications" },
+  },
+  // ── Against 1.d4 ──────────────────────────────────────────────────────────────
+  {
+    matchPattern: "queen's gambit: declined",
+    line: { eco: "D58", name: "QGD: Tartakower-Makogonov-Bondarevsky", moves: "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O 6.Nf3 h6 7.Bh4 b6 8.Be2 Bb7 9.Bxf6 Bxf6 10.cxd5 exd5 11.b4 c5", rationale: "The TMB system is the most reliable defense against the QGD. Black fianchettoes the bishop to b7, plays h6 to challenge the pin, and then strikes with c5. The bishop pair on the long diagonals provides lasting counterplay.", confidence: "high", lineType: "main", exploits: "QGD's passive bishop" },
+  },
   {
     matchPattern: "queen's gambit",
-    line: { eco: "D58", name: "QGD: Tartakower Defense", moves: "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O 6.Nf3 h6 7.Bh4 b6", rationale: "The Tartakower is the most dynamic response to the QGD. Black fianchettoes the bishop and creates counterplay.", confidence: "high", lineType: "main", exploits: "QGD's passive bishop" },
+    line: { eco: "D35", name: "QGD: Exchange, Nge2 System", moves: "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.cxd5 exd5 5.Bg5 c6 6.e3 Bf5 7.Qf3 Bg6 8.Bh4 Be7 9.Bd3 Bxd3 10.Qxd3 Nbd7 11.Nge2 O-O", rationale: "Against the Exchange QGD, Black develops the bishop to f5 before it gets locked in. After trading bishops on d3, Black has a solid position with no bad pieces. The minority attack with a5-a4 gives Black queenside counterplay.", confidence: "high", lineType: "main", exploits: "Exchange QGD's symmetrical structure" },
   },
   {
     matchPattern: "london system",
-    line: { eco: "A48", name: "London System: ...Bf5 Counter", moves: "1.d4 Nf6 2.Nf3 d5 3.Bf4 Bf5 4.e3 e6 5.Bd3 Bxd3 6.Qxd3 c5", rationale: "Trading off White's London bishop and immediately attacking the center with c5 gives Black active counterplay.", confidence: "high", lineType: "main", exploits: "London's passive bishop" },
+    line: { eco: "A48", name: "Anti-London: ...Bf5 Counter", moves: "1.d4 Nf6 2.Nf3 d5 3.Bf4 Bf5 4.e3 e6 5.Bd3 Bxd3 6.Qxd3 c5 7.c3 Nc6 8.Nbd2 Bd6 9.Bxd6 Qxd6 10.O-O O-O 11.e4 dxe4", rationale: "Trading off White's London bishop with an early Bf5 is the most effective antidote. After Bxd3 Qxd3 c5, Black equalizes immediately. The resulting position is open and Black's active pieces ensure full equality. White's London system has been completely neutralized.", confidence: "high", lineType: "main", exploits: "London's passive bishop" },
+  },
+  {
+    matchPattern: "king's indian: classical",
+    line: { eco: "E97", name: "KID: Classical, Bayonet Attack Defense", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7 9.b4 Nh5 10.Re1 f5 11.Ng5 Nf6 12.Bf3", rationale: "Against the Bayonet Attack (9.b4), Black plays Nh5-f5 to launch the standard kingside attack. The knight reroutes to f4 via h5 while f5 opens lines against White's king. This is the critical theoretical battleground of the KID.", confidence: "high", lineType: "main", exploits: "KID's closed center allows kingside attack" },
   },
   {
     matchPattern: "king's indian",
-    line: { eco: "E97", name: "King's Indian: Orthodox, Aronin-Taimanov", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7", rationale: "The Aronin-Taimanov is the sharpest response to the Classical KID. Black aims for a kingside attack with f5.", confidence: "high", lineType: "main", exploits: "KID's closed center" },
+    line: { eco: "E97", name: "King's Indian: Orthodox Main Line", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7 9.Ne1 Nd7 10.f3 f5 11.Be3 f4 12.Bf2", rationale: "The Orthodox Main Line with 9.Ne1 leads to the classic KID structure where Black attacks on the kingside with f5-f4-g5-g4 while White expands on the queenside with c5-cxd6-b4-a4. Both sides have clear plans and the play is razor-sharp.", confidence: "high", lineType: "main", exploits: "KID's closed center" },
   },
   {
     matchPattern: "nimzo-indian",
-    line: { eco: "E32", name: "Nimzo-Indian: Classical, 4.Qc2", moves: "1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.Qc2 O-O 5.a3 Bxc3+ 6.Qxc3 b6", rationale: "After 4.Qc2, Black should castle and then play b6 to fianchetto. This gives Black a solid position with the bishop pair.", confidence: "high", lineType: "main", exploits: "Nimzo's doubled pawns" },
+    line: { eco: "E41", name: "Nimzo-Indian: Huebner Variation", moves: "1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.e3 c5 5.Bd3 Nc6 6.Nf3 Bxc3+ 7.bxc3 d6 8.O-O e5 9.Nd2 O-O 10.f3 Ne8 11.d5 Nb8", rationale: "The Huebner Variation gives Black a solid position with the bishop pair traded for White's doubled c-pawns. Black's plan is to reroute the knight via e8-c7 and play f5 for a kingside attack. White's extra center pawns are a long-term weakness.", confidence: "high", lineType: "main", exploits: "Nimzo's doubled pawns" },
   },
-  // Against English
+  {
+    matchPattern: "catalan",
+    line: { eco: "E06", name: "Catalan: Closed, Main Line", moves: "1.d4 Nf6 2.c4 e6 3.g3 d5 4.Bg2 Be7 5.Nf3 O-O 6.O-O dxc4 7.Qc2 a6 8.Qxc4 b5 9.Qc2 Bb7 10.Bd2 Ra7 11.Rc1 Be4", rationale: "Black accepts the gambit pawn with dxc4 and then holds it with a6-b5. The bishop on b7 controls the long diagonal and the rook lift Ra7 is a key defensive resource. Black's extra pawn provides long-term winning chances.", confidence: "high", lineType: "main", exploits: "Catalan's slow piece development" },
+  },
+  {
+    matchPattern: "trompowsky",
+    line: { eco: "A45", name: "Trompowsky: 2...Ne4 Main Line", moves: "1.d4 Nf6 2.Bg5 Ne4 3.Bf4 c5 4.f3 Nf6 5.dxc5 Qa5+ 6.Nc3 Qxc5 7.e4 d6 8.Qd2 e5 9.Bg5 Be7 10.O-O-O O-O", rationale: "The 2...Ne4 response is the most aggressive counter to the Trompowsky. Black immediately challenges the bishop and gains time. After c5 and Qa5+, Black recovers the pawn with active piece play.", confidence: "medium", lineType: "main", exploits: "Trompowsky's early bishop commitment" },
+  },
+  {
+    matchPattern: "grunfeld",
+    line: { eco: "D85", name: "Grunfeld: Exchange, Modern", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 d5 4.cxd5 Nxd5 5.e4 Nxc3 6.bxc3 Bg7 7.Nf3 c5 8.Be3 Qa5 9.Qd2 O-O 10.Rc1 cxd4 11.cxd4 Qxd2+", rationale: "The Exchange Grunfeld is the critical test. Black allows White a big center then attacks it with c5, Qa5, and Bg7 pressure. The resulting positions are deeply theoretical but Black's piece activity and pressure on d4 provide full compensation.", confidence: "high", lineType: "main", exploits: "Grunfeld's central pressure" },
+  },
+  // ── Against English ────────────────────────────────────────────────────────────
   {
     matchPattern: "english",
-    line: { eco: "A25", name: "English: Closed, Botvinnik System", moves: "1.c4 e5 2.Nc3 Nc6 3.g3 g6 4.Bg2 Bg7 5.d3 d6 6.e4", rationale: "The Botvinnik System gives Black a solid position. Black mirrors White's setup and aims for counterplay in the center.", confidence: "medium", lineType: "main", exploits: "English's slow development" },
+    line: { eco: "A29", name: "English: Four Knights, Kingside Fianchetto", moves: "1.c4 e5 2.Nc3 Nf6 3.Nf3 Nc6 4.g3 d5 5.cxd5 Nxd5 6.Bg2 Nb6 7.O-O Be7 8.d3 O-O 9.a3 Be6 10.b4 f6", rationale: "The Four Knights with d5 is the most dynamic response to the English. Black seizes space in the center and develops naturally. After Nb6, Black maintains the d5 outpost and prepares f6-Qd7 with a solid, active position.", confidence: "high", lineType: "main", exploits: "English's slow development" },
+  },
+  // ── Against Reti ───────────────────────────────────────────────────────────────
+  {
+    matchPattern: "reti",
+    line: { eco: "A07", name: "Reti: KIA Reversed", moves: "1.Nf3 d5 2.g3 Nf6 3.Bg2 c6 4.O-O Bg4 5.d3 Nbd7 6.Nbd2 e5 7.e4 dxe4 8.dxe4 Bc5 9.h3 Bh5 10.Qe1 O-O", rationale: "Against the Reti, Black plays a solid Slav-like setup with c6-d5 and develops the bishop to g4 before White can play e4. After e5, Black has a strong center and active pieces. The bishop on c5 targets f2.", confidence: "medium", lineType: "main", exploits: "Reti's slow central control" },
   },
 ];
 
@@ -1099,6 +1152,69 @@ export function analyzePlayStyle(games: ChessComGame[], username: string): PlayS
   };
 }
 
+/**
+ * Deep theory extensions for common openings.
+ * When no counter-line matches, we use this map to extend the ECO book's
+ * short move sequence into a full 8-12 move main line.
+ */
+const DEEP_THEORY_MAP: Record<string, { moves: string; name: string; rationale: string }> = {
+  // ── 1.e4 openings ──
+  "sicilian": { moves: "1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 6.Be3 e5 7.Nb3 Be6 8.f3 Be7 9.Qd2 O-O 10.O-O-O Nbd7", name: "Sicilian Najdorf: English Attack", rationale: "The English Attack (6.Be3/f3/Qd2/O-O-O) is the most dangerous system against the Najdorf. White castles queenside and launches a kingside pawn storm." },
+  "french": { moves: "1.e4 e6 2.d4 d5 3.Nc3 Nf6 4.e5 Nfd7 5.f4 c5 6.Nf3 Nc6 7.Be3 cxd4 8.Nxd4 Bc5 9.Qd2 O-O 10.O-O-O a6", name: "French: Steinitz, Boleslavsky", rationale: "The Steinitz variation with f4 gives White a strong kingside pawn chain. Black must counter on the queenside with c5 and a6-b5." },
+  "caro-kann": { moves: "1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Bf5 5.Ng3 Bg6 6.h4 h6 7.Nf3 Nd7 8.h5 Bh7 9.Bd3 Bxd3 10.Qxd3 e6", name: "Caro-Kann: Classical Main Line", rationale: "The Classical Caro-Kann with 4...Bf5 is the most popular response. White pushes h4-h5 to weaken Black's kingside and aims for a space advantage." },
+  "pirc": { moves: "1.e4 d6 2.d4 Nf6 3.Nc3 g6 4.f4 Bg7 5.Nf3 O-O 6.Bd3 Na6 7.O-O c5 8.d5 Nc7 9.a4 Rb8 10.Qe1 b6", name: "Pirc: Austrian Attack", rationale: "The Austrian Attack (4.f4) is the most aggressive system against the Pirc. White builds a massive center and aims for a kingside attack with e5." },
+  "scandinavian": { moves: "1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.d4 Nf6 5.Nf3 Bf5 6.Bc4 e6 7.Bd2 c6 8.Qe2 Bb4 9.O-O-O Nbd7 10.d5 exd5", name: "Scandinavian: Main Line with Qa5", rationale: "After 3...Qa5, Black develops the bishop to f5 before it gets locked in. White aims for a central break with d5 to open lines." },
+  "alekhine": { moves: "1.e4 Nf6 2.e5 Nd5 3.d4 d6 4.Nf3 dxe5 5.Nxe5 c6 6.Be2 Bf5 7.O-O Nd7 8.Nf3 e6 9.c4 N5f6 10.Nc3 Be7", name: "Alekhine: Modern Variation", rationale: "The Modern Variation avoids the sharp Four Pawns Attack. White maintains a space advantage while Black develops solidly." },
+  "philidor": { moves: "1.e4 e5 2.Nf3 d6 3.d4 Nf6 4.Nc3 Nbd7 5.Bc4 Be7 6.O-O O-O 7.a4 c6 8.Re1 exd4 9.Nxd4 Nc5 10.Bf1 Re8", name: "Philidor: Hanham Variation", rationale: "The Hanham setup with Nbd7-Be7-O-O is the most solid Philidor system. White maintains a space edge but Black's position is very resilient." },
+  "petroff": { moves: "1.e4 e5 2.Nf3 Nf6 3.Nxe5 d6 4.Nf3 Nxe4 5.d4 d5 6.Bd3 Nc6 7.O-O Be7 8.c4 Nb4 9.Be2 O-O 10.Nc3 Bf5", name: "Petroff: Classical Attack", rationale: "The Classical Attack with 5.d4 leads to a symmetrical pawn structure. White has a slight space advantage but Black's position is very solid." },
+  // ── 1.d4 openings ──
+  "queen's gambit": { moves: "1.d4 d5 2.c4 e6 3.Nc3 Nf6 4.Bg5 Be7 5.e3 O-O 6.Nf3 Nbd7 7.Rc1 c6 8.Bd3 dxc4 9.Bxc4 Nd5 10.Bxe7 Qxe7", name: "QGD: Lasker Defense", rationale: "The Lasker Defense with Nbd7-c6-dxc4-Nd5 is the most reliable QGD system. Black simplifies the position and aims for equality." },
+  "slav": { moves: "1.d4 d5 2.c4 c6 3.Nf3 Nf6 4.Nc3 dxc4 5.a4 Bf5 6.e3 e6 7.Bxc4 Bb4 8.O-O Nbd7 9.Qe2 Bg6 10.e4 O-O", name: "Slav: Czech Variation", rationale: "The Czech Slav with 4...dxc4 5.a4 Bf5 is the main line. Black develops the light-squared bishop before playing e6, avoiding the 'bad bishop' problem." },
+  "dutch": { moves: "1.d4 f5 2.g3 Nf6 3.Bg2 g6 4.Nf3 Bg7 5.O-O O-O 6.c4 d6 7.Nc3 Qe8 8.d5 Na6 9.Rb1 Nc5 10.b3 a5", name: "Leningrad Dutch: Main Line", rationale: "The Leningrad Dutch with g6-Bg7 is the most dynamic Dutch system. Black aims for a kingside attack with f5-f4-g5 while the bishop on g7 controls the long diagonal." },
+  "benoni": { moves: "1.d4 Nf6 2.c4 c5 3.d5 e6 4.Nc3 exd5 5.cxd5 d6 6.e4 g6 7.Nf3 Bg7 8.Be2 O-O 9.O-O Re8 10.Nd2 Na6", name: "Modern Benoni: Classical", rationale: "The Modern Benoni creates an asymmetrical pawn structure. Black has a queenside pawn majority and aims for b5, while White has a central space advantage." },
+  "bogo-indian": { moves: "1.d4 Nf6 2.c4 e6 3.Nf3 Bb4+ 4.Bd2 Bxd2+ 5.Qxd2 d5 6.g3 O-O 7.Bg2 Nbd7 8.O-O c6 9.Nc3 b6 10.cxd5 exd5", name: "Bogo-Indian: Exchange Variation", rationale: "The Bogo-Indian with 3...Bb4+ is a solid alternative to the Nimzo-Indian. After the bishop exchange, Black has a solid position with easy development." },
+  "indian": { moves: "1.d4 Nf6 2.c4 e6 3.Nf3 b6 4.g3 Ba6 5.b3 Bb4+ 6.Bd2 Be7 7.Bg2 c6 8.Bc3 d5 9.Ne5 Nfd7 10.Nxd7 Nxd7", name: "Queen's Indian: Petrosian System", rationale: "The Queen's Indian with b6-Ba6 targets the c4 pawn and prevents White from establishing a big center. The Petrosian System with Bc3 is the main line." },
+  // ── Flank openings ──
+  "english": { moves: "1.c4 e5 2.Nc3 Nf6 3.Nf3 Nc6 4.g3 d5 5.cxd5 Nxd5 6.Bg2 Nb6 7.O-O Be7 8.d3 O-O 9.a3 Be6 10.b4 f6", name: "English: Four Knights", rationale: "The Four Knights with d5 is the most active response to the English. Black seizes central space and develops naturally." },
+  "reti": { moves: "1.Nf3 d5 2.g3 Nf6 3.Bg2 c6 4.O-O Bg4 5.d3 Nbd7 6.Nbd2 e5 7.e4 dxe4 8.dxe4 Bc5 9.h3 Bh5 10.Qe1 O-O", name: "Reti: Reversed KIA", rationale: "Against the Reti, Black plays a solid Slav-like setup with c6-d5 and develops the bishop to g4 before White can play e4." },
+  "bird": { moves: "1.f4 d5 2.Nf3 Nf6 3.g3 g6 4.Bg2 Bg7 5.O-O O-O 6.d3 c5 7.Qe1 Nc6 8.Na3 Rb8 9.c3 b5 10.e4 dxe4", name: "Bird: Leningrad Reversed", rationale: "Against the Bird, Black mirrors the Leningrad Dutch setup. The fianchettoed bishop on g7 and the c5-break give Black active counterplay." },
+};
+
+/** Get a deep theory line for an opening, falling back to ECO book + extension */
+function getDeepTheoryLine(
+  eco: string,
+  openingName: string,
+  myColor: "white" | "black"
+): PrepLine {
+  const lowerName = openingName.toLowerCase();
+
+  // Try to find a matching deep theory line by opening name keyword
+  for (const [key, theory] of Object.entries(DEEP_THEORY_MAP)) {
+    if (lowerName.includes(key)) {
+      return {
+        eco: eco || "A00",
+        name: theory.name,
+        moves: theory.moves,
+        rationale: theory.rationale + ` Opponent frequently plays ${openingName} — study this line to be prepared.`,
+        confidence: "medium",
+        lineType: "main",
+      };
+    }
+  }
+
+  // Final fallback: use the ECO book entry but extend with a generic continuation
+  const ecoEntry = ECO_BOOK.find(e => e.eco === eco);
+  const baseMoves = ecoEntry?.moves || "1.e4 e5";
+  return {
+    eco: eco || "A00",
+    name: `Study: ${openingName}`,
+    moves: baseMoves,
+    rationale: `Opponent frequently plays ${openingName}. Review this opening's main ideas, typical pawn structures, and piece placement. Focus on the first 10 moves and key plans for both sides.`,
+    confidence: "low",
+    lineType: "main",
+  };
+}
+
 /** Generate prep lines based on opponent profile */
 export function generatePrepLines(
   profile: PlayStyleProfile,
@@ -1141,16 +1257,20 @@ export function generatePrepLines(
     }
   }
 
-  // Ensure at least 2 lines
+  // Ensure at least 1 line via deep theory fallback
   if (lines.length === 0 && opponentOpenings.length > 0) {
-    lines.push({
-      eco: "A00",
-      name: "Study opponent's main opening",
-      moves: opponentOpenings[0]?.moves || "",
-      rationale: `Opponent frequently plays ${opponentOpenings[0]?.name}. Study the main counter-lines.`,
-      confidence: "low",
-      lineType: "main",
-    });
+    const topOpening = opponentOpenings[0];
+    const deepLine = getDeepTheoryLine(topOpening.eco, topOpening.name, myColor);
+    lines.push(deepLine);
+  }
+
+  // If we still have fewer than 2 lines, add a second from the next opening
+  if (lines.length < 2 && opponentOpenings.length > 1) {
+    const secondOpening = opponentOpenings[1];
+    const deepLine = getDeepTheoryLine(secondOpening.eco, secondOpening.name, myColor);
+    if (!lines.find(l => l.eco === deepLine.eco && l.name === deepLine.name)) {
+      lines.push(deepLine);
+    }
   }
 
   return lines.slice(0, 5);

@@ -4933,3 +4933,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Build CutoffOverrideModal component (power-of-2 size selector, warning if results entered)
 - [ ] Wire "Change cutoff" link into Bracket tab dashboard header
 - [ ] Unit tests for cutoff override logic
+
+## Deepen Prep Lines
+- [x] Expand counter-lines from 2 moves to 8-12 moves with full main-line theory
+- [x] Add deep theory lines for all major openings (Sicilian, Ruy Lopez, QGD, KID, etc.)
