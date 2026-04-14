@@ -42,6 +42,11 @@ import {
   getSavedInsights,
   getInsightsForOpponent,
 } from "../lib/coachInsight";
+import {
+  getRecentlyScouted,
+  addRecentlyScouted,
+  removeRecentlyScouted,
+} from "../lib/recentlyScouted";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -221,6 +226,9 @@ export default function MatchupPrep() {
     setQuota(getQuotaState("free"));
   }, []);
 
+  // Recently scouted chips
+  const [recentlyScouted, setRecentlyScouted] = useState<string[]>(() => getRecentlyScouted());
+
   // Practice mode state
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [practiceRevealed, setPracticeRevealed] = useState(false);
@@ -265,6 +273,9 @@ export default function MatchupPrep() {
       }
       const data: PrepReport = await res.json();
       setReport(data);
+      // Persist to recently scouted list
+      const updated = addRecentlyScouted(username.trim());
+      setRecentlyScouted(updated);
       // Initialize practice queue sorted by priority (will be re-sorted by collision after enrichment)
       const sorted = data.prepLines
         .map((_, i) => i)
@@ -1060,6 +1071,24 @@ export default function MatchupPrep() {
           </div>
         )}
 
+        {/* ── Recently Scouted Chips ── */}
+        {!report && !loading && !error && recentlyScouted.length > 0 && (
+          <RecentlyScoutedChips
+            usernames={recentlyScouted}
+            onSelect={(u) => {
+              setSearchInput(u);
+              navigate(`/prep/${encodeURIComponent(u)}`);
+              fetchReport(u);
+            }}
+            onRemove={(u) => {
+              const updated = removeRecentlyScouted(u);
+              setRecentlyScouted(updated);
+            }}
+            isDark={isDark}
+            t={t}
+          />
+        )}
+
         {/* ── Welcome / Empty State ── */}
         {!report && !loading && !error && (
           <div className={`${t.card} py-12 px-6 sm:py-16 flex flex-col items-center gap-5 text-center`}>
@@ -1631,6 +1660,67 @@ function EmptyState({
       <div>
         <h3 className={`font-semibold text-sm ${t.textPrimary}`}>{title}</h3>
         <p className={`text-sm mt-1 ${t.textTertiary} max-w-xs mx-auto leading-relaxed`}>{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Recently Scouted Chips ─────────────────────────────────────────────────────
+
+function RecentlyScoutedChips({
+  usernames, onSelect, onRemove, isDark, t
+}: {
+  usernames: string[];
+  onSelect: (username: string) => void;
+  onRemove: (username: string) => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  if (usernames.length === 0) return null;
+  return (
+    <div className={`${t.card} p-4`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>
+        Recently Scouted
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {usernames.map((username) => (
+          <div
+            key={username}
+            className={`group flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border text-sm font-medium transition-all ${
+              isDark
+                ? "bg-[#0d1a0f]/60 border-[#1e2e22]/60 text-white/70 hover:border-[#3D6B47]/40 hover:text-white"
+                : "bg-gray-50/80 border-gray-200/60 text-gray-600 hover:border-[#3D6B47]/30 hover:text-gray-900"
+            }`}
+          >
+            {/* Clickable username area */}
+            <button
+              onClick={() => onSelect(username)}
+              className="flex items-center gap-1.5 min-w-0"
+              aria-label={`Scout ${username}`}
+            >
+              <span
+                className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                  isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                }`}
+              >
+                {username.charAt(0).toUpperCase()}
+              </span>
+              <span className="truncate max-w-[120px]">{username}</span>
+            </button>
+            {/* Remove button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(username); }}
+              className={`ml-0.5 w-4 h-4 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
+                isDark ? "hover:bg-white/10 text-white/30 hover:text-white/60" : "hover:bg-gray-200 text-gray-300 hover:text-gray-500"
+              }`}
+              aria-label={`Remove ${username} from recent`}
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
