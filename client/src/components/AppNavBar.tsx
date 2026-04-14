@@ -23,6 +23,7 @@ import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/to
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
+import { AnalyzeDropdown } from "@/components/AnalyzeDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 
@@ -89,8 +90,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     (activeTournament.status === "in_progress" || activeTournament.status === "registration" || activeTournament.status === "unknown");
 
   const navItems = [
-    {
-      name: "Tournaments",
+    { name: "Tournaments",
       url: dashboardUrl,
       icon: LayoutDashboard,
       tooltip: dashboardTooltip,
@@ -108,7 +108,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     },
     { name: "Clubs",   url: "/clubs",   icon: Building2 },
     { name: "Battle",  url: "/battle",  icon: Swords },
-    { name: "Analyze", url: "/record",  icon: Video },
+    { name: "Analyze", url: "/prep",  icon: Video, dropdown: <AnalyzeDropdown /> },
   ];
 
   const logoEl = (
