@@ -41,6 +41,7 @@ import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
 import { EliminationBracketView, SwissElimCutoffScreen } from "@/components/EliminationBracketView";
+import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 import { StyleAwarePairingsPanel } from "@/components/StyleAwarePairingsPanel";
 import { computeStyleSignals, synthesiseStyleProfile, type StylePairingPlayer } from "@/lib/styleAwarePairings";
@@ -1570,6 +1571,7 @@ export default function Director() {
     enterResult,
     generateNextRound,
     advanceToElimination,
+    resetElimination,
     togglePause,
     resetTournament,
     completeTournament,
@@ -1735,6 +1737,7 @@ export default function Director() {
   const [sortKey, setSortKey] = useState<"rank" | "elo" | "name" | "points">("rank");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showFilters, setShowFilters] = useState(false);
+  const [showCutoffOverride, setShowCutoffOverride] = useState(false);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showUploadRSVP, setShowUploadRSVP] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
@@ -4224,14 +4227,29 @@ export default function Director() {
                         </p>
                       </div>
                     </div>
-                    {allResultsIn && (
-                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold ${
-                        isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
-                      }`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                        All results in
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {/* Change cutoff link — only for swiss_elim */}
+                      {state.format === "swiss_elim" && (
+                        <button
+                          onClick={() => setShowCutoffOverride(true)}
+                          className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${
+                            isDark
+                              ? "text-white/35 hover:text-white/60 hover:bg-white/06"
+                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          Change cutoff
+                        </button>
+                      )}
+                      {allResultsIn && (
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold ${
+                          isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-green-50 text-green-700"
+                        }`}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                          All results in
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -5054,8 +5072,29 @@ export default function Director() {
           onClose={() => setSwapModalOpen(false)}
         />
       )}
+      {/* ── Cutoff Override Modal ─────────────────────────────────────────── */}
+      {showCutoffOverride && state.format === "swiss_elim" && state.elimPhase === "elimination" && (() => {
+        const swissRoundCount = state.swissRounds ?? 0;
+        const elimRoundsInState = state.rounds.filter((r) => r.number > swissRoundCount);
+        const hasElimResults = elimRoundsInState.some((r) =>
+          r.games.some((g) => g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE")
+        );
+        return (
+          <CutoffOverrideModal
+            currentCutoff={state.elimCutoff ?? 8}
+            totalPlayers={state.players.length}
+            hasResults={hasElimResults}
+            isDark={isDark}
+            onConfirm={(newCutoff) => {
+              resetElimination(newCutoff);
+              toast.success(`Bracket regenerated with top ${newCutoff} players.`);
+            }}
+            onClose={() => setShowCutoffOverride(false)}
+          />
+        );
+      })()}
 
-      {/* ── Mobile floating "Back to Home" pill ─────────────────────────── */}
+      {/* ── Mobile floating "Back to Home" pill ─────────────────────────────── */}
       {/* Visible on mobile only when on a non-home tab, so the director can quickly jump back */}
       {activeTab !== "home" && (
         <div

@@ -526,7 +526,7 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
                 continue;
               }
             }
-            const report = await buildPrepReport(username, 50);
+            const report = await buildPrepReport(username, ["rapid", "blitz"], "white");
             const reportStr = JSON.stringify(report);
             await db.insert(prepCache).values({
               username,

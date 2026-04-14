@@ -4926,3 +4926,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update PublicBracketView empty state to reflect auto-generation ("updates automatically")
 - [x] Remove obsolete isSwissElimCutoff banner from Director Home tab
 - [x] 21 unit tests for auto-bracket generation logic (all passing)
+
+## Cutoff Override for Swiss-Elim Bracket
+
+- [ ] Add resetElimination(cutoffSize) to directorState.ts for post-auto-generation override
+- [ ] Build CutoffOverrideModal component (power-of-2 size selector, warning if results entered)
+- [ ] Wire "Change cutoff" link into Bracket tab dashboard header
+- [ ] Unit tests for cutoff override logic

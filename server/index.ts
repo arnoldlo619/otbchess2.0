@@ -18,7 +18,7 @@ import clubBattlesRouter from "./clubBattles.js";
 import { clubsRouter } from "./clubs.js";
 import { leaguesRouter } from "./leagues.js";
 import { emailRouter } from "./email.js";
-import { buildPrepReport, fetchPlayerGames, analyzePlayStyle, fetchPlayerStats, generatePrepLines, generateInsights } from "./prepEngine.js";
+import { buildPrepReport, fetchPlayerGames, analyzePlayStyle, generatePrepLines, generateInsights } from "./prepEngine.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -277,7 +277,7 @@ export function createApp() {
     }
 
     // Build fresh report
-    const report = await buildPrepReport(normalised, maxGames);
+    const report = await buildPrepReport(normalised, ["rapid", "blitz"], "white");
 
     // Store in cache (fire-and-forget)
     try {
@@ -318,7 +318,7 @@ export function createApp() {
 
       if (forceRefresh) {
         // Bypass cache when ?refresh=true
-        const report = await buildPrepReport(username.toLowerCase().trim(), maxGames);
+        const report = await buildPrepReport(username.toLowerCase().trim(), ["rapid", "blitz"], "white");
         // Update cache
         try {
           const db = await getDb();

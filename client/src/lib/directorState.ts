@@ -540,6 +540,43 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
+  // Reset/override the elimination bracket with a new cutoff size (swiss_elim only)
+  // Safe to call when elimPhase === "elimination" AND no results have been entered yet
+  const resetElimination = useCallback((cutoffSize: number) => {
+    setState((prev) => {
+      if (prev.format !== "swiss_elim" || prev.elimPhase !== "elimination") return prev;
+
+      // Only allow reset if no elimination results have been entered yet
+      const swissRoundCount = prev.swissRounds ?? 0;
+      const elimRoundsInState = prev.rounds.filter((r) => r.number > swissRoundCount);
+      const hasAnyResult = elimRoundsInState.some((r) =>
+        r.games.some((g) => g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE")
+      );
+      if (hasAnyResult) return prev; // refuse to reset if results already entered
+
+      // Remove all elimination rounds from state
+      const swissRoundsOnly = prev.rounds.filter((r) => r.number <= swissRoundCount);
+
+      // Re-generate with new cutoff
+      const standings = computeStandings(prev.players, swissRoundsOnly);
+      const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
+      const nextRoundNum = swissRoundCount + 1;
+      const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
+      const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
+      const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+
+      return {
+        ...prev,
+        rounds: [...swissRoundsOnly, newRound],
+        currentRound: nextRoundNum,
+        totalRounds: swissRoundCount + elimRoundsCount,
+        elimCutoff: cutoffSize,
+        elimPlayers: advancingPlayers,
+        elimRoundLabelText: elimRoundLabel(cutoffSize),
+      };
+    });
+  }, []);
+
   // Advance from Swiss to Elimination phase (swiss_elim format only)
   const advanceToElimination = useCallback((cutoffSize: number) => {
     setState((prev) => {
@@ -743,6 +780,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     enterResult,
     generateNextRound,
     advanceToElimination,
+    resetElimination,
     completeTournament,
     togglePause,
     resetTournament,
