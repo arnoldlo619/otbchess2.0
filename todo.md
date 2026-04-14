@@ -4952,3 +4952,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Re-fetch report when TC filter changes (if report or search input is present)
 - [x] Show helper label ("Rapid + Blitz", "Rapid only", "Blitz only") next to toggle
 - [x] 26 unit tests for TC filter (timeClasses resolution, cache key, URL, labels, state)
+
+## Bug Fixes
+- [x] Fix nested <a> DOM error in GuestMobileMenu: replaced Link+a pattern with a single <a> element for nav items

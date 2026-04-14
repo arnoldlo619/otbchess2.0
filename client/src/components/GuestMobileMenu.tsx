@@ -11,7 +11,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Building2, Swords, Video, LogIn, Trophy, Shield, Timer } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
 
 const NAV_ITEMS = [
@@ -119,18 +119,18 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
       {/* Nav links */}
       <div style={{ paddingTop: 6, paddingBottom: 6 }}>
         {NAV_ITEMS.map(({ name, href, icon: Icon }) => (
-          <Link key={name} href={href}>
-            <a
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors duration-100"
-              style={{ color: location.startsWith(href) ? "#fff" : "rgba(255,255,255,0.70)" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              <Icon size={15} style={{ color: location.startsWith(href) ? "#4CAF50" : "rgba(255,255,255,0.45)", flexShrink: 0 }} />
-              {name}
-            </a>
-          </Link>
+          <a
+            key={name}
+            href={href}
+            onClick={(e) => { e.preventDefault(); setOpen(false); window.location.href = href; }}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors duration-100"
+            style={{ color: location.startsWith(href) ? "#fff" : "rgba(255,255,255,0.70)" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
+            <Icon size={15} style={{ color: location.startsWith(href) ? "#4CAF50" : "rgba(255,255,255,0.45)", flexShrink: 0 }} />
+            {name}
+          </a>
         ))}
       </div>
 
