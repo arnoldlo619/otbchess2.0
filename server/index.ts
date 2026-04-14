@@ -254,38 +254,44 @@ export function createApp() {
   // 24-hour TTL: returns cached report if fresh, otherwise builds + caches.
   const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-  async function getCachedOrBuildPrepReport(username: string, maxGames: number) {
+  async function getCachedOrBuildPrepReport(
+    username: string,
+    maxGames: number,
+    timeClasses: string[] = ["rapid", "blitz"]
+  ) {
     const normalised = username.toLowerCase().trim();
+    // Composite cache key: username:all | username:rapid | username:blitz
+    const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
+    const cacheKey = `${normalised}:${tcKey}`;
     try {
       const db = await getDb();
       const [cached] = await db.select().from(prepCache)
-        .where(eq(prepCache.username, normalised))
+        .where(eq(prepCache.username, cacheKey))
         .limit(1);
 
       if (cached) {
         const age = Date.now() - new Date(cached.cachedAt).getTime();
         if (age < PREP_CACHE_TTL_MS) {
-          console.log(`[prep-cache] HIT for ${normalised} (age: ${Math.round(age / 60000)}m)`);
+          console.log(`[prep-cache] HIT for ${cacheKey} (age: ${Math.round(age / 60000)}m)`);
           return { report: JSON.parse(cached.reportJson), fromCache: true };
         }
-        console.log(`[prep-cache] STALE for ${normalised} (age: ${Math.round(age / 60000)}m), refreshing...`);
+        console.log(`[prep-cache] STALE for ${cacheKey} (age: ${Math.round(age / 60000)}m), refreshing...`);
       } else {
-        console.log(`[prep-cache] MISS for ${normalised}, building fresh report...`);
+        console.log(`[prep-cache] MISS for ${cacheKey}, building fresh report...`);
       }
     } catch (dbErr) {
       console.warn("[prep-cache] DB read error, falling through to live fetch:", dbErr);
     }
 
     // Build fresh report
-    const report = await buildPrepReport(normalised, ["rapid", "blitz"], "white");
+    const report = await buildPrepReport(normalised, timeClasses, "white");
 
     // Store in cache (fire-and-forget)
     try {
       const db = await getDb();
       const reportStr = JSON.stringify(report);
-      // Upsert: try insert, on duplicate key update
       await db.insert(prepCache).values({
-        username: normalised,
+        username: cacheKey,
         reportJson: reportStr,
         gamesAnalyzed: report.opponent.gamesAnalyzed,
         cachedAt: new Date(),
@@ -296,7 +302,7 @@ export function createApp() {
           cachedAt: new Date(),
         },
       });
-      console.log(`[prep-cache] STORED for ${normalised} (${report.opponent.gamesAnalyzed} games)`);
+      console.log(`[prep-cache] STORED for ${cacheKey} (${report.opponent.gamesAnalyzed} games)`);
     } catch (dbErr) {
       console.warn("[prep-cache] DB write error (non-fatal):", dbErr);
     }
@@ -316,15 +322,24 @@ export function createApp() {
       const maxGames = Math.min(parseInt(req.query.games as string) || 50, 100);
       const forceRefresh = req.query.refresh === "true";
 
+      // Time-control filter: ?tc=all|rapid|blitz  (default: all = rapid+blitz)
+      const tcParam = (req.query.tc as string) || "all";
+      const timeClasses: string[] =
+        tcParam === "rapid" ? ["rapid"] :
+        tcParam === "blitz" ? ["blitz"] :
+        ["rapid", "blitz"]; // "all"
+
       if (forceRefresh) {
         // Bypass cache when ?refresh=true
-        const report = await buildPrepReport(username.toLowerCase().trim(), ["rapid", "blitz"], "white");
-        // Update cache
+        const normalised = username.toLowerCase().trim();
+        const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
+        const cacheKey = `${normalised}:${tcKey}`;
+        const report = await buildPrepReport(normalised, timeClasses, "white");
         try {
           const db = await getDb();
           const reportStr = JSON.stringify(report);
           await db.insert(prepCache).values({
-            username: username.toLowerCase().trim(),
+            username: cacheKey,
             reportJson: reportStr,
             gamesAnalyzed: report.opponent.gamesAnalyzed,
             cachedAt: new Date(),
@@ -336,7 +351,7 @@ export function createApp() {
         return;
       }
 
-      const { report, fromCache } = await getCachedOrBuildPrepReport(username, maxGames);
+      const { report, fromCache } = await getCachedOrBuildPrepReport(username, maxGames, timeClasses);
       res.json({ ...report, _cached: fromCache });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";

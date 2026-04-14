@@ -207,6 +207,10 @@ export default function MatchupPrep() {
   // Key Lines filter
   const [lineFilter, setLineFilter] = useState<LineFilter>("all");
 
+  // Time-control filter for prep report
+  type TcFilter = "all" | "rapid" | "blitz";
+  const [tcFilter, setTcFilter] = useState<TcFilter>("all");
+
   // Enriched prep lines with collision scores (recomputed when report or repertoire changes)
   const enrichedLines = useMemo<EnrichedPrepLine[]>(() => {
     if (!report) return [];
@@ -283,7 +287,7 @@ export default function MatchupPrep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.username]);
 
-  async function fetchReport(username: string, refresh = false) {
+  async function fetchReport(username: string, refresh = false, tc?: "all" | "rapid" | "blitz") {
     if (refresh) {
       setRefreshing(true);
     } else {
@@ -293,7 +297,11 @@ export default function MatchupPrep() {
     }
     setError(null);
     try {
-      const url = `/api/prep/${encodeURIComponent(username.trim())}${refresh ? "?refresh=true" : ""}`;
+      const activeTc = tc ?? tcFilter;
+      const tcQuery = activeTc !== "all" ? `tc=${activeTc}` : "";
+      const refreshQuery = refresh ? "refresh=true" : "";
+      const queryStr = [tcQuery, refreshQuery].filter(Boolean).join("&");
+      const url = `/api/prep/${encodeURIComponent(username.trim())}${queryStr ? `?${queryStr}` : ""}`;
       const res = await fetch(url);
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: "Unknown error" }));
@@ -572,6 +580,45 @@ export default function MatchupPrep() {
                 </button>
               )}
             </div>
+          )}
+        </div>
+
+        {/* ── Time-Control Filter Row ── */}
+        <div className={`max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2`}>
+          <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Games</span>
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
+            {(["all", "rapid", "blitz"] as const).map((tc) => (
+              <button
+                key={tc}
+                data-testid={`tc-filter-${tc}`}
+                onClick={() => {
+                  if (tc === tcFilter) return;
+                  setTcFilter(tc);
+                  if (report) {
+                    // Re-fetch with the new TC filter
+                    fetchReport(report.opponent.username, false, tc);
+                  } else if (searchInput.trim()) {
+                    fetchReport(searchInput.trim(), false, tc);
+                  }
+                }}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
+                  tcFilter === tc
+                    ? isDark
+                      ? "bg-[#3D6B47] text-white shadow-sm"
+                      : "bg-[#3D6B47] text-white shadow-sm"
+                    : isDark
+                      ? "text-white/40 hover:text-white/70"
+                      : "text-gray-400 hover:text-gray-700"
+                }`}
+              >
+                {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : "Blitz"}
+              </button>
+            ))}
+          </div>
+          {report && (
+            <span className={`text-[10px] ${t.textTertiary} ml-1`}>
+              {tcFilter === "all" ? "Rapid + Blitz" : tcFilter === "rapid" ? "Rapid only" : "Blitz only"}
+            </span>
           )}
         </div>
       </div>

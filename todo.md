@@ -4944,3 +4944,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add initialLineIndex prop to ChessPracticeBoard with useEffect jump logic
 - [x] Resolve filtered→full index when clicking from filtered Key Lines view
 - [x] 19 unit tests for practice-this-line feature (all passing)
+
+## Time-Control Filter for Matchup Prep
+- [x] Add All / Rapid / Blitz segmented toggle to Matchup Prep sticky header
+- [x] Add ?tc=all|rapid|blitz query param support to GET /api/prep/:username
+- [x] Use composite cache key (username:tc) so each TC variant is cached independently
+- [x] Re-fetch report when TC filter changes (if report or search input is present)
+- [x] Show helper label ("Rapid + Blitz", "Rapid only", "Blitz only") next to toggle
+- [x] 26 unit tests for TC filter (timeClasses resolution, cache key, URL, labels, state)
