@@ -27,6 +27,7 @@ import { UserRepertoirePanel } from "../components/UserRepertoirePanel";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
 import { CoachInsightCard } from "../components/CoachInsightCard";
+import { PreRoundQuickReview } from "../components/PreRoundQuickReview";
 import {
   UserRepertoire,
   loadUserRepertoire,
@@ -781,6 +782,21 @@ export default function MatchupPrep() {
             {/* ── Tab 1: Scout ── */}
             {activeTab === "scout" && (
               <div className="space-y-4">
+
+                {/* Pre-Round Quick Review — shown at top for game-day use */}
+                <PreRoundQuickReview
+                  report={report}
+                  enrichedLines={enrichedLines}
+                  repertoire={{
+                    whiteFirstMove: repertoire.whiteFirstMove,
+                    blackVsE4: repertoire.blackVsE4,
+                    blackVsD4: repertoire.blackVsD4,
+                    expectedColor: repertoire.expectedColor,
+                  }}
+                  quota={quota}
+                  onQuotaConsumed={refreshQuota}
+                  isDark={isDark}
+                />
 
                 {/* My Repertoire Panel */}
                 <UserRepertoirePanel value={repertoire} onChange={setRepertoire} />
