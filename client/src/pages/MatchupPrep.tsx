@@ -47,6 +47,10 @@ import {
   addRecentlyScouted,
   removeRecentlyScouted,
 } from "../lib/recentlyScouted";
+import {
+  useOpponentProfile,
+  countryCodeToFlag,
+} from "../hooks/useOpponentProfile";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -225,6 +229,11 @@ export default function MatchupPrep() {
   const refreshQuota = useCallback(() => {
     setQuota(getQuotaState("free"));
   }, []);
+
+  // Opponent profile (avatar, title, country) — fetched when report is loaded
+  const { profile: opponentProfile } = useOpponentProfile(
+    report ? report.opponent.username : null
+  );
 
   // Recently scouted chips
   const [recentlyScouted, setRecentlyScouted] = useState<string[]>(() => getRecentlyScouted());
@@ -643,18 +652,64 @@ export default function MatchupPrep() {
             {/* Opponent Snapshot Hero */}
             <div className={`${t.card} p-5 sm:p-6`}>
               <div className="flex items-start justify-between gap-4 mb-5">
-                <div>
-                  <p className={`text-[11px] font-semibold uppercase tracking-widest mb-1 ${t.textTertiary}`}>Opponent</p>
-                  <h2 className={`text-xl sm:text-2xl font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                    {report.opponent.username}
-                  </h2>
-                  <p className={`text-xs mt-1 ${t.textTertiary}`}>
-                    {report.opponent.gamesAnalyzed} games analyzed
-                    {report._cached && <span className="ml-2 opacity-60">· cached</span>}
-                  </p>
+                {/* Left: avatar + identity */}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {/* Avatar */}
+                  <div className={`relative shrink-0 w-14 h-14 rounded-2xl overflow-hidden ${
+                    isDark ? "bg-[#162018] border border-[#2e4a34]/40" : "bg-[#3D6B47]/06 border border-[#3D6B47]/15"
+                  }`}>
+                    {opponentProfile?.avatar ? (
+                      <img
+                        src={opponentProfile.avatar}
+                        alt={report.opponent.username}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className={`text-xl font-bold ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/40"}`}>
+                          {report.opponent.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    {/* Country flag badge */}
+                    {opponentProfile?.countryCode && (
+                      <div className="absolute bottom-0.5 right-0.5 text-[13px] leading-none select-none">
+                        {countryCodeToFlag(opponentProfile.countryCode)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Identity text */}
+                  <div className="min-w-0">
+                    <p className={`text-[11px] font-semibold uppercase tracking-widest mb-0.5 ${t.textTertiary}`}>Opponent</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className={`text-xl sm:text-2xl font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+                        {report.opponent.username}
+                      </h2>
+                      {/* Title badge (GM / IM / FM etc.) */}
+                      {opponentProfile?.title && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
+                          isDark
+                            ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                            : "bg-amber-50 border-amber-200 text-amber-700"
+                        }`}>
+                          {opponentProfile.title}
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
+                      {opponentProfile?.name && (
+                        <span className="mr-2">{opponentProfile.name}</span>
+                      )}
+                      {report.opponent.gamesAnalyzed} games analyzed
+                      {report._cached && <span className="ml-2 opacity-60">· cached</span>}
+                    </p>
+                  </div>
                 </div>
+
                 {/* Ratings */}
-                <div className="flex gap-2 shrink-0">
+                <div className="flex flex-col gap-1.5 shrink-0 items-end">
                   {report.opponent.rating.rapid  && <RatingBadge label="Rapid"  value={report.opponent.rating.rapid}  isDark={isDark} />}
                   {report.opponent.rating.blitz  && <RatingBadge label="Blitz"  value={report.opponent.rating.blitz}  isDark={isDark} />}
                   {report.opponent.rating.bullet && <RatingBadge label="Bullet" value={report.opponent.rating.bullet} isDark={isDark} />}
