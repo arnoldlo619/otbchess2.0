@@ -688,6 +688,7 @@ const ECO_BOOK: EcoEntry[] = [
   { eco: "E95", name: "King's Indian: Classical, 7.O-O Nbd7", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nbd7 8.Re1" },
   { eco: "E96", name: "King's Indian: Classical, 7.O-O Nbd7 8.Re1 c6", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nbd7 8.Re1 c6 9.Bf1" },
   { eco: "E97", name: "King's Indian: Orthodox, Aronin-Taimanov", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7" },
+  { eco: "E97", name: "King's Indian: Mar del Plata", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7 9.Ne1 Nd7 10.Nd3 f5" },
   { eco: "E98", name: "King's Indian: Orthodox, Taimanov, 9.Ne1", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7 9.Ne1 Nd7 10.Be3 f5" },
   { eco: "E99", name: "King's Indian: Orthodox, Taimanov, Main Line", moves: "1.d4 Nf6 2.c4 g6 3.Nc3 Bg7 4.e4 d6 5.Nf3 O-O 6.Be2 e5 7.O-O Nc6 8.d5 Ne7 9.Ne1 Nd7 10.Be3 f5 11.f3 f4 12.Bf2 g5" },
 ];

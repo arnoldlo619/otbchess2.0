@@ -135,7 +135,7 @@ describe("clubEventRegistry — RSVPs", () => {
   it("removes a RSVP", () => {
     const evt = makeEvent();
     upsertRSVP(evt.id, "club-1", "user-1", "Alice", "going");
-    removeRSVP(evt.id, "user-1");
+    removeRSVP(evt.id, "club-1", "user-1");
     expect(getUserRSVP(evt.id, "user-1")).toBeNull();
   });
 
