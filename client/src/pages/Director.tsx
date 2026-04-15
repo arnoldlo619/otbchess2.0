@@ -19,7 +19,7 @@ import { RoundTimer } from "@/components/RoundTimer";
 import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
-import { Link, useParams, useLocation } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
@@ -3018,27 +3018,27 @@ export default function Director() {
                         </div>
                         {/* Action buttons */}
                         <div className={`flex flex-wrap gap-2 px-5 pb-4 pt-3 border-t ${ isDark ? "border-white/06" : "border-[#3D6B47]/08"}`}>
-                          <Link href={`/tournament/${tournamentId}`}>
-                            <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                          <button
+                            onClick={() => window.location.href = `/tournament/${tournamentId}`}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                               isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] hover:bg-[#4CAF50]/30" : "bg-[#3D6B47] text-white hover:bg-[#2d5235]"
                             }`}>
-                              <BarChart3 className="w-4 h-4" /> View Results
-                            </button>
-                          </Link>
-                          <Link href={`/tournament/${tournamentId}/report`}>
-                            <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                            <BarChart3 className="w-4 h-4" /> View Results
+                          </button>
+                          <button
+                            onClick={() => window.location.href = `/tournament/${tournamentId}/report`}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                               isDark ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30" : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
                             }`}>
-                              <Trophy className="w-4 h-4" /> Player Reports
-                            </button>
-                          </Link>
-                          <Link href={`/tournament/${tournamentId}/print`}>
-                            <button className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                            <Trophy className="w-4 h-4" /> Player Reports
+                          </button>
+                          <button
+                            onClick={() => window.location.href = `/tournament/${tournamentId}/print`}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                               isDark ? "bg-white/10 text-white/70 hover:bg-white/15" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                             }`}>
-                              <Download className="w-4 h-4" /> Print / Export
-                            </button>
-                          </Link>
+                            <Download className="w-4 h-4" /> Print / Export
+                          </button>
                           {/* Instagram Carousel Recap */}
                           <button
                             onClick={() => setShowCarousel(true)}

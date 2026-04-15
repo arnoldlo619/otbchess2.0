@@ -4955,3 +4955,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Bug Fixes
 - [x] Fix nested <a> DOM error in GuestMobileMenu: replaced Link+a pattern with a single <a> element for nav items
+
+## Nested Anchor Audit
+- [x] Audit AvatarNavDropdown and all nav/dropdown components for nested anchor violations
+- [x] Fix MobileNavDrawer.tsx: replaced Link+a with single <a> element
+- [x] Fix Director.tsx: replaced 3x Link+button with plain buttons using onClick navigation
+- [x] Verified all other pages/components clean (AvatarNavDropdown, Tournament, PublicTournament, PlayerView, ClubDashboard, ClubProfile, LeagueHistory, TournamentAnalytics)
+- [x] Full codebase scan confirms zero nested anchor violations

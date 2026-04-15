@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 export interface SpinBorderButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "solid" | "outline" | "glass";
-  /** Render as a different element (e.g. pass an <a> or wouter <Link> as child) */
+  /** Render as a different element (e.g. pass an anchor or wouter Link as child) */
   asChild?: boolean;
   children?: React.ReactNode;
   className?: string;

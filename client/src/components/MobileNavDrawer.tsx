@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LayoutDashboard, Building2, Swords, Video } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
 const NAV_ITEMS = [
   { name: "Tournaments", href: "/join",    icon: LayoutDashboard },
@@ -116,40 +116,40 @@ export function MobileNavDrawer({ currentPage, className = "" }: MobileNavDrawer
               {NAV_ITEMS.map((item) => {
                 const active = isActive(item);
                 return (
-                  <Link key={item.name} href={item.href}>
-                    <a
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={
-                        active
-                          ? {
-                              background: `${OTB_GREEN_GLOW}0.20)`,
-                              border: `1px solid ${OTB_GREEN_GLOW}0.28)`,
-                              color: "#fff",
-                            }
-                          : { color: "rgba(255,255,255,0.65)", border: "1px solid transparent" }
-                      }
-                      onMouseEnter={(e) => {
-                        if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
-                      }}
-                    >
-                      <item.icon
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: active ? OTB_GREEN : undefined }}
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    onClick={(e) => { e.preventDefault(); setOpen(false); window.location.href = item.href; }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={
+                      active
+                        ? {
+                            background: `${OTB_GREEN_GLOW}0.20)`,
+                            border: `1px solid ${OTB_GREEN_GLOW}0.28)`,
+                            color: "#fff",
+                          }
+                        : { color: "rgba(255,255,255,0.65)", border: "1px solid transparent" }
+                    }
+                    onMouseEnter={(e) => {
+                      if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active) (e.currentTarget as HTMLElement).style.background = "transparent";
+                    }}
+                  >
+                    <item.icon
+                      className="w-4 h-4 flex-shrink-0"
+                      style={{ color: active ? OTB_GREEN : undefined }}
+                    />
+                    <span>{item.name}</span>
+                    {active && (
+                      <motion.div
+                        layoutId="mobile-drawer-dot"
+                        className="ml-auto w-1.5 h-1.5 rounded-full"
+                        style={{ background: OTB_GREEN }}
                       />
-                      <span>{item.name}</span>
-                      {active && (
-                        <motion.div
-                          layoutId="mobile-drawer-dot"
-                          className="ml-auto w-1.5 h-1.5 rounded-full"
-                          style={{ background: OTB_GREEN }}
-                        />
-                      )}
-                    </a>
-                  </Link>
+                    )}
+                  </a>
                 );
               })}
             </div>
