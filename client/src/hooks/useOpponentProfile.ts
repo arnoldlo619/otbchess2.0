@@ -123,7 +123,7 @@ export function useOpponentProfile(username: string | null | undefined): {
         if (latestUsername.current !== u) return;
         // Profile fetch is cosmetic — fail silently, don't block the prep report
         console.warn("[useOpponentProfile] fetch failed (non-fatal):", err);
-        setError(null); // intentionally suppress error UI
+        setError(null);
         setLoading(false);
       });
   }, [username]);

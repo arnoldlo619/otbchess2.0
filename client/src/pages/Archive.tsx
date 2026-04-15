@@ -635,13 +635,6 @@ export default function Archive() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // ── Admin password gate ──────────────────────────────────────────────────
-  const { isUnlocked, attempt } = useArchiveAuth();
-  if (!isUnlocked) {
-    return <ArchivePasswordModal onAttempt={attempt} />;
-  }
-  // ────────────────────────────────────────────────────────────────────────
-
   const [search, setSearch] = useState("");
   const [formatFilter, setFormatFilter] = useState<string>("All");
   const [sortKey, setSortKey] = useState<"date" | "players" | "elo">("date");
@@ -654,36 +647,6 @@ export default function Archive() {
   useEffect(() => {
     setUserTournaments(listTournaments());
   }, []);
-
-  // Delete a user tournament: call server API, then remove from localStorage
-  const handleDeleteTournament = async (id: string): Promise<void> => {
-    // Optimistic: remove from list immediately
-    setUserTournaments((prev) => prev.filter((t) => t.id !== id));
-    try {
-      const r = await fetch(`/api/tournament/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (r.ok) {
-        // Also clean up localStorage registry
-        deleteTournament(id);
-        toast.success("Tournament deleted");
-      } else {
-        // Restore on failure
-        setUserTournaments(listTournaments());
-        const err = await r.json().catch(() => ({}));
-        toast.error((err as { error?: string }).error ?? "Failed to delete tournament");
-        throw new Error("delete failed");
-      }
-    } catch (e) {
-      if ((e as Error).message !== "delete failed") {
-        // Network error — restore
-        setUserTournaments(listTournaments());
-        toast.error("Network error — could not delete tournament");
-      }
-      throw e;
-    }
-  };
 
   const filtered = useMemo(() => {
     let list = [...ARCHIVE_TOURNAMENTS];
@@ -722,6 +685,43 @@ export default function Archive() {
   }, [search, formatFilter, sortKey]);
 
   const activeFilters = (formatFilter !== "All" ? 1 : 0) + (search.trim() ? 1 : 0);
+
+  // ── Admin password gate ──────────────────────────────────────────────────
+  const { isUnlocked, attempt } = useArchiveAuth();
+  if (!isUnlocked) {
+    return <ArchivePasswordModal onAttempt={attempt} />;
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
+  // Delete a user tournament: call server API, then remove from localStorage
+  const handleDeleteTournament = async (id: string): Promise<void> => {
+    // Optimistic: remove from list immediately
+    setUserTournaments((prev) => prev.filter((t) => t.id !== id));
+    try {
+      const r = await fetch(`/api/tournament/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (r.ok) {
+        // Also clean up localStorage registry
+        deleteTournament(id);
+        toast.success("Tournament deleted");
+      } else {
+        // Restore on failure
+        setUserTournaments(listTournaments());
+        const err = await r.json().catch(() => ({}));
+        toast.error((err as { error?: string }).error ?? "Failed to delete tournament");
+        throw new Error("delete failed");
+      }
+    } catch (e) {
+      if ((e as Error).message !== "delete failed") {
+        // Network error — restore
+        setUserTournaments(listTournaments());
+        toast.error("Network error — could not delete tournament");
+      }
+      throw e;
+    }
+  };
 
   return (
     <div

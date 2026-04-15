@@ -83,7 +83,7 @@ export default function DirectorAccessPage() {
     }
   }
 
-  function useThisCode(t: TournamentConfig) {
+  function handleUseThisCode(t: TournamentConfig) {
     setCode(t.directorCode);
     setShowForgot(false);
     setShowCode(true);
@@ -352,7 +352,7 @@ export default function DirectorAccessPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => useThisCode(t)}
+                          onClick={() => handleUseThisCode(t)}
                           className={`flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-xl transition-colors ${
                             isDark
                               ? "bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25"
