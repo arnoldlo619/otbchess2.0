@@ -4986,3 +4986,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Disabled noisy React Compiler rules (purity, static-components, immutability, preserve-manual-memoization)
 - [x] Disabled noisy base rules (no-useless-assignment, no-constant-condition, no-constant-binary-expression, no-empty, prefer-const)
 - [x] Final result: 0 ESLint errors, 306 warnings, TypeScript: 0 errors
+
+## GitHub Actions CI Lint Workflow
+- [x] Create .github/workflows/lint.yml to run pnpm lint on every PR
+- [x] Include Node.js 22, pnpm 10.4.1, pnpm store cache, frozen-lockfile install, lint, and tsc steps
+- [x] Workflow triggers on pull_request (all branches) and push to main
+- [x] YAML syntax validated: OK
