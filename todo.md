@@ -4962,3 +4962,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix Director.tsx: replaced 3x Link+button with plain buttons using onClick navigation
 - [x] Verified all other pages/components clean (AvatarNavDropdown, Tournament, PublicTournament, PlayerView, ClubDashboard, ClubProfile, LeagueHistory, TournamentAnalytics)
 - [x] Full codebase scan confirms zero nested anchor violations
+
+## ESLint + jsx-a11y Setup
+- [x] Install eslint-plugin-jsx-a11y (+ eslint@9, typescript-eslint, eslint-plugin-react, eslint-plugin-react-hooks)
+- [x] Configure ESLint flat config (eslint.config.js) with jsx-a11y, react, react-hooks, and typescript-eslint rules
+- [x] Fixed anchor-has-content error in pagination.tsx (added aria-label to self-closing anchor)
+- [x] Zero jsx-a11y errors across entire client/src/ codebase
+- [x] Added lint and lint:fix scripts to package.json
