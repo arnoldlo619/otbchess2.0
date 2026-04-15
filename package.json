@@ -16,7 +16,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "lint": "eslint client/src/ server/ shared/ --ext .ts,.tsx",
-    "lint:fix": "eslint client/src/ server/ shared/ --ext .ts,.tsx --fix"
+    "lint:fix": "eslint client/src/ server/ shared/ --ext .ts,.tsx --fix",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -127,7 +128,10 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-validate-jsx-nesting": "^0.1.1",
+    "husky": "^9.1.7",
     "jsdom": "^28.1.0",
+    "lint-staged": "^16.4.0",
     "pnpm": "^10.15.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",
@@ -150,6 +154,11 @@
     },
     "neverBuiltDependencies": [
       "canvas"
+    ]
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --no-warn-ignored"
     ]
   }
 }

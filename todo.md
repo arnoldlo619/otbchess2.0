@@ -4969,3 +4969,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fixed anchor-has-content error in pagination.tsx (added aria-label to self-closing anchor)
 - [x] Zero jsx-a11y errors across entire client/src/ codebase
 - [x] Added lint and lint:fix scripts to package.json
+
+## Husky + lint-staged Pre-commit Hook
+- [x] Install husky and lint-staged (+ eslint-plugin-validate-jsx-nesting for nested element detection)
+- [x] Initialize husky and create pre-commit hook (.husky/pre-commit → pnpm lint-staged)
+- [x] Configure lint-staged to run ESLint on staged .ts/.tsx files
+- [x] Tested: clean files pass, nested <a> inside <a> blocks commit with error
+- [x] Tuned rules: set-state-in-effect and purity disabled (43 existing violations); all a11y and nesting rules at error level

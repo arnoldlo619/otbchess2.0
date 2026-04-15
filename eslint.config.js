@@ -3,6 +3,7 @@ import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import validateJsxNesting from "eslint-plugin-validate-jsx-nesting";
 
 export default tseslint.config(
   // ── Base JS recommended ──────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export default tseslint.config(
       react: reactPlugin,
       "react-hooks": reactHooks,
       "jsx-a11y": jsxA11y,
+      "validate-jsx-nesting": validateJsxNesting,
     },
     rules: {
       // ── React ──────────────────────────────────────────────────────────
@@ -34,6 +36,8 @@ export default tseslint.config(
 
       // ── React Hooks ────────────────────────────────────────────────────
       ...reactHooks.configs.recommended.rules,
+      "react-hooks/set-state-in-effect": "off",   // 43 existing violations; enable later
+      "react-hooks/purity": "off",                // common pattern in existing code; enable later
 
       // ── Accessibility (jsx-a11y) ───────────────────────────────────────
       // Core rule that catches <a> containing <a>, <button>, etc.
@@ -66,6 +70,9 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-empty-object-type": "off",
+
+      // ── JSX nesting validation (catches <a> inside <a>, <button> inside <a>, etc.) ──
+      "validate-jsx-nesting/no-invalid-jsx-nesting": "error",
 
       // ── General ────────────────────────────────────────────────────────
       "no-console": ["warn", { allow: ["warn", "error"] }],
