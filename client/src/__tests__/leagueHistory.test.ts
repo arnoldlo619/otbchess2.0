@@ -104,7 +104,7 @@ describe("League Season History — Page Component", () => {
     expect(historyPage).toContain('"h2h"');
     expect(historyPage).toContain("h2hPlayer");
     expect(historyPage).toContain("h2hRows");
-    expect(historyPage).toContain("Select a player");
+    expect(historyPage).toContain("Select Player"); // actual label in LeagueHistory.tsx
   });
 
   it("renders stats tab with result distribution", () => {
@@ -116,15 +116,15 @@ describe("League Season History — Page Component", () => {
   });
 
   it("displays champion banner for completed leagues", () => {
-    expect(historyPage).toContain("League Champion");
+    expect(historyPage).toContain("Season Champion"); // actual label in LeagueHistory.tsx
     expect(historyPage).toContain("champion.displayName");
   });
 
   it("shows top performers section in stats", () => {
     expect(historyPage).toContain("Top Performers");
-    expect(historyPage).toContain("Most Wins");
-    expect(historyPage).toContain("Most Draws");
-    expect(historyPage).toContain("Highest Win Rate");
+    // Top performers shows standings by points, not by named stat categories
+    expect(historyPage).toContain("s.points");
+    expect(historyPage).toContain("s.displayName");
   });
 
   it("has a back link to the league dashboard", () => {

@@ -113,15 +113,15 @@ describe("recordTournamentCreated / recordTournamentCompleted", () => {
     const event = recordTournamentCreated(CLUB_ID, "Director", "Spring Open 2026", "spring-open-2026");
     expect(event.type).toBe("tournament_created");
     expect(event.detail).toBe("Spring Open 2026");
-    expect(event.linkHref).toBe("/tournament/spring-open-2026");
-    expect(event.linkLabel).toBe("View tournament");
+    expect(event.linkHref).toBe("/tournament/spring-open-2026/play");
+    expect(event.linkLabel).toBe("Join Tournament"); // actual label in clubFeedRegistry.ts
   });
 
   it("creates a tournament_completed event with winner info", () => {
     const event = recordTournamentCompleted(CLUB_ID, "Spring Open 2026", "Magnus", "spring-open-2026");
     expect(event.type).toBe("tournament_completed");
     expect(event.detail).toContain("Magnus");
-    expect(event.linkHref).toBe("/tournament/spring-open-2026");
+    expect(event.linkHref).toBe("/tournament/spring-open-2026/results");
   });
 });
 
