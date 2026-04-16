@@ -5109,3 +5109,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add 'Openings' link to AppNavBar between Battle and Analyze
 - [x] Add 'Openings' link to AvatarNavDropdown mobile menu
 - [x] Add 'Openings' link to GuestMobileMenu
+
+## Pro Subscription Gate (Openings Pages)
+
+- [ ] Audit existing Pro/subscription patterns (useAuth, isPro, subscription fields)
+- [ ] Build OpeningsProGate component with premium upgrade CTA
+- [ ] Gate OpeningsLibrary page — free users see upgrade CTA
+- [ ] Gate OpeningDetail page — free users see upgrade CTA
+- [ ] Gate StudyMode page — free users see upgrade CTA
+- [ ] Write tests for the gate component
+- [ ] Run quality gates and save checkpoint

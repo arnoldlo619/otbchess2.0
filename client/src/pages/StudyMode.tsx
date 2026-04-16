@@ -15,6 +15,7 @@ import { useRoute, useLocation } from "wouter";
 import { Chess } from "chess.js";
 import { Chessboard, type PieceDropHandlerArgs } from "react-chessboard";
 import { useTheme } from "@/contexts/ThemeContext";
+import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronLeft,
   Eye, HelpCircle, Lightbulb, Play, RefreshCw,
@@ -165,7 +166,7 @@ function TabButton({
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function StudyMode() {
+function StudyModeContent() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [, navigate] = useLocation();
@@ -648,5 +649,13 @@ export default function StudyMode() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StudyMode() {
+  return (
+    <OpeningsProGate>
+      <StudyModeContent />
+    </OpeningsProGate>
   );
 }
