@@ -5018,3 +5018,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added logger imports to 21 files (12 client, 9 server)
 - [x] Fixed leagueLifecycle.test.ts assertion to match new log string
 - [x] Final: 0 no-console warnings, 0 TypeScript errors, 4482 tests passing
+
+## Dominant TC Badge on Opponent Hero Card
+
+- [x] Add dominantTimeControl and timeControlSplit fields to client-side PlayStyleProfile interface
+- [x] Build DominantTCBadge component (icon + label + game count, auto-selects TC filter on click)
+- [x] Render DominantTCBadge in hero card identity section (next to title badge)
+- [x] Auto-pre-select TC filter when report loads based on dominantTimeControl
+- [x] Unit tests for dominant TC detection logic
