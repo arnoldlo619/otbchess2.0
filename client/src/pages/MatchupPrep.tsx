@@ -77,6 +77,14 @@ interface PlayStyleProfile {
   endgameProfile: { checkmates: number; resignations: number; timeouts: number; draws: number; total: number };
   firstMoveAsWhite: { move: string; count: number; pct: number }[];
   avgGameLength: number;
+  /** Dominant time control (most games played in) */
+  dominantTimeControl?: "rapid" | "blitz" | "bullet" | "mixed";
+  /** Per-TC game counts and win rates */
+  timeControlSplit?: {
+    rapid: { games: number; winRate: number };
+    blitz: { games: number; winRate: number };
+    bullet: { games: number; winRate: number };
+  };
 }
 
 interface PrepLine {
@@ -307,6 +315,13 @@ export default function MatchupPrep() {
       }
       const data: PrepReport = await res.json();
       setReport(data);
+      // Auto-select TC filter based on opponent's dominant time control
+      if (!tc && !refresh && data.opponent.dominantTimeControl && data.opponent.dominantTimeControl !== "mixed") {
+        const dominant = data.opponent.dominantTimeControl;
+        if (dominant === "rapid" || dominant === "blitz") {
+          setTcFilter(dominant);
+        }
+      }
       // Persist to recently scouted list
       const updated = addRecentlyScouted(username.trim());
       setRecentlyScouted(updated);
@@ -761,6 +776,28 @@ export default function MatchupPrep() {
                         }`}>
                           {opponentProfile.title}
                         </span>
+                      )}
+                      {/* Dominant TC badge — auto-detects most-played time control */}
+                      {report.opponent.dominantTimeControl && (
+                        <DominantTCBadge
+                          tc={report.opponent.dominantTimeControl}
+                          games={
+                            report.opponent.dominantTimeControl !== "mixed" && report.opponent.timeControlSplit
+                              ? report.opponent.timeControlSplit[report.opponent.dominantTimeControl as "rapid" | "blitz" | "bullet"].games
+                              : undefined
+                          }
+                          isDark={isDark}
+                          onClick={
+                            report.opponent.dominantTimeControl !== "mixed" &&
+                            (report.opponent.dominantTimeControl === "rapid" || report.opponent.dominantTimeControl === "blitz")
+                              ? () => {
+                                  const dominant = report.opponent.dominantTimeControl as "rapid" | "blitz";
+                                  setTcFilter(dominant);
+                                  fetchReport(report.opponent.username, false, dominant);
+                                }
+                              : undefined
+                          }
+                        />
                       )}
                     </div>
                     <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
@@ -1361,6 +1398,48 @@ function RatingBadge({ label, value, isDark }: { label: string; value: number; i
       <div className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? "text-white/25" : "text-gray-400"}`}>{label}</div>
       <div className={`text-sm font-bold mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
     </div>
+  );
+}
+
+/** Maps a dominant TC value to a display config */
+function getDominantTCConfig(tc: "rapid" | "blitz" | "bullet" | "mixed") {
+  switch (tc) {
+    case "rapid":  return { label: "Rapid",  icon: "\u23F1", colorDark: "bg-sky-500/10 border-sky-500/25 text-sky-400",    colorLight: "bg-sky-50 border-sky-200 text-sky-700" };
+    case "blitz":  return { label: "Blitz",  icon: "\u26A1", colorDark: "bg-orange-500/10 border-orange-500/25 text-orange-400", colorLight: "bg-orange-50 border-orange-200 text-orange-700" };
+    case "bullet": return { label: "Bullet", icon: "\u2022", colorDark: "bg-red-500/10 border-red-500/25 text-red-400",    colorLight: "bg-red-50 border-red-200 text-red-700" };
+    case "mixed":  return { label: "Mixed",  icon: "\u223C", colorDark: "bg-white/06 border-white/10 text-white/40",        colorLight: "bg-gray-100 border-gray-200 text-gray-500" };
+  }
+}
+
+function DominantTCBadge({
+  tc, games, isDark, onClick
+}: {
+  tc: "rapid" | "blitz" | "bullet" | "mixed";
+  games?: number;
+  isDark: boolean;
+  onClick?: () => void;
+}) {
+  const cfg = getDominantTCConfig(tc);
+  const colorCls = isDark ? cfg.colorDark : cfg.colorLight;
+  const isClickable = onClick && tc !== "mixed";
+  return (
+    <span
+      data-testid="dominant-tc-badge"
+      onClick={isClickable ? onClick : undefined}
+      role={isClickable ? "button" : undefined}
+      title={isClickable ? `Filter by ${cfg.label}` : undefined}
+      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
+        colorCls
+      } ${
+        isClickable ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
+      }`}
+    >
+      <span aria-hidden="true">{cfg.icon}</span>
+      <span>{cfg.label}</span>
+      {games !== undefined && games > 0 && (
+        <span className="opacity-60 font-medium">·\u00a0{games}g</span>
+      )}
+    </span>
   );
 }
 
