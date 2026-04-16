@@ -5094,3 +5094,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire routes in App.tsx
 - [x] Write tests (29 tests)
 - [x] Run quality gates and save checkpoint
+
+## Node Tree Generation (Jobava London + Caro-Kann)
+
+- [x] Build Python node tree generator with move-by-move annotations
+- [x] Generate Jobava London node trees (10 lines, ~122 nodes)
+- [x] Generate Caro-Kann node trees (10 lines, ~144 nodes)
+- [x] Seed all nodes into line_nodes table (266 total)
+- [x] Write validation tests for node tree integrity (46 tests)
+- [x] Run quality gates and save checkpoint
