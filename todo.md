@@ -5082,3 +5082,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build admin dashboard UI: publish workflow
 - [x] Write comprehensive tests (49 tests)
 - [x] Run quality gates and save checkpoint
+
+## Openings Explorer & Study UI MVP
+
+- [x] Build public API routes: GET /api/openings (catalog), GET /api/openings/:slug (detail + lines), GET /api/openings/:slug/lines/:lineSlug (line detail)
+- [x] Build public API routes: POST /api/study/progress (save review), GET /api/study/progress (user progress)
+- [x] Build Openings Library page (/openings) with search, side/difficulty/style filters, featured section, card layout
+- [x] Build Opening Detail page (/openings/:slug) with overview, chapter list, line count, tags, Start Studying CTA
+- [x] Build Study Mode page (/openings/:slug/study/:lineSlug) with interactive board, hints, line progress, learn/practice states
+- [x] Build Progress Dashboard widget and Continue Studying module
+- [x] Wire routes in App.tsx
+- [x] Write tests (29 tests)
+- [x] Run quality gates and save checkpoint
