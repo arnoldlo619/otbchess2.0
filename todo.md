@@ -5041,3 +5041,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write architecture documentation (OPENINGS_ARCHITECTURE.md)
 - [x] Write comprehensive unit tests for schema types and seed validation
 - [x] Run quality gates: tsc, vitest, eslint, server restart
+
+## Launch Catalog Seed Content
+
+- [x] Research and build seed data for 16 launch openings (7 White, 4 Black vs e4, 5 Black vs d4)
+- [x] Extend tag taxonomy with new style/level/bestFor/family tags
+- [x] Build complete openings-catalog-seed.json with all metadata fields
+- [x] Run seed script to populate database
+- [x] Write catalog documentation with UI rendering notes
+- [x] Write tests for catalog content validation
+- [x] Run quality gates and save checkpoint
