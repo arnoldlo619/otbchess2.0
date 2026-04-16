@@ -50,11 +50,15 @@ import { logger } from "./logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const AVATARS_DIR = path.resolve(__dirname, "../uploads/avatars");
-if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
-
-const BANNERS_DIR = path.resolve(__dirname, "../uploads/banners");
-if (!fs.existsSync(BANNERS_DIR)) fs.mkdirSync(BANNERS_DIR, { recursive: true });
+// Use /tmp/otb-uploads to avoid corrupted project uploads dir in sandbox
+const AVATARS_DIR = "/tmp/otb-uploads/avatars";
+const BANNERS_DIR = "/tmp/otb-uploads/banners";
+try {
+  if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
+  if (!fs.existsSync(BANNERS_DIR)) fs.mkdirSync(BANNERS_DIR, { recursive: true });
+} catch (err) {
+  console.warn("[clubs] Could not create upload dirs:", (err as Error).message);
+}
 
 export const clubsRouter = Router();
 
