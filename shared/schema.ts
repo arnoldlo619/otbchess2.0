@@ -64,6 +64,9 @@ export const users = mysqlTable(
     // Guest flag — true for ephemeral guest sessions (no email/password)
     isGuest: boolean("is_guest").default(false).notNull(),
 
+    // Pro subscription flag — true for paid Pro members
+    isPro: boolean("is_pro").default(false).notNull(),
+
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

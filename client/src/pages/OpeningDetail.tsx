@@ -13,6 +13,7 @@ import { useRoute, useLocation } from "wouter";
 import { Chessboard } from "react-chessboard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
+import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   ArrowLeft, BookOpen, ChevronRight, Lock,
   Star, AlertTriangle,
@@ -149,7 +150,7 @@ function LineRow({ line, openingSlug: _openingSlug, onClick }: { line: LineCard;
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function OpeningDetail() {
+function OpeningDetailContent() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [, navigate] = useLocation();
@@ -381,5 +382,13 @@ export default function OpeningDetail() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OpeningDetail() {
+  return (
+    <OpeningsProGate>
+      <OpeningDetailContent />
+    </OpeningsProGate>
   );
 }

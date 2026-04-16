@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Chessboard } from "react-chessboard";
 import { useTheme } from "@/contexts/ThemeContext";
+import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   Search, Filter, ChevronRight, Star, Zap, Shield, Swords,
   BookOpen, Crown, Target, X, Sparkles,
@@ -269,7 +270,7 @@ function CategorySection({
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function OpeningsLibrary() {
+function OpeningsLibraryContent() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [, navigate] = useLocation();
@@ -533,5 +534,13 @@ export default function OpeningsLibrary() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OpeningsLibrary() {
+  return (
+    <OpeningsProGate>
+      <OpeningsLibraryContent />
+    </OpeningsProGate>
   );
 }

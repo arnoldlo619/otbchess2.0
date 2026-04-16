@@ -33,6 +33,8 @@ export interface AuthUser {
   fideId: string | null;
   /** True for ephemeral guest sessions created via POST /api/auth/guest */
   isGuest: boolean;
+  /** True for paid Pro subscribers — gates Openings and future Pro features */
+  isPro: boolean;
   createdAt: string;
   updatedAt: string;
 }
