@@ -990,3 +990,612 @@ export const clubEventRsvps = mysqlTable(
 );
 export type ClubEventRsvpRow = typeof clubEventRsvps.$inferSelect;
 export type NewClubEventRsvpRow = typeof clubEventRsvps.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OPENINGS DATABASE SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Architecture overview:
+//
+//   openings          Top-level opening families (e.g. "Sicilian Defense")
+//     └─ opening_lines   Specific variations within an opening (e.g. "Najdorf: 6.Bg5")
+//          └─ line_nodes  Node-based move tree with branching & transpositions
+//
+//   repertoires        Curated or user-created repertoire collections
+//     └─ repertoire_lines  Junction: which lines belong to which repertoire
+//
+//   model_games        Annotated reference games linked to specific lines
+//   user_line_reviews  Per-user spaced repetition state & progress tracking
+//   opening_tags       Flexible tag system with junction tables
+//
+// Design principles:
+//   - varchar(36) nanoid PKs (matches existing project convention)
+//   - No FK constraints (TiDB Cloud compatibility)
+//   - FEN stored at every node for instant board rendering
+//   - SAN + UCI + PGN stored for maximum client flexibility
+//   - Separate "opening" (family) from "line" (specific variation)
+//   - Node tree supports branching, transpositions, and alternative moves
+//   - user_line_reviews is spaced-repetition-ready (SM-2 compatible fields)
+//   - All tables are index-heavy for fast browsing and filtering
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── openings ────────────────────────────────────────────────────────────────
+// Top-level opening families. Each row represents a named opening system
+// (e.g. "Sicilian Defense", "Queen's Gambit Declined") — NOT individual lines.
+// Think of this as the "folder" that groups related lines together.
+//
+// Why it exists:
+//   - Provides a browsable catalog of openings for the explore UI
+//   - Groups lines into logical families for filtering and search
+//   - Stores opening-level metadata (description, history, key ideas)
+//   - Enables "opening pages" similar to chess.com's opening explorer
+export const openings = mysqlTable(
+  "openings",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** Canonical name, e.g. "Sicilian Defense" */
+    name: varchar("name", { length: 200 }).notNull(),
+
+    /** URL-safe slug, e.g. "sicilian-defense" */
+    slug: varchar("slug", { length: 200 }).notNull().unique(),
+
+    /** ECO code prefix, e.g. "B20" (may span a range like "B20-B99") */
+    eco: varchar("eco", { length: 20 }).notNull(),
+
+    /** Which color this opening is primarily for */
+    color: varchar("color", { length: 10 }).notNull(), // 'white' | 'black' | 'both'
+
+    /** The defining first moves in SAN, e.g. "1.e4 c5" */
+    startingMoves: varchar("starting_moves", { length: 200 }).notNull(),
+
+    /** FEN after the starting moves */
+    startingFen: text("starting_fen").notNull(),
+
+    /** Rich description (Markdown-safe) — history, key ideas, when to play it */
+    description: text("description"),
+
+    /** One-line summary for cards/lists, e.g. "Sharp, tactical, asymmetric" */
+    summary: varchar("summary", { length: 300 }),
+
+    /** Difficulty for study: beginner | intermediate | advanced | expert */
+    difficulty: varchar("difficulty", { length: 20 }).notNull().default("intermediate"),
+
+    /** Popularity / commonness at club level (0–100) */
+    popularity: int("popularity").notNull().default(50),
+
+    /** Positional character: tactical | positional | universal */
+    playCharacter: varchar("play_character", { length: 30 }).notNull().default("universal"),
+
+    /** Key strategic themes as JSON array, e.g. ["pawn-center","kingside-attack"] */
+    themes: text("themes"),
+
+    /** Number of lines in this opening (denormalized for fast display) */
+    lineCount: int("line_count").notNull().default(0),
+
+    /** Sort order for curated browsing (lower = shown first) */
+    sortOrder: int("sort_order").notNull().default(100),
+
+    /** Whether this opening is published and visible to users */
+    isPublished: tinyint("is_published").notNull().default(0),
+
+    /** Content author or source attribution */
+    authorName: varchar("author_name", { length: 100 }),
+
+    /** Cover image URL for the opening card */
+    coverImageUrl: text("cover_image_url"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    slugIdx: index("op_slug_idx").on(table.slug),
+    ecoIdx: index("op_eco_idx").on(table.eco),
+    colorIdx: index("op_color_idx").on(table.color),
+    publishedIdx: index("op_published_idx").on(table.isPublished),
+    sortIdx: index("op_sort_idx").on(table.sortOrder),
+  })
+);
+export type OpeningRow = typeof openings.$inferSelect;
+export type NewOpeningRow = typeof openings.$inferInsert;
+
+// ─── opening_lines ───────────────────────────────────────────────────────────
+// A specific variation within an opening. Each line has a defined move sequence,
+// metadata for study prioritization, and links to its parent opening.
+//
+// Why it exists:
+//   - The core study unit — users learn and review individual lines
+//   - Rich metadata enables smart filtering: must-know, traps, difficulty
+//   - Priority + commonness scores drive study queue ordering
+//   - Strategic summary + hint + punishment support guided practice
+//   - Links to parent opening for hierarchical navigation
+export const openingLines = mysqlTable(
+  "opening_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to openings.id — which opening family this line belongs to */
+    openingId: varchar("opening_id", { length: 36 }).notNull(),
+
+    /** Human-readable title, e.g. "Najdorf: 6.Bg5 Main Line" */
+    title: varchar("title", { length: 300 }).notNull(),
+
+    /** URL-safe slug, e.g. "najdorf-6bg5-main-line" */
+    slug: varchar("slug", { length: 300 }).notNull(),
+
+    /** ECO code for this specific line, e.g. "B96" */
+    eco: varchar("eco", { length: 10 }).notNull(),
+
+    /** Full PGN of the main line (no variations — those live in line_nodes) */
+    pgn: text("pgn").notNull(),
+
+    /** Final FEN position after the main line moves */
+    finalFen: text("final_fen").notNull(),
+
+    /** Total half-moves (plies) in the main line */
+    plyCount: int("ply_count").notNull().default(0),
+
+    /** Rich description (Markdown-safe) — when to play, key ideas */
+    description: text("description"),
+
+    /** beginner | intermediate | advanced | expert */
+    difficulty: varchar("difficulty", { length: 20 }).notNull().default("intermediate"),
+
+    /** How commonly this line appears in practice (0–100) */
+    commonness: int("commonness").notNull().default(50),
+
+    /** Study priority score (0–100, higher = study first) */
+    priority: int("priority").notNull().default(50),
+
+    /** Whether this is a must-know line for the opening */
+    isMustKnow: tinyint("is_must_know").notNull().default(0),
+
+    /** Whether this line contains a tactical trap */
+    isTrap: tinyint("is_trap").notNull().default(0),
+
+    /** Line classification: main | sideline | gambit | surprise | trap */
+    lineType: varchar("line_type", { length: 20 }).notNull().default("main"),
+
+    /** Which color this line is primarily for */
+    color: varchar("color", { length: 10 }).notNull(), // 'white' | 'black'
+
+    /** Strategic summary — 1-2 sentences on the resulting position */
+    strategicSummary: text("strategic_summary"),
+
+    /** Hint text shown during practice before revealing the move */
+    hintText: text("hint_text"),
+
+    /** What happens if the opponent deviates — the "punishment idea" */
+    punishmentIdea: text("punishment_idea"),
+
+    /** Pawn structure label, e.g. "Maroczy Bind", "Isolated Queen's Pawn" */
+    pawnStructure: varchar("pawn_structure", { length: 100 }),
+
+    /** Key themes as JSON array, e.g. ["kingside-attack","piece-activity"] */
+    themes: text("themes"),
+
+    /** Sort order within the parent opening */
+    sortOrder: int("sort_order").notNull().default(100),
+
+    /** Whether this line is published and visible */
+    isPublished: tinyint("is_published").notNull().default(0),
+
+    /** Content author or source attribution */
+    authorName: varchar("author_name", { length: 100 }),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    openingIdx: index("ol_opening_id_idx").on(table.openingId),
+    slugIdx: index("ol_slug_idx").on(table.slug),
+    ecoIdx: index("ol_eco_idx").on(table.eco),
+    colorIdx: index("ol_color_idx").on(table.color),
+    priorityIdx: index("ol_priority_idx").on(table.priority),
+    mustKnowIdx: index("ol_must_know_idx").on(table.isMustKnow),
+    trapIdx: index("ol_trap_idx").on(table.isTrap),
+    publishedIdx: index("ol_published_idx").on(table.isPublished),
+    openingSortIdx: index("ol_opening_sort_idx").on(table.openingId, table.sortOrder),
+  })
+);
+export type OpeningLineRow = typeof openingLines.$inferSelect;
+export type NewOpeningLineRow = typeof openingLines.$inferInsert;
+
+// ─── line_nodes ──────────────────────────────────────────────────────────────
+// Node-based move tree. Each node represents a single half-move (ply) in a
+// line's move tree. Nodes form a directed acyclic graph (DAG) via parentNodeId,
+// enabling branching variations and transposition links.
+//
+// Why it exists:
+//   - Supports branching: one parent node can have multiple child moves
+//   - Supports transpositions: a node can link to another node via transpositionNodeId
+//   - Stores FEN at every node for instant board rendering at any point
+//   - Stores SAN + UCI for both human display and engine communication
+//   - Annotation per node enables move-by-move commentary
+//   - isMainLine flag distinguishes the primary continuation from alternatives
+export const lineNodes = mysqlTable(
+  "line_nodes",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to opening_lines.id — which line this node belongs to */
+    lineId: varchar("line_id", { length: 36 }).notNull(),
+
+    /** FK to line_nodes.id — parent node (null for the root/starting position) */
+    parentNodeId: varchar("parent_node_id", { length: 36 }),
+
+    /** Half-move index (0 = starting position, 1 = first move, etc.) */
+    ply: int("ply").notNull(),
+
+    /** Move in Standard Algebraic Notation, e.g. "Nf3" (null for root node) */
+    moveSan: varchar("move_san", { length: 20 }),
+
+    /** Move in UCI format, e.g. "g1f3" (null for root node) */
+    moveUci: varchar("move_uci", { length: 10 }),
+
+    /** FEN position AFTER this move is played */
+    fen: text("fen").notNull(),
+
+    /** Whether this node is on the main line (vs. a sideline/alternative) */
+    isMainLine: tinyint("is_main_line").notNull().default(1),
+
+    /** Move-level annotation (Markdown-safe) — explains why this move */
+    annotation: text("annotation"),
+
+    /** NAG (Numeric Annotation Glyph): 1=!, 2=?, 3=!!, 4=??, 5=!?, 6=?! */
+    nag: int("nag"),
+
+    /** Engine evaluation in centipawns (positive = white advantage) */
+    eval: int("eval"),
+
+    /** FK to line_nodes.id — if this position transposes to another known node */
+    transpositionNodeId: varchar("transposition_node_id", { length: 36 }),
+
+    /** Sort order among siblings (children of the same parent) */
+    sortOrder: int("sort_order").notNull().default(0),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    lineIdx: index("ln_line_id_idx").on(table.lineId),
+    parentIdx: index("ln_parent_node_idx").on(table.parentNodeId),
+    linePlyIdx: index("ln_line_ply_idx").on(table.lineId, table.ply),
+    transpositionIdx: index("ln_transposition_idx").on(table.transpositionNodeId),
+  })
+);
+export type LineNodeRow = typeof lineNodes.$inferSelect;
+export type NewLineNodeRow = typeof lineNodes.$inferInsert;
+
+// ─── repertoires ─────────────────────────────────────────────────────────────
+// A curated collection of opening lines, either staff-authored ("Official
+// Sicilian Repertoire for Black") or user-created ("My 1.e4 Repertoire").
+//
+// Why it exists:
+//   - Groups lines into a coherent study plan with a defined order
+//   - Supports both platform-curated and user-created repertoires
+//   - Enables "study this repertoire" flow with progress tracking
+//   - Future: community-shared repertoires, coach-assigned repertoires
+export const repertoires = mysqlTable(
+  "repertoires",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** Human-readable title, e.g. "Complete Sicilian Najdorf for Black" */
+    title: varchar("title", { length: 300 }).notNull(),
+
+    /** URL-safe slug */
+    slug: varchar("slug", { length: 300 }).notNull(),
+
+    /** Rich description (Markdown-safe) */
+    description: text("description"),
+
+    /** Which color this repertoire covers */
+    color: varchar("color", { length: 10 }).notNull(), // 'white' | 'black' | 'both'
+
+    /** Target audience: beginner | intermediate | advanced | expert */
+    targetLevel: varchar("target_level", { length: 20 }).notNull().default("intermediate"),
+
+    /** Who created it: staff | community | user */
+    authorType: varchar("author_type", { length: 20 }).notNull().default("staff"),
+
+    /** Author display name */
+    authorName: varchar("author_name", { length: 100 }),
+
+    /** FK to users.id — null for staff-authored repertoires */
+    authorUserId: varchar("author_user_id", { length: 36 }),
+
+    /** Whether this repertoire is published and visible */
+    isPublished: tinyint("is_published").notNull().default(0),
+
+    /** Whether this is a featured/promoted repertoire */
+    isFeatured: tinyint("is_featured").notNull().default(0),
+
+    /** Number of lines in this repertoire (denormalized) */
+    lineCount: int("line_count").notNull().default(0),
+
+    /** Estimated study time in minutes */
+    estimatedMinutes: int("estimated_minutes"),
+
+    /** Cover image URL */
+    coverImageUrl: text("cover_image_url"),
+
+    /** Sort order for curated browsing */
+    sortOrder: int("sort_order").notNull().default(100),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    slugIdx: index("rep_slug_idx").on(table.slug),
+    colorIdx: index("rep_color_idx").on(table.color),
+    authorTypeIdx: index("rep_author_type_idx").on(table.authorType),
+    authorUserIdx: index("rep_author_user_idx").on(table.authorUserId),
+    publishedIdx: index("rep_published_idx").on(table.isPublished),
+    featuredIdx: index("rep_featured_idx").on(table.isFeatured),
+  })
+);
+export type RepertoireRow = typeof repertoires.$inferSelect;
+export type NewRepertoireRow = typeof repertoires.$inferInsert;
+
+// ─── repertoire_lines ────────────────────────────────────────────────────────
+// Junction table linking repertoires to opening_lines with ordering.
+//
+// Why it exists:
+//   - Many-to-many: one line can appear in multiple repertoires
+//   - sortOrder controls the study sequence within a repertoire
+//   - Keeps repertoire composition separate from line content
+export const repertoireLines = mysqlTable(
+  "repertoire_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to repertoires.id */
+    repertoireId: varchar("repertoire_id", { length: 36 }).notNull(),
+
+    /** FK to opening_lines.id */
+    lineId: varchar("line_id", { length: 36 }).notNull(),
+
+    /** Position in the repertoire study order */
+    sortOrder: int("sort_order").notNull().default(0),
+
+    /** Optional note specific to this line within this repertoire */
+    note: text("note"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    repertoireIdx: index("rl_repertoire_id_idx").on(table.repertoireId),
+    lineIdx: index("rl_line_id_idx").on(table.lineId),
+    repertoireSortIdx: index("rl_rep_sort_idx").on(table.repertoireId, table.sortOrder),
+  })
+);
+export type RepertoireLineRow = typeof repertoireLines.$inferSelect;
+export type NewRepertoireLineRow = typeof repertoireLines.$inferInsert;
+
+// ─── model_games ─────────────────────────────────────────────────────────────
+// Annotated reference games that illustrate a specific opening line in action.
+// Think "Kasparov vs. Topalov, Wijk aan Zee 1999" linked to the Sicilian Najdorf.
+//
+// Why it exists:
+//   - Shows users how a line plays out in a real game
+//   - Annotations explain key moments and strategic ideas
+//   - Links to specific lines for contextual study
+//   - Future: auto-link user's own games that match a studied line
+export const modelGames = mysqlTable(
+  "model_games",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to opening_lines.id — which line this game illustrates */
+    lineId: varchar("line_id", { length: 36 }).notNull(),
+
+    /** Game title, e.g. "Kasparov vs. Topalov, Wijk aan Zee 1999" */
+    title: varchar("title", { length: 300 }).notNull(),
+
+    /** White player name */
+    whitePlayer: varchar("white_player", { length: 100 }).notNull(),
+
+    /** Black player name */
+    blackPlayer: varchar("black_player", { length: 100 }).notNull(),
+
+    /** Event name, e.g. "Wijk aan Zee" */
+    event: varchar("event", { length: 200 }),
+
+    /** Year the game was played */
+    year: int("year"),
+
+    /** Game result: 1-0 | 0-1 | 1/2-1/2 */
+    result: varchar("result", { length: 10 }).notNull(),
+
+    /** Full PGN with annotations */
+    pgn: text("pgn").notNull(),
+
+    /** Final FEN position */
+    finalFen: text("final_fen"),
+
+    /** Total moves in the game */
+    totalMoves: int("total_moves"),
+
+    /** Rich annotation / commentary (Markdown-safe) */
+    commentary: text("commentary"),
+
+    /** Why this game was selected as a model game */
+    selectionReason: text("selection_reason"),
+
+    /** Sort order among model games for the same line */
+    sortOrder: int("sort_order").notNull().default(0),
+
+    /** Whether this game is published */
+    isPublished: tinyint("is_published").notNull().default(0),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    lineIdx: index("mg_line_id_idx").on(table.lineId),
+    lineSortIdx: index("mg_line_sort_idx").on(table.lineId, table.sortOrder),
+  })
+);
+export type ModelGameRow = typeof modelGames.$inferSelect;
+export type NewModelGameRow = typeof modelGames.$inferInsert;
+
+// ─── user_line_reviews ───────────────────────────────────────────────────────
+// Per-user, per-line spaced repetition state. One row per (user, line) pair.
+// Fields are SM-2 algorithm compatible for future spaced repetition scheduling.
+//
+// Why it exists:
+//   - Tracks which lines a user has studied and their mastery level
+//   - SM-2 fields (interval, easeFactor, repetitions) enable spaced repetition
+//   - Streak and accuracy tracking for gamification
+//   - nextReviewAt drives the daily study queue
+//   - Future: adaptive difficulty based on review performance
+export const userLineReviews = mysqlTable(
+  "user_line_reviews",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to users.id */
+    userId: varchar("user_id", { length: 36 }).notNull(),
+
+    /** FK to opening_lines.id */
+    lineId: varchar("line_id", { length: 36 }).notNull(),
+
+    /** Current mastery: new | learning | reviewing | mastered */
+    status: varchar("status", { length: 20 }).notNull().default("new"),
+
+    /** SM-2: current interval in days between reviews */
+    intervalDays: int("interval_days").notNull().default(0),
+
+    /** SM-2: ease factor (starts at 2.5, min 1.3) — stored as integer × 100 */
+    easeFactor: int("ease_factor").notNull().default(250),
+
+    /** SM-2: number of consecutive successful reviews */
+    repetitions: int("repetitions").notNull().default(0),
+
+    /** When this line should next be reviewed */
+    nextReviewAt: timestamp("next_review_at"),
+
+    /** Last time the user reviewed this line */
+    lastReviewedAt: timestamp("last_reviewed_at"),
+
+    /** Total number of review attempts */
+    totalAttempts: int("total_attempts").notNull().default(0),
+
+    /** Number of correct (quality >= 3) attempts */
+    correctAttempts: int("correct_attempts").notNull().default(0),
+
+    /** Current streak of consecutive correct reviews */
+    streak: int("streak").notNull().default(0),
+
+    /** Best streak ever achieved */
+    bestStreak: int("best_streak").notNull().default(0),
+
+    /** Last review quality rating (0–5, SM-2 scale) */
+    lastQuality: int("last_quality"),
+
+    /** Average time in seconds to complete a review of this line */
+    avgReviewSeconds: int("avg_review_seconds"),
+
+    /** JSON array of recent review results for analytics, e.g. [{"q":4,"ts":"..."},…] */
+    reviewHistory: text("review_history"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("ulr_user_id_idx").on(table.userId),
+    lineIdx: index("ulr_line_id_idx").on(table.lineId),
+    userLineIdx: index("ulr_user_line_idx").on(table.userId, table.lineId),
+    userStatusIdx: index("ulr_user_status_idx").on(table.userId, table.status),
+    nextReviewIdx: index("ulr_next_review_idx").on(table.userId, table.nextReviewAt),
+  })
+);
+export type UserLineReviewRow = typeof userLineReviews.$inferSelect;
+export type NewUserLineReviewRow = typeof userLineReviews.$inferInsert;
+
+// ─── opening_tags ────────────────────────────────────────────────────────────
+// Flexible tag system for categorizing openings and lines.
+// Tags can represent themes ("kingside-attack"), structures ("isolated-qp"),
+// styles ("aggressive"), or custom categories ("beginner-friendly").
+//
+// Why it exists:
+//   - Enables flexible, multi-dimensional filtering beyond ECO codes
+//   - Tags can be added without schema changes
+//   - Supports both opening-level and line-level tagging
+//   - Future: user-created tags, community voting on tag relevance
+export const openingTags = mysqlTable(
+  "opening_tags",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** Tag display name, e.g. "Kingside Attack" */
+    name: varchar("name", { length: 100 }).notNull(),
+
+    /** URL-safe slug, e.g. "kingside-attack" */
+    slug: varchar("slug", { length: 100 }).notNull().unique(),
+
+    /** Tag category: theme | structure | style | level | custom */
+    category: varchar("category", { length: 30 }).notNull().default("theme"),
+
+    /** Optional description of what this tag means */
+    description: text("description"),
+
+    /** Sort order for display */
+    sortOrder: int("sort_order").notNull().default(100),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    slugIdx: index("ot_slug_idx").on(table.slug),
+    categoryIdx: index("ot_category_idx").on(table.category),
+  })
+);
+export type OpeningTagRow = typeof openingTags.$inferSelect;
+export type NewOpeningTagRow = typeof openingTags.$inferInsert;
+
+// ─── opening_tag_map ─────────────────────────────────────────────────────────
+// Junction table: tags ↔ openings (many-to-many).
+export const openingTagMap = mysqlTable(
+  "opening_tag_map",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to opening_tags.id */
+    tagId: varchar("tag_id", { length: 36 }).notNull(),
+
+    /** FK to openings.id */
+    openingId: varchar("opening_id", { length: 36 }).notNull(),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    tagIdx: index("otm_tag_id_idx").on(table.tagId),
+    openingIdx: index("otm_opening_id_idx").on(table.openingId),
+    tagOpeningIdx: index("otm_tag_opening_idx").on(table.tagId, table.openingId),
+  })
+);
+export type OpeningTagMapRow = typeof openingTagMap.$inferSelect;
+export type NewOpeningTagMapRow = typeof openingTagMap.$inferInsert;
+
+// ─── line_tag_map ────────────────────────────────────────────────────────────
+// Junction table: tags ↔ opening_lines (many-to-many).
+export const lineTagMap = mysqlTable(
+  "line_tag_map",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+
+    /** FK to opening_tags.id */
+    tagId: varchar("tag_id", { length: 36 }).notNull(),
+
+    /** FK to opening_lines.id */
+    lineId: varchar("line_id", { length: 36 }).notNull(),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    tagIdx: index("ltm_tag_id_idx").on(table.tagId),
+    lineIdx: index("ltm_line_id_idx").on(table.lineId),
+    tagLineIdx: index("ltm_tag_line_idx").on(table.tagId, table.lineId),
+  })
+);
+export type LineTagMapRow = typeof lineTagMap.$inferSelect;
+export type NewLineTagMapRow = typeof lineTagMap.$inferInsert;

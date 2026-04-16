@@ -5026,3 +5026,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Render DominantTCBadge in hero card identity section (next to title badge)
 - [x] Auto-pre-select TC filter when report loads based on dominantTimeControl
 - [x] Unit tests for dominant TC detection logic
+
+## Openings Database System (Foundational Architecture)
+
+- [x] Design and implement `openings` table (top-level opening families: Sicilian, French, etc.)
+- [x] Design and implement `repertoires` table (curated or user-created repertoire collections)
+- [x] Design and implement `opening_lines` table (specific variations within an opening)
+- [x] Design and implement `line_nodes` table (node-based move tree with branching)
+- [x] Design and implement `model_games` table (annotated reference games per line)
+- [x] Design and implement `user_line_reviews` table (spaced repetition + progress tracking)
+- [x] Design and implement `opening_tags` + junction tables (flexible categorization)
+- [x] Build seed-ready JSON content structure with example data
+- [x] Create admin ingestion utility (seed script)
+- [x] Write architecture documentation (OPENINGS_ARCHITECTURE.md)
+- [x] Write comprehensive unit tests for schema types and seed validation
+- [x] Run quality gates: tsc, vitest, eslint, server restart
