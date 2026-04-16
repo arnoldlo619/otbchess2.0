@@ -5051,3 +5051,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write catalog documentation with UI rendering notes
 - [x] Write tests for catalog content validation
 - [x] Run quality gates and save checkpoint
+
+## Starter Line Packs (6 Openings)
+
+- [x] Build line pack: Jobava London (8-15 lines)
+- [x] Build line pack: Vienna Gambit (8-15 lines)
+- [x] Build line pack: Scotch Game (8-15 lines)
+- [x] Build line pack: Caro-Kann Defense (8-15 lines)
+- [x] Build line pack: King's Indian Defense (8-15 lines)
+- [x] Build line pack: Anti-London System (8-15 lines)
+- [x] Add study mode metadata (unlock order, Learn/Drill/Trap annotations)
+- [x] Create seed script and run ingestion
+- [x] Write validation tests
+- [x] Run quality gates and save checkpoint
