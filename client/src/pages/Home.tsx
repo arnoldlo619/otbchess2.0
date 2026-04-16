@@ -988,9 +988,11 @@ function Showcase() {
 
       {/* ── Lightbox modal ── */}
       {lightboxSrc && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 md:p-8"
           onClick={() => setLightboxSrc(null)}
+          onKeyDown={(e) => e.key === "Escape" && setLightboxSrc(null)}
           role="dialog"
           aria-modal="true"
           aria-label={lightboxAlt}

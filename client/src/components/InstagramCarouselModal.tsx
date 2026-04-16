@@ -1945,7 +1945,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
     } finally {
       setExporting(false);
     }
-  }, [activeSlide, exportSlide, tournamentName, isStory]);
+  }, [SLIDES, activeSlide, exportSlide, tournamentName, isStory]);
 
   // ── Download all as ZIP ──────────────────────────────────────────────────────
   const downloadAll = useCallback(async () => {
@@ -1980,7 +1980,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
       setExporting(false);
       setExportProgress(0);
     }
-  }, [exportSlide, tournamentName, isStory]);
+  }, [SLIDES, exportSlide, tournamentName, isStory]);
 
   if (!open) return null;
 

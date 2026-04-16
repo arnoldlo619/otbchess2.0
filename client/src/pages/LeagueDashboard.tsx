@@ -980,12 +980,12 @@ export default function LeagueDashboard() {
                   title={tab.label}
                 >
                   <Icon size={17} />
-                  {(tab as any).badge > 0 && (
+                  {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
                       style={{ background: "#ef4444", color: "#fff" }}
                     >
-                      {(tab as any).badge}
+                      {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
                     </span>
                   )}
                   {/* Tooltip */}
@@ -3359,8 +3359,8 @@ export default function LeagueDashboard() {
                         setSettingsDescription("");
                         setToast({ msg: "Settings saved", type: "success" });
                         setTimeout(() => setToast(null), 3000);
-                      } catch (err: any) {
-                        setToast({ msg: err.message ?? "Failed to save settings", type: "error" });
+                      } catch (err) {
+                        setToast({ msg: err instanceof Error ? err.message : "Failed to save settings", type: "error" });
                         setTimeout(() => setToast(null), 4000);
                       } finally {
                         setSavingSettings(false);
@@ -3567,12 +3567,12 @@ export default function LeagueDashboard() {
             >
               <Icon size={18} />
               <span className="text-[9px] font-medium">{tab.label}</span>
-              {(tab as any).badge > 0 && (
+              {((tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge ?? 0) > 0 && (
                 <span
                   className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
                   style={{ background: accent, color: "#fff" }}
                 >
-                  {(tab as any).badge}
+                  {(tab as { id: string; label: string; icon: React.ElementType; badge?: number }).badge}
                 </span>
               )}
             </button>

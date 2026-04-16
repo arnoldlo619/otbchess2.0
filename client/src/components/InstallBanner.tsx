@@ -139,12 +139,14 @@ export function InstallBanner() {
 
       {/* ── iOS instruction sheet ──────────────────────────────────────────── */}
       {iosSheetOpen && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           className="fixed inset-0 z-[90] md:hidden flex flex-col justify-end"
           role="dialog"
           aria-modal="true"
           aria-label="How to add OTB Chess to your Home Screen"
           onClick={() => setIosSheetOpen(false)}
+          onKeyDown={(e) => e.key === "Escape" && setIosSheetOpen(false)}
         >
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />

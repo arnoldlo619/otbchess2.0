@@ -1,5 +1,8 @@
 import { useRef } from "react";
 
+// The noop type intentionally uses `any` to allow usePersistFn to accept
+// any function signature — this is the correct pattern for a generic persist hook.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type noop = (...args: any[]) => any;
 
 /**

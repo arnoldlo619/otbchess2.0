@@ -152,7 +152,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ size?: numbe
 export default function LeagueDemo() {
   const [, navigate] = useLocation();
   const themeCtx = useTheme();
-  const isDark = (themeCtx as any).isDark ?? true;
+  const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   // Color tokens — identical to LeagueDashboard

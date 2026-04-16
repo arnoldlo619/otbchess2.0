@@ -160,7 +160,7 @@ export default forwardRef<ChessClockHandle, ChessClockProps>(function ChessClock
       lastWarnSecRef.current = sec;
       warningTick();
     }
-  }, [fullScreen, active, paused, flagFallen, hostMs, guestMs, warningTick]);
+  }, [fullScreen, active, paused, externalPause, flagFallen, hostMs, guestMs, warningTick]);
 
   // ── Flag alarm + external callback ─────────────────────────────────────────────
   useEffect(() => {

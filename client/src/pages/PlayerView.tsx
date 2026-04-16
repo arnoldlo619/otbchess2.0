@@ -896,7 +896,7 @@ export default function PlayerView() {
     });
 
     return () => es.close();
-  }, [tournamentId]);
+  }, [tournamentId, navigate]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!tournamentId || !username) {

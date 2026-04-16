@@ -10,7 +10,7 @@
  *   - Round progress tracker
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import confetti from "canvas-confetti";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { UploadRSVPModal } from "@/components/UploadRSVPModal";
@@ -1640,7 +1640,8 @@ export default function Director() {
     setActiveTab(TAB_ORDER[nextIdx]);
     setSwipeFlash(direction === "prev" ? "right" : "left");
     setTimeout(() => setSwipeFlash(null), 350);
-  }, [activeTab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- TAB_ORDER is derived from isElimFormat which is stable per render
+  }, [activeTab, isElimFormat]);
 
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   useSwipeGesture(swipeContainerRef, {
@@ -1780,7 +1781,10 @@ export default function Director() {
   // When the Boards tab is active, pressing 1 / D / 0 records the result for
   // the currently focused board card. Arrow keys cycle focus between boards.
   const [focusedBoardIdx, setFocusedBoardIdx] = useState<number>(0);
-  const boardGames = currentRoundData?.games.filter((g) => g.whiteId !== "BYE") ?? [];
+  const boardGames = useMemo(
+    () => currentRoundData?.games.filter((g) => g.whiteId !== "BYE") ?? [],
+    [currentRoundData?.games]
+  );
   useEffect(() => {
     if (activeTab !== "home" || isRegistration || boardGames.length === 0) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -1834,7 +1838,6 @@ export default function Director() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isRegistration, boardGames, focusedBoardIdx, state.players, recordWithUndo, pushStandingsNow]); // keyboard shortcuts always active on home tab
 
   // ── Push notification broadcasts ────────────────────────────────────────
@@ -4820,7 +4823,7 @@ export default function Director() {
                                 setTimeout(() => navigate("/"), 800);
                               } else {
                                 const err = await r.json().catch(() => ({}));
-                                toast.error((err as any).error ?? "Failed to delete tournament");
+                                toast.error((err as Record<string, string>).error ?? "Failed to delete tournament");
                                 setIsDeleting(false);
                                 setShowDeleteConfirm(false);
                               }

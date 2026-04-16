@@ -510,6 +510,10 @@ export default function JoinPage() {
   const [swipeProgress, setSwipeProgress] = useState(0); // kept for the existing edge indicator
   const [swipeFlash, setSwipeFlash] = useState(false);
 
+  const advanceStep = useCallback((next: Step) => {
+    setStepKey((k) => k + 1);
+    setStep(next);
+  }, []);
   const handleSwipeBack = useCallback(() => {
     if (step === "username") {
       haptic(30);
@@ -524,7 +528,7 @@ export default function JoinPage() {
       setSwipeFlash(true);
       setTimeout(() => setSwipeFlash(false), 350);
     }
-  }, [step, active]);
+  }, [step, active, advanceStep]);
 
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   useSwipeGesture(swipeContainerRef, {
@@ -599,10 +603,6 @@ export default function JoinPage() {
     }
   })();
 
-  function advanceStep(next: Step) {
-    setStepKey((k) => k + 1);
-    setStep(next);
-  }
 
   const [codeLoading, setCodeLoading] = useState(false);
 
@@ -697,7 +697,7 @@ export default function JoinPage() {
     if (lookupStatus === "not_found" || lookupStatus === "error") {
       setError(lookupError);
     }
-  }, [lookupStatus]);;
+  }, [lookupStatus, step, active.profile, lookupError, advanceStep]);
 
   const [confirming, setConfirming] = useState(false);
   const [capToast, setCapToast] = useState<{ type: "full" | "duplicate" } | null>(null);
@@ -858,7 +858,7 @@ export default function JoinPage() {
       setConfirming(false);
       setError(lookupError || "Username not found on chess.com.");
     }
-  }, [lookupStatus]);
+  }, [lookupStatus, isQrMode, confirming, active.profile, embeddedMeta, lookupError, tournamentCode, playerName, navigate]);
 
   async function handleConfirm() {
     setConfirming(true);

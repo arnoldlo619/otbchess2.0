@@ -135,14 +135,14 @@ export function SmtpSettingsCard({ isDark }: Props) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error((err as any).error ?? "Failed to save");
+        throw new Error((err as Record<string, string>).error ?? "Failed to save");
       }
 
       setIsConfigured(true);
       setConfig((c) => ({ ...c, smtpPass: "" })); // clear after save
       toast.success("SMTP settings saved");
-    } catch (err: any) {
-      toast.error(err.message ?? "Failed to save SMTP settings");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save SMTP settings");
     } finally {
       setSaving(false);
     }
@@ -167,8 +167,8 @@ export function SmtpSettingsCard({ isDark }: Props) {
         setTestResult({ ok: false, message: data.error ?? "Connection failed" });
         toast.error(data.error ?? "SMTP connection failed");
       }
-    } catch (err: any) {
-      const msg = err.message ?? "Connection failed";
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Connection failed";
       setTestResult({ ok: false, message: msg });
       toast.error(msg);
     } finally {

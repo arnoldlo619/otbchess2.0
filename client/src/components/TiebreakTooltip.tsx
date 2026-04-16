@@ -194,6 +194,7 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
 
       {/* Popover */}
       {open && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           ref={tooltipRef}
           role="dialog"
@@ -214,6 +215,7 @@ export function TiebreakTooltip({ type, position, className = "" }: TiebreakTool
           }}
           onMouseEnter={handleOpen}
           onMouseLeave={handleClose}
+          tabIndex={-1}
         >
           {/* Arrow */}
           <div
