@@ -5064,3 +5064,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Create seed script and run ingestion
 - [x] Write validation tests
 - [x] Run quality gates and save checkpoint
+
+## Openings Admin System
+
+- [x] Build requireAdmin middleware (OWNER_OPEN_ID-based)
+- [x] Build admin API: CRUD openings (create, read, update, delete)
+- [x] Build admin API: CRUD lines (create, read, update, delete, reorder)
+- [x] Build admin API: bulk publish/unpublish
+- [x] Build admin API: tag management
+- [x] Build PGN import endpoint with move validation
+- [x] Build node tree auto-generation from PGN
+- [x] Build validation engine (move legality, FEN integrity, completeness)
+- [x] Build duplicate/overlap detection
+- [x] Build admin dashboard UI: opening manager
+- [x] Build admin dashboard UI: line editor
+- [x] Build admin dashboard UI: QA dashboard (incomplete/invalid content)
+- [x] Build admin dashboard UI: publish workflow
+- [x] Write comprehensive tests (49 tests)
+- [x] Run quality gates and save checkpoint

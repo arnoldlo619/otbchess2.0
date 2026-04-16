@@ -21,6 +21,7 @@ import { emailRouter } from "./email.js";
 import {buildPrepReport} from "./prepEngine.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
+import { createOpeningsAdminRouter } from "./openingsAdmin.js";
 export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -781,6 +782,7 @@ export function createApp() {
   app.use("/api/clubs/:clubId/invites", clubInvitesRouter);
   app.use("/api/clubs/:clubId/battles", clubBattlesRouter);
   app.use("/api/invite", createInviteRouter());
+  app.use("/api/admin", createOpeningsAdminRouter());
 
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.
