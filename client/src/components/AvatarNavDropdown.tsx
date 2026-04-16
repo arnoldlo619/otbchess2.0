@@ -39,6 +39,7 @@ import { useChessAvatar } from "@/hooks/useChessAvatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 import AuthModal from "@/components/AuthModal";
+import { ProUpgradeModal } from "@/components/ProUpgradeModal";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const OTB_GREEN      = "#4CAF50";
@@ -325,6 +326,8 @@ export function AvatarNavDropdown({
   }, [updateProfile]);
   // Internal auth modal — used when the parent page doesn't provide onSignInClick
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
+  // Pro upgrade modal
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const handleSignIn = () => {
     setOpen(false);
     if (onSignInClick) {
@@ -833,6 +836,15 @@ export function AvatarNavDropdown({
                   <span>Create Free Account</span>
                 </button>
               )}
+              {user && !user.isPro && !user.isGuest && (
+                <button
+                  onClick={() => { setOpen(false); setUpgradeOpen(true); }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-[#22c55e] hover:bg-[#22c55e]/10 transition-colors"
+                >
+                  <Crown className="w-4 h-4 flex-shrink-0" />
+                  <span>Upgrade to Pro</span>
+                </button>
+              )}
               {user ? (
                 <button
                   onClick={() => { logout(); setOpen(false); }}
@@ -1048,6 +1060,11 @@ export function AvatarNavDropdown({
         accept="image/*"
         className="hidden"
         onChange={handleAvatarUpload}
+      />
+      {/* Pro upgrade modal */}
+      <ProUpgradeModal
+        isOpen={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
       />
     </div>
   );
