@@ -20,6 +20,7 @@ import { leaguesRouter } from "./leagues.js";
 import { emailRouter } from "./email.js";
 import { buildPrepReport, fetchPlayerGames, analyzePlayStyle, generatePrepLines, generateInsights } from "./prepEngine.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
+import { logger } from "./logger.js";
 export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -99,7 +100,7 @@ async function sendTimerExpiryPush(tournamentId: string) {
             const code = (err as { statusCode: number }).statusCode;
             if (code === 410 || code === 404) staleIds.push(row.id);
           }
-          console.warn("[push] Timer expiry push failed:", err);
+          logger.warn("[push] Timer expiry push failed:", err);
         }
       })
     );
@@ -109,9 +110,8 @@ async function sendTimerExpiryPush(tournamentId: string) {
         .delete(pushSubscriptions)
         .where(inArray(pushSubscriptions.id, staleIds));
     }
-    console.log(`[push] Timer expiry push sent to ${rows.length} subscriber(s) for ${tournamentId}`);
   } catch (err) {
-    console.error("[push] Timer expiry push error:", err);
+    logger.error("[push] Timer expiry push error:", err);
   }
 }
 
@@ -122,7 +122,6 @@ function broadcastTimerUpdate(tournamentId: string, snap: TimerSnapshot) {
   for (const res of Array.from(subs)) {
     try { res.write(payload); } catch { /* disconnected */ }
   }
-  console.log(`[sse] Broadcast timer_update (${snap.status}) to ${subs.size} subscriber(s) for ${tournamentId}`);
 }
 
 function broadcastPlayerJoined(tournamentId: string, player: Record<string, unknown>) {
@@ -132,7 +131,6 @@ function broadcastPlayerJoined(tournamentId: string, player: Record<string, unkn
   for (const res of Array.from(subs)) {
     try { res.write(payload); } catch { /* client already disconnected */ }
   }
-  console.log(`[sse] Broadcast player_joined to ${subs.size} subscriber(s) for ${tournamentId}`);
 }
 
 // Broadcast tournament_started to all SSE subscribers (directors + players watching).
@@ -147,7 +145,6 @@ function broadcastTournamentStarted(
   for (const res of Array.from(subs)) {
     try { res.write(data); } catch { /* client already disconnected */ }
   }
-  console.log(`[sse] Broadcast tournament_started to ${subs.size} subscriber(s) for ${tournamentId}`);
 }
 
 // ─── Chess.com & Lichess proxy ────────────────────────────────────────────────
@@ -272,15 +269,12 @@ export function createApp() {
       if (cached) {
         const age = Date.now() - new Date(cached.cachedAt).getTime();
         if (age < PREP_CACHE_TTL_MS) {
-          console.log(`[prep-cache] HIT for ${cacheKey} (age: ${Math.round(age / 60000)}m)`);
           return { report: JSON.parse(cached.reportJson), fromCache: true };
         }
-        console.log(`[prep-cache] STALE for ${cacheKey} (age: ${Math.round(age / 60000)}m), refreshing...`);
       } else {
-        console.log(`[prep-cache] MISS for ${cacheKey}, building fresh report...`);
       }
     } catch (dbErr) {
-      console.warn("[prep-cache] DB read error, falling through to live fetch:", dbErr);
+      logger.warn("[prep-cache] DB read error, falling through to live fetch:", dbErr);
     }
 
     // Build fresh report
@@ -302,9 +296,8 @@ export function createApp() {
           cachedAt: new Date(),
         },
       });
-      console.log(`[prep-cache] STORED for ${cacheKey} (${report.opponent.gamesAnalyzed} games)`);
     } catch (dbErr) {
-      console.warn("[prep-cache] DB write error (non-fatal):", dbErr);
+      logger.warn("[prep-cache] DB write error (non-fatal):", dbErr);
     }
 
     return { report, fromCache: false };
@@ -355,7 +348,7 @@ export function createApp() {
       res.json({ ...report, _cached: fromCache });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error("[prep engine]", msg);
+      logger.error("[prep engine]", msg);
       if (msg.includes("archives error: 404")) {
         res.status(404).json({ error: "Player not found on chess.com" });
       } else {
@@ -387,7 +380,7 @@ export function createApp() {
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error("[prep openings]", msg);
+      logger.error("[prep openings]", msg);
       if (msg.includes("archives error: 404")) {
         res.status(404).json({ error: "Player not found on chess.com" });
       } else {
@@ -440,7 +433,7 @@ export function createApp() {
         res.json({ id: (result as any).insertId, updated: false });
       }
     } catch (err) {
-      console.error("[saved-prep] save error:", err);
+      logger.error("[saved-prep] save error:", err);
       res.status(500).json({ error: "Failed to save prep report" });
     }
   });
@@ -467,7 +460,7 @@ export function createApp() {
         .limit(50);
       res.json({ reports: rows });
     } catch (err) {
-      console.error("[saved-prep] list error:", err);
+      logger.error("[saved-prep] list error:", err);
       res.status(500).json({ error: "Failed to fetch saved reports" });
     }
   });
@@ -496,7 +489,7 @@ export function createApp() {
         savedAt: row.savedAt,
       }});
     } catch (err) {
-      console.error("[saved-prep] get error:", err);
+      logger.error("[saved-prep] get error:", err);
       res.status(500).json({ error: "Failed to fetch saved report" });
     }
   });
@@ -514,7 +507,7 @@ export function createApp() {
         .where(and(eq(savedPrepReports.id, id), eq(savedPrepReports.userId, userId)));
       res.json({ deleted: true });
     } catch (err) {
-      console.error("[saved-prep] delete error:", err);
+      logger.error("[saved-prep] delete error:", err);
       res.status(500).json({ error: "Failed to delete saved report" });
     }
   });
@@ -568,7 +561,7 @@ export function createApp() {
 
       if (!llmRes.ok) {
         const errText = await llmRes.text().catch(() => "unknown error");
-        console.error("[coach-insight] LLM error:", llmRes.status, errText);
+        logger.error("[coach-insight] LLM error:", llmRes.status, errText);
         res.status(502).json({ error: "Coach insight generation failed. Please try again." }); return;
       }
 
@@ -584,7 +577,7 @@ export function createApp() {
 
       res.json({ insight: content.trim(), model: llmData.model ?? "unknown" });
     } catch (err) {
-      console.error("[coach-insight] error:", err);
+      logger.error("[coach-insight] error:", err);
       res.status(500).json({ error: "Failed to generate coach insight" });
     }
   });
@@ -598,7 +591,7 @@ export function createApp() {
       const { status, body } = await proxyChessCom(req.params.username);
       res.status(status).json(body);
     } catch (err) {
-      console.error("[chess proxy]", err);
+      logger.error("[chess proxy]", err);
       res.status(502).json({ error: "Could not reach chess.com" });
     }
   });
@@ -707,7 +700,7 @@ export function createApp() {
         losses: totalLosses,
       });
     } catch (err) {
-      console.error("[chess analysis proxy]", err);
+      logger.error("[chess analysis proxy]", err);
       res.status(502).json({ error: "Could not analyze games" });
     }
   });
@@ -748,7 +741,7 @@ export function createApp() {
       res.setHeader("Cache-Control", "public, max-age=86400"); // 24 h browser cache
       res.send(Buffer.from(buffer));
     } catch (err) {
-      console.error("[avatar-proxy]", err);
+      logger.error("[avatar-proxy]", err);
       res.status(502).end();
     }
   });
@@ -759,7 +752,7 @@ export function createApp() {
       const { status, body } = await proxyLichess(req.params.username);
       res.status(status).json(body);
     } catch (err) {
-      console.error("[lichess proxy]", err);
+      logger.error("[lichess proxy]", err);
       res.status(502).json({ error: "Could not reach lichess.org" });
     }
   });
@@ -808,7 +801,7 @@ export function createApp() {
         .where(eq(pushSubscriptions.tournamentId, req.params.tournamentId));
       res.json({ count: rows.length });
     } catch (err) {
-      console.error("[push] count error:", err);
+      logger.error("[push] count error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -849,7 +842,6 @@ export function createApp() {
             auth: subscription.keys.auth,
           })
           .where(eq(pushSubscriptions.id, existing[0].id));
-        console.log(`[push] Updated subscription for tournament ${tournamentId}`);
       } else {
         // Insert new subscription
         await db.insert(pushSubscriptions).values({
@@ -859,7 +851,6 @@ export function createApp() {
           p256dh: subscription.keys.p256dh,
           auth: subscription.keys.auth,
         });
-        console.log(`[push] New subscription for tournament ${tournamentId}`);
       }
 
       // Return total count for this tournament
@@ -870,7 +861,7 @@ export function createApp() {
 
       res.json({ ok: true, count: countRows.length });
     } catch (err) {
-      console.error("[push] subscribe error:", err);
+      logger.error("[push] subscribe error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -904,10 +895,9 @@ export function createApp() {
         .from(pushSubscriptions)
         .where(eq(pushSubscriptions.tournamentId, tournamentId));
 
-      console.log(`[push] Unsubscribed from tournament ${tournamentId} (${countRows.length} remaining)`);
       res.json({ ok: true, count: countRows.length });
     } catch (err) {
-      console.error("[push] unsubscribe error:", err);
+      logger.error("[push] unsubscribe error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -969,7 +959,7 @@ export function createApp() {
                 staleIds.push(row.id);
               }
             }
-            console.warn("[push] Failed to send notification:", err);
+            logger.warn("[push] Failed to send notification:", err);
           }
         })
       );
@@ -980,13 +970,12 @@ export function createApp() {
             db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, id))
           )
         );
-        console.log(`[push] Removed ${staleIds.length} stale subscription(s)`);
       }
 
-      console.log(`[push] Round ${round} notification for ${tournamentId}: ${sent} sent, ${failed} failed`);
+      logger.info(`[push] Round ${round} notification for ${tournamentId}: ${sent} sent, ${failed} failed`);
       res.json({ ok: true, sent, failed });
     } catch (err) {
-      console.error("[push] notify error:", err);
+      logger.error("[push] notify error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1047,7 +1036,7 @@ export function createApp() {
                 staleIds.push(row.id);
               }
             }
-            console.warn("[push] Failed to send results notification:", err);
+            logger.warn("[push] Failed to send results notification:", err);
           }
         })
       );
@@ -1058,13 +1047,12 @@ export function createApp() {
             db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, id))
           )
         );
-        console.log(`[push] Removed ${staleIds.length} stale subscription(s)`);
       }
 
-      console.log(`[push] Round ${round} results notification for ${tournamentId}: ${sent} sent, ${failed} failed`);
+      logger.info(`[push] Round ${round} results notification for ${tournamentId}: ${sent} sent, ${failed} failed`);
       res.json({ ok: true, sent, failed });
     } catch (err) {
-      console.error("[push] results notify error:", err);
+      logger.error("[push] results notify error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1126,7 +1114,7 @@ export function createApp() {
                 staleIds.push(row.id);
               }
             }
-            console.warn("[push] Failed to send timer-warning notification:", err);
+            logger.warn("[push] Failed to send timer-warning notification:", err);
           }
         })
       );
@@ -1137,13 +1125,12 @@ export function createApp() {
             db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, id))
           )
         );
-        console.log(`[push] Removed ${staleIds.length} stale subscription(s)`);
       }
 
-      console.log(`[push] Timer warning for ${tournamentId} R${round}: ${sent} sent, ${failed} failed`);
+      logger.info(`[push] Timer warning for ${tournamentId} R${round}: ${sent} sent, ${failed} failed`);
       res.json({ ok: true, sent, failed });
     } catch (err) {
-      console.error("[push] timer-warning error:", err);
+      logger.error("[push] timer-warning error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1163,7 +1150,7 @@ export function createApp() {
       const players = rows.map((r) => JSON.parse(r.playerJson));
       res.json({ players, count: players.length });
     } catch (err) {
-      console.error("[players] GET error:", err);
+      logger.error("[players] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1201,7 +1188,6 @@ export function createApp() {
               eq(tournamentPlayers.username, username)
             )
           );
-        console.log(`[players] Updated player ${username} in tournament ${id}`);
       } else {
         // Insert new registration
         await db.insert(tournamentPlayers).values({
@@ -1210,13 +1196,12 @@ export function createApp() {
           username,
           playerJson: JSON.stringify(player),
         });
-        console.log(`[players] Registered player ${username} in tournament ${id}`);
       }
       // Broadcast the new/updated player to all connected SSE director clients
       broadcastPlayerJoined(id, player);
       res.json({ ok: true, username });
     } catch (err) {
-      console.error("[players] POST error:", err);
+      logger.error("[players] POST error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1240,7 +1225,6 @@ export function createApp() {
     if (!sseSubscribers.has(id)) sseSubscribers.set(id, new Set());
     const subs = sseSubscribers.get(id)!;
     subs.add(res);
-    console.log(`[sse] Director subscribed to tournament ${id} (${subs.size} active)`);
 
     // Send an initial comment so the browser knows the stream is open
     res.write(`: connected\n\n`);
@@ -1255,7 +1239,6 @@ export function createApp() {
       clearInterval(keepalive);
       subs.delete(res);
       if (subs.size === 0) sseSubscribers.delete(id);
-      console.log(`[sse] Director disconnected from tournament ${id} (${subs.size} remaining)`);
     });
   });
 
@@ -1276,7 +1259,7 @@ export function createApp() {
       if (rows.length === 0) return res.status(404).json({ error: "not_found" });
       res.json({ state: JSON.parse(rows[0].stateJson), updatedAt: rows[0].updatedAt });
     } catch (err) {
-      console.error("[state] GET error:", err);
+      logger.error("[state] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1306,7 +1289,6 @@ export function createApp() {
       } else {
         await db.insert(tournamentState).values({ tournamentId: id, stateJson });
       }
-      console.log(`[state] Saved state for tournament ${id} (${stateJson.length} bytes)`);
       // Invalidate public snapshot cache so next public read rebuilds from fresh data
       invalidateSnapshotCache(id);
       // Broadcast standings_updated so players see live score changes immediately
@@ -1324,7 +1306,7 @@ export function createApp() {
       }
       res.json({ ok: true });
     } catch (err) {
-      console.error("[state] PUT error:", err);
+      logger.error("[state] PUT error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1366,7 +1348,7 @@ export function createApp() {
         updatedAt: rows[0].updatedAt,
       });
     } catch (err) {
-      console.error("[live-state] GET error:", err);
+      logger.error("[live-state] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1430,7 +1412,6 @@ export function createApp() {
           updatedAt: stateRows[0].updatedAt?.toISOString?.() ?? new Date().toISOString(),
         });
         cached = setSnapshotCache(ut.tournamentId, snapshot);
-        console.log(`[public-snapshot] Built snapshot for ${ut.tournamentId} (${cached.json.length} bytes)`);
       }
 
       // ETag conditional response
@@ -1452,7 +1433,7 @@ export function createApp() {
       res.setHeader("Content-Type", "application/json");
       res.send(cached.json);
     } catch (err) {
-      console.error("[public-tournament] GET error:", err);
+      logger.error("[public-tournament] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1477,7 +1458,7 @@ export function createApp() {
       });
       res.json({ ok: true });
     } catch (err) {
-      console.error("[analytics] POST error:", err);
+      logger.error("[analytics] POST error:", err);
       res.status(500).json({ error: "Failed" });
     }
   });
@@ -1835,7 +1816,7 @@ export function createApp() {
         repeatEventGrowth,
       });
     } catch (err) {
-      console.error("[analytics] GET aggregate error:", err);
+      logger.error("[analytics] GET aggregate error:", err);
       res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });
@@ -1857,7 +1838,7 @@ export function createApp() {
       if (utRows.length === 0) return res.status(404).json({ error: "not_found" });
       res.json({ isPublic: utRows[0].isPublic === 1 });
     } catch (err) {
-      console.error("[public-status] GET error:", err);
+      logger.error("[public-status] GET error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1886,7 +1867,7 @@ export function createApp() {
         .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, userId)));
       res.json({ ok: true, isPublic });
     } catch (err) {
-      console.error("[public-toggle] PUT error:", err);
+      logger.error("[public-toggle] PUT error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -1936,10 +1917,8 @@ export function createApp() {
           await sendTimerExpiryPush(id);
         }, delayMs);
         timerExpiryTimeouts.set(id, handle);
-        console.log(`[timer] Expiry push scheduled in ${Math.round(delayMs / 1000)}s for tournament ${id}`);
       } else {
         // Timer already expired (e.g. director refreshed after time ran out).
-        console.log(`[timer] Timer already expired for ${id}, skipping push scheduling.`);
       }
 
       // Schedule 5-minute warning push (only if > 5 min remain).
@@ -1990,13 +1969,13 @@ export function createApp() {
             if (staleIds.length > 0) {
               await db.delete(pushSubscriptions).where(inArray(pushSubscriptions.id, staleIds));
             }
-            console.log(`[timer] 5-min warning push sent to ${rows.length} subscriber(s) for ${id}`);
+            logger.info(`[timer] 5-min warning push sent to ${rows.length} subscriber(s) for ${id}`);
           } catch (err) {
-            console.error("[timer] 5-min warning push error:", err);
+            logger.error("[timer] 5-min warning push error:", err);
           }
         }, warningDelayMs);
         timerWarningTimeouts.set(id, warnHandle);
-        console.log(`[timer] 5-min warning push scheduled in ${Math.round(warningDelayMs / 1000)}s for tournament ${id}`);
+        logger.info(`[timer] 5-min warning push scheduled in ${Math.round(warningDelayMs / 1000)}s for tournament ${id}`);
       }
     }
 
@@ -2028,10 +2007,9 @@ export function createApp() {
             eq(tournamentPlayers.username, username.toLowerCase().trim())
           )
         );
-      console.log(`[players] Removed player ${username} from tournament ${id}`);
       res.json({ ok: true });
     } catch (err) {
-      console.error("[players] DELETE error:", err);
+      logger.error("[players] DELETE error:", err);
       res.status(500).json({ error: "Database error" });
     }
   });
@@ -2053,7 +2031,6 @@ export function createApp() {
       return res.status(400).json({ error: "Missing round, games, or players" });
     }
     broadcastTournamentStarted(id, { round, games, players });
-    console.log(`[start] Tournament ${id} started — Round ${round}, ${games.length} games, ${players.length} players`);
     // Record startedAt for 24h auto-expiry (only set once, on first start)
     try {
       const db = await getDb();
@@ -2065,7 +2042,7 @@ export function createApp() {
           isNull(userTournaments.startedAt)
         ));
     } catch (e) {
-      console.warn("[start] Failed to set startedAt:", e);
+      logger.warn("[start] Failed to set startedAt:", e);
     }
     res.json({ ok: true });
   });
@@ -2089,10 +2066,9 @@ export function createApp() {
       await db.delete(tournamentPlayers).where(eq(tournamentPlayers.tournamentId, id));
       await db.delete(tournamentState).where(eq(tournamentState.tournamentId, id));
       await db.delete(userTournaments).where(eq(userTournaments.tournamentId, id));
-      console.log(`[delete] Tournament ${id} fully deleted by user ${userId}`);
       res.json({ ok: true });
     } catch (err) {
-      console.error("[delete] Tournament delete error:", err);
+      logger.error("[delete] Tournament delete error:", err);
       res.status(500).json({ error: "Failed to delete tournament" });
     }
   });
@@ -2119,7 +2095,6 @@ export function createApp() {
       for (const sub of Array.from(subs)) {
         try { sub.write(data); } catch { /* disconnected */ }
       }
-      console.log(`[round] Broadcast round_started (Round ${round}) to ${subs.size} subscriber(s) for ${id}`);
     }
     res.json({ ok: true });
   });
@@ -2145,7 +2120,6 @@ export function createApp() {
       for (const sub of Array.from(subs)) {
         try { sub.write(data); } catch { /* disconnected */ }
       }
-      console.log(`[sse] Broadcast tournament_ended to ${subs.size} subscriber(s) for ${id}`);
     }
     res.json({ ok: true });
   });
@@ -2202,7 +2176,7 @@ function getRaceRoom(code: string): RaceRoomState {
       });
       res.status(201).json({ id, code: code! });
     } catch (err) {
-      console.error("[battles] create error:", err);
+      logger.error("[battles] create error:", err);
       res.status(500).json({ error: "Failed to create battle room" });
     }
   });
@@ -2248,7 +2222,7 @@ function getRaceRoom(code: string): RaceRoomState {
       const [host, guest] = await Promise.all([enrichAvatar(hostRaw), enrichAvatar(guestRaw)]);
       res.json({ ...room, host, guest });
     } catch (err) {
-      console.error("[battles] get error:", err);
+      logger.error("[battles] get error:", err);
       res.status(500).json({ error: "Failed to fetch battle room" });
     }
   });
@@ -2286,7 +2260,7 @@ function getRaceRoom(code: string): RaceRoomState {
       const [host, guest] = await Promise.all([enrichJoin(hostRows[0] ?? null), enrichJoin(guestRows[0] ?? null)]);
       res.json({ ...room, guestId: userId, status: "active", host, guest });
     } catch (err) {
-      console.error("[battles] join error:", err);
+      logger.error("[battles] join error:", err);
       res.status(500).json({ error: "Failed to join battle room" });
     }
   });
@@ -2360,7 +2334,7 @@ function getRaceRoom(code: string): RaceRoomState {
 
       res.json({ history });
     } catch (err) {
-      console.error("[battles] history error:", err);
+      logger.error("[battles] history error:", err);
       res.status(500).json({ error: "Failed to fetch battle history" });
     }
   });
@@ -2406,7 +2380,7 @@ function getRaceRoom(code: string): RaceRoomState {
       }
       res.json({ ok: true, openingIdx: room.openingIdx });
     } catch (err) {
-      console.error("[race] update error:", err);
+      logger.error("[race] update error:", err);
       res.status(500).json({ error: "Failed to update race state" });
     }
   });
@@ -2427,7 +2401,7 @@ function getRaceRoom(code: string): RaceRoomState {
       await db.update(battleRooms).set({ result, status: "completed", completedAt: new Date() }).where(eq(battleRooms.code, req.params.code.toUpperCase()));
       res.json({ ok: true });
     } catch (err) {
-      console.error("[battles] result error:", err);
+      logger.error("[battles] result error:", err);
       res.status(500).json({ error: "Failed to report result" });
     }
   });
@@ -2451,7 +2425,7 @@ function getRaceRoom(code: string): RaceRoomState {
       await db.update(battleRooms).set({ pgn }).where(eq(battleRooms.code, req.params.code.toUpperCase()));
       res.json({ ok: true });
     } catch (err) {
-      console.error("[battles] pgn save error:", err);
+      logger.error("[battles] pgn save error:", err);
       res.status(500).json({ error: "Failed to save PGN" });
     }
   });
@@ -2499,10 +2473,9 @@ async function startServer() {
             try { sub.write(data); } catch { /* disconnected */ }
           }
         }
-        console.log(`[auto-expiry] Tournament ${tournamentId} auto-completed after 24h`);
       }
     } catch (err) {
-      console.error("[auto-expiry] Error:", err);
+      logger.error("[auto-expiry] Error:", err);
     }
   }
   // Run once at startup, then every 30 minutes
@@ -2524,7 +2497,6 @@ async function startServer() {
 
   const port = process.env.PORT || 3000;
   server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
@@ -2537,5 +2509,5 @@ const isMain = process.argv[1] &&
    process.argv[1].includes("dist/index"));
 
 if (isMain) {
-  startServer().catch(console.error);
+  startServer().catch((err) => logger.error('[server] Fatal startup error:', err));
 }

@@ -39,6 +39,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import type { Round, Player } from "@/lib/tournamentData";
+import { logger } from "@/lib/logger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -631,7 +632,7 @@ export function ShareResultsModal({
             clubLogoUrl: pdfClubLogoUrl,
           });
         } catch (pdfErr) {
-          console.warn("[ShareResultsModal] PDF generation failed, sending without attachment:", pdfErr);
+          logger.warn("[ShareResultsModal] PDF generation failed, sending without attachment:", pdfErr);
         }
       }
 

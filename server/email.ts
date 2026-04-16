@@ -15,6 +15,7 @@ import { getDb } from "./db.js";
 import { directorSmtpConfig } from "../shared/schema.js";
 import { eq } from "drizzle-orm";
 import { requireFullAuth } from "./auth.js";
+import { logger } from "./logger.js";
 
 export const emailRouter = Router();
 
@@ -79,7 +80,7 @@ emailRouter.put("/smtp-config", requireFullAuth, async (req: any, res: any) => {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error("[email] PUT smtp-config error:", err);
+    logger.error("[email] PUT smtp-config error:", err);
     res.status(500).json({ error: "Failed to save SMTP config" });
   }
 });
@@ -108,7 +109,7 @@ emailRouter.get("/smtp-config", requireFullAuth, async (req: any, res: any) => {
       fromEmail: cfg.fromEmail,
     });
   } catch (err) {
-    console.error("[email] GET smtp-config error:", err);
+    logger.error("[email] GET smtp-config error:", err);
     res.status(500).json({ error: "Failed to fetch SMTP config" });
   }
 });
@@ -158,7 +159,7 @@ emailRouter.post("/test-smtp", requireFullAuth, async (req: any, res: any) => {
 
     res.json({ ok: true, message: `Test email sent to ${cfg.fromEmail}` });
   } catch (err: any) {
-    console.error("[email] test-smtp error:", err);
+    logger.error("[email] test-smtp error:", err);
     res.status(400).json({ error: err.message ?? "SMTP connection failed" });
   }
 });
@@ -278,7 +279,7 @@ emailRouter.post("/tournament/:id/send-results-email", requireFullAuth, async (r
     const failed = results.filter((r) => r.status === "failed").length;
     res.json({ ok: true, sent, failed, results });
   } catch (err: any) {
-    console.error("[email] send-results-email error:", err);
+    logger.error("[email] send-results-email error:", err);
     res.status(500).json({ error: err.message ?? "Failed to send emails" });
   }
 });

@@ -9,6 +9,7 @@
  */
 
 import type { ClubBattle, BattleResult, BattleLeaderboardEntry, PlayerBattleSummary } from "./clubBattleRegistry";
+import { logger } from "@/lib/logger";
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
@@ -178,10 +179,9 @@ export async function migrateLocalBattlesToServer(clubId: string): Promise<numbe
   try {
     const { inserted } = await apiBattleBulkImport(clubId, battles);
     localStorage.setItem(migrationKey(clubId), "1");
-    console.log(`[battle-migration] Migrated ${inserted} battles for club ${clubId}`);
     return inserted;
   } catch (err) {
-    console.warn("[battle-migration] Failed to migrate battles:", err);
+    logger.warn("[battle-migration] Failed to migrate battles:", err);
     return 0;
   }
 }

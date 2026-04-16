@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { logger } from "@/lib/logger";
 
 export type PushStatus =
   | "idle"          // Not yet attempted
@@ -122,7 +123,7 @@ export function usePushSubscription({
       setStatus("subscribed");
       sessionStorage.setItem(storageKey(tournamentId), "subscribed");
     } catch (err) {
-      console.error("[push] Subscribe error:", err);
+      logger.error("[push] Subscribe error:", err);
       setStatus("error");
     }
   }, [tournamentId]);
@@ -154,7 +155,7 @@ export function usePushSubscription({
       setStatus("unsubscribed");
       sessionStorage.setItem(storageKey(tournamentId), "unsubscribed");
     } catch (err) {
-      console.error("[push] Unsubscribe error:", err);
+      logger.error("[push] Unsubscribe error:", err);
       setStatus("error");
     }
   }, [tournamentId]);

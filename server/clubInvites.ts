@@ -79,7 +79,6 @@ router.post("/", requireAuth, async (req, res) => {
 
   // In a real deployment, send an email here via SendGrid / Resend / etc.
   // For now, return the link so the director can copy-paste it.
-  console.log(`[invite] New invite for ${email} → ${inviteUrl}`);
 
   return res.json({
     id,

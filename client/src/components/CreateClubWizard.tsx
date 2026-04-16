@@ -25,6 +25,7 @@ import { createClub, type ClubCategory } from "@/lib/clubRegistry";
 import { apiCreateClub } from "@/lib/clubsApi";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import {
   X,
   ChevronLeft,
@@ -302,7 +303,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
             resolvedAvatarUrl = url;
           } else {
             // Avatar upload failed — continue without avatar rather than blocking
-            console.warn("[CreateClubWizard] Avatar upload failed, continuing without avatar");
+            logger.warn("[CreateClubWizard] Avatar upload failed, continuing without avatar");
             resolvedAvatarUrl = null;
           }
         }
@@ -342,7 +343,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         setCreatedClubId(serverClub.id);
         setCreating(false);
       } catch (err) {
-        console.error("[CreateClubWizard] handleNext error:", err);
+        logger.error("[CreateClubWizard] handleNext error:", err);
         setCreating(false);
         const msg = err instanceof Error ? err.message : "An unexpected error occurred";
         setError(msg);

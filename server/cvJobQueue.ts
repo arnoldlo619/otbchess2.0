@@ -28,6 +28,7 @@ import {
 } from "../shared/schema.js";
 import { detectOpening } from "./openingDetection.js";
 import { computePlayerAccuracy } from "./accuracyCalc.js";
+import { logger } from "./logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,7 +62,6 @@ export async function enqueueCvJob(sessionId: string, videoPath: string, fenTime
     cornersFile: cornersFile ?? null,
   });
 
-  console.log(`[cv-queue] Enqueued job ${jobId} for session ${sessionId}`);
 
   // Trigger processing immediately (non-blocking)
   setImmediate(() => processNextJob());
@@ -79,12 +79,11 @@ export function startCvJobQueue(): void {
   pollInterval = setInterval(() => {
     if (!isProcessing) {
       processNextJob().catch((err) =>
-        console.error("[cv-queue] Poll error:", err)
+        logger.error("[cv-queue] Poll error:", err)
       );
     }
   }, 10_000); // Check every 10 seconds
 
-  console.log("[cv-queue] Job queue started (polling every 10s)");
 }
 
 /**
@@ -94,7 +93,6 @@ export function stopCvJobQueue(): void {
   if (pollInterval) {
     clearInterval(pollInterval);
     pollInterval = null;
-    console.log("[cv-queue] Job queue stopped");
   }
 }
 
@@ -120,7 +118,7 @@ async function processNextJob(): Promise<void> {
   try {
     await runCvJob(job.id, job.sessionId, job.videoPath, job.fenTimelineFile ?? null, job.attempts ?? 0, (job as Record<string, unknown>).cornersFile as string | null ?? null);
   } catch (err) {
-    console.error(`[cv-queue] Unhandled error processing job ${job.id}:`, err);
+    logger.error(`[cv-queue] Unhandled error processing job ${job.id}:`, err);
   } finally {
     isProcessing = false;
   }
@@ -136,7 +134,7 @@ async function runCvJob(
 ): Promise<void> {
   const db = await getDb();
 
-  console.log(`[cv-queue] Starting job ${jobId} (attempt ${attempts + 1})`);
+  logger.info(`[cv-queue] Starting job ${jobId} (attempt ${attempts + 1})`);
 
   // Mark as running
   await db
@@ -155,7 +153,7 @@ async function runCvJob(
     cvResult = await spawnCvWorker(videoPath, fenTimelineFile ?? undefined, jobId, cornersFile ?? undefined);
   } catch (spawnErr) {
     const errMsg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
-    console.error(`[cv-queue] CV worker spawn error for job ${jobId}:`, errMsg);
+    logger.error(`[cv-queue] CV worker spawn error for job ${jobId}:`, errMsg);
 
     await db
       .update(cvJobs)
@@ -174,7 +172,7 @@ async function runCvJob(
   // ── Handle CV failure ─────────────────────────────────────────────────────
   if (!cvResult.pgn || cvResult.error) {
     const errMsg = cvResult.error ?? "CV worker produced no PGN";
-    console.warn(`[cv-queue] Job ${jobId} failed: ${errMsg}`);
+    logger.warn(`[cv-queue] Job ${jobId} failed: ${errMsg}`);
 
     await db
       .update(cvJobs)
@@ -196,9 +194,6 @@ async function runCvJob(
     return;
   }
 
-  console.log(
-    `[cv-queue] Job ${jobId} succeeded: ${cvResult.moveTimeline.length} moves reconstructed from ${cvResult.framesProcessed} frames`
-  );
 
   // ── Store CV results ──────────────────────────────────────────────────────
   await db
@@ -225,7 +220,7 @@ async function runCvJob(
     try {
       chess.loadPgn(pgnMoves.replace(/\{[^}]*\}/g, ""));
     } catch {
-      console.warn(`[cv-queue] Could not parse reconstructed PGN for job ${jobId}`);
+      logger.warn(`[cv-queue] Could not parse reconstructed PGN for job ${jobId}`);
       await db
         .update(recordingSessions)
         .set({ status: "queued", updatedAt: new Date() })
@@ -305,7 +300,7 @@ async function runCvJob(
 
   // Run analysis in background (same pattern as the manual PGN analyze endpoint)
   runStockfishAnalysis(sessionId, gameId, history).catch((err) => {
-    console.error(`[cv-queue] Stockfish analysis error for game ${gameId}:`, err);
+    logger.error(`[cv-queue] Stockfish analysis error for game ${gameId}:`, err);
   });
 }
 
@@ -334,7 +329,6 @@ function spawnCvWorker(videoPath: string, fenTimelineFile?: string, jobId?: stri
       args.push("--corners-file", cornersFile);
     }
 
-    console.log(`[cv-queue] Spawning: ${PYTHON_BIN} ${args.join(" ")}`);
 
     const proc = spawn(PYTHON_BIN, args, {
       stdio: ["ignore", "pipe", "pipe"],
@@ -353,7 +347,7 @@ function spawnCvWorker(videoPath: string, fenTimelineFile?: string, jobId?: stri
 
     proc.on("close", (code) => {
       if (stderr) {
-        console.warn(`[cv-queue] Python stderr:\n${stderr.slice(0, 500)}`);
+        logger.warn(`[cv-queue] Python stderr:\n${stderr.slice(0, 500)}`);
       }
 
       if (!stdout.trim()) {
@@ -456,11 +450,8 @@ async function runStockfishAnalysis(
       .set({ status: "complete", updatedAt: new Date() })
       .where(eq(recordingSessions.id, sessionId));
 
-    console.log(
-      `[cv-queue] Analysis complete for game ${gameId} — White: ${whiteAccuracy}%, Black: ${blackAccuracy}%`
-    );
   } catch (err) {
-    console.error(`[cv-queue] Stockfish analysis failed for game ${gameId}:`, err);
+    logger.error(`[cv-queue] Stockfish analysis failed for game ${gameId}:`, err);
     await db
       .update(recordingSessions)
       .set({ status: "failed", updatedAt: new Date() })

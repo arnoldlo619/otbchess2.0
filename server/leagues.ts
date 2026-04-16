@@ -31,6 +31,7 @@ import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import webpush from "web-push";
 import type { Request, Response } from "express";
+import { logger } from "./logger.js";
 
 // Initialise VAPID details (same keys as main server)
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY ?? "";
@@ -59,7 +60,7 @@ async function notifyCommissioner(leagueId: string, title: string, body: string,
       } catch (err: any) {
         const code = err?.statusCode;
         if (code === 410 || code === 404) staleIds.push(row.id);
-        else console.warn("[league-push] Send failed:", err?.message);
+        else logger.warn("[league-push] Send failed:", err?.message);
       }
     }));
     if (staleIds.length) {
@@ -68,9 +69,8 @@ async function notifyCommissioner(leagueId: string, title: string, body: string,
         await db.delete(leaguePushSubscriptions).where(eq(leaguePushSubscriptions.id, id));
       }
     }
-    console.log(`[league-push] Notified ${subs.length - staleIds.length} commissioner(s) for league ${leagueId}`);
   } catch (err) {
-    console.error("[league-push] notifyCommissioner error:", err);
+    logger.error("[league-push] notifyCommissioner error:", err);
   }
 }
 
@@ -290,7 +290,7 @@ leaguesRouter.get("/mine", requireAuth, async (req: Request, res: Response) => {
     }
     res.json(results);
   } catch (err) {
-    console.error("[leagues] GET /mine error:", err);
+    logger.error("[leagues] GET /mine error:", err);
     res.status(500).json({ error: "Failed to fetch your leagues" });
   }
 });
@@ -306,7 +306,7 @@ leaguesRouter.get("/club/:clubId", async (req: Request, res: Response) => {
       .orderBy(desc(leagues.createdAt));
     res.json(rows);
   } catch (err) {
-    console.error("[leagues] GET /club/:clubId error:", err);
+    logger.error("[leagues] GET /club/:clubId error:", err);
     res.status(500).json({ error: "Failed to fetch leagues" });
   }
 });
@@ -389,7 +389,7 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
 
     res.status(201).json({ leagueId, message: "League created in Draft mode", status: "draft" });
   } catch (err) {
-    console.error("[leagues] POST / error:", err);
+    logger.error("[leagues] POST / error:", err);
     res.status(500).json({ error: "Failed to create league" });
   }
 });
@@ -445,7 +445,7 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
           }
         }
       } catch (fetchErr) {
-        console.warn(`[leagues] Failed to fetch chess.com rating for ${p.chesscomUsername}:`, fetchErr);
+        logger.warn(`[leagues] Failed to fetch chess.com rating for ${p.chesscomUsername}:`, fetchErr);
         // Non-fatal — continue without rating
       }
     }
@@ -511,7 +511,6 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
     // so opponents can one-click access it from match cards.
     const playersWithChessCom = updatedPlayers.filter(p => p.chesscomUsername);
     if (playersWithChessCom.length > 0) {
-      console.log(`[league-prep] Pre-warming prep cache for ${playersWithChessCom.length} players...`);
       (async () => {
         for (const p of playersWithChessCom) {
           try {
@@ -522,7 +521,6 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
             if (existing) {
               const age = Date.now() - new Date(existing.cachedAt).getTime();
               if (age < 24 * 60 * 60 * 1000) {
-                console.log(`[league-prep] Cache fresh for ${username}, skipping`);
                 continue;
               }
             }
@@ -536,18 +534,16 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
             }).onDuplicateKeyUpdate({
               set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date() },
             });
-            console.log(`[league-prep] Cached prep for ${username} (${report.opponent.gamesAnalyzed} games)`);
           } catch (err) {
-            console.warn(`[league-prep] Failed to pre-warm for ${p.chesscomUsername}:`, err);
+            logger.warn(`[league-prep] Failed to pre-warm for ${p.chesscomUsername}:`, err);
           }
         }
-        console.log(`[league-prep] Pre-warming complete for league ${league.id}`);
       })();
     }
 
     res.json({ success: true, message: "Season started!", status: "active" });
   } catch (err) {
-    console.error("[leagues] POST /:leagueId/start error:", err);
+    logger.error("[leagues] POST /:leagueId/start error:", err);
     res.status(500).json({ error: "Failed to start season" });
   }
 });
@@ -575,7 +571,7 @@ leaguesRouter.get("/invites/mine", requireAuth, async (req: Request, res: Respon
       .orderBy(desc(leagueInvites.createdAt));
     res.json(rows);
   } catch (err) {
-    console.error("[league-invites] GET /mine error:", err);
+    logger.error("[league-invites] GET /mine error:", err);
     res.status(500).json({ error: "Failed to list invites" });
   }
 });
@@ -608,7 +604,7 @@ leaguesRouter.get("/:leagueId", async (req: Request, res: Response) => {
 
     res.json({ ...league[0], players, clubName });
   } catch (err) {
-    console.error("[leagues] GET /:leagueId error:", err);
+    logger.error("[leagues] GET /:leagueId error:", err);
     res.status(500).json({ error: "Failed to fetch league" });
   }
 });
@@ -643,7 +639,7 @@ leaguesRouter.get("/:leagueId/weeks", async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (err) {
-    console.error("[leagues] GET /:leagueId/weeks error:", err);
+    logger.error("[leagues] GET /:leagueId/weeks error:", err);
     res.status(500).json({ error: "Failed to fetch weeks" });
   }
 });
@@ -673,7 +669,7 @@ leaguesRouter.get("/:leagueId/standings", async (req: Request, res: Response) =>
 
     res.json(enriched);
   } catch (err) {
-    console.error("[leagues] GET /:leagueId/standings error:", err);
+    logger.error("[leagues] GET /:leagueId/standings error:", err);
     res.status(500).json({ error: "Failed to fetch standings" });
   }
 });
@@ -782,7 +778,7 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", requireAuth, async (req
       : "Your report is saved. Waiting for opponent to confirm.";
     res.json({ success: true, message: statusMsg, status: updateFields.resultStatus });
   } catch (err) {
-    console.error("[leagues] POST result error:", err);
+    logger.error("[leagues] POST result error:", err);
     res.status(500).json({ error: "Failed to record result" });
   }
 });
@@ -848,7 +844,7 @@ leaguesRouter.patch("/:leagueId/matches/:matchId/result", requireAuth, async (re
     await recalculateStandings(req.params.leagueId);
     res.json({ success: true });
   } catch (err) {
-    console.error("[leagues] PATCH result error:", err);
+    logger.error("[leagues] PATCH result error:", err);
     res.status(500).json({ error: "Failed to override result" });
   }
 });
@@ -943,7 +939,7 @@ leaguesRouter.post("/:leagueId/advance-week", requireAuth, async (req: Request, 
 
     res.json({ success: true, newWeek: nextWeek });
   } catch (err) {
-    console.error("[leagues] POST advance-week error:", err);
+    logger.error("[leagues] POST advance-week error:", err);
     res.status(500).json({ error: "Failed to advance week" });
   }
 });
@@ -966,7 +962,7 @@ leaguesRouter.patch("/:leagueId/weeks/:weekId/deadline", requireAuth, async (req
     }).where(eq(leagueWeeks.id, weekId));
     res.json({ success: true });
   } catch (err) {
-    console.error("[leagues] PATCH deadline error:", err);
+    logger.error("[leagues] PATCH deadline error:", err);
     res.status(500).json({ error: "Failed to set deadline" });
   }
 });
@@ -983,7 +979,7 @@ leaguesRouter.get("/:leagueId/my-join-request", requireAuth, async (req: Request
     if (!existing.length) return res.json({ status: null });
     res.json({ status: existing[0].status, createdAt: existing[0].createdAt });
   } catch (err) {
-    console.error("[leagues] GET my-join-request error:", err);
+    logger.error("[leagues] GET my-join-request error:", err);
     res.status(500).json({ error: "Failed to check request status" });
   }
 });
@@ -1007,7 +1003,7 @@ leaguesRouter.get("/:leagueId/join-requests", requireAuth, async (req: Request, 
       .orderBy(asc(leagueJoinRequests.createdAt));
     res.json(requests);
   } catch (err) {
-    console.error("[leagues] GET join-requests error:", err);
+    logger.error("[leagues] GET join-requests error:", err);
     res.status(500).json({ error: "Failed to fetch join requests" });
   }
 });
@@ -1051,7 +1047,7 @@ leaguesRouter.post("/:leagueId/join-request", requireAuth, async (req: Request, 
     ).catch(() => {});
     res.json({ success: true, message: "Join request submitted" });
   } catch (err) {
-    console.error("[leagues] POST join-request error:", err);
+    logger.error("[leagues] POST join-request error:", err);
     res.status(500).json({ error: "Failed to submit join request" });
   }
 });
@@ -1118,7 +1114,7 @@ leaguesRouter.patch("/:leagueId/join-requests/:requestId", requireAuth, async (r
     }
     res.json({ success: true, action });
   } catch (err) {
-    console.error("[leagues] PATCH join-request error:", err);
+    logger.error("[leagues] PATCH join-request error:", err);
     res.status(500).json({ error: "Failed to review request" });
   }
 });
@@ -1163,7 +1159,7 @@ leaguesRouter.post("/:leagueId/push/subscribe", requireAuth, async (req: Request
     }
     res.json({ success: true });
   } catch (err) {
-    console.error("[league-push] subscribe error:", err);
+    logger.error("[league-push] subscribe error:", err);
     res.status(500).json({ error: "Failed to save subscription" });
   }
 });
@@ -1178,7 +1174,7 @@ leaguesRouter.delete("/:leagueId/push/subscribe", requireAuth, async (req: Reque
       .where(and(eq(leaguePushSubscriptions.leagueId, req.params.leagueId), eq(leaguePushSubscriptions.userId, userId)));
     res.json({ success: true });
   } catch (err) {
-    console.error("[league-push] unsubscribe error:", err);
+    logger.error("[league-push] unsubscribe error:", err);
     res.status(500).json({ error: "Failed to remove subscription" });
   }
 });
@@ -1195,7 +1191,7 @@ leaguesRouter.get("/:leagueId/push/status", requireAuth, async (req: Request, re
       .limit(1);
     res.json({ subscribed: sub.length > 0 });
   } catch (err) {
-    console.error("[league-push] status error:", err);
+    logger.error("[league-push] status error:", err);
     res.status(500).json({ error: "Failed to check subscription" });
   }
 });
@@ -1269,7 +1265,7 @@ leaguesRouter.post("/:leagueId/invites", requireAuth, async (req: Request, res: 
     });
     res.status(201).json(invite);
   } catch (err) {
-    console.error("[league-invites] POST error:", err);
+    logger.error("[league-invites] POST error:", err);
     res.status(500).json({ error: "Failed to send invite" });
   }
 });
@@ -1290,7 +1286,7 @@ leaguesRouter.get("/:leagueId/invites", requireAuth, async (req: Request, res: R
       .orderBy(desc(leagueInvites.createdAt));
     res.json(rows);
   } catch (err) {
-    console.error("[league-invites] GET error:", err);
+    logger.error("[league-invites] GET error:", err);
     res.status(500).json({ error: "Failed to list invites" });
   }
 });
@@ -1341,7 +1337,7 @@ leaguesRouter.patch("/:leagueId/invites/:inviteId", requireAuth, async (req: Req
     }
     res.json({ success: true, status: action === "accept" ? "accepted" : "declined" });
   } catch (err) {
-    console.error("[league-invites] PATCH error:", err);
+    logger.error("[league-invites] PATCH error:", err);
     res.status(500).json({ error: "Failed to respond to invite" });
   }
 });
@@ -1362,7 +1358,7 @@ leaguesRouter.delete("/:leagueId/invites/:inviteId", requireAuth, async (req: Re
       .where(and(eq(leagueInvites.id, Number(inviteId)), eq(leagueInvites.leagueId, leagueId)));
     res.json({ success: true });
   } catch (err) {
-    console.error("[league-invites] DELETE error:", err);
+    logger.error("[league-invites] DELETE error:", err);
     res.status(500).json({ error: "Failed to cancel invite" });
   }
 });
@@ -1416,7 +1412,7 @@ leaguesRouter.patch("/:leagueId/settings", requireAuth, async (req: Request, res
     const [updated] = await db.select().from(leagues).where(eq(leagues.id, leagueId)).limit(1);
     res.json({ success: true, league: updated });
   } catch (err) {
-    console.error("[league-settings] PATCH error:", err);
+    logger.error("[league-settings] PATCH error:", err);
     res.status(500).json({ error: "Failed to update league settings" });
   }
 });
@@ -1550,7 +1546,7 @@ leaguesRouter.get("/:leagueId/history", async (req: Request, res: Response) => {
       },
     });
   } catch (err) {
-    console.error("[leagues] GET /:leagueId/history error:", err);
+    logger.error("[leagues] GET /:leagueId/history error:", err);
     res.status(500).json({ error: "Failed to fetch season history" });
   }
 });
@@ -1577,7 +1573,7 @@ async function notifyPlayerPush(
       } catch (err: any) {
         const code = err?.statusCode;
         if (code === 410 || code === 404) staleIds.push(row.id);
-        else console.warn("[league-push] Player notify failed:", err?.message);
+        else logger.warn("[league-push] Player notify failed:", err?.message);
       }
     }));
     if (staleIds.length) {
@@ -1586,6 +1582,6 @@ async function notifyPlayerPush(
       }
     }
   } catch (err) {
-    console.error("[league-invites] notifyPlayer error:", err);
+    logger.error("[league-invites] notifyPlayer error:", err);
   }
 }

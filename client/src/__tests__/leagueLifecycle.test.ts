@@ -133,7 +133,8 @@ describe("Season Start Flow", () => {
   });
 
   it("pre-warms prep cache for players with chess.com usernames", () => {
-    expect(leaguesCode).toContain("[league-prep] Pre-warming prep cache");
+    // The prep cache pre-warming logic is present; the log was removed as part of console cleanup
+    expect(leaguesCode).toContain("[league-prep] Failed to pre-warm for");
   });
 });
 

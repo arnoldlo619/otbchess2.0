@@ -21,6 +21,7 @@ import { nanoid, nanoid as nid } from "nanoid";
 import { eq, desc, and } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { users, userTournaments, ratingHistory } from "../shared/schema.js";
+import { logger } from "./logger.js";
 
 const BCRYPT_ROUNDS = 12;
 const JWT_EXPIRY_DEFAULT = "7d";
@@ -163,7 +164,7 @@ export function createAuthRouter(): Router {
 
       return res.status(201).json({ user: safeUser(user), token });
     } catch (err) {
-      console.error("[auth] register error:", err);
+      logger.error("[auth] register error:", err);
       return res.status(500).json({ error: "Registration failed" });
     }
   });
@@ -205,7 +206,7 @@ export function createAuthRouter(): Router {
 
       return res.json({ user: safeUser(user), token });
     } catch (err) {
-      console.error("[auth] login error:", err);
+      logger.error("[auth] login error:", err);
       return res.status(500).json({ error: "Login failed" });
     }
   });
@@ -249,10 +250,10 @@ export function createAuthRouter(): Router {
         sameSite: "lax",
         maxAge: COOKIE_MAX_AGE_GUEST_MS,
       });
-      console.log(`[auth] Guest session created: ${rawName} (${id})`);
+      logger.info(`[auth] Guest session created: ${rawName} (${id})`);
       return res.status(201).json({ user: safeUser(user), token });
     } catch (err) {
-      console.error("[auth] guest error:", err);
+      logger.error("[auth] guest error:", err);
       return res.status(500).json({ error: "Failed to create guest session" });
     }
   });
@@ -273,7 +274,7 @@ export function createAuthRouter(): Router {
       if (!user) return res.status(401).json({ error: "User not found" });
       return res.json({ user: safeUser(user) });
     } catch (err) {
-      console.error("[auth] me error:", err);
+      logger.error("[auth] me error:", err);
       return res.status(500).json({ error: "Failed to fetch user" });
     }
   });
@@ -392,7 +393,7 @@ export function createAuthRouter(): Router {
       const [updated] = await db.select().from(users).where(eq(users.id, payload.sub));
       return res.json({ user: safeUser(updated) });
     } catch (err) {
-      console.error("[auth] patch me error:", err);
+      logger.error("[auth] patch me error:", err);
       return res.status(500).json({ error: "Failed to update profile" });
     }
   });
@@ -417,7 +418,7 @@ export function createAuthRouter(): Router {
         .limit(30);
       return res.json({ history: rows });
     } catch (err) {
-      console.error("[auth] rating-history error:", err);
+      logger.error("[auth] rating-history error:", err);
       return res.status(500).json({ error: "Failed to fetch rating history" });
     }
   });
@@ -442,7 +443,7 @@ export function createAuthRouter(): Router {
         .orderBy(userTournaments.createdAt);
       return res.json({ tournaments: rows });
     } catch (err) {
-      console.error("[auth] get user tournaments error:", err);
+      logger.error("[auth] get user tournaments error:", err);
       return res.status(500).json({ error: "Failed to fetch tournaments" });
     }
   });
@@ -505,7 +506,7 @@ export function createAuthRouter(): Router {
 
       return res.json({ ok: true });
     } catch (err) {
-      console.error("[auth] post user tournaments error:", err);
+      logger.error("[auth] post user tournaments error:", err);
       return res.status(500).json({ error: "Failed to save tournament" });
     }
   });
@@ -539,10 +540,10 @@ export function createAuthRouter(): Router {
       await db
         .delete(userTournaments)
         .where(eq(userTournaments.tournamentId, tournamentId));
-      console.log(`[auth] Tournament ${tournamentId} deleted by user ${payload.sub}`);
+      logger.info(`[auth] Tournament ${tournamentId} deleted by user ${payload.sub}`);
       return res.json({ ok: true });
     } catch (err) {
-      console.error("[auth] delete user tournament error:", err);
+      logger.error("[auth] delete user tournament error:", err);
       return res.status(500).json({ error: "Failed to delete tournament" });
     }
   });
@@ -578,7 +579,7 @@ export function createAuthRouter(): Router {
         .where(eq(userTournaments.tournamentId, tournamentId));
       return res.json({ ok: true, customSlug: slug || null });
     } catch (err) {
-      console.error("[auth] patch custom-slug error:", err);
+      logger.error("[auth] patch custom-slug error:", err);
       return res.status(500).json({ error: "Failed to update custom slug" });
     }
   });
@@ -615,7 +616,7 @@ export function createAuthRouter(): Router {
       if (rows.length === 0) return res.status(404).json({ error: "Tournament not found" });
       return res.json(rows[0]);
     } catch (err) {
-      console.error("[auth] join resolve error:", err);
+      logger.error("[auth] join resolve error:", err);
       return res.status(500).json({ error: "Failed to resolve tournament" });
     }
   });
@@ -641,7 +642,7 @@ export function createAuthRouter(): Router {
       if (rows.length === 0) return res.status(404).json({ error: "Tournament not found" });
       return res.json(rows[0]);
     } catch (err) {
-      console.error("[auth] get tournament meta error:", err);
+      logger.error("[auth] get tournament meta error:", err);
       return res.status(500).json({ error: "Failed to fetch tournament meta" });
     }
   });
@@ -688,7 +689,7 @@ export function createAuthRouter(): Router {
         conflict: `Already used by "${rows[0].name ?? "another tournament"}"`
       });
     } catch (err) {
-      console.error("[auth] check-slug error:", err);
+      logger.error("[auth] check-slug error:", err);
       return res.status(500).json({ error: "Failed to check slug availability" });
     }
   });

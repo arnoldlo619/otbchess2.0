@@ -99,6 +99,7 @@ import {
   Target,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { logger } from "@/lib/logger";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1985,7 +1986,7 @@ export default function Director() {
 
     es.onerror = () => {
       // EventSource will automatically reconnect; no manual action needed.
-      console.warn("[sse] player stream error — will reconnect automatically");
+      logger.warn("[sse] player stream error — will reconnect automatically");
     };
 
     return () => es.close();
@@ -4759,7 +4760,7 @@ export default function Director() {
                                 body: JSON.stringify({ players: standings, tournamentName: state.tournamentName }),
                               });
                             } catch {
-                              console.error("[director] Failed to broadcast tournament_ended");
+                              logger.error("[director] Failed to broadcast tournament_ended");
                             }
                             toast.success("Tournament finalized!");
                             setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
