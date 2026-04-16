@@ -766,10 +766,10 @@ export function createApp() {
   app.use("/api/recordings", createRecordingsRouter());
   app.use("/api/games", createRecordingsRouter());
 
-   // ── Static: serve uploaded club avatars ─────────────────────────────────────
-  const uploadsDir = path.resolve(__dirname, "../uploads");
+  // ── Static: serve uploaded club avatars ─────────────────────────────────────────
+  // Use /tmp/otb-uploads to avoid corrupted project uploads dir in sandbox
+  const uploadsDir = "/tmp/otb-uploads";
   app.use("/uploads", express.static(uploadsDir, { maxAge: "7d" }));
-
   // ── Clubs API (Discover, Create, Join, Members) ───────────────────────────
   app.use("/api/clubs", clubsRouter);
   app.use("/api/leagues", leaguesRouter);

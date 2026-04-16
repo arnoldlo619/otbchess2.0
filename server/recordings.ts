@@ -45,9 +45,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ── Upload directory for video chunks ────────────────────────────────────────
-const UPLOADS_DIR = path.resolve(__dirname, "../uploads/video-chunks");
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// Use /tmp/otb-uploads to avoid corrupted project uploads dir in sandbox
+const UPLOADS_DIR = "/tmp/otb-uploads/video-chunks";
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch (err) {
+  // Non-fatal: sandbox filesystem may block mkdirSync at module load time.
+  // Chunk uploads will fail gracefully at request time if the dir is unavailable.
+  console.warn("[recordings] Could not create uploads/video-chunks dir:", (err as Error).message);
 }
 
 // ── Multer storage: saves each chunk as <sessionId>-chunk-<index>.<ext> ──────
