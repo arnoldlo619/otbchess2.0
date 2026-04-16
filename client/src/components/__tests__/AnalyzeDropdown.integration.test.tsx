@@ -22,26 +22,29 @@ describe("AnalyzeDropdown Integration", () => {
     expect(component.props.className).toContain("shadow-lg");
   });
 
-  it("has two Link children for navigation options", () => {
+  it("has four children: Analysis link, Matchup Prep link, divider, and Openings link", () => {
     const component = AnalyzeDropdown();
     const children = component.props.children;
-    
-    // Should have exactly 2 Link components
+    // Analysis Link, Matchup Prep Link, divider div, Openings Link
     expect(Array.isArray(children)).toBe(true);
-    expect(children.length).toBe(2);
+    expect(children.length).toBe(4);
   });
 
   it("first link navigates to /games (Analysis)", () => {
     const component = AnalyzeDropdown();
     const analysisLink = component.props.children[0];
-    
     expect(analysisLink.props.href).toBe("/games");
   });
 
   it("second link navigates to /prep (Matchup Prep)", () => {
     const component = AnalyzeDropdown();
     const matchupLink = component.props.children[1];
-    
     expect(matchupLink.props.href).toBe("/prep");
+  });
+
+  it("fourth child navigates to /openings (Openings Library)", () => {
+    const component = AnalyzeDropdown();
+    const openingsLink = component.props.children[3];
+    expect(openingsLink.props.href).toBe("/openings");
   });
 });

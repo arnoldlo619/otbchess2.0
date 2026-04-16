@@ -1,15 +1,16 @@
 /**
  * AnalyzeDropdown — Dropdown menu for the Analyze nav item.
  *
- * Provides two navigation options:
- *   1. "Analysis" — Navigate to games history page (for analyzing past games)
+ * Provides three navigation options:
+ *   1. "Analysis"    — Navigate to games history page (for analyzing past games)
  *   2. "Matchup Prep" — Navigate to matchup prep page (for preparing against opponents)
+ *   3. "Openings"    — Navigate to the openings library and study feature
  *
  * Rendered below the "Analyze" tab on hover.
  */
 
 import { Link } from "wouter";
-import { BarChart3, Target } from "lucide-react";
+import { BarChart3, Target, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function AnalyzeDropdown() {
@@ -50,6 +51,24 @@ export function AnalyzeDropdown() {
       >
         <Target className="w-4 h-4 text-[#4CAF50]" />
         <span>Matchup Prep</span>
+      </Link>
+
+      {/* Divider */}
+      <div className="my-1.5 mx-3 border-t border-gray-200 dark:border-[#2d4a35]" />
+
+      {/* Openings Library Option */}
+      <Link
+        href="/openings"
+        className={cn(
+          "flex items-center gap-3 px-4 py-2.5 text-sm font-medium",
+          "text-gray-700 dark:text-gray-200",
+          "hover:bg-gray-100 dark:hover:bg-[#2d4a35]",
+          "transition-colors duration-150",
+          "cursor-pointer"
+        )}
+      >
+        <BookOpen className="w-4 h-4 text-[#4CAF50]" />
+        <span>Openings</span>
       </Link>
     </div>
   );
