@@ -73,6 +73,7 @@ export function useChesscomAvatar(player: PlayerProfile | null): string | null {
 
     fetchAvatar();
     return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- using stable primitives instead of the object reference
   }, [player?.id, player?.avatarUrl, player?.chesscomUsername]);
 
   if (!player) return null;

@@ -100,6 +100,7 @@ export function PlayerAvatar({
           alt={`${username}'s avatar`}
           className="w-full h-full object-cover"
           crossOrigin="anonymous"
+          aria-hidden="true"
           onError={() => setImgError(true)}
         />
       ) : showFlair ? (

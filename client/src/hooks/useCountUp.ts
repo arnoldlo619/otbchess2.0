@@ -77,7 +77,7 @@ export function useCountUp({
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [target, trigger, duration, start]);
+  }, [target, trigger, duration, start, easingFn]);
 
   const displayValue =
     decimals > 0

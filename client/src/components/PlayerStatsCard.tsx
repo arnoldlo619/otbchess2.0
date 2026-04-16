@@ -439,6 +439,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
                   src={avatarUrl!}
                   alt={player.name}
                   crossOrigin="anonymous"
+                  aria-hidden="true"
                   onError={() => setImgError(true)}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />

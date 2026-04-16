@@ -273,6 +273,7 @@ function AvatarCircle({
         src={photoUrl}
         alt={user.displayName ?? "avatar"}
         className="w-full h-full object-cover rounded-full"
+        aria-hidden="true"
         onError={(e) => {
           // On broken image, hide and let initials show via parent
           (e.currentTarget as HTMLImageElement).style.display = "none";

@@ -206,7 +206,7 @@ export default function FullScreenClock({
       lastWarnSecRef.current = sec;
       warningTick();
     }
-  }, [active, paused, flagFallen, hostMs, guestMs, warningTick]);
+  }, [active, paused, externalPause, flagFallen, hostMs, guestMs, warningTick]);
 
   // ── Flag alarm ────────────────────────────────────────────────────────────────
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "wouter";
 import {
   BarChart3,
@@ -126,7 +126,7 @@ function MetricCard({
   isDark,
   accent = false,
 }: {
-  icon: any;
+  icon: React.ElementType;
   label: string;
   value: string | number;
   subtitle?: string;
@@ -260,7 +260,7 @@ function FunnelStep({
   value: number;
   maxValue: number;
   isDark: boolean;
-  icon: any;
+  icon: React.ElementType;
 }) {
   const pct = maxValue > 0 ? Math.round((value / maxValue) * 100) : 0;
   return (
@@ -417,7 +417,7 @@ function Section({
   defaultOpen = true,
 }: {
   title: string;
-  icon: any;
+  icon: React.ElementType;
   children: React.ReactNode;
   isDark: boolean;
   defaultOpen?: boolean;

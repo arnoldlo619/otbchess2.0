@@ -1440,7 +1440,8 @@ export default function TournamentPage() {
     setMobileTab(MOBILE_TABS[nextIdx]);
     setSwipeFlash(direction === "prev" ? "right" : "left");
     setTimeout(() => setSwipeFlash(null), 350);
-  }, [mobileTab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- MOBILE_TABS is derived from isElimFormat which is stable per render
+  }, [mobileTab, isElimFormat]);
 
   const swipeContainerRef = useRef<HTMLDivElement>(null);
   useSwipeGesture(swipeContainerRef, {

@@ -15,7 +15,7 @@
  *   - A call-to-action to view the full results
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
   X,
@@ -563,7 +563,10 @@ export function ShareResultsModal({
   const [isSendingAll, setIsSendingAll] = useState(false);
   const [sendSummary, setSendSummary] = useState<{ sent: number; failed: number } | null>(null);
 
-  const targets = singlePlayer ? [singlePlayer] : performances;
+  const targets = useMemo(
+    () => singlePlayer ? [singlePlayer] : performances,
+    [singlePlayer, performances]
+  );
 
   // Check if SMTP is configured on mount
   useEffect(() => {
@@ -679,18 +682,19 @@ export function ShareResultsModal({
       } else {
         toast.warning(`Sent ${data.sent}, failed ${data.failed}`);
       }
-    } catch (err: any) {
-      toast.error(err.message ?? "Failed to send emails");
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : "Failed to send emails";
+      toast.error(errMsg);
       // Mark all as failed
       const failed: PlayerSendState = {};
       for (const p of playersWithEmail) {
-        failed[p.player.id] = { status: "failed", error: err.message };
+        failed[p.player.id] = { status: "failed", error: errMsg };
       }
       setSendStates(failed);
     } finally {
       setIsSendingAll(false);
     }
-  }, [smtpConfigured, targets, tournamentName, tournamentId, reportUrl]);
+  }, [smtpConfigured, targets, tournamentName, tournamentId, reportUrl, pdfPlayers, pdfRounds, pdfClubName, pdfClubLogoUrl]);
 
   const bg = isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-gray-200";
   const textMain = isDark ? "text-white" : "text-gray-900";

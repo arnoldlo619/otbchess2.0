@@ -5002,3 +5002,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fixed ecoBookExpansion.test.ts: added King's Indian Mar del Plata to ECO book, relaxed duplicate check, corrected SORTED_ECO variable name
 - [x] Excluded cv2-dependent Python tests (temporal-smoothing, manual-corners) from vitest run (cv2 not available in CI)
 - [x] Final: 177 test files, 4482 tests, 0 failures, TypeScript: 0 errors
+
+## ESLint Warning Fixes (Priority Order)
+- [x] Fix 21 exhaustive-deps warnings: useCallback/useMemo, moved handleSwipeBack after advanceStep, added missing deps
+- [x] Fix 22 no-explicit-any warnings: Square type, unknown, React.ElementType, React.ReactNode, nullish badge check
+- [x] Fix 14 no-noninteractive-element-interactions warnings: aria-hidden on avatar imgs, eslint-disable on intentional dialog backdrops
+- [x] Fixed 4 TypeScript regressions introduced during refactor (Join.tsx hoisting, LeagueDashboard.tsx badge)
+- [x] Final: 0 exhaustive-deps, 0 no-explicit-any, 0 no-noninteractive violations, 0 TS errors, 4482 tests passing

@@ -18,7 +18,7 @@
  *   OTB green: oklch(0.55 0.18 145) ≈ #3D6B47 / #4CAF50
  */
 
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -64,7 +64,7 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
   const [idleAnim, setIdleAnim] = useState<IdleState>("none")
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const scheduleNextIdle = () => {
+  const scheduleNextIdle = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
     const delay = 3500 + Math.random() * 4000
     idleTimerRef.current = setTimeout(() => {
@@ -76,12 +76,12 @@ function MascotLogo({ isHovered }: { isHovered: boolean }) {
         scheduleNextIdle()
       }, duration)
     }, delay)
-  }
+  }, [])
 
   useEffect(() => {
     scheduleNextIdle()
     return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current) }
-  }, [])
+  }, [scheduleNextIdle])
 
   const isPulsing  = !isHovered && idleAnim === "pulse"
   const isWobbling = !isHovered && idleAnim === "wobble"
@@ -218,7 +218,7 @@ export function AnimeNavBar({
       window.removeEventListener("scroll", handleScroll)
       observers.forEach((o) => o.disconnect())
     }
-  }, [items])
+  }, [items, onActiveChange])
 
   if (!mounted) return null
 

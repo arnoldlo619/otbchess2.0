@@ -157,6 +157,7 @@ function PlayerCard({
             alt={player?.displayName ?? ""}
             className="w-28 h-28 rounded-full object-cover relative z-10"
             style={{ border: `2.5px solid ${accentColor}66` }}
+            aria-hidden="true"
             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
           />
         ) : (
@@ -1515,6 +1516,7 @@ export default function Battle() {
                         opacity: room.result === "guest_win" ? 0.4 : 1,
                       }}
                       alt=""
+                      aria-hidden="true"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                     />
                   ) : (
@@ -1560,6 +1562,7 @@ export default function Battle() {
                         opacity: room.result === "host_win" ? 0.4 : 1,
                       }}
                       alt=""
+                      aria-hidden="true"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                     />
                   ) : (

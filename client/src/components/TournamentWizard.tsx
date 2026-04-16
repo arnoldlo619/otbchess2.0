@@ -2364,7 +2364,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       document.body.style.overflow = "hidden";
       return () => { document.body.style.overflow = prev; };
     }
-  }, [open]);
+  }, [open, initialClubId, initialClubName]);
 
   // When entering quickstart mode, auto-fill today's date
   const handleSelectMode = (m: "quickstart" | "schedule" | "large_event") => {
@@ -2459,7 +2459,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
         }),
       }).catch(() => { /* non-critical — localStorage is the source of truth */ });
     }
-  }, [data]);
+  }, [data, user?.id]);
 
   const commitTournament = useCallback(() => {
     const slug = makeSlug(data.name, data.date);

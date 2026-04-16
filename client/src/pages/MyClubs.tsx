@@ -657,7 +657,7 @@ export default function MyClubs() {
     };
   }, [search, categoryFilter, myClubs, fetchDiscover]);
 
-  const refreshClubs = async () => {
+  const refreshClubs = useCallback(async () => {
     seedClubsIfEmpty();
     seedClubEventsIfEmpty();
 
@@ -699,11 +699,11 @@ export default function MyClubs() {
       events.sort((a, b) => a.startAt.localeCompare(b.startAt));
       setUpcomingEvents(events);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     refreshClubs();
-  }, [user, showWizard, rsvpRefresh]); // re-fetch after wizard closes or RSVP changes
+  }, [user, showWizard, rsvpRefresh, refreshClubs]); // re-fetch after wizard closes or RSVP changes
 
   const myClubIds = new Set(myClubs.map((c) => c.id));
 

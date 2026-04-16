@@ -2032,6 +2032,7 @@ export default function VideoRecorder() {
                   alt="Last detected board position"
                   className="w-full aspect-square object-cover"
                   loading="lazy"
+                  aria-hidden="true"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </div>

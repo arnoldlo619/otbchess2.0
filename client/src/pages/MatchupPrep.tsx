@@ -729,6 +729,7 @@ export default function MatchupPrep() {
                         src={opponentProfile.avatar}
                         alt={report.opponent.username}
                         className="w-full h-full object-cover"
+                        aria-hidden="true"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />
                     ) : (

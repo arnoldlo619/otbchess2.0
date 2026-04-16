@@ -14,7 +14,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Chessboard, type PieceDropHandlerArgs } from "react-chessboard";
-import { Chess } from "chess.js";
+import { Chess, type Square } from "chess.js";
 import {
   CheckCircle,
   XCircle,
@@ -246,11 +246,11 @@ export default function ChessPracticeBoard({
       }
 
       // Select a piece
-      const piece = chess.get(square as any);
+      const piece = chess.get(square as Square);
       if (piece && piece.color === userColor) {
         setSelectedSquare(square);
         // Show legal moves
-        const moves = chess.moves({ square: square as any, verbose: true });
+        const moves = chess.moves({ square: square as Square, verbose: true });
         const highlights: Record<string, React.CSSProperties> = {
           [square]: { background: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)" },
         };

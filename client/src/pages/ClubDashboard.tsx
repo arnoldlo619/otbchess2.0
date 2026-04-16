@@ -2381,7 +2381,7 @@ export default function ClubDashboard() {
     }
 
     loadClub();
-  }, [id, user]);
+  }, [id, user, navigate]);
 
   // Poll-close + scheduled-publish interval: every 30 seconds
   // MUST be declared before any early return to comply with Rules of Hooks
@@ -4371,6 +4371,7 @@ export default function ClubDashboard() {
                                           style={{ background: "oklch(0.3 0.08 145)" }}>
                                           {rec.opponentAvatarUrl ? (
                                             <img src={rec.opponentAvatarUrl} alt={rec.opponentName} className="w-full h-full object-cover rounded-full"
+                                              aria-hidden="true"
                                               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                                           ) : rec.opponentName.charAt(0).toUpperCase()}
                                         </div>
@@ -4627,6 +4628,7 @@ export default function ClubDashboard() {
                                           src={rec.opponentAvatarUrl}
                                           alt={rec.opponentName}
                                           className="w-full h-full object-cover"
+                                          aria-hidden="true"
                                           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                                         />
                                       ) : (

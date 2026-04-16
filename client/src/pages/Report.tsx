@@ -480,7 +480,7 @@ function ExportableCard({
     } finally {
       setExporting(false);
     }
-  }, [perf, tournamentName]);
+  }, [perf, tournamentName, exportRef]);
 
   return (
     <div className="group relative">
