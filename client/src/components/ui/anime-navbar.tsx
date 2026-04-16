@@ -183,6 +183,7 @@ export function AnimeNavBar({
   const [isDesktop, setIsDesktop]           = useState(false)
 
   const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const closeTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -309,8 +310,13 @@ export function AnimeNavBar({
                       key={item.name}
                       {...navTagProps}
                       onClick={handleNavClick(item)}
-                      onMouseEnter={() => setHoveredTab(item.name)}
-                      onMouseLeave={() => setHoveredTab(null)}
+                      onMouseEnter={() => {
+                        if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+                        setHoveredTab(item.name)
+                      }}
+                      onMouseLeave={() => {
+                        closeTimerRef.current = setTimeout(() => setHoveredTab(null), 120)
+                      }}
                       className={cn(
                         "relative cursor-pointer text-xs md:text-sm font-semibold px-4 md:px-5 py-2 rounded-full transition-colors duration-200 select-none overflow-visible",
                         isActive ? tabActiveText : tabInactiveText
@@ -402,6 +408,12 @@ export function AnimeNavBar({
                             transition={{ duration: 0.2, ease: "easeOut" }}
                             className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[10000]"
                             style={{ pointerEvents: "auto" }}
+                            onMouseEnter={() => {
+                              if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+                            }}
+                            onMouseLeave={() => {
+                              closeTimerRef.current = setTimeout(() => setHoveredTab(null), 120)
+                            }}
                           >
                             <div className="flex justify-center mb-0.5">
                               <div
