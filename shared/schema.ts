@@ -1085,6 +1085,21 @@ export const openings = mysqlTable(
     /** Cover image URL for the opening card */
     coverImageUrl: text("cover_image_url"),
 
+    /** Whether this opening is featured / promoted in the catalog */
+    isFeatured: tinyint("is_featured").notNull().default(0),
+
+    /** Whether this opening is suitable for beginners / first-time learners */
+    starterFriendly: tinyint("starter_friendly").notNull().default(0),
+
+    /** Estimated number of lines in this opening (for display before lines are loaded) */
+    estimatedLineCount: int("estimated_line_count").notNull().default(0),
+
+    /** Trap potential score (0–100) — how many traps / punishing lines exist */
+    trapPotential: int("trap_potential").notNull().default(50),
+
+    /** Strategic complexity score (0–100) — how deep the positional ideas run */
+    strategicComplexity: int("strategic_complexity").notNull().default(50),
+
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -1094,6 +1109,7 @@ export const openings = mysqlTable(
     colorIdx: index("op_color_idx").on(table.color),
     publishedIdx: index("op_published_idx").on(table.isPublished),
     sortIdx: index("op_sort_idx").on(table.sortOrder),
+    featuredIdx: index("op_featured_idx").on(table.isFeatured),
   })
 );
 export type OpeningRow = typeof openings.$inferSelect;
