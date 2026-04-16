@@ -5103,3 +5103,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Seed all nodes into line_nodes table (266 total)
 - [x] Write validation tests for node tree integrity (46 tests)
 - [x] Run quality gates and save checkpoint
+
+## Navigation: Openings Link
+
+- [x] Add 'Openings' link to AppNavBar between Battle and Analyze
+- [x] Add 'Openings' link to AvatarNavDropdown mobile menu
+- [x] Add 'Openings' link to GuestMobileMenu
