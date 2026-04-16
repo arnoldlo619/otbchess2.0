@@ -23,6 +23,7 @@ import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
 import { createOpeningsAdminRouter } from "./openingsAdmin.js";
 import { registerOpeningsPublicRoutes } from "./openingsPublic.js";
+import { createBillingRouter } from "./billing.js";
 export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -783,9 +784,12 @@ export function createApp() {
   app.use("/api/clubs/:clubId/invites", clubInvitesRouter);
   app.use("/api/clubs/:clubId/battles", clubBattlesRouter);
   app.use("/api/invite", createInviteRouter());
-  app.use("/api/admin", createOpeningsAdminRouter());
+   app.use("/api/admin", createOpeningsAdminRouter());
   registerOpeningsPublicRoutes(app);
-
+  // ── Billing: Stripe checkout, portal, webhook ──────────────────────────────
+  // Webhook needs raw body — mount before JSON middleware would consume it.
+  app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
+  app.use("/api/billing", createBillingRouter());
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.
   app.get("/api/push/vapid-public-key", (_req, res) => {

@@ -27,6 +27,7 @@ import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/to
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 
 import AuthModal from "../components/AuthModal";
+import { ProUpgradeModal } from "../components/ProUpgradeModal";
 import { useAuthContext } from "../context/AuthContext";
 import {
   Trophy,
@@ -1563,6 +1564,7 @@ function Footer() {
 export default function Home() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const { user: _user, logout: _logout } = useAuthContext();
@@ -1673,6 +1675,7 @@ export default function Home() {
       <Footer />
       <TournamentWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark={isDark} />
+      <ProUpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
 
 
     </div>

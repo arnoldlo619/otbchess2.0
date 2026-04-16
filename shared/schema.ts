@@ -67,6 +67,9 @@ export const users = mysqlTable(
     // Pro subscription flag — true for paid Pro members
     isPro: boolean("is_pro").default(false).notNull(),
 
+    // Stripe customer ID (set after first successful checkout)
+    stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

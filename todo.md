@@ -5110,12 +5110,23 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add 'Openings' link to AvatarNavDropdown mobile menu
 - [x] Add 'Openings' link to GuestMobileMenu
 
-## Pro Subscription Gate (Openings Pages)
+### Pro Subscription Gate (Openings Pages)
+- [x] Audit existing Pro/subscription patterns (useAuth, isPro, subscription fields)
+- [x] Build OpeningsProGate component with premium upgrade CTA
+- [x] Gate OpeningsLibrary page — free users see upgrade CTA
+- [x] Gate OpeningDetail page — free users see upgrade CTA
+- [x] Gate StudyMode page — free users see upgrade CTA
+- [x] Write tests for the gate component
+- [x] Run quality gates and save checkpoint
 
-- [ ] Audit existing Pro/subscription patterns (useAuth, isPro, subscription fields)
-- [ ] Build OpeningsProGate component with premium upgrade CTA
-- [ ] Gate OpeningsLibrary page — free users see upgrade CTA
-- [ ] Gate OpeningDetail page — free users see upgrade CTA
-- [ ] Gate StudyMode page — free users see upgrade CTA
-- [ ] Write tests for the gate component
-- [ ] Run quality gates and save checkpoint
+## Pro Upgrade Modal & Stripe Billing
+- [x] ProUpgradeModal component — feature comparison table, plan toggle (monthly/annual), Stripe CTA
+- [x] Stripe billing server route — POST /api/billing/checkout, POST /api/billing/portal, POST /api/billing/webhook
+- [x] Webhook handler — activates/deactivates isPro on checkout.session.completed / subscription.deleted
+- [x] Wire ProUpgradeModal into OpeningsProGate (all upgrade buttons open modal)
+- [x] Wire ProUpgradeModal into AvatarNavDropdown (desktop dropdown upgrade CTA for free users)
+- [x] Wire ProUpgradeModal into Home.tsx (upgradeOpen state + render)
+- [x] stripe_customer_id column added to users table via migration script
+- [x] 35 vitest tests — feature table, pricing, request validation, checkout payload, webhook, prop contract
+- [ ] Add STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL secrets
+- [ ] Test Stripe checkout flow end-to-end in staging
