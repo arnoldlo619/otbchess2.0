@@ -24,8 +24,8 @@ import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ─── OTB design tokens ────────────────────────────────────────────────────────
-const OTB_GREEN       = "#4CAF50"
-const OTB_GREEN_DARK  = "#3D6B47"
+const _OTB_GREEN       = "#4CAF50"
+const _OTB_GREEN_DARK  = "#3D6B47"
 const OTB_GREEN_GLOW  = "rgba(61,107,71,"
 
 // ─── Types ────────────────────────────────────────────────────────────────────

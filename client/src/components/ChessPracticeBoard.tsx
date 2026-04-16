@@ -23,7 +23,7 @@ import {
   Brain,
   Zap,
   Trophy,
-  BookOpen,
+  BookOpen as _BookOpen,
   ArrowRight,
 } from "lucide-react";
 
@@ -102,7 +102,7 @@ export default function ChessPracticeBoard({
   const textSecondary = isDark ? "text-white/55" : "text-gray-500";
   const textTertiary = isDark ? "text-white/30" : "text-gray-400";
   const accentText = isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]";
-  const accentBg = isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
+  const _accentBg = isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
 
   // ── Initialize / reset for a line ──────────────────────────────────────────
   const initLine = useCallback(

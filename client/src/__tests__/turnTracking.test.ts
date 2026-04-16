@@ -162,7 +162,7 @@ describe("Turn Tracking Fix", () => {
   });
 
   describe("tryLegalMoves", () => {
-    const startPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+    const _startPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
     const afterE4Pos = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR";
 
     const sampleMoves: SimpleMove[] = [

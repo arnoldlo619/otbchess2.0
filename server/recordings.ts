@@ -29,7 +29,7 @@ import {
   videoChunks,
   cvJobs,
 } from "../shared/schema.js";
-import { detectOpening, formatOpeningName } from "./openingDetection.js";
+import {detectOpening} from "./openingDetection.js";
 import { computePlayerAccuracy, computeBestMoveStreak, accuracyLabel } from "./accuracyCalc.js";
 import { enqueueCvJob } from "./cvJobQueue.js";
 import multer from "multer";
@@ -649,6 +649,7 @@ export function createRecordingsRouter(): Router {
   // 4. Stores the final video path as videoKey on the session.
   // 5. Cleans up individual chunk files.
   router.post("/:id/finalize", async (req, res) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { chunkCount, durationMs, whitePlayer, blackPlayer, fenTimeline, boardCorners } = req.body as {
       chunkCount?: number;
       durationMs?: number;

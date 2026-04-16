@@ -315,7 +315,7 @@ export function generateSwissPairings(
   // Sort brackets by score descending
   const sortedBrackets = Array.from(brackets.entries()).sort((a, b) => b[0] - a[0]);
 
-  const paired = new Set<string>();
+  const _paired = new Set<string>();
   const games: Game[] = [];
   let board = 1;
 
@@ -326,8 +326,8 @@ export function generateSwissPairings(
   }
 
   // Dutch pairing: try to pair i with i + half, falling back as needed
-  const n = workingList.length;
-  const tempPaired = new Set<string>();
+  const _n = workingList.length;
+  const _tempPaired = new Set<string>();
   const tempGames: { p1: Player; p2: Player }[] = [];
 
   // Attempt pairing with backtracking
@@ -586,7 +586,7 @@ export function generateEliminationFirstRound(
   if (n < 2) return [];
 
   const fullBracketSize = nextPowerOf2(n);
-  const byeCount = fullBracketSize - n;
+  const _byeCount = fullBracketSize - n;
 
   const games: Game[] = [];
   let board = 1;

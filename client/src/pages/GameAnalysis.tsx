@@ -8,10 +8,9 @@
  *   - Engine summary panel (accuracy, mistakes, key moments)
  *   - Move navigation (keyboard arrows, click, buttons)
  */
-import { useState, useEffect, useCallback, useRef, useMemo, createRef } from "react";
+import {useState, useEffect, useCallback, useRef, useMemo} from "react";
 import { useRoute, useLocation } from "wouter";
 import { Chessboard } from "react-chessboard";
-import { Chess } from "chess.js";
 import { NavLogo } from "@/components/NavLogo";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -22,10 +21,10 @@ import {
   RotateCcw,
   Loader2,
   AlertCircle,
-  Target,
-  TrendingDown,
+  Target as _Target,
+  TrendingDown as _TrendingDown,
   Zap,
-  Award,
+  Award as _Award,
   ArrowLeft,
   Share2,
   Download,

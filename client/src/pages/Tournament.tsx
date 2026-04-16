@@ -42,7 +42,7 @@ import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { PushOnboardingBanner } from "@/components/PushOnboardingBanner";
 import {
   Crown,
-  ArrowLeft,
+  ArrowLeft as _ArrowLeft,
   Clock,
   MapPin,
   Calendar,
@@ -61,7 +61,6 @@ import {
   BellOff,
   BellRing,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 import { PublicBracketView } from "@/components/PublicBracketView";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
@@ -138,6 +137,7 @@ function LiveBadge({ currentRound, totalRounds, status }: { currentRound: number
 }
 
 // ─── Nav ─────────────────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TournamentNav({ tournamentId }: { tournamentId: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -297,6 +297,7 @@ function TournamentHeader({
 }
 
 // ─── Mobile Standings Accordion ─────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MobileStandingsAccordion({ players, rounds, myPlayerId }: { players: Player[]; rounds: Round[]; myPlayerId?: string }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";

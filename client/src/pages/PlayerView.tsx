@@ -11,7 +11,7 @@
  *   new_round_flash  — brief animated transition when a new round starts
  *   tournament_complete — final standings
  */
-import { useEffect, useState, useCallback } from "react";
+import {useEffect, useState} from "react";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
@@ -31,7 +31,7 @@ import {
   Wifi,
   WifiOff,
   Bell,
-  BellOff,
+  BellOff as _BellOff,
   X,
   Timer,
   Video,

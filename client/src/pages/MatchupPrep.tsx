@@ -23,11 +23,9 @@ import {
   Trash2, ChevronLeft, Check, RotateCcw,
   Zap, AlertCircle, Info, Crosshair, Flame, Dumbbell
 } from "lucide-react";
-import { UserRepertoirePanel } from "../components/UserRepertoirePanel";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
 import { CoachInsightCard } from "../components/CoachInsightCard";
-import { PreRoundQuickReview } from "../components/PreRoundQuickReview";
 import {
   UserRepertoire,
   loadUserRepertoire,
@@ -36,11 +34,11 @@ import {
   type EnrichedPrepLine,
 } from "../lib/userRepertoire";
 import {
-  type InsightContext,
+  type InsightContext as _InsightContext,
   type QuotaState,
-  type CoachInsight,
+  type CoachInsight as _CoachInsight,
   getQuotaState,
-  getSavedInsights,
+  getSavedInsights as _getSavedInsights,
   getInsightsForOpponent,
 } from "../lib/coachInsight";
 import {
@@ -202,7 +200,7 @@ export default function MatchupPrep() {
   const [loadingSaved, setLoadingSaved] = useState(false);
 
   // Repertoire state (persisted in localStorage)
-  const [repertoire, setRepertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
+  const [repertoire, _setRepertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
 
   // Key Lines filter
   const [lineFilter, setLineFilter] = useState<LineFilter>("all");
@@ -263,7 +261,7 @@ export default function MatchupPrep() {
 
   // Practice mode state
   const [practiceIndex, setPracticeIndex] = useState(0);
-  const [practiceRevealed, setPracticeRevealed] = useState(false);
+  const [_practiceRevealed, setPracticeRevealed] = useState(false);
   const [practiceCompleted, setPracticeCompleted] = useState<Set<number>>(new Set());
   const [practiceQueue, setPracticeQueue] = useState<number[]>([]);
 
@@ -405,17 +403,17 @@ export default function MatchupPrep() {
       setPracticeIndex(i => i + 1);
     }
   }
-  function practicePrev() {
+  function _practicePrev() {
     setPracticeRevealed(false);
     if (practiceIndex > 0) {
       setPracticeIndex(i => i - 1);
     }
   }
-  function markCompleted(idx: number) {
+  function _markCompleted(idx: number) {
     setPracticeCompleted(prev => new Set(Array.from(prev).concat(idx)));
     practiceNext();
   }
-  function resetPractice() {
+  function _resetPractice() {
     setPracticeCompleted(new Set());
     setPracticeIndex(0);
     setPracticeRevealed(false);
@@ -1366,7 +1364,7 @@ function RatingBadge({ label, value, isDark }: { label: string; value: number; i
   );
 }
 
-function ColorStatCard({
+function _ColorStatCard({
   title, icon, wins, draws, losses, winRate, games, isDark, t
 }: {
   title: string; icon: React.ReactNode;
@@ -1405,7 +1403,7 @@ function ColorStatCard({
   );
 }
 
-function OpeningMiniList({
+function _OpeningMiniList({
   title, openings, firstMoves, isDark, t
 }: {
   title: string;
@@ -1451,6 +1449,7 @@ function OpeningMiniList({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function KeyLineCard({
   line, index, priority, isDark, t
 }: {
@@ -1541,6 +1540,7 @@ function KeyLineCard({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function EnrichedKeyLineCard({
   line, index, priority, isDark, t
 }: {
@@ -1667,7 +1667,7 @@ function EnrichedKeyLineCard({
   );
 }
 
-function PracticeMode({
+function _PracticeMode({
   lines, queue, currentIndex, revealed, completed,
   onReveal, onGotIt, onReviewAgain, onPrev, onNext, onReset,
   isDark, t

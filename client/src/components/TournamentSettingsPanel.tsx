@@ -28,7 +28,7 @@ import {
   Shuffle,
   Users,
   Clock,
-  BarChart3,
+  BarChart3 as _BarChart3,
   Check,
   Lock,
   Save,

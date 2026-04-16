@@ -144,7 +144,7 @@ describe("bracket round reconstruction from stored round data", () => {
     const r2Games = generateEliminationNextRound(r1Games, players, 2);
     r2Games[0].result = "1-0"; // p1 wins (champion)
 
-    const rounds: Round[] = [
+    const _rounds: Round[] = [
       makeRound(1, r1Games),
       makeRound(2, r2Games),
     ];

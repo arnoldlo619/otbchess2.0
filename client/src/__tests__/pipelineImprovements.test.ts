@@ -11,7 +11,7 @@
  * 4. cv-job progress response shape — lastFen and stablePositions fields
  * 5. merge_fen_timelines() — client-priority mode when server has few stable FENs
  */
-import { describe, it, expect } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ─── 1. FEN Stability Filtering ─────────────────────────────────────────────
 
@@ -30,7 +30,7 @@ function filterStableFens(
   let i = 0;
 
   while (i < rawTimeline.length) {
-    const [ts, fen] = rawTimeline[i];
+    const [_ts, fen] = rawTimeline[i];
     const fenBoard = fen.split(" ")[0]; // board part only
 
     // Count consecutive frames with the same board position

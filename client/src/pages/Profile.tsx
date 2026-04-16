@@ -9,8 +9,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import {
-  User,
-  Crown,
+  User as _User,
+  Crown as _Crown,
   Edit3,
   Check,
   X,

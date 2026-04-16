@@ -7,7 +7,7 @@
  * 3. Tab switching behaviour when "Practice this line" is clicked
  * 4. Edge cases: out-of-bounds index, undefined initialLineIndex
  */
-import { describe, it, expect } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ── Helpers extracted from component logic ───────────────────────────────────
 
@@ -140,30 +140,30 @@ describe("Practice this line — jump guard logic", () => {
 describe("Practice this line — tab switching", () => {
   it("sets activeTab to 'practice' when button is clicked", () => {
     // Simulate the state change
-    let activeTab: "scout" | "lines" | "practice" = "lines";
+    let _activeTab: "scout" | "lines" | "practice" = "lines";
     let practiceLineIndex: number | undefined = undefined;
 
     // Simulate button click
     const lineIndex = 2;
     practiceLineIndex = lineIndex;
-    activeTab = "practice";
+    _activeTab = "practice";
 
-    expect(activeTab).toBe("practice");
+    expect(_activeTab).toBe("practice");
     expect(practiceLineIndex).toBe(2);
   });
 
   it("preserves practiceLineIndex across tab switches", () => {
-    let activeTab: "scout" | "lines" | "practice" = "lines";
+    let _activeTab: "scout" | "lines" | "practice" = "lines";
     let practiceLineIndex: number | undefined = undefined;
 
     // Click "Practice this line" for line 3
     practiceLineIndex = 3;
-    activeTab = "practice";
+    _activeTab = "practice";
     expect(practiceLineIndex).toBe(3);
 
     // Switch to scout tab and back
-    activeTab = "scout";
-    activeTab = "practice";
+    _activeTab = "scout";
+    _activeTab = "practice";
     // practiceLineIndex should still be 3
     expect(practiceLineIndex).toBe(3);
   });

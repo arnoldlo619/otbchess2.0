@@ -29,7 +29,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { nanoid } from "nanoid";
 import { useLocation } from "wouter";
-import { recommendedRounds, roundsHint, roundRangeLabel } from "@/lib/recommendedRounds";
+import {recommendedRounds, roundsHint} from "@/lib/recommendedRounds";
 import { registerTournament, makeSlug, generateDirectorCode, grantDirectorSession } from "@/lib/tournamentRegistry";
 import {
   X,
@@ -45,12 +45,12 @@ import {
   Copy,
   Share2,
   Shuffle,
-  BarChart3,
+  BarChart3 as _BarChart3,
   Zap,
   ArrowRight,
-  Shield,
+  Shield as _Shield,
   Eye,
-  EyeOff,
+  EyeOff as _EyeOff,
   Bolt,
   ChevronDown,
   Tv2,
@@ -1715,6 +1715,7 @@ function StepTime({
 
 // ─── Animated QR ─────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean }) {
   const [phase, setPhase] = useState<"idle" | "scan" | "done">("idle");
   const [scanY, setScanY] = useState(10);
@@ -1803,6 +1804,7 @@ function AnimatedQR({ inviteUrl, isDark }: { inviteUrl: string; isDark: boolean 
 
 // ─── Spectator Share Section (embedded in Step 4) ───────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SpectatorShareSection({ data, isDark }: { data: WizardData; isDark: boolean }) {
   const [specCopied, setSpecCopied] = useState(false);
   const tournamentId = makeSlug(data.name, data.date);

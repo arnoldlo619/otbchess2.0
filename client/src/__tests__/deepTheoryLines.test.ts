@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import {describe, it, expect} from "vitest";
 
 /**
  * Tests for the deep theory line system:
@@ -72,7 +72,7 @@ describe("DEEP_THEORY_MAP coverage", () => {
   });
 
   it("each deep theory line should be at least 8 full moves (16 half-moves)", () => {
-    for (const [key, moves] of Object.entries(DEEP_THEORY_MAP_MOVES)) {
+    for (const [_key, moves] of Object.entries(DEEP_THEORY_MAP_MOVES)) {
       const depth = countHalfMoves(moves);
       expect(depth).toBeGreaterThanOrEqual(16);
     }

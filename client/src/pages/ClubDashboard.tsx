@@ -10,7 +10,7 @@
  *   • Feed tab    — chronological activity stream
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import {useState, useEffect, useRef} from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -58,7 +58,7 @@ import {
   snapshotPotmWinner,
   seedDemoBattlesToClub,
   type ClubBattle,
-  type BattleResult,
+  type BattleResult as _BattleResult,
   type BattleLeaderboardEntry,
   type HeadToHeadRecord,
   type PotmArchiveEntry,
@@ -76,7 +76,7 @@ import {
 import {
   listFeedEvents,
   syncFeedFromServer,
-  seedFeedIfEmpty,
+  seedFeedIfEmpty as _seedFeedIfEmpty,
   postAnnouncement,
   postPoll,
   postRsvpForm,
@@ -98,7 +98,7 @@ import {
   getPreviousMonthLabel,
   recordTournamentCreated,
   type FeedEvent,
-  type PollOption,
+  type PollOption as _PollOption,
   type FeedRSVPEntry,
   type ScheduledPoll,
 } from "@/lib/clubFeedRegistry";
@@ -126,8 +126,8 @@ import {
   Send,
   Plus,
   Trash2,
-  ExternalLink,
-  Share2,
+  ExternalLink as _ExternalLink,
+  Share2 as _Share2,
   ChevronDown,
   ChevronUp,
   Globe,
@@ -148,7 +148,7 @@ import {
   DollarSign,
   CreditCard,
   PieChart,
-  Activity,
+  Activity as _Activity,
   UserPlus,
   ThumbsUp,
   Wallet,
@@ -163,8 +163,8 @@ import {
   Pin,
   PinOff,
   ListOrdered,
-  GitBranch,
-  Bell,
+  GitBranch as _GitBranch,
+  Bell as _Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -2270,7 +2270,7 @@ export default function ClubDashboard() {
   const [battlePlayerA, setBattlePlayerA] = useState("");
   const [battlePlayerB, setBattlePlayerB] = useState("");
   const [battleNotes, setBattleNotes] = useState("");
-  const [battleResultId, setBattleResultId] = useState<string | null>(null);
+  const [_battleResultId, _setBattleResultId] = useState<string | null>(null);
   const [expandedLeaderboardId, setExpandedLeaderboardId] = useState<string | null>(null);
 
   // Transfer ownership state

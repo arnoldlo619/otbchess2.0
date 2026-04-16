@@ -79,7 +79,7 @@ const DEFAULT_DATA: WizardData = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const TOTAL_STEPS = 5;
+const _TOTAL_STEPS = 5;
 
 const ACCENT_COLORS = [
   { hex: "#3D6B47", label: "Forest Green" },
@@ -244,7 +244,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const [createdClubId, setCreatedClubId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [, startTransition] = useTransition();
+  const [, _startTransition] = useTransition();
   const nameRef = useRef<HTMLInputElement>(null);
 
   // Focus first input on mount
@@ -859,7 +859,7 @@ function Step3Location({
 // ── Step 4: About ─────────────────────────────────────────────────────────────
 
 function Step4About({
-  data, patch, isDark, inputBg, textMain, textMuted, labelCls, divider,
+  data, patch, isDark: _isDark, inputBg, textMain: _textMain, textMuted, labelCls, divider,
 }: {
   data: WizardData;
   patch: (f: Partial<WizardData>) => void;

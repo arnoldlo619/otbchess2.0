@@ -96,7 +96,7 @@ function Avatar({ user, size = 40 }: { user: OtherUser | null; size?: number }) 
 // ── Chess Game Card ───────────────────────────────────────────────────────────
 function ChessGameCard({
   game,
-  message,
+  message: _message,
   currentUserId,
   onAccept,
   onDecline,

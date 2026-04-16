@@ -13,7 +13,7 @@
  *  - Auto-dismiss timeout constant
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ─── Mirror constants and logic from LnmOnboardingTooltip ──────────────────
 

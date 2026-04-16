@@ -3,11 +3,11 @@
  * Tests for ARCHIVE_TOURNAMENTS data integrity and listTournaments() helper
  * used by the Archive page.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect, beforeEach, afterEach} from "vitest";
 import {
   ARCHIVE_TOURNAMENTS,
   ARCHIVE_STATS,
-  type ArchiveTournament,
+  type _ArchiveTournament,
 } from "@/lib/archiveData";
 import { listTournaments, registerTournament } from "@/lib/tournamentRegistry";
 import { generateDirectorCode } from "@/lib/tournamentRegistry";

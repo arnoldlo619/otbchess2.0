@@ -17,7 +17,7 @@
 import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
-import { eq, and } from "drizzle-orm";
+import {eq} from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getDb } from "./db.js";
 import {
@@ -358,7 +358,8 @@ function spawnCvWorker(videoPath: string, fenTimelineFile?: string, jobId?: stri
       try {
         const result = JSON.parse(stdout.trim()) as CvWorkerResult;
         resolve(result);
-      } catch (parseErr) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_parseErr) {
         reject(new Error(`CV worker output is not valid JSON: ${stdout.slice(0, 200)}`));
       }
     });

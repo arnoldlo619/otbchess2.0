@@ -6,7 +6,7 @@
  *   - calcRemaining: computes remaining seconds from a TimerSnapshot
  *   - visual state derivation: isExpired, isNearEnd, isVeryLow
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ── Helpers (duplicated from component for testability) ───────────────────────
 

@@ -5,7 +5,7 @@
  * classifyBlackVsD4, parsePgnHeaders, and detectChessComRepertoire.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect} from "vitest";
 import {
   classifyWhiteFirstMove,
   classifyBlackVsE4,

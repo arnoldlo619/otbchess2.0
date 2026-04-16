@@ -29,7 +29,7 @@ import { validateEmail, validatePassword, validateDisplayName, scorePassword } f
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DEMO_TOURNAMENT } from "@/lib/tournamentData";
 import type { Player } from "@/lib/tournamentData";
-import { resolveTournament, registerTournament, makeSlug, type TournamentConfig } from "@/lib/tournamentRegistry";
+import {resolveTournament, registerTournament, type TournamentConfig} from "@/lib/tournamentRegistry";
 
 /**
  * Pick the correct rating from a profile based on the tournament's ratingType.
@@ -51,7 +51,7 @@ import {
   type RegistrationEntry,
 } from "@/lib/registrationStore";
 import {
-  Crown,
+  Crown as _Crown,
   ChevronRight,
   CheckCircle2,
   Loader2,
@@ -507,7 +507,7 @@ export default function JoinPage() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Swipe-right to go back (native iOS/Android feel)
-  const [swipeProgress, setSwipeProgress] = useState(0); // kept for the existing edge indicator
+  const [swipeProgress, _setSwipeProgress] = useState(0); // kept for the existing edge indicator
   const [swipeFlash, setSwipeFlash] = useState(false);
 
   const advanceStep = useCallback((next: Step) => {

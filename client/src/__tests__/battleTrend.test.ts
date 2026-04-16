@@ -37,9 +37,9 @@ function makeBattle(
 /** Monday 2026-03-16 (week of Mar 16) */
 const MON_MAR_16 = new Date("2026-03-16T10:00:00.000Z");
 /** Monday 2026-03-09 */
-const MON_MAR_09 = new Date("2026-03-09T10:00:00.000Z");
+const _MON_MAR_09 = new Date("2026-03-09T10:00:00.000Z");
 /** Monday 2026-02-16 (6 weeks before Mar 30) */
-const MON_FEB_16 = new Date("2026-02-16T10:00:00.000Z");
+const _MON_FEB_16 = new Date("2026-02-16T10:00:00.000Z");
 
 // ─── getWeekStart ─────────────────────────────────────────────────────────────
 

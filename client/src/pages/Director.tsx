@@ -20,11 +20,9 @@ import { AnnounceModal } from "@/components/AnnounceModal";
 import { SpectatorShareModal } from "@/components/SpectatorShareModal";
 import { SpectatorQRScreen } from "@/components/SpectatorQRScreen";
 import { useParams, useLocation } from "wouter";
-import { NavLogo } from "@/components/NavLogo";
 import { MinimalTournamentNav } from "@/components/MinimalTournamentNav";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useDirectorState } from "@/lib/directorState";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
@@ -40,22 +38,22 @@ import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
-import { EliminationBracketView, SwissElimCutoffScreen } from "@/components/EliminationBracketView";
+import {EliminationBracketView} from "@/components/EliminationBracketView";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 import { StyleAwarePairingsPanel } from "@/components/StyleAwarePairingsPanel";
-import { computeStyleSignals, synthesiseStyleProfile, type StylePairingPlayer } from "@/lib/styleAwarePairings";
+import {type StylePairingPlayer} from "@/lib/styleAwarePairings";
 import { EditPlayerModal } from "@/components/EditPlayerModal";
 import { PairingSwapModal } from "@/components/PairingSwapModal";
 import {
   Crown,
   ChevronLeft,
-  ChevronRight,
+  ChevronRight as _ChevronRight,
   Play,
   Pause,
   Zap,
   Users,
-  Clock,
+  Clock as _Clock,
   Trophy,
   CheckCircle2,
   Circle,
@@ -63,10 +61,10 @@ import {
   ArrowRight,
   Copy,
   Download,
-  Bell,
-  Settings,
+  Bell as _Bell,
+  Settings as _Settings,
   BarChart3,
-  RefreshCw,
+  RefreshCw as _RefreshCw,
   Shield,
   Search,
   X,
@@ -74,15 +72,15 @@ import {
   SortDesc,
   Filter,
   ChevronDown,
-  MapPin,
+  MapPin as _MapPin,
   UserPlus,
   PlayCircle,
   QrCode,
-  FileText,
+  FileText as _FileText,
   Printer,
-  Hash,
-  MoreVertical,
-  MessageSquare,
+  Hash as _Hash,
+  MoreVertical as _MoreVertical,
+  MessageSquare as _MessageSquare,
   Tv2,
   Undo2,
   Info,
@@ -133,7 +131,7 @@ function exportPlayersCSV(players: import("@/lib/tournamentData").Player[], tour
   URL.revokeObjectURL(url);
 }
 
-const RESULT_OPTIONS: { value: Result; label: string; short: string }[] = [
+const _RESULT_OPTIONS: { value: Result; label: string; short: string }[] = [
   { value: "1-0",  label: "White wins",  short: "1-0" },
   { value: "½-½",  label: "Draw",        short: "½-½" },
   { value: "0-1",  label: "Black wins",  short: "0-1" },
@@ -920,7 +918,7 @@ function DoubleSwissBoardCard({
 }
 
 /// ─── Standings Mini Table ─────────────────────────────────────────────────────
-function StandingsPanel({
+function _StandingsPanel({
   players,
   isDark,
 }: {
@@ -1081,7 +1079,7 @@ function VerticalRoundTracker({
 }
 
 // ─── Horizontal Round Tracker (mobile only) ─────────────────────────────────
-function HorizontalRoundTracker({
+function _HorizontalRoundTracker({
   rounds,
   currentRound,
   totalRounds,
@@ -1559,7 +1557,7 @@ export default function Director() {
     isRegistration,
     canStart,
     liveStandings,
-      lastSaved,
+      lastSaved: _lastSaved,
     addPlayer,
     addLatePlayer,
     updatePlayer,
@@ -1571,13 +1569,13 @@ export default function Director() {
     startTournament,
     enterResult,
     generateNextRound,
-    advanceToElimination,
+    advanceToElimination: _advanceToElimination,
     resetElimination,
     togglePause,
     resetTournament,
     completeTournament,
     updateSettings,
-    isSwissElimCutoff,
+    isSwissElimCutoff: _isSwissElimCutoff,
   } = useDirectorState(tournamentId);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
@@ -1656,7 +1654,7 @@ export default function Director() {
   const [showSpectatorQR, setShowSpectatorQR] = useState(false);
   // Spectator URL — public live view, no auth required
   const spectatorUrl = `${window.location.origin}/tournament/${tournamentId}`;
-  const [showOverflow, setShowOverflow] = useState(false);
+  const [_showOverflow, _setShowOverflow] = useState(false);
   // Board assignment editing state
   const [editBoardsMode, setEditBoardsMode] = useState(false);
   const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
@@ -1768,7 +1766,7 @@ export default function Director() {
   // ── Board search filter state ───────────────────────────────────────────────────────
   const [boardSearch, setBoardSearch] = useState("");
   const [showNextRoundConfirm, setShowNextRoundConfirm] = useState(false);
-  const [showStylePanel, setShowStylePanel] = useState(false);
+  const [_showStylePanel, _setShowStylePanel] = useState(false);
   // ── Edit Player modal state ───────────────────────────────────────────────
   const [editingPlayer, setEditingPlayer] = useState<import("@/lib/tournamentData").Player | null>(null);
   // ── Pairing Swap modal state ──────────────────────────────────────────────
@@ -1881,12 +1879,12 @@ export default function Director() {
   }, [tournamentId, state.tournamentName]);
 
   // ── Push subscriber count — fetched once on mount and after each broadcast ──
-  const [pushSubscriberCount, setPushSubscriberCount] = useState<number | null>(null);
+  const [_pushSubscriberCount, _setPushSubscriberCount] = useState<number | null>(null);
   useEffect(() => {
     if (tournamentId === "otb-demo-2026") return;
     fetch(`/api/push/count/${encodeURIComponent(tournamentId)}`)
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d && typeof d.count === "number") setPushSubscriberCount(d.count); })
+      .then((d) => { if (d && typeof d.count === "number") _setPushSubscriberCount(d.count); })
       .catch(() => {});
   }, [tournamentId]);
 
@@ -2299,7 +2297,7 @@ export default function Director() {
                       {Array.from({ length: state.totalRounds }, (_, i) => i + 1).map((rn) => {
                         const isCompleted = rn < state.currentRound;
                         const isCurrent = rn === state.currentRound;
-                        const isUpcoming = rn > state.currentRound;
+                        const _isUpcoming = rn > state.currentRound;
                         return (
                           <span
                             key={rn}

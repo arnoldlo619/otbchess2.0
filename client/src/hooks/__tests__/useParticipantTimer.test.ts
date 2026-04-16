@@ -7,7 +7,7 @@
  * and the derived state logic used in useParticipantTimer.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect, beforeEach, afterEach} from "vitest";
 import {
   timerStorageKey,
   saveTimerSnapshot,

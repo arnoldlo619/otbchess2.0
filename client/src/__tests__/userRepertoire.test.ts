@@ -2,7 +2,7 @@
  * userRepertoire.test.ts
  * Tests for the repertoire-aware collision scoring library.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect, beforeEach} from "vitest";
 import {
   loadUserRepertoire,
   saveUserRepertoire,

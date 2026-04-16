@@ -144,7 +144,7 @@ describe("Live Notation Mode", () => {
 
     it("returns no legal moves for opponent's piece", () => {
       const c = new Chess();
-      const moves = c.moves({ square: "e7" as Square, verbose: true });
+      const _moves = c.moves({ square: "e7" as Square, verbose: true });
       // e7 has a black pawn, but it's white's turn — chess.js still returns moves for that square
       // The hook filters by color, so we test the color check
       const piece = c.get("e7" as Square);
@@ -248,10 +248,10 @@ describe("Live Notation Mode", () => {
       // Known stalemate position
       const c = new Chess("k7/8/1K6/8/8/8/8/1Q6 w - - 0 1");
       c.move("Qb2"); // Not stalemate yet, let's use a known stalemate FEN directly
-      const c2 = new Chess("k7/8/2K5/8/8/8/8/1Q6 b - - 0 1");
+      const _c2 = new Chess("k7/8/2K5/8/8/8/8/1Q6 b - - 0 1");
       // Black king on a8, white king c6, white queen b1 — not stalemate
       // Use a definitive stalemate position
-      const c3 = new Chess("k7/8/1K6/8/8/8/8/8 w - - 0 1");
+      const _c3 = new Chess("k7/8/1K6/8/8/8/8/8 w - - 0 1");
       // This is actually not stalemate for white. Let's use the classic:
       const c4 = new Chess("5k2/5P2/5K2/8/8/8/8/8 b - - 0 1");
       expect(c4.isStalemate()).toBe(true);

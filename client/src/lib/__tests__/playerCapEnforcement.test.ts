@@ -3,8 +3,8 @@
  *
  * Tests for player cap enforcement in addPlayerToTournament.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { addPlayerToTournament, type AddPlayerResult } from "../directorState";
+import {describe, it, expect, beforeEach, afterEach} from "vitest";
+import {addPlayerToTournament} from "../directorState";
 import type { Player } from "../tournamentData";
 
 // ── helpers ────────────────────────────────────────────────────────────────────

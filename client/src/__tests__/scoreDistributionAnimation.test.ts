@@ -40,7 +40,7 @@ function animatedWidth(pct: number, visible: boolean): string {
  *   [0] immediately after round changes (should be false — bars collapsed)
  *   [1] after the 80ms timeout fires (should be true — bars re-expanded)
  */
-function simulateRoundChange(initialVisible: boolean): Promise<[boolean, boolean]> {
+function _simulateRoundChange(initialVisible: boolean): Promise<[boolean, boolean]> {
   return new Promise((resolve) => {
     let visible = initialVisible;
     // Step 1: collapse immediately

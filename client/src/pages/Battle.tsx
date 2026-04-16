@@ -310,6 +310,7 @@ export default function Battle() {
   const lnmTooltip = useLnmTooltip();
   const lnmAnalysis = useLnmAnalysis();
   const clockRef = useRef<ChessClockHandle>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, navigate] = useLocation();
 
   // Draft recovery: show banner when a saved draft exists for this room
@@ -351,7 +352,7 @@ export default function Battle() {
   }, [notation.active, notation.moves]);
 
   // Called by useLnmSave's onExit callback after saving
-  function handleLnmExitWithSave(pgn: string | null) {
+  function handleLnmExitWithSave(_pgn: string | null) {
     if (room?.code) clearDraftPgn(room.code);
     setDraftRecoveryPgn(null);
     // notation.deactivate() is called inside useLnmSave.saveAndExit → onExit
@@ -359,7 +360,7 @@ export default function Battle() {
     notation.deactivate();
   }
 
-  function handleLnmExit(pgn: string | null) {
+  function handleLnmExit(_pgn: string | null) {
     if (room?.code) clearDraftPgn(room.code);
     setDraftRecoveryPgn(null);
   }

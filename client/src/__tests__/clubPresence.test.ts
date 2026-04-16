@@ -7,7 +7,7 @@
  *   - useClubPresence hook behaviour (polling + heartbeat intervals)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ── isOnlineNow logic (replicated from server/clubs.ts) ──────────────────────
 const ONLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes

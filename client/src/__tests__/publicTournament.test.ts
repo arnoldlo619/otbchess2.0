@@ -15,7 +15,7 @@
  * - API endpoint URL construction
  * - PublicTournamentCard toggle logic
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import {describe, it, expect, beforeEach} from "vitest";
 import { computeStandings } from "@/lib/swiss";
 import type { Player, Round } from "@/lib/tournamentData";
 

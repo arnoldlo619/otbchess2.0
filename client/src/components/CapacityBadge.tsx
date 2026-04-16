@@ -40,7 +40,7 @@ export function CapacityBadge({
   current,
   max,
   isDark = false,
-  size = "md",
+  size: _size = "md",
 }: CapacityBadgeProps) {
   const state = getCapacityState(current, max);
   const pct = getCapacityPct(current, max);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getCapacityState, getCapacityPct, type CapacityState } from "../CapacityBadge";
+import {getCapacityState, getCapacityPct} from "../CapacityBadge";
 
 // ─── getCapacityState ─────────────────────────────────────────────────────────
 

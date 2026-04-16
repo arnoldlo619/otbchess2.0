@@ -420,7 +420,7 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
 
     // Fetch member details for player names
     const memberRows = await db.select().from(dbClubMembers).where(eq(dbClubMembers.clubId, league.clubId));
-    const memberMap = new Map(memberRows.map((m) => [m.userId, m]));
+    const _memberMap = new Map(memberRows.map((m) => [m.userId, m]));
 
     const playerIds = players.map((p) => p.playerId);
     const totalWeeks = league.maxPlayers - 1;

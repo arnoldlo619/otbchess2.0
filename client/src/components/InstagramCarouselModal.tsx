@@ -365,7 +365,7 @@ function Slide1Cover({ rows, config, tournamentName, totalRounds, scale = 1, hos
   const FOOTER = 80 * s;
   const PAD = 64 * s;
   const isStory = format === "story";
-  const H = SLIDE_H[format] * s;
+  const _H = SLIDE_H[format] * s;
 
   // Dynamic font size for tournament name — fills width
   const nameFontSize = Math.min(
@@ -835,7 +835,7 @@ function Slide4Stats({ rows, config, tournamentName, totalRounds, scale = 1, hos
   const highestElo = rows.length
     ? rows.reduce((best, r) => (r.player.elo > best.player.elo ? r : best), rows[0])
     : null;
-  const FOOTER = 80 * s;
+  const _FOOTER = 80 * s;
   const PAD = 52 * s;
 
   const stats = [

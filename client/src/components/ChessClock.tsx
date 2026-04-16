@@ -82,7 +82,7 @@ export default forwardRef<ChessClockHandle, ChessClockProps>(function ChessClock
   guestAvatarUrl,
   onFlagFall,
   externalPause = false,
-  hideTapButtons = false,
+  hideTapButtons: _hideTapButtons = false,
 }: ChessClockProps, ref) {
   const { minutes, increment } = parseTimeControl(timeControl);
   const initialMs = minutes * 60_000;

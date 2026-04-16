@@ -24,7 +24,7 @@ import {
   type InsightContext,
   type CoachInsight,
   type QuotaState,
-  type InsightType,
+  type InsightType as _InsightType,
   buildCoachPrompt,
   generateInsightId,
   incrementUsage,
@@ -83,7 +83,7 @@ function ThinkingDots({ isDark }: { isDark: boolean }) {
 // ─── Insight Text Renderer ────────────────────────────────────────────────────
 
 function InsightText({ text, isDark }: { text: string; isDark: boolean }) {
-  const [expanded, setExpanded] = useState(true);
+  const [_expanded, _setExpanded] = useState(true);
   const lines = text.split("\n").filter(l => l.trim());
 
   // Detect "Key takeaway:" line for special treatment

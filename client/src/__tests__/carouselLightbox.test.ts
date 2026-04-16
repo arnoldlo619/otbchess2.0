@@ -49,7 +49,7 @@ describe("Carousel lightbox popup logic", () => {
   });
 
   it("closeLightbox resets src to null and alt to empty string", () => {
-    const opened = openLightbox(MOCK_SRC, MOCK_ALT);
+    const _opened = openLightbox(MOCK_SRC, MOCK_ALT);
     const closed = closeLightbox();
     expect(closed.src).toBeNull();
     expect(closed.alt).toBe("");

@@ -34,7 +34,7 @@ const ARROW_SLIDE =
 export const SpinBorderButton = React.forwardRef<
   HTMLButtonElement,
   SpinBorderButtonProps
->(({ variant = "solid", className, children, asChild, ...props }, ref) => {
+>(({ variant = "solid", className, children, asChild: _asChild, ...props }, ref) => {
   const isSolid = variant === "solid";
   const isGlass = variant === "glass";
 

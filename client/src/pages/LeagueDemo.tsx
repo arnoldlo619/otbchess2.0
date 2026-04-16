@@ -9,9 +9,9 @@ import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
-  Trophy, Users, Calendar, BarChart3, ListOrdered,
-  Clock, Swords, Target, ArrowLeft, Crown, ChevronRight,
-  History, Shield, Zap, CheckCircle2,
+  Trophy, Users as _Users, Calendar, BarChart3, ListOrdered,
+  Clock, Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
+  History, Shield as _Shield, Zap, CheckCircle2,
 } from "lucide-react";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ export default function LeagueDemo() {
   const accent    = "oklch(0.55 0.13 145)";
 
   const featuredMatchup = CURRENT_WEEK_MATCHUPS[0]; // Magnus vs Hikaru
-  const upcomingMatchups = CURRENT_WEEK_MATCHUPS.slice(0, 5);
+  const _upcomingMatchups = CURRENT_WEEK_MATCHUPS.slice(0, 5);
   // Fetch chess.com avatars for all demo players in parallel
   const allDemoUsernames = DEMO_PLAYERS.map(p => p.chesscomUsername);
   const { avatars: demoAvatars } = useChessAvatars(allDemoUsernames);

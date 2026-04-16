@@ -11,7 +11,7 @@
  */
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Crown, Swords, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {X, Crown, Swords} from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { PlayerPerformance, RoundHistoryEntry } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
@@ -125,8 +125,8 @@ export default function PlayerCardExpandedModal({ perf, accentColor = "#4CAF50",
   }, []);
 
   const { player, rank, totalPlayers, points, wins, draws, losses,
-    performanceRating, ratingChange, longestStreak, whiteGames, blackGames,
-    buchholz, badge, badgeLabel, roundHistory, bestWin } = perf;
+    performanceRating, ratingChange, longestStreak, whiteGames: _whiteGames, blackGames: _blackGames,
+    buchholz, badge: _badge, badgeLabel, roundHistory, bestWin } = perf;
 
   const flag = player.country ? FLAG_EMOJI[player.country] ?? "" : "";
 
