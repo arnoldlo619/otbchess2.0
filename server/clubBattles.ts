@@ -18,6 +18,7 @@ import { eq, and, or, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getDb } from "./db.js";
 import { clubBattles, type NewClubBattleRow } from "../shared/schema.js";
+import { logger } from "./logger.js";
 
 const router = Router({ mergeParams: true });
 
@@ -38,7 +39,7 @@ router.get("/", async (req, res) => {
       .orderBy(desc(clubBattles.createdAt));
     return res.json(rows);
   } catch (err) {
-    console.error("[club-battles] GET /", err);
+    logger.error("[club-battles] GET /", err);
     return res.status(500).json({ error: "Failed to load battles" });
   }
 });
@@ -88,7 +89,7 @@ router.post("/", async (req, res) => {
     if (err?.code === "ER_DUP_ENTRY" || String(err?.message).includes("Duplicate")) {
       return res.status(200).json({ id: req.body.id, skipped: true });
     }
-    console.error("[club-battles] POST /", err);
+    logger.error("[club-battles] POST /", err);
     return res.status(500).json({ error: "Failed to create battle" });
   }
 });
@@ -142,7 +143,7 @@ router.post("/bulk", async (req, res) => {
       if (err?.code === "ER_DUP_ENTRY" || String(err?.message).includes("Duplicate")) {
         skipped++;
       } else {
-        console.error("[club-battles] bulk insert error for", b.id, err);
+        logger.error("[club-battles] bulk insert error for", b.id, err);
         skipped++;
       }
     }
@@ -162,7 +163,7 @@ router.patch("/:battleId/start", async (req, res) => {
       .where(and(eq(clubBattles.id, battleId), eq(clubBattles.clubId, clubId)));
     return res.json({ ok: true });
   } catch (err) {
-    console.error("[club-battles] PATCH start", err);
+    logger.error("[club-battles] PATCH start", err);
     return res.status(500).json({ error: "Failed to start battle" });
   }
 });
@@ -182,7 +183,7 @@ router.patch("/:battleId/result", async (req, res) => {
       .where(and(eq(clubBattles.id, battleId), eq(clubBattles.clubId, clubId)));
     return res.json({ ok: true });
   } catch (err) {
-    console.error("[club-battles] PATCH result", err);
+    logger.error("[club-battles] PATCH result", err);
     return res.status(500).json({ error: "Failed to record result" });
   }
 });
@@ -197,7 +198,7 @@ router.delete("/:battleId", async (req, res) => {
       .where(and(eq(clubBattles.id, battleId), eq(clubBattles.clubId, clubId)));
     return res.json({ ok: true });
   } catch (err) {
-    console.error("[club-battles] DELETE", err);
+    logger.error("[club-battles] DELETE", err);
     return res.status(500).json({ error: "Failed to delete battle" });
   }
 });
@@ -240,7 +241,7 @@ router.get("/stats/:playerId", async (req, res) => {
       winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
     });
   } catch (err) {
-    console.error("[club-battles] GET stats", err);
+    logger.error("[club-battles] GET stats", err);
     return res.status(500).json({ error: "Failed to load stats" });
   }
 });
@@ -311,7 +312,7 @@ router.get("/leaderboard", async (req, res) => {
     entries.sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
     return res.json(entries);
   } catch (err) {
-    console.error("[club-battles] GET leaderboard", err);
+    logger.error("[club-battles] GET leaderboard", err);
     return res.status(500).json({ error: "Failed to load leaderboard" });
   }
 });

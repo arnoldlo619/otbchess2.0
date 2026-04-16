@@ -23,6 +23,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import type { StandingRow } from "@/lib/swiss";
 import type { TournamentConfig } from "@/lib/tournamentRegistry";
 import type { Round } from "@/lib/tournamentData";
+import { logger } from "@/lib/logger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1904,7 +1905,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
       });
       return blob ?? null;
     } catch (err) {
-      console.error("[carousel] Export error", err);
+      logger.error("[carousel] Export error", err);
       return null;
     }
   }, [slideH]);

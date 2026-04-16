@@ -16,6 +16,7 @@ import { eq, and, or, desc, asc } from "drizzle-orm";
 import { Chess } from "chess.js";
 import { getDb } from "./db";
 import { requireAuth } from "./auth";
+import { logger } from "./logger.js";
 import {
   clubConversations,
   clubMessages,
@@ -72,7 +73,7 @@ router.get("/", requireAuth, async (req, res) => {
     );
     return res.json({ conversations: enriched });
   } catch (err) {
-    console.error("[club-messaging] list conversations error:", err);
+    logger.error("[club-messaging] list conversations error:", err);
     return res.status(500).json({ error: "Failed to load conversations" });
   }
 });
@@ -120,7 +121,7 @@ router.post("/", requireAuth, async (req, res) => {
     const [created] = await db.select().from(clubConversations).where(eq(clubConversations.id, id)).limit(1);
     return res.status(201).json({ conversation: created });
   } catch (err) {
-    console.error("[club-messaging] create conversation error:", err);
+    logger.error("[club-messaging] create conversation error:", err);
     return res.status(500).json({ error: "Failed to create conversation" });
   }
 });
@@ -156,7 +157,7 @@ router.get("/:convId/messages", requireAuth, async (req, res) => {
     );
     return res.json({ messages: enriched });
   } catch (err) {
-    console.error("[club-messaging] list messages error:", err);
+    logger.error("[club-messaging] list messages error:", err);
     return res.status(500).json({ error: "Failed to load messages" });
   }
 });
@@ -188,7 +189,7 @@ router.post("/:convId/messages", requireAuth, async (req, res) => {
     const [msg] = await db.select().from(clubMessages).where(eq(clubMessages.id, msgId)).limit(1);
     return res.status(201).json({ message: { ...msg, chessGame: null } });
   } catch (err) {
-    console.error("[club-messaging] send message error:", err);
+    logger.error("[club-messaging] send message error:", err);
     return res.status(500).json({ error: "Failed to send message" });
   }
 });
@@ -234,7 +235,7 @@ router.post("/:convId/chess-invite", requireAuth, async (req, res) => {
     const [msg] = await db.select().from(clubMessages).where(eq(clubMessages.id, msgId)).limit(1);
     return res.status(201).json({ message: { ...msg, chessGame: game } });
   } catch (err) {
-    console.error("[club-messaging] chess invite error:", err);
+    logger.error("[club-messaging] chess invite error:", err);
     return res.status(500).json({ error: "Failed to send chess invite" });
   }
 });
@@ -271,7 +272,7 @@ router.post("/:convId/chess-games/:gameId/respond", requireAuth, async (req, res
     const [updated] = await db.select().from(clubChessGames).where(eq(clubChessGames.id, gameId)).limit(1);
     return res.json({ game: updated });
   } catch (err) {
-    console.error("[club-messaging] respond to chess invite error:", err);
+    logger.error("[club-messaging] respond to chess invite error:", err);
     return res.status(500).json({ error: "Failed to respond to chess invite" });
   }
 });
@@ -339,7 +340,7 @@ router.post("/:convId/chess-games/:gameId/move", requireAuth, async (req, res) =
     const [updated] = await db.select().from(clubChessGames).where(eq(clubChessGames.id, gameId)).limit(1);
     return res.json({ game: updated, move: moveResult });
   } catch (err) {
-    console.error("[club-messaging] chess move error:", err);
+    logger.error("[club-messaging] chess move error:", err);
     return res.status(500).json({ error: "Failed to make move" });
   }
 });

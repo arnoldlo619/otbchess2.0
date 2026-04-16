@@ -38,6 +38,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { execFile } from "child_process";
 import { promisify } from "util";
+import { logger } from "./logger.js";
 
 const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
@@ -113,7 +114,7 @@ async function analyzePosition(
       san: (data.san as string) ?? "",
     };
   } catch (err) {
-    console.error("[chess-api] Analysis error:", err);
+    logger.error("[chess-api] Analysis error:", err);
     return null;
   }
 }
@@ -208,7 +209,7 @@ export function createRecordingsRouter(): Router {
 
       res.json({ games, total, page, limit });
     } catch (err) {
-      console.error("[recordings] list games error:", err);
+      logger.error("[recordings] list games error:", err);
       res.status(500).json({ error: "Failed to list games" });
     }
   });
@@ -233,7 +234,7 @@ export function createRecordingsRouter(): Router {
         .where(eq(recordingSessions.id, id));
       res.status(201).json(session);
     } catch (err) {
-      console.error("[recordings] create error:", err);
+      logger.error("[recordings] create error:", err);
       res.status(500).json({ error: "Failed to create recording session" });
     }
   });
@@ -250,7 +251,7 @@ export function createRecordingsRouter(): Router {
         .orderBy(desc(recordingSessions.createdAt));
       res.json(sessions);
     } catch (err) {
-      console.error("[recordings] list error:", err);
+      logger.error("[recordings] list error:", err);
       res.status(500).json({ error: "Failed to list recording sessions" });
     }
   });
@@ -296,7 +297,7 @@ export function createRecordingsRouter(): Router {
 
       res.json({ session, game: games[0] ?? null, cvJob: cvJobInfo });
     } catch (err) {
-      console.error("[recordings] get error:", err);
+      logger.error("[recordings] get error:", err);
       res.status(500).json({ error: "Failed to get recording session" });
     }
   });
@@ -322,7 +323,7 @@ export function createRecordingsRouter(): Router {
         .where(eq(recordingSessions.id, req.params.id));
       res.json(session);
     } catch (err) {
-      console.error("[recordings] update error:", err);
+      logger.error("[recordings] update error:", err);
       res.status(500).json({ error: "Failed to update recording session" });
     }
   });
@@ -426,7 +427,7 @@ export function createRecordingsRouter(): Router {
 
       res.status(201).json(game);
     } catch (err) {
-      console.error("[recordings] pgn submit error:", err);
+      logger.error("[recordings] pgn submit error:", err);
       res.status(500).json({ error: "Failed to save game" });
     }
   });
@@ -569,11 +570,8 @@ export function createRecordingsRouter(): Router {
             .set({ status: "complete", updatedAt: new Date() })
             .where(eq(recordingSessions.id, req.params.id));
 
-          console.log(
-            `[recordings] Analysis complete for game ${game.id} (${history.length} moves) — White: ${whiteAccuracy}%, Black: ${blackAccuracy}%`
-          );
         } catch (err) {
-          console.error("[recordings] Background analysis error:", err);
+          logger.error("[recordings] Background analysis error:", err);
           await db
             .update(recordingSessions)
             .set({ status: "failed", updatedAt: new Date() })
@@ -581,7 +579,7 @@ export function createRecordingsRouter(): Router {
         }
       })();
     } catch (err) {
-      console.error("[recordings] analyze error:", err);
+      logger.error("[recordings] analyze error:", err);
       res.status(500).json({ error: "Failed to start analysis" });
     }
   });
@@ -593,7 +591,7 @@ export function createRecordingsRouter(): Router {
     // Run multer middleware first to parse the multipart body
     uploadChunk(req, res, async (multerErr) => {
       if (multerErr) {
-        console.error("[recordings] multer error:", multerErr);
+        logger.error("[recordings] multer error:", multerErr);
         return res.status(400).json({ error: multerErr.message ?? "Upload error" });
       }
 
@@ -629,17 +627,14 @@ export function createRecordingsRouter(): Router {
             sizeBytes: req.file.size,
             mimeType: req.file.mimetype,
           });
-          console.log(
-            `[recordings] Stored chunk ${chunkIndex} for session ${req.params.id} — ${req.file.size} bytes → ${req.file.path}`
-          );
         } else {
           // No file attached — still acknowledge (client may retry)
-          console.warn(`[recordings] Chunk ${chunkIndex} for session ${req.params.id} had no file attached`);
+          logger.warn(`[recordings] Chunk ${chunkIndex} for session ${req.params.id} had no file attached`);
         }
 
         res.json({ ok: true, chunkIndex, stored: !!req.file });
       } catch (err) {
-        console.error("[recordings] chunk error:", err);
+        logger.error("[recordings] chunk error:", err);
         // Clean up file on DB error
         if (req.file) fs.unlink(req.file.path, () => {});
         res.status(500).json({ error: "Failed to store chunk" });
@@ -678,9 +673,6 @@ export function createRecordingsRouter(): Router {
         .where(eq(videoChunks.sessionId, req.params.id))
         .orderBy(asc(videoChunks.chunkIndex));
 
-      console.log(
-        `[recordings] Finalizing session ${req.params.id}: ${chunks.length} DB chunks, ${chunkCount} reported, ${durationMs}ms`
-      );
 
       // Mark session as processing while we concatenate
       await db
@@ -715,7 +707,7 @@ export function createRecordingsRouter(): Router {
           });
 
           if (existingChunks.length === 0) {
-            console.error(`[recordings] No chunk files found on disk for session ${req.params.id}`);
+            logger.error(`[recordings] No chunk files found on disk for session ${req.params.id}`);
             await db
               .update(recordingSessions)
               .set({ status: "queued", updatedAt: new Date() })
@@ -761,7 +753,6 @@ export function createRecordingsRouter(): Router {
             })
             .where(eq(recordingSessions.id, req.params.id));
 
-          console.log(`[recordings] Concatenated ${existingChunks.length} chunks → ${outputPath}`);
 
           // Write fenTimeline seed to a temp file if provided
           let fenTimelineFile: string | undefined;
@@ -769,9 +760,8 @@ export function createRecordingsRouter(): Router {
             try {
               fenTimelineFile = path.join(UPLOADS_DIR, `${req.params.id}-fen-timeline.json`);
               fs.writeFileSync(fenTimelineFile, JSON.stringify(fenTimeline), "utf8");
-              console.log(`[recordings] Saved client FEN timeline (${fenTimeline.length} entries) to ${fenTimelineFile}`);
             } catch (writeErr) {
-              console.warn(`[recordings] Could not write FEN timeline file:`, writeErr);
+              logger.warn(`[recordings] Could not write FEN timeline file:`, writeErr);
               fenTimelineFile = undefined;
             }
           }
@@ -783,9 +773,8 @@ export function createRecordingsRouter(): Router {
               cornersFile = path.join(UPLOADS_DIR, `${req.params.id}-corners.json`);
               const cornersArray = boardCorners.map(c => [c.x, c.y]);
               fs.writeFileSync(cornersFile, JSON.stringify(cornersArray), "utf8");
-              console.log(`[recordings] Saved manual board corners to ${cornersFile}`);
             } catch (writeErr) {
-              console.warn(`[recordings] Could not write corners file:`, writeErr);
+              logger.warn(`[recordings] Could not write corners file:`, writeErr);
               cornersFile = undefined;
             }
           }
@@ -793,9 +782,8 @@ export function createRecordingsRouter(): Router {
           // Enqueue CV job to automatically reconstruct PGN from video
           try {
             await enqueueCvJob(req.params.id, outputPath, fenTimelineFile, cornersFile);
-            console.log(`[recordings] CV job enqueued for session ${req.params.id}`);
           } catch (queueErr) {
-            console.error(`[recordings] Failed to enqueue CV job:`, queueErr);
+            logger.error(`[recordings] Failed to enqueue CV job:`, queueErr);
             // Fall back to queued so user can enter PGN manually
             await db
               .update(recordingSessions)
@@ -807,11 +795,11 @@ export function createRecordingsRouter(): Router {
           // Clean up individual chunk files
           for (const chunk of existingChunks) {
             fs.unlink(chunk.filePath, (err) => {
-              if (err) console.warn(`[recordings] Could not delete chunk file ${chunk.filePath}:`, err.message);
+              if (err) logger.warn(`[recordings] Could not delete chunk file ${chunk.filePath}:`, err.message);
             });
           }
         } catch (ffmpegErr) {
-          console.error("[recordings] ffmpeg concatenation error:", ffmpegErr);
+          logger.error("[recordings] ffmpeg concatenation error:", ffmpegErr);
           // Fall back to queued state so user can still enter PGN manually
           await db
             .update(recordingSessions)
@@ -821,7 +809,7 @@ export function createRecordingsRouter(): Router {
         }
       })();
     } catch (err) {
-      console.error("[recordings] finalize error:", err);
+      logger.error("[recordings] finalize error:", err);
       res.status(500).json({ error: "Failed to finalize recording" });
     }
   });
@@ -896,7 +884,7 @@ export function createRecordingsRouter(): Router {
         stablePositions: job.stablePositions ?? 0,
       });
     } catch (err) {
-      console.error("[recordings] cv-job progress error:", err);
+      logger.error("[recordings] cv-job progress error:", err);
       res.status(500).json({ error: "Failed to get CV job progress" });
     }
   });
@@ -947,7 +935,7 @@ export function createRecordingsRouter(): Router {
         fs.createReadStream(videoPath).pipe(res);
       }
     } catch (err) {
-      console.error("[recordings] video stream error:", err);
+      logger.error("[recordings] video stream error:", err);
       res.status(500).json({ error: "Failed to stream video" });
     }
   });
@@ -1115,9 +1103,8 @@ export function createRecordingsRouter(): Router {
             .set({ status: "complete", updatedAt: new Date() })
             .where(eq(recordingSessions.id, sessionId));
 
-          console.log(`[games/from-pgn] Analysis complete for game ${gameId} — White: ${whiteAccuracy}%, Black: ${blackAccuracy}%`);
         } catch (err) {
-          console.error("[games/from-pgn] Background analysis error:", err);
+          logger.error("[games/from-pgn] Background analysis error:", err);
           await db
             .update(recordingSessions)
             .set({ status: "failed", updatedAt: new Date() })
@@ -1126,7 +1113,7 @@ export function createRecordingsRouter(): Router {
         }
       })();
     } catch (err) {
-      console.error("[games/from-pgn] error:", err);
+      logger.error("[games/from-pgn] error:", err);
       res.status(500).json({ error: "Failed to create game from PGN" });
     }
   });
@@ -1144,7 +1131,7 @@ export function createRecordingsRouter(): Router {
       if (!game) return res.status(404).json({ error: "Game not found" });
       res.json(game);
     } catch (err) {
-      console.error("[recordings] get game error:", err);
+      logger.error("[recordings] get game error:", err);
       res.status(500).json({ error: "Failed to get game" });
     }
   });
@@ -1265,7 +1252,7 @@ export function createRecordingsRouter(): Router {
         fenTimeline,
       });
     } catch (err) {
-      console.error("[recordings] get analysis error:", err);
+      logger.error("[recordings] get analysis error:", err);
       res.status(500).json({ error: "Failed to get analysis" });
     }
   });
@@ -1299,7 +1286,7 @@ export function createRecordingsRouter(): Router {
 
       res.json({ ok: true, count: corrections.length });
     } catch (err) {
-      console.error("[recordings] corrections error:", err);
+      logger.error("[recordings] corrections error:", err);
       res.status(500).json({ error: "Failed to save corrections" });
     }
   });

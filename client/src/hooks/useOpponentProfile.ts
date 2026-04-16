@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { logger } from "@/lib/logger";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -122,7 +123,7 @@ export function useOpponentProfile(username: string | null | undefined): {
       .catch((err) => {
         if (latestUsername.current !== u) return;
         // Profile fetch is cosmetic — fail silently, don't block the prep report
-        console.warn("[useOpponentProfile] fetch failed (non-fatal):", err);
+        logger.warn("[useOpponentProfile] fetch failed (non-fatal):", err);
         setError(null);
         setLoading(false);
       });

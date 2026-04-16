@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { logger } from "@/lib/logger";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
@@ -17,7 +18,7 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
       })
       .catch((err) => {
         // SW registration failure is non-fatal — app still works online
-        console.warn("[OTB Chess] Service worker registration failed:", err);
+        logger.warn("[OTB Chess] Service worker registration failed:", err);
       });
   });
 } else if ("serviceWorker" in navigator && import.meta.env.DEV) {

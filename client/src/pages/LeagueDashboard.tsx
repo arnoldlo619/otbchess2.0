@@ -16,6 +16,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
+import { logger } from "@/lib/logger";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
@@ -482,7 +483,7 @@ export default function LeagueDashboard() {
       }
       if (wRes.ok) setWeeks(await wRes.json());
       if (sRes.ok) setStandings(await sRes.json());
-    } catch (e) { console.error(e); }
+    } catch (e) { logger.error(e); }
     finally { setLoading(false); }
   }, [leagueId]);
 
@@ -664,7 +665,7 @@ export default function LeagueDashboard() {
       if (res.ok) { setPushStatus("subscribed"); showToast("Notifications enabled!"); }
       else showToast("Failed to save subscription", "error");
     } catch (err) {
-      console.error("[push]", err);
+      logger.error("[push]", err);
       showToast("Could not enable notifications", "error");
     } finally {
       setPushLoading(false);

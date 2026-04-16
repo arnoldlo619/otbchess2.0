@@ -35,6 +35,7 @@ import { GameHighlightCard } from "@/components/GameHighlightCard";
 import { buildAnnotatedPgn, downloadPgn } from "@/lib/exportPgn";
 import { GameVideoPlayer, type MoveTimestamp } from "@/components/GameVideoPlayer";
 import { FenScrubber, type FenEntry } from "@/components/FenScrubber";
+import { logger } from "@/lib/logger";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
@@ -836,7 +837,7 @@ export default function GameAnalysis() {
       setHighlightStatus("done");
       setTimeout(() => setHighlightStatus("idle"), 3000);
     } catch (err) {
-      console.error("Highlight generation failed:", err);
+      logger.error("Highlight generation failed:", err);
       setHighlightStatus("idle");
     }
   }, [data, criticalMoment]);
@@ -866,7 +867,7 @@ export default function GameAnalysis() {
       setHighlightStatus("done");
       setTimeout(() => setHighlightStatus("idle"), 3000);
     } catch (err) {
-      console.error("Highlight download failed:", err);
+      logger.error("Highlight download failed:", err);
       setHighlightStatus("idle");
     }
   }, [data]);

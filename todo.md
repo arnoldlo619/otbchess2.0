@@ -5009,3 +5009,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix 14 no-noninteractive-element-interactions warnings: aria-hidden on avatar imgs, eslint-disable on intentional dialog backdrops
 - [x] Fixed 4 TypeScript regressions introduced during refactor (Join.tsx hoisting, LeagueDashboard.tsx badge)
 - [x] Final: 0 exhaustive-deps, 0 no-explicit-any, 0 no-noninteractive violations, 0 TS errors, 4482 tests passing
+
+## Console.log Cleanup & Logger Utility
+- [x] Cataloged all console.* calls: 50 debug, 8 intentional, 187 error/warn across 22 files
+- [x] Built lightweight logger utility: client/src/lib/logger.ts + server/logger.ts (env-aware, dev-only info/debug)
+- [x] Replaced 195 intentional/error/warn logs with logger.info/warn/error calls
+- [x] Stripped 50 debug console.log statements
+- [x] Added logger imports to 21 files (12 client, 9 server)
+- [x] Fixed leagueLifecycle.test.ts assertion to match new log string
+- [x] Final: 0 no-console warnings, 0 TypeScript errors, 4482 tests passing

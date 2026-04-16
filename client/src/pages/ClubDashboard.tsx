@@ -172,6 +172,7 @@ import BattleTrendSparkline from "@/components/BattleTrendSparkline";
 import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { apiGetClub, apiListClubMembers, apiTransferOwnership } from "@/lib/clubsApi";
+import { logger } from "@/lib/logger";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -4823,7 +4824,7 @@ export default function ClubDashboard() {
                             await fetchClubLeagues();
                           } catch (err) {
                             toast.error("Failed to create league");
-                            console.error(err);
+                            logger.error(err);
                           } finally {
                             setLeagueCreating(false);
                           }
@@ -4916,7 +4917,7 @@ export default function ClubDashboard() {
                             await fetchClubLeagues();
                           } catch (err) {
                             toast.error("Failed to create league");
-                            console.error(err);
+                            logger.error(err);
                           } finally {
                             setLeagueCreating(false);
                           }

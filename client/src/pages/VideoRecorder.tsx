@@ -27,6 +27,7 @@ import { useSearch, useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
+import { logger } from "@/lib/logger";
 import {
   Camera,
   RotateCcw,
@@ -523,7 +524,7 @@ export default function VideoRecorder() {
         await videoRef.current.play();
       }
     } catch (err) {
-      console.error("[VideoRecorder] Camera error:", err);
+      logger.error("[VideoRecorder] Camera error:", err);
     }
   }, []);
 
@@ -739,7 +740,7 @@ export default function VideoRecorder() {
         body: formData,
       });
     } catch (err) {
-      console.error("[VideoRecorder] Chunk upload error:", err);
+      logger.error("[VideoRecorder] Chunk upload error:", err);
       setUploadError("Upload interrupted — chunks are buffered locally");
     }
   }, []);
@@ -750,7 +751,7 @@ export default function VideoRecorder() {
     try {
       wakeLockRef.current = await navigator.wakeLock.request("screen");
     } catch (err) {
-      console.warn("[VideoRecorder] Wake lock not available:", err);
+      logger.warn("[VideoRecorder] Wake lock not available:", err);
     }
   }, []);
 
@@ -873,7 +874,7 @@ export default function VideoRecorder() {
         }),
       });
     } catch (err) {
-      console.error("[VideoRecorder] Finalize error:", err);
+      logger.error("[VideoRecorder] Finalize error:", err);
     }
 
     setScreen("processing");

@@ -46,6 +46,7 @@ import { requireAuth as authMiddleware, requireFullAuth } from "./auth.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { logger } from "./logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,7 +165,7 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
 
     res.json({ clubs: sliced.map(dbRowToClub), total: rows.length });
   } catch (err) {
-    console.error("[clubs] GET / error:", err);
+    logger.error("[clubs] GET / error:", err);
     res.status(500).json({ error: "Failed to list clubs" });
   }
 });
@@ -197,7 +198,7 @@ clubsRouter.get("/mine", authMiddleware, async (req: Request, res: Response) => 
       );
     res.json(clubRows.map(dbRowToClub));
   } catch (err) {
-    console.error("[clubs] GET /mine error:", err);
+    logger.error("[clubs] GET /mine error:", err);
     res.status(500).json({ error: "Failed to list your clubs" });
   }
 });
@@ -232,7 +233,7 @@ clubsRouter.get("/leaderboard", async (req: Request, res: Response) => {
 
     res.json({ clubs: ranked.slice(0, 50), total: ranked.length, sortBy });
   } catch (err) {
-    console.error("[clubs] GET /leaderboard error:", err);
+    logger.error("[clubs] GET /leaderboard error:", err);
     res.status(500).json({ error: "Failed to load leaderboard" });
   }
 });
@@ -269,7 +270,7 @@ clubsRouter.post("/upload-avatar", requireFullAuth, avatarJsonParser, async (req
     fs.writeFileSync(filepath, buffer);
     res.json({ url: `/uploads/avatars/${filename}` });
   } catch (err) {
-    console.error("[clubs] POST /upload-avatar error:", err);
+    logger.error("[clubs] POST /upload-avatar error:", err);
     res.status(500).json({ error: "Failed to upload avatar" });
   }
 });
@@ -303,7 +304,7 @@ clubsRouter.post("/upload-banner", requireFullAuth, bannerJsonParser, async (req
     fs.writeFileSync(filepath, buffer);
     res.json({ url: `/uploads/banners/${filename}` });
   } catch (err) {
-    console.error("[clubs] POST /upload-banner error:", err);
+    logger.error("[clubs] POST /upload-banner error:", err);
     res.status(500).json({ error: "Failed to upload banner" });
   }
 });
@@ -387,7 +388,7 @@ clubsRouter.post("/", requireFullAuth, async (req: Request, res: Response) => {
       .where(eq(dbClubs.id, clubId));
     res.status(201).json(dbRowToClub(created));
   } catch (err) {
-    console.error("[clubs] POST / error:", err);
+    logger.error("[clubs] POST / error:", err);
     res.status(500).json({ error: "Failed to create club" });
   }
 });
@@ -448,12 +449,12 @@ clubsRouter.post("/sync", requireFullAuth, async (req: Request, res: Response) =
           });
         upserted++;
       } catch (innerErr) {
-        console.error("[clubs] sync upsert error for club", c.id, innerErr);
+        logger.error("[clubs] sync upsert error for club", c.id, innerErr);
       }
     }
     res.json({ upserted });
   } catch (err) {
-    console.error("[clubs] POST /sync error:", err);
+    logger.error("[clubs] POST /sync error:", err);
     res.status(500).json({ error: "Sync failed" });
   }
 });
@@ -475,7 +476,7 @@ clubsRouter.get("/:id", async (req: Request, res: Response) => {
     }
     res.json(dbRowToClub(row));
   } catch (err) {
-    console.error("[clubs] GET /:id error:", err);
+    logger.error("[clubs] GET /:id error:", err);
     res.status(500).json({ error: "Failed to get club" });
   }
 });
@@ -536,7 +537,7 @@ clubsRouter.patch("/:id", requireFullAuth, async (req: Request, res: Response) =
     const [updated] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
     res.json(dbRowToClub(updated));
   } catch (err) {
-    console.error("[clubs] PATCH /:id error:", err);
+    logger.error("[clubs] PATCH /:id error:", err);
     res.status(500).json({ error: "Failed to update club" });
   }
 });
@@ -603,7 +604,7 @@ clubsRouter.patch("/:id/transfer-ownership", requireFullAuth, async (req: Reques
     const [updated] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
     res.json(dbRowToClub(updated));
   } catch (err) {
-    console.error("[clubs] PATCH /:id/transfer-ownership error:", err);
+    logger.error("[clubs] PATCH /:id/transfer-ownership error:", err);
     res.status(500).json({ error: "Failed to transfer ownership" });
   }
 });
@@ -661,7 +662,7 @@ clubsRouter.delete("/:id", requireFullAuth, async (req: Request, res: Response) 
     await db.delete(dbClubs).where(eq(dbClubs.id, id));
     res.json({ success: true });
   } catch (err) {
-    console.error("[clubs] DELETE /:id error:", err);
+    logger.error("[clubs] DELETE /:id error:", err);
     res.status(500).json({ error: "Failed to delete club" });
   }
 });
@@ -677,7 +678,7 @@ clubsRouter.get("/:id/members", async (req: Request, res: Response) => {
       .where(eq(dbClubMembers.clubId, id));
     res.json(rows.map(dbMemberToMember));
   } catch (err) {
-    console.error("[clubs] GET /:id/members error:", err);
+    logger.error("[clubs] GET /:id/members error:", err);
     res.status(500).json({ error: "Failed to list members" });
   }
 });
@@ -719,7 +720,7 @@ clubsRouter.post("/:id/members", requireFullAuth, async (req: Request, res: Resp
 
     res.status(201).json({ success: true });
   } catch (err) {
-    console.error("[clubs] POST /:id/members error:", err);
+    logger.error("[clubs] POST /:id/members error:", err);
     res.status(500).json({ error: "Failed to join club" });
   }
 });
@@ -745,7 +746,7 @@ clubsRouter.post("/:id/heartbeat", authMiddleware, async (req: Request, res: Res
       .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, userId)));
     res.json({ success: true });
   } catch (err) {
-    console.error("[clubs] POST /:id/heartbeat error:", err);
+    logger.error("[clubs] POST /:id/heartbeat error:", err);
     res.status(500).json({ error: "Failed to update presence" });
   }
 });
@@ -765,7 +766,7 @@ clubsRouter.get("/:id/presence", async (req: Request, res: Response) => {
     ).length;
     res.json({ onlineCount, totalMembers });
   } catch (err) {
-    console.error("[clubs] GET /:id/presence error:", err);
+    logger.error("[clubs] GET /:id/presence error:", err);
     res.status(500).json({ error: "Failed to get presence" });
   }
 });
@@ -819,7 +820,7 @@ clubsRouter.delete(
       }
       res.json({ success: true });
     } catch (err) {
-      console.error("[clubs] DELETE /:id/members/:memberId error:", err);
+      logger.error("[clubs] DELETE /:id/members/:memberId error:", err);
       res.status(500).json({ error: "Failed to remove member" });
     }
   }
@@ -845,7 +846,7 @@ clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
       updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
     })));
   } catch (err) {
-    console.error("[clubs] GET /:id/events error:", err);
+    logger.error("[clubs] GET /:id/events error:", err);
     res.status(500).json({ error: "Failed to fetch club events" });
   }
 });
@@ -887,7 +888,7 @@ clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Respon
       updatedAt: created.updatedAt instanceof Date ? created.updatedAt.toISOString() : String(created.updatedAt),
     });
   } catch (err) {
-    console.error("[clubs] POST /:id/events error:", err);
+    logger.error("[clubs] POST /:id/events error:", err);
     res.status(500).json({ error: "Failed to create club event" });
   }
 });
@@ -908,7 +909,7 @@ clubsRouter.delete("/:id/events/:eventId", authMiddleware, async (req: Request, 
     await db.delete(clubEvents).where(eq(clubEvents.id, eventId));
     res.json({ success: true });
   } catch (err) {
-    console.error("[clubs] DELETE /:id/events/:eventId error:", err);
+    logger.error("[clubs] DELETE /:id/events/:eventId error:", err);
     res.status(500).json({ error: "Failed to delete event" });
   }
 });
@@ -931,7 +932,7 @@ clubsRouter.get("/:id/feed", async (req: Request, res: Response) => {
       createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
     })));
   } catch (err) {
-    console.error("[clubs] GET /:id/feed error:", err);
+    logger.error("[clubs] GET /:id/feed error:", err);
     res.status(500).json({ error: "Failed to fetch club feed" });
   }
 });
@@ -964,7 +965,7 @@ clubsRouter.post("/:id/feed", authMiddleware, async (req: Request, res: Response
       createdAt: created.createdAt instanceof Date ? created.createdAt.toISOString() : String(created.createdAt),
     });
   } catch (err) {
-    console.error("[clubs] POST /:id/feed error:", err);
+    logger.error("[clubs] POST /:id/feed error:", err);
     res.status(500).json({ error: "Failed to create feed post" });
   }
 });
@@ -985,7 +986,7 @@ clubsRouter.delete("/:id/feed/:feedId", authMiddleware, async (req: Request, res
     await db.delete(clubFeed).where(eq(clubFeed.id, feedId));
     res.json({ success: true });
   } catch (err) {
-    console.error("[clubs] DELETE /:id/feed/:feedId error:", err);
+    logger.error("[clubs] DELETE /:id/feed/:feedId error:", err);
     res.status(500).json({ error: "Failed to delete feed post" });
   }
 });
@@ -1012,7 +1013,7 @@ clubsRouter.get("/:id/events/:eventId/rsvps", async (req: Request, res: Response
       updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
     })));
   } catch (err) {
-    console.error("[clubs] GET /:id/events/:eventId/rsvps error:", err);
+    logger.error("[clubs] GET /:id/events/:eventId/rsvps error:", err);
     res.status(500).json({ error: "Failed to fetch RSVPs" });
   }
 });
@@ -1059,7 +1060,7 @@ clubsRouter.post("/:id/events/:eventId/rsvps", authMiddleware, async (req: Reque
       });
     }
   } catch (err) {
-    console.error("[clubs] POST /:id/events/:eventId/rsvps error:", err);
+    logger.error("[clubs] POST /:id/events/:eventId/rsvps error:", err);
     res.status(500).json({ error: "Failed to upsert RSVP" });
   }
 });
@@ -1075,7 +1076,7 @@ clubsRouter.delete("/:id/events/:eventId/rsvps", authMiddleware, async (req: Req
       .where(and(eq(clubEventRsvps.eventId, eventId), eq(clubEventRsvps.userId, userId)));
     res.json({ success: true });
   } catch (err) {
-    console.error("[clubs] DELETE /:id/events/:eventId/rsvps error:", err);
+    logger.error("[clubs] DELETE /:id/events/:eventId/rsvps error:", err);
     res.status(500).json({ error: "Failed to remove RSVP" });
   }
 });
