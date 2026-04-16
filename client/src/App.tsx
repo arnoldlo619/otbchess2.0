@@ -42,6 +42,7 @@ const LeagueDemo = lazy(() => import("./pages/LeagueDemo"));
 const MatchupPrep = lazy(() => import("./pages/MatchupPrep"));
 const PublicTournament = lazy(() => import("./pages/PublicTournament"));
 const TournamentAnalytics = lazy(() => import("./pages/TournamentAnalytics"));
+const OpeningsAdmin = lazy(() => import("./pages/OpeningsAdmin"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -92,6 +93,7 @@ function Router() {
         <Route path={"/invite/:token"} component={InviteAccept} />
         <Route path={"/live/:slug"} component={PublicTournament} />
         <Route path={"/tournament/:id/analytics"} component={TournamentAnalytics} />
+        <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
