@@ -9,7 +9,7 @@
  * - Frame sampling and transfer logic
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ── Helpers mirrored from VideoRecorder ──────────────────────────────────────
 

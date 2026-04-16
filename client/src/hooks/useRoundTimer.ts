@@ -132,7 +132,7 @@ export function useRoundTimer({
     const wallElapsed = (Date.now() - startWallRef.current) / 1000;
     const totalElapsed = elapsedAtPauseRef.current + wallElapsed;
 
-    setElapsedSec((prev) => {
+    setElapsedSec((_prev) => {
       const next = Math.min(totalElapsed, durationSec);
       const remaining = durationSec - next;
 

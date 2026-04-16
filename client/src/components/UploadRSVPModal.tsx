@@ -235,7 +235,7 @@ export function UploadRSVPModal({
   const [platform, setPlatform] = useState<Platform>("chesscom");
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [lookupStarted, setLookupStarted] = useState(false);
+  const [_lookupStarted, setLookupStarted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lookupInProgress = useRef(false);
 

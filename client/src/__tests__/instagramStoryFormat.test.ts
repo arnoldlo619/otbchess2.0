@@ -135,7 +135,7 @@ describe("Format toggle", () => {
 
 describe("Story layout calculations", () => {
   const FOOTER = 80;
-  const PAD = 52;
+  const _PAD = 52;
 
   it("story standings rows fit more content due to taller canvas", () => {
     const calcMaxRows = (format: SlideFormat, rowH: number) => {

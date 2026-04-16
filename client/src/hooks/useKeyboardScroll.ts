@@ -60,7 +60,7 @@ export function useKeyboardScroll(
         : window.innerHeight;
 
       const elRect = el.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
+      const _containerRect = container.getBoundingClientRect();
 
       // Bottom of the element relative to the viewport
       const elBottom = elRect.bottom;

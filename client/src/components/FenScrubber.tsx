@@ -35,7 +35,7 @@ export function FenScrubber({
   isDark,
 }: FenScrubberProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [focusedIdx, setFocusedIdx] = useState<number>(-1);
+  const [_focusedIdx, _setFocusedIdx] = useState<number>(-1);
 
   const selectedIdx = selectedEntry
     ? fenTimeline.findIndex((e) => e.timestampMs === selectedEntry.timestampMs)
@@ -80,7 +80,7 @@ export function FenScrubber({
 
   if (fenTimeline.length === 0) return null;
 
-  const totalDurationMs = fenTimeline[fenTimeline.length - 1].timestampMs;
+  const _totalDurationMs = fenTimeline[fenTimeline.length - 1].timestampMs;
 
   return (
     <div

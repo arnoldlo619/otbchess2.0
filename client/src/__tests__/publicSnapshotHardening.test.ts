@@ -19,8 +19,8 @@ import {
   clearAllSnapshots,
   computeStandingsServer,
   type BuildSnapshotInput,
-  type PublicSnapshot,
-  type StandingRow,
+  type _PublicSnapshot,
+  type _StandingRow,
 } from "../../../server/publicSnapshot";
 
 // ─── Test Data ──────────────────────────────────────────────────────────────
@@ -369,7 +369,7 @@ describe("Client ETag-aware fetch pattern", () => {
 describe("Snapshot payload size", () => {
   it("stripped snapshot is smaller than raw input", () => {
     const input = makeInput();
-    const rawSize = JSON.stringify(input).length;
+    const _rawSize = JSON.stringify(input).length;
     const snapshot = buildSnapshot(input);
     const snapshotSize = JSON.stringify(snapshot).length;
 

@@ -18,7 +18,7 @@ import clubBattlesRouter from "./clubBattles.js";
 import { clubsRouter } from "./clubs.js";
 import { leaguesRouter } from "./leagues.js";
 import { emailRouter } from "./email.js";
-import { buildPrepReport, fetchPlayerGames, analyzePlayStyle, generatePrepLines, generateInsights } from "./prepEngine.js";
+import {buildPrepReport} from "./prepEngine.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
 export { _startCvJobQueue as startCvJobQueue };
@@ -339,6 +339,7 @@ export function createApp() {
           }).onDuplicateKeyUpdate({
             set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date() },
           });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_) { /* non-fatal */ }
         res.json({ ...report, _cached: false });
         return;
@@ -1612,7 +1613,7 @@ export function createApp() {
         try {
           const state = JSON.parse(stateRows[0].stateJson);
           const rounds = state.rounds ?? [];
-          const totalRounds = state.totalRounds ?? 0;
+          const _totalRounds = state.totalRounds ?? 0;
           let completedRounds = 0;
           let totalGames = 0;
           let reportedGames = 0;

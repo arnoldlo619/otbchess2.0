@@ -10,7 +10,7 @@
  *
  * Uses fetch mocking to simulate server responses without a real server.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ── Helpers mirroring the save handler logic ──────────────────────────────────
 

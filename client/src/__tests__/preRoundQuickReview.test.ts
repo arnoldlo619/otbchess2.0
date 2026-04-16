@@ -7,7 +7,7 @@
  *  - getReviewedKey: per-opponent storage key generation
  *  - Collapse/expand default state logic based on review history
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import {describe, it, expect, beforeEach} from "vitest";
 
 // ── Mock localStorage ─────────────────────────────────────────────────────────
 
@@ -278,7 +278,7 @@ describe("buildTendencies — endgame style", () => {
   it("includes endgame style when checkmate rate >= 20%", () => {
     // sampleReport: 10/50 = 20% checkmates
     const t = buildTendencies(sampleReport);
-    const endgame = t.find(x => x.label === "Endgame style");
+    const _endgame = t.find(x => x.label === "Endgame style");
     // May or may not appear depending on slice(0, 3) — verify the logic is correct
     // 20% is exactly the threshold, so it should be included before slicing
     const allTendencies: Tendency[] = [];

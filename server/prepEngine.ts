@@ -1185,7 +1185,7 @@ const DEEP_THEORY_MAP: Record<string, { moves: string; name: string; rationale: 
 function getDeepTheoryLine(
   eco: string,
   openingName: string,
-  myColor: "white" | "black"
+  _myColor: "white" | "black"
 ): PrepLine {
   const lowerName = openingName.toLowerCase();
 

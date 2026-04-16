@@ -9,7 +9,7 @@
  * 5. ShareResultsModal pdfClubLogoUrl prop propagation
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {describe, it, expect, vi, beforeEach} from "vitest";
 
 // ─── Feature: fetchImageAsBase64 ─────────────────────────────────────────────
 describe("fetchImageAsBase64", () => {

@@ -425,7 +425,7 @@ describe("prep line generation logic", () => {
   it("suggests counter-lines when opponent plays 1.e4 heavily", () => {
     // Simulate a profile where opponent plays 1.e4 in 80% of white games
     const firstMoveAsWhite = [{ move: "e4", count: 8, pct: 80 }];
-    const counterMoves = ["1.e4"];
+    const _counterMoves = ["1.e4"];
     const COUNTER_LINES: Record<string, string[]> = {
       "1.e4": ["Sicilian: Najdorf", "Caro-Kann Defense", "French Defense: Winawer"],
       "1.d4": ["King's Indian Defense", "Nimzo-Indian Defense", "Grunfeld Defense"],

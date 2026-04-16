@@ -38,21 +38,21 @@ import {
   Crown,
   Swords,
   BarChart3,
-  Clock,
-  CheckCircle2,
+  Clock as _Clock,
+  CheckCircle2 as _CheckCircle2,
   ArrowRight,
   Star,
   Shield,
   Globe,
-  Home as HomeIcon,
+  Home as _HomeIcon,
   Building2,
   Video,
-  LogIn,
-  LogOut,
-  ChevronDown,
+  LogIn as _LogIn,
+  LogOut as _LogOut,
+  ChevronDown as _ChevronDown,
   Ghost,
   LayoutDashboard,
-  Target,
+  Target as _Target,
   BookOpen,
   Search,
   TrendingUp,
@@ -60,8 +60,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
-import { GuestMobileMenu } from "@/components/GuestMobileMenu";
-import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
 
@@ -140,8 +139,9 @@ function useCountUp(
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Nav({
-  onCreateTournament,
+  onCreateTournament: _onCreateTournament,
   onSignIn,
   onUpgrade,
 }: {
@@ -837,7 +837,7 @@ function Showcase() {
   };
 
   const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
-  const accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
+  const _accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
 
   return (
     <section id="for-clubs" className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
@@ -1033,7 +1033,7 @@ function PlayerDemo() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [username, setUsername] = useState("");
-  const { status, profile, error: lookupError, lookup, reset, analysisLoading } = useChessComProfile();
+  const { status, profile, error: lookupError, lookup, reset: _reset, analysisLoading } = useChessComProfile();
   const loading = status === "loading";
 
   const handleLookup = () => {
@@ -1565,7 +1565,7 @@ export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { user, logout } = useAuthContext();
+  const { user: _user, logout: _logout } = useAuthContext();
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
 

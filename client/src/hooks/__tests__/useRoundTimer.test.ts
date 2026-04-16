@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useRoundTimer, DEFAULT_DURATION_MIN, DEFAULT_NEAR_END_SEC } from "../useRoundTimer";
+import {useRoundTimer, DEFAULT_DURATION_MIN} from "../useRoundTimer";
 
 beforeEach(() => {
   vi.useFakeTimers();

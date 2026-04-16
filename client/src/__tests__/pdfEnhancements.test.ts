@@ -5,7 +5,7 @@
  * 3. Email PDF as attachment (pdfBase64 in send-results-email payload)
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {describe, it, expect, vi} from "vitest";
 
 // ─── Feature 1: PDF on Report page ────────────────────────────────────────────
 describe("Feature 1 — PDF download on Report page", () => {

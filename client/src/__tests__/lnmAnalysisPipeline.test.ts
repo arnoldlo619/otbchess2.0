@@ -12,7 +12,7 @@
  *  - analyseStatus prop rendering in NotationModeOverlay
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {describe, it, expect, vi} from "vitest";
 
 // ─── Constants mirrored from the implementation ───────────────────────────────
 

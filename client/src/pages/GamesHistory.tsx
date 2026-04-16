@@ -10,7 +10,7 @@ import { useLocation } from "wouter";
 import {
   Search, SlidersHorizontal, ChevronLeft, ChevronRight,
   ArrowUpDown, ArrowUp, ArrowDown, BookOpen, RefreshCw,
-  Trophy, Minus, Crown, BarChart2, Clock, X,
+  Trophy as _Trophy, Minus, Crown, BarChart2, Clock, X,
 } from "lucide-react";
 import { useGameHistory, type ResultFilter, type SortField } from "../hooks/useGameHistory";
 import type { AnalysedGame } from "../hooks/useMyAnalysedGames";

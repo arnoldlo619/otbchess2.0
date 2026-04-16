@@ -4,7 +4,7 @@
  * Tests for the useActiveTournament hook logic and the navigation
  * touchpoints that surface active tournament state to mobile users.
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import {describe, it, expect, beforeEach} from "vitest";
 
 // ─── Mock localStorage ────────────────────────────────────────────────────────
 const localStorageMock = (() => {

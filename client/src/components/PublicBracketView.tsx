@@ -74,7 +74,7 @@ interface MatchCardProps {
   roundNumber: number;
 }
 
-function MatchCard({ game, players, elimPlayers, isCurrentRound, isDark, roundNumber }: MatchCardProps) {
+function MatchCard({ game, players, elimPlayers, isCurrentRound, isDark, roundNumber: _roundNumber }: MatchCardProps) {
   const white = getPlayer(game.whiteId, elimPlayers, players);
   const black = getPlayer(game.blackId, elimPlayers, players);
   const winner = resultWinner(game);
@@ -182,7 +182,7 @@ interface PlayerRowProps {
   side: "white" | "black";
 }
 
-function PlayerRow({ player, isBye, seed, score, isWinner, isPending, isDark, side }: PlayerRowProps) {
+function PlayerRow({ player, isBye, seed, score, isWinner, isPending: _isPending, isDark, side: _side }: PlayerRowProps) {
   if (isBye) {
     return (
       <div className={`flex items-center gap-2 px-3 py-2.5 ${
@@ -291,7 +291,7 @@ interface RoundColumnProps {
   isLast: boolean;
 }
 
-function RoundColumn({ roundNumber, games, players, elimPlayers, currentRound, isDark, label, isLast }: RoundColumnProps) {
+function RoundColumn({ roundNumber, games, players, elimPlayers, currentRound, isDark, label, isLast: _isLast }: RoundColumnProps) {
   const isCurrentRound = roundNumber === currentRound;
   const isCompleted = roundNumber < currentRound;
 

@@ -20,7 +20,7 @@
  */
 
 import React, { useMemo, useRef, useEffect } from "react";
-import { Trophy, ChevronRight, Crown, Zap, CheckCircle2, Circle } from "lucide-react";
+import {Trophy, ChevronRight, Crown, Zap, CheckCircle2} from "lucide-react";
 import { elimRoundLabel } from "@/lib/swiss";
 import type { Round, Player, Game, Result } from "@/lib/tournamentData";
 
@@ -236,7 +236,7 @@ function MatchCard({
 
 // ─── Connector Lines (SVG) ────────────────────────────────────────────────────
 
-function ConnectorLines({
+function _ConnectorLines({
   matchCount,
   isDark,
 }: {

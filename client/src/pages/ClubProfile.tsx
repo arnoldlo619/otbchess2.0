@@ -7,7 +7,7 @@
  *   - Members roster with roles and stats
  *   - Tournament history with status badges
  */
-import { useState, useEffect, useCallback } from "react";
+import {useState, useEffect} from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -60,7 +60,7 @@ import {
   getUserRSVP,
   upsertRSVP,
   type ClubEvent,
-  type RSVPStatus,
+  type RSVPStatus as _RSVPStatus,
 } from "@/lib/clubEventRegistry";
 import {
   getPlayerBattleSummary,
@@ -397,7 +397,7 @@ function FeedEventCard({
   const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
   const userVotedOptions = userId ? (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id) : [];
   const userRsvp = userId ? (event.rsvpEntries ?? []).find((r) => r.userId === userId) : undefined;
-  const accent = isDark ? "#4CAF50" : "#3D6B47";
+  const _accent = isDark ? "#4CAF50" : "#3D6B47";
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId || !isMemberUser) return;
@@ -843,7 +843,7 @@ export default function ClubProfile() {
   }
 
   // Membership flags (aliases of the pre-return derivations for readability below)
-  const myMembership = myMembershipEarly;
+  const _myMembership = myMembershipEarly;
   const isOwner = isOwnerEarly;
   const isDirector = isDirectorEarly;
   // onlineCount already declared above (before the early return)
@@ -2617,7 +2617,8 @@ export default function ClubProfile() {
                         return;
                       }
                     }
-                  } catch (e) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  } catch (_e) {
                     toast.error("Network error — please check your connection.");
                     setSavingSettings(false);
                     return;

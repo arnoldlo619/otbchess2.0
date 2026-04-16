@@ -9,7 +9,7 @@
  *  - PGN reconstruction from move timeline
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ─── FEN Utilities (mirrored from cv_worker.py logic) ────────────────────────
 // These TypeScript implementations mirror the Python logic for unit testing

@@ -444,7 +444,7 @@ function addSwissPairingPage(doc: any, tournamentName: string, totalRounds: numb
     const half = Math.ceil(group.players.length / 2);
     group.players.forEach((player, pi) => {
       const isTopHalf = pi < half;
-      const isBottomHalf = pi >= half;
+      const _isBottomHalf = pi >= half;
       const pairIdx = isTopHalf ? pi : pi - half;
 
       doc.setFont("helvetica", isTopHalf ? "bold" : "normal");

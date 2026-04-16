@@ -25,7 +25,7 @@ import {
   deleteFeedEvent,
   clearFeed,
   seedFeedIfEmpty,
-  type FeedEvent,
+  type _FeedEvent,
 } from "../lib/clubFeedRegistry";
 
 const CLUB_ID = "test-club-001";

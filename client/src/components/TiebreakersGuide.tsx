@@ -4,7 +4,7 @@
  * Falls back to static demo data when fewer than 3 players or no completed rounds.
  */
 
-import type { Player, Round } from "@/lib/tournamentData";
+import type {Round} from "@/lib/tournamentData";
 import type { StandingRow } from "@/lib/swiss";
 
 interface Props {

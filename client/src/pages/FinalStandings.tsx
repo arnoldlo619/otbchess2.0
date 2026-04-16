@@ -14,9 +14,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useLocation } from "wouter";
-import { Trophy, ArrowLeft, Download, Share2, Medal, Instagram, LayoutGrid } from "lucide-react";
+import {Trophy, ArrowLeft, Share2, Instagram, LayoutGrid} from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
-import type { TournamentConfig } from "@/lib/tournamentRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
 import type { Player, Round } from "@/lib/tournamentData";
@@ -77,6 +76,7 @@ function Skeleton({ isDark }: { isDark: boolean }) {
 
 export default function FinalStandings() {
   const { id } = useParams<{ id: string }>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, navigate] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -317,7 +317,7 @@ export default function FinalStandings() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row, idx) => {
+                    {rows.map((row, _idx) => {
                       const isTop3 = row.rank <= 3;
                       return (
                         <tr

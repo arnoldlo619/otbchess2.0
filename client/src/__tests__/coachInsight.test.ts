@@ -11,7 +11,7 @@
  * - INSIGHT_TYPE_LABELS / INSIGHT_TYPE_DESCRIPTIONS completeness
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {describe, it, expect, beforeEach, afterEach} from "vitest";
 
 // ── localStorage mock for Node.js test environment ───────────────────────────
 const localStorageMock = (() => {

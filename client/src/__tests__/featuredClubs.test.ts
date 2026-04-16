@@ -9,7 +9,7 @@
  *  - Empty state (returns null when no clubs)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ── Helpers extracted from FeaturedClubsCarousel for testing ──────────────────
 

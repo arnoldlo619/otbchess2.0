@@ -74,7 +74,7 @@ interface AvatarNavDropdownProps {
 function Sparkline({
   points,
   dates,
-  color,
+  color: _color,
   width = 72,
   height = 24,
 }: {

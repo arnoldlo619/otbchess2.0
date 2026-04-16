@@ -460,8 +460,8 @@ export default function LeagueDashboard() {
   const textMain = isDark ? "#f0f5ee" : "#111827";
   const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
   const accent = "oklch(0.55 0.13 145)";
-  const tabBg = isDark ? "oklch(0.22 0.06 145)" : "#e8f0e8";
-  const tabActive = isDark ? "oklch(0.28 0.08 145)" : "#ffffff";
+  const _tabBg = isDark ? "oklch(0.22 0.06 145)" : "#e8f0e8";
+  const _tabActive = isDark ? "oklch(0.28 0.08 145)" : "#ffffff";
 
   function showToast(msg: string, type: "success" | "error" = "success") {
     setToast({ msg, type });
@@ -1939,7 +1939,7 @@ export default function LeagueDashboard() {
                     const whitePlayer = league.players.find(p => p.playerId === myMatchThisWeek.playerWhiteId);
                     const isMe = myMatchThisWeek.playerWhiteId === user?.id;
                     const won = myMatchThisWeek.result === "white_win";
-                    const lost = myMatchThisWeek.result === "black_win";
+                    const _lost = myMatchThisWeek.result === "black_win";
                     const whiteChesscomAvatar = whitePlayer?.chesscomUsername
                       ? (matchupChesscomAvatars.get(whitePlayer.chesscomUsername.toLowerCase()) ?? null)
                       : null;
@@ -2484,7 +2484,7 @@ export default function LeagueDashboard() {
                   const lastArr = parseLastResults(s.lastResults);
                   const podiumColor = i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#cd7c2f" : null;
                   const gamesPlayed = s.wins + s.draws + s.losses;
-                  const winRate = gamesPlayed > 0 ? Math.round((s.wins / gamesPlayed) * 100) : 0;
+                  const _winRate = gamesPlayed > 0 ? Math.round((s.wins / gamesPlayed) * 100) : 0;
 
                   return (
                     <div key={s.playerId}>

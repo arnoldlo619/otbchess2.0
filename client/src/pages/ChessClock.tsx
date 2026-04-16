@@ -626,7 +626,7 @@ export default function ChessClock() {
     }
   }, [tournamentId, navigate, search]);
 
-  const isFlagged = clockState === "p1_flagged" || clockState === "p2_flagged";
+  const _isFlagged = clockState === "p1_flagged" || clockState === "p2_flagged";
   const isIdle = clockState === "idle";
   const isPaused = clockState === "paused";
 

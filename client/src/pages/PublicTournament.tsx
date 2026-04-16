@@ -16,7 +16,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useParams, Link } from "wouter";
 import {
-  Search, X, Star, StarOff, Trophy, Users, MapPin, Calendar,
+  Search, X, Star, StarOff as _StarOff, Trophy, Users, MapPin, Calendar,
   ChevronRight, ChevronDown, Crown, Swords, Hash, UserPlus,
   Mail, ArrowRight, ExternalLink,
 } from "lucide-react";
@@ -24,7 +24,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
-import type { Player, Game, Round, Result } from "@/lib/tournamentData";
+import type {Player, Round, Result} from "@/lib/tournamentData";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -501,7 +501,7 @@ function FollowedPlayerCard({
 function PairingsSection({
   rounds,
   currentRound,
-  totalRounds,
+  totalRounds: _totalRounds,
   players,
   followedPlayerId,
   isDark,

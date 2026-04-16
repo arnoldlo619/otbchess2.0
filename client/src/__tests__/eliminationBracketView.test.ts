@@ -10,7 +10,7 @@
  * 6. Integration: swiss_elim cutoff screen standings display
  */
 
-import { describe, it, expect } from "vitest";
+import {describe, it, expect} from "vitest";
 import {
   generateEliminationFirstRound,
   generateEliminationNextRound,
@@ -44,7 +44,7 @@ function makePlayer(id: string, name: string, elo = 1500): Player {
   };
 }
 
-function makeRound(number: number, games: Game[]): Round {
+function _makeRound(number: number, games: Game[]): Round {
   return { number, status: "completed", games };
 }
 

@@ -81,7 +81,7 @@ function buildQueryString(params: GameHistoryParams): string {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useGameHistory(): UseGameHistoryReturn {
-  const [location, setLocation] = useLocation();
+  const [_location, setLocation] = useLocation();
 
   // Parse initial params from URL
   const [params, setParams] = useState<GameHistoryParams>(() => {

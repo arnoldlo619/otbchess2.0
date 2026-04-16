@@ -76,7 +76,7 @@ export function classifyWhiteFirstMove(moves: string): string | null {
  * Classify Black's response to 1.e4 from opening name and ECO code.
  * Returns the canonical value for BLACK_VS_E4.
  */
-export function classifyBlackVsE4(openingName: string, eco: string, moves: string): string | null {
+export function classifyBlackVsE4(openingName: string, eco: string, _moves: string): string | null {
   const name = (openingName ?? "").toLowerCase();
   const e = (eco ?? "").toUpperCase();
 
@@ -109,7 +109,7 @@ export function classifyBlackVsE4(openingName: string, eco: string, moves: strin
  * Classify Black's response to 1.d4 from opening name and ECO code.
  * Returns the canonical value for BLACK_VS_D4.
  */
-export function classifyBlackVsD4(openingName: string, eco: string, moves: string): string | null {
+export function classifyBlackVsD4(openingName: string, eco: string, _moves: string): string | null {
   const name = (openingName ?? "").toLowerCase();
   const e = (eco ?? "").toUpperCase();
 

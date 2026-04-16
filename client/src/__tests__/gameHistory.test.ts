@@ -467,7 +467,7 @@ describe("fetch API integration", () => {
   afterEach(() => { global.fetch = originalFetch; });
 
   it("builds correct query string for all params", () => {
-    const params: GameHistoryParams = {
+    const _params: GameHistoryParams = {
       page: 2, limit: 10, search: "sicilian", result: "1-0",
       sortBy: "totalMoves", sortDir: "asc",
     };

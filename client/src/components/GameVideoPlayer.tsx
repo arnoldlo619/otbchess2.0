@@ -97,7 +97,7 @@ export function GameVideoPlayer({
   sessionId,
   moveTimestamps,
   currentMoveIndex,
-  totalMoves,
+  totalMoves: _totalMoves,
   isDark,
 }: GameVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);

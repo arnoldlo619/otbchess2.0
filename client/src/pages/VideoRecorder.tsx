@@ -38,7 +38,7 @@ import {
   AlertCircle,
   Loader2,
   ChevronRight,
-  Volume2,
+  Volume2 as _Volume2,
   Lightbulb,
   Grid3x3,
   ArrowLeft,
@@ -302,6 +302,7 @@ function LiveCvStatusBar({
 export default function VideoRecorder() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user } = useAuthContext();
   const search = useSearch();
   const params = new URLSearchParams(search);
@@ -395,8 +396,8 @@ export default function VideoRecorder() {
   const movePulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-gray-950";
-  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-900";
-  const accent = "text-[#4CAF50]";
+  const _cardBg = isDark ? "bg-[#1a2e1e]" : "bg-gray-900";
+  const _accent = "text-[#4CAF50]";
 
   // ── Orientation listener ──────────────────────────────────────────────────
   useEffect(() => {

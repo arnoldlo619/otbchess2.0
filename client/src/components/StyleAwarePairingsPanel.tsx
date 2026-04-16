@@ -17,7 +17,7 @@ import { useState, useMemo } from "react";
 import {
   Zap,
   Scale,
-  Swords,
+  Swords as _Swords,
   ChevronDown,
   ChevronUp,
   Info,
@@ -26,7 +26,7 @@ import {
   XCircle,
   Minus,
   Settings2,
-  Crown,
+  Crown as _Crown,
   Sparkles,
   ArrowRight,
 } from "lucide-react";

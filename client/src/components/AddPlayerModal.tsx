@@ -84,7 +84,7 @@ const G_RING = "rgba(61,107,71,0.25)";
 const G_BG = "rgba(61,107,71,0.08)";
 const AMBER = "#D97706";
 const AMBER_BG = "rgba(217,119,6,0.08)";
-const AMBER_RING = "rgba(217,119,6,0.25)";
+const _AMBER_RING = "rgba(217,119,6,0.25)";
 
 // ─── ELO lookup helpers ───────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
  * Phase 33: Tournament Auto-Expiry + Director End/Delete Controls
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import {describe, it, expect} from "vitest";
 
 // ─── Auto-Expiry Logic (pure functions mirroring server logic) ─────────────────
 

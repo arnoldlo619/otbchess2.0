@@ -182,7 +182,7 @@ export function RatingProgressChart({ isDark = true }: RatingProgressChartProps)
   const current_ = hasData ? ratings[ratings.length - 1] : null;
 
   // Theme tokens
-  const cardBg   = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)";
+  const _cardBg   = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)";
   const tabActive = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
   const tabText   = isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.45)";
   const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";

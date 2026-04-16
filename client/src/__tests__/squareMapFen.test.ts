@@ -22,7 +22,7 @@ import { describe, it, expect } from "vitest";
 
 const PIECE_SIZE = 416;
 const EDGE_MARGIN_FRAC = 0.04;
-const EDGE_MARGIN = PIECE_SIZE * EDGE_MARGIN_FRAC; // ~16.64 px
+const _EDGE_MARGIN = PIECE_SIZE * EDGE_MARGIN_FRAC; // ~16.64 px
 
 const MAX_PIECES_PER_SIDE: Record<string, number> = {
   K: 1, Q: 9, R: 10, B: 10, N: 10, P: 8,
@@ -345,11 +345,11 @@ describe("square_map() with grid_angle rotation", () => {
 
     // Find where the piece landed in each case
     let posNoRot = [-1, -1];
-    let posRot = [-1, -1];
+    let _posRot = [-1, -1];
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
         if (boardNoRot[r][c]) posNoRot = [r, c];
-        if (boardRot[r][c]) posRot = [r, c];
+        if (boardRot[r][c]) _posRot = [r, c];
       }
     }
     // With 45° rotation, the piece should map to a different square

@@ -26,7 +26,7 @@ import {
 } from "@/lib/clubRegistry";
 import {
   apiListPublicClubs,
-  apiListMyClubs,
+  apiListMyClubs as _apiListMyClubs,
   migrateLocalClubsToServer,
 } from "@/lib/clubsApi";
 import { FeaturedClubsCarousel } from "@/components/FeaturedClubsCarousel";
@@ -35,7 +35,7 @@ import {
   seedClubEventsIfEmpty,
   getUserRSVP,
   upsertRSVP,
-  countRSVPs,
+  countRSVPs as _countRSVPs,
   getEventRSVPs,
   type ClubEvent,
   type ClubEventRSVP,
@@ -62,7 +62,7 @@ import {
   CheckCircle2,
   Circle,
   MinusCircle,
-  ExternalLink,
+  ExternalLink as _ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
@@ -102,7 +102,7 @@ const ALL_CATEGORIES: Array<ClubCategory | "all"> = [
 function ClubCard({
   club,
   isDark,
-  compact = false,
+  compact: _compact = false,
   toDashboard = false,
 }: {
   club: Club;
@@ -705,7 +705,7 @@ export default function MyClubs() {
     refreshClubs();
   }, [user, showWizard, rsvpRefresh, refreshClubs]); // re-fetch after wizard closes or RSVP changes
 
-  const myClubIds = new Set(myClubs.map((c) => c.id));
+  const _myClubIds = new Set(myClubs.map((c) => c.id));
 
   // ── Colour palette ──────────────────────────────────────────────────────────
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F0F5EE]";
