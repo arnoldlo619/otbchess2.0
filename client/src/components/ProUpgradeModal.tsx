@@ -1,12 +1,11 @@
 /**
- * ProUpgradeModal — Open Beta edition.
+ * ProUpgradeModal — Live Stripe Payments edition.
  *
- * During the open beta all Pro features are free. This modal communicates
- * that clearly, shows what's included, and previews future pricing so users
- * understand the value before paid plans launch.
+ * Shows a monthly / annual plan toggle, feature comparison table, and a
+ * "Start Pro" button that calls POST /api/billing/checkout to create a
+ * Stripe Checkout session and redirects the user.
  *
- * Stripe infrastructure (server/billing.ts) is fully wired and ready to
- * activate — just add the four STRIPE_* secrets when payments go live.
+ * If the user is not signed in, clicking the CTA opens the AuthModal first.
  *
  * Usage:
  *   <ProUpgradeModal
@@ -16,7 +15,7 @@
  *   />
  */
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,8 +32,10 @@ import {
   Trophy,
   Users,
   Sparkles,
-  Gift,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 // ─── Feature comparison data ─────────────────────────────────────────────────
 interface FeatureRow {
@@ -62,12 +63,8 @@ const FEATURES: FeatureRow[] = [
 
 // ─── Cell renderer ────────────────────────────────────────────────────────────
 function FeatureCell({ value }: { value: string | boolean }) {
-  if (value === true) {
-    return <Check className="w-4 h-4 text-[#22c55e] mx-auto" />;
-  }
-  if (value === false) {
-    return <Minus className="w-4 h-4 text-white/20 mx-auto" />;
-  }
+  if (value === true)  return <Check className="w-4 h-4 text-[#22c55e] mx-auto" />;
+  if (value === false) return <Minus className="w-4 h-4 text-white/20 mx-auto" />;
   return <span className="text-white/70 text-xs font-medium">{value}</span>;
 }
 
@@ -77,15 +74,20 @@ interface ProUpgradeModalProps {
   onClose: () => void;
   /** Optionally highlight a specific feature row by label */
   highlightFeature?: string;
+  /** Called when user needs to sign in first before upgrading */
+  onNeedsAuth?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgradeModalProps) {
+export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth }: ProUpgradeModalProps) {
+  const { user } = useAuth();
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("annual");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Close on Escape
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
+    (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); },
     [onClose]
   );
 
@@ -93,6 +95,7 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
     if (isOpen) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      setError(null);
     }
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -100,7 +103,46 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
     };
   }, [isOpen, handleKeyDown]);
 
+  // ── Checkout handler ──────────────────────────────────────────────────────
+  const handleCheckout = async () => {
+    // Require sign-in
+    if (!user) {
+      onClose();
+      onNeedsAuth?.();
+      return;
+    }
+    // Already Pro
+    if (user.isPro) {
+      onClose();
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ interval: billingInterval }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? "Failed to start checkout.");
+      }
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
   if (typeof document === "undefined") return null;
+
+  const monthlyPrice = 9.99;
+  const annualPrice  = 79.99;
+  const annualMonthly = (annualPrice / 12).toFixed(2);
+  const savingsPct = Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100);
 
   return createPortal(
     <AnimatePresence>
@@ -123,11 +165,11 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
             key="pro-upgrade-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Open Beta — All Pro Features Free"
+            aria-label="Upgrade to Pro"
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
             className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none"
           >
             <div
@@ -146,88 +188,110 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
               {/* Header */}
               <div className="px-6 pt-8 pb-6 text-center border-b border-white/[0.06]">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 mb-4">
-                  <Gift className="w-6 h-6 text-[#22c55e]" />
+                  <Crown className="w-6 h-6 text-[#22c55e]" />
                 </div>
-
-                {/* Open Beta badge */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25 text-[#22c55e] text-xs font-bold tracking-wider uppercase mb-4">
-                  <Sparkles className="w-3 h-3" />
-                  Open Beta
-                </div>
-
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  All Pro Features — Free Right Now
+                  Upgrade to Pro
                 </h2>
                 <p className="text-white/50 text-sm max-w-md mx-auto leading-relaxed">
-                  We're in open beta. Every Pro feature is unlocked for all users at no cost
-                  while we build, refine, and grow the platform together.
+                  Unlock the full OTB toolkit — openings library, coach insights,
+                  unlimited analysis, and more.
                 </p>
               </div>
 
-              {/* Open Beta value prop */}
+              {/* Billing interval toggle */}
               <div className="px-6 py-5 border-b border-white/[0.06]">
-                <div className="rounded-xl bg-[#22c55e]/[0.07] border border-[#22c55e]/20 p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#22c55e]/15 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-[#22c55e]" />
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm mb-1">
-                        You have full Pro access — no credit card needed
-                      </p>
-                      <p className="text-white/45 text-xs leading-relaxed">
-                        Explore the Openings Library, run Coach Insights, and use every feature
-                        below. When paid plans launch, early beta users will receive a special
-                        founding member rate.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Future pricing preview */}
-                <div className="mt-4 flex items-center gap-3">
-                  <div className="flex-1 rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
-                    <p className="text-white/30 text-[10px] font-semibold uppercase tracking-wider mb-1">
-                      Future Monthly
-                    </p>
-                    <div className="flex items-baseline justify-center gap-0.5">
-                      <span className="text-white/20 text-xs">$</span>
-                      <span className="text-white/40 text-2xl font-bold line-through decoration-white/20">9.99</span>
-                    </div>
-                    <p className="text-white/20 text-[10px] mt-0.5">/ month</p>
-                  </div>
-                  <div className="flex-1 rounded-xl bg-[#22c55e]/[0.05] border border-[#22c55e]/15 p-4 text-center relative overflow-hidden">
-                    <div className="absolute top-2 right-2">
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30">
-                        BEST VALUE
+                <div className="flex items-center justify-center gap-2 mb-5">
+                  <div className="flex items-center bg-white/[0.04] rounded-xl p-1 gap-1 border border-white/[0.06]">
+                    <button
+                      onClick={() => setBillingInterval("monthly")}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        billingInterval === "monthly"
+                          ? "bg-white/[0.08] text-white"
+                          : "text-white/40 hover:text-white/60"
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      onClick={() => setBillingInterval("annual")}
+                      className={`relative px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        billingInterval === "annual"
+                          ? "bg-[#22c55e]/15 text-[#22c55e]"
+                          : "text-white/40 hover:text-white/60"
+                      }`}
+                    >
+                      Annual
+                      <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30">
+                        Save {savingsPct}%
                       </span>
-                    </div>
-                    <p className="text-white/30 text-[10px] font-semibold uppercase tracking-wider mb-1">
-                      Future Annual
-                    </p>
-                    <div className="flex items-baseline justify-center gap-0.5">
-                      <span className="text-white/30 text-xs">$</span>
-                      <span className="text-white/50 text-2xl font-bold line-through decoration-white/30">79.99</span>
-                    </div>
-                    <p className="text-white/30 text-[10px] mt-0.5">/ year · save 33%</p>
+                    </button>
                   </div>
                 </div>
-                <p className="text-center text-white/25 text-[11px] mt-2">
-                  Prices shown are planned — no charges during open beta
-                </p>
-              </div>
 
-              {/* CTA — just close the modal, user already has access */}
-              <div className="px-6 py-5 border-b border-white/[0.06]">
+                {/* Pricing display */}
+                <div className="text-center mb-5">
+                  {billingInterval === "monthly" ? (
+                    <>
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-white/40 text-lg">$</span>
+                        <span className="text-white text-4xl font-bold">{monthlyPrice.toFixed(2)}</span>
+                        <span className="text-white/30 text-sm">/ month</span>
+                      </div>
+                      <p className="text-white/30 text-xs mt-1">Billed monthly · cancel anytime</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-white/40 text-lg">$</span>
+                        <span className="text-white text-4xl font-bold">{annualMonthly}</span>
+                        <span className="text-white/30 text-sm">/ month</span>
+                      </div>
+                      <p className="text-white/30 text-xs mt-1">
+                        ${annualPrice.toFixed(2)} billed annually · cancel anytime
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Error message */}
+                {error && (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                {/* CTA button */}
                 <button
-                  onClick={onClose}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold text-base transition-colors shadow-lg shadow-[#22c55e]/20"
+                  onClick={handleCheckout}
+                  disabled={loading || user?.isPro}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold text-base transition-colors shadow-lg shadow-[#22c55e]/20"
                 >
-                  <Sparkles className="w-5 h-5" />
-                  Start Exploring — It&apos;s Free
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Redirecting to checkout…
+                    </>
+                  ) : user?.isPro ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      You&apos;re already Pro
+                    </>
+                  ) : !user ? (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Sign in to upgrade
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Start Pro — {billingInterval === "annual" ? `$${annualPrice.toFixed(2)}/yr` : `$${monthlyPrice.toFixed(2)}/mo`}
+                    </>
+                  )}
                 </button>
                 <p className="mt-2.5 text-center text-white/25 text-xs">
-                  No account required · No credit card · Open beta
+                  Secure checkout via Stripe · Cancel anytime · No hidden fees
                 </p>
               </div>
 
@@ -250,7 +314,6 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
                     </div>
                   </div>
 
-                  {/* Table rows — during beta, Pro column reflects what users actually get */}
                   {FEATURES.map((row, idx) => {
                     const isHighlighted =
                       row.highlight ||
@@ -293,12 +356,6 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
                     );
                   })}
                 </div>
-
-                {/* Beta footnote */}
-                <p className="text-center text-white/20 text-[11px] mt-4 leading-relaxed">
-                  During open beta all Pro features are available to everyone.
-                  The Free / Pro split above reflects the planned post-beta structure.
-                </p>
               </div>
             </div>
           </motion.div>

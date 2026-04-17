@@ -5128,13 +5128,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire ProUpgradeModal into Home.tsx (upgradeOpen state + render)
 - [x] stripe_customer_id column added to users table via migration script
 - [x] 35 vitest tests — feature table, pricing, request validation, checkout payload, webhook, prop contract
-- [ ] Add STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL secrets when ready to go live
-- [ ] Test Stripe checkout flow end-to-end in staging
-- [x] Switch to Open Beta mode — ProUpgradeModal shows "Free during beta" messaging with future pricing preview
-- [x] OpeningsProGate passes all users through with a dismissible soft beta banner (BETA_OPEN = true flag)
-- [x] Feature comparison table retained — shows planned Free vs Pro split post-beta
-- [x] CTA button changed from "Start Checkout" to "Start Exploring — It's Free"
-- [x] Stripe infrastructure stays intact — flip BETA_OPEN = false + add secrets to re-enable gate
+- [x] Add STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL secrets
+- [ ] Test Stripe checkout flow end-to-end in production
+- [x] Switch to Open Beta mode (was temporary)
+- [x] Reverted Open Beta — BETA_OPEN = false, live payments active
+- [x] ProUpgradeModal rewritten — monthly/annual toggle, real pricing, Stripe checkout API call
+- [x] OpeningsProGate live — gates free users, passes Pro users, sign-in prompt for guests
+- [x] /pro/success page — polls for isPro activation after Stripe redirect, welcome screen
+- [x] Pricing page CTA updated — "Upgrade to Pro" button opens ProUpgradeModal with checkout
+- [x] AuthModal wired into Pricing page and OpeningsProGate for unauthenticated users
 
 ## Pricing Page
 - [x] Build /pricing page — Free vs Pro feature table, Open Beta banner, future pricing preview
