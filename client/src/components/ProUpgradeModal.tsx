@@ -111,8 +111,8 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth
       onNeedsAuth?.();
       return;
     }
-    // Already Pro
-    if (user.isPro) {
+    // Already Pro or OTB Staff — no checkout needed
+    if (user.isPro || user.isStaff) {
       onClose();
       return;
     }
@@ -265,13 +265,18 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth
                 {/* CTA button */}
                 <button
                   onClick={handleCheckout}
-                  disabled={loading || user?.isPro}
+                  disabled={loading || user?.isPro || user?.isStaff}
                   className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold text-base transition-colors shadow-lg shadow-[#22c55e]/20"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Redirecting to checkout…
+                    </>
+                  ) : user?.isStaff ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      OTB Staff — Full Access
                     </>
                   ) : user?.isPro ? (
                     <>

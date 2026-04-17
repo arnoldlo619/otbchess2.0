@@ -67,6 +67,9 @@ export const users = mysqlTable(
     // Pro subscription flag — true for paid Pro members
     isPro: boolean("is_pro").default(false).notNull(),
 
+    // OTB Staff flag — true for team/staff members; grants full Pro access without a subscription
+    isStaff: boolean("is_staff").default(false).notNull(),
+
     // Stripe customer ID (set after first successful checkout)
     stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
 

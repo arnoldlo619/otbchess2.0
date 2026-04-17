@@ -54,8 +54,8 @@ export function OpeningsProGate({ children }: OpeningsProGateProps) {
     return <>{children}</>;
   }
 
-  // ── Pro users: full access ────────────────────────────────────────────────────
-  if (user?.isPro) {
+  // ── Pro users and OTB Staff: full access ──────────────────────────────────
+  if (user?.isPro || user?.isStaff) {
     return <>{children}</>;
   }
 

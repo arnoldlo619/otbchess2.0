@@ -607,9 +607,21 @@ export function AvatarNavDropdown({
                   </div>
                 </button>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate leading-tight">
-                    {user.displayName || user.email}
-                  </p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-semibold text-white truncate leading-tight">
+                      {user.displayName || user.email}
+                    </p>
+                    {user.isStaff && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold tracking-wider uppercase flex-shrink-0">
+                        ★ OTB Staff
+                      </span>
+                    )}
+                    {!user.isStaff && user.isPro && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[9px] font-bold tracking-wider uppercase flex-shrink-0">
+                        ★ Pro
+                      </span>
+                    )}
+                  </div>
                   {user.chesscomUsername && (
                     <div className="flex flex-col gap-1">
                       <p className="text-[11px] text-white/40 truncate leading-tight">
@@ -836,7 +848,7 @@ export function AvatarNavDropdown({
                   <span>Create Free Account</span>
                 </button>
               )}
-              {user && !user.isPro && !user.isGuest && (
+              {user && !user.isPro && !user.isGuest && !user.isStaff && (
                 <button
                   onClick={() => { setOpen(false); setUpgradeOpen(true); }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-[#22c55e] hover:bg-[#22c55e]/10 transition-colors"
