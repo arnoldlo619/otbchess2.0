@@ -30,6 +30,7 @@ import {
   TrendingUp,
   Clock,
   RefreshCw,
+  Library,
 } from "lucide-react";
 import { Chess } from "chess.js";
 
@@ -627,7 +628,7 @@ export default function GameRecorder() {
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {/* Manual PGN Entry */}
                 <button
                   onClick={() => setMode("manual")}
@@ -700,36 +701,39 @@ export default function GameRecorder() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Quick tip */}
-              <div
-                className={`flex items-start gap-3 rounded-xl p-4 ${
-                  isDark ? "bg-white/5" : "bg-[#3D6B47]/5"
-                }`}
-              >
-                <BookOpen
-                  className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                    isDark ? "text-[#3D6B47]" : "text-[#3D6B47]"
+                {/* Openings & Repertoire */}
+                <button
+                  onClick={() => navigate("/openings")}
+                  className={`group relative overflow-hidden rounded-2xl border p-6 text-left transition-all hover:scale-[1.02] active:scale-[0.98] sm:col-span-2 lg:col-span-1 ${
+                    isDark
+                      ? "bg-white/5 border-white/10 hover:border-[#3D6B47]/60 hover:bg-white/8"
+                      : "bg-white border-gray-200 hover:border-[#3D6B47]/40 hover:shadow-lg"
                   }`}
-                />
-                <div className="space-y-1">
-                  <p
-                    className={`text-sm font-medium ${
-                      isDark ? "text-white/70" : "text-gray-700"
-                    }`}
-                  >
-                    Where to find your PGN?
-                  </p>
-                  <p
-                    className={`text-xs leading-relaxed ${
-                      isDark ? "text-white/40" : "text-gray-500"
-                    }`}
-                  >
-                    Write down your moves during the game, or use a chess notation
-                    app. You can also export games from chess.com or lichess.org.
-                  </p>
-                </div>
+                >
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
+                        isDark ? "bg-[#3D6B47]/30" : "bg-[#3D6B47]/10"
+                      }`}
+                    >
+                      <Library className="w-6 h-6 text-[#3D6B47]" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h3 className="font-semibold text-lg">Openings &amp; Repertoire</h3>
+                      <p
+                        className={`text-sm leading-relaxed ${
+                          isDark ? "text-white/50" : "text-gray-500"
+                        }`}
+                      >
+                        Study openings, build your repertoire, and prep against opponents
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3D6B47] to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left`}
+                  />
+                </button>
               </div>
             </div>
 

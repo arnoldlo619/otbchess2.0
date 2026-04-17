@@ -5130,6 +5130,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 35 vitest tests — feature table, pricing, request validation, checkout payload, webhook, prop contract
 - [x] Add STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL secrets
 - [ ] Test Stripe checkout flow end-to-end in production
+- [ ] Verify /api/billing/checkout returns valid Stripe session URL
+- [ ] Simulate checkout.session.completed webhook — confirm isPro = true in DB
+- [ ] Simulate customer.subscription.deleted webhook — confirm isPro = false in DB
+- [ ] Verify /pro/success polling and welcome screen
 - [x] Switch to Open Beta mode (was temporary)
 - [x] Reverted Open Beta — BETA_OPEN = false, live payments active
 - [x] ProUpgradeModal rewritten — monthly/annual toggle, real pricing, Stripe checkout API call
