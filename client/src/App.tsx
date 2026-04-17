@@ -48,6 +48,8 @@ const OpeningDetail = lazy(() => import("./pages/OpeningDetail"));
 const StudyMode = lazy(() => import("./pages/StudyMode"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const ProSuccess = lazy(() => import("./pages/ProSuccess"));
+const OpeningsLibraryDemo = lazy(() => import("./pages/OpeningsLibraryDemo"));
+const OpeningDetailDemo = lazy(() => import("./pages/OpeningDetailDemo"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -99,6 +101,8 @@ function Router() {
         <Route path={"/live/:slug"} component={PublicTournament} />
         <Route path={"/tournament/:id/analytics"} component={TournamentAnalytics} />
         <Route path={"/openings/:openingSlug/study/:lineSlug"} component={StudyMode} />
+        <Route path={"/openings/demo/:slug"} component={OpeningDetailDemo} />
+        <Route path={"/openings/demo"} component={OpeningsLibraryDemo} />
         <Route path={"/openings/:slug"} component={OpeningDetail} />
         <Route path={"/openings"} component={OpeningsLibrary} />
         <Route path={"/pricing"} component={Pricing} />

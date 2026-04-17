@@ -31,6 +31,7 @@ import {
   ArrowLeft,
   Gift,
   Star,
+  Eye,
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
@@ -221,6 +222,16 @@ export default function Pricing() {
               <Sparkles className="w-4 h-4" />
               Upgrade to Pro
             </button>
+            {/* View Demo link */}
+            <div className="mt-3 text-center">
+              <Link
+                href="/openings/demo"
+                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                View Demo — explore before you upgrade
+              </Link>
+            </div>
           </div>
         </motion.div>
 
