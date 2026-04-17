@@ -5128,5 +5128,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire ProUpgradeModal into Home.tsx (upgradeOpen state + render)
 - [x] stripe_customer_id column added to users table via migration script
 - [x] 35 vitest tests — feature table, pricing, request validation, checkout payload, webhook, prop contract
-- [ ] Add STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL secrets
+- [ ] Add STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL secrets when ready to go live
 - [ ] Test Stripe checkout flow end-to-end in staging
+- [x] Switch to Open Beta mode — ProUpgradeModal shows "Free during beta" messaging with future pricing preview
+- [x] OpeningsProGate passes all users through with a dismissible soft beta banner (BETA_OPEN = true flag)
+- [x] Feature comparison table retained — shows planned Free vs Pro split post-beta
+- [x] CTA button changed from "Start Checkout" to "Start Exploring — It's Free"
+- [x] Stripe infrastructure stays intact — flip BETA_OPEN = false + add secrets to re-enable gate

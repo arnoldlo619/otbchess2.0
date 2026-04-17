@@ -1,54 +1,30 @@
 /**
- * OpeningsProGate — Pro subscription gate for the Openings feature.
+ * OpeningsProGate — Open Beta edition.
  *
- * Renders children when the user is a Pro member.
- * For free users (including guests and unauthenticated visitors), renders
- * a premium upgrade CTA that opens the ProUpgradeModal on click.
+ * During the open beta ALL users (including guests and unauthenticated visitors)
+ * have full access to the Openings feature. This component renders children
+ * immediately and shows a soft "Open Beta" banner at the top of the page so
+ * users understand they are getting Pro-level access for free.
  *
- * Usage:
- *   <OpeningsProGate>
- *     <OpeningsLibrary />
- *   </OpeningsProGate>
+ * The ProUpgradeModal is still wired in — clicking the banner CTA opens it so
+ * users can see what's included and preview future pricing. No gate is applied.
+ *
+ * When paid plans launch, flip `BETA_OPEN = false` here and the gate will
+ * re-engage, showing the upgrade CTA to non-Pro users.
  */
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen,
-  Crown,
-  Zap,
-  Target,
-  Brain,
+  Sparkles,
+  X,
   ChevronRight,
-  Lock,
-  Star,
 } from "lucide-react";
 import { ProUpgradeModal } from "./ProUpgradeModal";
 
-// ─── Pro feature highlights ───────────────────────────────────────────────────
-const PRO_FEATURES = [
-  {
-    icon: BookOpen,
-    title: "Opening Library",
-    description: "Browse 16 premium openings across all styles and levels.",
-  },
-  {
-    icon: Brain,
-    title: "Study Mode",
-    description: "Move-by-move interactive study with explanations and hints.",
-  },
-  {
-    icon: Target,
-    title: "Drill Mode",
-    description: "Reinforce lines with spaced repetition and practice drills.",
-  },
-  {
-    icon: Zap,
-    title: "Trap Lines",
-    description: "Learn the most dangerous traps your opponents walk into.",
-  },
-];
+// ─── Feature flag ─────────────────────────────────────────────────────────────
+// Set to false when paid plans launch to re-enable the gate.
+const BETA_OPEN = true;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface OpeningsProGateProps {
@@ -56,8 +32,8 @@ interface OpeningsProGateProps {
 }
 
 export function OpeningsProGate({ children }: OpeningsProGateProps) {
-  const { user, loading } = useAuth();
-  const [, navigate] = useLocation();
+  const { loading } = useAuth();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // While auth is loading, show a minimal skeleton to avoid layout flash
@@ -69,162 +45,70 @@ export function OpeningsProGate({ children }: OpeningsProGateProps) {
     );
   }
 
-  // Pro users see the full content
-  if (user?.isPro) {
-    return <>{children}</>;
+  // ── Open Beta: pass all users through ────────────────────────────────────────
+  if (BETA_OPEN) {
+    return (
+      <>
+        {/* Soft beta banner — dismissible */}
+        <AnimatePresence>
+          {!bannerDismissed && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="relative z-10 bg-[#0d1a0f] border-b border-[#22c55e]/20"
+            >
+              <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex-shrink-0 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25">
+                    <Sparkles className="w-3 h-3 text-[#22c55e]" />
+                    <span className="text-[#22c55e] text-[10px] font-bold uppercase tracking-wider">
+                      Open Beta
+                    </span>
+                  </div>
+                  <p className="text-white/50 text-xs truncate">
+                    All Pro features are{" "}
+                    <span className="text-white/80 font-semibold">free during open beta</span>
+                    {" "}— no account or credit card needed.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setUpgradeOpen(true)}
+                    className="hidden sm:flex items-center gap-1 text-[#22c55e] text-xs font-semibold hover:text-[#4ade80] transition-colors"
+                  >
+                    See what&apos;s included
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setBannerDismissed(true)}
+                    className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/[0.08] text-white/30 hover:text-white/60 transition-colors"
+                    aria-label="Dismiss banner"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Full content — no gate */}
+        {children}
+
+        {/* Modal — shows feature table and future pricing preview */}
+        <ProUpgradeModal
+          isOpen={upgradeOpen}
+          onClose={() => setUpgradeOpen(false)}
+          highlightFeature="Openings Library"
+        />
+      </>
+    );
   }
 
-  // ── Upgrade CTA ─────────────────────────────────────────────────────────────
-  return (
-    <>
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
-        {/* Hero section */}
-        <div className="relative flex-1 flex flex-col items-center justify-center px-6 py-20 overflow-hidden">
-          {/* Background glow */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#22c55e]/5 rounded-full blur-3xl" />
-            <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-[#22c55e]/3 rounded-full blur-2xl" />
-          </div>
-
-          {/* Lock badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className="relative mb-8 flex items-center justify-center w-20 h-20 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20"
-          >
-            <Lock className="w-9 h-9 text-[#22c55e]" />
-          </motion.div>
-
-          {/* Headline */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-center max-w-lg"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/20 text-[#22c55e] text-xs font-semibold tracking-wider uppercase mb-5">
-              <Crown className="w-3.5 h-3.5" />
-              Pro Feature
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">
-              Master your openings.<br />
-              <span className="text-[#22c55e]">Play better chess.</span>
-            </h1>
-            <p className="text-white/50 text-lg leading-relaxed">
-              The Openings Library is a Pro feature. Study lines, drill positions,
-              and learn the traps that win games at club level.
-            </p>
-          </motion.div>
-
-          {/* Feature grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="grid grid-cols-2 gap-3 mt-10 max-w-xl w-full"
-          >
-            {PRO_FEATURES.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={feature.title}
-                  className="flex gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#22c55e]/20 transition-colors"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#22c55e]/10 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-[#22c55e]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white/90 mb-0.5">{feature.title}</p>
-                    <p className="text-xs text-white/40 leading-relaxed">{feature.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </motion.div>
-
-          {/* CTA buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-3 mt-10 w-full max-w-sm"
-          >
-            {user ? (
-              // Logged-in free user — open upgrade modal
-              <button
-                onClick={() => setUpgradeOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold text-sm transition-colors"
-              >
-                <Crown className="w-4 h-4" />
-                Upgrade to Pro
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            ) : (
-              // Unauthenticated visitor — show sign in and upgrade options
-              <>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white font-semibold text-sm transition-colors border border-white/10"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setUpgradeOpen(true)}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold text-sm transition-colors"
-                >
-                  <Crown className="w-4 h-4" />
-                  Get Pro
-                </button>
-              </>
-            )}
-          </motion.div>
-
-          {/* Social proof */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.55 }}
-            className="flex items-center gap-2 mt-8 text-white/30 text-xs"
-          >
-            <div className="flex -space-x-1.5">
-              {["bg-emerald-500", "bg-blue-500", "bg-purple-500", "bg-orange-500"].map((color, i) => (
-                <div
-                  key={i}
-                  className={`w-6 h-6 rounded-full ${color} border-2 border-[#0a0a0a] flex items-center justify-center`}
-                >
-                  <Star className="w-2.5 h-2.5 text-white" />
-                </div>
-              ))}
-            </div>
-            <span>Trusted by club players worldwide</span>
-          </motion.div>
-        </div>
-
-        {/* Bottom banner for logged-in free users */}
-        {user && !user.isPro && (
-          <div className="border-t border-white/[0.06] bg-[#0d0d0d] px-6 py-4">
-            <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
-              <p className="text-white/40 text-sm">
-                Signed in as <span className="text-white/60 font-medium">{user.displayName}</span>
-              </p>
-              <button
-                onClick={() => setUpgradeOpen(true)}
-                className="flex items-center gap-1.5 text-[#22c55e] text-sm font-semibold hover:text-[#4ade80] transition-colors"
-              >
-                Upgrade to Pro <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Pro upgrade modal */}
-      <ProUpgradeModal
-        isOpen={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        highlightFeature="Openings Library"
-      />
-    </>
-  );
+  // ── Paid mode (future): gate non-Pro users ────────────────────────────────────
+  // This branch is unreachable while BETA_OPEN = true.
+  // When flipped, non-Pro users will see the upgrade CTA instead of the content.
+  return <>{children}</>;
 }

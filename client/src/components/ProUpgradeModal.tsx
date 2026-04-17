@@ -1,12 +1,12 @@
 /**
- * ProUpgradeModal — Full-screen Pro upgrade overlay.
+ * ProUpgradeModal — Open Beta edition.
  *
- * Features:
- *   - Feature comparison table (Free vs Pro)
- *   - Monthly / Annual plan toggle with savings badge
- *   - Prominent Stripe Checkout button
- *   - Animated entrance (framer-motion)
- *   - Accessible: Escape to close, aria-modal
+ * During the open beta all Pro features are free. This modal communicates
+ * that clearly, shows what's included, and previews future pricing so users
+ * understand the value before paid plans launch.
+ *
+ * Stripe infrastructure (server/billing.ts) is fully wired and ready to
+ * activate — just add the four STRIPE_* secrets when payments go live.
  *
  * Usage:
  *   <ProUpgradeModal
@@ -16,7 +16,7 @@
  *   />
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -32,9 +32,9 @@ import {
   Video,
   Trophy,
   Users,
-  Loader2,
+  Sparkles,
+  Gift,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 
 // ─── Feature comparison data ─────────────────────────────────────────────────
 interface FeatureRow {
@@ -60,22 +60,6 @@ const FEATURES: FeatureRow[] = [
   { label: "Early Access Features",  icon: Crown,     free: false,         pro: true },
 ];
 
-// ─── Plan definitions ─────────────────────────────────────────────────────────
-type PlanId = "monthly" | "annual";
-
-interface Plan {
-  id: PlanId;
-  label: string;
-  price: number;
-  period: string;
-  savings?: string;
-}
-
-const PLANS: Plan[] = [
-  { id: "monthly", label: "Monthly", price: 9.99,  period: "/ month" },
-  { id: "annual",  label: "Annual",  price: 79.99, period: "/ year",  savings: "Save 33%" },
-];
-
 // ─── Cell renderer ────────────────────────────────────────────────────────────
 function FeatureCell({ value }: { value: string | boolean }) {
   if (value === true) {
@@ -97,11 +81,6 @@ interface ProUpgradeModalProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgradeModalProps) {
-  const { user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>("annual");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   // Close on Escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -120,33 +99,6 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
       document.body.style.overflow = "";
     };
   }, [isOpen, handleKeyDown]);
-
-  const handleCheckout = async () => {
-    if (!user) {
-      onClose();
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: selectedPlan }),
-        credentials: "include",
-      });
-      const data = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        throw new Error(data.error ?? "Failed to start checkout. Please try again.");
-      }
-      window.location.href = data.url;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-      setLoading(false);
-    }
-  };
-
-  const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[0];
 
   if (typeof document === "undefined") return null;
 
@@ -171,7 +123,7 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
             key="pro-upgrade-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Upgrade to Pro"
+            aria-label="Open Beta — All Pro Features Free"
             initial={{ opacity: 0, y: 32, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -194,84 +146,95 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
               {/* Header */}
               <div className="px-6 pt-8 pb-6 text-center border-b border-white/[0.06]">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 mb-4">
-                  <Crown className="w-6 h-6 text-[#22c55e]" />
+                  <Gift className="w-6 h-6 text-[#22c55e]" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-1">Upgrade to Pro</h2>
-                <p className="text-white/50 text-sm">
-                  Unlock the full OTB Chess experience — openings, analysis, and more.
+
+                {/* Open Beta badge */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25 text-[#22c55e] text-xs font-bold tracking-wider uppercase mb-4">
+                  <Sparkles className="w-3 h-3" />
+                  Open Beta
+                </div>
+
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  All Pro Features — Free Right Now
+                </h2>
+                <p className="text-white/50 text-sm max-w-md mx-auto leading-relaxed">
+                  We're in open beta. Every Pro feature is unlocked for all users at no cost
+                  while we build, refine, and grow the platform together.
                 </p>
               </div>
 
-              {/* Plan toggle */}
-              <div className="px-6 py-5">
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  {PLANS.map((plan) => (
-                    <button
-                      key={plan.id}
-                      onClick={() => setSelectedPlan(plan.id)}
-                      className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
-                        selectedPlan === plan.id
-                          ? "bg-[#22c55e]/10 border-[#22c55e]/40 text-[#22c55e]"
-                          : "bg-white/[0.04] border-white/10 text-white/50 hover:text-white/80"
-                      }`}
-                    >
-                      {plan.label}
-                      {plan.savings && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#22c55e] text-black">
-                          {plan.savings}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Price display */}
-                <div className="text-center mb-6">
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-white">
-                      ${activePlan.price.toFixed(2)}
-                    </span>
-                    <span className="text-white/40 text-sm">{activePlan.period}</span>
+              {/* Open Beta value prop */}
+              <div className="px-6 py-5 border-b border-white/[0.06]">
+                <div className="rounded-xl bg-[#22c55e]/[0.07] border border-[#22c55e]/20 p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#22c55e]/15 flex items-center justify-center">
+                      <Crown className="w-5 h-5 text-[#22c55e]" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm mb-1">
+                        You have full Pro access — no credit card needed
+                      </p>
+                      <p className="text-white/45 text-xs leading-relaxed">
+                        Explore the Openings Library, run Coach Insights, and use every feature
+                        below. When paid plans launch, early beta users will receive a special
+                        founding member rate.
+                      </p>
+                    </div>
                   </div>
-                  {selectedPlan === "annual" && (
-                    <p className="text-white/40 text-xs mt-1">
-                      Billed annually — equivalent to $6.67 / month
-                    </p>
-                  )}
                 </div>
 
-                {/* CTA button */}
+                {/* Future pricing preview */}
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex-1 rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
+                    <p className="text-white/30 text-[10px] font-semibold uppercase tracking-wider mb-1">
+                      Future Monthly
+                    </p>
+                    <div className="flex items-baseline justify-center gap-0.5">
+                      <span className="text-white/20 text-xs">$</span>
+                      <span className="text-white/40 text-2xl font-bold line-through decoration-white/20">9.99</span>
+                    </div>
+                    <p className="text-white/20 text-[10px] mt-0.5">/ month</p>
+                  </div>
+                  <div className="flex-1 rounded-xl bg-[#22c55e]/[0.05] border border-[#22c55e]/15 p-4 text-center relative overflow-hidden">
+                    <div className="absolute top-2 right-2">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30">
+                        BEST VALUE
+                      </span>
+                    </div>
+                    <p className="text-white/30 text-[10px] font-semibold uppercase tracking-wider mb-1">
+                      Future Annual
+                    </p>
+                    <div className="flex items-baseline justify-center gap-0.5">
+                      <span className="text-white/30 text-xs">$</span>
+                      <span className="text-white/50 text-2xl font-bold line-through decoration-white/30">79.99</span>
+                    </div>
+                    <p className="text-white/30 text-[10px] mt-0.5">/ year · save 33%</p>
+                  </div>
+                </div>
+                <p className="text-center text-white/25 text-[11px] mt-2">
+                  Prices shown are planned — no charges during open beta
+                </p>
+              </div>
+
+              {/* CTA — just close the modal, user already has access */}
+              <div className="px-6 py-5 border-b border-white/[0.06]">
                 <button
-                  onClick={handleCheckout}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold text-base transition-colors shadow-lg shadow-[#22c55e]/20"
+                  onClick={onClose}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold text-base transition-colors shadow-lg shadow-[#22c55e]/20"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Redirecting to checkout…
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="w-5 h-5" />
-                      {user ? `Start ${activePlan.label} Pro` : "Sign in to Upgrade"}
-                    </>
-                  )}
+                  <Sparkles className="w-5 h-5" />
+                  Start Exploring — It&apos;s Free
                 </button>
-
-                {error && (
-                  <p className="mt-3 text-center text-red-400 text-sm">{error}</p>
-                )}
-
-                <p className="mt-3 text-center text-white/30 text-xs">
-                  Secure payment via Stripe · Cancel anytime
+                <p className="mt-2.5 text-center text-white/25 text-xs">
+                  No account required · No credit card · Open beta
                 </p>
               </div>
 
               {/* Feature comparison table */}
-              <div className="px-6 pb-8">
+              <div className="px-6 pb-8 pt-5">
                 <h3 className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">
-                  What&apos;s included
+                  Everything that&apos;s included
                 </h3>
                 <div className="rounded-xl border border-white/[0.06] overflow-hidden">
                   {/* Table header */}
@@ -287,7 +250,7 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
                     </div>
                   </div>
 
-                  {/* Table rows */}
+                  {/* Table rows — during beta, Pro column reflects what users actually get */}
                   {FEATURES.map((row, idx) => {
                     const isHighlighted =
                       row.highlight ||
@@ -330,6 +293,12 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature }: ProUpgrad
                     );
                   })}
                 </div>
+
+                {/* Beta footnote */}
+                <p className="text-center text-white/20 text-[11px] mt-4 leading-relaxed">
+                  During open beta all Pro features are available to everyone.
+                  The Free / Pro split above reflects the planned post-beta structure.
+                </p>
               </div>
             </div>
           </motion.div>
