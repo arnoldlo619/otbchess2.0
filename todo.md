@@ -5174,3 +5174,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add green "★ Pro" badge for Pro subscribers (hidden when isStaff is true)
 - [x] Badge visible for own profile view (Profile page is currently auth-gated to own account)
 - [x] 0 TypeScript errors
+
+## OTB Staff Badge — Mobile Nav Sheet
+- [x] Add amber "★ OTB Staff" badge to mobile nav sheet user identity section
+- [x] Add green "★ Pro" badge for Pro subscribers in mobile nav sheet (hidden when isStaff)
+- [x] 0 TypeScript errors

@@ -950,9 +950,21 @@ export function AvatarNavDropdown({
                     </div>
                   </button>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">
-                      {user.displayName || user.email}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-sm font-semibold text-white truncate">
+                        {user.displayName || user.email}
+                      </p>
+                      {user.isStaff && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold tracking-wider uppercase flex-shrink-0">
+                          ★ OTB Staff
+                        </span>
+                      )}
+                      {!user.isStaff && user.isPro && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[9px] font-bold tracking-wider uppercase flex-shrink-0">
+                          ★ Pro
+                        </span>
+                      )}
+                    </div>
                     {user.chesscomUsername && (
                       <p className="text-[11px] text-white/40 truncate">
                         chess.com/{user.chesscomUsername}
