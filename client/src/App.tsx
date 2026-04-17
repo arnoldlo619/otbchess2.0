@@ -46,6 +46,7 @@ const OpeningsAdmin = lazy(() => import("./pages/OpeningsAdmin"));
 const OpeningsLibrary = lazy(() => import("./pages/OpeningsLibrary"));
 const OpeningDetail = lazy(() => import("./pages/OpeningDetail"));
 const StudyMode = lazy(() => import("./pages/StudyMode"));
+const Pricing = lazy(() => import("./pages/Pricing"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -99,6 +100,7 @@ function Router() {
         <Route path={"/openings/:openingSlug/study/:lineSlug"} component={StudyMode} />
         <Route path={"/openings/:slug"} component={OpeningDetail} />
         <Route path={"/openings"} component={OpeningsLibrary} />
+        <Route path={"/pricing"} component={Pricing} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />

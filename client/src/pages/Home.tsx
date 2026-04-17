@@ -1499,6 +1499,7 @@ function Footer() {
     Product: [
       { label: "Features", href: "/#features" },
       { label: "How It Works", href: "/#how-it-works" },
+      { label: "Pricing", href: "/pricing" },
       { label: "Demo", href: "/tournament/otb-demo-2026/manage" },
     ],
     Community: [
