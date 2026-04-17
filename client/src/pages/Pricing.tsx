@@ -35,6 +35,7 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
+import AuthModal from "@/components/AuthModal";
 
 // ─── Feature table data ───────────────────────────────────────────────────────
 interface FeatureRow {
@@ -105,6 +106,7 @@ export default function Pricing() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [modalOpen, setModalOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const fadeUp = {
     initial: { opacity: 0, y: 20 },
@@ -214,10 +216,10 @@ export default function Pricing() {
 
             <button
               onClick={() => setModalOpen(true)}
-              className="w-full py-3 rounded-xl text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-black transition-colors flex items-center justify-center gap-2 relative"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-black transition-colors relative"
             >
               <Sparkles className="w-4 h-4" />
-              Start exploring — it&apos;s free
+              Upgrade to Pro
             </button>
           </div>
         </motion.div>
@@ -368,7 +370,12 @@ export default function Pricing() {
       </div>
 
       {/* ── ProUpgradeModal ────────────────────────────────────────────────── */}
-      <ProUpgradeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <ProUpgradeModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onNeedsAuth={() => { setModalOpen(false); setAuthOpen(true); }}
+      />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }
