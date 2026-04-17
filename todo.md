@@ -5157,3 +5157,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] "View Demo" link added to Pricing page Pro card (amber, below Upgrade CTA)
 - [x] Routes registered in App.tsx (/openings/demo and /openings/demo/:slug)
 - [x] 0 TypeScript errors, 5181 tests passing
+
+## OTB Staff Role
+- [x] Add is_staff column to users table in schema.ts
+- [x] Run SQL migration to add is_staff column to the database
+- [x] Seed arnoldlo619@gmail.com as isStaff=true (first OTB Staff member)
+- [x] isStaff exposed via safeUser (auto-spread) and added to AuthUser interface in useAuth.ts
+- [x] OpeningsProGate updated — isStaff treated as Pro-equivalent (full access)
+- [x] ProUpgradeModal updated — isStaff shows "OTB Staff — Full Access" CTA, no checkout
+- [x] AvatarNavDropdown — amber "★ OTB Staff" badge next to displayName in desktop dropdown
+- [x] AvatarNavDropdown — "Upgrade to Pro" CTA hidden for staff users
+- [x] 0 TypeScript errors, 5181 tests passing
