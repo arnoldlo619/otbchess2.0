@@ -5168,3 +5168,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] AvatarNavDropdown — amber "★ OTB Staff" badge next to displayName in desktop dropdown
 - [x] AvatarNavDropdown — "Upgrade to Pro" CTA hidden for staff users
 - [x] 0 TypeScript errors, 5181 tests passing
+
+## OTB Staff Badge — Profile Page
+- [x] Add amber "★ OTB Staff" badge to Profile page identity header (next to display name)
+- [x] Add green "★ Pro" badge for Pro subscribers (hidden when isStaff is true)
+- [x] Badge visible for own profile view (Profile page is currently auth-gated to own account)
+- [x] 0 TypeScript errors
