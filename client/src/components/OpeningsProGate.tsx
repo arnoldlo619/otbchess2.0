@@ -4,12 +4,14 @@
  * Gates the Openings feature behind a Pro subscription.
  *
  * - Authenticated Pro users: pass through immediately.
- * - Authenticated free users: see the upgrade CTA with ProUpgradeModal.
- * - Unauthenticated visitors: see a sign-in prompt (AuthModal).
+ * - Authenticated free users: see the upgrade CTA with ProUpgradeModal + "View Demo" button.
+ * - Unauthenticated visitors: see a sign-in prompt + "View Demo" button.
  *
+ * "View Demo" navigates to /openings/demo — a static demo library with sample openings.
  * To re-enable open beta access for all users, set BETA_OPEN = true.
  */
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import {
@@ -18,6 +20,7 @@ import {
   Lock,
   Sparkles,
   LogIn,
+  Eye,
 } from "lucide-react";
 import { ProUpgradeModal } from "./ProUpgradeModal";
 import AuthModal from "./AuthModal";
@@ -33,6 +36,7 @@ interface OpeningsProGateProps {
 
 export function OpeningsProGate({ children }: OpeningsProGateProps) {
   const { user, loading } = useAuth();
+  const [, navigate] = useLocation();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
@@ -101,6 +105,18 @@ export function OpeningsProGate({ children }: OpeningsProGateProps) {
                 See what&apos;s included
               </button>
             </div>
+
+            {/* View Demo CTA */}
+            <div className="mt-6 pt-6 border-t border-white/[0.06]">
+              <p className="text-xs text-white/30 mb-3">Not ready to sign up yet?</p>
+              <button
+                onClick={() => navigate("/openings/demo")}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/25 hover:border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 text-sm font-medium transition-all"
+              >
+                <Eye className="w-4 h-4" />
+                View Demo — No sign-in required
+              </button>
+            </div>
           </motion.div>
         </div>
 
@@ -155,6 +171,18 @@ export function OpeningsProGate({ children }: OpeningsProGateProps) {
           <p className="mt-3 text-white/25 text-xs">
             Starting at $6.67 / month · Cancel anytime
           </p>
+
+          {/* View Demo CTA */}
+          <div className="mt-6 pt-6 border-t border-white/[0.06]">
+            <p className="text-xs text-white/30 mb-3">Want to explore first?</p>
+            <button
+              onClick={() => navigate("/openings/demo")}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/25 hover:border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 text-sm font-medium transition-all"
+            >
+              <Eye className="w-4 h-4" />
+              View Demo Library
+            </button>
+          </div>
         </motion.div>
       </div>
 

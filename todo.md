@@ -5146,3 +5146,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Build /pricing page — Free vs Pro feature table, Open Beta banner, future pricing preview
 - [x] Register /pricing route in App.tsx
 - [x] Add "Pricing" link to Footer PRODUCT section between "How It Works" and "Demo"
+
+## Openings Demo Mode
+- [x] Audit OpeningsLibrary, OpeningDetail, OpeningsProGate for gate and data flow
+- [x] Create demo seed data (5 sample openings + 1 detailed opening with chapters/lines)
+- [x] DemoModeBanner component — amber sticky banner with upgrade CTA and exit demo link
+- [x] /openings/demo — OpeningsLibraryDemo page with search, filter, and 5 sample opening cards
+- [x] /openings/demo/:slug — OpeningDetailDemo page with first 2 lines open, remaining lines blurred/locked
+- [x] "View Demo" button added to OpeningsProGate gate screens (both guest and free-user)
+- [x] "View Demo" link added to Pricing page Pro card (amber, below Upgrade CTA)
+- [x] Routes registered in App.tsx (/openings/demo and /openings/demo/:slug)
+- [x] 0 TypeScript errors, 5181 tests passing
