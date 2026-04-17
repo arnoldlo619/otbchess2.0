@@ -5135,3 +5135,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Feature comparison table retained — shows planned Free vs Pro split post-beta
 - [x] CTA button changed from "Start Checkout" to "Start Exploring — It's Free"
 - [x] Stripe infrastructure stays intact — flip BETA_OPEN = false + add secrets to re-enable gate
+
+## Pricing Page
+- [x] Build /pricing page — Free vs Pro feature table, Open Beta banner, future pricing preview
+- [x] Register /pricing route in App.tsx
+- [x] Add "Pricing" link to Footer PRODUCT section between "How It Works" and "Demo"
