@@ -1045,10 +1045,12 @@ function PlayerDemo() {
   return (
     <section
       id="player-demo"
-      className={`py-24 transition-colors duration-500 ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#F0F5EE]"}`}
+      className={`py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#F0F5EE]"}`}
       ref={ref}
     >
-      <div className="container">
+      {/* Micro-checkered background — matches hero section */}
+      <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
+      <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center mb-12">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
             chess.com Integration
