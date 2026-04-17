@@ -5179,3 +5179,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add amber "★ OTB Staff" badge to mobile nav sheet user identity section
 - [x] Add green "★ Pro" badge for Pro subscribers in mobile nav sheet (hidden when isStaff)
 - [x] 0 TypeScript errors
+
+## Admin Staff Management Page
+- [x] Server: GET /api/admin/staff — list all staff users (isStaff guard)
+- [x] Server: GET /api/admin/staff/search?email= — look up user by email (isStaff guard)
+- [x] Server: POST /api/admin/staff/grant — grant isStaff by email (isStaff guard)
+- [x] Server: POST /api/admin/staff/revoke — revoke isStaff by email (isStaff guard, self-revoke blocked)
+- [x] /admin/staff React page — current staff list, email search, grant/revoke controls, toast feedback
+- [x] Register /admin/staff route in App.tsx (lazy-loaded)
+- [x] "Staff Admin" amber link added to AvatarNavDropdown desktop dropdown (staff only)
+- [x] 0 TypeScript errors, 5181 tests passing

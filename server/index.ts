@@ -24,6 +24,7 @@ import { logger } from "./logger.js";
 import { createOpeningsAdminRouter } from "./openingsAdmin.js";
 import { registerOpeningsPublicRoutes } from "./openingsPublic.js";
 import { createBillingRouter } from "./billing.js";
+import { createAdminStaffRouter } from "./adminStaff.js";
 export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -790,6 +791,7 @@ export function createApp() {
   // Webhook needs raw body — mount before JSON middleware would consume it.
   app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
   app.use("/api/billing", createBillingRouter());
+  app.use("/api/admin/staff", createAdminStaffRouter());
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.
   app.get("/api/push/vapid-public-key", (_req, res) => {

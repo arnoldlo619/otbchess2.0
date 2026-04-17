@@ -32,6 +32,7 @@ import {
   Moon,
   Timer,
   Camera,
+  Shield,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
@@ -847,6 +848,23 @@ export function AvatarNavDropdown({
                   <Crown className="w-4 h-4 flex-shrink-0" />
                   <span>Create Free Account</span>
                 </button>
+              )}
+              {user?.isStaff && (
+                <Link
+                  href="/admin/staff"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-400 hover:bg-amber-500/10 transition-colors"
+                  style={{ border: "1px solid transparent" }}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background = "rgba(245,158,11,0.08)")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background = "transparent")
+                  }
+                >
+                  <Shield className="w-4 h-4 flex-shrink-0" />
+                  <span>Staff Admin</span>
+                </Link>
               )}
               {user && !user.isPro && !user.isGuest && !user.isStaff && (
                 <button

@@ -50,6 +50,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const ProSuccess = lazy(() => import("./pages/ProSuccess"));
 const OpeningsLibraryDemo = lazy(() => import("./pages/OpeningsLibraryDemo"));
 const OpeningDetailDemo = lazy(() => import("./pages/OpeningDetailDemo"));
+const AdminStaff = lazy(() => import("./pages/AdminStaff"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -107,6 +108,7 @@ function Router() {
         <Route path={"/openings"} component={OpeningsLibrary} />
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/pro/success"} component={ProSuccess} />
+        <Route path={"/admin/staff"} component={AdminStaff} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
