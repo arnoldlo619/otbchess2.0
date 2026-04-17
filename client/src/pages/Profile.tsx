@@ -429,7 +429,19 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 className={`text-xl font-bold ${text}`}>{user.displayName}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className={`text-xl font-bold ${text}`}>{user.displayName}</h1>
+                  {user.isStaff && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold tracking-wider uppercase flex-shrink-0">
+                      ★ OTB Staff
+                    </span>
+                  )}
+                  {!user.isStaff && user.isPro && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[10px] font-bold tracking-wider uppercase flex-shrink-0">
+                      ★ Pro
+                    </span>
+                  )}
+                </div>
                 <p className={`text-sm ${muted}`}>{user.email}</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <Shield className="w-3.5 h-3.5 text-[#2d6a4f]" />
