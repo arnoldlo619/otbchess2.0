@@ -29,6 +29,7 @@ interface PublicBracketViewProps {
   isAwaitingCutoff?: boolean;
   format?: string;
   isDark: boolean;
+  myPlayerId?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -413,6 +414,7 @@ export function PublicBracketView({
   isAwaitingCutoff = false,
   format,
   isDark,
+  myPlayerId,
 }: PublicBracketViewProps) {
   const elimRounds = useMemo(
     () => rounds.filter((r) => r.number >= elimStartRound),
@@ -511,6 +513,7 @@ export function PublicBracketView({
           allResultsIn={false}
           isDark={isDark}
           elimStartRound={elimStartRound}
+          myPlayerId={myPlayerId}
         />
       </div>
 

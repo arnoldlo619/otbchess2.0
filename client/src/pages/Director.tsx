@@ -4409,6 +4409,7 @@ export default function Director() {
                     elimRoundLabelText={state.elimRoundLabelText}
                     isDark={isDark}
                     elimStartRound={elimStartRound}
+                    myPlayerId={undefined}
                     onEnterResult={(gameId, result) => {
                       recordWithUndo(gameId, result, "*", `Elimination result recorded`);
                       pushStandingsNow();

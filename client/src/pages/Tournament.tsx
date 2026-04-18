@@ -1762,6 +1762,7 @@ export default function TournamentPage() {
                     isAwaitingCutoff={isAwaitingCutoff}
                     format={config?.format}
                     isDark={isDark}
+                    myPlayerId={myPlayerId}
                   />
                   {config?.format === "swiss_elim" && swissRounds > 0 && displayState.rounds.some((r) => r.number >= elimStartRound) && (() => {
                     const swissRoundsOnly = displayState.rounds.filter((r) => r.number <= swissRounds);
@@ -1843,6 +1844,7 @@ export default function TournamentPage() {
                   isAwaitingCutoff={isAwaitingCutoff}
                   format={config?.format}
                   isDark={isDark}
+                  myPlayerId={myPlayerId}
                 />
               </div>
             )}
