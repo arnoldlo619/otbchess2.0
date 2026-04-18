@@ -52,6 +52,7 @@ interface MobileMatchCardProps {
   isDark: boolean;
   isCurrentRound: boolean;
   matchNumber: number;
+  myPlayerId?: string;
   onEnterResult?: (gameId: string, result: Result) => void;
 }
 
@@ -62,6 +63,7 @@ function MobileMatchCard({
   isDark,
   isCurrentRound,
   matchNumber,
+  myPlayerId,
   onEnterResult,
 }: MobileMatchCardProps) {
   const isBye = game.whiteId === "BYE" || game.blackId === "BYE";
@@ -92,10 +94,17 @@ function MobileMatchCard({
   const whiteScore = game.result === "1-0" ? "1" : game.result === "½-½" ? "½" : game.result === "0-1" ? "0" : null;
   const blackScore = game.result === "0-1" ? "1" : game.result === "½-½" ? "½" : game.result === "1-0" ? "0" : null;
 
+  const isMyGame = !!myPlayerId && (game.whiteId === myPlayerId || game.blackId === myPlayerId);
+  const myIsWhite = myPlayerId === game.whiteId;
+
   const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const cardBorder = isCurrentRound && isPending
-    ? isDark ? "border-[#4CAF50]/40 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#3D6B47]/35"
-    : isDark ? "border-white/08" : "border-gray-200";
+  const cardBorder = isMyGame
+    ? isDark
+      ? "border-[#4CAF50]/70 shadow-[0_0_0_2px_rgba(76,175,80,0.18),0_0_16px_rgba(76,175,80,0.08)]"
+      : "border-[#3D6B47]/60 shadow-[0_0_0_2px_rgba(61,107,71,0.15)]"
+    : isCurrentRound && isPending
+      ? isDark ? "border-[#4CAF50]/40 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#3D6B47]/35"
+      : isDark ? "border-white/08" : "border-gray-200";
   const divider = isDark ? "border-white/06" : "border-gray-100";
   const loserText = isDark ? "text-white/28" : "text-gray-300";
   const winnerBg = isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/07";
@@ -127,6 +136,7 @@ function MobileMatchCard({
         </div>
       );
     }
+    const isMe = myPlayerId === playerId;
     const shouldFlash = flashSide === side;
     return (
       <div className={`relative flex items-center gap-3 px-4 py-3 transition-colors ${isWinner ? winnerBg : ""} ${shouldFlash ? "animate-bracket-winner-flash" : ""}`}>
@@ -172,6 +182,14 @@ function MobileMatchCard({
         )}
         {/* Crown */}
         {isWinner && <Crown className={`w-4 h-4 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-500"}`} strokeWidth={2} />}
+        {/* You badge */}
+        {isMe && (
+          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/25"
+          }`}>
+            You
+          </span>
+        )}
       </div>
     );
   }
@@ -180,9 +198,18 @@ function MobileMatchCard({
     <div className={`rounded-2xl border overflow-hidden ${cardBg} ${cardBorder} ${isBye ? "opacity-50" : ""}`}>
       {/* Match number header */}
       <div className={`flex items-center justify-between px-4 py-2 border-b ${divider}`}>
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
-          Match {matchNumber}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            Match {matchNumber}
+          </span>
+          {isMyGame && (
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+              isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+            }`}>
+              Your match
+            </span>
+          )}
+        </div>
         {!isPending && (
           <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
             isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
@@ -337,6 +364,7 @@ export interface MobileBracketCarouselProps {
   allResultsIn: boolean;
   isDark: boolean;
   elimStartRound: number;
+  myPlayerId?: string;
   onEnterResult?: (gameId: string, result: Result) => void;
   onAdvanceRound?: () => void;
   onCompleteTournament?: () => void;
@@ -350,6 +378,7 @@ export function MobileBracketCarousel({
   allResultsIn,
   isDark,
   elimStartRound,
+  myPlayerId,
   onEnterResult,
   onAdvanceRound,
   onCompleteTournament,
@@ -358,15 +387,40 @@ export function MobileBracketCarousel({
   const totalSlides = rounds.length + 1; // +1 for champion
   const championIdx = rounds.length;
 
-  // Default to the active round
-  const activeRoundIdx = rounds.findIndex((r) => r.number === currentRound);
-  const [slideIdx, setSlideIdx] = useState(Math.max(0, activeRoundIdx));
+  // Find the round containing the logged-in player's current (pending) match
+  const myActiveRoundIdx = myPlayerId
+    ? rounds.findIndex((r) =>
+        r.games.some(
+          (g) =>
+            (g.whiteId === myPlayerId || g.blackId === myPlayerId) &&
+            g.result === "*"
+        )
+      )
+    : -1;
 
-  // Sync to active round when currentRound changes
+  // Default to player's active round, then current round, then first round
+  const defaultSlideIdx =
+    myActiveRoundIdx >= 0
+      ? myActiveRoundIdx
+      : Math.max(0, rounds.findIndex((r) => r.number === currentRound));
+
+  const [slideIdx, setSlideIdx] = useState(defaultSlideIdx);
+
+  // Sync to player's active round when myPlayerId or rounds change
   useEffect(() => {
+    if (myPlayerId) {
+      const idx = rounds.findIndex((r) =>
+        r.games.some(
+          (g) =>
+            (g.whiteId === myPlayerId || g.blackId === myPlayerId) &&
+            g.result === "*"
+        )
+      );
+      if (idx >= 0) { setSlideIdx(idx); return; }
+    }
     const idx = rounds.findIndex((r) => r.number === currentRound);
     if (idx >= 0) setSlideIdx(idx);
-  }, [currentRound, rounds]);
+  }, [currentRound, rounds, myPlayerId]);
 
   // Touch swipe state
   const touchStartX = useRef<number | null>(null);
@@ -537,6 +591,7 @@ export function MobileBracketCarousel({
                     isDark={isDark}
                     isCurrentRound={isActive}
                     matchNumber={gIdx + 1}
+                    myPlayerId={myPlayerId}
                     onEnterResult={onEnterResult}
                   />
                 ))}

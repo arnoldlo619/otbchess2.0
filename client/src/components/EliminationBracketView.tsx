@@ -27,6 +27,7 @@ interface EliminationBracketViewProps {
   allResultsIn: boolean;
   elimRoundLabelText?: string;
   isDark: boolean;
+  myPlayerId?: string;
   onEnterResult: (gameId: string, result: Result) => void;
   onAdvanceRound: () => void;
   onCompleteTournament: () => void;
@@ -73,10 +74,11 @@ interface MatchCardProps {
   elimPlayers: Player[];
   isDark: boolean;
   isCurrentRound: boolean;
+  myPlayerId?: string;
   onEnterResult?: (gameId: string, result: Result) => void;
 }
 
-function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnterResult }: MatchCardProps) {
+function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, myPlayerId, onEnterResult }: MatchCardProps) {
   const isBye = game.whiteId === "BYE" || game.blackId === "BYE";
   const isPending = game.result === "*";
   const winner = resultWinner(game);
@@ -134,10 +136,16 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
   const whiteScore = game.result === "1-0" ? "1" : game.result === "½-½" ? "½" : game.result === "0-1" ? "0" : null;
   const blackScore = game.result === "0-1" ? "1" : game.result === "½-½" ? "½" : game.result === "1-0" ? "0" : null;
 
+  const isMyGame = !!myPlayerId && (game.whiteId === myPlayerId || game.blackId === myPlayerId);
+
   const cardBg = isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white";
-  const cardBorder = isCurrentRound && isPending
-    ? isDark ? "border-[#4CAF50]/35 shadow-[0_0_0_1px_rgba(76,175,80,0.15)]" : "border-[#3D6B47]/35"
-    : isDark ? "border-white/08" : "border-gray-150";
+  const cardBorder = isMyGame
+    ? isDark
+      ? "border-[#4CAF50]/70 shadow-[0_0_0_2px_rgba(76,175,80,0.18),0_0_16px_rgba(76,175,80,0.08)]"
+      : "border-[#3D6B47]/60 shadow-[0_0_0_2px_rgba(61,107,71,0.15)]"
+    : isCurrentRound && isPending
+      ? isDark ? "border-[#4CAF50]/35 shadow-[0_0_0_1px_rgba(76,175,80,0.15)]" : "border-[#3D6B47]/35"
+      : isDark ? "border-white/08" : "border-gray-150";
 
   const winnerBg = isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/07";
   const loserText = isDark ? "text-white/28" : "text-gray-300";
@@ -170,6 +178,7 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
         </div>
       );
     }
+    const isMe = !isByeRow && myPlayerId === playerId;
     const shouldFlash = !isByeRow && flashWinner === side;
     return (
       <div className={`relative flex items-center gap-2 px-3 py-2.5 transition-colors ${isWinner ? winnerBg : ""} ${shouldFlash ? "animate-bracket-winner-flash" : ""}`}>
@@ -207,6 +216,14 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
         )}
         {/* Crown */}
         {isWinner && <Crown className={`w-3 h-3 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-500"}`} strokeWidth={2} />}
+        {/* You badge */}
+        {isMe && (
+          <span className={`text-[8px] font-black px-1 py-0.5 rounded-full flex-shrink-0 ${
+            isDark ? "bg-[#4CAF50]/20 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/25"
+          }`}>
+            You
+          </span>
+        )}
       </div>
     );
   }
@@ -399,6 +416,7 @@ function RoundColumn({
   elimPlayers,
   currentRound,
   isDark,
+  myPlayerId,
   onEnterResult,
   verticalOffset,
 }: {
@@ -408,6 +426,7 @@ function RoundColumn({
   elimPlayers: Player[];
   currentRound: number;
   isDark: boolean;
+  myPlayerId?: string;
   onEnterResult?: (gameId: string, result: Result) => void;
   verticalOffset: number;
 }) {
@@ -456,6 +475,7 @@ function RoundColumn({
             elimPlayers={elimPlayers}
             isDark={isDark}
             isCurrentRound={isActive}
+            myPlayerId={myPlayerId}
             onEnterResult={onEnterResult}
           />
         ))}
@@ -532,6 +552,7 @@ export function EliminationBracketView({
   currentRound,
   allResultsIn,
   isDark,
+  myPlayerId,
   onEnterResult,
   onAdvanceRound,
   onCompleteTournament,
@@ -594,6 +615,7 @@ export function EliminationBracketView({
         allResultsIn={allResultsIn}
         isDark={isDark}
         elimStartRound={elimStartRound}
+        myPlayerId={myPlayerId}
         onEnterResult={onEnterResult}
         onAdvanceRound={onAdvanceRound}
         onCompleteTournament={onCompleteTournament}
@@ -639,6 +661,7 @@ export function EliminationBracketView({
                     elimPlayers={elimPlayers}
                     currentRound={currentRound}
                     isDark={isDark}
+                    myPlayerId={myPlayerId}
                     onEnterResult={onEnterResult}
                     verticalOffset={colOffset(round.games.length)}
                   />
