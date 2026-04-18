@@ -1577,3 +1577,26 @@ select {
   from { width: 0%; }
   to   { width: 100%; }
 }
+
+/* ── Elimination Bracket Animations ──────────────────────────────────────── */
+@keyframes bracket-winner-flash {
+  0%   { background-color: oklch(0.44 0.16 145 / 0.0); }
+  20%  { background-color: oklch(0.44 0.16 145 / 0.45); box-shadow: 0 0 0 2px oklch(0.55 0.18 145 / 0.55); }
+  60%  { background-color: oklch(0.44 0.16 145 / 0.22); }
+  100% { background-color: oklch(0.44 0.16 145 / 0.0); }
+}
+@keyframes bracket-card-enter {
+  0%   { opacity: 0; transform: translateX(-16px) scale(0.96); }
+  55%  { opacity: 1; transform: translateX(2px) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes bracket-connector-pulse {
+  0%, 100% { stroke-opacity: 0.18; }
+  50%       { stroke-opacity: 0.60; }
+}
+.animate-bracket-winner-flash {
+  animation: bracket-winner-flash 0.70s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-bracket-card-enter {
+  animation: bracket-card-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
