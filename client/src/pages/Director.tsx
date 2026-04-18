@@ -27,6 +27,7 @@ import { useDirectorState } from "@/lib/directorState";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
+import { suggestElimCutoff } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession, updateTournamentConfig } from "@/lib/tournamentRegistry";
 import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
@@ -95,6 +96,7 @@ import {
   ExternalLink,
   Globe,
   Target,
+  Swords,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -1576,6 +1578,7 @@ export default function Director() {
     completeTournament,
     updateSettings,
     isSwissElimCutoff: _isSwissElimCutoff,
+    isSwissElimSwissPhaseComplete,
   } = useDirectorState(tournamentId);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =
@@ -2201,6 +2204,71 @@ export default function Director() {
             >
               <Zap className="w-3.5 h-3.5" />
               Generate Round {state.currentRound + 1}
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
+            </button>
+          </div>
+        </div>
+      )}
+      {/* ── Sticky "Swiss Phase Complete" Banner — Generate Elimination Bracket ──────── */}
+      {!isRegistration && allResultsIn && isSwissElimSwissPhaseComplete && (
+        <div
+          className={`sticky top-[56px] z-30 border-b transition-all duration-300 ${
+            isDark
+              ? "bg-[#2a1f0a]/95 backdrop-blur-md border-amber-500/25"
+              : "bg-[#fffbf0]/95 backdrop-blur-md border-amber-400/30"
+          }`}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="max-w-5xl mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                isDark ? "bg-amber-500/25" : "bg-amber-100"
+              }`}>
+                <Trophy className={`w-3.5 h-3.5 ${
+                  isDark ? "text-amber-400" : "text-amber-600"
+                }`} />
+              </span>
+              <p className={`text-sm font-semibold truncate ${
+                isDark ? "text-amber-300" : "text-amber-700"
+              }`}>
+                Swiss phase complete &mdash; Ready to generate the elimination bracket
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                generateNextRound();
+                // Switch to bracket tab immediately
+                setActiveTab("bracket");
+                const cutoff = suggestElimCutoff(state.players.length);
+                toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
+                setTimeout(() => {
+                  try {
+                    const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
+                    const latestState = raw ? JSON.parse(raw) : null;
+                    const nextRound = state.currentRound + 1;
+                    const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                    if (roundData && latestState?.state?.players) {
+                      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          round: nextRound,
+                          games: roundData.games,
+                          players: latestState.state.players,
+                        }),
+                      }).catch(() => {});
+                    }
+                  } catch { /* ignore */ }
+                }, 200);
+              }}
+              className={`group flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                isDark
+                  ? "bg-amber-500 text-black hover:bg-amber-400 shadow-[0_2px_10px_rgba(245,158,11,0.35)]"
+                  : "bg-amber-500 text-white hover:bg-amber-600 shadow-[0_2px_10px_rgba(245,158,11,0.25)]"
+              }`}
+            >
+              <Swords className="w-3.5 h-3.5" />
+              Generate Elimination Bracket
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
             </button>
           </div>
@@ -2880,6 +2948,65 @@ export default function Director() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Swiss phase complete — Generate Elimination Bracket CTA (inline in pairings area) */}
+                  {allResultsIn && isSwissElimSwissPhaseComplete && (
+                    <div
+                      className={`rounded-xl border overflow-hidden ${
+                        isDark
+                          ? "bg-amber-500/08 border-amber-500/25"
+                          : "bg-amber-50 border-amber-200"
+                      }`}
+                    >
+                      <div className={`flex items-center gap-3 px-4 py-3 border-b ${
+                        isDark ? "border-amber-500/15" : "border-amber-200"
+                      }`}>
+                        <Trophy className={`w-4 h-4 flex-shrink-0 ${
+                          isDark ? "text-amber-400" : "text-amber-600"
+                        }`} />
+                        <p className={`text-sm font-medium ${
+                          isDark ? "text-amber-300" : "text-amber-700"
+                        }`}>
+                          Swiss phase complete — All {state.swissRounds ?? state.totalRounds} rounds finished
+                        </p>
+                      </div>
+                      <div className="px-4 py-3">
+                        <button
+                          onClick={() => {
+                            generateNextRound();
+                            setActiveTab("bracket");
+                            const cutoff = suggestElimCutoff(state.players.length);
+                            toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
+                            setTimeout(() => {
+                              try {
+                                const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
+                                const latestState = raw ? JSON.parse(raw) : null;
+                                const nextRound = state.currentRound + 1;
+                                const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                                if (roundData && latestState?.state?.players) {
+                                  fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      round: nextRound,
+                                      games: roundData.games,
+                                      players: latestState.state.players,
+                                    }),
+                                  }).catch(() => {});
+                                }
+                              } catch { /* ignore */ }
+                            }, 200);
+                          }}
+                          className="group w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-black transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                          style={{ background: "#f59e0b", boxShadow: "0 4px 16px rgba(245,158,11,0.35)" }}
+                        >
+                          <Swords className="w-4 h-4" />
+                          Generate Elimination Bracket
+                          <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-1" />
+                        </button>
                       </div>
                     </div>
                   )}
@@ -4258,23 +4385,64 @@ export default function Director() {
 
               {/* Swiss phase in progress — bracket not yet generated */}
               {state.format === "swiss_elim" && state.elimPhase === "swiss" && (
-                <div className={`flex flex-col items-center justify-center py-12 gap-3 rounded-2xl border ${
+                <div className={`flex flex-col items-center justify-center py-12 gap-4 rounded-2xl border ${
                   isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
                 }`}>
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                     isDark ? "bg-amber-500/10" : "bg-amber-50"
                   }`}>
-                    <Trophy className={`w-6 h-6 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
+                    {isSwissElimSwissPhaseComplete
+                      ? <Swords className={`w-6 h-6 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
+                      : <Trophy className={`w-6 h-6 ${isDark ? "text-amber-400" : "text-amber-500"}`} />}
                   </div>
                   <div className="text-center">
                     <p className={`text-sm font-bold ${isDark ? "text-white/70" : "text-gray-700"}`}
                       style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                      Swiss Phase in Progress
+                      {isSwissElimSwissPhaseComplete ? "Swiss Phase Complete" : "Swiss Phase in Progress"}
                     </p>
                     <p className={`text-xs mt-1 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-                      The elimination bracket will auto-generate after Round {state.swissRounds ?? state.totalRounds}.
+                      {isSwissElimSwissPhaseComplete
+                        ? `All ${state.swissRounds ?? state.totalRounds} Swiss rounds finished. Generate the bracket to continue.`
+                        : `The elimination bracket will auto-generate after Round ${state.swissRounds ?? state.totalRounds}.`}
                     </p>
                   </div>
+                  {isSwissElimSwissPhaseComplete && allResultsIn && (
+                    <button
+                      onClick={() => {
+                        generateNextRound();
+                        const cutoff = suggestElimCutoff(state.players.length);
+                        toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
+                        setTimeout(() => {
+                          try {
+                            const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
+                            const latestState = raw ? JSON.parse(raw) : null;
+                            const nextRound = state.currentRound + 1;
+                            const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                            if (roundData && latestState?.state?.players) {
+                              fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  round: nextRound,
+                                  games: roundData.games,
+                                  players: latestState.state.players,
+                                }),
+                              }).catch(() => {});
+                            }
+                          } catch { /* ignore */ }
+                        }, 200);
+                      }}
+                      className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${
+                        isDark
+                          ? "bg-amber-500 text-black hover:bg-amber-400 shadow-lg shadow-amber-500/25"
+                          : "bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20"
+                      }`}
+                    >
+                      <Swords className="w-4 h-4" />
+                      Generate Elimination Bracket
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               )}
 
