@@ -11,7 +11,7 @@
  *   - Advance / Complete CTAs below the tree
  */
 
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import { Trophy, Crown, Zap, CheckCircle2 } from "lucide-react";
 import { elimRoundLabel } from "@/lib/swiss";
 import type { Round, Player, Game, Result } from "@/lib/tournamentData";
@@ -80,6 +80,51 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
   const isPending = game.result === "*";
   const winner = resultWinner(game);
 
+  // Track previous result to detect when a result is newly entered
+  const prevResultRef = useRef<string>(game.result);
+  const [flashWinner, setFlashWinner] = useState<"white" | "black" | null>(null);
+
+  // Track whether the card players were just populated (winner advanced into this slot)
+  const prevWhiteIdRef = useRef<string>(game.whiteId);
+  const prevBlackIdRef = useRef<string>(game.blackId);
+  const [justEntered, setJustEntered] = useState(() => {
+    // Only animate on mount if both slots are already filled (pre-existing bracket)
+    return false;
+  });
+
+  useEffect(() => {
+    const prevW = prevWhiteIdRef.current;
+    const prevB = prevBlackIdRef.current;
+    // A player "arrived" into this slot if it was previously a placeholder/empty
+    const whiteArrived = prevW !== game.whiteId && (prevW === "" || prevW === "TBD");
+    const blackArrived = prevB !== game.blackId && (prevB === "" || prevB === "TBD");
+    if (whiteArrived || blackArrived) {
+      setJustEntered(true);
+      const t = setTimeout(() => setJustEntered(false), 600);
+      prevWhiteIdRef.current = game.whiteId;
+      prevBlackIdRef.current = game.blackId;
+      return () => clearTimeout(t);
+    }
+    prevWhiteIdRef.current = game.whiteId;
+    prevBlackIdRef.current = game.blackId;
+  }, [game.whiteId, game.blackId]);
+
+  useEffect(() => {
+    const prev = prevResultRef.current;
+    const curr = game.result;
+    // Transition from pending → result
+    if (prev === "*" && curr !== "*") {
+      const w = resultWinner(game);
+      if (w === "white" || w === "black") {
+        setFlashWinner(w);
+        // Clear flash after animation completes
+        const t = setTimeout(() => setFlashWinner(null), 800);
+        return () => clearTimeout(t);
+      }
+    }
+    prevResultRef.current = curr;
+  }, [game.result]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const white = game.whiteId === "BYE" ? null : (getPlayer(game.whiteId, players, elimPlayers) ?? null);
   const black = game.blackId === "BYE" ? null : (getPlayer(game.blackId, players, elimPlayers) ?? null);
   const whiteSeed = game.whiteId === "BYE" ? null : getSeed(game.whiteId, elimPlayers);
@@ -105,6 +150,7 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
     isWinner,
     isLoser,
     isByeRow,
+    side,
   }: {
     playerId: string;
     player: Player | null;
@@ -113,6 +159,7 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
     isWinner: boolean;
     isLoser: boolean;
     isByeRow: boolean;
+    side: "white" | "black";
   }) {
     if (isByeRow) {
       return (
@@ -122,8 +169,9 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
         </div>
       );
     }
+    const shouldFlash = !isByeRow && flashWinner === side;
     return (
-      <div className={`relative flex items-center gap-2 px-3 py-2.5 transition-colors ${isWinner ? winnerBg : ""}`}>
+      <div className={`relative flex items-center gap-2 px-3 py-2.5 transition-colors ${isWinner ? winnerBg : ""} ${shouldFlash ? "animate-bracket-winner-flash" : ""}`}>
         {/* Green left accent on winner */}
         {isWinner && (
           <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-r-full bg-[#4CAF50]" />
@@ -164,7 +212,7 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
 
   return (
     <div
-      className={`rounded-xl border overflow-hidden transition-all duration-200 ${cardBg} ${cardBorder} ${isBye ? "opacity-50" : ""}`}
+      className={`rounded-xl border overflow-hidden transition-all duration-200 ${cardBg} ${cardBorder} ${isBye ? "opacity-50" : ""} ${justEntered ? "animate-bracket-card-enter" : ""}`}
       style={{ width: COL_W }}
     >
       {/* White row */}
@@ -176,6 +224,7 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
         isWinner={winner === "white"}
         isLoser={winner === "black"}
         isByeRow={game.whiteId === "BYE"}
+        side="white"
       />
       {/* Divider */}
       <div className={`border-t mx-2.5 ${divider}`} />
@@ -188,6 +237,7 @@ function MatchCard({ game, players, elimPlayers, isDark, isCurrentRound, onEnter
         isWinner={winner === "black"}
         isLoser={winner === "white"}
         isByeRow={game.blackId === "BYE"}
+        side="black"
       />
       {/* Result entry buttons */}
       {isCurrentRound && isPending && onEnterResult && !isBye && (
