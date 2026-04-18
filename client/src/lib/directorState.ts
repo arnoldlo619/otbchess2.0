@@ -540,6 +540,33 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
+  // Generate the elimination bracket with a director-chosen cutoff size (swiss_elim only)
+  // Called when the Swiss phase is complete and the director confirms the cutoff in the modal
+  const generateNextRoundWithCutoff = useCallback((cutoffSize: number) => {
+    setState((prev) => {
+      if (prev.format !== "swiss_elim" || prev.elimPhase !== "swiss") return prev;
+      const currentRoundData = prev.rounds.find((r) => r.number === prev.currentRound);
+      const allDone = currentRoundData?.games.every((g) => g.result !== "*") ?? false;
+      if (!allDone) return prev;
+      const nextRoundNum = prev.currentRound + 1;
+      const standings = computeStandings(prev.players, prev.rounds);
+      const advancingPlayers = standings.slice(0, cutoffSize).map((s) => s.player);
+      const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
+      const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
+      const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+      return {
+        ...prev,
+        rounds: [...prev.rounds, newRound],
+        currentRound: nextRoundNum,
+        totalRounds: prev.currentRound + elimRoundsCount,
+        elimPhase: "elimination",
+        elimCutoff: cutoffSize,
+        elimPlayers: advancingPlayers,
+        elimRoundLabelText: elimRoundLabel(cutoffSize),
+      };
+    });
+  }, []);
+
   // Reset/override the elimination bracket with a new cutoff size (swiss_elim only)
   // Safe to call when elimPhase === "elimination" AND no results have been entered yet
   const resetElimination = useCallback((cutoffSize: number) => {
@@ -779,6 +806,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     startTournament,
     enterResult,
     generateNextRound,
+    generateNextRoundWithCutoff,
     advanceToElimination,
     resetElimination,
     completeTournament,
