@@ -746,10 +746,23 @@ function QuickstartForm({
   ];
 
   const timeControlOptions: { preset: string; label: string; sub: string; base: number; inc: number }[] = [
+    // Bullet
     { preset: "1+0",  label: "Bullet",    sub: "1 min · no increment",  base: 1,  inc: 0  },
-    { preset: "3+2",  label: "Blitz",     sub: "3 min + 2 sec",         base: 3,  inc: 2  },
-    { preset: "10+5", label: "Rapid",     sub: "10 min + 5 sec",        base: 10, inc: 5  },
-    { preset: "30+0", label: "Classical", sub: "30 min · no increment", base: 30, inc: 0  },
+    { preset: "1+1",  label: "Bullet",    sub: "1 min + 1 sec",          base: 1,  inc: 1  },
+    { preset: "2+1",  label: "Bullet",    sub: "2 min + 1 sec",          base: 2,  inc: 1  },
+    // Blitz
+    { preset: "3+0",  label: "Blitz",     sub: "3 min · no increment",  base: 3,  inc: 0  },
+    { preset: "3+2",  label: "Blitz",     sub: "3 min + 2 sec",          base: 3,  inc: 2  },
+    { preset: "5+0",  label: "Blitz",     sub: "5 min · no increment",  base: 5,  inc: 0  },
+    // Rapid
+    { preset: "10+0", label: "Rapid",     sub: "10 min · no increment", base: 10, inc: 0  },
+    { preset: "10+5", label: "Rapid",     sub: "10 min + 5 sec",         base: 10, inc: 5  },
+    { preset: "15+10",label: "Rapid",     sub: "15 min + 10 sec",        base: 15, inc: 10 },
+    { preset: "30+0", label: "Rapid",     sub: "30 min · no increment", base: 30, inc: 0  },
+    // Classical
+    { preset: "45+0", label: "Classical", sub: "45 min · no increment", base: 45, inc: 0  },
+    { preset: "60+30",label: "Classical", sub: "60 min + 30 sec",        base: 60, inc: 30 },
+    { preset: "90+30",label: "Classical", sub: "90 min + 30 sec",        base: 90, inc: 30 },
   ];
 
   const DEFAULT_TIME_PRESET = "10+5";
@@ -1151,7 +1164,12 @@ function QuickstartForm({
                 className="text-xs lg:text-sm font-semibold"
                 style={{ color: isNonDefaultTime ? T.green : isDark ? T.dText : T.lText }}
               >
-                {activeTime ? `${activeTime.preset} ${activeTime.label}` : `${data.timePreset} Rapid`}
+                {activeTime
+                    ? `${activeTime.preset} · ${activeTime.label}`
+                    : data.timePreset === "custom"
+                      ? `${data.timeBase}+${data.timeIncrement} · ${data.ratingType === "blitz" ? "Blitz" : "Rapid"}`
+                      : `${data.timePreset} · ${data.ratingType === "blitz" ? "Blitz" : data.ratingType === "rapid" ? "Rapid" : "Classical"}`
+                  }
               </span>
               <ChevronDown
                 className="w-3.5 h-3.5 transition-transform duration-200"
