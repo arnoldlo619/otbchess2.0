@@ -16,6 +16,7 @@ import { Trophy, Crown, Clock } from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { elimRoundLabel } from "@/lib/swiss";
 import type { Player, Round, Game } from "@/lib/tournamentData";
+import { MobileBracketCarousel } from "./MobileBracketCarousel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -500,6 +501,21 @@ export function PublicBracketView({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ── Mobile carousel (hidden on md+) ── */}
+      <div className="md:hidden">
+        <MobileBracketCarousel
+          rounds={elimRounds}
+          players={players}
+          elimPlayers={seededPlayers}
+          currentRound={currentRound}
+          allResultsIn={false}
+          isDark={isDark}
+          elimStartRound={elimStartRound}
+        />
+      </div>
+
+      {/* ── Desktop bracket tree (hidden on mobile) ── */}
+      <div className="hidden md:flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -613,6 +629,7 @@ export function PublicBracketView({
           </div>
         );
       })()}
+      </div>{/* end desktop wrapper */}
     </div>
   );
 }

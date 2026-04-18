@@ -15,6 +15,7 @@ import React, { useMemo, useRef, useEffect, useState } from "react";
 import { Trophy, Crown, Zap, CheckCircle2 } from "lucide-react";
 import { elimRoundLabel } from "@/lib/swiss";
 import type { Round, Player, Game, Result } from "@/lib/tournamentData";
+import { MobileBracketCarousel } from "./MobileBracketCarousel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -582,6 +583,24 @@ export function EliminationBracketView({
     );
   }
 
+  // ── Mobile carousel (< md breakpoint) ──
+  const mobileCarousel = (
+    <div className="md:hidden">
+      <MobileBracketCarousel
+        rounds={rounds}
+        players={players}
+        elimPlayers={elimPlayers}
+        currentRound={currentRound}
+        allResultsIn={allResultsIn}
+        isDark={isDark}
+        elimStartRound={elimStartRound}
+        onEnterResult={onEnterResult}
+        onAdvanceRound={onAdvanceRound}
+        onCompleteTournament={onCompleteTournament}
+      />
+    </div>
+  );
+
   // Compute the maximum number of matches in any round (first round = most matches)
   const maxMatches = Math.max(...rounds.map((r) => r.games.length));
 
@@ -594,7 +613,11 @@ export function EliminationBracketView({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ── Bracket tree ── */}
+      {/* ── Mobile carousel (hidden on md+) ── */}
+      {mobileCarousel}
+
+      {/* ── Desktop bracket tree (hidden on mobile) ── */}
+      <div className="hidden md:flex flex-col gap-5">
       <div
         ref={scrollRef}
         className="overflow-x-auto pb-3"
@@ -719,6 +742,7 @@ export function EliminationBracketView({
           </button>
         </div>
       )}
+      </div>{/* end desktop wrapper */}
     </div>
   );
 }
