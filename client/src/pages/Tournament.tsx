@@ -64,6 +64,7 @@ import {
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 import { PublicBracketView } from "@/components/PublicBracketView";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
+import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -1751,16 +1752,34 @@ export default function TournamentPage() {
               className="block lg:hidden"
             >
               {mobileTab === "bracket" && isElimFormat && (
-                <PublicBracketView
-                  rounds={displayState.rounds}
-                  players={displayState.players}
-                  elimPlayers={(displayState as DirectorState & { elimPlayers?: typeof displayState.players }).elimPlayers ?? []}
-                  currentRound={displayState.currentRound}
-                  elimStartRound={elimStartRound}
-                  isAwaitingCutoff={isAwaitingCutoff}
-                  format={config?.format}
-                  isDark={isDark}
-                />
+                <div className="flex flex-col gap-5">
+                  <PublicBracketView
+                    rounds={displayState.rounds}
+                    players={displayState.players}
+                    elimPlayers={(displayState as DirectorState & { elimPlayers?: typeof displayState.players }).elimPlayers ?? []}
+                    currentRound={displayState.currentRound}
+                    elimStartRound={elimStartRound}
+                    isAwaitingCutoff={isAwaitingCutoff}
+                    format={config?.format}
+                    isDark={isDark}
+                  />
+                  {config?.format === "swiss_elim" && swissRounds > 0 && displayState.rounds.some((r) => r.number >= elimStartRound) && (() => {
+                    const swissRoundsOnly = displayState.rounds.filter((r) => r.number <= swissRounds);
+                    const swissStandings = computeStandings(displayState.players, swissRoundsOnly);
+                    const cutoff = (displayState as DirectorState & { elimCutoff?: number }).elimCutoff
+                      ?? (displayState as DirectorState & { elimPlayers?: typeof displayState.players }).elimPlayers?.length
+                      ?? swissStandings.length;
+                    return (
+                      <SwissStandingsPanel
+                        standings={swissStandings}
+                        cutoff={cutoff}
+                        swissRounds={swissRounds}
+                        isDark={isDark}
+                        defaultCollapsed={true}
+                      />
+                    );
+                  })()}
+                </div>
               )}
               {mobileTab === "pairings" && (
                 <PairingsPanel
@@ -1840,9 +1859,25 @@ export default function TournamentPage() {
                 />
               </div>
 
-              {/* Right: Standings — desktop only */}
-              <div>
+              {/* Right: Standings + Swiss summary — desktop only */}
+              <div className="flex flex-col gap-5">
                 <StandingsPanel players={displayState.players} rounds={displayState.rounds} myPlayerId={myPlayerId} format={config?.format} />
+                {config?.format === "swiss_elim" && swissRounds > 0 && elimStartRound > 1 && displayState.rounds.some((r) => r.number >= elimStartRound) && (() => {
+                  const swissRoundsOnly = displayState.rounds.filter((r) => r.number <= swissRounds);
+                  const swissStandings = computeStandings(displayState.players, swissRoundsOnly);
+                  const cutoff = (displayState as DirectorState & { elimCutoff?: number }).elimCutoff
+                    ?? (displayState as DirectorState & { elimPlayers?: typeof displayState.players }).elimPlayers?.length
+                    ?? swissStandings.length;
+                  return (
+                    <SwissStandingsPanel
+                      standings={swissStandings}
+                      cutoff={cutoff}
+                      swissRounds={swissRounds}
+                      isDark={isDark}
+                      defaultCollapsed={false}
+                    />
+                  );
+                })()}
               </div>
             </div>
 

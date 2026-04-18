@@ -27,7 +27,7 @@ import { useDirectorState } from "@/lib/directorState";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerHoverCard } from "@/components/PlayerProfileCard";
 import { getStandings, FLAG_EMOJI, type Result } from "@/lib/tournamentData";
-import { suggestElimCutoff } from "@/lib/swiss";
+import { suggestElimCutoff, computeStandings } from "@/lib/swiss";
 import { getTournamentConfig, hasDirectorSession, updateTournamentConfig } from "@/lib/tournamentRegistry";
 import { useAuthContext } from "@/context/AuthContext";
 import { TournamentSettingsPanel } from "@/components/TournamentSettingsPanel";
@@ -46,6 +46,7 @@ import { StyleAwarePairingsPanel } from "@/components/StyleAwarePairingsPanel";
 import {type StylePairingPlayer} from "@/lib/styleAwarePairings";
 import { EditPlayerModal } from "@/components/EditPlayerModal";
 import { PairingSwapModal } from "@/components/PairingSwapModal";
+import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
 import {
   Crown,
   ChevronLeft,
@@ -4335,6 +4336,21 @@ export default function Director() {
                   </div>
                 </div>
               )}
+
+              {/* Swiss Standings summary panel — shown when elimination bracket is active */}
+              {state.format === "swiss_elim" && state.elimPhase === "elimination" && (() => {
+                const swissRoundsOnly = state.rounds.filter((r) => r.number <= (state.swissRounds ?? 0));
+                const swissStandings = computeStandings(state.players, swissRoundsOnly);
+                return (
+                  <SwissStandingsPanel
+                    standings={swissStandings}
+                    cutoff={state.elimCutoff ?? state.elimPlayers?.length ?? swissStandings.length}
+                    swissRounds={state.swissRounds ?? 0}
+                    isDark={isDark}
+                    defaultCollapsed={false}
+                  />
+                );
+              })()}
 
               {/* Swiss phase in progress — bracket not yet generated */}
               {state.format === "swiss_elim" && state.elimPhase === "swiss" && (
