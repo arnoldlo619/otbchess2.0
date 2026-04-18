@@ -729,6 +729,11 @@ function QuickstartForm({
   const [inlinePicker, setInlinePicker] = useState<InlinePicker>(null);
   const toggleInline = (p: InlinePicker) =>
     setInlinePicker((prev) => (prev === p ? null : p));
+  // two-level time control picker: first pick category, then pick preset within category
+  type TcCategory = "Bullet" | "Blitz" | "Rapid" | "Classical" | null;
+  const [tcCategory, setTcCategory] = useState<TcCategory>(null);
+  const [customBase, setCustomBase] = useState("");
+  const [customInc, setCustomInc] = useState("");
   // rounds suggestion banner: shown after user picks a new cap that implies a different optimal rounds
   const [roundsSuggestion, setRoundsSuggestion] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -1162,42 +1167,155 @@ function QuickstartForm({
               className="px-5 lg:px-6 pb-4"
               style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(61,107,71,0.10)"}` }}
             >
-              <div className="grid grid-cols-2 gap-2 pt-3">
-                {timeControlOptions.map((opt) => {
-                  const active = data.timePreset === opt.preset;
-                  return (
+              {/* Level 1 — Category buttons (no caption text) */}
+              {!tcCategory && (
+                <div className="grid grid-cols-2 gap-2 pt-3">
+                  {(["Bullet", "Blitz", "Rapid", "Classical"] as const).map((cat) => {
+                    const catActive = ["Bullet", "Blitz"].includes(cat)
+                      ? data.ratingType === "blitz" && timeControlOptions.find(o => o.preset === data.timePreset)?.label === cat
+                      : timeControlOptions.find(o => o.preset === data.timePreset)?.label === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => { setTcCategory(cat); setCustomBase(""); setCustomInc(""); }}
+                        className="flex items-center justify-center rounded-xl border text-sm font-semibold transition-all duration-150"
+                        style={{
+                          padding: "10px 12px",
+                          background: catActive ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                          border: `1.5px solid ${catActive ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                          boxShadow: catActive ? `0 0 0 3px ${T.greenRing}` : "none",
+                          color: catActive ? T.green : isDark ? T.dText : T.lText,
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Level 2 — Preset sub-prompt for selected category */}
+              {tcCategory && (() => {
+                const presetMap: Record<string, { label: string; base: number; inc: number }[]> = {
+                  Bullet:    [{ label: "1 min", base: 1, inc: 0 }, { label: "1 + 1 min", base: 1, inc: 1 }, { label: "2 + 1 min", base: 2, inc: 1 }],
+                  Blitz:     [{ label: "3 min", base: 3, inc: 0 }, { label: "3 + 2 min", base: 3, inc: 2 }, { label: "5 min", base: 5, inc: 0 }],
+                  Rapid:     [{ label: "10 min", base: 10, inc: 0 }, { label: "15 + 10 min", base: 15, inc: 10 }, { label: "30 min", base: 30, inc: 0 }],
+                  Classical: [{ label: "45 min", base: 45, inc: 0 }, { label: "60 + 30 min", base: 60, inc: 30 }, { label: "90 + 30 min", base: 90, inc: 30 }],
+                };
+                const presets = presetMap[tcCategory] ?? [];
+                const applyPreset = (base: number, inc: number) => {
+                  const preset = inc > 0 ? `${base}+${inc}` : `${base}+0`;
+                  const isBlitzCat = tcCategory === "Bullet" || tcCategory === "Blitz";
+                  onChange({ timePreset: preset, timeBase: base, timeIncrement: inc, ratingType: isBlitzCat ? "blitz" : "rapid" });
+                  setTcCategory(null);
+                  setInlinePicker(null);
+                };
+                const handleCustomApply = () => {
+                  const b = parseInt(customBase, 10);
+                  const i = parseInt(customInc || "0", 10);
+                  if (!b || b < 1) return;
+                  applyPreset(b, i);
+                };
+                return (
+                  <div className="pt-3 space-y-3">
+                    {/* Back button */}
                     <button
-                      key={opt.preset}
                       type="button"
-                      onClick={() => {
-                        // Auto-suggest rating type based on time control category
-                        const isBlitzTime = opt.label === "Bullet" || opt.label === "Blitz";
-                        onChange({
-                          timePreset: opt.preset,
-                          timeBase: opt.base,
-                          timeIncrement: opt.inc,
-                          ratingType: isBlitzTime ? "blitz" : "rapid",
-                        });
-                        setInlinePicker(null);
-                      }}
-                      className="flex flex-col items-start rounded-xl border text-left transition-all duration-150"
-                      style={{
-                        padding: "8px 12px",
-                        background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
-                        border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
-                        boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
-                      }}
+                      onClick={() => setTcCategory(null)}
+                      className="flex items-center gap-1 text-xs font-medium"
+                      style={{ color: isDark ? T.dMuted : T.lMuted }}
                     >
-                      <span className="text-sm font-semibold" style={{ color: active ? T.green : isDark ? T.dText : T.lText }}>
-                        {opt.label}
-                      </span>
-                      <span className="text-xs mt-0.5" style={{ color: isDark ? T.dMuted : T.lMuted }}>
-                        {opt.sub}
-                      </span>
+                      <ChevronDown className="w-3 h-3 rotate-90" /> Back
                     </button>
-                  );
-                })}
-              </div>
+                    <p className="text-xs font-semibold" style={{ color: isDark ? T.dMuted : T.lMuted }}>
+                      {tcCategory} — choose a time control
+                    </p>
+                    {/* Preset options */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {presets.map((p) => {
+                        const pPreset = p.inc > 0 ? `${p.base}+${p.inc}` : `${p.base}+0`;
+                        const active = data.timePreset === pPreset;
+                        return (
+                          <button
+                            key={p.label}
+                            type="button"
+                            onClick={() => applyPreset(p.base, p.inc)}
+                            className="flex items-center justify-center rounded-xl border text-xs font-semibold transition-all duration-150"
+                            style={{
+                              padding: "9px 8px",
+                              background: active ? T.greenBg : isDark ? T.dCard : "#FAFAFA",
+                              border: `1.5px solid ${active ? T.green : isDark ? T.dBorder : T.lBorder}`,
+                              boxShadow: active ? `0 0 0 3px ${T.greenRing}` : "none",
+                              color: active ? T.green : isDark ? T.dText : T.lText,
+                            }}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Custom time input */}
+                    <div
+                      className="rounded-xl border p-3 space-y-2"
+                      style={{ border: `1.5px solid ${isDark ? T.dBorder : T.lBorder}`, background: isDark ? T.dCard : "#FAFAFA" }}
+                    >
+                      <p className="text-xs font-medium" style={{ color: isDark ? T.dMuted : T.lMuted }}>Custom time</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <label className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Base (min)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={180}
+                            value={customBase}
+                            onChange={(e) => setCustomBase(e.target.value)}
+                            placeholder="e.g. 15"
+                            className="w-full mt-0.5 rounded-lg border px-2 py-1.5 text-sm"
+                            style={{
+                              background: isDark ? "rgba(255,255,255,0.05)" : "#fff",
+                              border: `1px solid ${isDark ? T.dBorder : T.lBorder}`,
+                              color: isDark ? T.dText : T.lText,
+                              outline: "none",
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px]" style={{ color: isDark ? T.dMuted : T.lMuted }}>Increment (sec)</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={60}
+                            value={customInc}
+                            onChange={(e) => setCustomInc(e.target.value)}
+                            placeholder="e.g. 5"
+                            className="w-full mt-0.5 rounded-lg border px-2 py-1.5 text-sm"
+                            style={{
+                              background: isDark ? "rgba(255,255,255,0.05)" : "#fff",
+                              border: `1px solid ${isDark ? T.dBorder : T.lBorder}`,
+                              color: isDark ? T.dText : T.lText,
+                              outline: "none",
+                            }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCustomApply}
+                          disabled={!customBase}
+                          className="self-end rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
+                          style={{
+                            background: customBase ? T.green : isDark ? T.dBorder : T.lBorder,
+                            color: customBase ? "#fff" : isDark ? T.dMuted : T.lMuted,
+                            cursor: customBase ? "pointer" : "not-allowed",
+                          }}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

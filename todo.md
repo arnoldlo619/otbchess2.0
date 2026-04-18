@@ -5189,3 +5189,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Register /admin/staff route in App.tsx (lazy-loaded)
 - [x] "Staff Admin" amber link added to AvatarNavDropdown desktop dropdown (staff only)
 - [x] 0 TypeScript errors, 5181 tests passing
+
+## TournamentWizard — Time Control Sub-Prompt
+- [x] Removed caption/sub text from category buttons (Bullet / Blitz / Rapid / Classical)
+- [x] Two-level picker: click category → sub-prompt slides in with presets for that category
+- [x] Blitz presets: 3 min, 3 + 2 min, 5 min
+- [x] Rapid presets: 10 min, 15 + 10 min, 30 min
+- [x] Bullet presets: 1 min, 1 + 1 min, 2 + 1 min
+- [x] Classical presets: 45 min, 60 + 30 min, 90 + 30 min
+- [x] Custom time input: base (min) + increment (sec) with Apply button
+- [x] Back button returns to category selection
+- [x] timePreset, timeBase, timeIncrement, ratingType all wired to data model on selection
+- [x] 0 TypeScript errors
