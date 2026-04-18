@@ -101,6 +101,9 @@ function MatchCard({
       : "bg-[#3D6B47]/08",
     loserText: isDark ? "text-white/30" : "text-gray-300",
     seedBadge: isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400",
+    seedBadge1: isDark ? "bg-amber-400/20 text-amber-300" : "bg-amber-50 text-amber-600",
+    seedBadge2: isDark ? "bg-slate-400/15 text-slate-300" : "bg-slate-100 text-slate-500",
+    seedBadge3: isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-500",
     eloText: isDark ? "text-white/35" : "text-gray-400",
     divider: isDark ? "border-white/06" : "border-gray-100",
     btnWhite: isDark
@@ -113,6 +116,12 @@ function MatchCard({
       ? "bg-white/08 hover:bg-white/14 text-white/70 hover:text-white border-white/08"
       : "bg-gray-50 hover:bg-gray-100 text-gray-600 border-gray-200",
   };
+
+  const seedClass = (seed: number | null) =>
+    seed === 1 ? T.seedBadge1
+    : seed === 2 ? T.seedBadge2
+    : seed === 3 ? T.seedBadge3
+    : T.seedBadge;
 
   const cardBorder = isCurrentRound && isPending
     ? T.cardActive
@@ -128,7 +137,7 @@ function MatchCard({
       {/* Bye match */}
       {isBye && (
         <div className="px-3 py-2.5 flex items-center gap-2">
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${T.seedBadge}`}>
+          <span title={`Swiss seed #${blackSeed}`} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${seedClass(blackSeed)}`}>
             #{blackSeed}
           </span>
           <span className={`text-sm font-semibold truncate ${isDark ? "text-white/70" : "text-gray-700"}`}>
@@ -145,7 +154,7 @@ function MatchCard({
           <div className={`flex items-center gap-2 px-3 py-2 transition-colors ${
             winner === "white" ? T.winnerRow : winner !== null ? "" : ""
           }`}>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${T.seedBadge}`}>
+            <span title={`Swiss seed #${whiteSeed}`} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${seedClass(whiteSeed)}`}>
               #{whiteSeed ?? "?"}
             </span>
             <div className="flex-1 min-w-0">
@@ -177,7 +186,7 @@ function MatchCard({
           <div className={`flex items-center gap-2 px-3 py-2 transition-colors ${
             winner === "black" ? T.winnerRow : ""
           }`}>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${T.seedBadge}`}>
+            <span title={`Swiss seed #${blackSeed}`} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${seedClass(blackSeed)}`}>
               #{blackSeed ?? "?"}
             </span>
             <div className="flex-1 min-w-0">
