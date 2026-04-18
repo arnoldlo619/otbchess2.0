@@ -656,9 +656,7 @@ function HowItWorks() {
                 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                From Signups to Round 1
-                <br />
-                in three steps.
+                3 Simple Steps to Launch
               </h2>
             </div>
             <div className="grid md:grid-cols-3 gap-6 relative">
