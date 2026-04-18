@@ -12,6 +12,7 @@
  *   tournament_complete — final standings
  */
 import {useEffect, useState} from "react";
+import { motion } from "framer-motion";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
@@ -317,13 +318,21 @@ function LobbyScreen({
         <div className="relative flex items-center justify-center">
           <div className={`absolute w-32 h-32 rounded-full ${accentBg} animate-ping opacity-30`} />
           <div className={`absolute w-24 h-24 rounded-full ${accentBg} animate-ping opacity-50`} style={{ animationDelay: "0.3s" }} />
-          <div className={`relative w-20 h-20 rounded-full ${accentBg} flex items-center justify-center overflow-hidden`}>
-            <img
+          <motion.div
+            className={`relative w-20 h-20 rounded-full ${accentBg} flex items-center justify-center overflow-hidden`}
+            initial={{ scale: 0.4, opacity: 0, y: 12 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 }}
+          >
+            <motion.img
               src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
               alt="OTB!!"
               className="w-14 h-14 object-contain"
+              initial={{ rotate: -8 }}
+              animate={{ rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 14, delay: 0.25 }}
             />
-          </div>
+          </motion.div>
         </div>
         <div className="text-center space-y-2">
           <h2 className={`text-2xl font-bold ${textMain}`}>Welcome! Tournament begins shortly{dots}</h2>
