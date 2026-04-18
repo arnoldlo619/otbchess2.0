@@ -223,10 +223,19 @@ function PlayerRow({ player, isBye, seed, score, isWinner, isPending: _isPending
     }`}>
       {/* Seed badge */}
       {seed !== null && (
-        <span className={`text-[9px] font-black w-4 text-center flex-shrink-0 ${
-          isDark ? "text-white/25" : "text-gray-300"
-        }`}>
-          {seed}
+        <span
+          title={`Swiss seed #${seed}`}
+          className={`text-[9px] font-black flex-shrink-0 px-1 py-0.5 rounded min-w-[18px] text-center leading-none ${
+            seed === 1
+              ? isDark ? "bg-amber-400/20 text-amber-300" : "bg-amber-50 text-amber-600"
+              : seed === 2
+              ? isDark ? "bg-slate-400/15 text-slate-300" : "bg-slate-100 text-slate-500"
+              : seed === 3
+              ? isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-500"
+              : isDark ? "bg-white/08 text-white/35" : "bg-gray-100 text-gray-400"
+          }`}
+        >
+          #{seed}
         </span>
       )}
 
