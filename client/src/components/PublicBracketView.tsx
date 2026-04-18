@@ -1,21 +1,18 @@
 /**
  * PublicBracketView — Read-only spectator-facing elimination bracket tree
  *
- * Design: Apple-minimalist, chess.com green/white, Clash Display + Inter
- * Features:
- *   - Full bracket tree with round columns (QF / SF / Final / R16 / R32 / R64)
- *   - Match cards with player names, seeds, and result display
- *   - Bye cards auto-advance top seeds
- *   - Current round indicator (pulsing "Live" badge)
- *   - Winner highlight with green glow
- *   - Pending matches with amber "Pending" badge
- *   - Responsive horizontal scroll for wide brackets
- *   - Dark/light mode support
- *   - "Awaiting Swiss Results" state for swiss_elim before cutoff
+ * Matches the new EliminationBracketView design:
+ *   - Left-to-right horizontal bracket tree
+ *   - SVG connector lines between rounds
+ *   - Compact player cards with seed badge, name, ELO, score
+ *   - Green left-accent on winning player row
+ *   - Live / Done / Upcoming round labels
+ *   - Champion banner when final is decided
+ *   - Awaiting-cutoff and Swiss-in-progress empty states
  */
 
 import { useMemo } from "react";
-import { Trophy, Crown, Clock, ChevronRight } from "lucide-react";
+import { Trophy, Crown, Clock } from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { elimRoundLabel } from "@/lib/swiss";
 import type { Player, Round, Game } from "@/lib/tournamentData";
@@ -23,21 +20,13 @@ import type { Player, Round, Game } from "@/lib/tournamentData";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PublicBracketViewProps {
-  /** All rounds in the tournament (we filter to elimination rounds) */
   rounds: Round[];
-  /** All players in the tournament */
   players: Player[];
-  /** Players who qualified for the elimination bracket (seeded order) */
   elimPlayers?: Player[];
-  /** The current active round number */
   currentRound: number;
-  /** Round number where the elimination phase starts (1 for pure elimination, N+1 for swiss_elim) */
   elimStartRound?: number;
-  /** Whether the tournament is in the swiss_elim cutoff phase (Swiss done, bracket not yet generated) */
   isAwaitingCutoff?: boolean;
-  /** Format string for display */
   format?: string;
-  /** Dark mode flag */
   isDark: boolean;
 }
 
@@ -59,26 +48,128 @@ function resultWinner(game: Game): "white" | "black" | null {
   return null;
 }
 
-function isPending(game: Game): boolean {
-  return game.result === "*";
+function seedBadgeClass(seed: number | null, isDark: boolean): string {
+  if (seed === 1) return isDark ? "bg-amber-400/25 text-amber-300 border-amber-400/30" : "bg-amber-50 text-amber-600 border-amber-200";
+  if (seed === 2) return isDark ? "bg-slate-400/20 text-slate-300 border-slate-400/25" : "bg-slate-50 text-slate-500 border-slate-200";
+  if (seed === 3) return isDark ? "bg-orange-400/20 text-orange-300 border-orange-400/25" : "bg-orange-50 text-orange-500 border-orange-200";
+  return isDark ? "bg-white/08 text-white/40 border-white/10" : "bg-gray-50 text-gray-400 border-gray-200";
 }
 
-// ─── MatchCard ────────────────────────────────────────────────────────────────
+// Card dimensions — must match EliminationBracketView
+const CARD_H = 72;
+const CARD_GAP = 12;
+const COL_GAP = 48;
+const COL_W = 208;
 
-interface MatchCardProps {
+// ─── Player Row ───────────────────────────────────────────────────────────────
+
+function PlayerRow({
+  player,
+  seed,
+  score,
+  isWinner,
+  isLoser,
+  isByeRow,
+  isDark,
+}: {
+  player: Player | undefined;
+  seed: number | null;
+  score: string | null;
+  isWinner: boolean;
+  isLoser: boolean;
+  isByeRow: boolean;
+  isDark: boolean;
+}) {
+  const loserText = isDark ? "text-white/28" : "text-gray-300";
+  const winnerBg = isDark ? "bg-[#3D6B47]/25" : "bg-[#3D6B47]/07";
+
+  if (isByeRow) {
+    return (
+      <div className={`flex items-center gap-2 px-3 py-2.5 opacity-30`}>
+        <span className={`text-[10px] font-bold w-6 text-center ${isDark ? "text-white/30" : "text-gray-300"}`}>—</span>
+        <span className={`text-xs italic ${isDark ? "text-white/30" : "text-gray-300"}`}>BYE</span>
+      </div>
+    );
+  }
+
+  if (!player) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className={`w-[22px] h-[18px] rounded flex-shrink-0 ${isDark ? "bg-white/06" : "bg-gray-100"} animate-pulse`} />
+        <div className={`h-3 w-20 rounded ${isDark ? "bg-white/06" : "bg-gray-100"} animate-pulse`} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative flex items-center gap-2 px-3 py-2.5 transition-colors ${isWinner ? winnerBg : ""}`}>
+      {/* Green left accent on winner */}
+      {isWinner && (
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-r-full bg-[#4CAF50]" />
+      )}
+      {/* Seed badge */}
+      <span
+        title={`Swiss seed #${seed}`}
+        className={`text-[9px] font-black flex-shrink-0 w-[22px] h-[18px] flex items-center justify-center rounded border ${seedBadgeClass(seed, isDark)}`}
+      >
+        {seed != null ? `#${seed}` : "?"}
+      </span>
+      {/* Avatar */}
+      <PlayerAvatar
+        name={player.name}
+        username={player.username}
+        size={20}
+        platform={player.platform === "lichess" ? "lichess" : "chesscom"}
+        avatarUrl={player.avatarUrl}
+      />
+      {/* Name + ELO */}
+      <div className="flex-1 min-w-0">
+        <span className={`text-xs font-semibold truncate block leading-tight ${
+          isLoser ? loserText : isWinner
+            ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+            : isDark ? "text-white/88" : "text-gray-900"
+        }`}>
+          {player.name}
+        </span>
+        {player.elo && (
+          <span className={`text-[9px] ${isDark ? "text-white/28" : "text-gray-400"}`}>
+            {player.elo}
+          </span>
+        )}
+      </div>
+      {/* Score */}
+      {score !== null && (
+        <span className={`text-sm font-black tabular-nums flex-shrink-0 w-4 text-right ${
+          isWinner ? (isDark ? "text-[#4CAF50]" : "text-[#3D6B47]") : loserText
+        }`}>
+          {score}
+        </span>
+      )}
+      {/* Crown */}
+      {isWinner && <Crown className={`w-3 h-3 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-500"}`} strokeWidth={2} />}
+    </div>
+  );
+}
+
+// ─── Match Card ───────────────────────────────────────────────────────────────
+
+function MatchCard({
+  game,
+  players,
+  elimPlayers,
+  isCurrentRound,
+  isDark,
+}: {
   game: Game;
   players: Player[];
   elimPlayers: Player[];
   isCurrentRound: boolean;
   isDark: boolean;
-  roundNumber: number;
-}
-
-function MatchCard({ game, players, elimPlayers, isCurrentRound, isDark, roundNumber: _roundNumber }: MatchCardProps) {
+}) {
   const white = getPlayer(game.whiteId, elimPlayers, players);
   const black = getPlayer(game.blackId, elimPlayers, players);
   const winner = resultWinner(game);
-  const pending = isPending(game);
+  const pending = game.result === "*";
   const isBye = game.whiteId === "BYE" || game.blackId === "BYE";
 
   const whiteSeedIdx = getSeedIndex(game.whiteId, elimPlayers);
@@ -86,210 +177,117 @@ function MatchCard({ game, players, elimPlayers, isCurrentRound, isDark, roundNu
   const whiteSeed = whiteSeedIdx >= 0 ? whiteSeedIdx + 1 : null;
   const blackSeed = blackSeedIdx >= 0 ? blackSeedIdx + 1 : null;
 
-  // Score display
   const whiteScore = game.result === "1-0" ? "1" : game.result === "½-½" ? "½" : game.result === "0-1" ? "0" : null;
   const blackScore = game.result === "0-1" ? "1" : game.result === "½-½" ? "½" : game.result === "1-0" ? "0" : null;
 
-  const cardBase = isDark
-    ? "bg-[oklch(0.22_0.06_145)] border-white/08"
-    : "bg-white border-gray-100";
-
-  const cardActive = isDark
-    ? "bg-[oklch(0.24_0.07_145)] border-[#4CAF50]/30 shadow-[0_0_12px_rgba(76,175,80,0.12)]"
-    : "bg-white border-[#3D6B47]/25 shadow-[0_2px_12px_rgba(61,107,71,0.10)]";
-
-  const cardComplete = isDark
-    ? "bg-[oklch(0.22_0.06_145)] border-white/06"
-    : "bg-white border-gray-100";
-
-  const cardStyle = pending && isCurrentRound ? cardActive : !pending ? cardComplete : cardBase;
+  const cardBorder = isCurrentRound && pending
+    ? isDark ? "border-[#4CAF50]/35 shadow-[0_0_0_1px_rgba(76,175,80,0.12)]" : "border-[#3D6B47]/35"
+    : isDark ? "border-white/08" : "border-gray-150";
 
   return (
-    <div className={`rounded-xl border overflow-hidden transition-all duration-300 w-52 flex-shrink-0 ${cardStyle}`}>
-      {/* Board number */}
-      <div className={`flex items-center justify-between px-3 py-1.5 border-b ${
-        isDark ? "border-white/06" : "border-gray-100"
-      }`}>
-        <span className={`text-[10px] font-bold uppercase tracking-wider ${
-          isDark ? "text-white/30" : "text-gray-400"
-        }`}>
-          Board {game.board}
-        </span>
-        {pending && isCurrentRound && (
-          <span className={`flex items-center gap-1 text-[10px] font-bold ${
-            isDark ? "text-amber-400" : "text-amber-600"
-          }`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Live
-          </span>
-        )}
-        {!pending && (
-          <span className={`text-[10px] font-bold ${
-            isDark ? "text-[#4CAF50]/70" : "text-[#3D6B47]/70"
-          }`}>
-            Done
-          </span>
-        )}
-        {pending && !isCurrentRound && (
-          <span className={`text-[10px] font-semibold ${
-            isDark ? "text-white/25" : "text-gray-300"
-          }`}>
-            Upcoming
-          </span>
-        )}
-      </div>
-
-      {/* White player row */}
+    <div
+      className={`rounded-xl border overflow-hidden transition-all duration-200 ${
+        isDark ? "bg-[oklch(0.22_0.06_145)]" : "bg-white"
+      } ${cardBorder} ${isBye ? "opacity-50" : ""}`}
+      style={{ width: COL_W }}
+    >
       <PlayerRow
-        player={isBye && game.whiteId === "BYE" ? undefined : white}
-        isBye={game.whiteId === "BYE"}
+        player={game.whiteId === "BYE" ? undefined : white}
         seed={whiteSeed}
         score={whiteScore}
         isWinner={winner === "white"}
-        isPending={pending}
+        isLoser={winner === "black"}
+        isByeRow={game.whiteId === "BYE"}
         isDark={isDark}
-        side="white"
       />
-
-      {/* Divider */}
-      <div className={`h-px mx-3 ${isDark ? "bg-white/05" : "bg-gray-100"}`} />
-
-      {/* Black player row */}
+      <div className={`h-px mx-2.5 ${isDark ? "bg-white/06" : "bg-gray-100"}`} />
       <PlayerRow
-        player={isBye && game.blackId === "BYE" ? undefined : black}
-        isBye={game.blackId === "BYE"}
+        player={game.blackId === "BYE" ? undefined : black}
         seed={blackSeed}
         score={blackScore}
         isWinner={winner === "black"}
-        isPending={pending}
+        isLoser={winner === "white"}
+        isByeRow={game.blackId === "BYE"}
         isDark={isDark}
-        side="black"
       />
     </div>
   );
 }
 
-// ─── PlayerRow ────────────────────────────────────────────────────────────────
+// ─── SVG Bracket Connector ────────────────────────────────────────────────────
 
-interface PlayerRowProps {
-  player: Player | undefined;
-  isBye: boolean;
-  seed: number | null;
-  score: string | null;
-  isWinner: boolean;
-  isPending: boolean;
+function BracketConnector({
+  matchCount,
+  nextCount,
+  isDark,
+}: {
+  matchCount: number;
+  nextCount: number;
   isDark: boolean;
-  side: "white" | "black";
-}
+}) {
+  const lineColor = isDark ? "rgba(76,175,80,0.18)" : "rgba(61,107,71,0.15)";
+  const dotColor = isDark ? "rgba(76,175,80,0.35)" : "rgba(61,107,71,0.30)";
 
-function PlayerRow({ player, isBye, seed, score, isWinner, isPending: _isPending, isDark, side: _side }: PlayerRowProps) {
-  if (isBye) {
-    return (
-      <div className={`flex items-center gap-2 px-3 py-2.5 ${
-        isDark ? "opacity-30" : "opacity-25"
-      }`}>
-        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
-          isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
-        }`}>
-          —
-        </div>
-        <span className={`text-xs font-semibold italic ${
-          isDark ? "text-white/30" : "text-gray-300"
-        }`}>BYE</span>
-      </div>
+  const leftColH = matchCount * CARD_H + Math.max(0, matchCount - 1) * CARD_GAP;
+  const rightColH = nextCount * CARD_H + Math.max(0, nextCount - 1) * CARD_GAP;
+  const svgH = Math.max(leftColH, rightColH);
+  const svgW = COL_GAP;
+
+  const pairs = Math.floor(matchCount / 2);
+  const paths: React.ReactNode[] = [];
+
+  for (let i = 0; i < pairs; i++) {
+    const topMatchCenter = i * 2 * (CARD_H + CARD_GAP) + CARD_H / 2;
+    const botMatchCenter = (i * 2 + 1) * (CARD_H + CARD_GAP) + CARD_H / 2;
+    const midY = (topMatchCenter + botMatchCenter) / 2;
+    const rightOffset = (svgH - rightColH) / 2;
+    const rightMatchCenter = rightOffset + i * (CARD_H + CARD_GAP) + CARD_H / 2;
+
+    paths.push(
+      <g key={i}>
+        <path d={`M 0 ${topMatchCenter} H ${svgW * 0.45} V ${midY}`}
+          stroke={lineColor} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={`M 0 ${botMatchCenter} H ${svgW * 0.45} V ${midY}`}
+          stroke={lineColor} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={`M ${svgW * 0.45} ${midY} H ${svgW * 0.55} V ${rightMatchCenter} H ${svgW}`}
+          stroke={lineColor} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={svgW * 0.45} cy={midY} r="2.5" fill={dotColor} />
+      </g>
     );
   }
 
-  if (!player) {
-    return (
-      <div className={`flex items-center gap-2 px-3 py-2.5`}>
-        <div className={`w-6 h-6 rounded-lg flex-shrink-0 ${
-          isDark ? "bg-white/06" : "bg-gray-100"
-        } animate-pulse`} />
-        <div className={`h-3 w-20 rounded ${
-          isDark ? "bg-white/06" : "bg-gray-100"
-        } animate-pulse`} />
-      </div>
+  if (matchCount % 2 !== 0) {
+    const lastMatchCenter = (matchCount - 1) * (CARD_H + CARD_GAP) + CARD_H / 2;
+    const rightOffset = (svgH - rightColH) / 2;
+    const rightMatchCenter = rightOffset + Math.floor(matchCount / 2) * (CARD_H + CARD_GAP) + CARD_H / 2;
+    paths.push(
+      <path key="odd"
+        d={`M 0 ${lastMatchCenter} H ${svgW * 0.5} V ${rightMatchCenter} H ${svgW}`}
+        stroke={lineColor} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
     );
   }
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-2.5 transition-colors duration-200 ${
-      isWinner
-        ? isDark
-          ? "bg-[#3D6B47]/20"
-          : "bg-[#3D6B47]/06"
-        : ""
-    }`}>
-      {/* Seed badge */}
-      {seed !== null && (
-        <span
-          title={`Swiss seed #${seed}`}
-          className={`text-[9px] font-black flex-shrink-0 px-1 py-0.5 rounded min-w-[18px] text-center leading-none ${
-            seed === 1
-              ? isDark ? "bg-amber-400/20 text-amber-300" : "bg-amber-50 text-amber-600"
-              : seed === 2
-              ? isDark ? "bg-slate-400/15 text-slate-300" : "bg-slate-100 text-slate-500"
-              : seed === 3
-              ? isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-500"
-              : isDark ? "bg-white/08 text-white/35" : "bg-gray-100 text-gray-400"
-          }`}
-        >
-          #{seed}
-        </span>
-      )}
-
-      {/* Avatar */}
-      <PlayerAvatar
-        name={player.name}
-        username={player.username}
-        size={22}
-        platform={player.platform === "lichess" ? "lichess" : "chesscom"}
-        avatarUrl={player.avatarUrl}
-      />
-
-      {/* Name */}
-      <div className="flex-1 min-w-0">
-        <span className={`text-xs font-semibold truncate block ${
-          isWinner
-            ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-            : isDark ? "text-white/80" : "text-gray-800"
-        }`}>
-          {player.name}
-        </span>
-        {player.elo && (
-          <span className={`text-[9px] font-medium ${
-            isDark ? "text-white/25" : "text-gray-400"
-          }`}>
-            {player.elo}
-          </span>
-        )}
-      </div>
-
-      {/* Score */}
-      {score !== null && (
-        <span className={`text-sm font-black flex-shrink-0 w-5 text-center ${
-          isWinner
-            ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-            : isDark ? "text-white/40" : "text-gray-400"
-        }`}>
-          {score}
-        </span>
-      )}
-
-      {/* Winner crown */}
-      {isWinner && (
-        <Crown className={`w-3 h-3 flex-shrink-0 ${
-          isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-        }`} />
-      )}
+    <div className="flex-shrink-0 self-start" style={{ width: svgW, height: svgH }}>
+      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} fill="none" overflow="visible">
+        {paths}
+      </svg>
     </div>
   );
 }
 
-// ─── RoundColumn ─────────────────────────────────────────────────────────────
+// ─── Round Column ─────────────────────────────────────────────────────────────
 
-interface RoundColumnProps {
+function RoundColumn({
+  roundNumber,
+  games,
+  players,
+  elimPlayers,
+  currentRound,
+  isDark,
+  label,
+  verticalOffset,
+}: {
   roundNumber: number;
   games: Game[];
   players: Player[];
@@ -297,19 +295,17 @@ interface RoundColumnProps {
   currentRound: number;
   isDark: boolean;
   label: string;
-  isLast: boolean;
-}
-
-function RoundColumn({ roundNumber, games, players, elimPlayers, currentRound, isDark, label, isLast: _isLast }: RoundColumnProps) {
+  verticalOffset: number;
+}) {
   const isCurrentRound = roundNumber === currentRound;
   const isCompleted = roundNumber < currentRound;
 
   return (
-    <div className="flex flex-col gap-2 flex-shrink-0">
+    <div className="flex flex-col flex-shrink-0" style={{ width: COL_W }}>
       {/* Round label */}
-      <div className={`flex items-center gap-2 mb-1 px-1`}>
+      <div className="flex items-center gap-2 mb-3 h-7">
         <span
-          className={`text-xs font-black uppercase tracking-wider ${
+          className={`text-[11px] font-black uppercase tracking-wider ${
             isCurrentRound
               ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
               : isCompleted
@@ -321,26 +317,20 @@ function RoundColumn({ roundNumber, games, players, elimPlayers, currentRound, i
           {label}
         </span>
         {isCurrentRound && (
-          <span className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-            isDark
-              ? "bg-[#4CAF50]/15 text-[#4CAF50]"
-              : "bg-[#3D6B47]/10 text-[#3D6B47]"
+          <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
           }`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] animate-pulse" />
+            <span className="w-1 h-1 rounded-full bg-[#4CAF50] animate-pulse" />
             Live
           </span>
         )}
         {isCompleted && (
-          <span className={`text-[10px] font-semibold ${
-            isDark ? "text-white/20" : "text-gray-300"
-          }`}>
-            ✓
-          </span>
+          <span className={`text-[9px] font-semibold ${isDark ? "text-white/20" : "text-gray-300"}`}>✓</span>
         )}
       </div>
 
-      {/* Match cards stacked vertically */}
-      <div className="flex flex-col gap-3">
+      {/* Cards */}
+      <div className="flex flex-col" style={{ gap: CARD_GAP, marginTop: verticalOffset }}>
         {games.map((game) => (
           <MatchCard
             key={game.id}
@@ -349,10 +339,64 @@ function RoundColumn({ roundNumber, games, players, elimPlayers, currentRound, i
             elimPlayers={elimPlayers}
             isCurrentRound={isCurrentRound}
             isDark={isDark}
-            roundNumber={roundNumber}
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Champion Card ────────────────────────────────────────────────────────────
+
+function ChampionCard({
+  game,
+  players,
+  elimPlayers,
+  isDark,
+}: {
+  game: Game | undefined;
+  players: Player[];
+  elimPlayers: Player[];
+  isDark: boolean;
+}) {
+  const winner = game ? resultWinner(game) : null;
+  const champId = winner === "white" ? game!.whiteId : winner === "black" ? game!.blackId : null;
+  const champ = champId ? getPlayer(champId, elimPlayers, players) : null;
+  const seed = champId ? (getSeedIndex(champId, elimPlayers) + 1 || null) : null;
+
+  return (
+    <div
+      className={`flex flex-col items-center justify-center rounded-xl border p-4 gap-3 flex-shrink-0 ${
+        champ
+          ? isDark ? "bg-[oklch(0.28_0.10_145)] border-amber-400/30" : "bg-amber-50 border-amber-200"
+          : isDark ? "bg-[oklch(0.20_0.05_145)] border-white/06" : "bg-gray-50 border-gray-150"
+      }`}
+      style={{ width: 140 }}
+    >
+      <div className="relative">
+        <Trophy className={`w-7 h-7 ${champ ? "text-amber-400" : isDark ? "text-white/15" : "text-gray-200"}`} />
+        {champ && <Crown className="w-3.5 h-3.5 text-amber-400 absolute -top-1.5 -right-1.5" strokeWidth={2} />}
+      </div>
+      {champ ? (
+        <div className="text-center">
+          <p className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>
+            Champion
+          </p>
+          <p className={`text-sm font-black leading-tight ${isDark ? "text-white" : "text-gray-900"}`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            {champ.name}
+          </p>
+          {seed && (
+            <p className={`text-[9px] mt-0.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+              Seed #{seed}{champ.elo ? ` · ${champ.elo}` : ""}
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className={`text-[10px] font-semibold text-center ${isDark ? "text-white/25" : "text-gray-300"}`}>
+          Champion TBD
+        </p>
+      )}
     </div>
   );
 }
@@ -369,13 +413,11 @@ export function PublicBracketView({
   format,
   isDark,
 }: PublicBracketViewProps) {
-  // Filter to elimination rounds only
   const elimRounds = useMemo(
     () => rounds.filter((r) => r.number >= elimStartRound),
     [rounds, elimStartRound]
   );
 
-  // Compute round labels based on match count (players remaining)
   const roundLabels = useMemo(() => {
     const labels: Record<number, string> = {};
     for (const round of elimRounds) {
@@ -387,15 +429,13 @@ export function PublicBracketView({
     return labels;
   }, [elimRounds]);
 
-  // ── Awaiting cutoff state ──────────────────────────────────────────────────
+  // ── Awaiting cutoff ────────────────────────────────────────────────────────
   if (isAwaitingCutoff) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border ${
         isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
       }`}>
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-          isDark ? "bg-amber-500/10" : "bg-amber-50"
-        }`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-amber-500/10" : "bg-amber-50"}`}>
           <Clock className={`w-7 h-7 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
         </div>
         <div className="text-center">
@@ -405,9 +445,6 @@ export function PublicBracketView({
           </p>
           <p className={`text-sm mt-1 ${isDark ? "text-white/40" : "text-gray-500"}`}>
             The director is generating the elimination bracket.
-          </p>
-          <p className={`text-xs mt-1 ${isDark ? "text-white/25" : "text-gray-400"}`}>
-            Check back shortly — this page updates live.
           </p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -420,15 +457,13 @@ export function PublicBracketView({
     );
   }
 
-  //   // ── No bracket yet — Swiss still in progress ———————————————————————————————
+  // ── No bracket yet ─────────────────────────────────────────────────────────
   if (elimRounds.length === 0) {
     return (
       <div className={`flex flex-col items-center justify-center py-16 gap-4 rounded-2xl border ${
         isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
       }`}>
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-          isDark ? "bg-amber-500/10" : "bg-amber-50"
-        }`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-amber-500/10" : "bg-amber-50"}`}>
           <Trophy className={`w-7 h-7 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
         </div>
         <div className="text-center">
@@ -450,8 +485,18 @@ export function PublicBracketView({
     );
   }
 
-  // ── Full bracket tree ─────────────────────────────────────────────────────
+  // ── Full bracket tree ──────────────────────────────────────────────────────
   const seededPlayers = elimPlayers.length > 0 ? elimPlayers : players;
+  const maxMatches = Math.max(...elimRounds.map((r) => r.games.length));
+
+  function colOffset(matchCount: number): number {
+    const colH = matchCount * CARD_H + Math.max(0, matchCount - 1) * CARD_GAP;
+    const maxH = maxMatches * CARD_H + Math.max(0, maxMatches - 1) * CARD_GAP;
+    return (maxH - colH) / 2;
+  }
+
+  const finalRound = elimRounds[elimRounds.length - 1];
+  const finalGame = finalRound?.games[0];
 
   return (
     <div className="flex flex-col gap-4">
@@ -463,10 +508,8 @@ export function PublicBracketView({
           <Trophy className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
         </div>
         <div>
-          <h3
-            className={`text-sm font-black ${isDark ? "text-white/80" : "text-gray-800"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
+          <h3 className={`text-sm font-black ${isDark ? "text-white/80" : "text-gray-800"}`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}>
             Elimination Bracket
           </h3>
           <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>
@@ -477,49 +520,75 @@ export function PublicBracketView({
       </div>
 
       {/* Bracket scroll container */}
-      <div className="overflow-x-auto pb-4 -mx-1 px-1">
-        <div className="flex gap-6 min-w-max">
-          {elimRounds.map((round, idx) => (
-            <div key={round.number} className="flex items-start gap-6">
-              <RoundColumn
-                roundNumber={round.number}
-                games={round.games}
-                players={players}
-                elimPlayers={seededPlayers}
-                currentRound={currentRound}
+      <div className="overflow-x-auto pb-3 -mx-1 px-1" style={{ scrollbarWidth: "thin" }}>
+        <div className="flex items-start min-w-max">
+          {elimRounds.map((round, idx) => {
+            const isLast = idx === elimRounds.length - 1;
+            const nextRound = elimRounds[idx + 1];
+
+            return (
+              <div key={round.number} className="flex items-start">
+                <RoundColumn
+                  roundNumber={round.number}
+                  games={round.games}
+                  players={players}
+                  elimPlayers={seededPlayers}
+                  currentRound={currentRound}
+                  isDark={isDark}
+                  label={roundLabels[round.number] ?? `Round ${round.number}`}
+                  verticalOffset={colOffset(round.games.length)}
+                />
+                {!isLast && nextRound && (
+                  <div style={{ marginTop: 28 }}>
+                    <BracketConnector
+                      matchCount={round.games.length}
+                      nextCount={nextRound.games.length}
+                      isDark={isDark}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Connector to champion slot */}
+          {finalRound && (
+            <div style={{ marginTop: 28 }}>
+              <BracketConnector
+                matchCount={finalRound.games.length}
+                nextCount={1}
                 isDark={isDark}
-                label={roundLabels[round.number] ?? `Round ${round.number}`}
-                isLast={idx === elimRounds.length - 1}
               />
-              {/* Connector arrow between rounds */}
-              {idx < elimRounds.length - 1 && (
-                <div className="flex items-center self-stretch">
-                  <ChevronRight className={`w-4 h-4 flex-shrink-0 ${
-                    isDark ? "text-white/15" : "text-gray-200"
-                  }`} />
-                </div>
-              )}
             </div>
-          ))}
+          )}
+
+          {/* Champion card */}
+          <div style={{ marginTop: 28 + colOffset(1) }}>
+            <ChampionCard
+              game={finalGame}
+              players={players}
+              elimPlayers={seededPlayers}
+              isDark={isDark}
+            />
+          </div>
         </div>
       </div>
 
       {/* Champion banner — shown when the final is complete */}
       {(() => {
-        const finalRound = elimRounds[elimRounds.length - 1];
-        if (!finalRound || finalRound.games.length !== 1) return null;
-        const finalGame = finalRound.games[0];
+        if (!finalGame) return null;
         const champion = resultWinner(finalGame);
         if (!champion) return null;
         const championId = champion === "white" ? finalGame.whiteId : finalGame.blackId;
         const championPlayer = getPlayer(championId, seededPlayers, players);
         if (!championPlayer) return null;
         return (
-          <div className={`flex items-center gap-4 px-5 py-4 rounded-2xl border animate-in fade-in slide-in-from-bottom-2 ${
-            isDark
-              ? "bg-amber-400/08 border-amber-400/20"
-              : "bg-amber-50 border-amber-200"
-          }`} style={{ animationDuration: "400ms" }}>
+          <div
+            className={`flex items-center gap-4 px-5 py-4 rounded-2xl border animate-in fade-in slide-in-from-bottom-2 ${
+              isDark ? "bg-amber-400/08 border-amber-400/20" : "bg-amber-50 border-amber-200"
+            }`}
+            style={{ animationDuration: "400ms" }}
+          >
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
               isDark ? "bg-amber-400/15" : "bg-amber-100"
             }`}>
@@ -531,10 +600,8 @@ export function PublicBracketView({
               }`}>
                 Tournament Champion
               </p>
-              <p
-                className={`text-lg font-black ${isDark ? "text-amber-300" : "text-amber-800"}`}
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
+              <p className={`text-lg font-black ${isDark ? "text-amber-300" : "text-amber-800"}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}>
                 {championPlayer.name}
               </p>
               {championPlayer.elo && (
