@@ -1571,6 +1571,7 @@ export default function Director() {
     startTournament,
     enterResult,
     generateNextRound,
+    generateNextRoundWithCutoff,
     advanceToElimination: _advanceToElimination,
     resetElimination,
     togglePause,
@@ -1741,6 +1742,7 @@ export default function Director() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showFilters, setShowFilters] = useState(false);
   const [showCutoffOverride, setShowCutoffOverride] = useState(false);
+  const [showBracketGenerateModal, setShowBracketGenerateModal] = useState(false);
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [showUploadRSVP, setShowUploadRSVP] = useState(false);
   const [showCarousel, setShowCarousel] = useState(false);
@@ -2235,32 +2237,7 @@ export default function Director() {
               </p>
             </div>
             <button
-              onClick={() => {
-                generateNextRound();
-                // Switch to bracket tab immediately
-                setActiveTab("bracket");
-                const cutoff = suggestElimCutoff(state.players.length);
-                toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
-                setTimeout(() => {
-                  try {
-                    const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
-                    const latestState = raw ? JSON.parse(raw) : null;
-                    const nextRound = state.currentRound + 1;
-                    const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                    if (roundData && latestState?.state?.players) {
-                      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          round: nextRound,
-                          games: roundData.games,
-                          players: latestState.state.players,
-                        }),
-                      }).catch(() => {});
-                    }
-                  } catch { /* ignore */ }
-                }, 200);
-              }}
+              onClick={() => setShowBracketGenerateModal(true)}
               className={`group flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                 isDark
                   ? "bg-amber-500 text-black hover:bg-amber-400 shadow-[0_2px_10px_rgba(245,158,11,0.35)]"
@@ -2975,31 +2952,7 @@ export default function Director() {
                       </div>
                       <div className="px-4 py-3">
                         <button
-                          onClick={() => {
-                            generateNextRound();
-                            setActiveTab("bracket");
-                            const cutoff = suggestElimCutoff(state.players.length);
-                            toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
-                            setTimeout(() => {
-                              try {
-                                const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
-                                const latestState = raw ? JSON.parse(raw) : null;
-                                const nextRound = state.currentRound + 1;
-                                const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                                if (roundData && latestState?.state?.players) {
-                                  fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      round: nextRound,
-                                      games: roundData.games,
-                                      players: latestState.state.players,
-                                    }),
-                                  }).catch(() => {});
-                                }
-                              } catch { /* ignore */ }
-                            }, 200);
-                          }}
+                          onClick={() => setShowBracketGenerateModal(true)}
                           className="group w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-black transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
                           style={{ background: "#f59e0b", boxShadow: "0 4px 16px rgba(245,158,11,0.35)" }}
                         >
@@ -4408,30 +4361,7 @@ export default function Director() {
                   </div>
                   {isSwissElimSwissPhaseComplete && allResultsIn && (
                     <button
-                      onClick={() => {
-                        generateNextRound();
-                        const cutoff = suggestElimCutoff(state.players.length);
-                        toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
-                        setTimeout(() => {
-                          try {
-                            const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
-                            const latestState = raw ? JSON.parse(raw) : null;
-                            const nextRound = state.currentRound + 1;
-                            const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                            if (roundData && latestState?.state?.players) {
-                              fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  round: nextRound,
-                                  games: roundData.games,
-                                  players: latestState.state.players,
-                                }),
-                              }).catch(() => {});
-                            }
-                          } catch { /* ignore */ }
-                        }, 200);
-                      }}
+                      onClick={() => setShowBracketGenerateModal(true)}
                       className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${
                         isDark
                           ? "bg-amber-500 text-black hover:bg-amber-400 shadow-lg shadow-amber-500/25"
@@ -5242,6 +5172,42 @@ export default function Director() {
           onClose={() => setSwapModalOpen(false)}
         />
       )}
+      {/* ── Bracket Generate Modal (pre-generate cutoff confirmation) ────── */}
+      {showBracketGenerateModal && isSwissElimSwissPhaseComplete && (
+        <CutoffOverrideModal
+          mode="generate"
+          playerCount={state.players.length}
+          suggestedCutoff={suggestElimCutoff(state.players.length)}
+          isDark={isDark}
+          onConfirm={(cutoff) => {
+            setShowBracketGenerateModal(false);
+            generateNextRoundWithCutoff(cutoff);
+            setActiveTab("bracket");
+            toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
+            setTimeout(() => {
+              try {
+                const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
+                const latestState = raw ? JSON.parse(raw) : null;
+                const nextRound = state.currentRound + 1;
+                const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
+                if (roundData && latestState?.state?.players) {
+                  fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      round: nextRound,
+                      games: roundData.games,
+                      players: latestState.state.players,
+                    }),
+                  }).catch(() => {});
+                }
+              } catch { /* ignore */ }
+            }, 300);
+          }}
+          onCancel={() => setShowBracketGenerateModal(false)}
+        />
+      )}
+
       {/* ── Cutoff Override Modal ─────────────────────────────────────────── */}
       {showCutoffOverride && state.format === "swiss_elim" && state.elimPhase === "elimination" && (() => {
         const swissRoundCount = state.swissRounds ?? 0;
@@ -5251,6 +5217,7 @@ export default function Director() {
         );
         return (
           <CutoffOverrideModal
+            mode="change"
             currentCutoff={state.elimCutoff ?? 8}
             totalPlayers={state.players.length}
             hasResults={hasElimResults}
