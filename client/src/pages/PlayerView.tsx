@@ -317,12 +317,16 @@ function LobbyScreen({
         <div className="relative flex items-center justify-center">
           <div className={`absolute w-32 h-32 rounded-full ${accentBg} animate-ping opacity-30`} />
           <div className={`absolute w-24 h-24 rounded-full ${accentBg} animate-ping opacity-50`} style={{ animationDelay: "0.3s" }} />
-          <div className={`relative w-20 h-20 rounded-full ${accentBg} flex items-center justify-center`}>
-            <Crown className={`w-10 h-10 ${accent}`} />
+          <div className={`relative w-20 h-20 rounded-full ${accentBg} flex items-center justify-center overflow-hidden`}>
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_a8022818.png"
+              alt="OTB!!"
+              className="w-14 h-14 object-contain"
+            />
           </div>
         </div>
         <div className="text-center space-y-2">
-          <h2 className={`text-2xl font-bold ${textMain}`}>Waiting for tournament to start{dots}</h2>
+          <h2 className={`text-2xl font-bold ${textMain}`}>Welcome! Tournament begins shortly{dots}</h2>
           <p className={`text-base ${textMuted}`}>
             Hi <span className={`font-bold ${accent}`}>{username}</span> — you're registered!
           </p>
@@ -346,9 +350,6 @@ function LobbyScreen({
             </div>
           ))}
         </div>
-      </div>
-      <div className="px-6 pb-safe-bottom pb-8">
-        <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
       </div>
     </div>
   );

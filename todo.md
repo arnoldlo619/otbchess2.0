@@ -5201,3 +5201,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Back button returns to category selection
 - [x] timePreset, timeBase, timeIncrement, ratingType all wired to data model on selection
 - [x] 0 TypeScript errors
+
+## Tournament Waiting Lobby UI (Mobile)
+- [x] Replace heading "Waiting for tournament to start..." with "Welcome! Tournament begins shortly"
+- [x] Replace Crown icon with the OTB !! logo image (uploaded to CDN)
+- [x] Remove "Your Rejoin Link" card from the lobby screen for a cleaner, minimalist design
+- [x] 0 TypeScript errors
