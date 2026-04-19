@@ -8,6 +8,7 @@
  * color. Accent state is stored in a Map keyed by player id.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import confetti from "canvas-confetti";
 import { useChessAvatars, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { useParams, Link } from "wouter";
@@ -656,19 +657,53 @@ export default function ReportPage() {
     return exportRefs.current.get(playerId)!;
   }
 
-  // Celebratory toast on auto-redirect from completed tournament
+  // Celebratory confetti + toast on auto-redirect from completed tournament
   useEffect(() => {
     if (isDemo) return;
     const key = `otb_redirect_complete_${tournamentId}`;
     if (sessionStorage.getItem(key)) {
       sessionStorage.removeItem(key);
-      const t = setTimeout(() => {
+
+      // Fire a multi-burst confetti sequence
+      const fireConfetti = () => {
+        // Left cannon
+        confetti({
+          particleCount: 80,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.65 },
+          colors: ["#4CAF50", "#81C784", "#FFD700", "#FFFFFF", "#A5D6A7"],
+          zIndex: 9999,
+        });
+        // Right cannon
+        confetti({
+          particleCount: 80,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.65 },
+          colors: ["#4CAF50", "#81C784", "#FFD700", "#FFFFFF", "#A5D6A7"],
+          zIndex: 9999,
+        });
+      };
+
+      // Staggered bursts: immediate, 400ms, 800ms
+      fireConfetti();
+      const t1 = setTimeout(fireConfetti, 400);
+      const t2 = setTimeout(fireConfetti, 800);
+
+      // Toast after the first burst
+      const t3 = setTimeout(() => {
         toast.success(
           `🏆 Tournament complete! Here are your results.`,
           { duration: 5000, description: tournamentName }
         );
       }, 600);
-      return () => clearTimeout(t);
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
