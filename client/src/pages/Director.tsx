@@ -1865,6 +1865,25 @@ export default function Director() {
     }
   }, [tournamentId, state.tournamentName]);
 
+  const broadcastBracketLive = useCallback(async (cutoff: number) => {
+    const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
+    try {
+      const res = await fetch(`/api/push/notify/${tournamentId}/bracket-live`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournamentName, cutoff }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { sent: number; failed: number };
+        if (data.sent > 0) {
+          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Elimination bracket is live!`);
+        }
+      }
+    } catch {
+      // Silent fail — push is a best-effort enhancement
+    }
+  }, [tournamentId, state.tournamentName]);
+
   const broadcastResultsPosted = useCallback(async (round: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
@@ -2026,9 +2045,13 @@ export default function Director() {
         `Swiss phase complete — Elimination bracket generated! Top ${cutoff} players advancing.`,
         { duration: 5000 }
       );
+      // Auto-broadcast push notification to all subscribed players
+      if (tournamentId !== "otb-demo-2026") {
+        broadcastBracketLive(cutoff);
+      }
     }
     prevElimPhaseRef.current = curr;
-  }, [state.elimPhase, state.format, state.elimCutoff, state.elimPlayers]);
+  }, [state.elimPhase, state.format, state.elimCutoff, state.elimPlayers, broadcastBracketLive, tournamentId]);
 
   // Derived: filtered + sorted player list
   const allTitles = Array.from(new Set(standings.map((p) => p.title).filter(Boolean))) as string[];
