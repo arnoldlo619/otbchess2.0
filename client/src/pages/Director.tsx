@@ -1867,11 +1867,17 @@ export default function Director() {
 
   const broadcastTournamentComplete = useCallback(async (championName: string) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
+    // Build a standings array for personalised per-player notifications
+    const standingsPayload = liveStandings.map((row, idx) => ({
+      username: row.player.username,
+      rank: idx + 1,
+      points: row.points,
+    }));
     try {
       const res = await fetch(`/api/push/notify/${tournamentId}/tournament-complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tournamentName, championName }),
+        body: JSON.stringify({ tournamentName, championName, standings: standingsPayload }),
       });
       if (res.ok) {
         const data = await res.json() as { sent: number; failed: number };
@@ -1882,7 +1888,7 @@ export default function Director() {
     } catch {
       // Silent fail — push is a best-effort enhancement
     }
-  }, [tournamentId, state.tournamentName]);
+  }, [tournamentId, state.tournamentName, liveStandings]);
 
   const broadcastBracketLive = useCallback(async (cutoff: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";

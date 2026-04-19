@@ -1377,7 +1377,7 @@ export default function TournamentPage() {
     unsubscribe: pushUnsubscribe,
     isSubscribed: isPushSubscribed,
     isLoading: isPushLoading,
-  } = usePushSubscription({ tournamentId, enabled: pushEnabled });
+  } = usePushSubscription({ tournamentId, enabled: pushEnabled, chessUsername: authUser?.chesscomUsername ?? undefined });
 
   const displayState = tournamentState ?? {
     tournamentId: DEMO_TOURNAMENT.id,
