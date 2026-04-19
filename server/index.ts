@@ -1223,6 +1223,83 @@ export function createApp() {
     }
   });
 
+  // ── Push: POST /api/push/notify/:tournamentId/tournament-complete ────────────
+  // Broadcasts a push notification when the tournament is finalized.
+  // Body: { tournamentName: string, championName: string }
+  app.post("/api/push/notify/:tournamentId/tournament-complete", async (req, res) => {
+    const { tournamentId } = req.params;
+    const { tournamentName, championName } = req.body as {
+      tournamentName: string;
+      championName: string;
+    };
+
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      return res.status(503).json({ error: "Push notifications not configured" });
+    }
+
+    try {
+      const db = await getDb();
+
+      const rows = await db
+        .select()
+        .from(pushSubscriptions)
+        .where(eq(pushSubscriptions.tournamentId, tournamentId));
+
+      if (rows.length === 0) {
+        return res.json({ ok: true, sent: 0, failed: 0 });
+      }
+
+      const payload = JSON.stringify({
+        title: `🏆 Tournament Complete!`,
+        body: `${tournamentName} — Congratulations to ${championName}, our champion! View the final results.`,
+        icon: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/iqZHgEQGHFmYeOzw.png",
+        badge: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/sffLnKtDRYocchPn.png",
+        tag: `otb-tournament-complete-${tournamentId}`,
+        url: `/tournament/${tournamentId}/results`,
+      });
+
+      let sent = 0;
+      let failed = 0;
+      const staleIds: string[] = [];
+
+      await Promise.allSettled(
+        rows.map(async (row) => {
+          const sub: PushSub = {
+            endpoint: row.endpoint,
+            keys: { p256dh: row.p256dh, auth: row.auth },
+          };
+          try {
+            await webpush.sendNotification(sub, payload);
+            sent++;
+          } catch (err: unknown) {
+            failed++;
+            if (err && typeof err === "object" && "statusCode" in err) {
+              const code = (err as { statusCode: number }).statusCode;
+              if (code === 410 || code === 404) {
+                staleIds.push(row.id);
+              }
+            }
+            logger.warn("[push] Failed to send tournament-complete notification:", err);
+          }
+        })
+      );
+
+      if (staleIds.length > 0) {
+        await Promise.all(
+          staleIds.map((id) =>
+            db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, id))
+          )
+        );
+      }
+
+      logger.info(`[push] Tournament-complete notification for ${tournamentId}: ${sent} sent, ${failed} failed`);
+      res.json({ ok: true, sent, failed });
+    } catch (err) {
+      logger.error("[push] tournament-complete error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
   // ── Tournament Players: GET /api/tournament/:id/players ─────────────────────
   // Returns all registered players for a tournament (polled by Director dashboard).
   app.get("/api/tournament/:id/players", async (req, res) => {
