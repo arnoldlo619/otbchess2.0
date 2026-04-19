@@ -1865,6 +1865,25 @@ export default function Director() {
     }
   }, [tournamentId, state.tournamentName]);
 
+  const broadcastTournamentComplete = useCallback(async (championName: string) => {
+    const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
+    try {
+      const res = await fetch(`/api/push/notify/${tournamentId}/tournament-complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tournamentName, championName }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { sent: number; failed: number };
+        if (data.sent > 0) {
+          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Tournament complete!`);
+        }
+      }
+    } catch {
+      // Silent fail — push is a best-effort enhancement
+    }
+  }, [tournamentId, state.tournamentName]);
+
   const broadcastBracketLive = useCallback(async (cutoff: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
@@ -4442,10 +4461,14 @@ export default function Director() {
                     }}
                     onCompleteTournament={() => {
                       completeTournament();
+                      const winner = liveStandings[0];
+                      const winnerName = winner?.player.name ?? "Unknown";
+                      // Fire push notification to all subscribers
+                      if (tournamentId !== "otb-demo-2026") {
+                        broadcastTournamentComplete(winnerName);
+                      }
                       // Auto-post a feed card to the club if this tournament belongs to one
                       if (tournamentConfig?.clubId) {
-                        const winner = liveStandings[0];
-                        const winnerName = winner?.player.name ?? "Unknown";
                         recordTournamentCompleted(
                           tournamentConfig.clubId,
                           state.tournamentName,
@@ -4876,10 +4899,14 @@ export default function Director() {
                             setShowEndConfirm(false);
                             completeTournament();
                             syncStatusToServer("completed");
+                            const winner = liveStandings[0];
+                            const winnerName = winner?.player.name ?? "Unknown";
+                            // Fire push notification to all subscribers
+                            if (tournamentId !== "otb-demo-2026") {
+                              broadcastTournamentComplete(winnerName);
+                            }
                             // Auto-post a feed card to the club if this tournament belongs to one
                             if (tournamentConfig?.clubId) {
-                              const winner = liveStandings[0];
-                              const winnerName = winner?.player.name ?? "Unknown";
                               recordTournamentCompleted(
                                 tournamentConfig.clubId,
                                 state.tournamentName,
