@@ -27,6 +27,7 @@ export type PushStatus =
 interface UsePushSubscriptionOptions {
   tournamentId: string;
   enabled?: boolean; // Defaults to true; set false to skip auto-init
+  chessUsername?: string; // Optional chess.com username to personalise notifications
 }
 
 interface UsePushSubscriptionResult {
@@ -58,6 +59,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 export function usePushSubscription({
   tournamentId,
   enabled = true,
+  chessUsername,
 }: UsePushSubscriptionOptions): UsePushSubscriptionResult {
   const [status, setStatus] = useState<PushStatus>(() => {
     if (typeof window === "undefined") return "idle";
@@ -115,6 +117,7 @@ export function usePushSubscription({
         body: JSON.stringify({
           tournamentId,
           subscription: subscription.toJSON(),
+          ...(chessUsername ? { chessUsername } : {}),
         }),
       });
 
@@ -126,7 +129,7 @@ export function usePushSubscription({
       logger.error("[push] Subscribe error:", err);
       setStatus("error");
     }
-  }, [tournamentId]);
+  }, [tournamentId, chessUsername]);
 
   const unsubscribe = useCallback(async () => {
     setStatus("loading");

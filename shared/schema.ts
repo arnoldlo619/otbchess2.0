@@ -107,6 +107,10 @@ export const pushSubscriptions = mysqlTable(
     // Authentication secret (base64url)
     auth: text("auth").notNull(),
 
+    // chess.com username of the subscriber (optional — set when the player is known)
+    // Used to personalise broadcast notifications with the player's own ranking.
+    chessUsername: varchar("chess_username", { length: 255 }),
+
     // When the subscription was created
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

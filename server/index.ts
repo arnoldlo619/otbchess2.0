@@ -818,12 +818,13 @@ export function createApp() {
   });
 
   // ── Push: POST /api/push/subscribe ────────────────────────────────────────
-  // Body: { tournamentId: string, subscription: PushSubscription }
+  // Body: { tournamentId: string, subscription: PushSubscription, chessUsername?: string }
   // Upserts by endpoint — if the same endpoint re-subscribes it updates keys.
   app.post("/api/push/subscribe", pushSubscribeLimiter, async (req, res) => {
-    const { tournamentId, subscription } = req.body as {
+    const { tournamentId, subscription, chessUsername } = req.body as {
       tournamentId: string;
       subscription: PushSub;
+      chessUsername?: string;
     };
 
     if (!tournamentId || !subscription?.endpoint) {
@@ -845,12 +846,13 @@ export function createApp() {
         );
 
       if (existing.length > 0) {
-        // Update the keys in case they changed (browser re-subscribed)
+        // Update the keys and username in case they changed (browser re-subscribed)
         await db
           .update(pushSubscriptions)
           .set({
             p256dh: subscription.keys.p256dh,
             auth: subscription.keys.auth,
+            ...(chessUsername ? { chessUsername: chessUsername.toLowerCase() } : {}),
           })
           .where(eq(pushSubscriptions.id, existing[0].id));
       } else {
@@ -861,6 +863,7 @@ export function createApp() {
           endpoint: subscription.endpoint,
           p256dh: subscription.keys.p256dh,
           auth: subscription.keys.auth,
+          ...(chessUsername ? { chessUsername: chessUsername.toLowerCase() } : {}),
         });
       }
 
@@ -1224,17 +1227,35 @@ export function createApp() {
   });
 
   // ── Push: POST /api/push/notify/:tournamentId/tournament-complete ────────────
-  // Broadcasts a push notification when the tournament is finalized.
-  // Body: { tournamentName: string, championName: string }
+  // Broadcasts a personalised push notification when the tournament is finalized.
+  // Body: { tournamentName: string, championName: string, standings: { username: string; rank: number; points: number }[] }
   app.post("/api/push/notify/:tournamentId/tournament-complete", async (req, res) => {
     const { tournamentId } = req.params;
-    const { tournamentName, championName } = req.body as {
+    const { tournamentName, championName, standings } = req.body as {
       tournamentName: string;
       championName: string;
+      standings: { username: string; rank: number; points: number }[];
     };
 
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       return res.status(503).json({ error: "Push notifications not configured" });
+    }
+
+    // Build a quick username -> rank/points lookup
+    const rankMap = new Map<string, { rank: number; points: number }>();
+    if (Array.isArray(standings)) {
+      for (const entry of standings) {
+        if (entry.username) {
+          rankMap.set(entry.username.toLowerCase(), { rank: entry.rank, points: entry.points });
+        }
+      }
+    }
+
+    // Ordinal helper: 1 -> "1st", 2 -> "2nd", etc.
+    function ordinal(n: number): string {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
     }
 
     try {
@@ -1249,21 +1270,40 @@ export function createApp() {
         return res.json({ ok: true, sent: 0, failed: 0 });
       }
 
-      const payload = JSON.stringify({
-        title: `🏆 Tournament Complete!`,
-        body: `${tournamentName} — Congratulations to ${championName}, our champion! View the final results.`,
-        icon: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/iqZHgEQGHFmYeOzw.png",
-        badge: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/sffLnKtDRYocchPn.png",
-        tag: `otb-tournament-complete-${tournamentId}`,
-        url: `/tournament/${tournamentId}/results`,
-      });
-
       let sent = 0;
       let failed = 0;
       const staleIds: string[] = [];
 
       await Promise.allSettled(
         rows.map(async (row) => {
+          // Build personalised message body
+          let title = `🏆 Tournament Complete!`;
+          let body: string;
+
+          const username = row.chessUsername?.toLowerCase();
+          const playerEntry = username ? rankMap.get(username) : undefined;
+
+          if (playerEntry) {
+            if (playerEntry.rank === 1) {
+              title = `🏆 You Won ${tournamentName}!`;
+              body = `Congratulations! You finished 1st with ${playerEntry.points} pts. View your champion card!`;
+            } else {
+              body = `You finished ${ordinal(playerEntry.rank)} with ${playerEntry.points} pts. Champion: ${championName}. View the results!`;
+            }
+          } else {
+            // Generic fallback for subscribers without a linked username
+            body = `${tournamentName} — Congratulations to ${championName}, our champion! View the final results.`;
+          }
+
+          const payload = JSON.stringify({
+            title,
+            body,
+            icon: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/iqZHgEQGHFmYeOzw.png",
+            badge: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/sffLnKtDRYocchPn.png",
+            tag: `otb-tournament-complete-${tournamentId}`,
+            url: `/tournament/${tournamentId}/results`,
+          });
+
           const sub: PushSub = {
             endpoint: row.endpoint,
             keys: { p256dh: row.p256dh, auth: row.auth },

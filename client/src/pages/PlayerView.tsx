@@ -223,11 +223,11 @@ function RejoinLinkCard({ rejoinUrl, isDark }: { rejoinUrl: string; isDark: bool
 
 // ─── Push Prompt Card ───────────────────────────────────────────────────────────
 function PushPromptCard({
-  tournamentId, isDark,
+  tournamentId, isDark, chessUsername,
 }: {
-  tournamentId: string; isDark: boolean;
+  tournamentId: string; isDark: boolean; chessUsername?: string;
 }) {
-  const { status, subscribe, isLoading } = usePushSubscription({ tournamentId });
+  const { status, subscribe, isLoading } = usePushSubscription({ tournamentId, chessUsername });
   const [dismissed, setDismissed] = useState(false);
 
   // Don't show if already subscribed, denied, dismissed, or browser doesn't support push
@@ -313,7 +313,7 @@ function LobbyScreen({
         </div>
         <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
       </div>
-      <PushPromptCard tournamentId={tournamentId} isDark={isDark} />
+      <PushPromptCard tournamentId={tournamentId} isDark={isDark} chessUsername={username} />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-8">
         <div className="relative flex items-center justify-center">
           <div className={`absolute w-32 h-32 rounded-full ${accentBg} animate-ping opacity-30`} />
@@ -416,7 +416,7 @@ function WaitingRoundScreen({
           </p>
         </div>
       </div>
-      <PushPromptCard tournamentId={tournamentId} isDark={isDark} />
+      <PushPromptCard tournamentId={tournamentId} isDark={isDark} chessUsername={username} />
       {rank > 0 && (
         <div className={`mx-4 mt-3 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-5 py-4`}>
           <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-2`}>Your Standing</p>
