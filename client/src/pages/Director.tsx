@@ -4475,13 +4475,27 @@ export default function Director() {
                       }
                       // Auto-post a feed card to the club if this tournament belongs to one
                       if (tournamentConfig?.clubId) {
+                        const podium = liveStandings.slice(0, 3).map((s, i) => ({
+                          rank: i + 1,
+                          playerName: s.player.name,
+                          score: s.points,
+                          totalRounds: state.totalRounds,
+                        }));
+                        const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
+                          : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
+                          : state.format === "roundrobin" ? "Round Robin"
+                          : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
+                          : "Elimination";
                         recordTournamentCompleted(
                           tournamentConfig.clubId,
                           state.tournamentName,
                           winnerName,
                           tournamentId,
                           winner?.points,
-                          state.totalRounds
+                          state.totalRounds,
+                          podium,
+                          state.players.length,
+                          fmtLabel
                         );
                       }
                     }}
@@ -4913,13 +4927,27 @@ export default function Director() {
                             }
                             // Auto-post a feed card to the club if this tournament belongs to one
                             if (tournamentConfig?.clubId) {
+                              const podium2 = liveStandings.slice(0, 3).map((s, i) => ({
+                                rank: i + 1,
+                                playerName: s.player.name,
+                                score: s.points,
+                                totalRounds: state.totalRounds,
+                              }));
+                              const fmtLabel2 = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
+                                : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
+                                : state.format === "roundrobin" ? "Round Robin"
+                                : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
+                                : "Elimination";
                               recordTournamentCompleted(
                                 tournamentConfig.clubId,
                                 state.tournamentName,
                                 winnerName,
                                 tournamentId,
                                 winner?.points,
-                                state.totalRounds
+                                state.totalRounds,
+                                podium2,
+                                state.players.length,
+                                fmtLabel2
                               );
                             }
                             try {

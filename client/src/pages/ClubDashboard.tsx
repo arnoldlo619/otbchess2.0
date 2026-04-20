@@ -1412,15 +1412,60 @@ function FeedCard({
           )}
         </div>
       </div>
-      {!isPoll && !isRsvp && event.detail && (
+      {!isPoll && !isRsvp && event.type === "tournament_completed" && (
         <div className="px-4 pb-4">
-          {event.type === "tournament_completed" ? (
-            <div className="rounded-xl px-4 py-3 border border-amber-500/20" style={{ background: "oklch(0.20 0.08 80 / 0.35)" }}>
-              <p className="text-sm font-bold text-amber-300 leading-snug">{event.detail}</p>
+          {/* Rich tournament results card */}
+          <div className="rounded-xl overflow-hidden border border-amber-500/20" style={{ background: "oklch(0.18 0.07 80 / 0.35)" }}>
+            {/* Header row */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-amber-500/15">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <span className="text-amber-300 text-xs font-bold uppercase tracking-wider">{event.tournamentName ?? event.description}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {event.tournamentFormat && (
+                  <span className="text-[10px] font-semibold text-white/40 bg-white/05 rounded-full px-2 py-0.5">{event.tournamentFormat}</span>
+                )}
+                {event.tournamentPlayerCount && (
+                  <span className="text-[10px] font-semibold text-white/40">{event.tournamentPlayerCount} players</span>
+                )}
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
-          )}
+            {/* Podium */}
+            {event.tournamentPodium && event.tournamentPodium.length > 0 ? (
+              <div className="px-4 py-3 space-y-2">
+                {event.tournamentPodium.map((entry) => {
+                  const medal = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉";
+                  const nameColor = entry.rank === 1 ? "text-amber-300" : entry.rank === 2 ? "text-slate-300" : "text-orange-300";
+                  const scoreStr = entry.score % 1 !== 0 ? `${Math.floor(entry.score)}½` : String(entry.score);
+                  return (
+                    <div key={entry.rank} className={`flex items-center gap-3 ${entry.rank === 1 ? "" : "opacity-75"}`}>
+                      <span className="text-base w-6 text-center">{medal}</span>
+                      <span className={`text-sm font-semibold flex-1 truncate ${nameColor}`}>{entry.playerName}</span>
+                      <span className="text-xs text-white/40 font-mono">{scoreStr}/{entry.totalRounds}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : event.detail ? (
+              <div className="px-4 py-3">
+                <p className="text-sm font-bold text-amber-300">{event.detail}</p>
+              </div>
+            ) : null}
+            {/* View results link */}
+            {event.linkHref && (
+              <div className="px-4 py-2.5 border-t border-amber-500/15">
+                <a href={event.linkHref} className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80" style={{ color: accent }}>
+                  {event.linkLabel ?? "View results"} <ArrowRight className="w-3 h-3" />
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {!isPoll && !isRsvp && event.type !== "tournament_completed" && event.detail && (
+        <div className="px-4 pb-4">
+          <p className="text-sm text-white/70 leading-relaxed whitespace-pre-line">{event.detail}</p>
           {event.linkHref && (
             <a href={event.linkHref} className="inline-flex items-center gap-1 text-xs font-semibold mt-2 transition-colors hover:opacity-80" style={{ color: accent }}>
               {event.linkLabel ?? "View"} <ArrowRight className="w-3 h-3" />
