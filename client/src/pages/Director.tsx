@@ -4404,21 +4404,6 @@ export default function Director() {
                 </div>
               )}
 
-              {/* Swiss Standings summary panel — shown when elimination bracket is active */}
-              {state.format === "swiss_elim" && state.elimPhase === "elimination" && (() => {
-                const swissRoundsOnly = state.rounds.filter((r) => r.number <= (state.swissRounds ?? 0));
-                const swissStandings = computeStandings(state.players, swissRoundsOnly);
-                return (
-                  <SwissStandingsPanel
-                    standings={swissStandings}
-                    cutoff={state.elimCutoff ?? state.elimPlayers?.length ?? swissStandings.length}
-                    swissRounds={state.swissRounds ?? 0}
-                    isDark={isDark}
-                    defaultCollapsed={false}
-                  />
-                );
-              })()}
-
               {/* Swiss phase in progress — bracket not yet generated */}
               {state.format === "swiss_elim" && state.elimPhase === "swiss" && (
                 <div className={`flex flex-col items-center justify-center py-12 gap-4 rounded-2xl border ${
@@ -4466,6 +4451,10 @@ export default function Director() {
                   ? (state.swissRounds ?? 0) + 1
                   : 1;
                 const elimRounds = state.rounds.filter((r) => r.number >= elimStartRound);
+                // Compute total expected elim rounds so EliminationBracketView never declares
+                // a champion prematurely after the first elim round.
+                const elimCutoffSize = state.elimCutoff ?? state.elimPlayers?.length ?? state.players.length;
+                const totalElimRounds = elimCutoffSize > 1 ? Math.ceil(Math.log2(elimCutoffSize)) : 1;
                 return (
                   <EliminationBracketView
                     rounds={elimRounds}
@@ -4476,6 +4465,7 @@ export default function Director() {
                     elimRoundLabelText={state.elimRoundLabelText}
                     isDark={isDark}
                     elimStartRound={elimStartRound}
+                    totalElimRounds={totalElimRounds}
                     myPlayerId={undefined}
                     onEnterResult={(gameId, result) => {
                       recordWithUndo(gameId, result, "*", `Elimination result recorded`);
@@ -4518,6 +4508,21 @@ export default function Director() {
                         );
                       }
                     }}
+                  />
+                );
+              })()}
+
+              {/* Swiss Standings summary panel — below bracket, collapsed by default */}
+              {state.format === "swiss_elim" && state.elimPhase === "elimination" && (() => {
+                const swissRoundsOnly = state.rounds.filter((r) => r.number <= (state.swissRounds ?? 0));
+                const swissStandings = computeStandings(state.players, swissRoundsOnly);
+                return (
+                  <SwissStandingsPanel
+                    standings={swissStandings}
+                    cutoff={state.elimCutoff ?? state.elimPlayers?.length ?? swissStandings.length}
+                    swissRounds={state.swissRounds ?? 0}
+                    isDark={isDark}
+                    defaultCollapsed={true}
                   />
                 );
               })()}
