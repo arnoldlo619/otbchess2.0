@@ -1152,7 +1152,7 @@ export default function TournamentPage() {
     // spectators on other devices see the real tournament, not demo data.
     fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
       .then((r) => r.ok ? r.json() : null)
-      .then((data: { players?: Player[]; status?: string; currentRound?: number; totalRounds?: number; tournamentName?: string; games?: Round["games"]; rounds?: Round[] } | null) => {
+      .then((data: { players?: Player[]; status?: string; currentRound?: number; totalRounds?: number; tournamentName?: string; games?: Round["games"]; rounds?: Round[]; elimPhase?: string | null; elimPlayers?: Player[]; swissRounds?: number | null; format?: string | null } | null) => {
         setServerFetching(false);
         if (!data) return;
         setTournamentState((prev) => {
@@ -1160,6 +1160,8 @@ export default function TournamentPage() {
             // Already have local state — patch server fields and merge rounds
             const serverRounds = (data.rounds as Round[] | undefined) ?? [];
             const mergedRounds = serverRounds.length > 0 ? serverRounds : prev.rounds;
+            // Merge elimPhase/elimPlayers from server if not already in local state
+            const prevAny = prev as DirectorState & { elimPhase?: string; elimPlayers?: Player[]; swissRounds?: number };
             return {
               ...prev,
               players: (data.players as Player[]) ?? prev.players,
@@ -1168,6 +1170,11 @@ export default function TournamentPage() {
               totalRounds: data.totalRounds ?? prev.totalRounds,
               tournamentName: data.tournamentName ?? prev.tournamentName,
               rounds: mergedRounds,
+              // Only override elim fields if server has them and local doesn't
+              elimPhase: (prevAny.elimPhase ?? data.elimPhase ?? undefined) as ("swiss" | "elimination" | "cutoff" | undefined),
+              elimPlayers: (prevAny.elimPlayers && prevAny.elimPlayers.length > 0) ? prevAny.elimPlayers : (data.elimPlayers ?? []),
+              swissRounds: prevAny.swissRounds ?? data.swissRounds ?? undefined,
+              format: (prev as DirectorState & { format?: string }).format ?? data.format ?? undefined,
             };
           }
           // No local state — build a full DirectorState from server data
@@ -1189,6 +1196,11 @@ export default function TournamentPage() {
             players: (data.players as Player[]) ?? [],
             rounds,
             timer: null,
+            // swiss_elim phase data from server
+            elimPhase: data.elimPhase ?? undefined,
+            elimPlayers: data.elimPlayers ?? [],
+            swissRounds: data.swissRounds ?? undefined,
+            format: data.format ?? undefined,
           } as unknown as DirectorState;
         });
       })
@@ -1231,6 +1243,8 @@ export default function TournamentPage() {
           round: number;
           games: Round["games"];
           players: Player[];
+          elimPhase?: string | null;
+          elimPlayers?: Player[];
         };
         setSseConnected(true);
         setNewRoundFlash(payload.round);
@@ -1242,12 +1256,16 @@ export default function TournamentPage() {
             status: "in_progress",
             games: payload.games,
           };
-          return {
+          const update: Record<string, unknown> = {
             ...prev,
             players: payload.players,
             currentRound: payload.round,
             rounds: [...existingRounds, newRound].sort((a, b) => a.number - b.number),
           };
+          // Merge elim phase data when the bracket is generated
+          if (payload.elimPhase) update.elimPhase = payload.elimPhase;
+          if (payload.elimPlayers && payload.elimPlayers.length > 0) update.elimPlayers = payload.elimPlayers;
+          return update as unknown as DirectorState;
         });
       } catch { /* ignore malformed */ }
     });
@@ -1423,8 +1441,16 @@ export default function TournamentPage() {
   const swissRounds = (config as { swissRounds?: number } | undefined)?.swissRounds ?? 0;
   const elimStartRound = isElimFormat && config?.format === "swiss_elim" ? swissRounds + 1 : 1;
   // Awaiting cutoff: swiss_elim format, swiss rounds done, no elim rounds generated yet
+  // isAwaitingCutoff: Swiss phase is complete but bracket hasn't been generated yet.
+  // We check elimPhase from the state (set by the director) rather than round numbers,
+  // because currentRound never exceeds swissRounds until the bracket is generated.
+  const stateElimPhase = (displayState as DirectorState & { elimPhase?: string }).elimPhase;
+  const stateElimPlayers = (displayState as DirectorState & { elimPlayers?: Player[] }).elimPlayers ?? [];
   const isAwaitingCutoff = config?.format === "swiss_elim" &&
-    displayState.currentRound > swissRounds &&
+    // Swiss phase complete: all swiss rounds done and no elim bracket yet
+    displayState.currentRound >= swissRounds &&
+    swissRounds > 0 &&
+    stateElimPlayers.length === 0 &&
     displayState.rounds.filter((r) => r.number > swissRounds).length === 0;
 
   // Mobile tab state for Pairings / Standings / Players [/ Bracket]

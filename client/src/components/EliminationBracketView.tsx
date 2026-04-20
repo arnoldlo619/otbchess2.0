@@ -62,9 +62,10 @@ function seedBadgeClass(seed: number | null, isDark: boolean): string {
 
 // Card dimensions — used for SVG connector math
 const CARD_H = 72; // px: height of a match card (2 player rows)
+const HEADER_H = 32; // px: height of the round column header label
 const CARD_GAP = 12; // px: gap between cards in a column
 const COL_GAP = 48; // px: horizontal gap between columns (connector region)
-const COL_W = 200; // px: card width
+const COL_W = 224; // px: card width — wide enough for long player names
 
 // ─── Match Card ───────────────────────────────────────────────────────────────
 
@@ -669,7 +670,7 @@ export function EliminationBracketView({
 
                 {/* SVG connector to next round */}
                 {!isLast && nextRound && (
-                  <div style={{ marginTop: 28 /* header height */ }}>
+                  <div style={{ marginTop: HEADER_H }}>
                     <BracketConnector
                       matchCount={round.games.length}
                       nextCount={nextRound.games.length}
@@ -683,7 +684,7 @@ export function EliminationBracketView({
 
           {/* Connector to champion slot */}
           {finalRound && (
-            <div style={{ marginTop: 28 }}>
+            <div style={{ marginTop: HEADER_H }}>
               <BracketConnector
                 matchCount={finalRound.games.length}
                 nextCount={1}
@@ -693,7 +694,7 @@ export function EliminationBracketView({
           )}
 
           {/* Champion card */}
-          <div style={{ marginTop: 28 + colOffset(1) }}>
+          <div style={{ marginTop: HEADER_H + colOffset(1) }}>
             <ChampionCard
               game={finalGame}
               players={players}
@@ -727,20 +728,21 @@ export function EliminationBracketView({
 
       {allResultsIn && isLastRound && !isTournamentOver && (
         <div className={`flex items-center gap-3 p-4 rounded-2xl border ${
-          isDark ? "bg-[oklch(0.22_0.06_145)] border-white/08" : "bg-white border-gray-100"
+          isDark ? "bg-amber-500/08 border-amber-400/20" : "bg-amber-50 border-amber-200"
         }`}>
+          <Trophy className="w-5 h-5 text-amber-400 flex-shrink-0" />
           <div className="flex-1">
-            <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Final match complete</p>
-            <p className={`text-xs mt-0.5 ${isDark ? "text-white/45" : "text-gray-500"}`}>
-              Enter the final result above, then complete the tournament.
+            <p className={`text-sm font-bold ${isDark ? "text-amber-300" : "text-amber-800"}`}>Final match complete!</p>
+            <p className={`text-xs mt-0.5 ${isDark ? "text-amber-400/60" : "text-amber-600"}`}>
+              Enter the final result above, then crown the champion.
             </p>
           </div>
           <button
-            onClick={onAdvanceRound}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${T.advanceBtn}`}
+            onClick={onCompleteTournament}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${T.completeBtn}`}
           >
-            <Zap className="w-4 h-4" />
-            Next Round
+            <Crown className="w-4 h-4" />
+            Complete Tournament
           </button>
         </div>
       )}
