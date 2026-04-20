@@ -64,7 +64,7 @@ function seedBadgeClass(seed: number | null, isDark: boolean): string {
 
 // Card dimensions — used for SVG connector math
 const CARD_H = 72; // px: height of a match card (2 player rows)
-const HEADER_H = 32; // px: height of the round column header label
+const HEADER_H = 44; // px: height of the round column header label (two-line: stage name + sub-label)
 const CARD_GAP = 12; // px: gap between cards in a column
 const COL_GAP = 48; // px: horizontal gap between columns (connector region)
 const COL_W = 224; // px: card width — wide enough for long player names
@@ -415,6 +415,7 @@ function BracketConnector({
 function RoundColumn({
   round,
   roundLabel,
+  roundSubLabel,
   players,
   elimPlayers,
   currentRound,
@@ -425,6 +426,8 @@ function RoundColumn({
 }: {
   round: Round;
   roundLabel: string;
+  /** Optional secondary label shown below the stage name, e.g. "4 players" */
+  roundSubLabel?: string;
   players: Player[];
   elimPlayers: Player[];
   currentRound: number;
@@ -438,29 +441,38 @@ function RoundColumn({
 
   return (
     <div className="flex flex-col flex-shrink-0" style={{ width: COL_W }}>
-      {/* Round header */}
-      <div className="flex items-center gap-2 mb-3 h-7">
-        <span className={`text-[11px] font-black uppercase tracking-wider ${
-          isActive
-            ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
-            : isDark ? "text-white/35" : "text-gray-400"
-        }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-          {roundLabel}
-        </span>
-        {isActive && !allDone && (
-          <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-            isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-          }`}>
-            <span className="w-1 h-1 rounded-full bg-[#4CAF50] animate-pulse" />
-            Live
+      {/* Round header — two-line: stage name + sub-label */}
+      <div className="flex flex-col gap-0.5 mb-3" style={{ minHeight: HEADER_H }}>
+        <div className="flex items-center gap-2">
+          <span className={`text-[11px] font-black uppercase tracking-wider ${
+            isActive
+              ? isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+              : isDark ? "text-white/35" : "text-gray-400"
+          }`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+            {roundLabel}
           </span>
-        )}
-        {allDone && (
-          <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-            isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+          {isActive && !allDone && (
+            <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+              isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+            }`}>
+              <span className="w-1 h-1 rounded-full bg-[#4CAF50] animate-pulse" />
+              Live
+            </span>
+          )}
+          {allDone && (
+            <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+              isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+            }`}>
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              Done
+            </span>
+          )}
+        </div>
+        {roundSubLabel && (
+          <span className={`text-[9px] font-medium ${
+            isDark ? "text-white/25" : "text-gray-400"
           }`}>
-            <CheckCircle2 className="w-2.5 h-2.5" />
-            Done
+            {roundSubLabel}
           </span>
         )}
       </div>
@@ -578,11 +590,24 @@ export function EliminationBracketView({
   const roundLabels = useMemo(() => {
     const labels: Record<number, string> = {};
     for (const round of rounds) {
-      const matchCount = round.games.filter((g) => g.whiteId !== "BYE").length;
-      const playerCount = matchCount * 2;
+      const mainGames = round.games.filter((g) => !g.isThirdPlace && g.whiteId !== "BYE");
+      const playerCount = mainGames.length * 2;
       labels[round.number] = elimRoundLabel(playerCount);
     }
     return labels;
+  }, [rounds]);
+
+  // Sub-labels: e.g. "4 players · Elim Round 2"
+  const roundSubLabels = useMemo(() => {
+    const subLabels: Record<number, string> = {};
+    for (let i = 0; i < rounds.length; i++) {
+      const round = rounds[i];
+      const mainGames = round.games.filter((g) => !g.isThirdPlace && g.whiteId !== "BYE");
+      const playerCount = mainGames.length * 2;
+      const elimRoundNum = i + 1; // 1-indexed elim round number
+      subLabels[round.number] = `${playerCount} players · Elim Rd ${elimRoundNum}`;
+    }
+    return subLabels;
   }, [rounds]);
 
   const finalRound = rounds[rounds.length - 1];
@@ -684,6 +709,7 @@ export function EliminationBracketView({
                   <RoundColumn
                     round={roundForColumn}
                     roundLabel={roundLabels[round.number] ?? `Round ${round.number - elimStartRound + 1}`}
+                    roundSubLabel={roundSubLabels[round.number]}
                     players={players}
                     elimPlayers={elimPlayers}
                     currentRound={currentRound}

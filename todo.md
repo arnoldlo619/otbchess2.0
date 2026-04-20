@@ -5217,3 +5217,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Render 3rd-place match in EliminationBracketView with distinct visual treatment
 - [x] Update FinalStandings to use 3rd-place match result for 3rd/4th ranking
 - [x] Add 3rd-place bronze medal podium slot to Final Standings page alongside champion and finalist cards
+- [x] Dynamic bracket column headers: Quarter-Finals, Semi-Finals, Final, Round of X labels

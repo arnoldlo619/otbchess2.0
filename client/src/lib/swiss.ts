@@ -562,8 +562,11 @@ export function elimRoundsNeeded(bracketSize: number): number {
  */
 export function elimRoundLabel(playersRemaining: number): string {
   if (playersRemaining <= 2) return "Final";
-  if (playersRemaining <= 4) return "Semifinals";
-  if (playersRemaining <= 8) return "Quarterfinals";
+  if (playersRemaining <= 4) return "Semi-Finals";
+  if (playersRemaining <= 8) return "Quarter-Finals";
+  if (playersRemaining <= 16) return "Round of 16";
+  if (playersRemaining <= 32) return "Round of 32";
+  if (playersRemaining <= 64) return "Round of 64";
   return `Round of ${playersRemaining}`;
 }
 
