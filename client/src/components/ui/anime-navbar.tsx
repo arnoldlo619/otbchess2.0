@@ -181,6 +181,8 @@ export function AnimeNavBar({
   const [activeTab, setActiveTab]           = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
   const [scrollProgress, setScrollProgress] = useState(0)
   const [isDesktop, setIsDesktop]           = useState(false)
+  // mascotTab: tracks which tab the mascot sits above — follows hover, stays on last hovered, defaults to first item
+  const [mascotTab, setMascotTab]           = useState<string>(defaultActive ?? (items[0]?.name ?? ""))
 
   const manualOverrideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const closeTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -313,8 +315,10 @@ export function AnimeNavBar({
                       onMouseEnter={() => {
                         if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
                         setHoveredTab(item.name)
+                        setMascotTab(item.name)
                       }}
                       onMouseLeave={() => {
+                        // mascotTab intentionally NOT reset — stays on last hovered tab
                         closeTimerRef.current = setTimeout(() => setHoveredTab(null), 120)
                       }}
                       className={cn(
@@ -322,15 +326,15 @@ export function AnimeNavBar({
                         isActive ? tabActiveText : tabInactiveText
                       )}
                     >
-                      {/* ── Floating mascot above active tab ── */}
-                      {isActive && (
+                      {/* ── Floating mascot above hovered tab (stays on last hovered, defaults to first) ── */}
+                      {mascotTab === item.name && (
                         <motion.div
                           layoutId="anime-mascot"
                           className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none"
                           initial={false}
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         >
-                          <MascotFace isHovered={!!hoveredTab} />
+                          <MascotFace isHovered={hoveredTab === item.name} />
                         </motion.div>
                       )}
 
