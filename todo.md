@@ -5218,3 +5218,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update FinalStandings to use 3rd-place match result for 3rd/4th ranking
 - [x] Add 3rd-place bronze medal podium slot to Final Standings page alongside champion and finalist cards
 - [x] Dynamic bracket column headers: Quarter-Finals, Semi-Finals, Final, Round of X labels
+- [x] Admin staff management UI: owner-only page to promote/demote users to staff/pro
+- [x] Server-side admin API: list users, set is_staff/is_pro flags, owner-only middleware
+- [x] /admin/staff route with nav entry visible only to owner
+- [x] Fix ilike → sql LOWER() for MySQL/TiDB compatibility in adminStaff.ts
+- [x] Add GET /api/admin/staff/users endpoint to list all non-guest registered users
+- [x] Add All Registered Users collapsible panel with filter to AdminStaff page

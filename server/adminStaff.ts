@@ -8,7 +8,7 @@
  *   GET  /api/admin/staff/search   — search a user by email (returns basic info)
  */
 import { Router } from "express";
-import { eq, ilike } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb } from "./db.js";
 import { users } from "../shared/schema.js";
 import { requireFullAuth } from "./auth.js";
@@ -79,7 +79,7 @@ export function createAdminStaffRouter(): Router {
           createdAt: users.createdAt,
         })
         .from(users)
-        .where(ilike(users.email, email))
+        .where(sql`LOWER(${users.email}) = LOWER(${email})`)
         .limit(1);
       if (!found) return res.status(404).json({ error: "No user found with that email." });
       return res.json({ user: found });
@@ -98,7 +98,7 @@ export function createAdminStaffRouter(): Router {
       const [target] = await db
         .select({ id: users.id, email: users.email, displayName: users.displayName, isStaff: users.isStaff })
         .from(users)
-        .where(ilike(users.email, email.trim()))
+        .where(sql`LOWER(${users.email}) = LOWER(${email.trim()})`)
         .limit(1);
       if (!target) return res.status(404).json({ error: "No user found with that email." });
       if (target.isStaff) return res.json({ message: `${target.email} is already OTB Staff.`, user: target });
@@ -108,6 +108,30 @@ export function createAdminStaffRouter(): Router {
     } catch (err) {
       console.error("[adminStaff] POST /grant error:", err);
       return res.status(500).json({ error: "Failed to grant staff access." });
+    }
+  });
+
+  // ── GET /api/admin/staff/users — list all non-guest registered users ─────────
+  router.get("/users", async (_req, res) => {
+    try {
+      const db = await getDb();
+      const allUsers = await db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          email: users.email,
+          chesscomUsername: users.chesscomUsername,
+          isPro: users.isPro,
+          isStaff: users.isStaff,
+          isGuest: users.isGuest,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(sql`${users.isGuest} = 0`);
+      return res.json({ users: allUsers });
+    } catch (err) {
+      console.error("[adminStaff] GET /users error:", err);
+      return res.status(500).json({ error: "Failed to fetch users." });
     }
   });
 
@@ -121,7 +145,7 @@ export function createAdminStaffRouter(): Router {
       const [target] = await db
         .select({ id: users.id, email: users.email, displayName: users.displayName, isStaff: users.isStaff })
         .from(users)
-        .where(ilike(users.email, email.trim()))
+        .where(sql`LOWER(${users.email}) = LOWER(${email.trim()})`)
         .limit(1);
       if (!target) return res.status(404).json({ error: "No user found with that email." });
       // Prevent self-revocation

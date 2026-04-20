@@ -2,8 +2,10 @@
  * AdminStaff.tsx — Protected staff management page.
  *
  * Only accessible to users with isStaff = true.
- * Allows viewing all current staff, searching users by email,
- * and granting or revoking OTB Staff status.
+ * Allows:
+ *  - Searching users by email and granting/revoking staff access
+ *  - Viewing all current staff members
+ *  - Browsing all registered (non-guest) users with staff/pro toggle
  */
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
@@ -20,27 +22,21 @@ import {
   Loader2,
   ArrowLeft,
   RefreshCw,
+  Users,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface StaffUser {
+interface AdminUser {
   id: string;
   displayName: string;
   email: string;
   chesscomUsername: string | null;
   isPro: boolean;
   isStaff: boolean;
-  createdAt: string | null;
-}
-
-interface SearchResult {
-  id: string;
-  displayName: string;
-  email: string;
-  chesscomUsername: string | null;
-  isPro: boolean;
-  isStaff: boolean;
+  isGuest?: boolean;
   createdAt: string | null;
 }
 
@@ -55,21 +51,115 @@ async function apiFetch(path: string, options?: RequestInit) {
   return { ok: res.ok, status: res.status, data };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function UserRow({
+  member,
+  currentUserId,
+  actionLoading,
+  onGrant,
+  onRevoke,
+}: {
+  member: AdminUser;
+  currentUserId?: string;
+  actionLoading: string | null;
+  onGrant: (email: string) => void;
+  onRevoke: (email: string) => void;
+}) {
+  const isSelf = member.id === currentUserId;
+  const isActing = actionLoading === member.email;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 transition-colors"
+    >
+      {/* Avatar + info */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
+          member.isStaff
+            ? "bg-amber-500/20 border border-amber-500/30 text-amber-400"
+            : "bg-white/10 border border-white/10 text-white/60"
+        }`}>
+          {(member.displayName || member.email || "?").charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-sm font-semibold text-white truncate">{member.displayName}</p>
+            {member.isStaff && (
+              <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold tracking-wider uppercase flex-shrink-0">
+                ★ Staff
+              </span>
+            )}
+            {member.isPro && !member.isStaff && (
+              <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[9px] font-bold flex-shrink-0">
+                <Crown className="w-2.5 h-2.5" /> Pro
+              </span>
+            )}
+            {isSelf && (
+              <span className="text-[9px] text-white/25 flex-shrink-0">you</span>
+            )}
+          </div>
+          <p className="text-xs text-white/40 truncate">{member.email}</p>
+          {member.chesscomUsername && (
+            <p className="text-[10px] text-white/25 truncate">chess.com/{member.chesscomUsername}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Action button */}
+      {!isSelf && (
+        <div className="flex-shrink-0">
+          {!member.isStaff ? (
+            <button
+              onClick={() => onGrant(member.email)}
+              disabled={isActing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-xs font-semibold transition-colors disabled:opacity-40"
+            >
+              {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+              Grant Staff
+            </button>
+          ) : (
+            <button
+              onClick={() => onRevoke(member.email)}
+              disabled={isActing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold transition-colors disabled:opacity-40"
+            >
+              {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserMinus className="w-3.5 h-3.5" />}
+              Revoke
+            </button>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminStaff() {
   const { user, loading: authLoading } = useAuthContext();
   const [, navigate] = useLocation();
 
-  const [staffList, setStaffList] = useState<StaffUser[]>([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState<string | null>(null);
+  // Staff list
+  const [staffList, setStaffList] = useState<AdminUser[]>([]);
+  const [staffLoading, setStaffLoading] = useState(true);
+  const [staffError, setStaffError] = useState<string | null>(null);
 
+  // All users
+  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [allUsersLoading, setAllUsersLoading] = useState(false);
+  const [allUsersError, setAllUsersError] = useState<string | null>(null);
+  const [showAllUsers, setShowAllUsers] = useState(false);
+  const [userFilter, setUserFilter] = useState("");
+
+  // Search
   const [searchEmail, setSearchEmail] = useState("");
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [searchResult, setSearchResult] = useState<AdminUser | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const [actionLoading, setActionLoading] = useState<string | null>(null); // email being acted on
+  // Actions
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // ── Auth guard ───────────────────────────────────────────────────────────────
@@ -88,22 +178,35 @@ export default function AdminStaff() {
 
   // ── Fetch staff list ─────────────────────────────────────────────────────────
   const fetchStaff = useCallback(async () => {
-    setListLoading(true);
-    setListError(null);
+    setStaffLoading(true);
+    setStaffError(null);
     const { ok, data } = await apiFetch("/api/admin/staff");
-    if (ok) {
-      setStaffList(data.staff ?? []);
-    } else {
-      setListError(data.error ?? "Failed to load staff list.");
-    }
-    setListLoading(false);
+    if (ok) setStaffList(data.staff ?? []);
+    else setStaffError(data.error ?? "Failed to load staff list.");
+    setStaffLoading(false);
   }, []);
 
   useEffect(() => {
     if (user?.isStaff) fetchStaff();
   }, [user, fetchStaff]);
 
-  // ── Search user by email ─────────────────────────────────────────────────────
+  // ── Fetch all users ──────────────────────────────────────────────────────────
+  const fetchAllUsers = useCallback(async () => {
+    setAllUsersLoading(true);
+    setAllUsersError(null);
+    const { ok, data } = await apiFetch("/api/admin/staff/users");
+    if (ok) setAllUsers(data.users ?? []);
+    else setAllUsersError(data.error ?? "Failed to load users.");
+    setAllUsersLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (showAllUsers && allUsers.length === 0 && !allUsersLoading) {
+      fetchAllUsers();
+    }
+  }, [showAllUsers, allUsers.length, allUsersLoading, fetchAllUsers]);
+
+  // ── Search ───────────────────────────────────────────────────────────────────
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchEmail.trim()) return;
@@ -113,15 +216,12 @@ export default function AdminStaff() {
     const { ok, data } = await apiFetch(
       `/api/admin/staff/search?email=${encodeURIComponent(searchEmail.trim())}`
     );
-    if (ok) {
-      setSearchResult(data.user);
-    } else {
-      setSearchError(data.error ?? "User not found.");
-    }
+    if (ok) setSearchResult(data.user);
+    else setSearchError(data.error ?? "User not found.");
     setSearchLoading(false);
   };
 
-  // ── Grant staff ──────────────────────────────────────────────────────────────
+  // ── Grant / Revoke ───────────────────────────────────────────────────────────
   const handleGrant = async (email: string) => {
     setActionLoading(email);
     const { ok, data } = await apiFetch("/api/admin/staff/grant", {
@@ -130,8 +230,8 @@ export default function AdminStaff() {
     });
     if (ok) {
       setToast({ type: "success", message: data.message ?? `Staff access granted to ${email}.` });
-      // Refresh list and update search result if it matches
       await fetchStaff();
+      if (allUsers.length > 0) await fetchAllUsers();
       if (searchResult?.email.toLowerCase() === email.toLowerCase()) {
         setSearchResult((prev) => prev ? { ...prev, isStaff: true } : prev);
       }
@@ -141,7 +241,6 @@ export default function AdminStaff() {
     setActionLoading(null);
   };
 
-  // ── Revoke staff ─────────────────────────────────────────────────────────────
   const handleRevoke = async (email: string) => {
     setActionLoading(email);
     const { ok, data } = await apiFetch("/api/admin/staff/revoke", {
@@ -151,6 +250,7 @@ export default function AdminStaff() {
     if (ok) {
       setToast({ type: "success", message: data.message ?? `Staff access revoked from ${email}.` });
       await fetchStaff();
+      if (allUsers.length > 0) await fetchAllUsers();
       if (searchResult?.email.toLowerCase() === email.toLowerCase()) {
         setSearchResult((prev) => prev ? { ...prev, isStaff: false } : prev);
       }
@@ -168,12 +268,22 @@ export default function AdminStaff() {
       </div>
     );
   }
-
   if (!user?.isStaff) return null;
+
+  // Filtered users for the all-users panel
+  const filteredUsers = userFilter.trim()
+    ? allUsers.filter(
+        (u) =>
+          u.email.toLowerCase().includes(userFilter.toLowerCase()) ||
+          u.displayName.toLowerCase().includes(userFilter.toLowerCase()) ||
+          (u.chesscomUsername ?? "").toLowerCase().includes(userFilter.toLowerCase())
+      )
+    : allUsers;
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0d1f12] text-white">
+
       {/* ── Toast ── */}
       <AnimatePresence>
         {toast && (
@@ -213,10 +323,13 @@ export default function AdminStaff() {
               OTB Admin
             </span>
           </div>
+          <div className="ml-auto text-xs text-white/30">
+            {allUsers.length > 0 ? `${allUsers.length} registered users` : ""}
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
 
         {/* ── Search & Grant/Revoke ── */}
         <motion.section
@@ -224,9 +337,9 @@ export default function AdminStaff() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/[0.04] border border-white/10 rounded-2xl p-6"
         >
-          <h2 className="text-base font-semibold text-white mb-1">Find User</h2>
+          <h2 className="text-base font-semibold text-white mb-1">Find User by Email</h2>
           <p className="text-sm text-white/50 mb-4">
-            Search by email address to look up a user and grant or revoke staff access.
+            Search for any registered account and grant or revoke OTB Staff access.
           </p>
 
           <form onSubmit={handleSearch} className="flex gap-2">
@@ -254,7 +367,6 @@ export default function AdminStaff() {
             </button>
           </form>
 
-          {/* Search error */}
           {searchError && (
             <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -262,7 +374,6 @@ export default function AdminStaff() {
             </div>
           )}
 
-          {/* Search result */}
           <AnimatePresence>
             {searchResult && (
               <motion.div
@@ -270,55 +381,15 @@ export default function AdminStaff() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="mt-4 p-4 rounded-xl bg-white/[0.04] border border-white/10"
+                className="mt-4"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-white truncate">{searchResult.displayName}</p>
-                      {searchResult.isStaff && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold tracking-wider uppercase">
-                          ★ OTB Staff
-                        </span>
-                      )}
-                      {searchResult.isPro && !searchResult.isStaff && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[9px] font-bold tracking-wider uppercase">
-                          ★ Pro
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-white/50 mt-0.5">{searchResult.email}</p>
-                    {searchResult.chesscomUsername && (
-                      <p className="text-xs text-white/30 mt-0.5">chess.com/{searchResult.chesscomUsername}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2 flex-shrink-0">
-                    {!searchResult.isStaff ? (
-                      <button
-                        onClick={() => handleGrant(searchResult.email)}
-                        disabled={actionLoading === searchResult.email}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-xs font-semibold transition-colors disabled:opacity-40"
-                      >
-                        {actionLoading === searchResult.email
-                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          : <UserPlus className="w-3.5 h-3.5" />}
-                        Grant Staff
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleRevoke(searchResult.email)}
-                        disabled={actionLoading === searchResult.email || searchResult.id === user?.id}
-                        title={searchResult.id === user?.id ? "You cannot revoke your own staff access" : undefined}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        {actionLoading === searchResult.email
-                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          : <UserMinus className="w-3.5 h-3.5" />}
-                        Revoke Staff
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <UserRow
+                  member={searchResult}
+                  currentUserId={user?.id}
+                  actionLoading={actionLoading}
+                  onGrant={handleGrant}
+                  onRevoke={handleRevoke}
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -328,7 +399,7 @@ export default function AdminStaff() {
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.05 }}
           className="bg-white/[0.04] border border-white/10 rounded-2xl p-6"
         >
           <div className="flex items-center justify-between mb-4">
@@ -340,86 +411,149 @@ export default function AdminStaff() {
             </div>
             <button
               onClick={fetchStaff}
-              disabled={listLoading}
+              disabled={staffLoading}
               className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white/50 hover:text-white disabled:opacity-40"
               aria-label="Refresh staff list"
             >
-              <RefreshCw className={`w-4 h-4 ${listLoading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${staffLoading ? "animate-spin" : ""}`} />
             </button>
           </div>
 
-          {listError && (
+          {staffError && (
             <div className="flex items-center gap-2 text-sm text-red-400 mb-4">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              {listError}
+              {staffError}
             </div>
           )}
 
-          {listLoading ? (
+          {staffLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 text-[#4CAF50] animate-spin" />
             </div>
           ) : staffList.length === 0 ? (
-            <div className="text-center py-12 text-white/30 text-sm">
-              No staff members found.
-            </div>
+            <div className="text-center py-12 text-white/30 text-sm">No staff members found.</div>
           ) : (
             <div className="space-y-2">
               {staffList.map((member) => (
-                <motion.div
+                <UserRow
                   key={member.id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center justify-between gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* Avatar placeholder */}
-                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-bold text-amber-400">
-                        {(member.displayName || member.email || "?").charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-sm font-semibold text-white truncate">{member.displayName}</p>
-                        <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-bold tracking-wider uppercase flex-shrink-0">
-                          ★ OTB Staff
-                        </span>
-                        {member.isPro && (
-                          <span title="Pro subscriber"><Crown className="w-3 h-3 text-[#4CAF50] flex-shrink-0" /></span>
-                        )}
-                      </div>
-                      <p className="text-xs text-white/40 truncate">{member.email}</p>
-                    </div>
-                  </div>
-                  {/* Revoke button — disabled for self */}
-                  {member.id !== user?.id && (
-                    <button
-                      onClick={() => handleRevoke(member.email)}
-                      disabled={actionLoading === member.email}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold transition-colors disabled:opacity-40 flex-shrink-0"
-                    >
-                      {actionLoading === member.email
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : <UserMinus className="w-3.5 h-3.5" />}
-                      Revoke
-                    </button>
-                  )}
-                  {member.id === user?.id && (
-                    <span className="text-xs text-white/20 flex-shrink-0 pr-1">You</span>
-                  )}
-                </motion.div>
+                  member={member}
+                  currentUserId={user?.id}
+                  actionLoading={actionLoading}
+                  onGrant={handleGrant}
+                  onRevoke={handleRevoke}
+                />
               ))}
             </div>
           )}
+        </motion.section>
+
+        {/* ── All Registered Users ── */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/[0.04] border border-white/10 rounded-2xl overflow-hidden"
+        >
+          {/* Collapsible header */}
+          <button
+            onClick={() => setShowAllUsers((v) => !v)}
+            className="w-full flex items-center justify-between p-6 hover:bg-white/[0.02] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-white/50" />
+              <div className="text-left">
+                <h2 className="text-base font-semibold text-white">All Registered Users</h2>
+                <p className="text-sm text-white/50 mt-0.5">
+                  Browse and manage all non-guest accounts
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-white/40">
+              {allUsers.length > 0 && (
+                <span className="text-xs font-medium">{allUsers.length} users</span>
+              )}
+              {showAllUsers ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </button>
+
+          <AnimatePresence>
+            {showAllUsers && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="px-6 pb-6 space-y-3">
+                  {/* Filter input */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <input
+                      type="text"
+                      value={userFilter}
+                      onChange={(e) => setUserFilter(e.target.value)}
+                      placeholder="Filter by name, email, or chess.com username…"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#4CAF50]/50 focus:ring-1 focus:ring-[#4CAF50]/30 transition-colors"
+                    />
+                  </div>
+
+                  {/* Refresh */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-white/30">
+                      {filteredUsers.length} of {allUsers.length} users
+                    </p>
+                    <button
+                      onClick={fetchAllUsers}
+                      disabled={allUsersLoading}
+                      className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors disabled:opacity-40"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${allUsersLoading ? "animate-spin" : ""}`} />
+                      Refresh
+                    </button>
+                  </div>
+
+                  {allUsersError && (
+                    <div className="flex items-center gap-2 text-sm text-red-400">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      {allUsersError}
+                    </div>
+                  )}
+
+                  {allUsersLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-6 h-6 text-[#4CAF50] animate-spin" />
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="text-center py-8 text-white/30 text-sm">
+                      {userFilter ? "No users match your filter." : "No registered users found."}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+                      {filteredUsers.map((member) => (
+                        <UserRow
+                          key={member.id}
+                          member={member}
+                          currentUserId={user?.id}
+                          actionLoading={actionLoading}
+                          onGrant={handleGrant}
+                          onRevoke={handleRevoke}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.section>
 
         {/* ── Info box ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.15 }}
           className="flex gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-sm text-amber-300/70"
         >
           <Shield className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-400/60" />
