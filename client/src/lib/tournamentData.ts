@@ -41,6 +41,8 @@ export interface Game {
   result: Result;
   duration?: string;
   gameIndex?: 0 | 1;
+  /** True for the 3rd-place consolation match in swiss_elim format */
+  isThirdPlace?: boolean;
 }
 
 export interface Round {

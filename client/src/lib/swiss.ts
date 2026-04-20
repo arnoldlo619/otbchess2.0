@@ -742,3 +742,48 @@ export function suggestElimCutoff(playerCount: number): number {
   const maxCutoff = nearestPowerOf2(playerCount);
   return Math.min(maxCutoff, 64);
 }
+
+/**
+ * Generate the 3rd-place consolation game from a semi-finals round.
+ *
+ * The two losers of the semi-finals play each other.
+ * The game is tagged with `isThirdPlace: true` so the bracket view can
+ * render it distinctly from the main bracket tree.
+ *
+ * @param semiFinalGames - Games from the semi-finals round (exactly 2 games)
+ * @param allPlayers - Full player list for looking up Player objects
+ * @param roundNumber - The round number to assign (same as the Final round)
+ * @returns A single Game for the 3rd-place match, or null if inputs are invalid
+ */
+export function generateThirdPlaceGame(
+  semiFinalGames: Game[],
+  allPlayers: Player[],
+  roundNumber: number,
+): Game | null {
+  const playerMap = new Map(allPlayers.map((p) => [p.id, p]));
+  const losers: Player[] = [];
+
+  const sorted = [...semiFinalGames].sort((a, b) => a.board - b.board);
+  for (const game of sorted) {
+    if (game.whiteId === "BYE" || game.blackId === "BYE") continue;
+    let loserId: string | null = null;
+    if (game.result === "1-0") loserId = game.blackId;
+    else if (game.result === "0-1") loserId = game.whiteId;
+    if (loserId) {
+      const loser = playerMap.get(loserId);
+      if (loser) losers.push(loser);
+    }
+  }
+
+  if (losers.length < 2) return null;
+
+  return {
+    id: `r${roundNumber}b3p`,
+    round: roundNumber,
+    board: 99, // sentinel board number to keep it separate from main bracket
+    whiteId: losers[0].id,
+    blackId: losers[1].id,
+    result: "*" as Result,
+    isThirdPlace: true,
+  };
+}

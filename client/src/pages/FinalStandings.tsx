@@ -84,26 +84,41 @@ function computeElimPlacements(
 
   for (let i = 0; i < sorted.length; i++) {
     const round = sorted[i];
-    const completedGames = round.games.filter(
-      (g) => g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE"
-    );
 
     if (i === 0) {
-      // Final round — 1 game
-      const finalGame = completedGames[0];
-      if (finalGame) {
-        const winnerId = finalGame.result === "1-0" ? finalGame.whiteId : finalGame.blackId;
-        const loserId = finalGame.result === "1-0" ? finalGame.blackId : finalGame.whiteId;
+      // Final round: may contain the championship game AND a 3rd-place consolation game
+      const championshipGame = round.games.find(
+        (g) => !g.isThirdPlace && g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE"
+      );
+      const thirdPlaceGame = round.games.find(
+        (g) => g.isThirdPlace && g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE"
+      );
+
+      if (championshipGame) {
+        const winnerId = championshipGame.result === "1-0" ? championshipGame.whiteId : championshipGame.blackId;
+        const loserId = championshipGame.result === "1-0" ? championshipGame.blackId : championshipGame.whiteId;
         placements.set(winnerId, 1); // Champion
         placements.set(loserId, 2); // Finalist
         currentRank = 3;
       }
+
+      if (thirdPlaceGame) {
+        // 3rd-place match result definitively determines 3rd and 4th
+        const thirdId = thirdPlaceGame.result === "1-0" ? thirdPlaceGame.whiteId : thirdPlaceGame.blackId;
+        const fourthId = thirdPlaceGame.result === "1-0" ? thirdPlaceGame.blackId : thirdPlaceGame.whiteId;
+        placements.set(thirdId, 3);
+        placements.set(fourthId, 4);
+        currentRank = 5;
+      }
     } else {
-      // Earlier rounds — losers share a tier
+      // Earlier rounds — losers share a tier (skip 3rd-place game if somehow present)
+      const completedGames = round.games.filter(
+        (g) => !g.isThirdPlace && g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE"
+      );
       const losers: string[] = [];
       for (const game of completedGames) {
         const loserId = game.result === "1-0" ? game.blackId : game.whiteId;
-        // Only add if not already placed (shouldn't happen, but safety check)
+        // Only add if not already placed
         if (!placements.has(loserId)) {
           losers.push(loserId);
         }

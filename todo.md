@@ -5213,3 +5213,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Auto-navigate director to Complete view when elim bracket finishes
 - [x] Wire Complete button to navigate to Final Standings page
 - [x] Fix Final Standings ranking for swiss_elim: use elim bracket placement (1st=champion, 2nd=finalist, 3rd/4th=semi-final losers) instead of Swiss tiebreaks
+- [x] 3rd-place consolation match: auto-generate game between semi-final losers after semi-finals complete
+- [x] Render 3rd-place match in EliminationBracketView with distinct visual treatment
+- [x] Update FinalStandings to use 3rd-place match result for 3rd/4th ranking
