@@ -32,6 +32,8 @@ interface EliminationBracketViewProps {
   onAdvanceRound: () => void;
   onCompleteTournament: () => void;
   elimStartRound: number;
+  /** Total number of elimination rounds expected (e.g. ceil(log2(cutoffSize))). Prevents premature champion display. */
+  totalElimRounds?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -492,13 +494,16 @@ function ChampionCard({
   players,
   elimPlayers,
   isDark,
+  isFinalGame,
 }: {
   game: Game | undefined;
   players: Player[];
   elimPlayers: Player[];
   isDark: boolean;
+  /** True only when this game is the actual championship match (last expected round, 1 game). */
+  isFinalGame: boolean;
 }) {
-  const winner = game ? resultWinner(game) : null;
+  const winner = (isFinalGame && game) ? resultWinner(game) : null;
   const champId = winner === "white" ? game!.whiteId : winner === "black" ? game!.blackId : null;
   const champ = champId ? getPlayer(champId, players, elimPlayers) : null;
   const seed = champId ? getSeed(champId, elimPlayers) : null;
@@ -558,6 +563,7 @@ export function EliminationBracketView({
   onAdvanceRound,
   onCompleteTournament,
   elimStartRound,
+  totalElimRounds,
 }: EliminationBracketViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -581,8 +587,18 @@ export function EliminationBracketView({
 
   const finalRound = rounds[rounds.length - 1];
   const finalGame = finalRound?.games[0];
-  const isTournamentOver = finalGame?.result !== "*" && finalGame !== undefined;
-  const isLastRound = currentRound === (finalRound?.number ?? currentRound);
+
+  // Determine if we are truly on the last expected elim round (the championship match).
+  // totalElimRounds tells us how many elim rounds the bracket needs in total.
+  // We only declare the tournament over when:
+  //   (a) the current round IS the last expected elim round (only 1 game remaining), AND
+  //   (b) that single championship game has a result.
+  const expectedFinalRoundNum = totalElimRounds != null
+    ? elimStartRound + totalElimRounds - 1
+    : finalRound?.number ?? currentRound;
+  const isLastRound = currentRound === expectedFinalRoundNum && (finalRound?.games.length ?? 0) === 1;
+  // isTournamentOver: the championship game (1 game, last round) has a result
+  const isTournamentOver = isLastRound && finalGame?.result !== "*" && finalGame !== undefined;
 
   const T = {
     advanceBtn: isDark
@@ -700,6 +716,7 @@ export function EliminationBracketView({
               players={players}
               elimPlayers={elimPlayers}
               isDark={isDark}
+              isFinalGame={isLastRound}
             />
           </div>
         </div>

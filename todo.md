@@ -5208,3 +5208,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove "Your Rejoin Link" card from the lobby screen for a cleaner, minimalist design
 - [x] 0 TypeScript errors
 - [x] Swiss Phase Summary modal — shows full standings + advancing/eliminated split before bracket generation
+- [x] Fix premature Champion display in Swiss+Elim — bracket now only declares champion when the true final (1-game) round is won, using totalElimRounds = ceil(log2(cutoffSize))
+- [x] Move Swiss Standings panel below the elimination bracket and default it to collapsed when in elim phase
