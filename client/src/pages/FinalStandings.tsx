@@ -1,15 +1,17 @@
 /**
  * FinalStandings — /tournament/:id/results
  *
- * A clean, minimalist Swiss-format final standings page shown to both the
+ * A clean, minimalist final standings page shown to both the
  * director and all participants when a tournament is completed.
  *
- * Columns (matching chess-manager reference):
- *   Rank · Player · Rating · Pts · Bch1 · Bch · SB · W · D · L
+ * For swiss_elim format, rankings are derived from the elimination bracket:
+ *   1st = champion (winner of the final)
+ *   2nd = finalist (loser of the final)
+ *   3rd/4th = semi-final losers (ranked by Swiss tiebreaks among themselves)
+ *   5th–8th = quarter-final losers, etc.
+ *   Remaining players (eliminated in Swiss) ranked by Swiss tiebreaks below.
  *
- * Data source: fetched from /api/tournament/:id/live-state, which always
- * returns the latest persisted state (including status === "completed").
- * Falls back to location.state.standings if navigated from Director.
+ * For other formats, rankings use standard Swiss tiebreaks.
  */
 
 import { useEffect, useState, useCallback } from "react";
@@ -18,7 +20,7 @@ import {Trophy, ArrowLeft, Share2, Instagram, LayoutGrid} from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { useTheme } from "@/contexts/ThemeContext";
 import { computeStandings, type StandingRow } from "@/lib/swiss";
-import type { Player, Round } from "@/lib/tournamentData";
+import type { Player, Round, Game } from "@/lib/tournamentData";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
@@ -33,6 +35,9 @@ interface TournamentMeta {
   players: Player[];
   completedRounds: Round[];
   status: string;
+  format?: string;
+  swissRounds?: number;
+  elimCutoff?: number;
 }
 
 // ─── Medal helpers ────────────────────────────────────────────────────────────
@@ -44,6 +49,164 @@ function rankColor(rank: number, isDark: boolean): string {
   if (rank === 2) return isDark ? "text-gray-300" : "text-gray-500";
   if (rank === 3) return "text-orange-400";
   return isDark ? "text-white/40" : "text-gray-400";
+}
+
+// ─── Elim bracket placement ──────────────────────────────────────────────────
+
+/**
+ * Derive final placement from elimination bracket rounds.
+ * Returns a Map<playerId, rank> for all players who participated in the bracket.
+ *
+ * Logic:
+ *   - Walk rounds from the last (final) backwards.
+ *   - The final round has 1 game: winner = 1st, loser = 2nd.
+ *   - The semi-final round losers = 3rd/4th (tie-broken by Swiss standings).
+ *   - Quarter-final losers = 5th–8th, etc.
+ *   - Within each "tier" of losers, sub-sort by their Swiss standings rank.
+ */
+function computeElimPlacements(
+  elimRounds: Round[],
+  swissStandings: StandingRow[],
+): Map<string, number> {
+  const placements = new Map<string, number>();
+  if (elimRounds.length === 0) return placements;
+
+  // Build a Swiss rank lookup: playerId → rank (1-indexed)
+  const swissRankMap = new Map<string, number>();
+  swissStandings.forEach((row) => {
+    swissRankMap.set(row.player.id, row.rank);
+  });
+
+  // Sort elim rounds by round number descending (final first)
+  const sorted = [...elimRounds].sort((a, b) => b.number - a.number);
+
+  let currentRank = 1;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const round = sorted[i];
+    const completedGames = round.games.filter(
+      (g) => g.result !== "*" && g.whiteId !== "BYE" && g.blackId !== "BYE"
+    );
+
+    if (i === 0) {
+      // Final round — 1 game
+      const finalGame = completedGames[0];
+      if (finalGame) {
+        const winnerId = finalGame.result === "1-0" ? finalGame.whiteId : finalGame.blackId;
+        const loserId = finalGame.result === "1-0" ? finalGame.blackId : finalGame.whiteId;
+        placements.set(winnerId, 1); // Champion
+        placements.set(loserId, 2); // Finalist
+        currentRank = 3;
+      }
+    } else {
+      // Earlier rounds — losers share a tier
+      const losers: string[] = [];
+      for (const game of completedGames) {
+        const loserId = game.result === "1-0" ? game.blackId : game.whiteId;
+        // Only add if not already placed (shouldn't happen, but safety check)
+        if (!placements.has(loserId)) {
+          losers.push(loserId);
+        }
+      }
+
+      // Sub-sort losers by their Swiss standings rank (lower rank = better)
+      losers.sort((a, b) => (swissRankMap.get(a) ?? 999) - (swissRankMap.get(b) ?? 999));
+
+      for (const loserId of losers) {
+        placements.set(loserId, currentRank);
+        currentRank++;
+      }
+    }
+  }
+
+  return placements;
+}
+
+/**
+ * Build the final rows for a swiss_elim tournament.
+ * Top section: players ranked by their elim bracket placement.
+ * Bottom section: players eliminated in Swiss, ranked by Swiss tiebreaks.
+ */
+function buildSwissElimRows(
+  allPlayers: Player[],
+  allRounds: Round[],
+  swissRounds: number,
+): StandingRow[] {
+  // Compute Swiss-only standings (for tiebreaking and for non-bracket players)
+  const swissRoundsOnly = allRounds.filter((r) => r.number <= swissRounds);
+  const swissStandings = computeStandings(allPlayers, swissRoundsOnly);
+
+  // Get elim rounds
+  const elimRounds = allRounds.filter(
+    (r) => r.number > swissRounds && r.status === "completed"
+  );
+
+  // Compute elim placements
+  const elimPlacements = computeElimPlacements(elimRounds, swissStandings);
+
+  // Build a player lookup
+  const playerMap = new Map<string, Player>();
+  allPlayers.forEach((p) => playerMap.set(p.id, p));
+
+  // Build a Swiss standings lookup for tiebreak data
+  const swissRowMap = new Map<string, StandingRow>();
+  swissStandings.forEach((row) => swissRowMap.set(row.player.id, row));
+
+  // Compute full-tournament standings (all rounds) for W/D/L counts
+  const fullStandings = computeStandings(allPlayers, allRounds.filter((r) => r.status === "completed"));
+  const fullRowMap = new Map<string, StandingRow>();
+  fullStandings.forEach((row) => fullRowMap.set(row.player.id, row));
+
+  // Section 1: Bracket players, sorted by elim placement
+  const bracketEntries = Array.from(elimPlacements.entries())
+    .sort((a, b) => a[1] - b[1]);
+
+  // Section 2: Non-bracket players, sorted by Swiss standings
+  const bracketPlayerIds = new Set(elimPlacements.keys());
+  // Also include players who were IN the bracket but didn't have a completed game
+  // (e.g. first-round bye in bracket — unlikely but safe)
+  const nonBracketRows = swissStandings.filter(
+    (row) => !bracketPlayerIds.has(row.player.id)
+  );
+
+  // Build final rows
+  const result: StandingRow[] = [];
+  let rank = 1;
+
+  for (const [playerId] of bracketEntries) {
+    const swissRow = swissRowMap.get(playerId);
+    const fullRow = fullRowMap.get(playerId);
+    const player = playerMap.get(playerId);
+    if (!player) continue;
+
+    result.push({
+      player,
+      rank,
+      // Use full tournament points for display
+      points: fullRow?.points ?? swissRow?.points ?? 0,
+      buchholz: swissRow?.buchholz ?? 0,
+      buchholzCut1: swissRow?.buchholzCut1 ?? 0,
+      sonnebornBerger: swissRow?.sonnebornBerger ?? 0,
+      wins: fullRow?.wins ?? swissRow?.wins ?? 0,
+      draws: fullRow?.draws ?? swissRow?.draws ?? 0,
+      losses: fullRow?.losses ?? swissRow?.losses ?? 0,
+      matchW: 0,
+      matchD: 0,
+      matchL: 0,
+    });
+    rank++;
+  }
+
+  // Non-bracket players continue the ranking
+  for (const swissRow of nonBracketRows) {
+    result.push({
+      ...swissRow,
+      rank,
+    });
+    rank++;
+  }
+
+  return result;
 }
 
 // ─── Tiebreak cell ────────────────────────────────────────────────────────────
@@ -70,6 +233,17 @@ function Skeleton({ isDark }: { isDark: boolean }) {
       ))}
     </div>
   );
+}
+
+// ─── Elim round label helper ─────────────────────────────────────────────────
+
+function elimRoundLabel(gamesInRound: number): string {
+  if (gamesInRound === 1) return "Final";
+  if (gamesInRound === 2) return "Semi-Finals";
+  if (gamesInRound === 4) return "Quarter-Finals";
+  if (gamesInRound === 8) return "Round of 16";
+  if (gamesInRound === 16) return "Round of 32";
+  return `Round of ${gamesInRound * 2}`;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -109,13 +283,25 @@ export default function FinalStandings() {
         totalRounds?: number;
         players?: Player[];
         rounds?: Round[];
+        format?: string;
+        swissRounds?: number;
+        elimCutoff?: number;
       };
 
       const players: Player[] = Array.isArray(data.players) ? data.players : [];
       const rounds: Round[] = Array.isArray(data.rounds) ? data.rounds : [];
       const completedRounds = rounds.filter((r) => r.status === "completed");
 
-      const standings = computeStandings(players, completedRounds);
+      // For swiss_elim, use bracket-based placement ranking
+      const isSwissElim = data.format === "swiss_elim" && (data.swissRounds ?? 0) > 0;
+      let standings: StandingRow[];
+
+      if (isSwissElim) {
+        standings = buildSwissElimRows(players, rounds, data.swissRounds!);
+      } else {
+        standings = computeStandings(players, completedRounds);
+      }
+
       setRows(standings);
       setMeta({
         name: data.tournamentName ?? "Tournament",
@@ -125,6 +311,9 @@ export default function FinalStandings() {
         players,
         completedRounds,
         status: data.status ?? "completed",
+        format: data.format ?? undefined,
+        swissRounds: data.swissRounds ?? undefined,
+        elimCutoff: data.elimCutoff ?? undefined,
       });
     } catch {
       setError("Network error — please try again.");
@@ -136,6 +325,8 @@ export default function FinalStandings() {
   useEffect(() => {
     fetchState();
   }, [fetchState]);
+
+  const isSwissElim = meta?.format === "swiss_elim";
 
   // ── Theme tokens ────────────────────────────────────────────────────────────
   const bg = isDark ? "bg-[#0d1a0f]" : "bg-[#F7FAF7]";
@@ -162,6 +353,9 @@ export default function FinalStandings() {
 
   // ── Podium top-3 ────────────────────────────────────────────────────────────
   const top3 = rows.slice(0, 3);
+
+  // ── Determine bracket cutoff for visual divider in table ────────────────────
+  const bracketSize = meta?.elimCutoff ?? 0;
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
@@ -214,6 +408,15 @@ export default function FinalStandings() {
               <div className={`flex items-center gap-4 text-xs ${textMuted}`}>
                 <span>{meta.players.length} players</span>
                 <span>{meta.rounds} rounds</span>
+                {isSwissElim && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                    isDark
+                      ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
+                      : "border-amber-600/20 text-amber-700 bg-amber-50"
+                  }`}>
+                    Swiss + Elimination
+                  </span>
+                )}
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${
                     isDark
@@ -287,7 +490,9 @@ export default function FinalStandings() {
                   Full Standings
                 </p>
                 <p className={`text-xs ${textMuted}`}>
-                  Tiebreak order: Pts → Bch → Bch1 → SB → Rating
+                  {isSwissElim
+                    ? "Ranked by elimination bracket placement, then Swiss tiebreaks"
+                    : "Tiebreak order: Pts \u2192 Bch \u2192 Bch1 \u2192 SB \u2192 Rating"}
                 </p>
               </div>
 
@@ -317,80 +522,99 @@ export default function FinalStandings() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row, _idx) => {
+                    {rows.map((row, idx) => {
                       const isTop3 = row.rank <= 3;
+
+                      // Show a divider between bracket players and Swiss-only players
+                      const showBracketDivider = isSwissElim && bracketSize > 0 && idx === bracketSize;
+
                       return (
-                        <tr
-                          key={row.player.id}
-                          className={`border-b ${border} transition-colors ${rowHover} ${isTop3 ? rowHighlight : ""}`}
-                        >
-                          {/* Rank */}
-                          <td className={`px-4 py-3 text-sm font-black w-10 ${rankColor(row.rank, isDark)}`}>
-                            {row.rank}
-                          </td>
-
-                          {/* Player */}
-                          <td className="px-2 py-3">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <PlayerAvatar
-                                username={row.player.username}
-                                name={row.player.name || row.player.username}
-                                platform={row.player.platform ?? "chesscom"}
-                                avatarUrl={row.player.avatarUrl}
-                                size={28}
-                                className="flex-shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <p className={`text-sm font-semibold truncate ${textMain}`}>
-                                  {row.player.title && (
-                                    <span className="text-xs font-bold mr-1" style={{ color: accent }}>
-                                      {row.player.title}
-                                    </span>
-                                  )}
-                                  {row.player.name || row.player.username}
-                                </p>
-                                <p className={`text-xs truncate ${textMuted}`}>
-                                  @{row.player.username}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Rating */}
-                          <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${textMuted}`}>
-                            {row.player.elo > 0 ? row.player.elo : "—"}
-                          </td>
-
-                          {/* Pts — highlighted */}
-                          <td
-                            className="text-right tabular-nums px-2 py-3"
-                            style={{ backgroundColor: isDark ? "rgba(61,107,71,0.10)" : "rgba(61,107,71,0.05)" }}
+                        <>
+                          {showBracketDivider && (
+                            <tr key="bracket-divider">
+                              <td colSpan={10} className={`px-4 py-2 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                                  <span className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
+                                    Eliminated in Swiss Phase
+                                  </span>
+                                  <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          <tr
+                            key={row.player.id}
+                            className={`border-b ${border} transition-colors ${rowHover} ${isTop3 ? rowHighlight : ""}`}
                           >
-                            <span className={`text-sm font-black ${textMain}`}>
-                              {row.points % 1 === 0 ? row.points.toFixed(0) : row.points.toFixed(1)}
-                            </span>
-                          </td>
+                            {/* Rank */}
+                            <td className={`px-4 py-3 text-sm font-black w-10 ${rankColor(row.rank, isDark)}`}>
+                              {row.rank}
+                            </td>
 
-                          {/* Bch1 */}
-                          <TbCell value={row.buchholzCut1} isDark={isDark} />
-                          {/* Bch */}
-                          <TbCell value={row.buchholz} isDark={isDark} />
-                          {/* SB */}
-                          <TbCell value={row.sonnebornBerger} isDark={isDark} />
+                            {/* Player */}
+                            <td className="px-2 py-3">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <PlayerAvatar
+                                  username={row.player.username}
+                                  name={row.player.name || row.player.username}
+                                  platform={row.player.platform ?? "chesscom"}
+                                  avatarUrl={row.player.avatarUrl}
+                                  size={28}
+                                  className="flex-shrink-0"
+                                />
+                                <div className="min-w-0">
+                                  <p className={`text-sm font-semibold truncate ${textMain}`}>
+                                    {row.player.title && (
+                                      <span className="text-xs font-bold mr-1" style={{ color: accent }}>
+                                        {row.player.title}
+                                      </span>
+                                    )}
+                                    {row.player.name || row.player.username}
+                                  </p>
+                                  <p className={`text-xs truncate ${textMuted}`}>
+                                    @{row.player.username}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
 
-                          {/* W */}
-                          <td className={`text-right tabular-nums text-xs font-bold px-2 py-3 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
-                            {row.wins}
-                          </td>
-                          {/* D */}
-                          <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${textMuted}`}>
-                            {row.draws}
-                          </td>
-                          {/* L */}
-                          <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${isDark ? "text-red-400/70" : "text-red-400"}`}>
-                            {row.losses}
-                          </td>
-                        </tr>
+                            {/* Rating */}
+                            <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${textMuted}`}>
+                              {row.player.elo > 0 ? row.player.elo : "\u2014"}
+                            </td>
+
+                            {/* Pts — highlighted */}
+                            <td
+                              className="text-right tabular-nums px-2 py-3"
+                              style={{ backgroundColor: isDark ? "rgba(61,107,71,0.10)" : "rgba(61,107,71,0.05)" }}
+                            >
+                              <span className={`text-sm font-black ${textMain}`}>
+                                {row.points % 1 === 0 ? row.points.toFixed(0) : row.points.toFixed(1)}
+                              </span>
+                            </td>
+
+                            {/* Bch1 */}
+                            <TbCell value={row.buchholzCut1} isDark={isDark} />
+                            {/* Bch */}
+                            <TbCell value={row.buchholz} isDark={isDark} />
+                            {/* SB */}
+                            <TbCell value={row.sonnebornBerger} isDark={isDark} />
+
+                            {/* W */}
+                            <td className={`text-right tabular-nums text-xs font-bold px-2 py-3 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
+                              {row.wins}
+                            </td>
+                            {/* D */}
+                            <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${textMuted}`}>
+                              {row.draws}
+                            </td>
+                            {/* L */}
+                            <td className={`text-right tabular-nums text-xs font-medium px-2 py-3 ${isDark ? "text-red-400/70" : "text-red-400"}`}>
+                              {row.losses}
+                            </td>
+                          </tr>
+                        </>
                       );
                     })}
                   </tbody>
