@@ -1542,6 +1542,7 @@ export function createApp() {
         elimPlayers?: unknown[];
         swissRounds?: number;
         format?: string;
+        elimCutoff?: number;
       };
       // Return all rounds so fresh-device spectators get the full round history.
       // Also include current round's games separately for backwards compatibility.
@@ -1559,6 +1560,7 @@ export function createApp() {
         elimPlayers: s.elimPlayers ?? [],
         swissRounds: s.swissRounds ?? null,
         format: s.format ?? null,
+        elimCutoff: s.elimCutoff ?? null,
         updatedAt: rows[0].updatedAt,
       });
     } catch (err) {

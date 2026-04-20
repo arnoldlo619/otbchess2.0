@@ -4474,8 +4474,9 @@ export default function Director() {
                     onAdvanceRound={() => {
                       generateNextRound();
                     }}
-                    onCompleteTournament={() => {
+                    onCompleteTournament={async () => {
                       completeTournament();
+                      syncStatusToServer("completed");
                       const winner = liveStandings[0];
                       const winnerName = winner?.player.name ?? "Unknown";
                       // Fire push notification to all subscribers
@@ -4507,6 +4508,17 @@ export default function Director() {
                           fmtLabel
                         );
                       }
+                      // Broadcast tournament_ended to server
+                      try {
+                        await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ players: liveStandings, tournamentName: state.tournamentName }),
+                        });
+                      } catch { /* ignore */ }
+                      toast.success("Tournament finalized!");
+                      // Navigate to Final Standings page
+                      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 900);
                     }}
                   />
                 );

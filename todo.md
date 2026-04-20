@@ -5210,3 +5210,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Swiss Phase Summary modal — shows full standings + advancing/eliminated split before bracket generation
 - [x] Fix premature Champion display in Swiss+Elim — bracket now only declares champion when the true final (1-game) round is won, using totalElimRounds = ceil(log2(cutoffSize))
 - [x] Move Swiss Standings panel below the elimination bracket and default it to collapsed when in elim phase
+- [x] Auto-navigate director to Complete view when elim bracket finishes
+- [x] Wire Complete button to navigate to Final Standings page
+- [x] Fix Final Standings ranking for swiss_elim: use elim bracket placement (1st=champion, 2nd=finalist, 3rd/4th=semi-final losers) instead of Swiss tiebreaks
