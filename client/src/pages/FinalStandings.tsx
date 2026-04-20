@@ -460,40 +460,105 @@ export default function FinalStandings() {
                 <p className={`text-xs font-bold uppercase tracking-widest mb-5 ${thText}`}>
                   Podium
                 </p>
+
+                {/* Podium layout: 2nd (left, medium height) | 1st (centre, tallest) | 3rd (right, shortest) */}
                 <div className="flex items-end justify-center gap-3 sm:gap-6">
-                  {/* Reorder: 2nd, 1st, 3rd */}
-                  {[top3[1], top3[0], top3[2]].filter(Boolean).map((row, displayIdx) => {
-                    const podiumRank = displayIdx === 0 ? 2 : displayIdx === 1 ? 1 : 3;
-                    const heights = ["h-20", "h-28", "h-16"];
-                    const podiumColors = [
-                      isDark ? "bg-gray-600/40" : "bg-gray-200",
-                      isDark ? "bg-amber-500/30" : "bg-amber-100",
-                      isDark ? "bg-orange-600/30" : "bg-orange-100",
-                    ];
-                    const heightClass = heights[displayIdx];
-                    const podiumColor = podiumColors[displayIdx];
-                    return (
-                      <div key={row.player.id} className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
-                        <PlayerAvatar
-                          username={row.player.username}
-                          name={row.player.name || row.player.username}
-                          platform={row.player.platform ?? "chesscom"}
-                          avatarUrl={row.player.avatarUrl}
-                          size={podiumRank === 1 ? 52 : 40}
-                        />
-                        <p className={`text-xs font-bold text-center leading-tight truncate w-full px-1 ${textMain}`}>
-                          {row.player.name || row.player.username}
-                        </p>
-                        <p className={`text-xs font-semibold`} style={{ color: accent }}>
-                          {row.points} pts
-                        </p>
-                        <div className={`w-full rounded-t-xl flex flex-col items-center justify-center ${heightClass} ${podiumColor}`}>
-                          <span className="text-xl leading-none">{RANK_MEDAL[podiumRank]}</span>
-                          <span className={`text-xs font-black mt-1 ${textMain}`}>#{podiumRank}</span>
-                        </div>
+
+                  {/* ── 2nd Place (Silver) ── */}
+                  {top3[1] && (
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
+                      <PlayerAvatar
+                        username={top3[1].player.username}
+                        name={top3[1].player.name || top3[1].player.username}
+                        platform={top3[1].player.platform ?? "chesscom"}
+                        avatarUrl={top3[1].player.avatarUrl}
+                        size={40}
+                      />
+                      <p className={`text-xs font-bold text-center leading-tight truncate w-full px-1 ${textMain}`}>
+                        {top3[1].player.name || top3[1].player.username}
+                      </p>
+                      <p className={`text-xs font-semibold ${isDark ? "text-gray-300" : "text-gray-500"}`}>
+                        {isSwissElim ? "Finalist" : `${top3[1].points} pts`}
+                      </p>
+                      <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-20 ${
+                        isDark ? "bg-gray-600/40" : "bg-gray-200"
+                      }`}>
+                        <span className="text-xl leading-none">🥈</span>
+                        <span className={`text-xs font-black mt-1 ${textMain}`}>#2</span>
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
+
+                  {/* ── 1st Place (Gold / Champion) ── */}
+                  {top3[0] && (
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[140px]">
+                      {/* Crown accent above avatar */}
+                      <div className="relative">
+                        <PlayerAvatar
+                          username={top3[0].player.username}
+                          name={top3[0].player.name || top3[0].player.username}
+                          platform={top3[0].player.platform ?? "chesscom"}
+                          avatarUrl={top3[0].player.avatarUrl}
+                          size={56}
+                        />
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-base leading-none">👑</span>
+                      </div>
+                      <p className={`text-sm font-black text-center leading-tight truncate w-full px-1 ${textMain}`}>
+                        {top3[0].player.name || top3[0].player.username}
+                      </p>
+                      <p className="text-xs font-bold text-amber-400">
+                        {isSwissElim ? "Champion" : `${top3[0].points} pts`}
+                      </p>
+                      <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-28 ${
+                        isDark ? "bg-amber-500/30" : "bg-amber-100"
+                      }`}>
+                        <span className="text-2xl leading-none">🥇</span>
+                        <span className={`text-xs font-black mt-1 ${textMain}`}>#1</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 3rd Place (Bronze) ── */}
+                  {top3[2] ? (
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
+                      <PlayerAvatar
+                        username={top3[2].player.username}
+                        name={top3[2].player.name || top3[2].player.username}
+                        platform={top3[2].player.platform ?? "chesscom"}
+                        avatarUrl={top3[2].player.avatarUrl}
+                        size={40}
+                      />
+                      <p className={`text-xs font-bold text-center leading-tight truncate w-full px-1 ${textMain}`}>
+                        {top3[2].player.name || top3[2].player.username}
+                      </p>
+                      <p className={`text-xs font-semibold text-orange-400`}>
+                        {isSwissElim ? "3rd Place" : `${top3[2].points} pts`}
+                      </p>
+                      <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-16 ${
+                        isDark ? "bg-orange-700/35 border border-orange-600/20" : "bg-orange-100"
+                      }`}>
+                        <span className="text-xl leading-none">🥉</span>
+                        <span className={`text-xs font-black mt-1 ${textMain}`}>#3</span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Placeholder when only 2 players are in the tournament */
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px] opacity-30">
+                      <div className={`w-10 h-10 rounded-full border-2 border-dashed ${
+                        isDark ? "border-white/20" : "border-gray-300"
+                      } flex items-center justify-center`}>
+                        <span className="text-lg">🥉</span>
+                      </div>
+                      <p className={`text-xs font-semibold text-center ${textMuted}`}>3rd Place</p>
+                      <p className={`text-[10px] ${textMuted}`}>TBD</p>
+                      <div className={`w-full rounded-t-xl flex flex-col items-center justify-center h-16 ${
+                        isDark ? "bg-white/05" : "bg-gray-100"
+                      }`}>
+                        <span className={`text-xs font-black ${textMuted}`}>#3</span>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               </div>
             )}

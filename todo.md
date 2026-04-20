@@ -5216,3 +5216,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 3rd-place consolation match: auto-generate game between semi-final losers after semi-finals complete
 - [x] Render 3rd-place match in EliminationBracketView with distinct visual treatment
 - [x] Update FinalStandings to use 3rd-place match result for 3rd/4th ranking
+- [x] Add 3rd-place bronze medal podium slot to Final Standings page alongside champion and finalist cards
