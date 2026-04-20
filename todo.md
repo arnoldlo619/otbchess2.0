@@ -5207,3 +5207,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace Crown icon with the OTB !! logo image (uploaded to CDN)
 - [x] Remove "Your Rejoin Link" card from the lobby screen for a cleaner, minimalist design
 - [x] 0 TypeScript errors
+- [x] Swiss Phase Summary modal — shows full standings + advancing/eliminated split before bracket generation
