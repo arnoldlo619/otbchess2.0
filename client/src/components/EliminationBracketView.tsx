@@ -586,19 +586,26 @@ export function EliminationBracketView({
   }, [rounds]);
 
   const finalRound = rounds[rounds.length - 1];
-  const finalGame = finalRound?.games[0];
+  // The championship game is the non-3rd-place game in the final round
+  const finalGame = finalRound?.games.find((g) => !g.isThirdPlace);
+  // The 3rd-place consolation game (if present)
+  const thirdPlaceGame = finalRound?.games.find((g) => g.isThirdPlace);
 
   // Determine if we are truly on the last expected elim round (the championship match).
   // totalElimRounds tells us how many elim rounds the bracket needs in total.
   // We only declare the tournament over when:
-  //   (a) the current round IS the last expected elim round (only 1 game remaining), AND
-  //   (b) that single championship game has a result.
+  //   (a) the current round IS the last expected elim round, AND
+  //   (b) the championship game AND the 3rd-place game (if present) both have results.
   const expectedFinalRoundNum = totalElimRounds != null
     ? elimStartRound + totalElimRounds - 1
     : finalRound?.number ?? currentRound;
-  const isLastRound = currentRound === expectedFinalRoundNum && (finalRound?.games.length ?? 0) === 1;
-  // isTournamentOver: the championship game (1 game, last round) has a result
-  const isTournamentOver = isLastRound && finalGame?.result !== "*" && finalGame !== undefined;
+  // isLastRound: we are on the final round (championship + optional 3rd-place)
+  const mainGamesInFinalRound = finalRound?.games.filter((g) => !g.isThirdPlace).length ?? 0;
+  const isLastRound = currentRound === expectedFinalRoundNum && mainGamesInFinalRound === 1;
+  // isTournamentOver: championship game has result AND 3rd-place game (if present) has result
+  const championshipDone = finalGame !== undefined && finalGame.result !== "*";
+  const thirdPlaceDone = thirdPlaceGame === undefined || thirdPlaceGame.result !== "*";
+  const isTournamentOver = isLastRound && championshipDone && thirdPlaceDone;
 
   const T = {
     advanceBtn: isDark
@@ -667,12 +674,15 @@ export function EliminationBracketView({
             const isActive = round.number === currentRound;
             const isLast = idx === rounds.length - 1;
             const nextRound = rounds[idx + 1];
+            // Exclude the 3rd-place game from the main bracket column rendering
+            const mainGames = round.games.filter((g) => !g.isThirdPlace);
+            const roundForColumn: Round = { ...round, games: mainGames };
 
             return (
               <React.Fragment key={round.number}>
                 <div data-active-round={isActive ? "true" : undefined}>
                   <RoundColumn
-                    round={round}
+                    round={roundForColumn}
                     roundLabel={roundLabels[round.number] ?? `Round ${round.number - elimStartRound + 1}`}
                     players={players}
                     elimPlayers={elimPlayers}
@@ -680,7 +690,7 @@ export function EliminationBracketView({
                     isDark={isDark}
                     myPlayerId={myPlayerId}
                     onEnterResult={onEnterResult}
-                    verticalOffset={colOffset(round.games.length)}
+                    verticalOffset={colOffset(mainGames.length)}
                   />
                 </div>
 
@@ -688,8 +698,8 @@ export function EliminationBracketView({
                 {!isLast && nextRound && (
                   <div style={{ marginTop: HEADER_H }}>
                     <BracketConnector
-                      matchCount={round.games.length}
-                      nextCount={nextRound.games.length}
+                      matchCount={mainGames.length}
+                      nextCount={nextRound.games.filter((g) => !g.isThirdPlace).length}
                       isDark={isDark}
                     />
                   </div>
@@ -698,11 +708,11 @@ export function EliminationBracketView({
             );
           })}
 
-          {/* Connector to champion slot */}
+          {/* Connector to champion slot — use only main games count */}
           {finalRound && (
             <div style={{ marginTop: HEADER_H }}>
               <BracketConnector
-                matchCount={finalRound.games.length}
+                matchCount={finalRound.games.filter((g) => !g.isThirdPlace).length}
                 nextCount={1}
                 isDark={isDark}
               />
@@ -721,6 +731,48 @@ export function EliminationBracketView({
           </div>
         </div>
       </div>
+
+      {/* ── 3rd-Place Consolation Match ── */}
+      {thirdPlaceGame && (
+        <div className={`rounded-2xl border p-4 ${isDark ? "bg-[oklch(0.18_0.04_145)] border-white/08" : "bg-gray-50 border-gray-150"}`}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg leading-none">🥉</span>
+            <span className={`text-[11px] font-black uppercase tracking-wider ${isDark ? "text-white/50" : "text-gray-500"}`}>
+              3rd Place Match
+            </span>
+            {thirdPlaceGame.result === "*" && currentRound === finalRound?.number && (
+              <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+              }`}>
+                <span className="w-1 h-1 rounded-full bg-[#4CAF50] animate-pulse" />
+                Live
+              </span>
+            )}
+            {thirdPlaceGame.result !== "*" && (
+              <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
+              }`}>
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                Done
+              </span>
+            )}
+          </div>
+          <div style={{ width: COL_W }}>
+            <MatchCard
+              game={thirdPlaceGame}
+              players={players}
+              elimPlayers={elimPlayers}
+              isDark={isDark}
+              isCurrentRound={currentRound === finalRound?.number}
+              myPlayerId={myPlayerId}
+              onEnterResult={onEnterResult}
+            />
+          </div>
+          <p className={`text-[10px] mt-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            Semi-final losers compete for 3rd place. Winner is ranked 3rd in final standings.
+          </p>
+        </div>
+      )}
 
       {/* ── Advance CTA ── */}
       {allResultsIn && !isTournamentOver && !isLastRound && (

@@ -10,7 +10,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DEMO_TOURNAMENT, type Player, type Game, type Round, type Result } from "./tournamentData";
-import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, suggestElimCutoff, elimRoundLabel } from "./swiss";
+import { generateSwissPairings, generateDoubleSwissPairings, applyResultToPlayers, computeStandings, generateEliminationFirstRound, generateEliminationNextRound, generateThirdPlaceGame, suggestElimCutoff, elimRoundLabel } from "./swiss";
 import { getTournamentConfig, type TournamentConfig } from "./tournamentRegistry";
 import { useVisibilitySync } from "./useVisibilitySync";
 
@@ -506,7 +506,21 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
           const newGames = generateEliminationNextRound(lastRound.games, allPlayersForLookup, nextRoundNum);
           if (newGames.length === 0) return prev; // tournament over
           const playersRemaining = newGames.filter(g => g.whiteId !== "BYE" && g.blackId !== "BYE").length * 2;
-          const newRound: Round = { number: nextRoundNum, status: "in_progress", games: newGames };
+
+          // ── 3rd-place consolation match ──────────────────────────────────
+          // When advancing from the semi-finals (2 games → 1 final game),
+          // generate a consolation game between the two semi-final losers.
+          // The 3rd-place game is added to the same round as the Final.
+          const isSemiFinalToFinal = lastRound.games.filter(g => g.whiteId !== "BYE" && g.blackId !== "BYE").length === 2 && newGames.length === 1;
+          let gamesForNewRound = newGames;
+          if (isSemiFinalToFinal) {
+            const thirdPlaceGame = generateThirdPlaceGame(lastRound.games, allPlayersForLookup, nextRoundNum);
+            if (thirdPlaceGame) {
+              gamesForNewRound = [...newGames, thirdPlaceGame];
+            }
+          }
+
+          const newRound: Round = { number: nextRoundNum, status: "in_progress", games: gamesForNewRound };
           return {
             ...prev,
             rounds: [...prev.rounds, newRound],
