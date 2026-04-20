@@ -1538,6 +1538,10 @@ export function createApp() {
         tournamentName?: string;
         players?: unknown[];
         rounds?: Array<{ number: number; games: unknown[] }>;
+        elimPhase?: string;
+        elimPlayers?: unknown[];
+        swissRounds?: number;
+        format?: string;
       };
       // Return all rounds so fresh-device spectators get the full round history.
       // Also include current round's games separately for backwards compatibility.
@@ -1550,6 +1554,11 @@ export function createApp() {
         players: s.players ?? [],
         games: currentRoundData?.games ?? [],
         rounds: s.rounds ?? [],
+        // swiss_elim phase tracking — needed by spectators on fresh devices
+        elimPhase: s.elimPhase ?? null,
+        elimPlayers: s.elimPlayers ?? [],
+        swissRounds: s.swissRounds ?? null,
+        format: s.format ?? null,
         updatedAt: rows[0].updatedAt,
       });
     } catch (err) {
@@ -2286,17 +2295,19 @@ export function createApp() {
   app.post("/api/tournament/:id/round", (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Missing tournament id" });
-    const { round, games, players } = req.body as {
+    const { round, games, players, elimPhase, elimPlayers } = req.body as {
       round: number;
       games: unknown[];
       players: unknown[];
+      elimPhase?: string;
+      elimPlayers?: unknown[];
     };
     if (!round || !games || !players) {
       return res.status(400).json({ error: "Missing round, games, or players" });
     }
     const subs = sseSubscribers.get(id);
     if (subs && subs.size > 0) {
-      const data = `event: round_started\ndata: ${JSON.stringify({ round, games, players })}\n\n`;
+      const data = `event: round_started\ndata: ${JSON.stringify({ round, games, players, elimPhase: elimPhase ?? null, elimPlayers: elimPlayers ?? [] })}\n\n`;
       for (const sub of Array.from(subs)) {
         try { sub.write(data); } catch { /* disconnected */ }
       }

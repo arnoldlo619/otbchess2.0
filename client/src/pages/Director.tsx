@@ -993,11 +993,15 @@ function VerticalRoundTracker({
   currentRound,
   totalRounds,
   isDark,
+  swissRounds,
+  elimPhase,
 }: {
   rounds: ReturnType<typeof useDirectorState>["state"]["rounds"];
   currentRound: number;
   totalRounds: number;
   isDark: boolean;
+  swissRounds?: number;
+  elimPhase?: string;
 }) {
   return (
     <div
@@ -1019,9 +1023,20 @@ function VerticalRoundTracker({
         const roundData = rounds.find((rd) => rd.number === r);
         const isComplete = roundData?.status === "completed";
         const isCurrent = r === currentRound;
+        // Show a phase divider between Swiss and Elim rounds
+        const isFirstElimRound = swissRounds && elimPhase === "elimination" && r === swissRounds + 1;
 
         return (
           <div key={r} className="flex flex-col items-center">
+            {isFirstElimRound && (
+              <div className="flex flex-col items-center my-1">
+                <div className={`w-0.5 h-3 rounded-full ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full my-0.5 ${
+                  isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-600"
+                }`}>Elim</span>
+                <div className={`w-0.5 h-3 rounded-full ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+              </div>
+            )}
             {/* Round dot — larger: w-10 h-10 */}
             <div
               className={`relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold transition-all duration-300 ${
@@ -2329,6 +2344,8 @@ export default function Director() {
                 currentRound={state.currentRound}
                 totalRounds={state.totalRounds}
                 isDark={isDark}
+                swissRounds={state.format === "swiss_elim" ? (state.swissRounds ?? undefined) : undefined}
+                elimPhase={state.elimPhase}
               />
             </div>
           )}
@@ -5299,6 +5316,9 @@ export default function Director() {
                       round: nextRound,
                       games: roundData.games,
                       players: latestState.state.players,
+                      // Include elim phase info so spectators on fresh devices get the bracket
+                      elimPhase: latestState.state.elimPhase ?? "elimination",
+                      elimPlayers: latestState.state.elimPlayers ?? [],
                     }),
                   }).catch(() => {});
                 }
