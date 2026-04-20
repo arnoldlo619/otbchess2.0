@@ -132,6 +132,23 @@ export interface FeedEvent {
   /** Total votes cast */
   pollResultTotalVotes?: number;
 
+  // ── Tournament Completed fields ─────────────────────────────────────────
+  /** Tournament name (type === "tournament_completed") */
+  tournamentName?: string;
+  /** Tournament ID for deep-linking */
+  tournamentId?: string;
+  /** Format string, e.g. "Swiss · 5R" */
+  tournamentFormat?: string;
+  /** Total number of players */
+  tournamentPlayerCount?: number;
+  /** Top-3 podium entries */
+  tournamentPodium?: Array<{
+    rank: number;
+    playerName: string;
+    score: number;
+    totalRounds: number;
+  }>;
+
   // ── Player of the Month fields ───────────────────────────────────────────
   /** "YYYY-MM" deduplication key, e.g. "2026-03" (type === "potm_announcement") */
   potmMonth?: string;
@@ -469,7 +486,10 @@ export function recordTournamentCompleted(
   winnerName: string,
   tournamentId: string,
   winnerScore?: number,
-  totalRounds?: number
+  totalRounds?: number,
+  podium?: Array<{ rank: number; playerName: string; score: number; totalRounds: number }>,
+  playerCount?: number,
+  format?: string
 ): FeedEvent {
   const formatScore = (s: number) => s % 1 !== 0 ? `${Math.floor(s)}½` : String(s);
   const scoreStr =
@@ -488,8 +508,13 @@ export function recordTournamentCompleted(
     actorName: winnerName,
     description: `${tournamentName} concluded`,
     detail,
-    linkHref: `/tournament/${tournamentId}/results`,
+    linkHref: `/tournament/${tournamentId}/report`,
     linkLabel: "View results",
+    tournamentName,
+    tournamentId,
+    tournamentFormat: format,
+    tournamentPlayerCount: playerCount,
+    tournamentPodium: podium,
   });
 }
 
