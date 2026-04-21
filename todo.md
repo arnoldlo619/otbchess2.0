@@ -5237,3 +5237,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] SMTP credentials stored as secrets (PLATFORM_SMTP_HOST/PORT/USER/PASS/FROM_NAME)
 - [x] Platform email helper (server/platformEmail.ts) with sendPlatformEmail and verifyPlatformSmtp
 - [x] Welcome email for new users on registration (tournament link + community link)
+- [x] SEO: Fix homepage title (30-60 chars), meta description (50-160 chars), keywords, and H2 heading
