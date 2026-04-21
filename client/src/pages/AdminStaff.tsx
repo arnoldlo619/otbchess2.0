@@ -35,6 +35,7 @@ interface AdminUser {
   email: string;
   chesscomUsername: string | null;
   isPro: boolean;
+  proExpiresAt?: string | Date | null;
   isStaff: boolean;
   isGuest?: boolean;
   createdAt: string | null;
@@ -65,11 +66,19 @@ function UserRow({
   actionLoading: string | null;
   onGrant: (email: string) => void;
   onRevoke: (email: string) => void;
-  onGrantPro: (email: string) => void;
+  onGrantPro: (email: string, expiresAt?: string | null) => void;
   onRevokePro: (email: string) => void;
 }) {
   const isSelf = member.id === currentUserId;
   const isActing = actionLoading === member.email;
+  const [showExpiry, setShowExpiry] = useState(false);
+  const [expiryDate, setExpiryDate] = useState("");
+
+  // Format the expiry date for display
+  const expiryDisplay = member.proExpiresAt
+    ? new Date(member.proExpiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : null;
+  const isExpired = member.proExpiresAt ? new Date() > new Date(member.proExpiresAt) : false;
 
   return (
     <motion.div
@@ -98,6 +107,11 @@ function UserRow({
             {member.isPro && !member.isStaff && (
               <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30 text-[#22c55e] text-[9px] font-bold flex-shrink-0">
                 <Crown className="w-2.5 h-2.5" /> Pro
+                {expiryDisplay && (
+                  <span className={`ml-0.5 ${isExpired ? 'text-red-400' : 'text-[#22c55e]/70'}`}>
+                    · {isExpired ? 'Expired' : `until ${expiryDisplay}`}
+                  </span>
+                )}
               </span>
             )}
             {isSelf && (
@@ -115,14 +129,37 @@ function UserRow({
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Pro toggle */}
         {!member.isPro ? (
-          <button
-            onClick={() => onGrantPro(member.email)}
-            disabled={isActing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#22c55e]/10 hover:bg-[#22c55e]/20 border border-[#22c55e]/25 text-[#22c55e] text-xs font-semibold transition-colors disabled:opacity-40"
-          >
-            {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crown className="w-3.5 h-3.5" />}
-            Grant Pro
-          </button>
+          <div className="flex items-center gap-1">
+            {showExpiry && (
+              <input
+                type="date"
+                value={expiryDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                className="text-xs bg-white/5 border border-white/15 rounded-lg px-2 py-1.5 text-white/70 focus:outline-none focus:border-[#22c55e]/50 w-32"
+                title="Optional expiry date"
+              />
+            )}
+            <button
+              onClick={() => setShowExpiry((v) => !v)}
+              disabled={isActing}
+              title={showExpiry ? "Hide expiry picker" : "Set optional expiry date"}
+              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/30 hover:text-white/60 transition-colors disabled:opacity-40"
+            >
+              <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="1" y="3" width="14" height="12" rx="2"/>
+                <path d="M5 1v4M11 1v4M1 7h14"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => { onGrantPro(member.email, expiryDate || null); setShowExpiry(false); setExpiryDate(""); }}
+              disabled={isActing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#22c55e]/10 hover:bg-[#22c55e]/20 border border-[#22c55e]/25 text-[#22c55e] text-xs font-semibold transition-colors disabled:opacity-40"
+            >
+              {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crown className="w-3.5 h-3.5" />}
+              Grant Pro
+            </button>
+          </div>
         ) : (
           <button
             onClick={() => onRevokePro(member.email)}
@@ -267,17 +304,17 @@ export default function AdminStaff() {
     setActionLoading(null);
   };
 
-  const handleGrantPro = async (email: string) => {
+  const handleGrantPro = async (email: string, expiresAt?: string | null) => {
     setActionLoading(email);
     const { ok, data } = await apiFetch("/api/admin/staff/grant-pro", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, expiresAt: expiresAt || null }),
     });
     if (ok) {
       setToast({ type: "success", message: data.message ?? `Pro access granted to ${email}.` });
       if (allUsers.length > 0) await fetchAllUsers();
       if (searchResult?.email.toLowerCase() === email.toLowerCase()) {
-        setSearchResult((prev) => prev ? { ...prev, isPro: true } : prev);
+        setSearchResult((prev) => prev ? { ...prev, isPro: true, proExpiresAt: expiresAt || null } : prev);
       }
     } else {
       setToast({ type: "error", message: data.error ?? "Failed to grant Pro access." });

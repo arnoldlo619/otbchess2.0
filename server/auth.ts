@@ -272,6 +272,13 @@ export function createAuthRouter(): Router {
       const db = await getDb();
       const [user] = await db.select().from(users).where(eq(users.id, payload.sub));
       if (!user) return res.status(401).json({ error: "User not found" });
+      // Auto-revoke expired time-limited Pro access
+      if (user.isPro && user.proExpiresAt && new Date() > new Date(user.proExpiresAt)) {
+        await db.update(users).set({ isPro: false, proExpiresAt: null }).where(eq(users.id, user.id));
+        user.isPro = false;
+        user.proExpiresAt = null;
+        logger.info(`[auth] Auto-revoked expired Pro for ${user.email}`);
+      }
       return res.json({ user: safeUser(user) });
     } catch (err) {
       logger.error("[auth] me error:", err);

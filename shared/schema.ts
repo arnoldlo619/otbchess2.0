@@ -67,6 +67,9 @@ export const users = mysqlTable(
     // Pro subscription flag — true for paid Pro members
     isPro: boolean("is_pro").default(false).notNull(),
 
+    // Pro expiry — if set, isPro is only valid until this timestamp (null = permanent Pro)
+    proExpiresAt: timestamp("pro_expires_at"),
+
     // OTB Staff flag — true for team/staff members; grants full Pro access without a subscription
     isStaff: boolean("is_staff").default(false).notNull(),
 
