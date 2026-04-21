@@ -5231,3 +5231,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Auto-revoke expired Pro access on auth check (server-side enforcement)
 - [x] Add expiry date picker to Grant Pro button in Admin Staff UI
 - [x] Show Pro expiry badge on user rows in Admin Staff UI
+- [x] Add Renew Pro section to user profile settings page (expiry status, renewal request button)
+- [x] Add /api/auth/renew-pro-request server endpoint to handle renewal requests

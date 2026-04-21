@@ -701,5 +701,31 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── POST /api/auth/renew-pro-request ────────────────────────────────────
+  // Authenticated user requests a Pro access renewal. Logs the request
+  // server-side so the admin can review and extend via the Admin Staff UI.
+  router.post("/renew-pro-request", async (req: import("express").Request & { userId?: string }, res) => {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
+    try {
+      const db = await getDb();
+      const rows = await db.select({
+        email: users.email,
+        displayName: users.displayName,
+        proExpiresAt: users.proExpiresAt,
+      }).from(users).where(eq(users.id, userId)).limit(1);
+      if (!rows.length) return res.status(404).json({ error: "User not found" });
+      const u = rows[0];
+      logger.info(
+        `[pro-renewal] Renewal request from ${u.email} (${u.displayName}), ` +
+        `current expiry: ${u.proExpiresAt ? new Date(u.proExpiresAt).toISOString() : "none"}`
+      );
+      return res.json({ ok: true, message: "Renewal request received" });
+    } catch (err) {
+      logger.error("[pro-renewal] error:", err);
+      return res.status(500).json({ error: "Failed to submit renewal request" });
+    }
+  });
+
   return router;
 }

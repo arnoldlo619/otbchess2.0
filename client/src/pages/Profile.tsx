@@ -279,6 +279,31 @@ export default function ProfilePage() {
   // Delete state: which tournament is pending confirmation, and which is being deleted
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [renewalLoading, setRenewalLoading] = useState(false);
+  const [renewalSent, setRenewalSent] = useState(false);
+  const [renewalError, setRenewalError] = useState<string | null>(null);
+
+  async function handleRenewPro() {
+    setRenewalLoading(true);
+    setRenewalError(null);
+    try {
+      const res = await fetch("/api/auth/renew-pro-request", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        setRenewalSent(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setRenewalError((data as { error?: string }).error ?? "Failed to send request. Please try again.");
+      }
+    } catch {
+      setRenewalError("Network error. Please try again.");
+    } finally {
+      setRenewalLoading(false);
+    }
+  }
 
   async function handleDeleteTournament(tournamentId: string) {
     setDeletingId(tournamentId);
@@ -1206,6 +1231,104 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Pro Membership card — shown only to Pro users (not staff) */}
+        {!user.isStaff && user.isPro && (
+          <div className={`rounded-3xl border p-6 ${card}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-[#22c55e]/15 border border-[#22c55e]/25 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 text-[#22c55e]" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className={`text-base font-bold ${text}`}>Pro Membership</h2>
+                <p className={`text-xs ${muted}`}>Full access to all Pro features</p>
+              </div>
+            </div>
+
+            {/* Expiry status */}
+            {user.proExpiresAt ? (() => {
+              const expiry = new Date(user.proExpiresAt);
+              const now = new Date();
+              const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              const isExpired = now > expiry;
+              const expiringSoon = !isExpired && daysLeft <= 30;
+              return (
+                <div className={`rounded-2xl border px-4 py-3 mb-4 ${
+                  isExpired
+                    ? "bg-red-500/10 border-red-500/20"
+                    : expiringSoon
+                    ? "bg-amber-500/10 border-amber-500/20"
+                    : "bg-[#22c55e]/5 border-[#22c55e]/15"
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-semibold ${
+                      isExpired ? "text-red-400" : expiringSoon ? "text-amber-400" : "text-[#22c55e]"
+                    }`}>
+                      {isExpired
+                        ? "Pro access has expired"
+                        : expiringSoon
+                        ? `Expiring in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`
+                        : `Active until ${expiry.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
+                      }
+                    </span>
+                  </div>
+                  {(isExpired || expiringSoon) && (
+                    <p className={`text-xs mt-1 ${
+                      isExpired ? "text-red-400/70" : "text-amber-400/70"
+                    }`}>
+                      {isExpired
+                        ? "Your Pro access has lapsed. Request a renewal below."
+                        : "Your Pro access is expiring soon. Request an extension to keep uninterrupted access."
+                      }
+                    </p>
+                  )}
+                </div>
+              );
+            })() : (
+              <div className="rounded-2xl border border-[#22c55e]/15 bg-[#22c55e]/5 px-4 py-3 mb-4">
+                <span className="text-sm font-semibold text-[#22c55e]">Active — no expiry set</span>
+                <p className="text-xs text-[#22c55e]/60 mt-0.5">Your Pro access is permanent until manually changed.</p>
+              </div>
+            )}
+
+            {/* Renew / Extend button — shown when expiry is set */}
+            {user.proExpiresAt && (
+              renewalSent ? (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20">
+                  <svg className="w-4 h-4 text-[#22c55e] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-sm text-[#22c55e] font-medium">Renewal request sent! We'll be in touch shortly.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {renewalError && (
+                    <p className="text-xs text-red-400 px-1">{renewalError}</p>
+                  )}
+                  <button
+                    onClick={handleRenewPro}
+                    disabled={renewalLoading}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-2xl bg-[#22c55e]/15 hover:bg-[#22c55e]/25 border border-[#22c55e]/30 text-[#22c55e] text-sm font-semibold transition disabled:opacity-50"
+                  >
+                    {renewalLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    )}
+                    {renewalLoading ? "Sending request..." : "Request Pro Renewal"}
+                  </button>
+                  <p className="text-[10px] text-center px-2 leading-relaxed" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)' }}>
+                    Clicking this sends a renewal request to the ChessOTB.club team. We'll review and extend your access within 24 hours.
+                  </p>
+                </div>
+              )
+            )}
+          </div>
+        )}
 
         {/* Danger zone */}
         <div className={`rounded-3xl border p-6 ${card}`}>
