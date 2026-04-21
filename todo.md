@@ -5226,3 +5226,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add All Registered Users collapsible panel with filter to AdminStaff page
 - [x] Add Grant Pro / Revoke Pro toggle to Admin Staff Management UI (All Users panel + search result)
 - [x] Add /api/admin/staff/grant-pro and /api/admin/staff/revoke-pro server endpoints
+- [x] Add proExpiresAt column to users schema and run DB migration
+- [x] Update grant-pro endpoint to accept optional expiresAt date
+- [x] Auto-revoke expired Pro access on auth check (server-side enforcement)
+- [x] Add expiry date picker to Grant Pro button in Admin Staff UI
+- [x] Show Pro expiry badge on user rows in Admin Staff UI

@@ -50,6 +50,7 @@ export function createAdminStaffRouter(): Router {
           email: users.email,
           chesscomUsername: users.chesscomUsername,
           isPro: users.isPro,
+          proExpiresAt: users.proExpiresAt,
           isStaff: users.isStaff,
           createdAt: users.createdAt,
         })
@@ -75,6 +76,7 @@ export function createAdminStaffRouter(): Router {
           email: users.email,
           chesscomUsername: users.chesscomUsername,
           isPro: users.isPro,
+          proExpiresAt: users.proExpiresAt,
           isStaff: users.isStaff,
           createdAt: users.createdAt,
         })
@@ -122,6 +124,7 @@ export function createAdminStaffRouter(): Router {
           email: users.email,
           chesscomUsername: users.chesscomUsername,
           isPro: users.isPro,
+          proExpiresAt: users.proExpiresAt,
           isStaff: users.isStaff,
           isGuest: users.isGuest,
           createdAt: users.createdAt,
@@ -135,22 +138,33 @@ export function createAdminStaffRouter(): Router {
     }
   });
 
-  // ── POST /api/admin/staff/grant-pro — grant isPro by email ──────────────────
+  // ── POST /api/admin/staff/grant-pro — grant isPro by email (with optional expiry) ──
   router.post("/grant-pro", async (req, res) => {
-    const { email } = req.body as { email?: string };
+    const { email, expiresAt } = req.body as { email?: string; expiresAt?: string | null };
     if (!email?.trim()) return res.status(400).json({ error: "email is required." });
+    // Parse optional expiry date
+    let expiryDate: Date | null = null;
+    if (expiresAt) {
+      expiryDate = new Date(expiresAt);
+      if (isNaN(expiryDate.getTime())) {
+        return res.status(400).json({ error: "Invalid expiresAt date format. Use ISO 8601 (e.g. 2026-12-31)." });
+      }
+    }
     try {
       const db = await getDb();
       const [target] = await db
-        .select({ id: users.id, email: users.email, displayName: users.displayName, isPro: users.isPro })
+        .select({ id: users.id, email: users.email, displayName: users.displayName, isPro: users.isPro, proExpiresAt: users.proExpiresAt })
         .from(users)
         .where(sql`LOWER(${users.email}) = LOWER(${email.trim()})`)
         .limit(1);
       if (!target) return res.status(404).json({ error: "No user found with that email." });
-      if (target.isPro) return res.json({ message: `${target.email} already has Pro access.`, user: target });
-      await db.update(users).set({ isPro: true }).where(eq(users.id, target.id));
-      console.log(`[adminStaff] Granted isPro to ${target.email} (id=${target.id})`);
-      return res.json({ message: `✓ Pro access granted to ${target.email}.`, user: { ...target, isPro: true } });
+      await db.update(users).set({ isPro: true, proExpiresAt: expiryDate }).where(eq(users.id, target.id));
+      const expiryMsg = expiryDate ? ` (expires ${expiryDate.toISOString().split('T')[0]})` : " (permanent)";
+      console.log(`[adminStaff] Granted isPro to ${target.email} (id=${target.id})${expiryMsg}`);
+      return res.json({
+        message: `✓ Pro access granted to ${target.email}${expiryMsg}.`,
+        user: { ...target, isPro: true, proExpiresAt: expiryDate },
+      });
     } catch (err) {
       console.error("[adminStaff] POST /grant-pro error:", err);
       return res.status(500).json({ error: "Failed to grant Pro access." });
