@@ -5236,3 +5236,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Email notification to info@chessotb.club on Pro renewal request (nodemailer + SMTP)
 - [x] SMTP credentials stored as secrets (PLATFORM_SMTP_HOST/PORT/USER/PASS/FROM_NAME)
 - [x] Platform email helper (server/platformEmail.ts) with sendPlatformEmail and verifyPlatformSmtp
+- [x] Welcome email for new users on registration (tournament link + community link)
