@@ -434,14 +434,14 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             </span>
           </h1>
 
-          <p
+          {/* SEO H2 — visually styled as a subtitle, semantically an H2 for crawlers */}
+          <h2
             className="opacity-0-init animate-fade-in-up text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-2 sm:px-0"
-            style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}
+            style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
           >
-            {/* Short single-line on mobile, full copy on sm+ */}
-            <span className="sm:hidden">Set up in minutes. Pairings generated automatically.</span>
-            <span className="hidden sm:inline">Set up in minutes. Players sign up with their chess.com username, we generate optimal pairings automatically.</span>
-          </p>
+            <span className="sm:hidden">Swiss pairings &amp; live standings. Set up in minutes.</span>
+            <span className="hidden sm:inline">Swiss pairings, live standings, and elimination brackets. Players sign up with their chess.com username &mdash; we generate optimal pairings automatically.</span>
+          </h2>
 
           <div
             className="opacity-0-init animate-fade-in-up flex flex-col sm:flex-row gap-3 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto"
@@ -1571,6 +1571,21 @@ export default function Home() {
   const { user: _user, logout: _logout } = useAuthContext();
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
+
+  // SEO: set page title, description, and keywords on mount
+  useEffect(() => {
+    document.title = "ChessOTB.club — Chess Tournaments Over The Board";
+    const desc = document.querySelector("meta[name='description']");
+    if (desc) desc.setAttribute("content", "Host and manage over-the-board chess tournaments with Swiss pairings, live standings, and elimination brackets. Free for chess clubs.");
+    let kw = document.querySelector("meta[name='keywords']");
+    if (!kw) {
+      kw = document.createElement("meta");
+      kw.setAttribute("name", "keywords");
+      document.head.appendChild(kw);
+    }
+    kw.setAttribute("content", "chess tournament, over the board chess, OTB chess, Swiss pairings, chess club tournament, chess bracket, chess standings, chess.com ELO");
+    return () => { document.title = "ChessOTB.club"; };
+  }, []);
 
   // Handle PWA shortcut: /?action=create opens the wizard immediately
   useEffect(() => {
