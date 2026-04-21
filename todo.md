@@ -5233,3 +5233,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show Pro expiry badge on user rows in Admin Staff UI
 - [x] Add Renew Pro section to user profile settings page (expiry status, renewal request button)
 - [x] Add /api/auth/renew-pro-request server endpoint to handle renewal requests
+- [x] Email notification to info@chessotb.club on Pro renewal request (nodemailer + SMTP)
+- [x] SMTP credentials stored as secrets (PLATFORM_SMTP_HOST/PORT/USER/PASS/FROM_NAME)
+- [x] Platform email helper (server/platformEmail.ts) with sendPlatformEmail and verifyPlatformSmtp
