@@ -162,6 +162,12 @@ export function createAuthRouter(): Router {
         maxAge: COOKIE_MAX_AGE_DEFAULT_MS,
       });
 
+      // Send welcome email (fire-and-forget — don't block the response)
+      const { sendWelcomeEmail } = await import("./platformEmail.js");
+      sendWelcomeEmail({ to: user.email, displayName: user.displayName }).catch(
+        (emailErr: unknown) => logger.error("[auth] Failed to send welcome email:", emailErr)
+      );
+
       return res.status(201).json({ user: safeUser(user), token });
     } catch (err) {
       logger.error("[auth] register error:", err);
