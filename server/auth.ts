@@ -703,7 +703,7 @@ export function createAuthRouter(): Router {
 
   // ── POST /api/auth/renew-pro-request ────────────────────────────────────
   // Authenticated user requests a Pro access renewal. Logs the request
-  // server-side so the admin can review and extend via the Admin Staff UI.
+  // and sends a notification email to info@chessotb.club.
   router.post("/renew-pro-request", async (req: import("express").Request & { userId?: string }, res) => {
     const userId = req.userId;
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
@@ -716,10 +716,36 @@ export function createAuthRouter(): Router {
       }).from(users).where(eq(users.id, userId)).limit(1);
       if (!rows.length) return res.status(404).json({ error: "User not found" });
       const u = rows[0];
+      const expiryStr = u.proExpiresAt
+        ? new Date(u.proExpiresAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+        : "No expiry set";
       logger.info(
         `[pro-renewal] Renewal request from ${u.email} (${u.displayName}), ` +
         `current expiry: ${u.proExpiresAt ? new Date(u.proExpiresAt).toISOString() : "none"}`
       );
+      // Send notification email to info@chessotb.club (fire-and-forget, don't block response)
+      const { sendPlatformEmail } = await import("./platformEmail.js");
+      sendPlatformEmail({
+        to: "info@chessotb.club",
+        subject: `Pro Renewal Request — ${u.displayName}`,
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#0d1f12;color:#e8f5e9;border-radius:12px">
+            <h2 style="color:#4ade80;margin-top:0">&#x1F451; Pro Renewal Request</h2>
+            <p>A user has requested to renew their Pro access on <strong>ChessOTB.club</strong>.</p>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0">
+              <tr><td style="padding:8px;color:#86efac;font-weight:bold">Name</td><td style="padding:8px">${u.displayName}</td></tr>
+              <tr><td style="padding:8px;color:#86efac;font-weight:bold">Email</td><td style="padding:8px">${u.email}</td></tr>
+              <tr><td style="padding:8px;color:#86efac;font-weight:bold">Current Expiry</td><td style="padding:8px">${expiryStr}</td></tr>
+            </table>
+            <p style="margin-top:20px">To extend their access, visit the <a href="https://chessotb.club/admin/staff" style="color:#4ade80">Admin Staff Panel</a> and search for their email.</p>
+            <hr style="border-color:#1a3a24;margin:20px 0" />
+            <p style="font-size:12px;color:#4a7c59">This is an automated notification from ChessOTB.club</p>
+          </div>
+        `,
+        text: `Pro Renewal Request\n\nName: ${u.displayName}\nEmail: ${u.email}\nCurrent Expiry: ${expiryStr}\n\nVisit https://chessotb.club/admin/staff to extend their access.`,
+      }).catch((emailErr: unknown) => {
+        logger.error("[pro-renewal] Failed to send notification email:", emailErr);
+      });
       return res.json({ ok: true, message: "Renewal request received" });
     } catch (err) {
       logger.error("[pro-renewal] error:", err);
