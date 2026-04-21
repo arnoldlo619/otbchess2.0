@@ -35,6 +35,8 @@ export interface AuthUser {
   isGuest: boolean;
   /** True for paid Pro subscribers — gates Openings and future Pro features */
   isPro: boolean;
+  /** Optional expiry date for manually-granted Pro access (ISO string or null) */
+  proExpiresAt?: string | null;
   /** True for OTB Staff/team members — grants full Pro access without a paid subscription */
   isStaff: boolean;
   createdAt: string;
