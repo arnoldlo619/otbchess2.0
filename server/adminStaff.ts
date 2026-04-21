@@ -135,6 +135,50 @@ export function createAdminStaffRouter(): Router {
     }
   });
 
+  // ── POST /api/admin/staff/grant-pro — grant isPro by email ──────────────────
+  router.post("/grant-pro", async (req, res) => {
+    const { email } = req.body as { email?: string };
+    if (!email?.trim()) return res.status(400).json({ error: "email is required." });
+    try {
+      const db = await getDb();
+      const [target] = await db
+        .select({ id: users.id, email: users.email, displayName: users.displayName, isPro: users.isPro })
+        .from(users)
+        .where(sql`LOWER(${users.email}) = LOWER(${email.trim()})`)
+        .limit(1);
+      if (!target) return res.status(404).json({ error: "No user found with that email." });
+      if (target.isPro) return res.json({ message: `${target.email} already has Pro access.`, user: target });
+      await db.update(users).set({ isPro: true }).where(eq(users.id, target.id));
+      console.log(`[adminStaff] Granted isPro to ${target.email} (id=${target.id})`);
+      return res.json({ message: `✓ Pro access granted to ${target.email}.`, user: { ...target, isPro: true } });
+    } catch (err) {
+      console.error("[adminStaff] POST /grant-pro error:", err);
+      return res.status(500).json({ error: "Failed to grant Pro access." });
+    }
+  });
+
+  // ── POST /api/admin/staff/revoke-pro — revoke isPro by email ──────────────────
+  router.post("/revoke-pro", async (req, res) => {
+    const { email } = req.body as { email?: string };
+    if (!email?.trim()) return res.status(400).json({ error: "email is required." });
+    try {
+      const db = await getDb();
+      const [target] = await db
+        .select({ id: users.id, email: users.email, displayName: users.displayName, isPro: users.isPro })
+        .from(users)
+        .where(sql`LOWER(${users.email}) = LOWER(${email.trim()})`)
+        .limit(1);
+      if (!target) return res.status(404).json({ error: "No user found with that email." });
+      if (!target.isPro) return res.json({ message: `${target.email} does not have Pro access.`, user: target });
+      await db.update(users).set({ isPro: false }).where(eq(users.id, target.id));
+      console.log(`[adminStaff] Revoked isPro from ${target.email} (id=${target.id})`);
+      return res.json({ message: `✓ Pro access revoked from ${target.email}.`, user: { ...target, isPro: false } });
+    } catch (err) {
+      console.error("[adminStaff] POST /revoke-pro error:", err);
+      return res.status(500).json({ error: "Failed to revoke Pro access." });
+    }
+  });
+
   // ── POST /api/admin/staff/revoke — revoke isStaff by email ─────────────────
   router.post("/revoke", async (req, res) => {
     const r = req as import("express").Request & { userId: string };

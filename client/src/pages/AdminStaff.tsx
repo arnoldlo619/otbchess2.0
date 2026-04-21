@@ -57,12 +57,16 @@ function UserRow({
   actionLoading,
   onGrant,
   onRevoke,
+  onGrantPro,
+  onRevokePro,
 }: {
   member: AdminUser;
   currentUserId?: string;
   actionLoading: string | null;
   onGrant: (email: string) => void;
   onRevoke: (email: string) => void;
+  onGrantPro: (email: string) => void;
+  onRevokePro: (email: string) => void;
 }) {
   const isSelf = member.id === currentUserId;
   const isActing = actionLoading === member.email;
@@ -107,10 +111,32 @@ function UserRow({
         </div>
       </div>
 
-      {/* Action button */}
-      {!isSelf && (
-        <div className="flex-shrink-0">
-          {!member.isStaff ? (
+      {/* Action buttons */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Pro toggle */}
+        {!member.isPro ? (
+          <button
+            onClick={() => onGrantPro(member.email)}
+            disabled={isActing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#22c55e]/10 hover:bg-[#22c55e]/20 border border-[#22c55e]/25 text-[#22c55e] text-xs font-semibold transition-colors disabled:opacity-40"
+          >
+            {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crown className="w-3.5 h-3.5" />}
+            Grant Pro
+          </button>
+        ) : (
+          <button
+            onClick={() => onRevokePro(member.email)}
+            disabled={isActing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/40 hover:text-white/60 text-xs font-semibold transition-colors disabled:opacity-40"
+          >
+            {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crown className="w-3.5 h-3.5" />}
+            Revoke Pro
+          </button>
+        )}
+
+        {/* Staff toggle */}
+        {!isSelf && (
+          !member.isStaff ? (
             <button
               onClick={() => onGrant(member.email)}
               disabled={isActing}
@@ -126,11 +152,11 @@ function UserRow({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold transition-colors disabled:opacity-40"
             >
               {isActing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserMinus className="w-3.5 h-3.5" />}
-              Revoke
+              Revoke Staff
             </button>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -237,6 +263,42 @@ export default function AdminStaff() {
       }
     } else {
       setToast({ type: "error", message: data.error ?? "Failed to grant staff access." });
+    }
+    setActionLoading(null);
+  };
+
+  const handleGrantPro = async (email: string) => {
+    setActionLoading(email);
+    const { ok, data } = await apiFetch("/api/admin/staff/grant-pro", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    if (ok) {
+      setToast({ type: "success", message: data.message ?? `Pro access granted to ${email}.` });
+      if (allUsers.length > 0) await fetchAllUsers();
+      if (searchResult?.email.toLowerCase() === email.toLowerCase()) {
+        setSearchResult((prev) => prev ? { ...prev, isPro: true } : prev);
+      }
+    } else {
+      setToast({ type: "error", message: data.error ?? "Failed to grant Pro access." });
+    }
+    setActionLoading(null);
+  };
+
+  const handleRevokePro = async (email: string) => {
+    setActionLoading(email);
+    const { ok, data } = await apiFetch("/api/admin/staff/revoke-pro", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    if (ok) {
+      setToast({ type: "success", message: data.message ?? `Pro access revoked from ${email}.` });
+      if (allUsers.length > 0) await fetchAllUsers();
+      if (searchResult?.email.toLowerCase() === email.toLowerCase()) {
+        setSearchResult((prev) => prev ? { ...prev, isPro: false } : prev);
+      }
+    } else {
+      setToast({ type: "error", message: data.error ?? "Failed to revoke Pro access." });
     }
     setActionLoading(null);
   };
@@ -389,6 +451,8 @@ export default function AdminStaff() {
                   actionLoading={actionLoading}
                   onGrant={handleGrant}
                   onRevoke={handleRevoke}
+                  onGrantPro={handleGrantPro}
+                  onRevokePro={handleRevokePro}
                 />
               </motion.div>
             )}
@@ -442,6 +506,8 @@ export default function AdminStaff() {
                   actionLoading={actionLoading}
                   onGrant={handleGrant}
                   onRevoke={handleRevoke}
+                  onGrantPro={handleGrantPro}
+                  onRevokePro={handleRevokePro}
                 />
               ))}
             </div>
@@ -539,6 +605,8 @@ export default function AdminStaff() {
                           actionLoading={actionLoading}
                           onGrant={handleGrant}
                           onRevoke={handleRevoke}
+                          onGrantPro={handleGrantPro}
+                          onRevokePro={handleRevokePro}
                         />
                       ))}
                     </div>

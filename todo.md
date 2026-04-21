@@ -5224,3 +5224,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix ilike → sql LOWER() for MySQL/TiDB compatibility in adminStaff.ts
 - [x] Add GET /api/admin/staff/users endpoint to list all non-guest registered users
 - [x] Add All Registered Users collapsible panel with filter to AdminStaff page
+- [x] Add Grant Pro / Revoke Pro toggle to Admin Staff Management UI (All Users panel + search result)
+- [x] Add /api/admin/staff/grant-pro and /api/admin/staff/revoke-pro server endpoints
