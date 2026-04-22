@@ -3566,9 +3566,9 @@ export default function Director() {
 
                 {/* ── Podium Hero (top 3) ───────────────────────────────────────── */}
                 {standingsData.length >= 2 && (
-                  <div className={`rounded-2xl border overflow-hidden ${
+                  <div className={`rounded-2xl border overflow-hidden animate-podium-card-enter ${
                     isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
-                  }`}>
+                  }`} style={{ animationDelay: "0ms" }}>
                     {/* Header */}
                     <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
                       isDark ? "border-white/08" : "border-gray-100"
@@ -3592,12 +3592,12 @@ export default function Director() {
                           return (
                             <div
                               key={player.id}
-                              className={`flex-1 flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border transition-all duration-200 ${
+                              className={`flex-1 flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border transition-all duration-200 animate-podium-slot-enter ${
                                 cfg.bgColor
                               } ${
                                 cfg.borderColor
                               }`}
-                              style={{ animationDelay: `${idx * 60}ms` }}
+                              style={{ animationDelay: `${idx * 60 + 40}ms` }}
                             >
                               {/* Rank number */}
                               <span
@@ -3655,9 +3655,9 @@ export default function Director() {
                 )}
 
                 {/* ── Full Leaderboard Table ────────────────────────────────────── */}
-                <div className={`rounded-2xl border overflow-hidden ${
+                <div className={`rounded-2xl border overflow-hidden animate-table-enter ${
                   isDark ? "bg-[oklch(0.22_0.06_145)] border-white/12" : "bg-white border-gray-200/80 shadow-sm"
-                }`}>
+                }`} style={{ animationDelay: "200ms" }}>
                   {/* Table header */}
                   <div className={`grid ${
                     isDoubleSwiss
@@ -3684,10 +3684,11 @@ export default function Director() {
                       const p = row.player;
                       const isLeader = i === 0;
                       const isPodium = i < 3;
+                      const rowDelay = 260 + i * 40;
                       return (
                         <div
                           key={p.id}
-                          className={`grid ${
+                          className={`grid animate-row-slide-up ${
                             isDoubleSwiss
                               ? "grid-cols-[2rem_1fr_2.5rem_4.5rem_4.5rem_3rem]"
                               : "grid-cols-[2rem_1fr_2.5rem_4.5rem_3rem]"
@@ -3700,6 +3701,7 @@ export default function Director() {
                           } ${
                             i > 0 ? (isDark ? "border-t border-white/04" : "border-t border-gray-100/80") : ""
                           }`}
+                          style={{ animationDelay: `${rowDelay}ms` }}
                         >
                           {/* Rank */}
                           <span className={`text-[11px] font-black text-center tabular-nums ${
