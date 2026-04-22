@@ -5242,3 +5242,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add robots.txt pointing to sitemap.xml
 - [x] Weekly automated sitemap health check (every Monday 9am) — verifies all URLs return 200, checks for missing pages, sends alert to info@chessotb.club if issues found
 - [x] SEO: Add document.title and meta description to /tournaments, /clubs, /battle, /record pages
+
+## Bug Fixes
+
+- [x] Fix missing React key prop warning in FinalStandings — Fragment key added to rows.map() wrapper
