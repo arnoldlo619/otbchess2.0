@@ -119,8 +119,8 @@ function Router() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
+    <AuthProvider>
+      <ErrorBoundary>
         <ThemeProvider
           defaultTheme="dark"
           switchable
@@ -131,8 +131,8 @@ function App() {
             <InstallBanner />
           </TooltipProvider>
         </ThemeProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </AuthProvider>
   );
 }
 
