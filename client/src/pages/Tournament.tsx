@@ -60,6 +60,8 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Info,
+  Swords,
 } from "lucide-react";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 import { PublicBracketView } from "@/components/PublicBracketView";
@@ -1490,6 +1492,59 @@ export default function TournamentPage() {
     return match?.id;
   }, [tournamentId, displayState.players]);
 
+  // ── Auto-navigate to bracket when swiss phase completes (swiss_elim only) ──
+  const hasAutoSwitchedToBracketRef = useRef(false);
+  const [eliminatedBanner, setEliminatedBanner] = useState<{ rank: number; total: number } | null>(null);
+  const prevElimPhaseRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (hasAutoSwitchedToBracketRef.current) return;
+    if (config?.format !== "swiss_elim") return;
+    const elimPhase = (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase;
+    const elimPlayers = (tournamentState as DirectorState & { elimPlayers?: Player[] } | null)?.elimPlayers ?? [];
+    const wasSwiss = prevElimPhaseRef.current === undefined || prevElimPhaseRef.current === "swiss" || prevElimPhaseRef.current === "cutoff";
+    prevElimPhaseRef.current = elimPhase;
+
+    // Trigger when elimPhase transitions to "elimination" and bracket players exist
+    if (elimPhase === "elimination" && elimPlayers.length > 0 && wasSwiss) {
+      hasAutoSwitchedToBracketRef.current = true;
+
+      // Switch mobile tab to bracket
+      setMobileTab("bracket");
+
+      // Scroll to bracket on desktop
+      setTimeout(() => {
+        const bracketEl = document.getElementById("bracket-section");
+        if (bracketEl) bracketEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+
+      // Show toast for the transition
+      toast.success("Elimination bracket is live!", {
+        description: "Swiss rounds are complete. The bracket stage has begun.",
+        duration: 6000,
+        icon: "⚔️",
+      });
+
+      // Check if the current user was eliminated (didn't make the cut)
+      if (myPlayerId) {
+        const madeTheCut = elimPlayers.some((p) => p.id === myPlayerId);
+        if (!madeTheCut) {
+          // Compute their swiss ranking
+          const swissRoundsNum = (config as { swissRounds?: number } | undefined)?.swissRounds ?? 0;
+          const swissRoundsOnly = tournamentState?.rounds.filter((r) => r.number <= swissRoundsNum) ?? [];
+          const standings = computeStandings(tournamentState?.players ?? [], swissRoundsOnly);
+          const myRank = standings.findIndex((r) => r.player.id === myPlayerId) + 1;
+          setEliminatedBanner({ rank: myRank || standings.length, total: standings.length });
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase,
+    (tournamentState as DirectorState & { elimPlayers?: Player[] } | null)?.elimPlayers?.length,
+    config?.format, myPlayerId,
+  ]);
+
   // While the server fetch is in flight and we have no local state,
   // show a minimal loading screen instead of demo data.
   if (serverFetching && !tournamentState && tournamentId !== "otb-demo-2026") {
@@ -1731,6 +1786,52 @@ export default function TournamentPage() {
             </div>
           )}
 
+          {/* Eliminated player banner — shown to players who didn't make the bracket cut */}
+          {eliminatedBanner && config?.format === "swiss_elim" && (
+            <div className="container pt-3 pb-0 animate-standings-slide-up">
+              <div className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border ${
+                isDark
+                  ? "border-amber-500/20 bg-amber-500/08"
+                  : "border-amber-400/30 bg-amber-50"
+              }`}>
+                <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${
+                  isDark ? "bg-amber-500/15" : "bg-amber-100"
+                }`}>
+                  <Info className="w-4.5 h-4.5 text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-bold ${isDark ? "text-amber-200" : "text-amber-900"}`}>
+                    You placed <span className="text-amber-500">#{eliminatedBanner.rank}</span> of {eliminatedBanner.total} in the Swiss rounds
+                  </p>
+                  <p className={`text-xs mt-0.5 ${isDark ? "text-amber-200/60" : "text-amber-700/70"}`}>
+                    The top players have advanced to the elimination bracket. Follow along below!
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setMobileTab("bracket");
+                    const bracketEl = document.getElementById("bracket-section");
+                    if (bracketEl) bracketEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                    isDark
+                      ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                      : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                  }`}
+                >
+                  <Swords className="w-3.5 h-3.5" />
+                  View Bracket
+                </button>
+                <button
+                  onClick={() => setEliminatedBanner(null)}
+                  className={`flex-shrink-0 text-lg leading-none px-1 ${isDark ? "text-amber-200/40 hover:text-amber-200" : "text-amber-400 hover:text-amber-600"}`}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Main content */}
           <div className="container py-4 sm:py-8 animate-page-in">
 
@@ -1860,7 +1961,7 @@ export default function TournamentPage() {
 
             {/* Bracket view — full width above pairings for elim formats (desktop) */}
             {isElimFormat && (
-              <div className="hidden lg:block mb-8">
+              <div id="bracket-section" className="hidden lg:block mb-8">
                 <PublicBracketView
                   rounds={displayState.rounds}
                   players={displayState.players}
