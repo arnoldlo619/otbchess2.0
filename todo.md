@@ -5238,3 +5238,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Platform email helper (server/platformEmail.ts) with sendPlatformEmail and verifyPlatformSmtp
 - [x] Welcome email for new users on registration (tournament link + community link)
 - [x] SEO: Fix homepage title (30-60 chars), meta description (50-160 chars), keywords, and H2 heading
+- [x] Generate sitemap.xml for chessotb.club (homepage, /tournaments, /clubs, /battle, /record)
+- [x] Add robots.txt pointing to sitemap.xml
