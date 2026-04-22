@@ -14,7 +14,7 @@
  * For other formats, rankings use standard Swiss tiebreaks.
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import {Trophy, ArrowLeft, Share2, Instagram, LayoutGrid} from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
@@ -609,9 +609,9 @@ export default function FinalStandings() {
                       const showBracketDivider = isSwissElim && bracketSize > 0 && idx === bracketSize;
 
                       return (
-                        <>
+                        <Fragment key={row.player.id}>
                           {showBracketDivider && (
-                            <tr key="bracket-divider">
+                            <tr>
                               <td colSpan={10} className={`px-4 py-2 ${isDark ? "bg-white/04" : "bg-gray-50"}`}>
                                 <div className="flex items-center gap-3">
                                   <div className={`flex-1 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
@@ -624,7 +624,6 @@ export default function FinalStandings() {
                             </tr>
                           )}
                           <tr
-                            key={row.player.id}
                             className={`border-b ${border} transition-colors ${rowHover} ${isTop3 ? rowHighlight : ""}`}
                           >
                             {/* Rank */}
@@ -694,7 +693,7 @@ export default function FinalStandings() {
                               {row.losses}
                             </td>
                           </tr>
-                        </>
+                        </Fragment>
                       );
                     })}
                   </tbody>
