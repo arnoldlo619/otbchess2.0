@@ -482,7 +482,17 @@ export default function GameRecorder() {
   const { user } = useAuthContext();
   const [, navigate] = useLocation();
 
-  // ── State ─────────────────────────────────────────────────────────────────
+  // SEO: set page title and meta description
+  useEffect(() => {
+    document.title = "Record a Chess Game — PGN & Video Capture | ChessOTB.club";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute("content", "Record your over-the-board chess games with manual PGN entry or AI-powered video capture. Save and analyze your games on ChessOTB.club.");
+    return () => {
+      document.title = "ChessOTB.club — Chess Tournaments Over The Board";
+    };
+  }, []);
+
+  // ── State ─────────────────────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<"select" | "manual" | "camera">("select");
   const [setup, setSetup] = useState<GameSetup>({
     whitePlayer: "",

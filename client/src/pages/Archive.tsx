@@ -643,6 +643,16 @@ export default function Archive() {
   const [userTournaments, setUserTournaments] = useState<TournamentConfig[]>([]);
   const formats = ["All", "Swiss", "Round Robin", "Elimination"];
 
+  // SEO: set page title and meta description
+  useEffect(() => {
+    document.title = "Chess Tournaments — Find & Join OTB Events | ChessOTB.club";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute("content", "Browse and join over-the-board chess tournaments near you. Swiss, Round Robin, and Elimination formats for all skill levels.");
+    return () => {
+      document.title = "ChessOTB.club — Chess Tournaments Over The Board";
+    };
+  }, []);
+
   // Load user's own tournaments from localStorage on mount
   useEffect(() => {
     setUserTournaments(listTournaments());
