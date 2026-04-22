@@ -240,12 +240,153 @@ function TbCell({ value, decimals = 1, muted = false, isDark }: { value: number;
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function Skeleton({ isDark }: { isDark: boolean }) {
-  const bg = isDark ? "bg-white/08 animate-pulse rounded" : "bg-gray-200 animate-pulse rounded";
+  const shimmer = isDark
+    ? "bg-white/08"
+    : "bg-gray-200";
+  const shimmerStrong = isDark
+    ? "bg-white/12"
+    : "bg-gray-300";
+  const cardBg = isDark ? "bg-[#111f14]" : "bg-white";
+  const border = isDark ? "border-white/08" : "border-[#E8F0E8]";
+  const accent = "#3D6B47";
+
   return (
-    <div className="space-y-2 px-4 mt-6">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className={`h-10 w-full ${bg}`} />
-      ))}
+    <div className="space-y-5 animate-in fade-in duration-500">
+
+      {/* ── Animated trophy / loading indicator ── */}
+      <div className="flex flex-col items-center justify-center py-8 gap-4">
+        {/* Spinning chess king SVG */}
+        <div className="relative w-16 h-16">
+          {/* Outer spinning ring */}
+          <svg
+            className="absolute inset-0 w-full h-full animate-spin"
+            style={{ animationDuration: "2s" }}
+            viewBox="0 0 64 64"
+            fill="none"
+          >
+            <circle
+              cx="32" cy="32" r="28"
+              stroke={accent}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray="44 132"
+              opacity="0.8"
+            />
+          </svg>
+          {/* Inner slower ring */}
+          <svg
+            className="absolute inset-0 w-full h-full animate-spin"
+            style={{ animationDuration: "3s", animationDirection: "reverse" }}
+            viewBox="0 0 64 64"
+            fill="none"
+          >
+            <circle
+              cx="32" cy="32" r="20"
+              stroke={accent}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="20 106"
+              opacity="0.4"
+            />
+          </svg>
+          {/* Trophy icon in centre */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4a2 2 0 0 1-2-2V5h4" />
+              <path d="M18 9h2a2 2 0 0 0 2-2V5h-4" />
+              <path d="M12 17c-2.8 0-5-2.2-5-5V3h10v9c0 2.8-2.2 5-5 5Z" />
+              <path d="M8 21h8" />
+              <path d="M12 17v4" />
+            </svg>
+          </div>
+        </div>
+        <p
+          className="text-sm font-semibold tracking-wide"
+          style={{ color: accent }}
+        >
+          Loading standings…
+        </p>
+        {/* Animated dots */}
+        <div className="flex gap-1.5">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="w-1.5 h-1.5 rounded-full"
+              style={{
+                backgroundColor: accent,
+                animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Podium skeleton ── */}
+      <div className={`${cardBg} rounded-2xl border ${border} p-5`}>
+        <div className={`h-3 w-16 ${shimmer} rounded mb-5 animate-pulse`} />
+        <div className="flex items-end justify-center gap-3 sm:gap-6">
+          {/* 2nd */}
+          <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
+            <div className={`w-10 h-10 rounded-full ${shimmer} animate-pulse`} />
+            <div className={`h-2.5 w-16 ${shimmer} rounded animate-pulse`} />
+            <div className={`h-2 w-10 ${shimmer} rounded animate-pulse`} />
+            <div className={`w-full rounded-t-xl h-20 ${shimmer} animate-pulse`} />
+          </div>
+          {/* 1st */}
+          <div className="flex flex-col items-center gap-2 flex-1 max-w-[140px]">
+            <div className={`w-14 h-14 rounded-full ${shimmerStrong} animate-pulse`} />
+            <div className={`h-3 w-20 ${shimmerStrong} rounded animate-pulse`} />
+            <div className={`h-2 w-12 ${shimmer} rounded animate-pulse`} />
+            <div className={`w-full rounded-t-xl h-28 ${shimmerStrong} animate-pulse`} />
+          </div>
+          {/* 3rd */}
+          <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
+            <div className={`w-10 h-10 rounded-full ${shimmer} animate-pulse`} />
+            <div className={`h-2.5 w-16 ${shimmer} rounded animate-pulse`} />
+            <div className={`h-2 w-10 ${shimmer} rounded animate-pulse`} />
+            <div className={`w-full rounded-t-xl h-16 ${shimmer} animate-pulse`} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Table skeleton ── */}
+      <div className={`${cardBg} rounded-2xl border ${border} overflow-hidden`}>
+        {/* Table header */}
+        <div className={`px-4 py-3 border-b ${border} flex gap-3`}>
+          <div className={`h-3 w-20 ${shimmer} rounded animate-pulse`} />
+          <div className="flex-1" />
+          <div className={`h-3 w-48 ${shimmer} rounded animate-pulse`} />
+        </div>
+        {/* Column headers */}
+        <div className={`px-4 py-2.5 border-b ${border} flex gap-2`}>
+          {[10, 40, 16, 12, 12, 12, 12, 8, 8, 8].map((w, i) => (
+            <div key={i} className={`h-2.5 ${shimmer} rounded animate-pulse flex-shrink-0`} style={{ width: `${w * 4}px` }} />
+          ))}
+        </div>
+        {/* Rows */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className={`px-4 py-3 border-b ${border} flex items-center gap-3`}
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
+            {/* Rank */}
+            <div className={`w-6 h-4 ${shimmer} rounded animate-pulse flex-shrink-0`} />
+            {/* Avatar */}
+            <div className={`w-7 h-7 rounded-full ${shimmer} animate-pulse flex-shrink-0`} />
+            {/* Name block */}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <div className={`h-3 ${i < 3 ? shimmerStrong : shimmer} rounded animate-pulse`} style={{ width: `${55 + (i % 3) * 15}%` }} />
+              <div className={`h-2 w-20 ${shimmer} rounded animate-pulse`} />
+            </div>
+            {/* Stat cells */}
+            {[1, 1, 1, 1, 1, 1, 1].map((_, j) => (
+              <div key={j} className={`w-8 h-3 ${shimmer} rounded animate-pulse flex-shrink-0`} />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
