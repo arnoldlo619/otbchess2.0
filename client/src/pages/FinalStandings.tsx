@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef, Fragment } from "react";
-import confetti from "canvas-confetti";
+import confettiLib from "canvas-confetti";
 import { useParams, Link, useLocation } from "wouter";
 import {Trophy, ArrowLeft, Share2, Instagram, LayoutGrid} from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
@@ -491,7 +491,21 @@ export default function FinalStandings() {
 
     // Delay to coincide with the 1st-place podium slot animation (60ms delay + ~500ms duration)
     const timer = setTimeout(() => {
-      // Two-sided cannon burst from bottom-left and bottom-right
+      // Create an explicit full-screen canvas to avoid getBoundingClientRect errors
+      // that occur when canvas-confetti tries to use a detached/virtual canvas.
+      const canvas = document.createElement("canvas");
+      canvas.style.cssText = [
+        "position:fixed",
+        "inset:0",
+        "width:100%",
+        "height:100%",
+        "pointer-events:none",
+        `z-index:9999`,
+      ].join(";");
+      document.body.appendChild(canvas);
+
+      const fire = confettiLib.create(canvas, { resize: true, useWorker: false });
+
       const shared = {
         particleCount: 60,
         spread: 70,
@@ -499,16 +513,28 @@ export default function FinalStandings() {
         gravity: 0.9,
         ticks: 200,
         colors: ["#3D6B47", "#4CAF50", "#769656", "#EEEED2", "#FFD700", "#FFFFFF"],
-        zIndex: 9999,
       };
-      confetti({ ...shared, origin: { x: 0.15, y: 0.85 }, angle: 65 });
-      confetti({ ...shared, origin: { x: 0.85, y: 0.85 }, angle: 115 });
 
-      // Second smaller burst 400ms later for a two-wave effect
-      setTimeout(() => {
-        confetti({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.3, y: 0.9 }, angle: 75 });
-        confetti({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.7, y: 0.9 }, angle: 105 });
+      // Wave 1 — two cannons from bottom corners
+      fire({ ...shared, origin: { x: 0.15, y: 0.85 }, angle: 65 });
+      fire({ ...shared, origin: { x: 0.85, y: 0.85 }, angle: 115 });
+
+      // Wave 2 — softer burst from slightly inward
+      const wave2 = setTimeout(() => {
+        fire({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.3, y: 0.9 }, angle: 75 });
+        fire({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.7, y: 0.9 }, angle: 105 });
       }, 400);
+
+      // Remove the canvas after all particles have settled (~3s)
+      const cleanup = setTimeout(() => {
+        canvas.remove();
+      }, 3000);
+
+      return () => {
+        clearTimeout(wave2);
+        clearTimeout(cleanup);
+        canvas.remove();
+      };
     }, 560);
 
     return () => clearTimeout(timer);
