@@ -613,6 +613,16 @@ export default function MyClubs() {
   const [discoverTotal, setDiscoverTotal] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // SEO: set page title and meta description
+  useEffect(() => {
+    document.title = "Chess Clubs — Join a Local OTB Chess Club | ChessOTB.club";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute("content", "Discover and join over-the-board chess clubs near you. Connect with local players, attend club events, and grow your chess community.");
+    return () => {
+      document.title = "ChessOTB.club — Chess Tournaments Over The Board";
+    };
+  }, []);
+
   // ── Server-side Discover search (debounced) ──────────────────────────────
   const fetchDiscover = useCallback(async (q: string, cat: ClubCategory | "all", joinedIds: Set<string>) => {
     setDiscoverLoading(true);

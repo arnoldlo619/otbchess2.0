@@ -313,6 +313,16 @@ export default function Battle() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, navigate] = useLocation();
 
+  // SEO: set page title and meta description
+  useEffect(() => {
+    document.title = "Chess Battle — Play OTB Chess with Friends | ChessOTB.club";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute("content", "Challenge a friend to an over-the-board chess battle. Share a code, set your time control, and play with live notation tracking.");
+    return () => {
+      document.title = "ChessOTB.club — Chess Tournaments Over The Board";
+    };
+  }, []);
+
   // Draft recovery: show banner when a saved draft exists for this room
   const [draftRecoveryPgn, setDraftRecoveryPgn] = useState<string | null>(null);
   useEffect(() => {

@@ -5240,3 +5240,5 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] SEO: Fix homepage title (30-60 chars), meta description (50-160 chars), keywords, and H2 heading
 - [x] Generate sitemap.xml for chessotb.club (homepage, /tournaments, /clubs, /battle, /record)
 - [x] Add robots.txt pointing to sitemap.xml
+- [x] Weekly automated sitemap health check (every Monday 9am) — verifies all URLs return 200, checks for missing pages, sends alert to info@chessotb.club if issues found
+- [x] SEO: Add document.title and meta description to /tournaments, /clubs, /battle, /record pages
