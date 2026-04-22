@@ -14,7 +14,8 @@
  * For other formats, rankings use standard Swiss tiebreaks.
  */
 
-import { useEffect, useState, useCallback, Fragment } from "react";
+import { useEffect, useState, useCallback, useRef, Fragment } from "react";
+import confetti from "canvas-confetti";
 import { useParams, Link, useLocation } from "wouter";
 import {Trophy, ArrowLeft, Share2, Instagram, LayoutGrid} from "lucide-react";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
@@ -416,6 +417,7 @@ export default function FinalStandings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCarousel, setShowCarousel] = useState(false);
+  const confettiFired = useRef(false);
 
   // ── Fetch tournament state ──────────────────────────────────────────────────
   const fetchState = useCallback(async () => {
@@ -481,6 +483,36 @@ export default function FinalStandings() {
   useEffect(() => {
     fetchState();
   }, [fetchState]);
+
+  // ── Confetti burst — fires once when champion is revealed ────────────────────
+  useEffect(() => {
+    if (loading || rows.length === 0 || confettiFired.current) return;
+    confettiFired.current = true;
+
+    // Delay to coincide with the 1st-place podium slot animation (60ms delay + ~500ms duration)
+    const timer = setTimeout(() => {
+      // Two-sided cannon burst from bottom-left and bottom-right
+      const shared = {
+        particleCount: 60,
+        spread: 70,
+        startVelocity: 45,
+        gravity: 0.9,
+        ticks: 200,
+        colors: ["#3D6B47", "#4CAF50", "#769656", "#EEEED2", "#FFD700", "#FFFFFF"],
+        zIndex: 9999,
+      };
+      confetti({ ...shared, origin: { x: 0.15, y: 0.85 }, angle: 65 });
+      confetti({ ...shared, origin: { x: 0.85, y: 0.85 }, angle: 115 });
+
+      // Second smaller burst 400ms later for a two-wave effect
+      setTimeout(() => {
+        confetti({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.3, y: 0.9 }, angle: 75 });
+        confetti({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.7, y: 0.9 }, angle: 105 });
+      }, 400);
+    }, 560);
+
+    return () => clearTimeout(timer);
+  }, [loading, rows]);
 
   const isSwissElim = meta?.format === "swiss_elim";
 
