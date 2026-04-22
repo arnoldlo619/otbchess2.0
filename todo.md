@@ -5246,3 +5246,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Bug Fixes
 
 - [x] Fix missing React key prop warning in FinalStandings — Fragment key added to rows.map() wrapper
+- [x] FinalStandings loading animation — spinning trophy rings, staggered dots, podium skeleton, table row skeletons
