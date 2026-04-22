@@ -5248,3 +5248,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix missing React key prop warning in FinalStandings — Fragment key added to rows.map() wrapper
 - [x] FinalStandings loading animation — spinning trophy rings, staggered dots, podium skeleton, table row skeletons
 - [x] FinalStandings staggered slide-in-from-bottom reveal — podium card, podium slots (1st/2nd/3rd), table card, and each table row animate in with cascading delays
+- [x] Director standings panel — staggered row slide-in animation consistent with FinalStandings
