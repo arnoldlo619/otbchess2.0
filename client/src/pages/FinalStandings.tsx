@@ -597,7 +597,7 @@ export default function FinalStandings() {
           <>
             {/* ── Podium (top 3) ─────────────────────────────────────────────── */}
             {top3.length >= 2 && (
-              <div className={`${cardBg} rounded-2xl border ${border} p-5 sm:p-6`}>
+              <div className={`${cardBg} rounded-2xl border ${border} p-5 sm:p-6 animate-podium-card-enter`} style={{ animationDelay: "0ms" }}>
                 <p className={`text-xs font-bold uppercase tracking-widest mb-5 ${thText}`}>
                   Podium
                 </p>
@@ -607,7 +607,7 @@ export default function FinalStandings() {
 
                   {/* ── 2nd Place (Silver) ── */}
                   {top3[1] && (
-                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px] animate-podium-slot-enter" style={{ animationDelay: "120ms" }}>
                       <PlayerAvatar
                         username={top3[1].player.username}
                         name={top3[1].player.name || top3[1].player.username}
@@ -632,7 +632,7 @@ export default function FinalStandings() {
 
                   {/* ── 1st Place (Gold / Champion) ── */}
                   {top3[0] && (
-                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[140px]">
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[140px] animate-podium-slot-enter" style={{ animationDelay: "60ms" }}>
                       {/* Crown accent above avatar */}
                       <div className="relative">
                         <PlayerAvatar
@@ -661,7 +661,7 @@ export default function FinalStandings() {
 
                   {/* ── 3rd Place (Bronze) ── */}
                   {top3[2] ? (
-                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px]">
+                    <div className="flex flex-col items-center gap-2 flex-1 max-w-[120px] animate-podium-slot-enter" style={{ animationDelay: "180ms" }}>
                       <PlayerAvatar
                         username={top3[2].player.username}
                         name={top3[2].player.name || top3[2].player.username}
@@ -705,7 +705,7 @@ export default function FinalStandings() {
             )}
 
             {/* ── Full standings table ────────────────────────────────────────── */}
-            <div className={`${cardBg} rounded-2xl border ${border} overflow-hidden`}>
+            <div className={`${cardBg} rounded-2xl border ${border} overflow-hidden animate-table-enter`} style={{ animationDelay: "200ms" }}>
               <div className="px-4 sm:px-5 pt-5 pb-3 flex items-center justify-between">
                 <p className={`text-xs font-bold uppercase tracking-widest ${thText}`}>
                   Full Standings
@@ -749,6 +749,7 @@ export default function FinalStandings() {
                       // Show a divider between bracket players and Swiss-only players
                       const showBracketDivider = isSwissElim && bracketSize > 0 && idx === bracketSize;
 
+                      const rowDelay = 260 + idx * 40;
                       return (
                         <Fragment key={row.player.id}>
                           {showBracketDivider && (
@@ -765,7 +766,8 @@ export default function FinalStandings() {
                             </tr>
                           )}
                           <tr
-                            className={`border-b ${border} transition-colors ${rowHover} ${isTop3 ? rowHighlight : ""}`}
+                            className={`border-b ${border} transition-colors ${rowHover} ${isTop3 ? rowHighlight : ""} animate-row-slide-up`}
+                            style={{ animationDelay: `${rowDelay}ms` }}
                           >
                             {/* Rank */}
                             <td className={`px-4 py-3 text-sm font-black w-10 ${rankColor(row.rank, isDark)}`}>

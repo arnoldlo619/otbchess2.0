@@ -1600,3 +1600,52 @@ select {
 .animate-bracket-card-enter {
   animation: bracket-card-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* ── FinalStandings reveal animations ──────────────────────────────────────── */
+@keyframes standings-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Podium card: slightly more travel + gentle spring overshoot */
+@keyframes podium-card-enter {
+  0%   { opacity: 0; transform: translateY(36px) scale(0.97); }
+  65%  { opacity: 1; transform: translateY(-3px) scale(1.005); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Individual podium slot: slides up from its own bottom */
+@keyframes podium-slot-enter {
+  0%   { opacity: 0; transform: translateY(24px) scale(0.95); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Table row: fast, subtle slide */
+@keyframes row-slide-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-podium-card-enter {
+  opacity: 0;
+  animation: podium-card-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-podium-slot-enter {
+  opacity: 0;
+  animation: podium-slot-enter 0.50s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-table-enter {
+  opacity: 0;
+  animation: standings-slide-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-row-slide-up {
+  opacity: 0;
+  animation: row-slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
