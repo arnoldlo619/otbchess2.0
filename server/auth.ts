@@ -292,6 +292,51 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // ── POST /api/auth/refresh ────────────────────────────────────────────────
+  // Silently reissue a fresh JWT if the current one is still valid.
+  // The client calls this periodically (e.g. every 10 min) to keep
+  // sessions alive during long tournaments without forcing a re-login.
+  router.post("/refresh", async (req, res) => {
+    const cookieToken = req.cookies?.token as string | undefined;
+    const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
+    const raw = cookieToken || headerToken;
+    if (!raw) return res.status(401).json({ error: "Not authenticated" });
+
+    const payload = verifyToken(raw);
+    if (!payload) return res.status(401).json({ error: "Invalid or expired token" });
+
+    try {
+      const db = await getDb();
+      const [user] = await db.select().from(users).where(eq(users.id, payload.sub));
+      if (!user) return res.status(401).json({ error: "User not found" });
+
+      // Determine token type from the original payload
+      const isGuest = Boolean(payload.isGuest);
+      // Decode the original token to check its original expiry window
+      const decoded = jwt.decode(raw) as { exp?: number; iat?: number } | null;
+      const originalTtl = decoded?.exp && decoded?.iat ? decoded.exp - decoded.iat : 0;
+      // If original TTL was > 7 days, the user had "remember me" enabled
+      const isRemember = originalTtl > 7 * 24 * 60 * 60;
+
+      const newToken = signToken(user.id, isRemember, isGuest);
+      res.cookie("token", newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: isGuest
+          ? COOKIE_MAX_AGE_GUEST_MS
+          : isRemember
+            ? COOKIE_MAX_AGE_REMEMBER_MS
+            : COOKIE_MAX_AGE_DEFAULT_MS,
+      });
+
+      return res.json({ user: safeUser(user), token: newToken });
+    } catch (err) {
+      logger.error("[auth] refresh error:", err);
+      return res.status(500).json({ error: "Token refresh failed" });
+    }
+  });
+
   // ── PATCH /api/auth/me ───────────────────────────────────────────────────
   router.patch("/me", async (req, res) => {
     const cookieToken = req.cookies?.token as string | undefined;

@@ -12,8 +12,17 @@
  *
  * The JWT is stored in an httpOnly cookie by the server (no localStorage).
  * We keep a copy of the user object in React state for instant UI updates.
+ *
+ * Silent refresh:
+ *  - Every 10 minutes, POST /api/auth/refresh reissues the JWT so sessions
+ *    stay alive during long tournaments (3–5 hours).
+ *  - When the browser tab regains focus (visibilitychange → visible), an
+ *    immediate refresh fires to catch up after laptop sleep / tab suspension.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+/** How often to silently refresh the token (ms). */
+const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface AuthUser {
   id: string;
@@ -71,13 +80,64 @@ export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Track whether the user was ever authenticated so we can detect session loss
+  const wasAuthenticated = useRef(false);
+
   // On mount, check if there's an active session
   useEffect(() => {
     apiFetch<{ user: AuthUser }>("/api/auth/me")
-      .then(({ user }) => setUser(user))
+      .then(({ user }) => {
+        setUser(user);
+        wasAuthenticated.current = true;
+      })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
+
+  // ── Silent token refresh ──────────────────────────────────────────────────
+  // Fires every REFRESH_INTERVAL_MS while the user is logged in, and also
+  // fires immediately when the tab regains visibility (handles laptop sleep,
+  // tab suspension, etc.).
+  const silentRefresh = useCallback(async () => {
+    try {
+      const { user: refreshedUser } = await apiFetch<{ user: AuthUser }>(
+        "/api/auth/refresh",
+        { method: "POST" }
+      );
+      setUser(refreshedUser);
+      wasAuthenticated.current = true;
+    } catch {
+      // Token is expired or invalid — session is gone.
+      // Only clear user state if they were previously authenticated
+      // (avoids clearing state for users who were never logged in).
+      if (wasAuthenticated.current) {
+        setUser(null);
+        wasAuthenticated.current = false;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only run the refresh loop while the user is logged in
+    if (!user) return;
+
+    // Periodic refresh every 10 minutes
+    const intervalId = setInterval(silentRefresh, REFRESH_INTERVAL_MS);
+
+    // Visibility-based refresh: when the tab comes back into focus after
+    // being hidden (laptop sleep, tab switch), immediately refresh.
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible" && user) {
+        silentRefresh();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [user, silentRefresh]);
 
   const login = useCallback(async (email: string, password: string, remember = false) => {
     const { user } = await apiFetch<{ user: AuthUser }>("/api/auth/login", {
@@ -85,6 +145,7 @@ export function useAuth() {
       body: JSON.stringify({ email, password, remember }),
     });
     setUser(user);
+    wasAuthenticated.current = true;
     return user;
   }, []);
 
@@ -100,6 +161,7 @@ export function useAuth() {
         body: JSON.stringify({ email, password, displayName, chesscomUsername }),
       });
       setUser(user);
+      wasAuthenticated.current = true;
       return user;
     },
     []
@@ -116,12 +178,14 @@ export function useAuth() {
       body: JSON.stringify({ displayName }),
     });
     setUser(user);
+    wasAuthenticated.current = true;
     return user;
   }, []);
 
   const logout = useCallback(async () => {
     await apiFetch("/api/auth/logout", { method: "POST" });
     setUser(null);
+    wasAuthenticated.current = false;
   }, []);
 
   const updateProfile = useCallback(async (fields: UpdateProfileFields) => {

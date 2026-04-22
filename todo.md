@@ -5255,3 +5255,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
 - [x] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
 - [x] Fix: auth cookie not persisting across page navigation in production — add trust proxy
+- [x] Silent token refresh — server POST /api/auth/refresh endpoint + client-side interval + visibility-based refresh
