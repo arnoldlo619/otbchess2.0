@@ -492,7 +492,6 @@ export default function FinalStandings() {
     // Delay to coincide with the 1st-place podium slot animation (60ms delay + ~500ms duration)
     const timer = setTimeout(() => {
       // Create an explicit full-screen canvas to avoid getBoundingClientRect errors
-      // that occur when canvas-confetti tries to use a detached/virtual canvas.
       const canvas = document.createElement("canvas");
       canvas.style.cssText = [
         "position:fixed",
@@ -500,39 +499,95 @@ export default function FinalStandings() {
         "width:100%",
         "height:100%",
         "pointer-events:none",
-        `z-index:9999`,
+        "z-index:9999",
       ].join(";");
       document.body.appendChild(canvas);
-
       const fire = confettiLib.create(canvas, { resize: true, useWorker: false });
 
-      const shared = {
-        particleCount: 60,
-        spread: 70,
-        startVelocity: 45,
-        gravity: 0.9,
-        ticks: 200,
-        colors: ["#3D6B47", "#4CAF50", "#769656", "#EEEED2", "#FFD700", "#FFFFFF"],
-      };
+      // Brand palette — greens, gold, cream, white, plus vivid pops
+      const colors = [
+        "#3D6B47", "#4CAF50", "#769656", "#EEEED2",
+        "#FFD700", "#FFC107", "#FFFFFF", "#A8E6CF",
+        "#FF6B6B", "#4ECDC4",
+      ];
 
-      // Wave 1 — two cannons from bottom corners
-      fire({ ...shared, origin: { x: 0.15, y: 0.85 }, angle: 65 });
-      fire({ ...shared, origin: { x: 0.85, y: 0.85 }, angle: 115 });
+      // ── Wave 1: big double-cannon from bottom corners ──────────────────────
+      fire({
+        particleCount: 120, spread: 80, startVelocity: 55,
+        gravity: 0.85, ticks: 280, colors,
+        origin: { x: 0.1, y: 0.9 }, angle: 70,
+        shapes: ["square", "circle"],
+      });
+      fire({
+        particleCount: 120, spread: 80, startVelocity: 55,
+        gravity: 0.85, ticks: 280, colors,
+        origin: { x: 0.9, y: 0.9 }, angle: 110,
+        shapes: ["square", "circle"],
+      });
 
-      // Wave 2 — softer burst from slightly inward
-      const wave2 = setTimeout(() => {
-        fire({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.3, y: 0.9 }, angle: 75 });
-        fire({ ...shared, particleCount: 35, startVelocity: 35, origin: { x: 0.7, y: 0.9 }, angle: 105 });
-      }, 400);
+      const timers: ReturnType<typeof setTimeout>[] = [];
 
-      // Remove the canvas after all particles have settled (~3s)
-      const cleanup = setTimeout(() => {
-        canvas.remove();
-      }, 3000);
+      // ── Wave 2: center explosion (350ms) ──────────────────────────────────
+      timers.push(setTimeout(() => {
+        fire({
+          particleCount: 150, spread: 360, startVelocity: 40,
+          gravity: 0.6, ticks: 320, colors,
+          origin: { x: 0.5, y: 0.55 },
+          shapes: ["star", "circle", "square"],
+          scalar: 1.1,
+        });
+      }, 350));
+
+      // ── Wave 3: side cannons inward (650ms) ───────────────────────────────
+      timers.push(setTimeout(() => {
+        fire({
+          particleCount: 80, spread: 65, startVelocity: 48,
+          gravity: 0.9, ticks: 260, colors,
+          origin: { x: 0.25, y: 0.88 }, angle: 78,
+          shapes: ["circle", "square"],
+        });
+        fire({
+          particleCount: 80, spread: 65, startVelocity: 48,
+          gravity: 0.9, ticks: 260, colors,
+          origin: { x: 0.75, y: 0.88 }, angle: 102,
+          shapes: ["circle", "square"],
+        });
+      }, 650));
+
+      // ── Wave 4: gold star shower from top (1000ms) ────────────────────────
+      timers.push(setTimeout(() => {
+        fire({
+          particleCount: 60, spread: 100, startVelocity: 20,
+          gravity: 0.4, ticks: 400, colors: ["#FFD700", "#FFC107", "#FFFFFF", "#4CAF50"],
+          origin: { x: 0.5, y: 0.0 },
+          shapes: ["star"],
+          scalar: 1.3,
+          drift: 0,
+        });
+      }, 1000));
+
+      // ── Wave 5: final corner burst (1400ms) ───────────────────────────────
+      timers.push(setTimeout(() => {
+        fire({
+          particleCount: 70, spread: 55, startVelocity: 42,
+          gravity: 1.0, ticks: 220, colors,
+          origin: { x: 0.05, y: 0.95 }, angle: 60,
+          shapes: ["square", "circle"],
+        });
+        fire({
+          particleCount: 70, spread: 55, startVelocity: 42,
+          gravity: 1.0, ticks: 220, colors,
+          origin: { x: 0.95, y: 0.95 }, angle: 120,
+          shapes: ["square", "circle"],
+        });
+      }, 1400));
+
+      // Remove canvas after all particles settle (~4.5s total)
+      const cleanup = setTimeout(() => canvas.remove(), 4500);
+      timers.push(cleanup);
 
       return () => {
-        clearTimeout(wave2);
-        clearTimeout(cleanup);
+        timers.forEach(clearTimeout);
         canvas.remove();
       };
     }, 560);

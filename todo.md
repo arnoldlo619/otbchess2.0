@@ -5250,3 +5250,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] FinalStandings staggered slide-in-from-bottom reveal — podium card, podium slots (1st/2nd/3rd), table card, and each table row animate in with cascading delays
 - [x] Director standings panel — staggered row slide-in animation consistent with FinalStandings
 - [x] FinalStandings confetti burst — fires once when champion podium slot animates in
+- [x] Enhanced confetti — multi-wave celebration with center burst, sustained shower, varied shapes
