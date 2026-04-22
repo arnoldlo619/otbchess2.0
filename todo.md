@@ -5254,3 +5254,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director confetti — fire celebration when director finalizes/ends tournament
 - [ ] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
 - [x] Fix: TournamentWizard useAuthContext must be used inside AuthProvider error on homepage
+- [x] Fix: auth cookie not persisting across page navigation in production — add trust proxy

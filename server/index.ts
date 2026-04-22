@@ -235,6 +235,10 @@ const pushSubscribeLimiter = rateLimit({
 export function createApp() {
   const app = express();
 
+  // ── Trust the reverse proxy (Manus CDN / Cloudflare) so Express sees
+  //    req.protocol as "https" and secure cookies work correctly. ────────────
+  app.set("trust proxy", 1);
+
   // ── Body size cap — prevents large-payload DoS on state/player endpoints ────
   app.use(express.json({ limit: "512kb" }));
   app.use(cookieParser());
