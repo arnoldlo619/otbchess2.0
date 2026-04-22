@@ -11,7 +11,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import confetti from "canvas-confetti";
+import { fireTournamentConfetti } from "@/lib/confetti";
 import { AddPlayerModal } from "@/components/AddPlayerModal";
 import { UploadRSVPModal } from "@/components/UploadRSVPModal";
 import { QRModal } from "@/components/QRModal";
@@ -1990,29 +1990,9 @@ export default function Director() {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      // Step 2: After scroll settles (~600ms), fire the confetti burst from both sides
+      // Step 2: After scroll settles (~600ms), fire the full 5-wave celebration
       const confettiTimer = setTimeout(() => {
-        const duration = 4000;
-        const end = Date.now() + duration;
-        const colors = ["#4CAF50", "#ffffff", "#3D6B47", "#a3e635", "#fbbf24"];
-        const frame = () => {
-          confetti({
-            particleCount: 4,
-            angle: 60,
-            spread: 60,
-            origin: { x: 0, y: 0.6 },
-            colors,
-          });
-          confetti({
-            particleCount: 4,
-            angle: 120,
-            spread: 60,
-            origin: { x: 1, y: 0.6 },
-            colors,
-          });
-          if (Date.now() < end) requestAnimationFrame(frame);
-        };
-        frame();
+        fireTournamentConfetti();
       }, 600);
 
       return () => clearTimeout(confettiTimer);
