@@ -5251,3 +5251,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director standings panel — staggered row slide-in animation consistent with FinalStandings
 - [x] FinalStandings confetti burst — fires once when champion podium slot animates in
 - [x] Enhanced confetti — multi-wave celebration with center burst, sustained shower, varied shapes
+- [x] Director confetti — fire celebration when director finalizes/ends tournament
