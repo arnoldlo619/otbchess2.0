@@ -5261,3 +5261,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Swiss+Elim: auto-navigate all participants to Performance Report after finals complete
 - [x] Swiss+Elim: suppress "Generate Round N" banner after elim bracket finals complete (isElimBracketComplete guard in canGenerateNext)
 - [x] Swiss+Elim (and all formats): auto-navigate all connected participants to Performance Report when director finalizes tournament (SSE tournament_ended event → Tournament.tsx redirect to /report)
+- [x] Rate-limit /api/auth/refresh endpoint — 10 requests per minute per IP (express-rate-limit, IPv6-safe keyGenerator)

@@ -15,6 +15,7 @@
  */
 
 import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { nanoid, nanoid as nid } from "nanoid";
@@ -296,7 +297,19 @@ export function createAuthRouter(): Router {
   // Silently reissue a fresh JWT if the current one is still valid.
   // The client calls this periodically (e.g. every 10 min) to keep
   // sessions alive during long tournaments without forcing a re-login.
-  router.post("/refresh", async (req, res) => {
+  //
+  // Rate limit: 10 requests per minute per IP to prevent token-refresh abuse.
+  // IPv6-safe keyGenerator strips port suffix (e.g. "::1:12345" → "::1").
+  const refreshRateLimiter = rateLimit({
+    windowMs: 60_000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => (req.ip ?? "unknown").replace(/:\d+$/, ""),
+    message: { error: "Too many refresh requests — please wait a moment." },
+    skip: () => process.env.NODE_ENV !== "production",
+  });
+  router.post("/refresh", refreshRateLimiter, async (req, res) => {
     const cookieToken = req.cookies?.token as string | undefined;
     const headerToken = (req.headers.authorization ?? "").replace("Bearer ", "");
     const raw = cookieToken || headerToken;
