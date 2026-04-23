@@ -1497,7 +1497,7 @@ export default function TournamentPage() {
   const hasAutoSwitchedToBracketRef = useRef(false);
   // Eliminated banner: persists across re-renders; dismissed state stored in sessionStorage
   const eliminatedDismissKey = `otb_elim_dismissed_${tournamentId}`;
-  const [eliminatedBanner, setEliminatedBanner] = useState<{ rank: number; total: number } | null>(null);
+  const [eliminatedBanner, setEliminatedBanner] = useState<{ rank: number; total: number; score: number; swissRounds: number } | null>(null);
   const prevElimPhaseRef = useRef<string | undefined>(undefined);
 
   // ── Auto-switch to bracket tab when swiss_elim transitions to elimination ──
@@ -1554,7 +1554,9 @@ export default function TournamentPage() {
     const swissRoundsOnly = tournamentState?.rounds.filter((r) => r.number <= swissRoundsNum) ?? [];
     const standings = computeStandings(tournamentState?.players ?? [], swissRoundsOnly);
     const myRank = standings.findIndex((r) => r.player.id === myPlayerId) + 1;
-    setEliminatedBanner({ rank: myRank || standings.length, total: standings.length });
+    const myStanding = standings.find((r) => r.player.id === myPlayerId);
+    const myScore = myStanding?.points ?? 0;
+    setEliminatedBanner({ rank: myRank || standings.length, total: standings.length, score: myScore, swissRounds: swissRoundsNum });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase,
@@ -1818,7 +1820,7 @@ export default function TournamentPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-bold ${isDark ? "text-amber-200" : "text-amber-900"}`}>
-                    You placed <span className="text-amber-500">#{eliminatedBanner.rank}</span> of {eliminatedBanner.total} in the Swiss rounds
+                    You placed <span className="text-amber-500">#{eliminatedBanner.rank}</span> of {eliminatedBanner.total} in the Swiss rounds — <span className="text-amber-500">{eliminatedBanner.score % 1 === 0 ? eliminatedBanner.score : eliminatedBanner.score.toFixed(1)}&thinsp;/&thinsp;{eliminatedBanner.swissRounds} pts</span>
                   </p>
                   <p className={`text-xs mt-0.5 ${isDark ? "text-amber-200/60" : "text-amber-700/70"}`}>
                     The top players have advanced to the elimination bracket. Follow along below!
