@@ -2056,6 +2056,67 @@ export default function Director() {
     }
   }, [allResultsIn, activeTab, isRegistration, state.currentRound]);
 
+  // ── Auto-complete tournament when elim bracket finals are done ─────────────
+  // When isElimBracketComplete becomes true (all elim rounds done, all results in),
+  // automatically finalize the tournament and broadcast tournament_ended SSE so all
+  // connected participants are redirected to the Performance Report page.
+  const autoCompletedRef = useRef(false);
+  useEffect(() => {
+    if (
+      isElimBracketComplete &&
+      allResultsIn &&
+      state.status !== "completed" &&
+      state.status !== "registration" &&
+      tournamentId !== "otb-demo-2026" &&
+      !autoCompletedRef.current
+    ) {
+      autoCompletedRef.current = true;
+      completeTournament();
+      syncStatusToServer("completed");
+      const winner = liveStandings[0];
+      const winnerName = winner?.player.name ?? "Unknown";
+      // Push notification to all subscribers
+      broadcastTournamentComplete(winnerName);
+      // Auto-post feed card to club if applicable
+      if (tournamentConfig?.clubId) {
+        const podium = liveStandings.slice(0, 3).map((s, i) => ({
+          rank: i + 1,
+          playerName: s.player.name,
+          score: s.points,
+          totalRounds: state.totalRounds,
+        }));
+        const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
+          : state.format === "swiss_elim" ? `Swiss+Elim · ${state.totalRounds}R`
+          : state.format === "roundrobin" ? "Round Robin"
+          : state.format === "doubleswiss" ? `Double Swiss · ${state.totalRounds}R`
+          : "Elimination";
+        recordTournamentCompleted(
+          tournamentConfig.clubId,
+          state.tournamentName,
+          winnerName,
+          tournamentId,
+          winner?.points,
+          state.totalRounds,
+          podium,
+          state.players.length,
+          fmtLabel
+        );
+      }
+      // Broadcast tournament_ended SSE — this triggers auto-redirect on all player screens
+      const players = state.players;
+      const tournamentName = state.tournamentName;
+      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ players, tournamentName }),
+      }).catch(() => { /* fire-and-forget */ });
+      toast.success("🏆 Tournament complete! Redirecting to results…", { duration: 4000 });
+      // Navigate director to results page after a short delay
+      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isElimBracketComplete, allResultsIn, state.status]);
+
   // Auto-navigate to bracket tab when swiss_elim transitions to elimination phase
   const prevElimPhaseRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -4491,12 +4552,12 @@ export default function Director() {
                           fmtLabel
                         );
                       }
-                      // Broadcast tournament_ended to server
+                      // Broadcast tournament_ended to server (send Player[] not StandingRow[])
                       try {
                         await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ players: liveStandings, tournamentName: state.tournamentName }),
+                          body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
                         });
                       } catch { /* ignore */ }
                       toast.success("Tournament finalized!");
