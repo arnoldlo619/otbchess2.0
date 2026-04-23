@@ -102,6 +102,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
+import { apiFetch } from "@/lib/apiFetch";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1956,10 +1957,8 @@ export default function ClubProfile() {
                           if (!club) return;
                           setCreatingLeague(true);
                           try {
-                            const res = await fetch("/api/leagues", {
+                            const created = await apiFetch<{ leagueId?: string; id?: string }>("/api/leagues", {
                               method: "POST",
-                              credentials: "include",
-                              headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({
                                 clubId: club.id,
                                 name: leagueForm.name.trim(),
@@ -1967,20 +1966,14 @@ export default function ClubProfile() {
                                 maxPlayers: leagueForm.maxPlayers,
                               }),
                             });
-                            if (res.ok) {
-                              const created = await res.json();
-                              const newLeagueId = created.leagueId ?? created.id;
-                              setClubLeagues((prev) => [{ id: newLeagueId, name: leagueForm.name.trim(), status: "draft", currentWeek: 0, totalWeeks: leagueForm.maxPlayers - 1, maxPlayers: leagueForm.maxPlayers, playerCount: 0 }, ...prev]);
-                              setShowCreateLeague(false);
-                              setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
-                              setLeagueWizardStep(1);
-                              setSelectedPlayerIds([]);
-                              toast.success(`League "${leagueForm.name.trim()}" created in Draft mode!`);
-                              navigate(`/leagues/${newLeagueId}`);
-                            } else {
-                              const d = await res.json().catch(() => ({}));
-                              toast.error(d.error ?? "Failed to create league");
-                            }
+                            const newLeagueId = created.leagueId ?? created.id;
+                            setClubLeagues((prev) => [{ id: newLeagueId!, name: leagueForm.name.trim(), status: "draft", currentWeek: 0, totalWeeks: leagueForm.maxPlayers - 1, maxPlayers: leagueForm.maxPlayers, playerCount: 0 }, ...prev]);
+                            setShowCreateLeague(false);
+                            setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
+                            setLeagueWizardStep(1);
+                            setSelectedPlayerIds([]);
+                            toast.success(`League "${leagueForm.name.trim()}" created in Draft mode!`);
+                            navigate(`/leagues/${newLeagueId}`);
                           } finally {
                             setCreatingLeague(false);
                           }
@@ -2062,10 +2055,8 @@ export default function ClubProfile() {
                             if (!club || picked === 0) return;
                             setCreatingLeague(true);
                             try {
-                              const res = await fetch("/api/leagues", {
+                              const created2 = await apiFetch<{ leagueId?: string; id?: string }>("/api/leagues", {
                                 method: "POST",
-                                credentials: "include",
-                                headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
                                   clubId: club.id,
                                   name: leagueForm.name.trim(),
@@ -2074,20 +2065,14 @@ export default function ClubProfile() {
                                   playerIds: selectedPlayerIds,
                                 }),
                               });
-                              if (res.ok) {
-                                const created = await res.json();
-                                const newLeagueId = created.leagueId ?? created.id;
-                                setClubLeagues((prev) => [{ id: newLeagueId, name: leagueForm.name.trim(), status: "draft", currentWeek: 0, totalWeeks: leagueForm.maxPlayers - 1, maxPlayers: leagueForm.maxPlayers, playerCount: picked }, ...prev]);
-                                setShowCreateLeague(false);
-                                setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
-                                setLeagueWizardStep(1);
-                                setSelectedPlayerIds([]);
-                                toast.success(`League "${leagueForm.name.trim()}" created in Draft mode with ${picked} player${picked !== 1 ? "s" : ""}!`);
-                                navigate(`/leagues/${newLeagueId}`);
-                              } else {
-                                const d = await res.json().catch(() => ({}));
-                                toast.error(d.error ?? "Failed to create league");
-                              }
+                              const newLeagueId2 = created2.leagueId ?? created2.id;
+                              setClubLeagues((prev) => [{ id: newLeagueId2!, name: leagueForm.name.trim(), status: "draft", currentWeek: 0, totalWeeks: leagueForm.maxPlayers - 1, maxPlayers: leagueForm.maxPlayers, playerCount: picked }, ...prev]);
+                              setShowCreateLeague(false);
+                              setLeagueForm({ name: "", description: "", maxPlayers: 8, totalWeeks: 7 });
+                              setLeagueWizardStep(1);
+                              setSelectedPlayerIds([]);
+                              toast.success(`League "${leagueForm.name.trim()}" created in Draft mode with ${picked} player${picked !== 1 ? "s" : ""}!`);
+                              navigate(`/leagues/${newLeagueId2}`);
                             } finally {
                               setCreatingLeague(false);
                             }
@@ -2137,20 +2122,18 @@ export default function ClubProfile() {
                 if (!user) { setAuthOpen(true); return; }
                 setRequestingLeagueId(lgId);
                 try {
-                  const res = await fetch(`/api/leagues/${lgId}/join-request`, {
-                    method: "POST",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                  });
-                  const data = await res.json();
-                  if (res.ok) {
+                  try {
+                    await apiFetch(`/api/leagues/${lgId}/join-request`, { method: "POST" });
                     setRequestedLeagueIds((prev) => { const n = new Set(Array.from(prev)); n.add(lgId); return n; });
                     toast.success("Request sent! The commissioner will review it.");
-                  } else if (res.status === 409) {
-                    setRequestedLeagueIds((prev) => { const n = new Set(Array.from(prev)); n.add(lgId); return n; });
-                    toast.info(data.error ?? "Request already submitted");
-                  } else {
-                    toast.error(data.error ?? "Failed to send request");
+                  } catch (joinErr: unknown) {
+                    const msg = joinErr instanceof Error ? joinErr.message : "";
+                    if (msg.includes("409") || msg.toLowerCase().includes("already")) {
+                      setRequestedLeagueIds((prev) => { const n = new Set(Array.from(prev)); n.add(lgId); return n; });
+                      toast.info(msg || "Request already submitted");
+                    } else {
+                      toast.error(msg || "Failed to send request");
+                    }
                   }
                 } catch {
                   toast.error("Network error — please try again");
@@ -2398,18 +2381,9 @@ export default function ClubProfile() {
                           if (!club || deleteConfirmText !== club.name) return;
                           setIsDeleting(true);
                           try {
-                            const res = await fetch(`/api/clubs/${encodeURIComponent(club.id)}`, {
-                              method: "DELETE",
-                              credentials: "include",
-                            });
-                            if (res.ok) {
-                              toast.success("Club deleted.");
-                              navigate("/clubs");
-                            } else {
-                              const err = await res.json().catch(() => ({}));
-                              toast.error(err.error ?? "Failed to delete club.");
-                              setIsDeleting(false);
-                            }
+                            await apiFetch(`/api/clubs/${encodeURIComponent(club.id)}`, { method: "DELETE" });
+                            toast.success("Club deleted.");
+                            navigate("/clubs");
                           } catch {
                             toast.error("Network error. Please try again.");
                             setIsDeleting(false);
@@ -2499,23 +2473,15 @@ export default function ClubProfile() {
                           if (!club || !selectedTransferMemberId) return;
                           setIsTransferring(true);
                           try {
-                            const res = await fetch(`/api/clubs/${encodeURIComponent(club.id)}/transfer-ownership`, {
+                            await apiFetch(`/api/clubs/${encodeURIComponent(club.id)}/transfer-ownership`, {
                               method: "PATCH",
-                              headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ newOwnerId: selectedTransferMemberId }),
-                              credentials: "include",
                             });
-                            if (res.ok) {
-                              toast.success("Ownership transferred.");
-                              setTransferStep(0);
-                              setSelectedTransferMemberId("");
-                              // Refresh club data
-                              window.location.reload();
-                            } else {
-                              const err = await res.json().catch(() => ({}));
-                              toast.error(err.error ?? "Failed to transfer ownership.");
-                              setIsTransferring(false);
-                            }
+                            toast.success("Ownership transferred.");
+                            setTransferStep(0);
+                            setSelectedTransferMemberId("");
+                            // Refresh club data
+                            window.location.reload();
                           } catch {
                             toast.error("Network error. Please try again.");
                             setIsTransferring(false);
@@ -2560,16 +2526,13 @@ export default function ClubProfile() {
                         patch.avatarUrl = null;
                       } else if (pendingAvatar.startsWith("data:")) {
                         // base64 data URL — upload to server
-                        const res = await fetch("/api/clubs/upload-avatar", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          credentials: "include",
-                          body: JSON.stringify({ dataUrl: pendingAvatar }),
-                        });
-                        if (res.ok) {
-                          const { url } = await res.json();
+                        try {
+                          const { url } = await apiFetch<{ url: string }>("/api/clubs/upload-avatar", {
+                            method: "POST",
+                            body: JSON.stringify({ dataUrl: pendingAvatar }),
+                          });
                           patch.avatarUrl = url;
-                        } else {
+                        } catch {
                           toast.error("Avatar upload failed — please try again.");
                           setSavingSettings(false);
                           return;
@@ -2585,16 +2548,13 @@ export default function ClubProfile() {
                       if (pendingBanner === null) {
                         patch.bannerUrl = null;
                       } else if (pendingBanner.startsWith("data:")) {
-                        const res = await fetch("/api/clubs/upload-banner", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          credentials: "include",
-                          body: JSON.stringify({ dataUrl: pendingBanner }),
-                        });
-                        if (res.ok) {
-                          const { url } = await res.json();
+                        try {
+                          const { url } = await apiFetch<{ url: string }>("/api/clubs/upload-banner", {
+                            method: "POST",
+                            body: JSON.stringify({ dataUrl: pendingBanner }),
+                          });
                           patch.bannerUrl = url;
-                        } else {
+                        } catch {
                           toast.error("Banner upload failed — please try again.");
                           setSavingSettings(false);
                           return;
@@ -2606,31 +2566,21 @@ export default function ClubProfile() {
 
                     if (Object.keys(patch).length > 0) {
                       // Persist to server DB (visible to all users)
-                      const res = await fetch(`/api/clubs/${club.id}`, {
+                      const serverClub = await apiFetch<Record<string, unknown>>(`/api/clubs/${club.id}`, {
                         method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
                         body: JSON.stringify(patch),
                       });
-                      if (res.ok) {
-                        const serverClub = await res.json();
-                        // Also update localStorage so the owner sees the change immediately
-                        updateClub(club.id, patch);
-                        // Add cache-busting param so browsers reload the new image
-                        if (serverClub.avatarUrl && !serverClub.avatarUrl.startsWith("data:")) {
-                          serverClub.avatarUrl = `${serverClub.avatarUrl}?v=${Date.now()}`;
-                        }
-                        if (serverClub.bannerUrl && !serverClub.bannerUrl.startsWith("data:")) {
-                          serverClub.bannerUrl = `${serverClub.bannerUrl}?v=${Date.now()}`;
-                        }
-                        setClub(serverClub);
-                        toast.success("Club updated!");
-                      } else {
-                        const err = await res.json().catch(() => ({}));
-                        toast.error(err.error ?? "Failed to save — please try again.");
-                        setSavingSettings(false);
-                        return;
+                      // Also update localStorage so the owner sees the change immediately
+                      updateClub(club.id, patch);
+                      // Add cache-busting param so browsers reload the new image
+                      if (typeof serverClub.avatarUrl === "string" && !serverClub.avatarUrl.startsWith("data:")) {
+                        serverClub.avatarUrl = `${serverClub.avatarUrl}?v=${Date.now()}`;
                       }
+                      if (typeof serverClub.bannerUrl === "string" && !serverClub.bannerUrl.startsWith("data:")) {
+                        serverClub.bannerUrl = `${serverClub.bannerUrl}?v=${Date.now()}`;
+                      }
+                      setClub(serverClub as unknown as Club);
+                      toast.success("Club updated!");
                     }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   } catch (_e) {

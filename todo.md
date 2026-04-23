@@ -5266,3 +5266,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Swiss+Elim eliminated banner: add "View My Report" button linking to /tournament/:id/report
 - [x] Rate-limit /api/auth/login and /api/auth/register — 5 attempts per minute per IP (brute-force protection, shared loginRegisterRateLimiter, production-only, ipKeyGenerator-safe)
 - [x] Fix: Chicago Chess Club profile page — broken club image (ClubProfile.tsx:1072) — added onError fallbacks for club avatar, banner, and member avatars; avatarBroken/bannerBroken state resets on URL change
+- [x] Club settings: polished avatar + banner re-upload UI with drag-and-drop, live preview, clear button, and save flow (ClubAvatarUpload + ClubBannerUpload already built; fixed all raw fetch() calls in ClubProfile.tsx to use apiFetch with Bearer token so uploads work in production)
