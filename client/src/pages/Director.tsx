@@ -1597,6 +1597,7 @@ export default function Director() {
     updateSettings,
     isSwissElimCutoff: _isSwissElimCutoff,
     isSwissElimSwissPhaseComplete,
+    isElimBracketComplete,
   } = useDirectorState(tournamentId);
   // ── Undo result snackbar ────────────────────────────────────────────────
   const { pending: undoPending, recordWithUndo, undo: undoResult, dismiss: dismissUndo } =

@@ -5259,3 +5259,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Swiss+Elim: auto-navigate players to elim bracket page when swiss rounds complete
 - [ ] Swiss+Elim: tooltip for eliminated players showing placement + link to bracket
 - [ ] Swiss+Elim: auto-navigate all participants to Performance Report after finals complete
+- [x] Swiss+Elim: suppress "Generate Round N" banner after elim bracket finals complete (isElimBracketComplete guard in canGenerateNext)

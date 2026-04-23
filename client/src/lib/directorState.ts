@@ -790,7 +790,11 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   // For swiss_elim in cutoff phase, block normal "Next Round" — director must use advanceToElimination
   const isSwissElimCutoff = state.format === "swiss_elim" && state.elimPhase === "cutoff";
   const isSwissElimSwissPhaseComplete = state.format === "swiss_elim" && state.elimPhase === "swiss" && state.currentRound >= (state.swissRounds ?? state.totalRounds);
-  const canGenerateNext = allResultsIn && state.status !== "registration" && !isSwissElimCutoff && !isSwissElimSwissPhaseComplete
+  // For swiss_elim in elimination phase, only allow generating the next round
+  // if the bracket is NOT yet finished (currentRound < totalRounds).
+  // This prevents the "Generate Round N" banner from appearing after the finals.
+  const isElimBracketComplete = state.format === "swiss_elim" && state.elimPhase === "elimination" && state.currentRound >= state.totalRounds;
+  const canGenerateNext = allResultsIn && state.status !== "registration" && !isSwissElimCutoff && !isSwissElimSwissPhaseComplete && !isElimBracketComplete
     && (state.format === "swiss_elim" ? state.elimPhase === "elimination" || state.currentRound < (state.swissRounds ?? state.totalRounds) : state.currentRound < state.totalRounds);
   const isRegistration = state.status === "registration";
   const canStart = isRegistration && state.players.length >= 2;
@@ -809,6 +813,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     lastSaved,
     isSwissElimCutoff,
     isSwissElimSwissPhaseComplete,
+    isElimBracketComplete,
     addPlayer,
     addLatePlayer,
     updatePlayer,
