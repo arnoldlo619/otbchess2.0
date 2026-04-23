@@ -1494,9 +1494,12 @@ export default function TournamentPage() {
 
   // ── Auto-navigate to bracket when swiss phase completes (swiss_elim only) ──
   const hasAutoSwitchedToBracketRef = useRef(false);
+  // Eliminated banner: persists across re-renders; dismissed state stored in sessionStorage
+  const eliminatedDismissKey = `otb_elim_dismissed_${tournamentId}`;
   const [eliminatedBanner, setEliminatedBanner] = useState<{ rank: number; total: number } | null>(null);
   const prevElimPhaseRef = useRef<string | undefined>(undefined);
 
+  // ── Auto-switch to bracket tab when swiss_elim transitions to elimination ──
   useEffect(() => {
     if (hasAutoSwitchedToBracketRef.current) return;
     if (config?.format !== "swiss_elim") return;
@@ -1524,25 +1527,38 @@ export default function TournamentPage() {
         duration: 6000,
         icon: "⚔️",
       });
-
-      // Check if the current user was eliminated (didn't make the cut)
-      if (myPlayerId) {
-        const madeTheCut = elimPlayers.some((p) => p.id === myPlayerId);
-        if (!madeTheCut) {
-          // Compute their swiss ranking
-          const swissRoundsNum = (config as { swissRounds?: number } | undefined)?.swissRounds ?? 0;
-          const swissRoundsOnly = tournamentState?.rounds.filter((r) => r.number <= swissRoundsNum) ?? [];
-          const standings = computeStandings(tournamentState?.players ?? [], swissRoundsOnly);
-          const myRank = standings.findIndex((r) => r.player.id === myPlayerId) + 1;
-          setEliminatedBanner({ rank: myRank || standings.length, total: standings.length });
-        }
-      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase,
     (tournamentState as DirectorState & { elimPlayers?: Player[] } | null)?.elimPlayers?.length,
-    config?.format, myPlayerId,
+    config?.format,
+  ]);
+
+  // ── Eliminated player banner — separate effect so it fires for late-joiners ──
+  // Fires whenever elimPhase === "elimination" and myPlayerId is not in elimPlayers.
+  // Respects a sessionStorage dismiss flag so the banner stays gone if dismissed.
+  useEffect(() => {
+    if (config?.format !== "swiss_elim") return;
+    if (!myPlayerId) return;
+    const elimPhase = (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase;
+    const elimPlayers = (tournamentState as DirectorState & { elimPlayers?: Player[] } | null)?.elimPlayers ?? [];
+    if (elimPhase !== "elimination" || elimPlayers.length === 0) return;
+    // Don't show if the player dismissed it this session
+    if (sessionStorage.getItem(eliminatedDismissKey)) return;
+    const madeTheCut = elimPlayers.some((p) => p.id === myPlayerId);
+    if (madeTheCut) return;
+    // Compute their Swiss ranking from Swiss-only rounds
+    const swissRoundsNum = (tournamentState as DirectorState & { swissRounds?: number } | null)?.swissRounds ?? 0;
+    const swissRoundsOnly = tournamentState?.rounds.filter((r) => r.number <= swissRoundsNum) ?? [];
+    const standings = computeStandings(tournamentState?.players ?? [], swissRoundsOnly);
+    const myRank = standings.findIndex((r) => r.player.id === myPlayerId) + 1;
+    setEliminatedBanner({ rank: myRank || standings.length, total: standings.length });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    (tournamentState as DirectorState & { elimPhase?: string } | null)?.elimPhase,
+    (tournamentState as DirectorState & { elimPlayers?: Player[] } | null)?.elimPlayers?.length,
+    myPlayerId, config?.format,
   ]);
 
   // While the server fetch is in flight and we have no local state,
@@ -1823,8 +1839,12 @@ export default function TournamentPage() {
                   View Bracket
                 </button>
                 <button
-                  onClick={() => setEliminatedBanner(null)}
+                  onClick={() => {
+                    sessionStorage.setItem(eliminatedDismissKey, "1");
+                    setEliminatedBanner(null);
+                  }}
                   className={`flex-shrink-0 text-lg leading-none px-1 ${isDark ? "text-amber-200/40 hover:text-amber-200" : "text-amber-400 hover:text-amber-600"}`}
+                  aria-label="Dismiss"
                 >
                   ×
                 </button>

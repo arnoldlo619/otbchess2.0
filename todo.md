@@ -5257,7 +5257,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: auth cookie not persisting across page navigation in production — add trust proxy
 - [x] Silent token refresh — server POST /api/auth/refresh endpoint + client-side interval + visibility-based refresh
 - [ ] Swiss+Elim: auto-navigate players to elim bracket page when swiss rounds complete
-- [ ] Swiss+Elim: tooltip for eliminated players showing placement + link to bracket
+- [x] Swiss+Elim: eliminated player amber banner showing Swiss placement + View Bracket button (decoupled from auto-switch effect, sessionStorage dismiss, fires for late-joiners)
 - [x] Swiss+Elim: auto-navigate all participants to Performance Report after finals complete
 - [x] Swiss+Elim: suppress "Generate Round N" banner after elim bracket finals complete (isElimBracketComplete guard in canGenerateNext)
 - [x] Swiss+Elim (and all formats): auto-navigate all connected participants to Performance Report when director finalizes tournament (SSE tournament_ended event → Tournament.tsx redirect to /report)
