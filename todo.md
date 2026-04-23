@@ -5274,3 +5274,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director: auto-switch to bracket tab after successfully generating the elimination bracket (already implemented: setActiveTab("bracket") in CutoffOverrideModal onConfirm + useEffect watching state.elimPhase transition swiss→elimination)
 - [x] Home: update trust-bar badges to highlight Swiss+Elim format and chess.com integration
 - [x] Home: refresh feature section slide copy to reinforce Swiss+Elim format and chess.com integration messaging
+
+## 100-Person Tournament Preparation (Chicago Chess Club)
+
+- [x] CRITICAL: Add /api/tournament/:id/stream SSE endpoint for spectators (was missing — players never received real-time updates)
+- [x] CRITICAL: Add backtrack iteration limit (50,000) to Swiss pairing engine to prevent browser freeze with 100 players
+- [x] CRITICAL: Add greedy O(n²) fallback pairing when backtracking is exhausted
+- [x] Add "Session expired" toast notification when silentRefresh fails
+- [x] Cap board card animation delay at 600ms (was 3s for 50 boards)
+- [x] Add vitest: Swiss pairing performance test (100 players, 7 rounds, under 2s)
+- [x] Add vitest: SSE endpoint registration test (route order, shared subscribers)

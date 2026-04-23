@@ -3381,14 +3381,14 @@ export default function Director() {
                                 const gB = boardGamesForNum.find((g) => g.gameIndex === 1);
                                 if (gA && (gA.whiteId === "BYE" || gA.blackId === "BYE")) {
                                   return (
-                                    <div key={`board-${boardNum}`} className="animate-in fade-in slide-in-from-bottom-3" style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}>
+                                    <div key={`board-${boardNum}`} className="animate-in fade-in slide-in-from-bottom-3" style={{ animationDuration: "350ms", animationDelay: `${Math.min(cardIdx * 60, 600)}ms`, animationFillMode: "both" }}>
                                       <ByeCard game={gA} players={state.players} isDark={isDark} />
                                     </div>
                                   );
                                 }
                                 if (!gA || !gB) return null;
                                 return (
-                                  <div key={`board-${boardNum}`} className="animate-in fade-in slide-in-from-bottom-3" style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}>
+                                  <div key={`board-${boardNum}`} className="animate-in fade-in slide-in-from-bottom-3" style={{ animationDuration: "350ms", animationDelay: `${Math.min(cardIdx * 60, 600)}ms`, animationFillMode: "both" }}>
                                     <DoubleSwissBoardCard
                                       gameA={gA}
                                       gameB={gB}
@@ -3439,7 +3439,7 @@ export default function Director() {
                               key={game.id}
                               id={`board-card-${game.id}`}
                               className="animate-in fade-in slide-in-from-bottom-3"
-                              style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}
+                              style={{ animationDuration: "350ms", animationDelay: `${Math.min(cardIdx * 60, 600)}ms`, animationFillMode: "both" }}
                             >
                               <ByeCard
                                 game={game}
@@ -3456,7 +3456,7 @@ export default function Director() {
                                   ? isDark ? "ring-1 ring-amber-400/15" : "ring-1 ring-amber-500/10"
                                   : ""
                               }`}
-                              style={{ animationDuration: "350ms", animationDelay: `${cardIdx * 60}ms`, animationFillMode: "both" }}
+                              style={{ animationDuration: "350ms", animationDelay: `${Math.min(cardIdx * 60, 600)}ms`, animationFillMode: "both" }}
                             >
                               <BoardCard
                                 game={game}

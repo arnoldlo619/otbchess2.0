@@ -330,16 +330,32 @@ export function generateSwissPairings(
   const _tempPaired = new Set<string>();
   const tempGames: { p1: Player; p2: Player }[] = [];
 
-  // Attempt pairing with backtracking
+  // ── Backtracking pairing with iteration limit ─────────────────────────────
+  // The recursive tryPair is O(n!) in the worst case. For large tournaments
+  // (50+ pairs), later rounds where many players have already faced each other
+  // can cause the backtracking to explore millions of branches.
+  // We cap iterations at 50,000 — enough for optimal pairing in most cases,
+  // but prevents browser freezes. If the limit is hit, we fall back to a
+  // greedy O(n²) algorithm that simply pairs top-down, allowing repeats.
+  const BACKTRACK_LIMIT = 50_000;
+  let backtrackIterations = 0;
+  let backtrackExhausted = false;
+
   function tryPair(pool: Player[]): boolean {
     if (pool.length === 0) return true;
     if (pool.length === 1) return false; // shouldn't happen (bye already handled)
+    if (backtrackExhausted) return false; // bail out early
 
     const p1 = pool[0];
     const rest = pool.slice(1);
 
     // Try each candidate for p1, preferring those in the same score group
     for (let i = 0; i < rest.length; i++) {
+      backtrackIterations++;
+      if (backtrackIterations > BACKTRACK_LIMIT) {
+        backtrackExhausted = true;
+        return false;
+      }
       const p2 = rest[i];
       const key = [p1.id, p2.id].sort().join("|");
       if (played.has(key)) continue; // avoid repeat if possible
@@ -353,6 +369,11 @@ export function generateSwissPairings(
 
     // If no non-repeat pairing found, allow repeats
     for (let i = 0; i < rest.length; i++) {
+      backtrackIterations++;
+      if (backtrackIterations > BACKTRACK_LIMIT) {
+        backtrackExhausted = true;
+        return false;
+      }
       const p2 = rest[i];
       const remaining = rest.filter((_, idx) => idx !== i);
       if (tryPair(remaining)) {
@@ -364,7 +385,50 @@ export function generateSwissPairings(
     return false;
   }
 
-  tryPair(workingList);
+  const backtrackSuccess = tryPair(workingList);
+
+  // ── Greedy fallback when backtracking is exhausted ────────────────────────
+  // Pairs players top-down from the sorted list, preferring non-repeat
+  // opponents but allowing repeats when necessary. O(n²) worst case.
+  if (!backtrackSuccess || backtrackExhausted) {
+    tempGames.length = 0; // clear any partial backtracking results
+    const greedyPool = [...workingList];
+    const greedyPaired = new Set<string>();
+
+    while (greedyPool.length >= 2) {
+      const p1 = greedyPool[0];
+      greedyPool.splice(0, 1);
+
+      // First pass: find best non-repeat opponent
+      let bestIdx = -1;
+      for (let i = 0; i < greedyPool.length; i++) {
+        const key = [p1.id, greedyPool[i].id].sort().join("|");
+        if (!played.has(key) && !greedyPaired.has(greedyPool[i].id)) {
+          bestIdx = i;
+          break;
+        }
+      }
+      // Second pass: allow repeats if no non-repeat found
+      if (bestIdx === -1) {
+        for (let i = 0; i < greedyPool.length; i++) {
+          if (!greedyPaired.has(greedyPool[i].id)) {
+            bestIdx = i;
+            break;
+          }
+        }
+      }
+      // Last resort: just take the first available
+      if (bestIdx === -1 && greedyPool.length > 0) bestIdx = 0;
+
+      if (bestIdx >= 0) {
+        const p2 = greedyPool[bestIdx];
+        greedyPool.splice(bestIdx, 1);
+        greedyPaired.add(p1.id);
+        greedyPaired.add(p2.id);
+        tempGames.push({ p1, p2 });
+      }
+    }
+  }
 
   // Reverse so that the highest-rated pair (added last by the recursive tryPair)
   // receives Board 1, with board numbers ascending as ratings/scores decrease.

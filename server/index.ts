@@ -1415,10 +1415,50 @@ export function createApp() {
     }
   });
 
+  // ── Tournament SSE: GET /api/tournament/:id/stream ──────────────────────────
+  // General-purpose SSE stream for tournament spectators/players.
+  // Receives all broadcast events: standings_updated, round_started,
+  // timer_update, tournament_ended, tournament_started, player_joined.
+  // Sends a keepalive comment every 25s to prevent proxy/load-balancer timeouts.
+  app.get("/api/tournament/:id/stream", (req, res) => {
+    const { id } = req.params;
+    if (!id) { res.status(400).end(); return; }
+
+    // SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // disable nginx buffering
+    res.flushHeaders();
+
+    // Register this response as a subscriber (same Map as /players/stream)
+    if (!sseSubscribers.has(id)) sseSubscribers.set(id, new Set());
+    const subs = sseSubscribers.get(id)!;
+    subs.add(res);
+
+    // Send an initial comment so the browser knows the stream is open
+    res.write(`: connected\n\n`);
+
+    // Keepalive ping every 25 seconds
+    const keepalive = setInterval(() => {
+      try { res.write(`: keepalive\n\n`); } catch { clearInterval(keepalive); }
+    }, 25_000);
+
+    // Clean up on disconnect
+    req.on("close", () => {
+      clearInterval(keepalive);
+      subs.delete(res);
+      if (subs.size === 0) sseSubscribers.delete(id);
+    });
+  });
+
   // ── Tournament Players: GET /api/tournament/:id/players/stream ──────────────
   // SSE stream — director subscribes once; server pushes "player_joined" events
   // whenever a new player registers via POST /api/tournament/:id/players.
   // Sends a keepalive comment every 25s to prevent proxy/load-balancer timeouts.
+  // NOTE: This endpoint MUST be registered AFTER /api/tournament/:id/stream
+  // because Express matches routes in registration order, and the more specific
+  // /players/stream path must not shadow the general /stream path.
   app.get("/api/tournament/:id/players/stream", (req, res) => {
     const { id } = req.params;
     if (!id) { res.status(400).end(); return; }

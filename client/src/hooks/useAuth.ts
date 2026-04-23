@@ -20,6 +20,7 @@
  *    immediate refresh fires to catch up after laptop sleep / tab suspension.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 
 /** How often to silently refresh the token (ms). */
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
@@ -132,6 +133,10 @@ export function useAuth() {
         setStoredToken(null);
         setUser(null);
         wasAuthenticated.current = false;
+        toast.error("Session expired — please sign in again", {
+          duration: 8000,
+          id: "session-expired", // prevent duplicate toasts
+        });
       }
     }
   }, []);
