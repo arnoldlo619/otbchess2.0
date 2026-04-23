@@ -257,22 +257,20 @@ clubsRouter.post("/upload-avatar", requireFullAuth, avatarJsonParser, async (req
       res.status(400).json({ error: "Invalid image data" });
       return;
     }
-    // Parse the base64 payload
+    // Validate it's a proper base64 data URL
     const matches = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
     if (!matches) {
       res.status(400).json({ error: "Malformed data URL" });
       return;
     }
-    const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+    // Check decoded size (max 5 MB)
     const buffer = Buffer.from(matches[2], "base64");
     if (buffer.length > 5 * 1024 * 1024) {
       res.status(413).json({ error: "Image too large (max 5 MB)" });
       return;
     }
-    const filename = `${nanoid()}.${ext}`;
-    const filepath = path.join(AVATARS_DIR, filename);
-    fs.writeFileSync(filepath, buffer);
-    res.json({ url: `/uploads/avatars/${filename}` });
+    // Return the data URL directly — stored in the DB so it persists across deployments
+    res.json({ url: dataUrl });
   } catch (err) {
     logger.error("[clubs] POST /upload-avatar error:", err);
     res.status(500).json({ error: "Failed to upload avatar" });
@@ -297,16 +295,13 @@ clubsRouter.post("/upload-banner", requireFullAuth, bannerJsonParser, async (req
       res.status(400).json({ error: "Malformed data URL" });
       return;
     }
-    const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
     const buffer = Buffer.from(matches[2], "base64");
     if (buffer.length > 8 * 1024 * 1024) {
       res.status(413).json({ error: "Banner too large (max 8 MB)" });
       return;
     }
-    const filename = `${nanoid()}.${ext}`;
-    const filepath = path.join(BANNERS_DIR, filename);
-    fs.writeFileSync(filepath, buffer);
-    res.json({ url: `/uploads/banners/${filename}` });
+    // Return the data URL directly — stored in the DB so it persists across deployments
+    res.json({ url: dataUrl });
   } catch (err) {
     logger.error("[clubs] POST /upload-banner error:", err);
     res.status(500).json({ error: "Failed to upload banner" });

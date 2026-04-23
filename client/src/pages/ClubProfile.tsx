@@ -986,22 +986,29 @@ export default function ClubProfile() {
   return (
     <div className={`min-h-screen ${bg}`}>
 
-      {/* ── Sticky top nav ─────────────────────────────────────────────────── */}
+      {/* ── Sticky top nav ─────────────────────────────────────────────────────────────────────────── */}
       <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
+          {/* Left: back navigation */}
           <button
             onClick={() => navigate("/clubs")}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-900"}`}
+            className={`flex items-center gap-1.5 text-sm font-medium transition-colors shrink-0 ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-900"}`}
           >
             <ChevronLeft className="w-4 h-4" />
-            My Clubs
+            <span className="hidden sm:inline">My Clubs</span>
           </button>
-          <div className={`w-px h-4 ${isDark ? "bg-white/15" : "bg-gray-200"}`} />
-          <NavLogo className="h-7" />
-          <div className="ml-auto flex items-center gap-2">
+
+          {/* Center: logo */}
+          <div className="flex-1 flex justify-center">
+            <NavLogo className="h-7" />
+          </div>
+
+          {/* Right: actions */}
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={handleShare}
               className={`p-2 rounded-xl transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
+              aria-label="Share club"
             >
               <Share2 className="w-4 h-4" />
             </button>
@@ -1044,12 +1051,7 @@ export default function ClubProfile() {
               className="absolute inset-0 w-full h-full object-cover opacity-20"
             />
           )}
-          {/* Category badge — top-left */}
-          <div className="absolute top-4 left-4 z-10">
-            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm ${bannerTheme.badge}`}>
-              {categoryLabel}
-            </span>
-          </div>
+
           {/* Gradient fade to page background below */}
           <div
             className="absolute inset-0"
