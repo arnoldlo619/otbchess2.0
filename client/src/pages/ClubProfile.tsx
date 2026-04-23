@@ -686,6 +686,9 @@ export default function ClubProfile() {
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
   const [pendingBanner, setPendingBanner] = useState<string | null | undefined>(undefined);
+  // Track broken images so we can fall back to placeholder gracefully
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  const [bannerBroken, setBannerBroken] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [deleteStep, setDeleteStep] = useState<number>(0); // 0=hidden, 1=confirm prompt
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -704,6 +707,10 @@ export default function ClubProfile() {
   const [followingLoading, setFollowingLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
+
+  // Reset broken-image flags when the club's image URLs change (e.g., after owner uploads a new image)
+  useEffect(() => { setAvatarBroken(false); }, [club?.avatarUrl]);
+  useEffect(() => { setBannerBroken(false); }, [club?.bannerUrl]);
 
   // Seed and load
   useEffect(() => {
@@ -1044,11 +1051,12 @@ export default function ClubProfile() {
             }}
           />
           {/* Custom banner overlay (if set) */}
-          {club.bannerUrl && (
+          {club.bannerUrl && !bannerBroken && (
             <img
               src={club.bannerUrl}
               alt=""
               className="absolute inset-0 w-full h-full object-cover opacity-20"
+              onError={() => setBannerBroken(true)}
             />
           )}
 
@@ -1068,8 +1076,13 @@ export default function ClubProfile() {
                 className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl sm:text-4xl shadow-lg ring-2 ring-white/20 overflow-hidden"
                 style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
               >
-                {club.avatarUrl ? (
-                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                {club.avatarUrl && !avatarBroken ? (
+                  <img
+                    src={club.avatarUrl}
+                    alt={club.name}
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarBroken(true)}
+                  />
                 ) : (
                   <span>{flag}</span>
                 )}
@@ -2018,7 +2031,7 @@ export default function ClubProfile() {
                               >
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 overflow-hidden" style={{ background: sel ? "oklch(0.55 0.13 145)" : (isDark ? "rgba(255,255,255,0.1)" : "#e5e7eb") }}>
                                   {m.avatarUrl
-                                    ? <img src={m.avatarUrl} alt="" className="w-8 h-8 object-cover" />
+                                    ? <img src={m.avatarUrl} alt="" className="w-8 h-8 object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                                     : <span style={{ color: sel ? "#fff" : (isDark ? "rgba(255,255,255,0.5)" : "#9ca3af") }}>{(m.displayName?.[0] ?? "?").toUpperCase()}</span>
                                   }
                                 </div>

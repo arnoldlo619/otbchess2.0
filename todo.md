@@ -5265,3 +5265,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: AvatarNavDropdown shows "Sign In" button even when user is authenticated — root cause: httpOnly cookie stripped by Google Cloud Run proxy; fixed by storing JWT in localStorage["otb-auth-token"] after login/register/guest/refresh and sending as Authorization: Bearer header in all apiFetch calls
 - [x] Swiss+Elim eliminated banner: add "View My Report" button linking to /tournament/:id/report
 - [x] Rate-limit /api/auth/login and /api/auth/register — 5 attempts per minute per IP (brute-force protection, shared loginRegisterRateLimiter, production-only, ipKeyGenerator-safe)
+- [x] Fix: Chicago Chess Club profile page — broken club image (ClubProfile.tsx:1072) — added onError fallbacks for club avatar, banner, and member avatars; avatarBroken/bannerBroken state resets on URL change
