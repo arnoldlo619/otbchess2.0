@@ -753,14 +753,14 @@ function Features() {
 const CAROUSEL_SLIDES = [
   {
     id: "tournaments",
-    badge: "Swiss Tournaments",
+    badge: "Swiss + Elim Format",
     badgeIcon: <Trophy className="w-3.5 h-3.5" />,
     headline: "Run a tournament.\nNot a spreadsheet.",
-    sub: "Set up a Swiss or Round Robin in under 3 minutes. Auto-pairings, live standings, and result entry — all from one director dashboard.",
+    sub: "Swiss pairings, live standings, and elimination brackets — all from one director dashboard. Players join with their chess.com username. No accounts, no friction.",
     bullets: [
-      { icon: <Zap className="w-4 h-4" />, text: "Auto-pairings in seconds — Swiss or Round Robin" },
+      { icon: <Zap className="w-4 h-4" />, text: "Swiss rounds → elimination bracket in one seamless flow" },
       { icon: <TrendingUp className="w-4 h-4" />, text: "Live standings with Buchholz tiebreaks, updated instantly" },
-      { icon: <Users className="w-4 h-4" />, text: "Players join with their chess.com username — no accounts needed" },
+      { icon: <Users className="w-4 h-4" />, text: "Players join via chess.com username — ratings auto-imported" },
     ],
     cta: { label: "Host a Tournament", href: "/?action=create" },
     ctaSecondary: null,
@@ -772,11 +772,11 @@ const CAROUSEL_SLIDES = [
     badge: "Chess Club League",
     badgeIcon: <Swords className="w-3.5 h-3.5" />,
     headline: "Your club.\nA real season.",
-    sub: "Weekly matchups. Live standings. A champion. The Chess Club League turns casual games into a structured competition with rivalries, rounds, and real stakes.",
+    sub: "Weekly matchups, live standings, and a season champion. Powered by chess.com — members link their username once and their rating follows them all season.",
     bullets: [
       { icon: <Trophy className="w-4 h-4" />, text: "Fantasy-style weekly matchups between club members" },
       { icon: <BarChart3 className="w-4 h-4" />, text: "Live standings, form guides, and head-to-head records" },
-      { icon: <Crown className="w-4 h-4" />, text: "Season champion crowned — built for your club's culture" },
+      { icon: <Link2 className="w-4 h-4" />, text: "chess.com integration — ratings & avatars auto-synced" },
     ],
     cta: { label: "Explore Chess Leagues", href: "/league-demo" },
     ctaSecondary: null,
@@ -788,7 +788,7 @@ const CAROUSEL_SLIDES = [
     badge: "Matchup Prep",
     badgeIcon: <BookOpen className="w-3.5 h-3.5" />,
     headline: "Know your opponent\nbefore move one.",
-    sub: "Enter your opponent's chess.com username. Get their opening tendencies, key patterns, and interactive prep lines — all before you sit down at the board.",
+    sub: "Enter any chess.com username. Get opening tendencies, key patterns, and AI-generated prep lines — ready before you sit down at the board.",
     bullets: [
       { icon: <Search className="w-4 h-4" />, text: "Scout openings, tendencies, and weaknesses instantly" },
       { icon: <BookOpen className="w-4 h-4" />, text: "AI-generated key lines with interactive chessboard" },

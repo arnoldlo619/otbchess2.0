@@ -5273,3 +5273,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Swiss+Elim: auto-navigate all connected players to bracket tab when director generates the elimination bracket (already implemented via round_started SSE + useEffect watching elimPhase; works for live transitions and late-joiners)
 - [x] Director: auto-switch to bracket tab after successfully generating the elimination bracket (already implemented: setActiveTab("bracket") in CutoffOverrideModal onConfirm + useEffect watching state.elimPhase transition swiss→elimination)
 - [x] Home: update trust-bar badges to highlight Swiss+Elim format and chess.com integration
+- [x] Home: refresh feature section slide copy to reinforce Swiss+Elim format and chess.com integration messaging
