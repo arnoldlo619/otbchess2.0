@@ -439,8 +439,8 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             className="opacity-0-init animate-fade-in-up text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-xl mx-auto text-muted-foreground px-2 sm:px-0"
             style={{ animationDelay: "0.35s", animationFillMode: "forwards", fontWeight: 400 }}
           >
-            <span className="sm:hidden">Swiss pairings &amp; live standings. Set up in minutes.</span>
-            <span className="hidden sm:inline">Swiss pairings, live standings, and elimination brackets. Players sign up with their chess.com username &mdash; we generate optimal pairings automatically.</span>
+            <span className="sm:hidden">Players sign up with their chess.com username — we generate optimal pairings automatically.</span>
+            <span className="hidden sm:inline">Players sign up with their chess.com username — we generate optimal pairings automatically.</span>
           </h2>
 
           <div
