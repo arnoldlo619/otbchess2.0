@@ -102,6 +102,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
+import { apiFetch } from "@/lib/apiFetch";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1867,16 +1868,12 @@ export default function Director() {
   const broadcastRoundStart = useCallback(async (round: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
-      const res = await fetch(`/api/push/notify/${tournamentId}`, {
+      const data = await apiFetch<{ sent: number; failed: number }>(`/api/push/notify/${tournamentId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ round, tournamentName }),
       });
-      if (res.ok) {
-        const data = await res.json() as { sent: number; failed: number };
-        if (data.sent > 0) {
-          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} about Round ${round} pairings`);
-        }
+      if (data.sent > 0) {
+        toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} about Round ${round} pairings`);
       }
     } catch {
       // Silent fail — push is a best-effort enhancement
@@ -1892,16 +1889,12 @@ export default function Director() {
       points: row.points,
     }));
     try {
-      const res = await fetch(`/api/push/notify/${tournamentId}/tournament-complete`, {
+      const data = await apiFetch<{ sent: number; failed: number }>(`/api/push/notify/${tournamentId}/tournament-complete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tournamentName, championName, standings: standingsPayload }),
       });
-      if (res.ok) {
-        const data = await res.json() as { sent: number; failed: number };
-        if (data.sent > 0) {
-          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Tournament complete!`);
-        }
+      if (data.sent > 0) {
+        toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Tournament complete!`);
       }
     } catch {
       // Silent fail — push is a best-effort enhancement
@@ -1911,16 +1904,12 @@ export default function Director() {
   const broadcastBracketLive = useCallback(async (cutoff: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
-      const res = await fetch(`/api/push/notify/${tournamentId}/bracket-live`, {
+      const data = await apiFetch<{ sent: number; failed: number }>(`/api/push/notify/${tournamentId}/bracket-live`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tournamentName, cutoff }),
       });
-      if (res.ok) {
-        const data = await res.json() as { sent: number; failed: number };
-        if (data.sent > 0) {
-          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Elimination bracket is live!`);
-        }
+      if (data.sent > 0) {
+        toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Elimination bracket is live!`);
       }
     } catch {
       // Silent fail — push is a best-effort enhancement
@@ -1930,16 +1919,12 @@ export default function Director() {
   const broadcastResultsPosted = useCallback(async (round: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
-      const res = await fetch(`/api/push/notify/${tournamentId}/results`, {
+      const data = await apiFetch<{ sent: number; failed: number }>(`/api/push/notify/${tournamentId}/results`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ round, tournamentName }),
       });
-      if (res.ok) {
-        const data = await res.json() as { sent: number; failed: number };
-        if (data.sent > 0) {
-          toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Round ${round} results posted`);
-        }
+      if (data.sent > 0) {
+        toast.success(`Notified ${data.sent} player${data.sent !== 1 ? "s" : ""} — Round ${round} results posted`);
       }
     } catch {
       // Silent fail — push is a best-effort enhancement
@@ -2012,9 +1997,7 @@ export default function Director() {
     //    before this tab opened.
     const fetchSnapshot = async () => {
       try {
-        const res = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`);
-        if (!res.ok) return;
-        const data = await res.json() as { players: import("@/lib/tournamentData").Player[] };
+        const data = await apiFetch<{ players: import("@/lib/tournamentData").Player[] }>(`/api/tournament/${encodeURIComponent(tournamentId)}/players`);
         if (Array.isArray(data.players)) data.players.forEach(addPlayer);
       } catch { /* silent */ }
     };
@@ -4554,9 +4537,8 @@ export default function Director() {
                       }
                       // Broadcast tournament_ended to server (send Player[] not StandingRow[])
                       try {
-                        await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+                        await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
                           method: "POST",
-                          headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ players: state.players, tournamentName: state.tournamentName }),
                         });
                       } catch { /* ignore */ }
@@ -5031,9 +5013,8 @@ export default function Director() {
                               );
                             }
                             try {
-                              await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+                              await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
                                 method: "POST",
-                                headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ players: standings, tournamentName: state.tournamentName }),
                               });
                             } catch {
@@ -5092,19 +5073,9 @@ export default function Director() {
                           onClick={async () => {
                             setIsDeleting(true);
                             try {
-                              const r = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}`, {
-                                method: "DELETE",
-                                credentials: "include",
-                              });
-                              if (r.ok) {
-                                toast.success("Tournament deleted");
-                                setTimeout(() => navigate("/"), 800);
-                              } else {
-                                const err = await r.json().catch(() => ({}));
-                                toast.error((err as Record<string, string>).error ?? "Failed to delete tournament");
-                                setIsDeleting(false);
-                                setShowDeleteConfirm(false);
-                              }
+                              await apiFetch(`/api/tournament/${encodeURIComponent(tournamentId)}`, { method: "DELETE" });
+                              toast.success("Tournament deleted");
+                              setTimeout(() => navigate("/"), 800);
                             } catch {
                               toast.error("Network error — could not delete tournament");
                               setIsDeleting(false);
