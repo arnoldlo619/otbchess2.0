@@ -5284,3 +5284,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Cap board card animation delay at 600ms (was 3s for 50 boards)
 - [x] Add vitest: Swiss pairing performance test (100 players, 7 rounds, under 2s)
 - [x] Add vitest: SSE endpoint registration test (route order, shared subscribers)
+
+## Tournament Lobby Mobile UX Cleanup
+
+- [x] Remove "Your Rejoin Link" component from tournament lobby
+- [x] Add "Tools" tab alongside "My Board" and "Standings" tabs
+- [x] Move Chess Clock and Record Game buttons into the Tools tab

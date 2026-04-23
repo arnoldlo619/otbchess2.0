@@ -579,7 +579,7 @@ function MyBoardScreen({
   opponent: Player | undefined; players: Player[]; isDark: boolean;
   rejoinUrl: string; connected: boolean; timerSnapshot: TimerSnap;
 }) {
-  const [activeTab, setActiveTab] = useState<"board" | "standings">("board");
+  const [activeTab, setActiveTab] = useState<"board" | "standings" | "tools">("board");
 
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-white/50" : "text-gray-500";
@@ -611,7 +611,7 @@ function MyBoardScreen({
 
       {/* Tab bar */}
       <div className={`flex border-b ${divider}`}>
-        {(["board", "standings"] as const).map((tab) => (
+        {(["board", "standings", "tools"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -621,7 +621,7 @@ function MyBoardScreen({
                 : textMuted
             }`}
           >
-            {tab === "board" ? "My Board" : `Standings${rank > 0 ? ` (#${rank})` : ""}`}
+            {tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` (#${rank})` : ""}` : "Tools"}
           </button>
         ))}
       </div>
@@ -701,53 +701,7 @@ function MyBoardScreen({
                 </p>
               </div>
             )}
-            {/* Chess Clock shortcut */}
-            {opponent && (
-              <a
-                href={`/tournament/${tournamentId}/clock?from=player`}
-                className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
-                  isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
-                } transition-colors`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
-                  }`}>
-                    <Timer className={`w-4 h-4 ${accent}`} />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
-                    <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
-                  </div>
-                </div>
-                <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-              </a>
-            )}
-            {/* Video Record shortcut */}
-            {opponent && (
-              <a
-                href={`/record/camera?tournamentId=${tournamentId}&boardNumber=${game.board ?? ""}&white=${encodeURIComponent(username)}&black=${encodeURIComponent(opponent.username ?? opponent.name ?? "")}`}
-                className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
-                  isDark
-                    ? "bg-[#1a1a2e] hover:bg-[#22223a] border border-[#4CAF50]/20"
-                    : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
-                } transition-colors`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    isDark ? "bg-[#4CAF50]/15" : "bg-indigo-100"
-                  }`}>
-                    <Video className={`w-4 h-4 ${isDark ? accent : "text-indigo-600"}`} />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
-                    <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish</p>
-                  </div>
-                </div>
-                <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-              </a>
-            )}
-            <RejoinLinkCard rejoinUrl={rejoinUrl} isDark={isDark} />
+
           </div>
         </div>
       )}
@@ -762,6 +716,55 @@ function MyBoardScreen({
             totalRounds={totalRounds}
             isDark={isDark}
           />
+        </div>
+      )}
+
+      {/* Tools tab */}
+      {activeTab === "tools" && (
+        <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe space-y-3">
+          <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
+          {/* Chess Clock */}
+          <a
+            href={`/tournament/${tournamentId}/clock?from=player`}
+            className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+              isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
+            } transition-colors`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
+              }`}>
+                <Timer className={`w-5 h-5 ${accent}`} />
+              </div>
+              <div>
+                <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
+                <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
+              </div>
+            </div>
+            <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </a>
+          {/* Record Game */}
+          <a
+            href={`/record/camera?tournamentId=${tournamentId}&boardNumber=${game.board ?? ""}&white=${encodeURIComponent(username)}&black=${encodeURIComponent(opponent?.username ?? opponent?.name ?? "")}`}
+            className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+              isDark
+                ? "bg-[#1a1a2e] hover:bg-[#22223a] border border-[#4CAF50]/20"
+                : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
+            } transition-colors`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                isDark ? "bg-[#4CAF50]/15" : "bg-indigo-100"
+              }`}>
+                <Video className={`w-5 h-5 ${isDark ? accent : "text-indigo-600"}`} />
+              </div>
+              <div>
+                <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
+                <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish</p>
+              </div>
+            </div>
+            <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </a>
         </div>
       )}
     </div>
