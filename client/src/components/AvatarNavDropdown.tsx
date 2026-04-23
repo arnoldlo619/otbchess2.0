@@ -297,7 +297,7 @@ export function AvatarNavDropdown({
   className = "",
   dashboardUrl,
 }: AvatarNavDropdownProps) {
-  const { user, logout, updateProfile } = useAuthContext();
+  const { user, loading: authLoading, logout, updateProfile } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [open, setOpen]   = useState(false);
@@ -436,6 +436,16 @@ export function AvatarNavDropdown({
 
   // On mobile, guests see the dedicated hamburger drawer instead of the avatar dropdown
   const isGuest = !user || user.isGuest;
+
+  // While the initial /api/auth/me check is in flight, show a neutral shimmer
+  // so the nav doesn't flash the login button for already-authenticated users.
+  if (authLoading) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
+      </div>
+    );
+  }
 
   if (isGuest) {
     return (
