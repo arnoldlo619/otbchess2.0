@@ -107,8 +107,21 @@ export function requireFullAuth(
 export function createAuthRouter(): Router {
   const router = Router();
 
+  // ── Brute-force protection: login + register ────────────────────────────
+  // 5 attempts per minute per IP. Applied to both /login and /register to
+  // prevent credential stuffing and automated account creation.
+  const loginRegisterRateLimiter = rateLimit({
+    windowMs: 60_000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? "unknown"),
+    message: { error: "Too many attempts — please wait a minute and try again." },
+    skip: () => process.env.NODE_ENV !== "production",
+  });
+
   // ── POST /api/auth/register ──────────────────────────────────────────────
-  router.post("/register", async (req, res) => {
+  router.post("/register", loginRegisterRateLimiter, async (req, res) => {
     const { email, password, displayName, chesscomUsername, lichessUsername } =
       req.body as {
         email: string;
@@ -177,7 +190,7 @@ export function createAuthRouter(): Router {
   });
 
   // ── POST /api/auth/login ─────────────────────────────────────────────────
-  router.post("/login", async (req, res) => {
+  router.post("/login", loginRegisterRateLimiter, async (req, res) => {
     const { email, password, remember } = req.body as { email: string; password: string; remember?: boolean };
 
     if (!email || !password) {
