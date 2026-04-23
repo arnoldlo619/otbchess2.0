@@ -62,6 +62,7 @@ import {
   BellRing,
   Info,
   Swords,
+  BarChart2,
 } from "lucide-react";
 import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 import { PublicBracketView } from "@/components/PublicBracketView";
@@ -1823,21 +1824,35 @@ export default function TournamentPage() {
                     The top players have advanced to the elimination bracket. Follow along below!
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setMobileTab("bracket");
-                    const bracketEl = document.getElementById("bracket-section");
-                    if (bracketEl) bracketEl.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                    isDark
-                      ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
-                      : "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                  }`}
-                >
-                  <Swords className="w-3.5 h-3.5" />
-                  View Bracket
-                </button>
+                {/* CTA buttons — stacked on mobile, inline on sm+ */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      setMobileTab("bracket");
+                      const bracketEl = document.getElementById("bracket-section");
+                      if (bracketEl) bracketEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                      isDark
+                        ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                        : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                    }`}
+                  >
+                    <Swords className="w-3.5 h-3.5" />
+                    View Bracket
+                  </button>
+                  <Link
+                    href={`/tournament/${tournamentId}/report`}
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                      isDark
+                        ? "bg-amber-500/25 text-amber-200 hover:bg-amber-500/35 border border-amber-500/30"
+                        : "bg-amber-200 text-amber-900 hover:bg-amber-300 border border-amber-300"
+                    }`}
+                  >
+                    <BarChart2 className="w-3.5 h-3.5" />
+                    My Report
+                  </Link>
+                </div>
                 <button
                   onClick={() => {
                     sessionStorage.setItem(eliminatedDismissKey, "1");
