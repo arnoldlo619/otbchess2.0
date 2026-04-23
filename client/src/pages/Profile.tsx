@@ -38,6 +38,7 @@ import type { Club } from "../lib/clubRegistry";
 import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
 import { Users, Settings } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 interface EditState {
   displayName: string;
   chesscomUsername: string;
@@ -287,7 +288,7 @@ export default function ProfilePage() {
     setRenewalLoading(true);
     setRenewalError(null);
     try {
-      const res = await fetch("/api/auth/renew-pro-request", {
+      const res = await authFetch("/api/auth/renew-pro-request", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -309,7 +310,7 @@ export default function ProfilePage() {
     setDeletingId(tournamentId);
     setConfirmDeleteId(null);
     try {
-      const res = await fetch(`/api/auth/user/tournaments/${encodeURIComponent(tournamentId)}`, {
+      const res = await authFetch(`/api/auth/user/tournaments/${encodeURIComponent(tournamentId)}`, {
         method: "DELETE",
         credentials: "include",
       });

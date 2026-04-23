@@ -61,6 +61,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type WizardMode = "select" | "quickstart" | "schedule" | "large_event";
@@ -2111,7 +2112,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     setSlugStatus("checking");
     setSlugConflict(null);
     const excludeParam = tournamentId ? `?exclude=${encodeURIComponent(tournamentId)}` : "";
-    fetch(`/api/auth/join/check-slug/${encodeURIComponent(slug)}${excludeParam}`)
+    authFetch(`/api/auth/join/check-slug/${encodeURIComponent(slug)}${excludeParam}`)
       .then((r) => r.json())
       .then((result: { available: boolean; conflict: string | null }) => {
         setSlugStatus(result.available ? "available" : "taken");
@@ -2147,7 +2148,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     // Persist to server if we have a tournament ID (user is signed in)
     if (tournamentId) {
       try {
-        await fetch(`/api/user/tournaments/${encodeURIComponent(tournamentId)}/custom-slug`, {
+        await authFetch(`/api/user/tournaments/${encodeURIComponent(tournamentId)}/custom-slug`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -2456,7 +2457,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     grantDirectorSession(slug);
     // If signed in, persist to server so My Tournaments history is cross-device
     if (user?.id) {
-      fetch(`/api/user/tournaments`, {
+      authFetch(`/api/user/tournaments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

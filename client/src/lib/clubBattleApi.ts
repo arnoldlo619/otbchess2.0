@@ -9,21 +9,8 @@
  */
 
 import type { ClubBattle, BattleResult, BattleLeaderboardEntry, PlayerBattleSummary } from "./clubBattleRegistry";
+import { apiFetch } from "@/lib/apiFetch";
 import { logger } from "@/lib/logger";
-
-// ─── API helpers ──────────────────────────────────────────────────────────────
-
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as Record<string, string>)?.error ?? `HTTP ${res.status}`);
-  }
-  return res.json() as Promise<T>;
-}
 
 // ─── Row type returned by the server ─────────────────────────────────────────
 // Timestamps come back as ISO strings from JSON serialisation.

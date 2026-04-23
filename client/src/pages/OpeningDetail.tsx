@@ -20,6 +20,7 @@ import {
   CheckCircle2, Circle, Loader2, Play,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Tag { name: string; category: string; slug: string; }
 
@@ -170,7 +171,7 @@ function OpeningDetailContent() {
     async function fetchDetail() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/openings/${slug}`);
+        const res = await authFetch(`/api/openings/${slug}`);
         if (!res.ok) throw new Error("Opening not found");
         const data = await res.json();
         setOpening(data.opening);

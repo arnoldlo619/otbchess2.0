@@ -26,6 +26,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TournamentMeta {
@@ -423,7 +424,7 @@ export default function FinalStandings() {
   const fetchState = useCallback(async () => {
     if (!id) return;
     try {
-      const res = await fetch(`/api/tournament/${encodeURIComponent(id)}/live-state`);
+      const res = await authFetch(`/api/tournament/${encodeURIComponent(id)}/live-state`);
       if (!res.ok) {
         if (res.status === 404) {
           setError("Tournament not found.");

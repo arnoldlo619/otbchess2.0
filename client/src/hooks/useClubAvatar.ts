@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from "react";
 
+import { authFetch } from "@/lib/apiFetch";
 interface ClubAvatarState {
   /** undefined = loading, null = no avatar / error, string = URL */
   avatarUrl: string | null | undefined;
@@ -26,7 +27,7 @@ export function useClubAvatar(clubId: string | null | undefined): ClubAvatarStat
 
     async function fetchAvatar() {
       try {
-        const res = await fetch(`/api/clubs/${clubId}`, { credentials: "include" });
+        const res = await authFetch(`/api/clubs/${clubId}`, { credentials: "include" });
         if (!res.ok) {
           if (!cancelled) setAvatarUrl(null);
           return;

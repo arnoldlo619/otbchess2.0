@@ -19,6 +19,7 @@ import {
   BookOpen, Crown, Target, X, Sparkles,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface OpeningTag {
   name: string;
@@ -290,7 +291,7 @@ function OpeningsLibraryContent() {
     async function fetchOpenings() {
       try {
         setLoading(true);
-        const res = await fetch("/api/openings");
+        const res = await authFetch("/api/openings");
         if (!res.ok) throw new Error("Failed to fetch openings");
         const data = await res.json();
         setAllOpenings(data.openings ?? []);

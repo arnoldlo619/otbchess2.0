@@ -13,6 +13,7 @@
  */
 import { useState, useCallback } from "react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface LichessProfile {
   /** Canonical Lichess username (case-preserved) */
@@ -162,7 +163,7 @@ async function fetchFromLichess(username: string): Promise<LichessProfile> {
   if (cache.has(key)) return cache.get(key)!;
 
   // Route through the server-side proxy to avoid CORS and rate-limiting issues
-  const res = await fetch(`/api/lichess/player/${encodeURIComponent(key)}`);
+  const res = await authFetch(`/api/lichess/player/${encodeURIComponent(key)}`);
 
   if (res.status === 404) {
     const err = new Error("not_found");

@@ -38,6 +38,7 @@ import { joinClub, isMember } from "@/lib/clubRegistry";
 import { apiJoinClub } from "@/lib/clubsApi";
 import { toast } from "sonner";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type SortMetric = "members" | "tournaments";
@@ -153,7 +154,7 @@ function metricValue(metric: SortMetric, club: LeaderboardClub): number {
 async function fetchLeaderboard(
   sortBy: SortMetric
 ): Promise<{ clubs: LeaderboardClub[]; total: number }> {
-  const res = await fetch(`/api/clubs/leaderboard?sortBy=${sortBy}`);
+  const res = await authFetch(`/api/clubs/leaderboard?sortBy=${sortBy}`);
   if (!res.ok) throw new Error("Failed to load leaderboard");
   return res.json();
 }

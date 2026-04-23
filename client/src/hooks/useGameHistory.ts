@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import type { AnalysedGame } from "./useMyAnalysedGames";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ResultFilter = "" | "1-0" | "0-1" | "1/2-1/2";
@@ -111,7 +112,7 @@ export function useGameHistory(): UseGameHistoryReturn {
         sortBy:  p.sortBy,
         sortDir: p.sortDir,
       }).toString();
-      const res = await fetch(`/api/games?${qs}`, { credentials: "include" });
+      const res = await authFetch(`/api/games?${qs}`, { credentials: "include" });
       if (!res.ok) {
         if (res.status === 401) {
           setGames([]);

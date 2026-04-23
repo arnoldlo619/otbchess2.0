@@ -15,6 +15,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HistoryRow {
   format: string;
@@ -76,7 +77,7 @@ export function RatingProgressChart({ isDark = true }: RatingProgressChartProps)
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/auth/rating-history", { credentials: "include" });
+        const res = await authFetch("/api/auth/rating-history", { credentials: "include" });
         if (!res.ok || cancelled) return;
         const json = await res.json() as { history: HistoryRow[] };
         const rapid:  FormatData = { ratings: [], dates: [] };

@@ -174,6 +174,7 @@ import { TournamentWizard } from "@/components/TournamentWizard";
 import { apiGetClub, apiListClubMembers, apiTransferOwnership } from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -2355,7 +2356,7 @@ export default function ClubDashboard() {
   async function fetchClubLeagues() {
     if (!club) return;
     try {
-      const res = await fetch(`/api/leagues/club/${club.id}`, { credentials: "include" });
+      const res = await authFetch(`/api/leagues/club/${club.id}`, { credentials: "include" });
       if (res.ok) setClubLeagues(await res.json());
     } catch { /* ignore */ }
   }
@@ -2503,7 +2504,7 @@ export default function ClubDashboard() {
   async function fetchPendingInvites() {
     if (!club) return;
     try {
-      const res = await fetch(`/api/clubs/${club.id}/invites`, { credentials: "include" });
+      const res = await authFetch(`/api/clubs/${club.id}/invites`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json() as Array<{ id: string; email: string; token: string; expiresAt: string; status: string }>;
         setPendingInvites(data.filter((i) => i.status === "pending"));
@@ -2519,7 +2520,7 @@ export default function ClubDashboard() {
     setInviteSending(true);
     setInviteLink(null);
     try {
-      const res = await fetch(`/api/clubs/${club.id}/invites`, {
+      const res = await authFetch(`/api/clubs/${club.id}/invites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -2544,7 +2545,7 @@ export default function ClubDashboard() {
   async function revokeInvite(token: string) {
     if (!club) return;
     try {
-      await fetch(`/api/clubs/${club.id}/invites/${token}`, {
+      await authFetch(`/api/clubs/${club.id}/invites/${token}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -4857,7 +4858,7 @@ export default function ClubDashboard() {
                           if (!club || !leagueName.trim()) return;
                           setLeagueCreating(true);
                           try {
-                            const res = await fetch("/api/leagues", {
+                            const res = await authFetch("/api/leagues", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               credentials: "include",
@@ -4944,7 +4945,7 @@ export default function ClubDashboard() {
                           if (!club || !leagueName.trim()) return;
                           setLeagueCreating(true);
                           try {
-                            const res = await fetch("/api/leagues", {
+                            const res = await authFetch("/api/leagues", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               credentials: "include",

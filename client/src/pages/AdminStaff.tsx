@@ -27,6 +27,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+import { authFetch } from "@/lib/apiFetch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface AdminUser {
@@ -43,8 +44,7 @@ interface AdminUser {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 async function apiFetch(path: string, options?: RequestInit) {
-  const res = await fetch(path, {
-    credentials: "include",
+  const res = await authFetch(path, {
     headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
     ...options,
   });

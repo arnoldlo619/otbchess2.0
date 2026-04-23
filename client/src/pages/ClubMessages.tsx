@@ -23,6 +23,7 @@ import { NavLogo } from "@/components/NavLogo";
 import { useAuthContext } from "@/context/AuthContext";
 import { getClub, getClubMembers } from "@/lib/clubRegistry";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface OtherUser {
   id: string;
@@ -233,7 +234,7 @@ export default function ClubMessages() {
   const loadConversations = useCallback(async () => {
     if (!clubId || !user) return;
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations`, { credentials: "include" });
+      const res = await authFetch(`/api/clubs/${clubId}/conversations`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setConversations(data.conversations ?? []);
@@ -251,7 +252,7 @@ export default function ClubMessages() {
   const loadMessages = useCallback(async (convId: string) => {
     setMessagesLoading(true);
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations/${convId}/messages`, { credentials: "include" });
+      const res = await authFetch(`/api/clubs/${clubId}/conversations/${convId}/messages`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages ?? []);
@@ -279,7 +280,7 @@ export default function ClubMessages() {
   async function startConversation(otherUserId: string) {
     if (!clubId) return;
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations`, {
+      const res = await authFetch(`/api/clubs/${clubId}/conversations`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -299,7 +300,7 @@ export default function ClubMessages() {
     if (!activeConvId || !messageInput.trim()) return;
     setSending(true);
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations/${activeConvId}/messages`, {
+      const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/messages`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -320,7 +321,7 @@ export default function ClubMessages() {
   async function sendChessInvite() {
     if (!activeConvId) return;
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-invite`, {
+      const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-invite`, {
         method: "POST",
         credentials: "include",
       });
@@ -336,7 +337,7 @@ export default function ClubMessages() {
   async function respondToInvite(gameId: string, action: "accept" | "decline") {
     if (!activeConvId) return;
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-games/${gameId}/respond`, {
+      const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-games/${gameId}/respond`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -352,7 +353,7 @@ export default function ClubMessages() {
   async function makeMove(gameId: string, from: string, to: string, promotion?: string) {
     if (!activeConvId) return;
     try {
-      const res = await fetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-games/${gameId}/move`, {
+      const res = await authFetch(`/api/clubs/${clubId}/conversations/${activeConvId}/chess-games/${gameId}/move`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

@@ -9,6 +9,7 @@
  *   otb-club-rsvps-v1           — array of ClubEventRSVP objects
  *   otb-club-event-comments-v1  — array of ClubEventComment objects
  */
+import { authFetch } from "@/lib/apiFetch";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ function _persistEventToServer(event: ClubEvent): void {
   try {
     const token = localStorage.getItem("otb-auth-token");
     if (!token) return;
-    fetch(`/api/clubs/${event.clubId}/events`, {
+    authFetch(`/api/clubs/${event.clubId}/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
@@ -188,7 +189,7 @@ function _persistEventToServer(event: ClubEvent): void {
  */
 export async function syncEventsFromServer(clubId: string): Promise<ClubEvent[]> {
   try {
-    const res = await fetch(`/api/clubs/${clubId}/events`);
+    const res = await authFetch(`/api/clubs/${clubId}/events`);
     if (!res.ok) return listClubEvents(clubId, true);
     const serverRows = await res.json() as Array<{
       id: string; clubId: string; title: string; description?: string | null;
@@ -304,7 +305,7 @@ export function removeRSVP(eventId: string, clubId: string, userId: string): voi
   try {
     const token = localStorage.getItem("otb-auth-token");
     if (token) {
-      fetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`, {
+      authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => { /* server unavailable */ });
@@ -323,7 +324,7 @@ function _persistRsvpToServer(
   try {
     const token = localStorage.getItem("otb-auth-token");
     if (!token) return;
-    fetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`, {
+    authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status, displayName, avatarUrl }),
@@ -343,7 +344,7 @@ function _persistRsvpToServer(
  */
 export async function syncRSVPsFromServer(clubId: string, eventId: string): Promise<ClubEventRSVP[]> {
   try {
-    const res = await fetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`);
+    const res = await authFetch(`/api/clubs/${clubId}/events/${eventId}/rsvps`);
     if (!res.ok) return getEventRSVPs(eventId);
     const serverRows = await res.json() as Array<{
       id: string; eventId: string; clubId: string; userId: string;

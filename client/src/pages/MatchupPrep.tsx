@@ -51,6 +51,7 @@ import {
   countryCodeToFlag,
 } from "../hooks/useOpponentProfile";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface OpeningStat {
@@ -308,7 +309,7 @@ export default function MatchupPrep() {
       const refreshQuery = refresh ? "refresh=true" : "";
       const queryStr = [tcQuery, refreshQuery].filter(Boolean).join("&");
       const url = `/api/prep/${encodeURIComponent(username.trim())}${queryStr ? `?${queryStr}` : ""}`;
-      const res = await fetch(url);
+      const res = await authFetch(url);
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: "Unknown error" }));
         throw new Error(data.error || `Error ${res.status}`);
@@ -358,7 +359,7 @@ export default function MatchupPrep() {
     if (!user) return;
     setLoadingSaved(true);
     try {
-      const res = await fetch("/api/prep/saved", { credentials: "include" });
+      const res = await authFetch("/api/prep/saved", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setSavedReports(data.reports ?? []);
@@ -373,7 +374,7 @@ export default function MatchupPrep() {
     if (!report || !user) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/prep/saved", {
+      const res = await authFetch("/api/prep/saved", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -397,7 +398,7 @@ export default function MatchupPrep() {
 
   async function handleDeleteSaved(id: number) {
     try {
-      await fetch(`/api/prep/saved/${id}`, { method: "DELETE", credentials: "include" });
+      await authFetch(`/api/prep/saved/${id}`, { method: "DELETE", credentials: "include" });
       if (savedId === id) setSavedId(null);
       await fetchSavedReports();
     } catch { /* non-fatal */ }

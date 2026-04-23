@@ -42,6 +42,7 @@ import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 import AuthModal from "@/components/AuthModal";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
@@ -388,7 +389,7 @@ export function AvatarNavDropdown({
   const fetchHistory = useCallback(async () => {
     if (historyLoaded || !user || user.isGuest) return;
     try {
-      const res = await fetch("/api/auth/rating-history", { credentials: "include" });
+      const res = await authFetch("/api/auth/rating-history", { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json() as { history: (RatingPoint & { format: string })[] };
       const rapid:  number[] = [];

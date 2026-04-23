@@ -14,6 +14,7 @@
  *   - poll                 — owner/director posted a poll with options
  *   - rsvp_form            — owner/director posted an event RSVP form
  */
+import { authFetch } from "@/lib/apiFetch";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -234,7 +235,7 @@ function _persistFeedToServer(clubId: string, event: FeedEvent): void {
   try {
     const token = localStorage.getItem("otb-auth-token");
     if (!token) return;
-    fetch(`/api/clubs/${clubId}/feed`, {
+    authFetch(`/api/clubs/${clubId}/feed`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
@@ -265,7 +266,7 @@ function _persistFeedToServer(clubId: string, event: FeedEvent): void {
  */
 export async function syncFeedFromServer(clubId: string): Promise<FeedEvent[]> {
   try {
-    const res = await fetch(`/api/clubs/${clubId}/feed?limit=100`);
+    const res = await authFetch(`/api/clubs/${clubId}/feed?limit=100`);
     if (!res.ok) return listFeedEvents(clubId);
     const serverRows = await res.json() as Array<{
       id: string; type: string; actorName: string; actorAvatarUrl?: string | null;

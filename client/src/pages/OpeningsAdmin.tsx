@@ -58,6 +58,7 @@ import {
   Search,
   Lock,
 } from "lucide-react";
+import { authFetch } from "@/lib/apiFetch";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -154,8 +155,7 @@ interface ValidationResult {
 // ─── API helpers ────────────────────────────────────────────────────────────
 
 async function adminFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    credentials: "include",
+  const res = await authFetch(url, {
     headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
     ...options,
   });

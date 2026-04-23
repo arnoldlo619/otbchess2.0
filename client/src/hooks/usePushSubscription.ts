@@ -15,6 +15,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 
+import { authFetch } from "@/lib/apiFetch";
 export type PushStatus =
   | "idle"          // Not yet attempted
   | "unsupported"   // Browser doesn't support push
@@ -43,7 +44,7 @@ function storageKey(tournamentId: string) {
 }
 
 async function getVapidPublicKey(): Promise<string> {
-  const res = await fetch("/api/push/vapid-public-key");
+  const res = await authFetch("/api/push/vapid-public-key");
   if (!res.ok) throw new Error("Could not fetch VAPID public key");
   const data = await res.json() as { publicKey: string };
   return data.publicKey;
@@ -111,7 +112,7 @@ export function usePushSubscription({
       });
 
       // 5. POST subscription to server
-      const res = await fetch("/api/push/subscribe", {
+      const res = await authFetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +142,7 @@ export function usePushSubscription({
 
         if (subscription) {
           // Notify server first
-          await fetch("/api/push/subscribe", {
+          await authFetch("/api/push/subscribe", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

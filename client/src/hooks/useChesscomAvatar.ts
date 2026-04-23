@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from "react";
 
+import { authFetch } from "@/lib/apiFetch";
 interface PlayerProfile {
   id: string;
   displayName: string;
@@ -55,7 +56,7 @@ export function useChesscomAvatar(player: PlayerProfile | null): string | null {
     async function fetchAvatar() {
       try {
         // Use the correct server proxy endpoint: /api/chess/player/:username
-        const res = await fetch(`/api/chess/player/${encodeURIComponent(username)}`);
+        const res = await authFetch(`/api/chess/player/${encodeURIComponent(username)}`);
         if (!res.ok) {
           avatarCache.set(username, "");
           return;

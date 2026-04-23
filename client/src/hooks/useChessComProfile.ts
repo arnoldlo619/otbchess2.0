@@ -10,6 +10,7 @@
 
 import { useState, useCallback } from "react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface OpeningEntry {
   name: string;
@@ -73,7 +74,7 @@ async function fetchFromChessCom(username: string): Promise<ChessComProfile> {
 
   if (cache.has(key)) return cache.get(key)!;
 
-  const res = await fetch(`/api/chess/player/${encodeURIComponent(key)}`);
+  const res = await authFetch(`/api/chess/player/${encodeURIComponent(key)}`);
 
   if (res.status === 404) {
     const err = new Error("not_found");
@@ -121,7 +122,7 @@ async function fetchAnalysis(username: string): Promise<ChessComAnalysis | null>
   if (analysisCache.has(key)) return analysisCache.get(key)!;
 
   try {
-    const res = await fetch(`/api/chess/player/${encodeURIComponent(key)}/analysis`);
+    const res = await authFetch(`/api/chess/player/${encodeURIComponent(key)}/analysis`);
     if (!res.ok) return null;
     const data = await res.json() as ChessComAnalysis;
     analysisCache.set(key, data);

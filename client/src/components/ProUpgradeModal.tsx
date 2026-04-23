@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Feature comparison data ─────────────────────────────────────────────────
 interface FeatureRow {
   label: string;
@@ -119,7 +120,7 @@ export function ProUpgradeModal({ isOpen, onClose, highlightFeature, onNeedsAuth
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/billing/checkout", {
+      const res = await authFetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+import { authFetch } from "@/lib/apiFetch";
 export default function ProSuccess() {
   const { user, loading } = useAuth();
   const [pollCount, setPollCount] = useState(0);
@@ -39,7 +40,7 @@ export default function ProSuccess() {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
+        const res = await authFetch("/api/auth/me", { credentials: "include" });
         const data = await res.json();
         if (data?.user?.isPro) {
           setConfirmed(true);

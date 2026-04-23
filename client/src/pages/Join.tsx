@@ -83,6 +83,7 @@ import {
 import type { ChessComProfile } from "@/hooks/useChessComProfile";
 import type { LichessProfile } from "@/hooks/useLichessProfile";
 
+import { authFetch } from "@/lib/apiFetch";
 /** Unified profile type covering both chess.com and Lichess */
 type UnifiedProfile = (ChessComProfile & { platform: "chesscom" }) | LichessProfile;
 type Platform = "chesscom" | "lichess";
@@ -110,7 +111,7 @@ function eloTierDark(elo: number) {
 // the local registration flow.
 async function postPlayerToServer(tournamentId: string, player: Player): Promise<void> {
   try {
-    await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`, {
+    await authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ player }),
@@ -396,7 +397,7 @@ export default function JoinPage() {
     // If already resolved locally (from ?t= bootstrap or existing localStorage), skip
     if (resolveTournament(urlCode)) return;
     // Fetch from server by inviteCode or customSlug
-    fetch(`/api/auth/join/resolve/${encodeURIComponent(urlCode)}`)
+    authFetch(`/api/auth/join/resolve/${encodeURIComponent(urlCode)}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data: {
         tournamentId: string;
@@ -625,7 +626,7 @@ export default function JoinPage() {
     setCodeLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/auth/join/resolve/${encodeURIComponent(code)}`);
+      const res = await authFetch(`/api/auth/join/resolve/${encodeURIComponent(code)}`);
       if (!res.ok) {
         setCodeLoading(false);
         setError("Invalid tournament code. Check with your host.");

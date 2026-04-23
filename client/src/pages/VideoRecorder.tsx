@@ -46,6 +46,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Screen = "permission" | "orientation" | "framing" | "corners" | "corners-reselect" | "recording" | "processing";
 
@@ -703,7 +704,7 @@ export default function VideoRecorder() {
   // ── Create recording session on server ───────────────────────────────────
   const createSession = useCallback(async (): Promise<string | null> => {
     try {
-      const res = await fetch("/api/recordings", {
+      const res = await authFetch("/api/recordings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -735,7 +736,7 @@ export default function VideoRecorder() {
       formData.append("chunkIndex", String(chunkIndex));
       formData.append("sessionId", sessionId);
 
-      await fetch(`/api/recordings/${sessionId}/chunk`, {
+      await authFetch(`/api/recordings/${sessionId}/chunk`, {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -859,7 +860,7 @@ export default function VideoRecorder() {
     const fenTimeline = fenTimelineRef.current;
 
     try {
-      await fetch(`/api/recordings/${sid}/finalize`, {
+      await authFetch(`/api/recordings/${sid}/finalize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -901,7 +902,7 @@ export default function VideoRecorder() {
       try {
         const sid = sessionIdRef.current;
         if (!sid) return;
-        const res = await fetch(`/api/recordings/${sid}`, {
+        const res = await authFetch(`/api/recordings/${sid}`, {
           credentials: "include",
         });
         if (!res.ok) return;
@@ -942,7 +943,7 @@ export default function VideoRecorder() {
       try {
         const sid = sessionIdRef.current;
         if (!sid) return;
-        const res = await fetch(`/api/recordings/${sid}/cv-job`, {
+        const res = await authFetch(`/api/recordings/${sid}/cv-job`, {
           credentials: "include",
         });
         if (!res.ok) return;

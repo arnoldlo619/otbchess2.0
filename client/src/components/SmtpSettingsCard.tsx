@@ -26,6 +26,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 interface SmtpConfig {
   host: string;
   port: number;
@@ -69,7 +70,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
   // ── Load existing config ──────────────────────────────────────────────────
   const loadConfig = useCallback(async () => {
     try {
-      const res = await fetch("/api/email/smtp-config", { credentials: "include" });
+      const res = await authFetch("/api/email/smtp-config", { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json();
       if (data.configured) {
@@ -126,7 +127,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
       // Only send password if the director typed a new one
       if (config.smtpPass) body.smtpPass = config.smtpPass;
 
-      const res = await fetch("/api/email/smtp-config", {
+      const res = await authFetch("/api/email/smtp-config", {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -155,7 +156,7 @@ export function SmtpSettingsCard({ isDark }: Props) {
     setTesting(true);
     setTestResult(null);
     try {
-      const res = await fetch("/api/email/test-smtp", {
+      const res = await authFetch("/api/email/test-smtp", {
         method: "POST",
         credentials: "include",
       });

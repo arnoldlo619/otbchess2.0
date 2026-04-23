@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Platform = "chess.com" | "lichess" | "manual" | "csv";
@@ -91,7 +92,7 @@ const _AMBER_RING = "rgba(217,119,6,0.25)";
 async function lookupChessCom(username: string): Promise<LookupResult> {
   // Route through server proxy to avoid browser User-Agent restrictions and
   // Cloudflare rate-limiting on direct browser → api.chess.com calls
-  const res = await fetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
+  const res = await authFetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
   if (res.status === 404) throw new Error("Player not found on chess.com");
   if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`);
   const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };

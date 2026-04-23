@@ -27,6 +27,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type {Player, Round, Result} from "@/lib/tournamentData";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Server-precomputed standing row — no client-side computeStandings needed. */
@@ -1406,7 +1407,7 @@ export default function PublicTournament() {
       if (etagRef.current) {
         headers["If-None-Match"] = etagRef.current;
       }
-      const res = await fetch(`/api/public/tournament/${encodeURIComponent(slug)}`, { headers });
+      const res = await authFetch(`/api/public/tournament/${encodeURIComponent(slug)}`, { headers });
       // 304 Not Modified — data hasn't changed, skip state update
       if (res.status === 304) {
         setLoading(false);

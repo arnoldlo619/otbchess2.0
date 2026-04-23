@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type LnmSaveStatus = "idle" | "saving" | "saved" | "error";
@@ -131,7 +132,7 @@ export function useLnmSave({
     writeDraft(battleCodeRef.current, pgnToSave);
 
     try {
-      const res = await fetch(`/api/battles/${battleCodeRef.current}/pgn`, {
+      const res = await authFetch(`/api/battles/${battleCodeRef.current}/pgn`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

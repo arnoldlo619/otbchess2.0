@@ -20,6 +20,7 @@
 import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type LnmAnalysisStatus =
@@ -76,7 +77,7 @@ export function useLnmAnalysis(): UseLnmAnalysisReturn {
       setGameId(null);
 
       try {
-        const res = await fetch("/api/games/from-pgn", {
+        const res = await authFetch("/api/games/from-pgn", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

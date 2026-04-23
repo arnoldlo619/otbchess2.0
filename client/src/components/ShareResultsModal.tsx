@@ -41,6 +41,7 @@ import type { PlayerPerformance } from "@/lib/performanceStats";
 import type { Round, Player } from "@/lib/tournamentData";
 import { logger } from "@/lib/logger";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ShareChannel = "email" | "qr";
@@ -651,7 +652,7 @@ export function ShareResultsModal({
       };
 
       const tid = tournamentId ?? "unknown";
-      const res = await fetch(`/api/tournament/${tid}/send-results-email`, {
+      const res = await authFetch(`/api/tournament/${tid}/send-results-email`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

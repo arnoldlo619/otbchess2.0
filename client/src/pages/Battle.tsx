@@ -40,6 +40,7 @@ import { useLnmSave, getDraftPgn, clearDraftPgn } from "../hooks/useLnmSave";
 import type { GameResult } from "../components/NotationModeOverlay";
 import type { ChessClockHandle } from "../components/ChessClock";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PlayerProfile {
@@ -465,7 +466,7 @@ export default function Battle() {
   // ── Poll for room updates while waiting ────────────────────────────────────
   const fetchRoom = useCallback(async (code: string) => {
     try {
-      const res = await fetch(`/api/battles/${code}`);
+      const res = await authFetch(`/api/battles/${code}`);
       if (!res.ok) return;
       const data: BattleRoom = await res.json();
       setRoom(data);
@@ -511,7 +512,7 @@ export default function Battle() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/battles", {
+      const res = await authFetch("/api/battles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ timeControl: tc.value }),
@@ -522,7 +523,7 @@ export default function Battle() {
       }
       const { code } = await res.json();
       // Fetch full room with profile
-      const roomRes = await fetch(`/api/battles/${code}`);
+      const roomRes = await authFetch(`/api/battles/${code}`);
       const roomData: BattleRoom = await roomRes.json();
       setRoom(roomData);
       setScreen("host_waiting");
@@ -546,7 +547,7 @@ export default function Battle() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/battles/${joinCode.trim()}/join`, {
+      const res = await authFetch(`/api/battles/${joinCode.trim()}/join`, {
         method: "PATCH",
       });
       if (!res.ok) {
@@ -570,7 +571,7 @@ export default function Battle() {
     if (!room) return;
     setLoading(true);
     try {
-      await fetch(`/api/battles/${room.code}/result`, {
+      await authFetch(`/api/battles/${room.code}/result`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ result }),
@@ -591,7 +592,7 @@ export default function Battle() {
     setRematchLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/battles", {
+      const res = await authFetch("/api/battles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ timeControl: room.timeControl }),
@@ -601,7 +602,7 @@ export default function Battle() {
         throw new Error(d.error ?? "Failed to create rematch room");
       }
       const { code } = await res.json();
-      const roomRes = await fetch(`/api/battles/${code}`);
+      const roomRes = await authFetch(`/api/battles/${code}`);
       const roomData: BattleRoom = await roomRes.json();
       // Reset transient state
       confettiFired.current = false;

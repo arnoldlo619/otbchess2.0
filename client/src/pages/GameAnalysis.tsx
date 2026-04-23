@@ -36,6 +36,7 @@ import { GameVideoPlayer, type MoveTimestamp } from "@/components/GameVideoPlaye
 import { FenScrubber, type FenEntry } from "@/components/FenScrubber";
 import { logger } from "@/lib/logger";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
   id: string;
@@ -666,7 +667,7 @@ export default function GameAnalysis() {
     let polling = true;
     const fetchData = async () => {
       try {
-        const res = await fetch(`/api/games/${gameId}/analysis`);
+        const res = await authFetch(`/api/games/${gameId}/analysis`);
         if (!res.ok) throw new Error("Failed to load analysis");
         const json = (await res.json()) as AnalysisResponse;
         setData(json);

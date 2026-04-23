@@ -16,6 +16,7 @@ import {
   Trophy, TrendingUp,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface StudyProgress {
   totalLines: number;
@@ -133,7 +134,7 @@ export default function ContinueStudying({ compact = false }: { compact?: boolea
   useEffect(() => {
     async function fetchProgress() {
       try {
-        const res = await fetch("/api/openings/progress/summary");
+        const res = await authFetch("/api/openings/progress/summary");
         if (!res.ok) {
           // Not logged in or no data — show empty state
           setProgress(null);

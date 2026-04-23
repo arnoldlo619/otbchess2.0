@@ -34,6 +34,7 @@ import {
   INSIGHT_TYPE_DESCRIPTIONS,
 } from "../lib/coachInsight";
 
+import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface CoachInsightCardProps {
@@ -179,7 +180,7 @@ export function CoachInsightCard({
     try {
       const promptJson = buildCoachPrompt(context);
 
-      const res = await fetch("/api/prep/coach-insight", {
+      const res = await authFetch("/api/prep/coach-insight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ promptJson }),

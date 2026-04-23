@@ -18,6 +18,7 @@ import AuthModal from "@/components/AuthModal";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { logger } from "@/lib/logger";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LeaguePlayer {
   id: number;
@@ -472,9 +473,9 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     try {
       const [lRes, wRes, sRes] = await Promise.all([
-        fetch(`/api/leagues/${leagueId}`),
-        fetch(`/api/leagues/${leagueId}/weeks`),
-        fetch(`/api/leagues/${leagueId}/standings`),
+        authFetch(`/api/leagues/${leagueId}`),
+        authFetch(`/api/leagues/${leagueId}/weeks`),
+        authFetch(`/api/leagues/${leagueId}/standings`),
       ]);
       if (lRes.ok) {
         const d = await lRes.json();
@@ -492,7 +493,7 @@ export default function LeagueDashboard() {
   const fetchJoinRequests = useCallback(async () => {
     if (!leagueId) return;
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/join-requests`, { credentials: "include" });
+      const res = await authFetch(`/api/leagues/${leagueId}/join-requests`, { credentials: "include" });
       if (res.ok) setJoinRequests(await res.json());
     } catch { /* not commissioner or not draft */ }
   }, [leagueId]);
@@ -514,7 +515,7 @@ export default function LeagueDashboard() {
       }
     }
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/my-join-request`, { credentials: "include" });
+      const res = await authFetch(`/api/leagues/${leagueId}/my-join-request`, { credentials: "include" });
       if (!res.ok) return;
       const data = await res.json() as { status: string | null };
       if (data.status === "pending") {
@@ -535,7 +536,7 @@ export default function LeagueDashboard() {
   const fetchSentInvites = useCallback(async () => {
     if (!leagueId) return;
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/invites`, { credentials: "include" });
+      const res = await authFetch(`/api/leagues/${leagueId}/invites`, { credentials: "include" });
       if (res.ok) setSentInvites(await res.json());
     } catch { /* not commissioner */ }
   }, [leagueId]);
@@ -543,7 +544,7 @@ export default function LeagueDashboard() {
   const fetchClubMembers = useCallback(async () => {
     if (!league?.clubId) return;
     try {
-      const res = await fetch(`/api/clubs/${league.clubId}/members`, { credentials: "include" });
+      const res = await authFetch(`/api/clubs/${league.clubId}/members`, { credentials: "include" });
       if (res.ok) setClubMembers(await res.json());
     } catch { /* ignore */ }
   }, [league?.clubId]);
@@ -552,7 +553,7 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     setSendingInviteId(memberId);
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/invites`, {
+      const res = await authFetch(`/api/leagues/${leagueId}/invites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -572,7 +573,7 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     setCancellingInviteId(inviteId);
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/invites/${inviteId}`, {
+      const res = await authFetch(`/api/leagues/${leagueId}/invites/${inviteId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -590,7 +591,7 @@ export default function LeagueDashboard() {
     if (!leagueId || !user) return;
     try {
       // Use the /invites/mine endpoint to find any pending invite for this league
-      const res = await fetch(`/api/leagues/invites/mine`, { credentials: "include" });
+      const res = await authFetch(`/api/leagues/invites/mine`, { credentials: "include" });
       if (res.ok) {
         const all = await res.json() as Array<{ id: number; leagueId: string; commissionerName: string; message?: string | null; status: string }>;
         const mine = all.find((inv) => inv.leagueId === leagueId) ?? null;
@@ -603,7 +604,7 @@ export default function LeagueDashboard() {
     if (!leagueId || !myInvite) return;
     setRespondingInvite(true);
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/invites/${myInvite.id}`, {
+      const res = await authFetch(`/api/leagues/${leagueId}/invites/${myInvite.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -630,14 +631,14 @@ export default function LeagueDashboard() {
     if (typeof Notification !== "undefined" && Notification.permission === "denied") {
       setPushStatus("denied"); return;
     }
-    fetch(`/api/leagues/${leagueId}/push/status`, { credentials: "include" })
+    authFetch(`/api/leagues/${leagueId}/push/status`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.subscribed) setPushStatus("subscribed"); })
       .catch(() => {});
   }, [leagueId]);
 
   async function getVapidKey(): Promise<string> {
-    const r = await fetch("/api/push/vapid-public-key");
+    const r = await authFetch("/api/push/vapid-public-key");
     const d = await r.json() as { publicKey: string };
     return d.publicKey;
   }
@@ -657,7 +658,7 @@ export default function LeagueDashboard() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidKey) });
       const subJson = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
-      const res = await fetch(`/api/leagues/${leagueId}/push/subscribe`, {
+      const res = await authFetch(`/api/leagues/${leagueId}/push/subscribe`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscription: subJson }),
@@ -675,7 +676,7 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     setPushLoading(true);
     try {
-      await fetch(`/api/leagues/${leagueId}/push/subscribe`, { method: "DELETE", credentials: "include" });
+      await authFetch(`/api/leagues/${leagueId}/push/subscribe`, { method: "DELETE", credentials: "include" });
       setPushStatus("idle");
       showToast("Notifications disabled");
     } catch { showToast("Failed to disable notifications", "error"); }
@@ -686,7 +687,7 @@ export default function LeagueDashboard() {
     if (!leagueId) return;
     setReviewingId(reqId);
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/join-requests/${reqId}`, {
+      const res = await authFetch(`/api/leagues/${leagueId}/join-requests/${reqId}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -707,7 +708,7 @@ export default function LeagueDashboard() {
 
   async function handleReportResult(result: "white_win" | "black_win" | "draw") {
     if (!reportingMatch || !leagueId) return;
-    const res = await fetch(`/api/leagues/${leagueId}/matches/${reportingMatch.id}/result`, {
+    const res = await authFetch(`/api/leagues/${leagueId}/matches/${reportingMatch.id}/result`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -727,7 +728,7 @@ export default function LeagueDashboard() {
   // Commissioner resolves a disputed match
   async function handleResolveDispute(matchId: number, result: "white_win" | "black_win" | "draw") {
     if (!leagueId) return;
-    const res = await fetch(`/api/leagues/${leagueId}/matches/${matchId}/result`, {
+    const res = await authFetch(`/api/leagues/${leagueId}/matches/${matchId}/result`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -745,7 +746,7 @@ export default function LeagueDashboard() {
   // Commissioner sets a deadline for a week
   async function handleSetDeadline(weekId: number, deadline: string | null) {
     if (!leagueId) return;
-    const res = await fetch(`/api/leagues/${leagueId}/weeks/${weekId}/deadline`, {
+    const res = await authFetch(`/api/leagues/${leagueId}/weeks/${weekId}/deadline`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -772,7 +773,7 @@ export default function LeagueDashboard() {
     if (!confirmed) return;
     setAdvancingWeek(true);
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/advance-week`, { method: "POST", credentials: "include" });
+      const res = await authFetch(`/api/leagues/${leagueId}/advance-week`, { method: "POST", credentials: "include" });
       if (res.ok) {
         const d = await res.json();
         if (d.completed) {
@@ -798,7 +799,7 @@ export default function LeagueDashboard() {
     if (!user) { setAuthOpen(true); return; }
     setJoinRequestStatus("loading");
     try {
-      const res = await fetch(`/api/leagues/${leagueId}/join-request`, {
+      const res = await authFetch(`/api/leagues/${leagueId}/join-request`, {
         method: "POST",
         credentials: "include",
       });
@@ -1288,7 +1289,7 @@ export default function LeagueDashboard() {
                         onClick={async () => {
                           setStartingSeason(true);
                           try {
-                            const res = await fetch(`/api/leagues/${league.id}/start`, { method: "POST", credentials: "include" });
+                            const res = await authFetch(`/api/leagues/${league.id}/start`, { method: "POST", credentials: "include" });
                             if (res.ok) {
                               showToast("Season started! Round-robin schedule generated.", "success");
                               await fetchAll();
@@ -3345,7 +3346,7 @@ export default function LeagueDashboard() {
                       }
                       setSavingSettings(true);
                       try {
-                        const res = await fetch(`/api/leagues/${league.id}/settings`, {
+                        const res = await authFetch(`/api/leagues/${league.id}/settings`, {
                           method: "PATCH",
                           headers: { "Content-Type": "application/json" },
                           credentials: "include",
@@ -3529,7 +3530,7 @@ export default function LeagueDashboard() {
                   <button
                     onClick={async () => {
                       try {
-                        const res = await fetch(`/api/leagues/${league.id}/advance-week`, { method: "POST", credentials: "include" });
+                        const res = await authFetch(`/api/leagues/${league.id}/advance-week`, { method: "POST", credentials: "include" });
                         if (res.ok) { showToast("Advanced to next week", "success"); fetchAll(); }
                         else { const d = await res.json().catch(() => ({})); showToast(d.error ?? "Failed", "error"); }
                       } catch { showToast("Network error", "error"); }

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface InviteDetails {
@@ -62,7 +63,7 @@ export default function InviteAccept() {
   // Load invite details on mount
   useEffect(() => {
     if (!token) return;
-    fetch(`/api/invite/${token}`)
+    authFetch(`/api/invite/${token}`)
       .then(async (res) => {
         const data = await res.json() as InviteDetails & { error?: string };
         if (!res.ok) {
@@ -81,7 +82,7 @@ export default function InviteAccept() {
     if (!invite || !user) return;
     setAccepting(true);
     try {
-      const res = await fetch(`/api/invite/${token}/accept`, {
+      const res = await authFetch(`/api/invite/${token}/accept`, {
         method: "POST",
         credentials: "include",
       });

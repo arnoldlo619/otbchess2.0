@@ -11,6 +11,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, RotateCcw, Pencil, Check, X } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 export interface TimerSnapshot {
   status: "idle" | "running" | "paused" | "expired";
   durationSec: number;
@@ -33,7 +34,7 @@ interface RoundTimerProps {
 
 async function pushSnapshot(tournamentId: string, snap: TimerSnapshot) {
   try {
-    await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/timer`, {
+    await authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/timer`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(snap),

@@ -46,6 +46,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface WizardData {
@@ -292,7 +293,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         //    This avoids the varchar(500) truncation and the 512kb JSON body limit.
         let resolvedAvatarUrl: string | null = data.avatarUrl;
         if (data.avatarUrl && data.avatarUrl.startsWith("data:image/")) {
-          const uploadRes = await fetch("/api/clubs/upload-avatar", {
+          const uploadRes = await authFetch("/api/clubs/upload-avatar", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",

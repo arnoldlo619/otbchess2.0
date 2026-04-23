@@ -47,6 +47,7 @@ import { loadTournamentState } from "@/lib/directorState";
 import { computeStandings } from "@/lib/swiss";
 import { exportStandingsCsv } from "@/lib/exportCsv";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function titleColor(title: string | null) {
@@ -708,7 +709,7 @@ export default function Archive() {
     // Optimistic: remove from list immediately
     setUserTournaments((prev) => prev.filter((t) => t.id !== id));
     try {
-      const r = await fetch(`/api/tournament/${encodeURIComponent(id)}`, {
+      const r = await authFetch(`/api/tournament/${encodeURIComponent(id)}`, {
         method: "DELETE",
         credentials: "include",
       });

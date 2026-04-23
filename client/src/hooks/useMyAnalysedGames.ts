@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { authFetch } from "@/lib/apiFetch";
 
 export interface AnalysedGame {
   id: string;
@@ -40,7 +41,7 @@ export function useMyAnalysedGames(): UseMyAnalysedGamesReturn {
     setStatus("loading");
     setError(null);
     try {
-      const res = await fetch("/api/games", { credentials: "include" });
+      const res = await authFetch("/api/games", { credentials: "include" });
       if (!res.ok) {
         if (res.status === 401) {
           setGames([]);

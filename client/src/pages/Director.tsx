@@ -102,7 +102,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch, authFetch } from "@/lib/apiFetch";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1269,7 +1269,7 @@ function PublicTournamentCard({
       setLoading(false);
       return;
     }
-    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
+    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data) setIsPublic(!!data.isPublic);
@@ -1285,7 +1285,7 @@ function PublicTournamentCard({
     }
     setToggling(true);
     try {
-      const res = await fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, {
+      const res = await authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -1471,7 +1471,7 @@ function PublicTournamentCard({
 function PublicModeChip({ tournamentId, isDark }: { tournamentId: string; isDark: boolean }) {
   const [isPublic, setIsPublic] = useState<boolean | null>(null);
   useEffect(() => {
-    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
+    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/public`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setIsPublic(!!d.isPublic); })
       .catch(() => {});
@@ -1617,7 +1617,7 @@ export default function Director() {
         const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
         const latestState = raw ? JSON.parse(raw) : null;
         if (!latestState?.state) return;
-        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`, {
+        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ state: latestState.state }),
@@ -1692,7 +1692,7 @@ export default function Director() {
   // into localStorage so it is available across devices.
   useEffect(() => {
     if (tournamentId === "otb-demo-2026") return;
-    fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/meta`, { credentials: "include" })
+    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/meta`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .then((meta: { customSlug?: string | null } | null) => {
         if (meta?.customSlug) {
@@ -1935,7 +1935,7 @@ export default function Director() {
   const [_pushSubscriberCount, _setPushSubscriberCount] = useState<number | null>(null);
   useEffect(() => {
     if (tournamentId === "otb-demo-2026") return;
-    fetch(`/api/push/count/${encodeURIComponent(tournamentId)}`)
+    authFetch(`/api/push/count/${encodeURIComponent(tournamentId)}`)
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d && typeof d.count === "number") _setPushSubscriberCount(d.count); })
       .catch(() => {});
@@ -2088,7 +2088,7 @@ export default function Director() {
       // Broadcast tournament_ended SSE — this triggers auto-redirect on all player screens
       const players = state.players;
       const tournamentName = state.tournamentName;
-      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ players, tournamentName }),
@@ -2276,7 +2276,7 @@ export default function Director() {
                     const latestState = raw ? JSON.parse(raw) : null;
                     const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
                     if (roundData && latestState?.players) {
-                      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -2997,7 +2997,7 @@ export default function Director() {
                                       const latestState = raw ? JSON.parse(raw) : null;
                                       const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
                                       if (roundData && latestState?.players) {
-                                        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
                                           method: "POST",
                                           headers: { "Content-Type": "application/json" },
                                           body: JSON.stringify({
@@ -5260,7 +5260,7 @@ export default function Director() {
                       const latestState = raw ? JSON.parse(raw) : null;
                       const round1 = latestState?.rounds?.find((r: { number: number }) => r.number === 1);
                       if (round1 && latestState?.players) {
-                        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/start`, {
+                        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/start`, {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
@@ -5363,7 +5363,7 @@ export default function Director() {
                 const nextRound = state.currentRound + 1;
                 const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
                 if (roundData && latestState?.state?.players) {
-                  fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                  authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({

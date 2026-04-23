@@ -22,6 +22,7 @@ import {
   SkipForward, Target, Trophy, X, Zap,
 } from "lucide-react";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LineNode {
   id: string;
@@ -197,7 +198,7 @@ function StudyModeContent() {
     async function fetchLine() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/openings/${openingSlug}/lines/${lineSlug}`);
+        const res = await authFetch(`/api/openings/${openingSlug}/lines/${lineSlug}`);
         if (!res.ok) throw new Error("Line not found");
         const data = await res.json();
         setLineData(data.line);

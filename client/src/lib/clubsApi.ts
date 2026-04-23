@@ -7,6 +7,7 @@
  */
 
 import type { Club, ClubMember } from "./clubRegistry";
+import { authFetch } from "./apiFetch";
 
 const BASE = "/api/clubs";
 
@@ -23,7 +24,7 @@ export async function apiListPublicClubs(opts?: {
       params.set("category", opts.category);
     if (opts?.limit) params.set("limit", String(opts.limit));
     const qs = params.toString();
-    const res = await fetch(`${BASE}${qs ? `?${qs}` : ""}`);
+    const res = await authFetch(`${BASE}${qs ? `?${qs}` : ""}`);
     if (!res.ok) return { clubs: [], total: 0 };
     const data = await res.json();
     // Handle both old array shape and new { clubs, total } shape
@@ -37,7 +38,7 @@ export async function apiListPublicClubs(opts?: {
 // ── List clubs the signed-in user belongs to ──────────────────────────────────
 export async function apiListMyClubs(): Promise<Club[]> {
   try {
-    const res = await fetch(`${BASE}/mine`, { credentials: "include" });
+    const res = await authFetch(`${BASE}/mine`);
     if (!res.ok) return [];
     return (await res.json()) as Club[];
   } catch {
@@ -49,10 +50,9 @@ export async function apiListMyClubs(): Promise<Club[]> {
 export async function apiCreateClub(
   club: Partial<Club> & { name: string }
 ): Promise<Club> {
-  const res = await fetch(BASE, {
+  const res = await authFetch(BASE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(club),
   });
   if (!res.ok) {
@@ -69,10 +69,9 @@ export async function apiCreateClub(
 // ── Sync localStorage clubs to the server (one-time migration) ────────────────
 export async function apiSyncClubsToServer(clubs: Club[]): Promise<number> {
   try {
-    const res = await fetch(`${BASE}/sync`, {
+    const res = await authFetch(`${BASE}/sync`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({ clubs }),
     });
     if (!res.ok) return 0;
@@ -86,7 +85,7 @@ export async function apiSyncClubsToServer(clubs: Club[]): Promise<number> {
 // ── Get a single club by ID ───────────────────────────────────────────────────
 export async function apiGetClub(id: string): Promise<Club | null> {
   try {
-    const res = await fetch(`${BASE}/${id}`);
+    const res = await authFetch(`${BASE}/${id}`);
     if (!res.ok) return null;
     return (await res.json()) as Club;
   } catch {
@@ -100,10 +99,9 @@ export async function apiUpdateClub(
   updates: Partial<Club>
 ): Promise<Club | null> {
   try {
-    const res = await fetch(`${BASE}/${id}`, {
+    const res = await authFetch(`${BASE}/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify(updates),
     });
     if (!res.ok) return null;
@@ -116,7 +114,7 @@ export async function apiUpdateClub(
 // ── List club members ─────────────────────────────────────────────────────────
 export async function apiListClubMembers(clubId: string): Promise<ClubMember[]> {
   try {
-    const res = await fetch(`${BASE}/${clubId}/members`);
+    const res = await authFetch(`${BASE}/${clubId}/members`);
     if (!res.ok) return [];
     return (await res.json()) as ClubMember[];
   } catch {
@@ -135,10 +133,9 @@ export async function apiJoinClub(
   }
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE}/${clubId}/members`, {
+    const res = await authFetch(`${BASE}/${clubId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify(member),
     });
     return res.ok || res.status === 409; // 409 = already a member, treat as success
@@ -153,9 +150,8 @@ export async function apiLeaveClub(
   userId: string
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE}/${clubId}/members/${userId}`, {
+    const res = await authFetch(`${BASE}/${clubId}/members/${userId}`, {
       method: "DELETE",
-      credentials: "include",
     });
     return res.ok;
   } catch {
@@ -168,9 +164,8 @@ export async function apiDeleteClub(
   clubId: string
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const res = await fetch(`${BASE}/${clubId}`, {
+    const res = await authFetch(`${BASE}/${clubId}`, {
       method: "DELETE",
-      credentials: "include",
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -188,10 +183,9 @@ export async function apiTransferOwnership(
   newOwnerId: string
 ): Promise<{ ok: boolean; club?: import("./clubRegistry").Club; error?: string }> {
   try {
-    const res = await fetch(`${BASE}/${clubId}/transfer-ownership`, {
+    const res = await authFetch(`${BASE}/${clubId}/transfer-ownership`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({ newOwnerId }),
     });
     if (!res.ok) {
@@ -208,9 +202,8 @@ export async function apiTransferOwnership(
 // ── Send presence heartbeat ──────────────────────────────────────────────
 export async function apiHeartbeat(clubId: string): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE}/${clubId}/heartbeat`, {
+    const res = await authFetch(`${BASE}/${clubId}/heartbeat`, {
       method: "POST",
-      credentials: "include",
     });
     return res.ok;
   } catch {
@@ -223,7 +216,7 @@ export async function apiGetPresence(
   clubId: string
 ): Promise<{ onlineCount: number; totalMembers: number }> {
   try {
-    const res = await fetch(`${BASE}/${clubId}/presence`);
+    const res = await authFetch(`${BASE}/${clubId}/presence`);
     if (!res.ok) return { onlineCount: 0, totalMembers: 0 };
     return await res.json();
   } catch {

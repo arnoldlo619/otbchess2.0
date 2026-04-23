@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { Chess } from "chess.js";
 
+import { authFetch } from "@/lib/apiFetch";
 // ── Types ────────────────────────────────────────────────────────────────────
 interface GameSetup {
   whitePlayer: string;
@@ -348,7 +349,7 @@ function MyGamesSection({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/games");
+      const res = await authFetch("/api/games");
       if (!res.ok) throw new Error("Failed to load games");
       const data = await res.json();
       setGames(Array.isArray(data) ? data : []);
@@ -363,7 +364,7 @@ function MyGamesSection({
   const silentRefresh = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch("/api/games");
+      const res = await authFetch("/api/games");
       if (!res.ok) return;
       const data = await res.json();
       setGames(Array.isArray(data) ? data : []);
@@ -553,7 +554,7 @@ export default function GameRecorder() {
 
     try {
       // 1. Create a recording session
-      const sessionRes = await fetch("/api/recordings", {
+      const sessionRes = await authFetch("/api/recordings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -562,7 +563,7 @@ export default function GameRecorder() {
       const session = await sessionRes.json();
 
       // 2. Submit the PGN
-      const pgnRes = await fetch(`/api/recordings/${session.id}/pgn`, {
+      const pgnRes = await authFetch(`/api/recordings/${session.id}/pgn`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -578,7 +579,7 @@ export default function GameRecorder() {
       const game = await pgnRes.json();
 
       // 3. Trigger engine analysis
-      await fetch(`/api/recordings/${session.id}/analyze`, {
+      await authFetch(`/api/recordings/${session.id}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
