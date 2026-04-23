@@ -59,6 +59,7 @@ import {
   TrendingUp,
   Brain,
   Maximize2,
+  Link2,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
@@ -490,9 +491,9 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             style={{ animationDelay: "0.65s", animationFillMode: "forwards" }}
           >
             {[
-              { icon: <Zap className="w-3.5 h-3.5" />, label: "Setup in < 3 min" },
-              { icon: <BarChart3 className="w-3.5 h-3.5" />, label: "99.9% ELO accuracy" },
-              { icon: <Shield className="w-3.5 h-3.5" />, label: "Swiss & Round Robin" },
+              { icon: <Swords className="w-3.5 h-3.5" />, label: "Swiss + Elim format" },
+              { icon: <Link2 className="w-3.5 h-3.5" />, label: "chess.com integration" },
+              { icon: <BarChart3 className="w-3.5 h-3.5" />, label: "Live standings & brackets" },
               { icon: <Globe className="w-3.5 h-3.5" />, label: "80+ clubs worldwide" },
             ].map(({ icon, label }) => (
               <span
