@@ -15,7 +15,7 @@
  */
 
 import { Router } from "express";
-import { rateLimit } from "express-rate-limit";
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { nanoid, nanoid as nid } from "nanoid";
@@ -305,7 +305,7 @@ export function createAuthRouter(): Router {
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => (req.ip ?? "unknown").replace(/:\d+$/, ""),
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? "unknown"),
     message: { error: "Too many refresh requests — please wait a moment." },
     skip: () => process.env.NODE_ENV !== "production",
   });

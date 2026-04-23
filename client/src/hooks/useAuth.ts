@@ -60,13 +60,30 @@ export interface UpdateProfileFields {
   fideId?: string;
 }
 
+/** In-memory + localStorage token store — fallback when httpOnly cookie is stripped by proxy */
+const TOKEN_KEY = "otb-auth-token";
+
+function getStoredToken(): string | null {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+function setStoredToken(token: string | null) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch { /* ignore */ }
+}
+
 async function apiFetch<T>(
   url: string,
   options?: RequestInit
 ): Promise<T> {
+  const storedToken = getStoredToken();
+  const authHeader: Record<string, string> = storedToken
+    ? { Authorization: `Bearer ${storedToken}` }
+    : {};
   const res = await fetch(url, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+    headers: { "Content-Type": "application/json", ...authHeader, ...(options?.headers ?? {}) },
     ...options,
   });
   const data = await res.json();
@@ -100,10 +117,11 @@ export function useAuth() {
   // tab suspension, etc.).
   const silentRefresh = useCallback(async () => {
     try {
-      const { user: refreshedUser } = await apiFetch<{ user: AuthUser }>(
+      const { user: refreshedUser, token: refreshedToken } = await apiFetch<{ user: AuthUser; token?: string }>(
         "/api/auth/refresh",
         { method: "POST" }
       );
+      if (refreshedToken) setStoredToken(refreshedToken);
       setUser(refreshedUser);
       wasAuthenticated.current = true;
     } catch {
@@ -111,6 +129,7 @@ export function useAuth() {
       // Only clear user state if they were previously authenticated
       // (avoids clearing state for users who were never logged in).
       if (wasAuthenticated.current) {
+        setStoredToken(null);
         setUser(null);
         wasAuthenticated.current = false;
       }
@@ -140,10 +159,11 @@ export function useAuth() {
   }, [user, silentRefresh]);
 
   const login = useCallback(async (email: string, password: string, remember = false) => {
-    const { user } = await apiFetch<{ user: AuthUser }>("/api/auth/login", {
+    const { user, token } = await apiFetch<{ user: AuthUser; token?: string }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password, remember }),
     });
+    if (token) setStoredToken(token);
     setUser(user);
     wasAuthenticated.current = true;
     return user;
@@ -156,10 +176,11 @@ export function useAuth() {
       displayName: string,
       chesscomUsername?: string
     ) => {
-      const { user } = await apiFetch<{ user: AuthUser }>("/api/auth/register", {
+      const { user, token } = await apiFetch<{ user: AuthUser; token?: string }>("/api/auth/register", {
         method: "POST",
         body: JSON.stringify({ email, password, displayName, chesscomUsername }),
       });
+      if (token) setStoredToken(token);
       setUser(user);
       wasAuthenticated.current = true;
       return user;
@@ -173,10 +194,11 @@ export function useAuth() {
    * routes guarded by requireFullAuth.
    */
   const loginAsGuest = useCallback(async (displayName: string) => {
-    const { user } = await apiFetch<{ user: AuthUser }>("/api/auth/guest", {
+    const { user, token } = await apiFetch<{ user: AuthUser; token?: string }>("/api/auth/guest", {
       method: "POST",
       body: JSON.stringify({ displayName }),
     });
+    if (token) setStoredToken(token);
     setUser(user);
     wasAuthenticated.current = true;
     return user;
@@ -184,6 +206,7 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     await apiFetch("/api/auth/logout", { method: "POST" });
+    setStoredToken(null);
     setUser(null);
     wasAuthenticated.current = false;
   }, []);
