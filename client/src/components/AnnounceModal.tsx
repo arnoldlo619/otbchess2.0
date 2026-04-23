@@ -81,7 +81,7 @@ export function AnnounceModal({
     <div className="fixed inset-0 z-[100] flex flex-col bg-[oklch(0.14_0.07_145)]">
 
       {/* ── Sticky top bar — always visible, never scrolls away ─────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 pt-16 pb-3 sm:px-6 sm:pt-18 sm:pb-4">
         {/* Left: fullscreen hint */}
         <div className="flex items-center gap-1.5 text-white/25 text-xs">
           <Maximize2 className="w-3.5 h-3.5" />
