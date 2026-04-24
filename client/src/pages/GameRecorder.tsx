@@ -620,7 +620,7 @@ export default function GameRecorder() {
           <span
             className={`text-sm font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}
           >
-            Game Recorder
+            OTB Analysis Features
           </span>
         </div>
       </header>
@@ -632,7 +632,7 @@ export default function GameRecorder() {
             <div className="space-y-8">
               <div className="text-center space-y-3">
                 <h1 className="text-3xl font-bold tracking-tight">
-                  Record Your Game
+                  OTB Analysis Features
                 </h1>
                 <p className={`text-base ${isDark ? "text-white/50" : "text-gray-500"}`}>
                   Analyze your OTB games with engine-powered insights
@@ -673,9 +673,9 @@ export default function GameRecorder() {
                   />
                 </button>
 
-                {/* Camera Recording (Coming Soon) */}
+                {/* Camera Recording */}
                 <div
-                  className={`relative overflow-hidden rounded-2xl border p-6 text-left opacity-60 ${
+                  className={`relative overflow-hidden rounded-2xl border p-6 text-left ${
                     isDark
                       ? "bg-white/5 border-white/10"
                       : "bg-white border-gray-200"
@@ -693,13 +693,9 @@ export default function GameRecorder() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg">Record via Camera</h3>
                         <span
-                          className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
-                            isDark
-                              ? "bg-white/10 text-white/40"
-                              : "bg-gray-100 text-gray-400"
-                          }`}
+                          className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400"
                         >
-                          Coming Soon
+                          NEW!
                         </span>
                       </div>
                       <p
