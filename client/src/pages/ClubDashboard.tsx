@@ -2784,12 +2784,18 @@ export default function ClubDashboard() {
       <div className="flex h-screen overflow-hidden">
         {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
         <aside
-          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1"
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
           style={{
-            background: isDark ? "oklch(0.15 0.04 145)" : "#0f1f14",
             borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
           }}
         >
+          {/* Dark overlay so icons stay crisp over the chess pattern */}
+          <div
+            className="absolute inset-0 pointer-events-none z-0"
+            style={{ background: isDark ? "oklch(0.15 0.04 145 / 0.80)" : "oklch(0.12 0.06 145 / 0.86)" }}
+          />
+          {/* Sidebar content — sits above the chess-pattern overlay */}
+          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
           {/* Club avatar / back button */}
           <button
             onClick={() => navigate("/clubs")}
@@ -2861,6 +2867,7 @@ export default function ClubDashboard() {
               </Link>
             )}
           </div>
+          </div>{/* end z-10 sidebar content wrapper */}
         </aside>
 
         {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
