@@ -17,11 +17,12 @@ import { Chessboard, type PieceDropHandlerArgs } from "react-chessboard";
 import { useTheme } from "@/contexts/ThemeContext";
 import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
-  ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronLeft,
+  ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronLeft, FlipVertical2,
   Eye, HelpCircle, Lightbulb, Play, RefreshCw,
   SkipForward, Target, Trophy, X, Zap,
 } from "lucide-react";
 
+import { NavLogo } from "@/components/NavLogo";
 import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LineNode {
@@ -64,6 +65,16 @@ const NAG_SYMBOLS: Record<number, string> = {
   1: "!", 2: "?", 3: "!!", 4: "??", 5: "!?", 6: "?!",
 };
 
+// NAG color helpers
+const NAG_COLORS: Record<number, { text: string; bg: string }> = {
+  1: { text: "text-emerald-400", bg: "bg-emerald-500/15" },   // !
+  2: { text: "text-red-400", bg: "bg-red-500/15" },           // ?
+  3: { text: "text-emerald-300", bg: "bg-emerald-500/20" },   // !!
+  4: { text: "text-red-300", bg: "bg-red-500/20" },           // ??
+  5: { text: "text-amber-400", bg: "bg-amber-500/15" },       // !?
+  6: { text: "text-amber-400", bg: "bg-amber-500/15" },       // ?!
+};
+
 // ── Move List ─────────────────────────────────────────────────────────────────
 function MoveList({
   nodes,
@@ -74,6 +85,8 @@ function MoveList({
   currentPly: number;
   onJumpTo: (ply: number) => void;
 }) {
+  const { theme } = useTheme();
+  const dk = theme === "dark";
   const listRef = useRef<HTMLDivElement>(null);
   const moveNodes = nodes.filter((n) => n.moveSan);
 
@@ -96,41 +109,47 @@ function MoveList({
     else pair.black = node;
   }
 
+  function moveClass(node: LineNode) {
+    const isCurrent = currentPly === node.ply;
+    const isPast = currentPly > node.ply;
+    if (isCurrent) return "bg-emerald-500/20 text-emerald-400";
+    if (isPast) return dk ? "text-white/60 hover:text-white/80" : "text-gray-600 hover:text-gray-900";
+    return dk ? "text-white/20" : "text-gray-300";
+  }
+
+  function nagBadge(nag: number | null) {
+    if (!nag || !NAG_SYMBOLS[nag]) return null;
+    const c = NAG_COLORS[nag];
+    return (
+      <span className={`ml-0.5 text-[10px] font-bold ${c?.text ?? (dk ? "text-white/50" : "text-gray-500")}`}>
+        {NAG_SYMBOLS[nag]}
+      </span>
+    );
+  }
+
   return (
     <div ref={listRef} className="flex flex-wrap gap-x-1 gap-y-0.5 text-xs font-mono">
       {pairs.map((pair) => (
         <span key={pair.moveNum} className="inline-flex items-center">
-          <span className="text-white/25 mr-0.5">{pair.moveNum}.</span>
+          <span className={`mr-0.5 ${dk ? "text-white/25" : "text-gray-400"}`}>{pair.moveNum}.</span>
           {pair.white && (
             <button
               data-ply={pair.white.ply}
               onClick={() => onJumpTo(pair.white!.ply)}
-              className={`px-1 py-0.5 rounded transition-colors ${
-                currentPly === pair.white.ply
-                  ? "bg-emerald-500/20 text-emerald-400"
-                  : currentPly > pair.white.ply
-                  ? "text-white/60 hover:text-white/80"
-                  : "text-white/20"
-              }`}
+              className={`px-1 py-0.5 rounded transition-colors ${moveClass(pair.white)}`}
             >
               {pair.white.moveSan}
-              {pair.white.nag ? NAG_SYMBOLS[pair.white.nag] ?? "" : ""}
+              {nagBadge(pair.white.nag)}
             </button>
           )}
           {pair.black && (
             <button
               data-ply={pair.black.ply}
               onClick={() => onJumpTo(pair.black!.ply)}
-              className={`px-1 py-0.5 rounded transition-colors ${
-                currentPly === pair.black.ply
-                  ? "bg-emerald-500/20 text-emerald-400"
-                  : currentPly > pair.black.ply
-                  ? "text-white/60 hover:text-white/80"
-                  : "text-white/20"
-              }`}
+              className={`px-1 py-0.5 rounded transition-colors ${moveClass(pair.black)}`}
             >
               {pair.black.moveSan}
-              {pair.black.nag ? NAG_SYMBOLS[pair.black.nag] ?? "" : ""}
+              {nagBadge(pair.black.nag)}
             </button>
           )}
         </span>
@@ -221,6 +240,8 @@ function StudyModeContent() {
   const currentFen = currentNode?.fen ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   const nextNode = mainNodes.find((n) => n.ply === currentPly + 1);
   const playerSide = lineData?.opening.side === "black" ? "black" : "white";
+  const [boardFlipped, setBoardFlipped] = useState(false);
+  const boardContainerRef = useRef<HTMLDivElement>(null);
   const isPlayerTurn = useMemo(() => {
     if (!currentFen) return false;
     const turn = currentFen.split(" ")[1];
@@ -347,6 +368,38 @@ function StudyModeContent() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [studyState, stepForward, stepBackward]);
 
+  // ── Swipe gesture for move navigation on mobile (Learn mode) ───────────
+  useEffect(() => {
+    const el = boardContainerRef.current;
+    if (!el) return;
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    function onTouchStart(e: TouchEvent) {
+      if (studyState !== "learn") return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    }
+    function onTouchEnd(e: TouchEvent) {
+      if (!tracking) return;
+      tracking = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      // Only trigger if horizontal swipe is dominant and > 40px
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) stepForward();  // swipe left → next move
+        else stepBackward();         // swipe right → previous move
+      }
+    }
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [studyState, stepForward, stepBackward]);
+
   // ── Render ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -378,6 +431,7 @@ function StudyModeContent() {
       <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-gray-200/70 bg-white/90"}`}>
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
+            <div className="hidden sm:block shrink-0"><NavLogo /></div>
             <button
               onClick={() => navigate(`/openings/${openingSlug}`)}
               className={`shrink-0 p-2.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/[0.05] text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"}`}
@@ -437,21 +491,34 @@ function StudyModeContent() {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Left: Board */}
           <div className="lg:w-[480px] xl:w-[520px] shrink-0 space-y-3">
-            <div className={`rounded-xl overflow-hidden border ${isDark ? "border-white/[0.06]" : "border-gray-200"}`}>
+            <div
+              ref={boardContainerRef}
+              className={`rounded-xl overflow-hidden border ${isDark ? "border-white/[0.06]" : "border-gray-200"}`}
+            >
               <Chessboard
                 options={{
                   position: currentFen,
-                  boardOrientation: playerSide === "black" ? "black" : "white",
+                  boardOrientation: boardFlipped ? (playerSide === "black" ? "white" : "black") : (playerSide === "black" ? "black" : "white"),
                   onPieceDrop: handlePieceDrop,
                   allowDragging: studyState !== "learn",
                   boardStyle: { borderRadius: "0" },
-                  darkSquareStyle: { backgroundColor: "#2d5a3a" },
-                  lightSquareStyle: { backgroundColor: "#8fbc8f" },
+                  darkSquareStyle: { backgroundColor: isDark ? "#2d5a3a" : "#769656" },
+                  lightSquareStyle: { backgroundColor: isDark ? "#8fbc8f" : "#eeeed2" },
                   animationDurationInMs: 200,
                 }}
               />
             </div>
 
+            {/* Board flip button */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setBoardFlipped(f => !f)}
+                title="Flip board"
+                className={`p-2 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-white/60 hover:bg-white/[0.05]" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
+              >
+                <FlipVertical2 className="w-4 h-4" />
+              </button>
+            </div>
             {/* Board controls (Learn mode) */}
             {studyState === "learn" && (
               <div className="flex items-center justify-center gap-2">
@@ -479,13 +546,13 @@ function StudyModeContent() {
                 <button
                   onClick={stepForward}
                   disabled={completed}
-                  className="p-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-colors disabled:opacity-20"
+                  className={`p-2 rounded-lg transition-colors disabled:opacity-20 ${isDark ? "text-white/40 hover:text-white/70 hover:bg-white/[0.05]" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
                 >
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setCurrentPly(maxPly)}
-                  className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.05] transition-colors"
+                  className={`p-2 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-white/60 hover:bg-white/[0.05]" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
                 >
                   <ArrowRight className="w-4 h-4" />
                   <ArrowRight className="w-4 h-4 -ml-3" />

@@ -5336,11 +5336,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Two-step confirmation before transferring
 
 ## Openings/Study/Prep Feature Enhancements
-- [ ] Add theme token system to OpeningsLibrary for light/dark mode
-- [ ] Add theme token system to OpeningDetail for light/dark mode
-- [ ] Add theme token system to StudyMode for light/dark mode
-- [ ] Align OpeningsLibrary header with platform pattern (NavLogo + AvatarNavDropdown)
-- [ ] Add breadcrumb navigation to OpeningDetail
-- [ ] Add board flip button to StudyMode
-- [ ] Add swipe gesture for move navigation in StudyMode on mobile
-- [ ] Add daily review queue card to OpeningsLibrary
+- [x] Add theme token system to OpeningsLibrary for light/dark mode
+- [x] Add theme token system to OpeningDetail for light/dark mode
+- [x] Add theme token system to StudyMode for light/dark mode
+- [x] Align OpeningsLibrary header with platform pattern (NavLogo + AvatarNavDropdown)
+- [x] Add breadcrumb navigation to OpeningDetail
+- [x] Add board flip button to StudyMode
+- [x] Add swipe gesture for move navigation in StudyMode on mobile
+- [x] Add daily review queue card to OpeningsLibrary
+- [x] Add NavLogo + AvatarNavDropdown to MatchupPrep header
+- [x] Add move annotation display in StudyMode (show !, !!, ?, ?? and commentAfter)
+- [x] Add progress rings/indicators on OpeningsLibrary cards

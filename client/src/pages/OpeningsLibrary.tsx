@@ -16,9 +16,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   Search, Filter, ChevronRight, Star, Zap, Shield, Swords,
-  BookOpen, Crown, Target, X, Sparkles,
+  BookOpen, Crown, Target, X, Sparkles, RotateCcw, Clock,
 } from "lucide-react";
+import { useAuthContext } from "@/context/AuthContext";
 
+import { NavLogo } from "@/components/NavLogo";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface OpeningTag {
@@ -93,9 +96,11 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 // ── Opening Card ──────────────────────────────────────────────────────────────
-function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onClick: () => void }) {
+function OpeningCardComponent({ opening, onClick, progress }: { opening: OpeningCard; onClick: () => void; progress?: { mastered: number; total: number } }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const pct = progress && progress.total > 0 ? Math.round((progress.mastered / progress.total) * 100) : 0;
+  const hasProgress = progress && progress.total > 0;
   return (
     <button
       onClick={onClick}
@@ -151,6 +156,20 @@ function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onCl
             </span>
           )}
         </div>
+        {/* Progress bar */}
+        {hasProgress && (
+          <div className="flex items-center gap-2 pt-1">
+            <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/[0.06]" : "bg-gray-100"}`}>
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className={`text-[9px] font-medium tabular-nums ${pct === 100 ? "text-emerald-400" : isDark ? "text-white/30" : "text-gray-400"}`}>
+              {progress!.mastered}/{progress!.total}
+            </span>
+          </div>
+        )}
 
         {/* Tags */}
         {opening.tags.length > 0 && (
@@ -254,11 +273,13 @@ function CategorySection({
   subtitle,
   openings: sectionOpenings,
   onOpeningClick,
+  progressMap,
 }: {
   title: string;
   subtitle: string;
   openings: OpeningCard[];
   onOpeningClick: (slug: string) => void;
+  progressMap?: Record<string, { mastered: number; total: number }>;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -271,7 +292,7 @@ function CategorySection({
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {sectionOpenings.map((o) => (
-          <OpeningCardComponent key={o.id} opening={o} onClick={() => onOpeningClick(o.slug)} />
+          <OpeningCardComponent key={o.id} opening={o} onClick={() => onOpeningClick(o.slug)} progress={progressMap?.[o.id]} />
         ))}
       </div>
     </section>
@@ -287,6 +308,20 @@ function OpeningsLibraryContent() {
   const [allOpenings, setAllOpenings] = useState<OpeningCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Review queue state
+  const { user } = useAuthContext();
+  const [reviewCount, setReviewCount] = useState(0);
+  const [reviewQueue, setReviewQueue] = useState<Array<{
+    reviewId: string;
+    lineId: string;
+    line: { title: string; slug: string; openingId: string } | null;
+    opening: { name: string; slug: string } | null;
+    status: string;
+    streak: number;
+  }>>([])
+  // Progress per opening: openingId -> { mastered, total }
+  const [progressMap, setProgressMap] = useState<Record<string, { mastered: number; total: number }>>({});
 
   // Filters
   const [search, setSearch] = useState("");
@@ -311,6 +346,43 @@ function OpeningsLibraryContent() {
     }
     fetchOpenings();
   }, []);
+
+  // Fetch review queue for logged-in users
+  useEffect(() => {
+    if (!user) return;
+    async function fetchQueue() {
+      try {
+        const res = await authFetch("/api/study/queue");
+        if (!res.ok) return;
+        const data = await res.json();
+        setReviewCount(data.count ?? 0);
+        setReviewQueue((data.queue ?? []).slice(0, 5));
+      } catch { /* silent */ }
+    }
+    fetchQueue();
+  }, [user]);
+
+  // Fetch study progress per opening for logged-in users
+  useEffect(() => {
+    if (!user) return;
+    async function fetchProgress() {
+      try {
+        const res = await authFetch("/api/study/progress");
+        if (!res.ok) return;
+        const data = await res.json();
+        const map: Record<string, { mastered: number; total: number }> = {};
+        for (const p of (data.progress ?? [])) {
+          const oid = p.line?.openingId;
+          if (!oid) continue;
+          if (!map[oid]) map[oid] = { mastered: 0, total: 0 };
+          map[oid].total++;
+          if (p.status === "mastered") map[oid].mastered++;
+        }
+        setProgressMap(map);
+      } catch { /* silent */ }
+    }
+    fetchProgress();
+  }, [user]);
 
   // Filter logic
   const filtered = useMemo(() => {
@@ -373,6 +445,11 @@ function OpeningsLibraryContent() {
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
       <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-gray-200/70 bg-white/90"}`}>
         <div className="max-w-7xl mx-auto px-4 py-3">
+          {/* Nav bar */}
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <NavLogo />
+            <AvatarNavDropdown />
+          </div>
           {/* Title row + filter toggle */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -492,6 +569,71 @@ function OpeningsLibraryContent() {
           </div>
         ) : (
           <>
+            {/* Review Queue Card — shown when user has due reviews */}
+            {user && reviewCount > 0 && !hasActiveFilters && (
+              <section className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                isDark
+                  ? "bg-gradient-to-br from-emerald-900/20 to-[#0f1f13]/80 border-emerald-500/15"
+                  : "bg-gradient-to-br from-emerald-50 to-white border-emerald-200/60"
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`p-2 rounded-xl ${isDark ? "bg-emerald-500/15" : "bg-emerald-100"}`}>
+                      <RotateCcw className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h3 className={`text-sm font-bold ${isDark ? "text-white/90" : "text-gray-900"}`}>Daily Review</h3>
+                      <p className={`text-[11px] ${isDark ? "text-white/40" : "text-gray-500"}`}>
+                        {reviewCount} {reviewCount === 1 ? "line" : "lines"} due for review
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (reviewQueue[0]?.opening?.slug && reviewQueue[0]?.line?.slug) {
+                        navigate(`/study/${reviewQueue[0].opening.slug}/${reviewQueue[0].line.slug}`);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all active:scale-95"
+                  >
+                    Start Review
+                  </button>
+                </div>
+                {reviewQueue.length > 0 && (
+                  <div className="space-y-1.5">
+                    {reviewQueue.map((item) => (
+                      <button
+                        key={item.reviewId}
+                        onClick={() => {
+                          if (item.opening?.slug && item.line?.slug) {
+                            navigate(`/study/${item.opening.slug}/${item.line.slug}`);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                          isDark
+                            ? "hover:bg-white/[0.04] text-white/70"
+                            : "hover:bg-emerald-50 text-gray-700"
+                        }`}
+                      >
+                        <Clock className={`w-3 h-3 shrink-0 ${isDark ? "text-emerald-400/60" : "text-emerald-500/60"}`} />
+                        <span className="text-xs truncate flex-1">
+                          {item.opening?.name ? `${item.opening.name} — ` : ""}{item.line?.title ?? "Unknown line"}
+                        </span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                          item.status === "mastered" ? (isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-100 text-emerald-600")
+                          : item.status === "reviewing" ? (isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600")
+                          : isDark ? "bg-white/[0.05] text-white/40" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          {item.status}
+                        </span>
+                        <ChevronRight className={`w-3 h-3 shrink-0 ${isDark ? "text-white/20" : "text-gray-300"}`} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* Featured section */}
             {featured.length > 0 && !hasActiveFilters && (
               <section className="space-y-3">
@@ -515,25 +657,28 @@ function OpeningsLibraryContent() {
                   subtitle="Systems and openings for the first move"
                   openings={whiteOpenings}
                   onOpeningClick={handleOpeningClick}
+                  progressMap={progressMap}
                 />
                 <CategorySection
                   title="Black vs 1.e4"
                   subtitle="Defenses against the King's Pawn"
                   openings={blackE4}
                   onOpeningClick={handleOpeningClick}
+                  progressMap={progressMap}
                 />
                 <CategorySection
                   title="Black vs 1.d4"
                   subtitle="Defenses against the Queen's Pawn"
                   openings={blackD4}
                   onOpeningClick={handleOpeningClick}
+                  progressMap={progressMap}
                 />
               </>
             ) : (
               /* Flat grid when side filter is active */
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {filtered.map((o) => (
-                  <OpeningCardComponent key={o.id} opening={o} onClick={() => handleOpeningClick(o.slug)} />
+                  <OpeningCardComponent key={o.id} opening={o} onClick={() => handleOpeningClick(o.slug)} progress={progressMap[o.id]} />
                 ))}
               </div>
             )}

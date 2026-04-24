@@ -20,6 +20,8 @@ import {
   CheckCircle2, Circle, Loader2, Play,
 } from "lucide-react";
 
+import { NavLogo } from "@/components/NavLogo";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Tag { name: string; category: string; slug: string; }
@@ -223,16 +225,22 @@ function OpeningDetailContent() {
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
       {/* Back nav */}
       <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-gray-200/70 bg-white/90"}`}>
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate("/openings")}
-            className={`flex items-center gap-1.5 text-xs transition-colors ${isDark ? "text-white/40 hover:text-emerald-400" : "text-gray-400 hover:text-[#3D6B47]"}`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Library
-          </button>
-          <span className={`${isDark ? "text-white/15" : "text-gray-300"}`}>/</span>
-          <span className={`text-xs font-medium truncate ${isDark ? "text-white/60" : "text-gray-700"}`}>{opening.name}</span>
+        <div className="max-w-5xl mx-auto px-4 py-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <NavLogo />
+            <AvatarNavDropdown />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/openings")}
+              className={`flex items-center gap-1.5 text-xs transition-colors ${isDark ? "text-white/40 hover:text-emerald-400" : "text-gray-400 hover:text-[#3D6B47]"}`}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Library
+            </button>
+            <span className={`${isDark ? "text-white/15" : "text-gray-300"}`}>/</span>
+            <span className={`text-xs font-medium truncate ${isDark ? "text-white/60" : "text-gray-700"}`}>{opening.name}</span>
+          </div>
         </div>
       </div>
 

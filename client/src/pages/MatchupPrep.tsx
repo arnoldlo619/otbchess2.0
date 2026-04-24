@@ -15,7 +15,7 @@ import { useParams, useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import {
-  ArrowLeft, Search, Target, BookOpen,
+  Search, Target, BookOpen,
   Shield, Clock, Crown,
   TrendingUp, Eye, Loader2,
   CircleDot, RefreshCw, ChevronRight, Trophy,
@@ -52,6 +52,8 @@ import {
 } from "../hooks/useOpponentProfile";
 
 import { authFetch } from "@/lib/apiFetch";
+import { NavLogo } from "@/components/NavLogo";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface OpeningStat {
@@ -522,17 +524,13 @@ export default function MatchupPrep() {
 
       {/* ── Sticky Header ── */}
       <div className={`sticky top-0 z-40 backdrop-blur-xl otb-header-safe ${t.header}`}>
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
-
-          <button
-            onClick={() => navigate("/")}
-            className={`p-2.5 rounded-xl transition-colors shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-              isDark ? "hover:bg-white/05 text-white/50 hover:text-white" : "hover:bg-gray-100 text-gray-400 hover:text-gray-900"
-            }`}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
+        {/* Nav bar row */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 pt-2 pb-1 flex items-center justify-between">
+          <NavLogo />
+          <AvatarNavDropdown />
+        </div>
+        {/* Search row */}
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
 
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
