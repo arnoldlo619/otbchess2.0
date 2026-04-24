@@ -10,9 +10,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Building2, Swords, Video, LogIn, Trophy, Shield, Timer } from "lucide-react";
+import { Building2, Swords, Video, LogIn, Trophy, Shield, Timer, Sun, Moon } from "lucide-react";
 import { useLocation } from "wouter";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const NAV_ITEMS = [
   { name: "Clubs",        href: "/clubs",  icon: Building2 },
@@ -30,6 +31,8 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const activeTournament = useActiveTournament();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -78,11 +81,11 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
         zIndex: 99999,
         borderRadius: 16,
         overflow: "hidden",
-        background: "oklch(0.17 0.06 145 / 0.97)",
-        border: "1px solid rgba(61,107,71,0.25)",
+        background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
+        border: isDark ? "1px solid rgba(61,107,71,0.25)" : "1px solid rgba(0,0,0,0.08)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+        boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.45)" : "0 8px 32px rgba(0,0,0,0.12)",
       }}
     >
       {/* Active Tournament — shown first if user has one */}
@@ -124,18 +127,18 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
             href={href}
             onClick={(e) => { e.preventDefault(); setOpen(false); window.location.href = href; }}
             className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors duration-100"
-            style={{ color: location.startsWith(href) ? "#fff" : "rgba(255,255,255,0.70)" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+            style={{ color: location.startsWith(href) ? (isDark ? "#fff" : "#111827") : (isDark ? "rgba(255,255,255,0.70)" : "#374151") }}
+            onMouseEnter={e => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
-            <Icon size={15} style={{ color: location.startsWith(href) ? "#4CAF50" : "rgba(255,255,255,0.45)", flexShrink: 0 }} />
+            <Icon size={15} style={{ color: location.startsWith(href) ? "#4CAF50" : (isDark ? "rgba(255,255,255,0.45)" : "#6B7280"), flexShrink: 0 }} />
             {name}
           </a>
         ))}
       </div>
 
       {/* Divider */}
-      <div style={{ margin: "0 12px", height: 1, background: "rgba(255,255,255,0.08)" }} />
+      <div style={{ margin: "0 12px", height: 1, background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
 
       {/* Sign In */}
       <div style={{ paddingTop: 6, paddingBottom: 6 }}>
@@ -148,6 +151,51 @@ export function GuestMobileMenu({ onSignInClick }: GuestMobileMenuProps) {
         >
           <LogIn size={15} style={{ flexShrink: 0 }} />
           Sign In
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div style={{ margin: "0 12px", height: 1, background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }} />
+
+      {/* Appearance toggle */}
+      <div style={{ paddingTop: 6, paddingBottom: 6 }}>
+        <button
+          onClick={() => { toggleTheme?.(); }}
+          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium transition-colors duration-100"
+          style={{ color: isDark ? "rgba(255,255,255,0.70)" : "#374151" }}
+          onMouseEnter={e => (e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+        >
+          {isDark
+            ? <Sun size={15} style={{ color: "rgba(255,255,255,0.45)", flexShrink: 0 }} />
+            : <Moon size={15} style={{ color: "#6B7280", flexShrink: 0 }} />}
+          <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+          {/* Mini pill toggle */}
+          <div
+            style={{
+              marginLeft: "auto",
+              width: 28,
+              height: 15,
+              borderRadius: 999,
+              background: isDark ? "rgba(255,255,255,0.12)" : "#3D6B47",
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0,
+              padding: "0 2px",
+            }}
+          >
+            <div
+              style={{
+                width: 11,
+                height: 11,
+                borderRadius: "50%",
+                background: "#fff",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                transform: isDark ? "translateX(0)" : "translateX(13px)",
+                transition: "transform 0.2s",
+              }}
+            />
+          </div>
         </button>
       </div>
     </div>
