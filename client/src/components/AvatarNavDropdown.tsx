@@ -470,17 +470,17 @@ export function AvatarNavDropdown({
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className={`flex items-center gap-1.5 rounded-full border transition-all border-white/20 bg-black/30 backdrop-blur-md hover:bg-white/10 active:bg-white/15`}
+            className={`flex items-center gap-1.5 rounded-full border transition-all ${isDark ? "border-white/20 bg-black/30 hover:bg-white/10 active:bg-white/15" : "border-gray-200 bg-white/80 hover:bg-gray-100 active:bg-gray-200 shadow-sm"} backdrop-blur-md`}
             style={{ padding: "3px 8px 3px 3px" }}
           >
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
               style={{ background: "rgba(255,255,255,0.08)" }}
             >
-              <LogIn className="w-3.5 h-3.5 text-white/50" />
+              <LogIn className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
             </div>
             <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className="w-3.5 h-3.5 text-white/50" />
+              <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
             </motion.div>
           </button>
           <AnimatePresence>
@@ -504,17 +504,17 @@ export function AvatarNavDropdown({
                 transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 className="absolute right-0 top-full mt-2 z-[9999] w-56 rounded-2xl shadow-2xl"
                 style={{
-                  background: "oklch(0.17 0.06 145 / 0.97)",
-                  border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+                  background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
+                  border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
                   backdropFilter: "blur(20px)",
                   WebkitBackdropFilter: "blur(20px)",
-                  boxShadow: `0 8px 32px rgba(0,0,0,0.55)`,
+                  boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55)` : "0 8px 32px rgba(0,0,0,0.12)",
                 }}
               >
                 <div className="px-2 py-2">
                   <button
                     onClick={handleSignIn}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
                   >
                     <LogIn className="w-4 h-4 flex-shrink-0" />
                     <span>Sign In</span>
@@ -523,7 +523,7 @@ export function AvatarNavDropdown({
                 {/* Divider */}
                 <div
                   className="mx-3 my-1 h-px"
-                  style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+                  style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
                 />
                 {/* Appearance toggle */}
                 <div className="px-2 pb-2">
@@ -562,7 +562,7 @@ export function AvatarNavDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
-        className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} bg-black/30 backdrop-blur-md hover:bg-white/10 active:bg-white/15`}
+        className={`flex items-center gap-1.5 rounded-full border transition-all ${buttonBorder} ${isDark ? "bg-black/30 hover:bg-white/10 active:bg-white/15" : "bg-white/80 hover:bg-gray-100 active:bg-gray-200 shadow-sm"} backdrop-blur-md`}
         style={{ padding: "3px 8px 3px 3px" }}
       >
         {/* Avatar circle */}
@@ -584,7 +584,7 @@ export function AvatarNavDropdown({
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-3.5 h-3.5 text-white/50" />
+          <ChevronDown className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
         </motion.div>
       </button>
 
@@ -615,11 +615,11 @@ export function AvatarNavDropdown({
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
             className="hidden md:block absolute right-0 top-full mt-2 z-[9999] w-64 rounded-2xl shadow-2xl"
             style={{
-              background: "oklch(0.17 0.06 145 / 0.97)",
-              border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+              background: isDark ? "oklch(0.17 0.06 145 / 0.97)" : "rgba(255,255,255,0.97)",
+              border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              boxShadow: `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)`,
+              boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${OTB_GREEN_GLOW}0.10)` : "0 8px 32px rgba(0,0,0,0.12)",
               maxHeight: "calc(100dvh - 5rem)",
               overflowY: "auto",
               overflowX: "hidden",
@@ -663,7 +663,7 @@ export function AvatarNavDropdown({
                   </div>
                   {user.chesscomUsername && (
                     <div className="flex flex-col gap-1">
-                      <p className="text-[11px] text-white/40 truncate leading-tight">
+                      <p className={`text-[11px] truncate leading-tight ${isDark ? "text-white/40" : "text-gray-400"}`}>
                         chess.com/{user.chesscomUsername}
                       </p>
                       {/* Compact three-rating row — only shown when at least one rating exists */}
@@ -766,13 +766,13 @@ export function AvatarNavDropdown({
             {user && !user.isGuest && (
               <div
                 className="mx-3 mb-1 h-px"
-                style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+                style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
               />
             )}
 
             {/* ── Section: Nav links ── */}
             <div className="px-2 pt-1.5 pb-1">
-              <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+              <p className={`px-2 pb-1 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
                 Navigate
               </p>
               {resolvedNavItems.map((item) => {
@@ -825,7 +825,7 @@ export function AvatarNavDropdown({
             {/* ── Divider ── */}
             <div
               className="mx-3 my-1 h-px"
-              style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+              style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
             />
 
             {/* ── Section: Appearance ── */}
@@ -854,7 +854,7 @@ export function AvatarNavDropdown({
             {/* ── Divider ── */}
             <div
               className="mx-3 my-1 h-px"
-              style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+              style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
             />
 
             {/* ── Section: User actions ── */}
@@ -924,7 +924,7 @@ export function AvatarNavDropdown({
               ) : (
                 <button
                   onClick={handleSignIn}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white hover:bg-white/07 transition-colors"
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
                 >
                   <LogIn className="w-4 h-4 flex-shrink-0" />
                   <span>Sign In</span>
@@ -964,11 +964,11 @@ export function AvatarNavDropdown({
                 }
                 className="fixed bottom-0 left-0 right-0 z-[9999] md:hidden rounded-t-3xl overflow-hidden"
                 style={{
-                  background: "oklch(0.15 0.06 145 / 0.98)",
-                  border: `1px solid ${OTB_GREEN_GLOW}0.22)`,
+                  background: isDark ? "oklch(0.15 0.06 145 / 0.98)" : "rgba(255,255,255,0.98)",
+                  border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.22)` : "1px solid rgba(0,0,0,0.08)",
                   backdropFilter: "blur(24px)",
                   WebkitBackdropFilter: "blur(24px)",
-                  boxShadow: `0 -8px 40px rgba(0,0,0,0.6), 0 0 32px ${OTB_GREEN_GLOW}0.08)`,
+                  boxShadow: isDark ? `0 -8px 40px rgba(0,0,0,0.6), 0 0 32px ${OTB_GREEN_GLOW}0.08)` : "0 -8px 40px rgba(0,0,0,0.15)",
                   paddingBottom: "env(safe-area-inset-bottom, 16px)",
                   opacity: swipeDy > 0 ? Math.max(0.4, 1 - swipeDy / 200) : 1,
                 }}
@@ -982,7 +982,7 @@ export function AvatarNavDropdown({
               >
                 <div
                   className="w-10 h-1 rounded-full transition-colors"
-                  style={{ background: swipeDy > 20 ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.18)" }}
+                  style={{ background: isDark ? (swipeDy > 20 ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.18)") : (swipeDy > 20 ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.12)") }}
                 />
               </div>
 
@@ -1022,7 +1022,7 @@ export function AvatarNavDropdown({
                       )}
                     </div>
                     {user.chesscomUsername && (
-                      <p className="text-[11px] text-white/40 truncate">
+                      <p className={`text-[11px] truncate ${isDark ? "text-white/40" : "text-gray-400"}`}>
                         chess.com/{user.chesscomUsername}
                       </p>
                     )}
@@ -1031,11 +1031,11 @@ export function AvatarNavDropdown({
               )}
 
               {/* Divider */}
-              <div className="mx-4 mb-2 h-px" style={{ background: `${OTB_GREEN_GLOW}0.15)` }} />
+              <div className="mx-4 mb-2 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
 
               {/* Nav links */}
               <div className="px-3 pb-1">
-                <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                <p className={`px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>
                   Navigate
                 </p>
                 {resolvedNavItems.map((item, i) => {
@@ -1073,7 +1073,7 @@ export function AvatarNavDropdown({
               </div>
 
               {/* Divider */}
-              <div className="mx-4 my-2 h-px" style={{ background: `${OTB_GREEN_GLOW}0.15)` }} />
+              <div className="mx-4 my-2 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
 
               {/* Appearance toggle */}
               <div className="px-3 pb-1">
@@ -1083,7 +1083,7 @@ export function AvatarNavDropdown({
                   style={{ border: "1px solid transparent" }}
                 >
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)" }}>
-                    {isDark ? <Sun className="w-4 h-4 text-white/50" /> : <Moon className="w-4 h-4 text-white/50" />}
+                    {isDark ? <Sun className="w-4 h-4 text-white/50" /> : <Moon className="w-4 h-4 text-gray-500" />}
                   </div>
                   <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
                   <div
@@ -1099,7 +1099,7 @@ export function AvatarNavDropdown({
               </div>
 
               {/* Divider */}
-              <div className="mx-4 my-2 h-px" style={{ background: `${OTB_GREEN_GLOW}0.15)` }} />
+              <div className="mx-4 my-2 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
 
               {/* User actions */}
               <div className="px-3 pb-3">
@@ -1111,7 +1111,7 @@ export function AvatarNavDropdown({
                     style={{ border: "1px solid transparent" }}
                   >
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)" }}>
-                      <Crown className="w-4 h-4 text-white/50" />
+                      <Crown className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-500"}`} />
                     </div>
                     <span>My Profile</span>
                   </Link>
