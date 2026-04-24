@@ -56,8 +56,8 @@ const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: stri
 };
 
 const SIDE_ICONS: Record<string, React.ReactNode> = {
-  white: <div className="w-3 h-3 rounded-full bg-white border border-white/30" />,
-  black: <div className="w-3 h-3 rounded-full bg-gray-800 border border-white/20" />,
+  white: <div className="w-3 h-3 rounded-full bg-white border border-gray-300 dark:border-white/30" />,
+  black: <div className="w-3 h-3 rounded-full bg-gray-800 border border-gray-400 dark:border-white/20" />,
 };
 
 // ── Mini Board Thumbnail ──────────────────────────────────────────────────────
@@ -94,10 +94,12 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 
 // ── Opening Card ──────────────────────────────────────────────────────────────
 function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onClick: () => void }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col bg-[#0f1f13]/80 border border-white/[0.06] rounded-xl overflow-hidden hover:border-emerald-500/30 hover:bg-[#0f1f13] transition-all duration-300 text-left w-full"
+      className={`group relative flex flex-col rounded-xl overflow-hidden transition-all duration-300 text-left w-full ${isDark ? "bg-[#0f1f13]/80 border border-white/[0.06] hover:border-emerald-500/30 hover:bg-[#0f1f13]" : "bg-white border border-gray-200/80 hover:border-[#3D6B47]/40 hover:shadow-md shadow-sm"}`}
     >
       {/* Featured badge */}
       {opening.isFeatured && (
@@ -119,9 +121,9 @@ function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onCl
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-0.5">
               {SIDE_ICONS[opening.side]}
-              <span className="text-[10px] text-white/40 font-mono uppercase tracking-wider">{opening.eco}</span>
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>{opening.eco}</span>
             </div>
-            <h3 className="text-sm font-semibold text-white/90 leading-tight group-hover:text-emerald-400 transition-colors truncate">
+            <h3 className={`text-sm font-semibold leading-tight transition-colors truncate ${isDark ? "text-white/90 group-hover:text-emerald-400" : "text-gray-900 group-hover:text-[#3D6B47]"}`}>
               {opening.name}
             </h3>
           </div>
@@ -129,7 +131,7 @@ function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onCl
 
         {/* Description */}
         {opening.shortDescription && (
-          <p className="text-[11px] text-white/50 leading-relaxed line-clamp-2">
+          <p className={`text-[11px] leading-relaxed line-clamp-2 ${isDark ? "text-white/50" : "text-gray-500"}`}>
             {opening.shortDescription}
           </p>
         )}
@@ -138,7 +140,7 @@ function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onCl
         <div className="flex items-center gap-2 mt-auto pt-1">
           <DifficultyBadge difficulty={opening.difficulty} />
           {opening.lineCount > 0 && (
-            <span className="text-[10px] text-white/30 font-mono">
+            <span className={`text-[10px] font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>
               {opening.lineCount} {opening.lineCount === 1 ? "line" : "lines"}
             </span>
           )}
@@ -159,7 +161,7 @@ function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onCl
               .map((tag) => (
                 <span
                   key={tag.slug}
-                  className="px-1.5 py-0.5 rounded text-[9px] text-white/30 bg-white/[0.03] border border-white/[0.04]"
+                  className={`px-1.5 py-0.5 rounded text-[9px] ${isDark ? "text-white/30 bg-white/[0.03] border border-white/[0.04]" : "text-gray-400 bg-gray-100 border border-gray-200/60"}`}
                 >
                   {tag.name}
                 </span>
@@ -178,6 +180,8 @@ function OpeningCardComponent({ opening, onClick }: { opening: OpeningCard; onCl
 
 // ── Featured Hero Card ────────────────────────────────────────────────────────
 function FeaturedCard({ opening, onClick }: { opening: OpeningCard; onClick: () => void }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   return (
     <button
       onClick={onClick}
@@ -193,18 +197,18 @@ function FeaturedCard({ opening, onClick }: { opening: OpeningCard; onClick: () 
         </div>
         <div className="flex items-center gap-2">
           {SIDE_ICONS[opening.side]}
-          <span className="text-[11px] text-white/40 font-mono">{opening.eco}</span>
+          <span className={`text-[11px] font-mono ${isDark ? "text-white/40" : "text-gray-400"}`}>{opening.eco}</span>
         </div>
-        <h3 className="text-lg font-bold text-white/95 group-hover:text-emerald-400 transition-colors">
+        <h3 className={`text-lg font-bold transition-colors ${isDark ? "text-white/95 group-hover:text-emerald-400" : "text-gray-900 group-hover:text-[#3D6B47]"}`}>
           {opening.name}
         </h3>
         {opening.shortDescription && (
-          <p className="text-xs text-white/50 leading-relaxed line-clamp-2">{opening.shortDescription}</p>
+          <p className={`text-xs leading-relaxed line-clamp-2 ${isDark ? "text-white/50" : "text-gray-500"}`}>{opening.shortDescription}</p>
         )}
         <div className="flex items-center gap-3 mt-1">
           <DifficultyBadge difficulty={opening.difficulty} />
           {opening.lineCount > 0 && (
-            <span className="text-[11px] text-white/30 font-mono">{opening.lineCount} lines</span>
+            <span className={`text-[11px] font-mono ${isDark ? "text-white/30" : "text-gray-400"}`}>{opening.lineCount} lines</span>
           )}
         </div>
       </div>
@@ -227,13 +231,15 @@ function FilterChip({
   onClick: () => void;
   icon?: React.ReactNode;
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   return (
     <button
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
         active
           ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-          : "bg-white/[0.03] text-white/50 border-white/[0.06] hover:border-white/10 hover:text-white/70"
+          : isDark ? "bg-white/[0.03] text-white/50 border-white/[0.06] hover:border-white/10 hover:text-white/70" : "bg-gray-100/70 text-gray-500 border-gray-200/60 hover:border-gray-300 hover:text-gray-700"
       }`}
     >
       {icon}
@@ -254,12 +260,14 @@ function CategorySection({
   openings: OpeningCard[];
   onOpeningClick: (slug: string) => void;
 }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   if (sectionOpenings.length === 0) return null;
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-white/90">{title}</h2>
-        <p className="text-xs text-white/40 mt-0.5">{subtitle}</p>
+        <h2 className={`text-lg font-bold ${isDark ? "text-white/90" : "text-gray-900"}`}>{title}</h2>
+        <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>{subtitle}</p>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {sectionOpenings.map((o) => (
@@ -363,15 +371,15 @@ function OpeningsLibraryContent() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
-      <div className="border-b border-white/[0.06] bg-[#0a1a0e]/80 backdrop-blur-xl sticky top-0 z-30">
+      <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-gray-200/70 bg-white/90"}`}>
         <div className="max-w-7xl mx-auto px-4 py-3">
           {/* Title row + filter toggle */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <BookOpen className="w-5 h-5 text-emerald-400 shrink-0" />
               <div className="min-w-0">
-                <h1 className="text-base font-bold text-white/90 truncate">Openings Library</h1>
-                <p className="text-[11px] text-white/40 hidden sm:block">
+                <h1 className={`text-base font-bold truncate ${isDark ? "text-white/90" : "text-gray-900"}`}>Openings Library</h1>
+                <p className={`text-[11px] hidden sm:block ${isDark ? "text-white/40" : "text-gray-500"}`}>
                   {allOpenings.length} openings &middot; {allOpenings.reduce((s, o) => s + o.lineCount, 0)} study lines
                 </p>
               </div>
@@ -381,7 +389,7 @@ function OpeningsLibraryContent() {
               className={`shrink-0 p-2.5 rounded-lg border transition-all ${
                 showFilters || hasActiveFilters
                   ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                  : "bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/60"
+                  : isDark ? "bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/60" : "bg-gray-100 border-gray-200 text-gray-400 hover:text-gray-600"
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -389,45 +397,45 @@ function OpeningsLibraryContent() {
           </div>
           {/* Search bar — full width below title on all screen sizes */}
           <div className="mt-2.5 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? "text-white/30" : "text-gray-400"}`} />
             <input
               type="text"
               placeholder="Search openings..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/80 placeholder:text-white/25 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.06] transition-all"
+              className={`w-full pl-9 pr-8 py-2.5 rounded-lg focus:outline-none transition-all ${isDark ? "bg-white/[0.04] border border-white/[0.06] text-white/80 placeholder:text-white/25 focus:border-emerald-500/30 focus:bg-white/[0.06]" : "bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]/50 focus:bg-white"}`}
               style={{ fontSize: "16px" }}
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10"
+                className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full ${isDark ? "hover:bg-white/10" : "hover:bg-gray-200"}`}
               >
-                <X className="w-3.5 h-3.5 text-white/40" />
+                <X className={`w-3.5 h-3.5 ${isDark ? "text-white/40" : "text-gray-400"}`} />
               </button>
             )}
           </div>
 
           {/* Filter bar */}
           {showFilters && (
-            <div className="mt-3 pt-3 border-t border-white/[0.04] space-y-2">
+            <div className={`mt-3 pt-3 border-t space-y-2 ${isDark ? "border-white/[0.04]" : "border-gray-200/60"}`}>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] text-white/30 uppercase tracking-wider font-medium w-12">Side</span>
+                <span className={`text-[10px] uppercase tracking-wider font-medium w-12 ${isDark ? "text-white/30" : "text-gray-400"}`}>Side</span>
                 <FilterChip
                   label="White"
                   active={sideFilter === "white"}
                   onClick={() => setSideFilter(sideFilter === "white" ? null : "white")}
-                  icon={<div className="w-2.5 h-2.5 rounded-full bg-white border border-white/30" />}
+                  icon={<div className="w-2.5 h-2.5 rounded-full bg-white border border-gray-300 dark:border-white/30" />}
                 />
                 <FilterChip
                   label="Black"
                   active={sideFilter === "black"}
                   onClick={() => setSideFilter(sideFilter === "black" ? null : "black")}
-                  icon={<div className="w-2.5 h-2.5 rounded-full bg-gray-800 border border-white/20" />}
+                  icon={<div className="w-2.5 h-2.5 rounded-full bg-gray-800 border border-gray-400 dark:border-white/20" />}
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] text-white/30 uppercase tracking-wider font-medium w-12">Level</span>
+                <span className={`text-[10px] uppercase tracking-wider font-medium w-12 ${isDark ? "text-white/30" : "text-gray-400"}`}>Level</span>
                 {DIFFICULTY_ORDER.map((d) => (
                   <FilterChip
                     key={d}
@@ -457,7 +465,7 @@ function OpeningsLibraryContent() {
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-              <span className="text-sm text-white/40">Loading openings...</span>
+              <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-500"}`}>Loading openings...</span>
             </div>
           </div>
         ) : error ? (
@@ -475,8 +483,8 @@ function OpeningsLibraryContent() {
         ) : filtered.length === 0 ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-2">
-              <Search className="w-8 h-8 text-white/20 mx-auto" />
-              <p className="text-sm text-white/40">No openings match your filters</p>
+              <Search className={`w-8 h-8 mx-auto ${isDark ? "text-white/20" : "text-gray-300"}`} />
+              <p className={`text-sm ${isDark ? "text-white/40" : "text-gray-500"}`}>No openings match your filters</p>
               <button onClick={clearFilters} className="text-xs text-emerald-400 hover:underline">
                 Clear filters
               </button>
@@ -489,7 +497,7 @@ function OpeningsLibraryContent() {
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-400" />
-                  <h2 className="text-sm font-semibold text-white/70 uppercase tracking-wider">Featured</h2>
+                  <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/70" : "text-gray-600"}`}>Featured</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {featured.slice(0, 4).map((o) => (

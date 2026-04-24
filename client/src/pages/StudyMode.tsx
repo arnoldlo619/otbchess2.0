@@ -353,7 +353,7 @@ function StudyModeContent() {
       <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-          <span className="text-sm text-white/40">Loading study line...</span>
+          <span className={`text-sm ${isDark ? "text-white/40" : "text-gray-500"}`}>Loading study line...</span>
         </div>
       </div>
     );
@@ -375,18 +375,18 @@ function StudyModeContent() {
   return (
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
       {/* Header */}
-      <div className="border-b border-white/[0.06] bg-[#0a1a0e]/80 backdrop-blur-xl sticky top-0 z-30">
+      <div className={`border-b backdrop-blur-xl sticky top-0 z-30 ${isDark ? "border-white/[0.06] bg-[#0a1a0e]/80" : "border-gray-200/70 bg-white/90"}`}>
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate(`/openings/${openingSlug}`)}
-              className="shrink-0 p-2.5 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors"
+              className={`shrink-0 p-2.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/[0.05] text-white/40 hover:text-white/70" : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"}`}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <div className="min-w-0">
-              <p className="text-[11px] text-white/30 truncate">{lineData.opening.name}</p>
-              <h1 className="text-sm font-semibold text-white/90 truncate">{lineData.title}</h1>
+              <p className={`text-[11px] truncate ${isDark ? "text-white/30" : "text-gray-400"}`}>{lineData.opening.name}</p>
+              <h1 className={`text-sm font-semibold truncate ${isDark ? "text-white/90" : "text-gray-900"}`}>{lineData.title}</h1>
             </div>
           </div>
 
@@ -414,17 +414,17 @@ function StudyModeContent() {
 
           {/* Progress bar — desktop inline */}
           <div className="hidden sm:flex items-center gap-2 w-32">
-            <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+            <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/[0.06]" : "bg-gray-200"}`}>
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all duration-300"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
-            <span className="text-[11px] text-white/30 font-mono w-8 text-right">{progressPct}%</span>
+            <span className={`text-[11px] font-mono w-8 text-right ${isDark ? "text-white/30" : "text-gray-400"}`}>{progressPct}%</span>
           </div>
         </div>
         {/* Progress bar — mobile full-width strip */}
-        <div className="sm:hidden h-0.5 bg-white/[0.06]">
+        <div className={`sm:hidden h-0.5 ${isDark ? "bg-white/[0.06]" : "bg-gray-200"}`}>
           <div
             className="h-full bg-emerald-500 transition-all duration-300"
             style={{ width: `${progressPct}%` }}
@@ -437,7 +437,7 @@ function StudyModeContent() {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Left: Board */}
           <div className="lg:w-[480px] xl:w-[520px] shrink-0 space-y-3">
-            <div className="rounded-xl overflow-hidden border border-white/[0.06]">
+            <div className={`rounded-xl overflow-hidden border ${isDark ? "border-white/[0.06]" : "border-gray-200"}`}>
               <Chessboard
                 options={{
                   position: currentFen,
@@ -457,7 +457,7 @@ function StudyModeContent() {
               <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={() => setCurrentPly(0)}
-                  className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.05] transition-colors"
+                  className={`p-2 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-white/60 hover:bg-white/[0.05]" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <ArrowLeft className="w-4 h-4 -ml-3" />
@@ -465,7 +465,7 @@ function StudyModeContent() {
                 <button
                   onClick={stepBackward}
                   disabled={currentPly === 0}
-                  className="p-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-colors disabled:opacity-20"
+                  className={`p-2 rounded-lg transition-colors disabled:opacity-20 ${isDark ? "text-white/40 hover:text-white/70 hover:bg-white/[0.05]" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
@@ -507,12 +507,12 @@ function StudyModeContent() {
                   </div>
                 )}
                 {!moveResult && isPlayerTurn && !completed && (
-                  <div className="text-xs text-white/40">
+                  <div className={`text-xs ${isDark ? "text-white/40" : "text-gray-500"}`}>
                     Your move — play the correct continuation
                   </div>
                 )}
                 {!moveResult && !isPlayerTurn && !completed && (
-                  <div className="text-xs text-white/30">Opponent's turn...</div>
+                  <div className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>Opponent's turn...</div>
                 )}
               </div>
             )}
@@ -521,7 +521,7 @@ function StudyModeContent() {
           {/* Right: Explanation panel */}
           <div className="flex-1 space-y-4 min-w-0">
             {/* Move list */}
-            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] max-h-48 overflow-y-auto">
+            <div className={`p-3 rounded-xl max-h-48 overflow-y-auto ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
               <MoveList nodes={mainNodes} currentPly={currentPly} onJumpTo={jumpTo} />
             </div>
 
@@ -530,7 +530,7 @@ function StudyModeContent() {
               <div className="p-4 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/10">
                 <div className="flex items-start gap-2">
                   <Lightbulb className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                  <p className="text-sm text-white/70 leading-relaxed">{currentNode.annotation}</p>
+                  <p className={`text-sm leading-relaxed ${isDark ? "text-white/70" : "text-gray-700"}`}>{currentNode.annotation}</p>
                 </div>
               </div>
             )}
@@ -538,12 +538,12 @@ function StudyModeContent() {
             {/* Strategic info cards */}
             <div className="space-y-2">
               {lineData.strategicGoal && (
-                <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                <div className={`p-3 rounded-lg ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <Target className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-[10px] text-white/40 uppercase tracking-wider font-medium">Strategic Goal</span>
+                    <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Strategic Goal</span>
                   </div>
-                  <p className="text-xs text-white/60 leading-relaxed">{lineData.strategicGoal}</p>
+                  <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>{lineData.strategicGoal}</p>
                 </div>
               )}
 
@@ -551,9 +551,9 @@ function StudyModeContent() {
                 <div className="p-3 rounded-lg bg-red-500/[0.03] border border-red-500/[0.06]">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Eye className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-[10px] text-white/40 uppercase tracking-wider font-medium">Common Mistake</span>
+                    <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Common Mistake</span>
                   </div>
-                  <p className="text-xs text-white/60 leading-relaxed">{lineData.commonMistake}</p>
+                  <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>{lineData.commonMistake}</p>
                 </div>
               )}
 
@@ -561,9 +561,9 @@ function StudyModeContent() {
                 <div className="p-3 rounded-lg bg-amber-500/[0.03] border border-amber-500/[0.06]">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Zap className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-[10px] text-white/40 uppercase tracking-wider font-medium">Punishment Idea</span>
+                    <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Punishment Idea</span>
                   </div>
-                  <p className="text-xs text-white/60 leading-relaxed">{lineData.punishmentIdea}</p>
+                  <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>{lineData.punishmentIdea}</p>
                 </div>
               )}
             </div>
@@ -574,7 +574,7 @@ function StudyModeContent() {
                 {!showHint ? (
                   <button
                     onClick={() => setShowHint(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-white/40 hover:text-amber-400 bg-white/[0.02] border border-white/[0.04] hover:border-amber-500/20 transition-all"
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs transition-all ${isDark ? "text-white/40 hover:text-amber-400 bg-white/[0.02] border border-white/[0.04] hover:border-amber-500/20" : "text-gray-400 hover:text-amber-600 bg-gray-50 border border-gray-200/70 hover:border-amber-400/40"}`}
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
                     Show Hint
@@ -585,7 +585,7 @@ function StudyModeContent() {
                       <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
                       <span className="text-[10px] text-amber-400/80 uppercase tracking-wider font-medium">Hint</span>
                     </div>
-                    <p className="text-xs text-white/60">
+                    <p className={`text-xs ${isDark ? "text-white/60" : "text-gray-600"}`}>
                       {lineData.hintText ?? (nextNode ? `The correct move is ${nextNode.moveSan}` : "Complete!")}
                     </p>
                   </div>
@@ -598,8 +598,8 @@ function StudyModeContent() {
               <div className="p-6 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 text-center space-y-4">
                 <Trophy className="w-10 h-10 text-amber-400 mx-auto" />
                 <div>
-                  <h3 className="text-lg font-bold text-white/90">Line Complete!</h3>
-                  <p className="text-xs text-white/40 mt-1">
+                  <h3 className={`text-lg font-bold ${isDark ? "text-white/90" : "text-gray-900"}`}>Line Complete!</h3>
+                  <p className={`text-xs mt-1 ${isDark ? "text-white/40" : "text-gray-500"}`}>
                     {studyState === "learn"
                       ? "You've reviewed all moves in this line"
                       : practiceErrors === 0
@@ -610,7 +610,7 @@ function StudyModeContent() {
                 <div className="flex items-center justify-center gap-2">
                   <button
                     onClick={resetLine}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white/60 bg-white/[0.04] border border-white/[0.06] hover:border-white/10 transition-all"
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${isDark ? "text-white/60 bg-white/[0.04] border border-white/[0.06] hover:border-white/10" : "text-gray-600 bg-gray-100 border border-gray-200 hover:border-gray-300"}`}
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     Retry
@@ -637,19 +637,19 @@ function StudyModeContent() {
 
             {/* Line summary */}
             {lineData.lineSummary && (
-              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+              <div className={`p-3 rounded-lg ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <BookOpen className="w-3.5 h-3.5 text-white/30" />
-                  <span className="text-[10px] text-white/30 uppercase tracking-wider font-medium">Line Summary</span>
+                  <BookOpen className={`w-3.5 h-3.5 ${isDark ? "text-white/30" : "text-gray-400"}`} />
+                  <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/30" : "text-gray-400"}`}>Line Summary</span>
                 </div>
-                <p className="text-xs text-white/50 leading-relaxed">{lineData.lineSummary}</p>
+                <p className={`text-xs leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>{lineData.lineSummary}</p>
               </div>
             )}
 
             {/* Keyboard shortcuts hint (Learn mode) */}
             {studyState === "learn" && (
-              <div className="text-[10px] text-white/20 text-center">
-                Use <kbd className="px-1 py-0.5 rounded bg-white/[0.05] text-white/30 font-mono">←</kbd>{" "}
+              <div className={`text-[10px] text-center ${isDark ? "text-white/20" : "text-gray-400"}`}>
+                Use <kbd className={`px-1 py-0.5 rounded font-mono ${isDark ? "bg-white/[0.05] text-white/30" : "bg-gray-100 text-gray-500"}`}>←</kbd>{" "}
                 <kbd className="px-1 py-0.5 rounded bg-white/[0.05] text-white/30 font-mono">→</kbd> arrow keys to navigate
               </div>
             )}
