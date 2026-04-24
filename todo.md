@@ -5313,3 +5313,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add swipe left/right gesture to navigate between My Board, Standings, and Tools tabs
 - [x] Add slide transition animation between tabs on swipe
 - [x] Show swipe indicator dots below tabs on mobile
+
+## My Clubs Sync Bug Fix
+- [x] Replace localStorage listMyClubs call in MyClubs.tsx with server API (apiListMyClubs)
+- [x] Ensure club creation wizard calls joinClub locally after server creation for immediate UI feedback
+- [x] Verify Profile page clubs show correctly (already uses apiListMyClubs)

@@ -26,7 +26,7 @@ import {
 } from "@/lib/clubRegistry";
 import {
   apiListPublicClubs,
-  apiListMyClubs as _apiListMyClubs,
+  apiListMyClubs,
   migrateLocalClubsToServer,
 } from "@/lib/clubsApi";
 import { FeaturedClubsCarousel } from "@/components/FeaturedClubsCarousel";
@@ -686,7 +686,20 @@ export default function MyClubs() {
     setAllClubs(all);
 
     if (user) {
-      const joined = listMyClubs(user.id);
+      // Fetch from server so owned/joined clubs are always in sync (not just localStorage)
+      let joined: Club[] = [];
+      try {
+        joined = await apiListMyClubs();
+        // Also sync to localStorage so offline fallback stays current
+        joined.forEach((c) => {
+          if (!listMyClubs(user.id).find((lc) => lc.id === c.id)) {
+            joinClub(c.id, { userId: user.id, displayName: user.displayName ?? "" });
+          }
+        });
+      } catch {
+        // Fallback to localStorage if server is unreachable
+        joined = listMyClubs(user.id);
+      }
       setMyClubs(joined);
       const joinedIds = new Set(joined.map((c) => c.id));
       const followed = all.filter((c) => !joinedIds.has(c.id) && isFollowing(c.id, user.id));
