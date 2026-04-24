@@ -694,7 +694,7 @@ export default function GameRecorder() {
 
                 {/* ── Card 3: Matchup Prep ── */}
                 <button
-                  onClick={() => navigate("/matchup-prep")}
+                  onClick={() => navigate("/prep")}
                   className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                     isDark
                       ? "bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-amber-900/10"
