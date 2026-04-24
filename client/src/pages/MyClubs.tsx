@@ -104,12 +104,15 @@ function ClubCard({
   isDark,
   compact: _compact = false,
   toDashboard = false,
+  isOwned = false,
 }: {
   club: Club;
   isDark: boolean;
   compact?: boolean;
   toDashboard?: boolean;
+  isOwned?: boolean;
 }) {
+  const [, navigate] = useLocation();
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
   const cardBorder = isDark ? "border-white/8" : "border-gray-100";
@@ -119,6 +122,7 @@ function ClubCard({
   const isTrending = /^seed-club-(7|8|9|10|11)$/.test(club.id);
 
   return (
+    <div className="relative">
     <Link href={toDashboard ? `/clubs/${club.id}/home` : `/clubs/${club.id}`}>
       <div
         className={`group rounded-3xl border ${cardBorder} ${card} overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 cursor-pointer`}
@@ -143,6 +147,13 @@ function ClubCard({
           )}
           {/* Dark scrim for text legibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          {/* Owner crown badge */}
+          {isOwned && (
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/90 text-black backdrop-blur-sm">
+              <Crown className="w-3 h-3" />
+              Owner
+            </div>
+          )}
           {/* Trending badge */}
           {isTrending && (
             <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/90 text-black backdrop-blur-sm">
@@ -217,6 +228,21 @@ function ClubCard({
         </div>
       </div>
     </Link>
+    {/* Manage button — floats below card for owned clubs */}
+    {isOwned && (
+      <button
+        onClick={(e) => { e.stopPropagation(); navigate(`/clubs/${club.id}?settings=1`); }}
+        className={`mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-2xl text-xs font-semibold transition-all duration-150 ${
+          isDark
+            ? "bg-amber-400/10 text-amber-400 hover:bg-amber-400/20 border border-amber-400/20"
+            : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+        }`}
+      >
+        <Crown className="w-3.5 h-3.5" />
+        Manage Club
+      </button>
+    )}
+    </div>
   );
 }
 
@@ -892,7 +918,13 @@ export default function MyClubs() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {myClubs.map((club) => (
-                  <ClubCard key={club.id} club={club} isDark={isDark} toDashboard={true} />
+                  <ClubCard
+                    key={club.id}
+                    club={club}
+                    isDark={isDark}
+                    toDashboard={true}
+                    isOwned={!!user && club.ownerId === user.id}
+                  />
                 ))}
               </div>
             )}

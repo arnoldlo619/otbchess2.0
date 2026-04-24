@@ -5318,3 +5318,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Replace localStorage listMyClubs call in MyClubs.tsx with server API (apiListMyClubs)
 - [x] Ensure club creation wizard calls joinClub locally after server creation for immediate UI feedback
 - [x] Verify Profile page clubs show correctly (already uses apiListMyClubs)
+
+## Owned Club Manage Button
+- [x] Add Crown badge + Manage button to owned club cards in My Clubs page
+- [x] Link Manage button to /clubs/:id?settings=1 (auto-opens settings panel)

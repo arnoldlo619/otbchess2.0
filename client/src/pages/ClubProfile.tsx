@@ -684,7 +684,10 @@ export default function ClubProfile() {
   // Track which draft leagues the current user has already requested to join
   const [requestedLeagueIds, setRequestedLeagueIds] = useState<Set<string>>(new Set());
   const [requestingLeagueId, setRequestingLeagueId] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(() => {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    return p.get("settings") === "1";
+  });
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined);
   const [pendingBanner, setPendingBanner] = useState<string | null | undefined>(undefined);
   // Track broken images so we can fall back to placeholder gracefully
