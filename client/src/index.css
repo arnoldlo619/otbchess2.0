@@ -222,8 +222,8 @@
   .chess-board-bg {
     background-image: 
       repeating-conic-gradient(
-        oklch(0.95 0.02 95) 0% 25%, 
-        oklch(0.55 0.13 145 / 0.06) 0% 50%
+        oklch(0.93 0.03 145 / 0.65) 0% 25%, 
+        oklch(0.55 0.13 145 / 0.11) 0% 50%
       );
     background-size: 40px 40px;
   }

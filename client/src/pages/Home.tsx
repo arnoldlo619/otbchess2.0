@@ -396,7 +396,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
   const isDark = theme === "dark";
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 sm:pt-24 md:pt-16 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-white"}`}>
+    <section className={`relative min-h-screen flex items-center overflow-hidden pt-28 sm:pt-24 md:pt-16 transition-colors duration-500 ${isDark ? "bg-[oklch(0.20_0.06_145)]" : "bg-[#EEF5EE]"}`}>
       {/* Chess board texture */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
 
@@ -406,7 +406,7 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
         style={{
           background: isDark
             ? "radial-gradient(ellipse at 50% 0%, oklch(0.44 0.12 145 / 0.14) 0%, transparent 70%)"
-            : "radial-gradient(ellipse at 50% 0%, oklch(0.55 0.13 145 / 0.07) 0%, transparent 70%)",
+            : "radial-gradient(ellipse at 50% 0%, oklch(0.55 0.13 145 / 0.14) 0%, transparent 65%)",
         }}
       />
 
@@ -415,9 +415,9 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
           <div className="opacity-0-init animate-fade-in-up flex justify-center mb-8" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
             <HoverBorderGradient
               as="span"
-              containerClassName={isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-white"}
+              containerClassName={isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#EEF5EE]"}
               className={`text-[11px] font-semibold tracking-[0.18em] uppercase leading-none ${
-                isDark ? "text-white/75 bg-[oklch(0.18_0.05_145)]" : "text-[#3D6B47] bg-white"
+                isDark ? "text-white/75 bg-[oklch(0.18_0.05_145)]" : "text-[#3D6B47] bg-[#EEF5EE]"
               }`}
             >
               For Chess Clubs &amp; Communities
