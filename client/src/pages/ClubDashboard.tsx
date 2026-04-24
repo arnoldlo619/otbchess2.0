@@ -690,6 +690,11 @@ function EventCard({
 }
 
 /** Create Event modal */
+const COUNTRY_FLAGS: Record<string, string> = {
+  GB: "🇬🇧", US: "🇺🇸", DE: "🇩🇪", JP: "🇯🇵", IN: "🇮🇳", FR: "🇫🇷",
+  ES: "🇪🇸", IT: "🇮🇹", CA: "🇨🇦", AU: "🇦🇺", BR: "🇧🇷", RU: "🇷🇺",
+};
+
 const ACCENT_PRESETS = [
   "#4CAF50", "#2196F3", "#9C27B0", "#FF5722", "#FF9800", "#E91E63", "#00BCD4", "#795548",
 ];
@@ -2934,6 +2939,85 @@ export default function ClubDashboard() {
           <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
+                {/* ── CLUB BANNER ─────────────────────────────────────────── */}
+                {(() => {
+                  const flag = COUNTRY_FLAGS[club.country ?? ""] ?? "🌍";
+                  return (
+                    <div
+                      className="relative rounded-3xl overflow-hidden mb-5 chess-board-bg"
+                      style={{ minHeight: "120px" }}
+                    >
+                      {/* Dark gradient overlay */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${accent}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)`,
+                        }}
+                      />
+                      {/* Content */}
+                      <div className="relative z-10 flex items-center gap-5 p-5 sm:p-6">
+                        {/* Club avatar */}
+                        <div
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg"
+                          style={{ background: accent, border: `2px solid ${accent}66` }}
+                        >
+                          {club.avatarUrl ? (
+                            <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-3xl">{flag}</span>
+                          )}
+                        </div>
+                        {/* Club identity */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white truncate">
+                              {club.name}
+                            </h1>
+                            {club.isPublic ? (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: `${accent}33`, color: accent }}>Public</span>
+                            ) : (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)" }}>Private</span>
+                            )}
+                          </div>
+                          {club.description && (
+                            <p className="text-sm leading-relaxed line-clamp-2" style={{ color: "oklch(0.70 0.08 145)" }}>
+                              {club.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" style={{ color: accent }} />
+                              <span className="font-semibold text-white">{club.memberCount}</span> members
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Trophy className="w-3 h-3" style={{ color: accent }} />
+                              <span className="font-semibold text-white">{club.tournamentCount}</span> tournaments
+                            </span>
+                            {club.location && (
+                              <span className="hidden sm:flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {flag} {club.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Admin CTA */}
+                        {isOwnerOrDirector && (
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={() => setTab("analytics")}
+                              className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90 flex items-center gap-1.5"
+                              style={{ background: accent, color: "#fff" }}
+                            >
+                              <BarChart2 className="w-3 h-3" />
+                              Analytics
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
