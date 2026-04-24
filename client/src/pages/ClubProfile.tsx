@@ -702,7 +702,10 @@ export default function ClubProfile() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isLeavingClub, setIsLeavingClub] = useState(false);
-  const [showWizard, setShowWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(() => {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    return p.get("create") === "1";
+  });
   const [liveTournaments, setLiveTournaments] = useState<TournamentConfig[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [announcementDraft, setAnnouncementDraft] = useState("");

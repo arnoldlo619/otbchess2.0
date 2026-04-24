@@ -5322,3 +5322,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Owned Club Manage Button
 - [x] Add Crown badge + Manage button to owned club cards in My Clubs page
 - [x] Link Manage button to /clubs/:id?settings=1 (auto-opens settings panel)
+
+## New Tournament Shortcut on Club Cards
+- [x] Add "New Tournament" button to owned club cards in My Clubs
+- [x] Button links to /clubs/:id?create=1 which auto-opens tournament wizard
