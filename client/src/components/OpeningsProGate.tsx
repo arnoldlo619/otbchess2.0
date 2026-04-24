@@ -21,7 +21,9 @@ import {
   LogIn,
   Eye,
   Lock,
+  ChevronLeft,
 } from "lucide-react";
+import { NavLogo } from "@/components/NavLogo";
 import { ProUpgradeModal } from "./ProUpgradeModal";
 import AuthModal from "./AuthModal";
 
@@ -31,28 +33,45 @@ const BETA_OPEN = false;
 
 // ─── Shared gate card wrapper ─────────────────────────────────────────────────
 function GateLayout({ children }: { children: React.ReactNode }) {
+  const [, navigate] = useLocation();
   return (
-    <div className="min-h-screen chess-board-bg dark:chess-board-bg bg-[#0d1a0f] flex items-center justify-center px-4 py-12">
-      {/* Radial glow behind card */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#22c55e]/5 blur-3xl" />
+    <div className="min-h-screen chess-board-bg dark:chess-board-bg bg-[#0d1a0f] flex flex-col">
+      {/* Nav bar — always visible so users can navigate away */}
+      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-[#0d1a0f]/90 backdrop-blur-md border-b border-white/[0.05]">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-white/50 hover:text-white hover:bg-white/[0.06] transition-all"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+        <NavLogo linked />
+        {/* Spacer to balance the back button */}
+        <div className="w-16" />
       </div>
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-sm"
-      >
-        {/* Card */}
-        <div className="bg-[#0f1f12]/90 backdrop-blur-md border border-[#22c55e]/15 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
-          {/* Top accent bar */}
-          <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#22c55e]/60 to-transparent" />
-
-          <div className="px-8 py-10 text-center space-y-6">
-            {children}
-          </div>
+      {/* Content area */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12 relative">
+        {/* Radial glow behind card */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#22c55e]/5 blur-3xl" />
         </div>
-      </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-sm"
+        >
+          {/* Card */}
+          <div className="bg-[#0f1f12]/90 backdrop-blur-md border border-[#22c55e]/15 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
+            {/* Top accent bar */}
+            <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#22c55e]/60 to-transparent" />
+            <div className="px-8 py-10 text-center space-y-6">
+              {children}
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
