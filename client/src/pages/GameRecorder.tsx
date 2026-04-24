@@ -12,6 +12,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuthContext } from "../context/AuthContext";
 import {
@@ -604,25 +605,24 @@ export default function GameRecorder() {
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header
-        className={`sticky top-0 z-50 backdrop-blur-xl border-b otb-header-safe ${
-          isDark ? "bg-[#0d1a0f]/80 border-white/10" : "bg-white/80 border-gray-200"
+        className={`sticky top-0 z-50 backdrop-blur-md border-b otb-header-safe ${
+          isDark ? "bg-[#0d1a0f]/90 border-white/10" : "bg-white/90 border-gray-200"
         }`}
       >
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => (mode === "select" ? navigate("/") : setMode("select"))}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+            className={`p-2 rounded-xl transition-colors ${
+              isDark ? "hover:bg-white/10 text-white/70 hover:text-white" : "hover:bg-gray-100 text-gray-500 hover:text-gray-900"
             }`}
+            aria-label="Back"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <NavLogo linked={false} />
-          <span
-            className={`text-sm font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}
-          >
-            OTB Analysis Features
-          </span>
+          <NavLogo className="h-7" linked={false} />
+          <div className="ml-auto">
+            <AvatarNavDropdown currentPage="Analyze" />
+          </div>
         </div>
       </header>
 
