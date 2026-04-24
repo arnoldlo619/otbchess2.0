@@ -16,7 +16,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   Search, Filter, ChevronRight, Star, Zap, Shield, Swords,
-  BookOpen, Crown, Target, X, Sparkles, RotateCcw, Clock,
+  BookOpen, Crown, Target, X, Sparkles, RotateCcw, Clock, Heart,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 
@@ -309,8 +309,20 @@ function OpeningsLibraryContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Review queue state
+  // Favorites state
   const { user } = useAuthContext();
+  interface FavoriteLine {
+    id: string;
+    lineId: string;
+    openingId: string;
+    note: string | null;
+    createdAt: string;
+    line: { id: string; title: string; slug: string; eco: string | null; difficulty: string; plyCount: number; description: string | null; mustKnow: boolean; isTrap: boolean };
+    opening: { id: string; name: string; slug: string; thumbnailFen: string | null };
+  }
+  const [favorites, setFavorites] = useState<FavoriteLine[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  // Review queue state
   const [reviewCount, setReviewCount] = useState(0);
   const [reviewQueue, setReviewQueue] = useState<Array<{
     reviewId: string;
@@ -346,6 +358,35 @@ function OpeningsLibraryContent() {
     }
     fetchOpenings();
   }, []);
+
+  // Fetch favorites for logged-in users
+  useEffect(() => {
+    if (!user) return;
+    async function fetchFavorites() {
+      try {
+        setFavoritesLoading(true);
+        const res = await authFetch("/api/favorites");
+        if (!res.ok) return;
+        const data = await res.json();
+        setFavorites(data.favorites ?? []);
+      } catch { /* silent */ } finally {
+        setFavoritesLoading(false);
+      }
+    }
+    fetchFavorites();
+  }, [user]);
+
+  async function handleRemoveFavorite(lineId: string) {
+    if (!user) return;
+    try {
+      const res = await authFetch(`/api/favorites/${lineId}`, { method: "POST" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.favorited) {
+        setFavorites((prev) => prev.filter((f) => f.lineId !== lineId));
+      }
+    } catch { /* silent */ }
+  }
 
   // Fetch review queue for logged-in users
   useEffect(() => {
@@ -634,7 +675,65 @@ function OpeningsLibraryContent() {
               </section>
             )}
 
-            {/* Featured section */}
+            {/* My Favorites section */}
+            {user && favorites.length > 0 && !hasActiveFilters && (
+              <section className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-rose-400 fill-current" />
+                    <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/70" : "text-gray-600"}`}>My Favorites</h2>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isDark ? "bg-rose-500/15 text-rose-400" : "bg-rose-50 text-rose-500"}`}>
+                      {favorites.length}
+                    </span>
+                  </div>
+                </div>
+                <div className={`rounded-xl border overflow-hidden ${isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-gray-200/70 bg-white"}`}>
+                  {favoritesLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <div className="w-5 h-5 rounded-full border-2 border-rose-400 border-t-transparent animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-white/[0.04]">
+                      {favorites.map((fav) => (
+                        <div key={fav.id} className={`group flex items-center gap-3 px-4 py-3 transition-colors ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-gray-50"}`}>
+                          <Heart className="w-3.5 h-3.5 shrink-0 text-rose-400 fill-current" />
+                          <button
+                            onClick={() => navigate(`/openings/${fav.opening.slug}/study/${fav.line.slug}`)}
+                            className="flex-1 min-w-0 text-left"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-medium truncate ${isDark ? "text-white/80 group-hover:text-emerald-400" : "text-gray-800 group-hover:text-[#3D6B47]"}`}>
+                                {fav.line.title}
+                              </span>
+                              {fav.line.mustKnow && (
+                                <span className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">Must Know</span>
+                              )}
+                            </div>
+                            <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                              {fav.opening.name}
+                              {fav.line.eco && <span className="ml-1.5 font-mono">{fav.line.eco}</span>}
+                            </p>
+                          </button>
+                          <div className="shrink-0 flex items-center gap-2">
+                            <span className={`text-[10px] font-mono ${isDark ? "text-white/25" : "text-gray-400"}`}>
+                              {Math.ceil(fav.line.plyCount / 2)}m
+                            </span>
+                            <button
+                              onClick={() => handleRemoveFavorite(fav.lineId)}
+                              title="Remove from favorites"
+                              className={`p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all ${isDark ? "hover:bg-rose-500/15 text-rose-400/50 hover:text-rose-400" : "hover:bg-rose-50 text-rose-300 hover:text-rose-400"}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+                        {/* Featured section */}
             {featured.length > 0 && !hasActiveFilters && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2">

@@ -17,7 +17,7 @@ import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   ArrowLeft, BookOpen, ChevronRight, Lock,
   Star, AlertTriangle,
-  CheckCircle2, Circle, Loader2, Play,
+  CheckCircle2, Circle, Loader2, Play, Heart,
 } from "lucide-react";
 
 import { NavLogo } from "@/components/NavLogo";
@@ -98,16 +98,16 @@ function StatBar({ label, value, max = 100 }: { label: string; value: number; ma
 }
 
 // ── Line Row ──────────────────────────────────────────────────────────────────
-function LineRow({ line, openingSlug: _openingSlug, onClick }: { line: LineCard; openingSlug: string; onClick: () => void }) {
+function LineRow({ line, openingSlug: _openingSlug, onClick, isFavorited, onToggleFavorite }: { line: LineCard; openingSlug: string; onClick: () => void; isFavorited?: boolean; onToggleFavorite?: (lineId: string) => void }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const colors = DIFFICULTY_COLORS[line.difficulty] ?? DIFFICULTY_COLORS.intermediate;
   const statusCfg = line.progress ? STATUS_CONFIG[line.progress.status] ?? STATUS_CONFIG.new : null;
-
   return (
+    <div className="relative group">
     <button
       onClick={onClick}
-      className={`group w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${isDark ? "bg-white/[0.02] border border-white/[0.04] hover:border-emerald-500/20 hover:bg-white/[0.04]" : "bg-white border border-gray-200/70 hover:border-[#3D6B47]/30 hover:shadow-sm"}`}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${isDark ? "bg-white/[0.02] border border-white/[0.04] hover:border-emerald-500/20 hover:bg-white/[0.04]" : "bg-white border border-gray-200/70 hover:border-[#3D6B47]/30 hover:shadow-sm"}`}
     >
       {/* Progress indicator */}
       <div className={`shrink-0 ${statusCfg?.color ?? "text-white/20"}`}>
@@ -153,6 +153,21 @@ function LineRow({ line, openingSlug: _openingSlug, onClick }: { line: LineCard;
         <ChevronRight className={`w-4 h-4 transition-colors ${isDark ? "text-white/15 group-hover:text-emerald-400" : "text-gray-300 group-hover:text-[#3D6B47]"}`} />
       </div>
     </button>
+    {/* Favorite button — floats on the right edge */}
+    {onToggleFavorite && (
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggleFavorite(line.id); }}
+        title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+        className={`absolute top-1/2 -translate-y-1/2 right-10 z-10 p-1.5 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 ${
+          isFavorited
+            ? "text-rose-400 bg-rose-500/10 hover:bg-rose-500/20"
+            : isDark ? "text-white/25 hover:text-rose-400 hover:bg-rose-500/10" : "text-gray-300 hover:text-rose-400 hover:bg-rose-50"
+        }`}
+      >
+        <Heart className={`w-3.5 h-3.5 ${isFavorited ? "fill-current" : ""}`} />
+      </button>
+    )}
+    </div>
   );
 }
 
@@ -169,7 +184,7 @@ function OpeningDetailContent() {
   const [lineCount, setLineCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [favoritedLines, setFavoritedLines] = useState<Set<string>>(new Set());
   const slug = params?.slug ?? "";
 
   useEffect(() => {
@@ -191,6 +206,36 @@ function OpeningDetailContent() {
     }
     fetchDetail();
   }, [slug]);
+
+  // Fetch favorite status for all lines in this opening
+  useEffect(() => {
+    if (!user) return;
+    async function fetchFavorites() {
+      try {
+        const res = await authFetch("/api/favorites");
+        if (!res.ok) return;
+        const data = await res.json();
+        const ids = new Set<string>((data.favorites ?? []).map((f: { lineId: string }) => f.lineId));
+        setFavoritedLines(ids);
+      } catch { /* ignore */ }
+    }
+    fetchFavorites();
+  }, [user]);
+
+  async function handleToggleFavorite(lineId: string) {
+    if (!user) return;
+    try {
+      const res = await authFetch(`/api/favorites/${lineId}`, { method: "POST" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setFavoritedLines((prev) => {
+        const next = new Set(prev);
+        if (data.favorited) next.add(lineId);
+        else next.delete(lineId);
+        return next;
+      });
+    } catch { /* ignore */ }
+  }
 
   if (loading) {
     return (
@@ -386,6 +431,8 @@ function OpeningDetailContent() {
                       line={line}
                       openingSlug={slug}
                       onClick={() => navigate(`/openings/${slug}/study/${line.slug}`)}
+                      isFavorited={favoritedLines.has(line.id)}
+                      onToggleFavorite={user ? handleToggleFavorite : undefined}
                     />
                   ))}
                 </div>

@@ -16,6 +16,7 @@ import {
   openingLines,
   lineNodes,
   userLineReviews,
+  userFavoriteLines,
   openingTags,
   openingTagMap,
   lineTagMap,
@@ -649,6 +650,174 @@ export function registerOpeningsPublicRoutes(router: Router) {
     } catch (err) {
       console.error("POST /api/study/review error:", err);
       res.status(500).json({ error: "Failed to save review" });
+    }
+  });
+
+  // ── Get user favorites ─────────────────────────────────────────────────
+  router.get("/api/favorites", async (req: Request, res: Response) => {
+    try {
+      const db = await getDb();
+      const userId = getUserId(req);
+      if (!userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      // Fetch favorites joined with line and opening data
+      const favRows = await db
+        .select({
+          favId: userFavoriteLines.id,
+          lineId: userFavoriteLines.lineId,
+          openingId: userFavoriteLines.openingId,
+          note: userFavoriteLines.note,
+          createdAt: userFavoriteLines.createdAt,
+          lineTitle: openingLines.title,
+          lineSlug: openingLines.slug,
+          lineEco: openingLines.eco,
+          lineDifficulty: openingLines.difficulty,
+          lineColor: openingLines.color,
+          linePlyCount: openingLines.plyCount,
+          lineDescription: openingLines.description,
+          lineMustKnow: openingLines.isMustKnow,
+          lineTrap: openingLines.isTrap,
+          openingName: openings.name,
+          openingSlug: openings.slug,
+          openingFen: openings.startingFen,
+        })
+        .from(userFavoriteLines)
+        .innerJoin(openingLines, eq(userFavoriteLines.lineId, openingLines.id))
+        .innerJoin(openings, eq(userFavoriteLines.openingId, openings.id))
+        .where(eq(userFavoriteLines.userId, userId))
+        .orderBy(desc(userFavoriteLines.createdAt));
+
+      const favorites = favRows.map((r) => ({
+        id: r.favId,
+        lineId: r.lineId,
+        openingId: r.openingId,
+        note: r.note ?? null,
+        createdAt: r.createdAt,
+        line: {
+          id: r.lineId,
+          title: r.lineTitle,
+          slug: r.lineSlug,
+          eco: r.lineEco,
+          difficulty: r.lineDifficulty,
+          color: r.lineColor,
+          plyCount: r.linePlyCount,
+          description: r.lineDescription,
+          mustKnow: r.lineMustKnow === 1,
+          isTrap: r.lineTrap === 1,
+        },
+        opening: {
+          id: r.openingId,
+          name: r.openingName,
+          slug: r.openingSlug,
+          thumbnailFen: r.openingFen,
+        },
+      }));
+
+      res.json({ favorites, count: favorites.length });
+    } catch (err) {
+      console.error("GET /api/favorites error:", err);
+      res.status(500).json({ error: "Failed to fetch favorites" });
+    }
+  });
+
+  // ── Toggle favorite (add if not exists, remove if exists) ─────────────
+  router.post("/api/favorites/:lineId", async (req: Request, res: Response) => {
+    try {
+      const db = await getDb();
+      const userId = getUserId(req);
+      if (!userId) {
+        res.status(401).json({ error: "Authentication required" });
+        return;
+      }
+
+      const { lineId } = req.params;
+      const { note } = req.body ?? {};
+
+      // Verify the line exists
+      const [line] = await db
+        .select({ id: openingLines.id, openingId: openingLines.openingId })
+        .from(openingLines)
+        .where(and(eq(openingLines.id, lineId), eq(openingLines.isPublished, 1)));
+
+      if (!line) {
+        res.status(404).json({ error: "Line not found" });
+        return;
+      }
+
+      // Check if already favorited
+      const [existing] = await db
+        .select()
+        .from(userFavoriteLines)
+        .where(and(
+          eq(userFavoriteLines.userId, userId),
+          eq(userFavoriteLines.lineId, lineId)
+        ));
+
+      if (existing) {
+        // Already favorited — remove it (toggle off)
+        await db
+          .delete(userFavoriteLines)
+          .where(eq(userFavoriteLines.id, existing.id));
+        res.json({ favorited: false, message: "Removed from favorites" });
+      } else {
+        // Not favorited — add it (toggle on)
+        const id = nanoid();
+        await db.insert(userFavoriteLines).values({
+          id,
+          userId,
+          lineId,
+          openingId: line.openingId,
+          note: note ?? null,
+        });
+        res.json({ favorited: true, message: "Added to favorites", id });
+      }
+    } catch (err) {
+      console.error("POST /api/favorites/:lineId error:", err);
+      res.status(500).json({ error: "Failed to toggle favorite" });
+    }
+  });
+
+  // ── Check favorite status for a set of lines ──────────────────────────
+  router.get("/api/favorites/status", async (req: Request, res: Response) => {
+    try {
+      const db = await getDb();
+      const userId = getUserId(req);
+      if (!userId) {
+        res.json({ favorites: {} });
+        return;
+      }
+
+      const { lineIds } = req.query;
+      if (!lineIds) {
+        res.json({ favorites: {} });
+        return;
+      }
+
+      const ids = (Array.isArray(lineIds) ? lineIds : [lineIds]) as string[];
+      if (ids.length === 0) {
+        res.json({ favorites: {} });
+        return;
+      }
+
+      const rows = await db
+        .select({ lineId: userFavoriteLines.lineId })
+        .from(userFavoriteLines)
+        .where(and(
+          eq(userFavoriteLines.userId, userId),
+          inArray(userFavoriteLines.lineId, ids)
+        ));
+
+      const favorites: Record<string, boolean> = {};
+      for (const id of ids) favorites[id] = false;
+      for (const r of rows) favorites[r.lineId] = true;
+
+      res.json({ favorites });
+    } catch (err) {
+      console.error("GET /api/favorites/status error:", err);
+      res.status(500).json({ error: "Failed to check favorites" });
     }
   });
 }

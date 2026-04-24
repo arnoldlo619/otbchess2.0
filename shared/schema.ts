@@ -1631,3 +1631,35 @@ export const lineTagMap = mysqlTable(
 );
 export type LineTagMapRow = typeof lineTagMap.$inferSelect;
 export type NewLineTagMapRow = typeof lineTagMap.$inferInsert;
+
+// ─── user_favorite_lines ─────────────────────────────────────────────────────
+// Stores a user's bookmarked/favorited opening lines.
+// Each row is a (userId, lineId) pair — unique per user per line.
+//
+// Why it exists:
+//   - Lets users build a personal "My Favorites" list from the opening library
+//   - Enables quick-access to preferred lines without navigating the full catalog
+//   - Supports future features: custom playlists, shared collections
+export const userFavoriteLines = mysqlTable(
+  "user_favorite_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    /** FK to users.id */
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    /** FK to opening_lines.id */
+    lineId: varchar("line_id", { length: 36 }).notNull(),
+    /** FK to openings.id — denormalized for efficient catalog queries */
+    openingId: varchar("opening_id", { length: 36 }).notNull(),
+    /** Optional user note attached to this favorite */
+    note: varchar("note", { length: 500 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index("ufl_user_id_idx").on(table.userId),
+    lineIdx: index("ufl_line_id_idx").on(table.lineId),
+    userLineUniq: index("ufl_user_line_uniq").on(table.userId, table.lineId),
+    userOpeningIdx: index("ufl_user_opening_idx").on(table.userId, table.openingId),
+  })
+);
+export type UserFavoriteLineRow = typeof userFavoriteLines.$inferSelect;
+export type NewUserFavoriteLineRow = typeof userFavoriteLines.$inferInsert;

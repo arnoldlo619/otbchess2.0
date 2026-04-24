@@ -5347,3 +5347,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add NavLogo + AvatarNavDropdown to MatchupPrep header
 - [x] Add move annotation display in StudyMode (show !, !!, ?, ?? and commentAfter)
 - [x] Add progress rings/indicators on OpeningsLibrary cards
+
+## Favorites Feature
+
+- [x] Create user_favorite_lines table in database (userId, lineId, openingId, note, createdAt)
+- [x] Add GET /api/favorites endpoint — list user's favorited lines with full line+opening data
+- [x] Add POST /api/favorites/:lineId endpoint — toggle favorite on/off
+- [x] Add GET /api/favorites/status endpoint — batch check favorite status for a set of lines
+- [x] Add Heart button to LineRow in OpeningDetail — hover-reveal, filled when favorited
+- [x] Add favorite state + fetch to OpeningDetailContent — loads all user favorites on mount
+- [x] Add Heart button to StudyMode header — visible to logged-in users, persists across sessions
+- [x] Add My Favorites section to OpeningsLibrary — shows favorited lines with opening name, ECO, remove button
+- [x] Add favorites fetch + handleRemoveFavorite to OpeningsLibrary
+- [x] Write 11 vitest tests for favorites toggle logic, data shape, and optimistic UI updates

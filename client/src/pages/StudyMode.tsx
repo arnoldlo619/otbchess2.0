@@ -18,11 +18,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { OpeningsProGate } from "@/components/OpeningsProGate";
 import {
   ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronLeft, FlipVertical2,
-  Eye, HelpCircle, Lightbulb, Play, RefreshCw,
+  Eye, HelpCircle, Heart, Lightbulb, Play, RefreshCw,
   SkipForward, Target, Trophy, X, Zap,
 } from "lucide-react";
 
 import { NavLogo } from "@/components/NavLogo";
+import { useAuthContext } from "@/context/AuthContext";
 import { authFetch } from "@/lib/apiFetch";
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface LineNode {
@@ -207,6 +208,8 @@ function StudyModeContent() {
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [practiceErrors, setPracticeErrors] = useState(0);
+  const { user } = useAuthContext();
+  const [isFavorited, setIsFavorited] = useState(false);
 
   // Chess engine for practice mode
   const [_game, setGame] = useState(new Chess());
@@ -229,6 +232,31 @@ function StudyModeContent() {
     }
     fetchLine();
   }, [openingSlug, lineSlug]);
+
+  // Fetch favorite status for this line
+  useEffect(() => {
+    if (!user || !lineData) return;
+    async function checkFavorite() {
+      try {
+        const res = await authFetch("/api/favorites");
+        if (!res.ok) return;
+        const data = await res.json();
+        const favLineIds = new Set<string>((data.favorites ?? []).map((f: { lineId: string }) => f.lineId));
+        setIsFavorited(favLineIds.has(lineData!.id));
+      } catch { /* ignore */ }
+    }
+    checkFavorite();
+  }, [user, lineData]);
+
+  async function handleToggleFavorite() {
+    if (!user || !lineData) return;
+    try {
+      const res = await authFetch(`/api/favorites/${lineData.id}`, { method: "POST" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setIsFavorited(data.favorited);
+    } catch { /* ignore */ }
+  }
 
   // Derived
   const mainNodes = useMemo(
@@ -466,7 +494,22 @@ function StudyModeContent() {
             />
           </div>
 
-          {/* Progress bar — desktop inline */}
+          {/* Favorite + Progress bar — desktop inline */}
+          <div className="hidden sm:flex items-center gap-2">
+            {user && (
+              <button
+                onClick={handleToggleFavorite}
+                title={isFavorited ? "Remove from favorites" : "Save to favorites"}
+                className={`p-2 rounded-lg transition-all ${
+                  isFavorited
+                    ? "text-rose-400 bg-rose-500/10 hover:bg-rose-500/20"
+                    : isDark ? "text-white/25 hover:text-rose-400 hover:bg-rose-500/10" : "text-gray-300 hover:text-rose-400 hover:bg-rose-50"
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
+              </button>
+            )}
+          </div>
           <div className="hidden sm:flex items-center gap-2 w-32">
             <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/[0.06]" : "bg-gray-200"}`}>
               <div
