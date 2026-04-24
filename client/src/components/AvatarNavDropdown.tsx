@@ -529,9 +529,9 @@ export function AvatarNavDropdown({
                 <div className="px-2 pb-2">
                   <button
                     onClick={() => toggleTheme?.()}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-700 hover:text-gray-900"}`}
                     style={{ border: "1px solid transparent" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)")}
                     onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
                   >
                     {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
