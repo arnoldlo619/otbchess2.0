@@ -2768,168 +2768,165 @@ export default function ClubDashboard() {
 
   const accent = club.accentColor ?? "#4CAF50";
 
+  const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number }[] = [
+    { id: "feed", label: "Feed", icon: Megaphone },
+    { id: "events", label: "Events", icon: Calendar, badge: upcomingEvents.length > 0 ? upcomingEvents.length : undefined },
+    { id: "members", label: "Members", icon: Users },
+    { id: "battles", label: "Battles", icon: Swords },
+    { id: "leagues", label: "Leagues", icon: Trophy },
+    { id: "analytics", label: "Analytics", icon: BarChart2 },
+    { id: "payments", label: "Payments", icon: Wallet },
+  ];
+
   return (
-    <div className="min-h-screen bg-[oklch(0.20_0.06_145)] dark:bg-[oklch(0.20_0.06_145)]">
-      {/* ── Nav ──────────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/08 otb-header-safe"
-        style={{ background: "oklch(0.20 0.06 145 / 0.92)", backdropFilter: "blur(12px)" }}
-      >
-        <div className="flex items-center gap-3">
-          <Link href="/clubs">
-            <button className="flex items-center gap-1.5 text-white/50 hover:text-white/80 transition-colors text-sm">
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:block">My Clubs</span>
-            </button>
-          </Link>
-          <div className="w-px h-4 bg-white/15" />
-          <NavLogo />
-        </div>
-        <div className="flex items-center gap-2">
-          {user && (
-            <Link href={`/clubs/${id}/messages`}>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition border border-white/10">
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span className="hidden sm:block">Messages</span>
-              </button>
-            </Link>
-          )}
-          <AvatarNavDropdown currentPage="Clubs" />
-        </div>
-      </div>
-
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div
-        className="relative overflow-hidden"
-        style={{ minHeight: "280px" }}
-      >
-        {/* Chess board texture background — same as landing page hero */}
-        <div className="absolute inset-0 bg-[oklch(0.20_0.06_145)]" />
-        <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
-
-        {/* Subtle green radial glow */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[60vh] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.44 0.12 145 / 0.18) 0%, transparent 70%)" }}
-        />
-
-        {/* Banner image overlay (if set) */}
-        {club.bannerUrl && (
-          <div
-            className="absolute inset-0"
-            style={{ background: `url(${club.bannerUrl}) center/cover no-repeat`, opacity: 0.25 }}
-          />
-        )}
-
-        {/* Gradient fade to body */}
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, transparent 40%, oklch(0.20 0.06 145) 100%)" }}
-        />
-
-        <div className="relative z-10 px-5 sm:px-8 pt-10 pb-8 max-w-4xl mx-auto">
-          {/* Club avatar + identity */}
-          <div className="flex items-end gap-5 mb-6">
-            <div
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 flex-shrink-0"
-              style={{ borderColor: accent + "66" }}
-            >
-              <PlayerAvatar
-                username={club.name}
-                name={club.name}
-                avatarUrl={club.avatarUrl ?? undefined}
-                size={96}
-                className="w-full h-full object-cover"
+    <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
+      {/* ── MAIN LAYOUT: icon rail + content ──────────────────────────────── */}
+      <div className="flex h-screen overflow-hidden">
+        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
+        <aside
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1"
+          style={{
+            background: isDark ? "oklch(0.15 0.04 145)" : "#0f1f14",
+            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+          }}
+        >
+          {/* Club avatar / back button */}
+          <button
+            onClick={() => navigate("/clubs")}
+            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
+            style={{ background: accent }}
+            title="Back to My Clubs"
+          >
+            {club.avatarUrl ? (
+              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+            ) : (
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                alt="OTB!!"
+                className="w-8 h-8 object-contain"
               />
-            </div>
-            <div className="flex-1 min-w-0 pb-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span
-                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                  style={{ background: accent + "22", color: accent, border: `1px solid ${accent}33` }}
+            )}
+          </button>
+          {/* Divider */}
+          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          {/* Nav icons */}
+          <nav className="flex flex-col items-center gap-1 flex-1">
+            {clubTabs.map((ct) => {
+              const Icon = ct.icon;
+              const isActive = tab === ct.id;
+              return (
+                <button
+                  key={ct.id}
+                  onClick={() => setTab(ct.id)}
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                  style={{
+                    background: isActive ? accent : "transparent",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                  }}
+                  title={ct.label}
                 >
-                  {club.category}
-                </span>
-                {club.isPublic && (
-                  <span className="flex items-center gap-1 text-white/30 text-[10px]">
-                    <Globe className="w-3 h-3" /> Public
+                  <Icon size={17} />
+                  {(ct.badge ?? 0) > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                      style={{ background: "#ef4444", color: "#fff" }}
+                    >
+                      {ct.badge}
+                    </span>
+                  )}
+                  {/* Tooltip */}
+                  <span
+                    className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
+                  >
+                    {ct.label}
                   </span>
+                </button>
+              );
+            })}
+          </nav>
+          {/* Divider */}
+          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          {/* Bottom actions */}
+          <div className="flex flex-col items-center gap-1">
+            {user && (
+              <Link href={`/clubs/${id}/messages`}>
+                <button
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                  style={{ color: "oklch(0.55 0.08 145)" }}
+                  title="Messages"
+                >
+                  <MessageSquare size={16} />
+                </button>
+              </Link>
+            )}
+          </div>
+        </aside>
+
+        {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
+          <div
+            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
+            style={{
+              background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
+              backdropFilter: "blur(12px)",
+              borderBottom: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)"}`,
+            }}
+          >
+            {/* Mobile back button */}
+            <button
+              onClick={() => navigate("/clubs")}
+              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
+              style={{ color: "oklch(0.65 0.12 145)" }}
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {/* Club logo + name (desktop) */}
+            <div className="hidden lg:flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+                style={{ background: accent }}
+              >
+                {club.avatarUrl ? (
+                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Crown size={14} style={{ color: "#fff" }} />
                 )}
               </div>
-              <h1
-                className="text-white font-black text-2xl sm:text-3xl leading-tight"
-                style={{ fontFamily: "'Clash Display', sans-serif", wordBreak: "break-word" }}
-              >
-                {club.name}
-              </h1>
-              {club.tagline && (
-                <p className="text-white/50 text-sm mt-1 truncate">{club.tagline}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
-            <div className="flex items-center gap-1.5 text-white/60 text-sm">
-              <Users className="w-4 h-4" style={{ color: accent }} />
-              <span className="font-semibold text-white/80">{club.memberCount}</span>
-              <span>members</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-white/60 text-sm">
-              <Trophy className="w-4 h-4" style={{ color: accent }} />
-              <span className="font-semibold text-white/80">{club.tournamentCount}</span>
-              <span>tournaments</span>
-            </div>
-            {club.location && (
-              <div className="flex items-center gap-1.5 text-white/60 text-sm">
-                <MapPin className="w-4 h-4" />
-                {club.location}
+              <div className="leading-tight">
+                <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
+                  {club.name}
+                </span>
+                <span className="text-xs font-medium ml-1" style={{ color: "oklch(0.65 0.12 145)" }}>Club</span>
               </div>
-            )}
-            <div className="flex items-center gap-1.5 text-white/60 text-sm">
-              <Calendar className="w-4 h-4" />
-              <span>Since {new Date(club.foundedAt).getFullYear()}</span>
+            </div>
+            {/* Mobile title */}
+            <div className="lg:hidden flex-1 min-w-0">
+              <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
+                {club.name}
+              </span>
+            </div>
+            {/* Right side: stats + avatar */}
+            <div className="flex items-center gap-3 ml-auto">
+              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                <span className="flex items-center gap-1">
+                  <Users size={12} style={{ color: accent }} />
+                  <span className="font-semibold" style={{ color: "#fff" }}>{club.memberCount}</span> members
+                </span>
+                <span className="flex items-center gap-1">
+                  <Trophy size={12} style={{ color: accent }} />
+                  <span className="font-semibold" style={{ color: "#fff" }}>{club.tournamentCount}</span> tournaments
+                </span>
+              </div>
+              <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── Sticky tab nav ─────────────────────────────────────────────────────────────────────────────────────── */}
-      <div
-        className="sticky top-[56px] z-30 border-b border-white/08"
-        style={{ background: "oklch(0.20 0.06 145 / 0.97)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
-      >
-        <div
-          className="max-w-4xl mx-auto flex items-center overflow-x-auto scrollbar-none"
-          style={{ WebkitOverflowScrolling: "touch", paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}
-        >
-          {(["events", "members", "feed", "battles", "leagues", "analytics", "payments"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`relative flex-shrink-0 px-4 py-3.5 text-sm font-semibold capitalize transition-colors ${
-                tab === t ? "text-white" : "text-white/40 hover:text-white/70"
-              }`}
-            >
-              {t === "events" && upcomingEvents.length > 0 && (
-                <span
-                  className="absolute top-2.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                  style={{ background: accent }}
-                />
-              )}
-              {t}
-              {tab === t && (
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
-                  style={{ background: accent }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Tab content ─────────────────────────────────────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6" style={{ background: "oklch(0.20 0.06 145)", paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+          {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
+          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+            <div className="px-4 lg:px-6 py-4">
+              <div className="max-w-4xl mx-auto">
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
@@ -5073,10 +5070,13 @@ export default function ClubDashboard() {
             )}
           </div>
         )}
-      </div>
-      {/* ── Create Event Modal ───────────────────────────────────────────────── */}
-      {showCreateEvent && user && (
-        <CreateEventModal
+              </div>{/* end max-w-4xl */}
+            </div>{/* end px wrapper */}
+          </div>{/* end scrollable content */}
+        </div>{/* end main content area */}
+      </div>{/* end flex layout */}
+      {/* ── Create Event Modal ───────────────────────────────────────────────────────── */}
+      {showCreateEvent && user && ( <CreateEventModal
           clubId={club.id}
           clubName={club.name}
           userId={user.id}
@@ -5095,7 +5095,6 @@ export default function ClubDashboard() {
           onClose={(createdTournamentId, createdTournamentName) => {
             setShowTournamentWizard(false);
             if (createdTournamentId && createdTournamentName) {
-              // Auto-create a linked club event so it appears in the Events tab
               createClubEvent({
                 clubId: club.id,
                 title: createdTournamentName,
@@ -5108,7 +5107,6 @@ export default function ClubDashboard() {
                 eventType: "standard",
                 tournamentId: createdTournamentId,
               });
-              // Post a feed announcement so all club members are notified
               recordTournamentCreated(
                 club.id,
                 user.displayName,
@@ -5122,6 +5120,39 @@ export default function ClubDashboard() {
           }}
         />
       )}
+      {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        style={{
+          background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(15,31,20,0.97)",
+          backdropFilter: "blur(12px)",
+          borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+        }}
+      >
+        {clubTabs.map((ct) => {
+          const Icon = ct.icon;
+          const isActive = tab === ct.id;
+          return (
+            <button
+              key={ct.id}
+              onClick={() => setTab(ct.id)}
+              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
+              style={{ color: isActive ? accent : "oklch(0.55 0.08 145)" }}
+            >
+              <Icon size={18} />
+              <span className="text-[9px] font-medium">{ct.label}</span>
+              {(ct.badge ?? 0) > 0 && (
+                <span
+                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                  style={{ background: accent, color: "#fff" }}
+                >
+                  {ct.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

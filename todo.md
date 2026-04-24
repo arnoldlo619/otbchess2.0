@@ -5360,3 +5360,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add My Favorites section to OpeningsLibrary — shows favorited lines with opening name, ECO, remove button
 - [x] Add favorites fetch + handleRemoveFavorite to OpeningsLibrary
 - [x] Write 11 vitest tests for favorites toggle logic, data shape, and optimistic UI updates
+
+## Clubs Page UI Transformation (League-style sidebar layout)
+
+- [x] Analyze current Club page structure and League page sidebar pattern
+- [x] Create ClubSidebar component with icon-based navigation tabs (inline in both ClubProfile and ClubDashboard)
+- [x] Refactor Club page layout to use sidebar + topbar + scrollable content structure
+- [x] Build branded top bar with club name, stats, and AvatarNavDropdown
+- [x] Add mobile bottom nav bar for both ClubProfile and ClubDashboard
+- [x] Add club avatar/flag to sidebar with back-to-clubs navigation
+- [x] Apply new layout to all clubs including demo clubs (verified London, Saint Louis)
+- [x] Verify TypeScript compiles clean and save checkpoint

@@ -104,6 +104,7 @@ import {
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
 import { apiFetch } from "@/lib/apiFetch";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -399,7 +400,7 @@ function FeedEventCard({
   const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
   const userVotedOptions = userId ? (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id) : [];
   const userRsvp = userId ? (event.rsvpEntries ?? []).find((r) => r.userId === userId) : undefined;
-  const _accent = isDark ? "#4CAF50" : "#3D6B47";
+  const accent = isDark ? "#4CAF50" : "#3D6B47";
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId || !isMemberUser) return;
@@ -997,343 +998,179 @@ export default function ClubProfile() {
   const divider = isDark ? "border-white/8" : "border-gray-100";
   const tabActive = isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
   const tabInactive = isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700";
+  const accent = isDark ? "#4CAF50" : "#3D6B47";
 
   return (
     <div className={`min-h-screen ${bg}`}>
-
-      {/* ── Sticky top nav ─────────────────────────────────────────────────────────────────────────── */}
-      <header className={`sticky top-0 z-30 border-b otb-header-safe ${divider} ${isDark ? "bg-[#0d1a0f]/90" : "bg-white/90"} backdrop-blur-md`}>
-        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
-          {/* Left: back navigation */}
+      <div className="flex h-screen overflow-hidden">
+        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
+        <aside
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1"
+          style={{
+            background: isDark ? "oklch(0.15 0.04 145)" : "#0f1f14",
+            borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+          }}
+        >
+          {/* Club avatar / back button */}
           <button
             onClick={() => navigate("/clubs")}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors shrink-0 ${isDark ? "text-white/60 hover:text-white" : "text-gray-400 hover:text-gray-900"}`}
+            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
+            style={{ background: accent }}
+            title="Back to My Clubs"
           >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">My Clubs</span>
+            {club.avatarUrl && !avatarBroken ? (
+              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-lg">{flag}</span>
+            )}
           </button>
-
-          {/* Center: logo */}
-          <div className="flex-1 flex justify-center">
-            <NavLogo className="h-7" />
-          </div>
-
-          {/* Right: actions */}
-          <div className="flex items-center gap-1 shrink-0">
+          {/* Divider */}
+          <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          {/* Nav icons */}
+          <nav className="flex flex-col items-center gap-1 flex-1">
+            {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((t) => {
+              const iconMap: Record<string, React.ReactNode> = {
+                feed: <Megaphone size={17} />,
+                events: <Calendar size={17} />,
+                members: <Users size={17} />,
+                tournaments: <Trophy size={17} />,
+                about: <Globe size={17} />,
+                leagues: <Award size={17} />,
+              };
+              const badgeMap: Record<string, number> = {
+                events: clubEvents.length,
+                feed: feedEvents.length,
+                tournaments: tournaments.length + liveTournaments.length,
+                leagues: clubLeagues.length,
+              };
+              const isActive = activeTab === t;
+              const badge = badgeMap[t] ?? 0;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setActiveTab(t)}
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                  style={{
+                    background: isActive ? accent : "transparent",
+                    color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                  }}
+                  title={t.charAt(0).toUpperCase() + t.slice(1)}
+                >
+                  {iconMap[t]}
+                  {badge > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                      style={{ background: "#ef4444", color: "#fff" }}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                  {/* Tooltip */}
+                  <span
+                    className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
+                  >
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+          {/* Divider */}
+          <div className="w-8 h-px mt-2 mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+          {/* Bottom actions */}
+          <div className="flex flex-col items-center gap-1">
             <button
               onClick={handleShare}
-              className={`p-2 rounded-xl transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
-              aria-label="Share club"
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+              style={{ color: "oklch(0.55 0.08 145)" }}
+              title="Share Club"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 size={16} />
             </button>
             {(isOwner || isDirector) && (
               <button
-                className={`p-2 rounded-xl transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
-                aria-label="Club settings"
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                style={{ color: "oklch(0.55 0.08 145)" }}
+                title="Club Settings"
               >
-                <MoreHorizontal className="w-4 h-4" />
+                <MoreHorizontal size={16} />
               </button>
             )}
           </div>
-        </div>
-      </header>
+        </aside>
 
-      {/* ── Hero banner ─────────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden">
-        {/* Full-bleed per-category gradient banner */}
-        <div className={`h-52 sm:h-64 w-full relative bg-gradient-to-br ${bannerTheme.grad}`}>
-          {/* Noise texture overlay */}
+        {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* ── BRANDED TOP BAR ─────────────────────────────────────────── */}
           <div
-            className={`absolute inset-0 pointer-events-none ${isDark ? "opacity-[0.05]" : "opacity-[0.07]"}`}
-            style={{ backgroundImage: NOISE_BG, backgroundSize: "150px" }}
-          />
-          {/* Radial glow from top-center */}
-          <div
-            className="absolute inset-0 pointer-events-none"
+            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5 otb-header-safe"
             style={{
-              background: isDark
-                ? "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 65%)"
-                : "radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.45) 0%, transparent 65%)",
+              background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "#0f1f14",
+              backdropFilter: "blur(12px)",
+              borderBottom: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.22 0.08 145)"}`,
             }}
-          />
-          {/* Custom banner overlay (if set) */}
-          {club.bannerUrl && !bannerBroken && (
-            <img
-              src={club.bannerUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-20"
-              onError={() => setBannerBroken(true)}
-            />
-          )}
-
-          {/* Gradient fade to page background below */}
-          <div
-            className="absolute inset-0"
-            style={{ background: `linear-gradient(to bottom, transparent 40%, ${isDark ? "#0d1a0f" : "#F0F5EE"} 100%)` }}
-          />
-        </div>
-
-        {/* Club identity card — overlaps banner */}
-        <div className="max-w-4xl mx-auto px-4">
-          <div className={`relative -mt-14 sm:-mt-20 rounded-3xl border ${cardBorder} ${card} p-4 sm:p-6 shadow-2xl`}>
-            <div className="flex items-start gap-4">
-              {/* Club avatar with ring */}
+          >
+            {/* Mobile back button */}
+            <button
+              onClick={() => navigate("/clubs")}
+              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
+              style={{ color: "oklch(0.65 0.12 145)" }}
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {/* Club logo + name (desktop) */}
+            <div className="hidden lg:flex items-center gap-2.5">
               <div
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl sm:text-4xl shadow-lg ring-2 ring-white/20 overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+                style={{ background: accent }}
               >
                 {club.avatarUrl && !avatarBroken ? (
-                  <img
-                    src={club.avatarUrl}
-                    alt={club.name}
-                    className="w-full h-full object-cover"
-                    onError={() => setAvatarBroken(true)}
-                  />
+                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span>{flag}</span>
+                  <Crown size={14} style={{ color: "#fff" }} />
                 )}
               </div>
-
-              {/* Name + meta */}
-              <div className="flex-1 min-w-0 pt-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1
-                    className={`text-xl sm:text-2xl font-bold leading-tight ${textMain}`}
-                    style={{ fontFamily: "'Clash Display', sans-serif" }}
-                  >
-                    {club.name}
-                  </h1>
-                  {club.isPublic && (
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-white/8 text-white/40" : "bg-gray-100 text-gray-400"}`}>
-                      Public
-                    </span>
-                  )}
-                </div>
-                <p className={`text-sm mt-1 leading-snug ${textMuted}`}>{club.tagline}</p>
-                <div className={`flex items-center gap-3 mt-2 flex-wrap text-xs ${textMuted}`}>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {club.location}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Hash className="w-3 h-3" />
-                    {categoryLabel}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    Est. {formatYear(club.foundedAt)}
-                  </span>
-                </div>
+              <div className="leading-tight">
+                <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
+                  {club.name}
+                </span>
+                <span className="text-xs font-medium ml-1" style={{ color: "oklch(0.65 0.12 145)" }}>Club</span>
               </div>
             </div>
-
-            {/* Stats row */}
-            <div className="flex gap-3 mt-5 overflow-x-auto pb-1 scrollbar-hide">
-              <StatPill icon={<Users className="w-4 h-4" />} value={club.memberCount} label="Members" isDark={isDark} />
-              {/* Members Online indicator — green pulse dot + live count */}
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 ${
-                isDark ? "bg-white/8 text-white/80" : "bg-black/5 text-gray-700"
-              }`}>
+            {/* Mobile title */}
+            <div className="lg:hidden flex-1 min-w-0">
+              <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
+                {club.name}
+              </span>
+            </div>
+            {/* Right side: stats + avatar */}
+            <div className="flex items-center gap-3 ml-auto">
+              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                <span className="flex items-center gap-1">
+                  <Users size={12} style={{ color: accent }} />
+                  <span className="font-semibold" style={{ color: "#fff" }}>{club.memberCount}</span> members
+                </span>
+                <span className="flex items-center gap-1">
+                  <Trophy size={12} style={{ color: accent }} />
+                  <span className="font-semibold" style={{ color: "#fff" }}>{club.tournamentCount}</span> tournaments
+                </span>
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                <span>{onlineCount} Online</span>
+                <span className="font-semibold" style={{ color: "#fff" }}>{onlineCount}</span> online
               </div>
-              <StatPill icon={<Bell className="w-4 h-4" />} value={followerCount} label="Followers" isDark={isDark} />
-              <StatPill icon={<Trophy className="w-4 h-4" />} value={club.tournamentCount} label="Tournaments" isDark={isDark} />
-              <StatPill icon={<CheckCircle2 className="w-4 h-4" />} value={completedTournaments.length} label="Completed" isDark={isDark} />
-              <StatPill icon={<Zap className="w-4 h-4" />} value={upcomingTournaments.length} label="Upcoming" isDark={isDark} />
-            </div>
-
-            {/* Join / Leave CTA + Owner Start Tournament */}
-            <div className="mt-4 flex flex-col sm:flex-row flex-wrap gap-2">
-              {isOwner && (
-                <button
-                  onClick={() => setShowWizard(true)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-[#3D6B47] text-white hover:bg-[#2d5236] active:scale-95 transition-all shadow-md shadow-[#3D6B47]/30"
-                >
-                  <Trophy className="w-4 h-4" />
-                  Start Tournament
-                </button>
-              )}
-              {!user ? (
-                <button
-                  onClick={() => setAuthOpen(true)}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Join Club
-                </button>
-              ) : isOwner ? (
-                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
-                  <Crown className="w-4 h-4" />
-                  You own this club
-                </div>
-              ) : joined ? (
-                !showLeaveConfirm ? (
-                  <button
-                    onClick={() => setShowLeaveConfirm(true)}
-                    disabled={joining}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                      isDark
-                        ? "bg-white/8 text-white/70 hover:bg-red-500/15 hover:text-red-400"
-                        : "bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500"
-                    }`}
-                  >
-                    {joining ? (
-                      <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                    ) : (
-                      <UserMinus className="w-4 h-4" />
-                    )}
-                    Leave Club
-                  </button>
-                ) : (
-                  <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>
-                    <p>Sure you want to leave?</p>
-                    <button
-                      onClick={() => setShowLeaveConfirm(false)}
-                      disabled={isLeavingClub}
-                      className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${isDark ? "bg-white/10 hover:bg-white/20" : "bg-white/50 hover:bg-white/70"}`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={async () => {
-                        setIsLeavingClub(true);
-                        try {
-                          await handleLeave();
-                          setShowLeaveConfirm(false);
-                        } finally {
-                          setIsLeavingClub(false);
-                        }
-                      }}
-                      disabled={isLeavingClub}
-                      className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-60"
-                    >
-                      {isLeavingClub ? "Leaving..." : "Leave"}
-                    </button>
-                  </div>
-                )
-              ) : (
-                <button
-                  onClick={handleJoin}
-                  disabled={joining}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors disabled:opacity-60"
-                >
-                  {joining ? (
-                    <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  ) : (
-                    <UserPlus className="w-4 h-4" />
-                  )}
-                  Join Club
-                </button>
-              )}
-              {joined && !isOwner && (
-                <span className={`text-xs font-medium ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}>
-                  ✓ Member
-                </span>
-              )}
-              {/* Following button — shown for non-members (or logged-out users) */}
-              {!joined && !isOwner && (
-                <button
-                  onClick={handleFollow}
-                  disabled={followingLoading}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all active:scale-95 disabled:opacity-60 ${
-                    following
-                      ? isDark
-                        ? "bg-[#4CAF50]/15 border-[#4CAF50]/30 text-[#4CAF50] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
-                        : "bg-[#3D6B47]/10 border-[#3D6B47]/30 text-[#3D6B47] hover:bg-red-50 hover:border-red-200 hover:text-red-500"
-                      : isDark
-                        ? "bg-white/6 border-white/15 text-white/70 hover:bg-white/10 hover:text-white"
-                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
-                  {followingLoading ? (
-                    <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                  ) : following ? (
-                    <BellOff className="w-4 h-4" />
-                  ) : (
-                    <Bell className="w-4 h-4" />
-                  )}
-                  {following ? "Following" : "Follow"}
-                </button>
-              )}
+              <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── Announcement banner ─────────────────────────────────────────────── */}
-      {club.announcement && (
-        <div className="max-w-4xl mx-auto px-4 mt-4">
-          <div className={`flex items-start gap-3 p-4 rounded-2xl border ${
-            isDark ? "bg-amber-500/8 border-amber-500/20" : "bg-amber-50 border-amber-200"
-          }`}>
-            <Megaphone className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-            <p className={`text-sm leading-relaxed ${isDark ? "text-amber-300" : "text-amber-700"}`}>
-              {club.announcement}
-            </p>
-          </div>
-        </div>
-      )}
+          {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
+          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+            <div className="px-4 lg:px-6 py-4">
+              <div className="max-w-4xl mx-auto">
 
-      {/* ── Tab navigation ──────────────────────────────────────────────────── */}
-      <div
-        className={`sticky top-[56px] z-20 mt-6 border-b ${
-          isDark ? "border-white/08 bg-[oklch(0.12_0.04_145)]/95" : "border-gray-200/80 bg-white/95"
-        } backdrop-blur-md`}
-      >
-        <div className="max-w-4xl mx-auto px-3">
-        {/* On mobile: horizontally scrollable; on md+: flex with equal-width tabs */}
-        <div
-          className="flex gap-0.5 overflow-x-auto scrollbar-none py-2"
-          style={{ WebkitOverflowScrolling: "touch" }}
-        >
-          {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`relative flex-shrink-0 py-2 px-3 text-sm font-semibold capitalize transition-all whitespace-nowrap rounded-xl ${
-                activeTab === tab ? tabActive : tabInactive
-              }`}
-            >
-              {tab}
-              {tab === "events" && clubEvents.length > 0 && (
-                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
-                  {clubEvents.length}
-                </span>
-              )}
-              {tab === "members" && (
-                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
-                  {club.memberCount}
-                </span>
-              )}
-              {tab === "feed" && feedEvents.length > 0 && (
-                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
-                  {feedEvents.length}
-                </span>
-              )}
-              {tab === "tournaments" && (
-                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
-                  {tournaments.length + liveTournaments.length}
-                </span>
-              )}
-              {tab === "leagues" && clubLeagues.length > 0 && (
-                <span className={`ml-1.5 text-xs ${activeTab === tab ? "opacity-70" : "opacity-40"}`}>
-                  {clubLeagues.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-        </div>
-      </div>
-
-      {/* ── Tab content ─────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 mt-4" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
 
         {/* ── About tab ───────────────────────────────────────────────────── */}
         {activeTab === "about" && (
@@ -2235,7 +2072,11 @@ export default function ClubProfile() {
             })()}
           </div>
         )}
-      </div>
+              </div>{/* close max-w-4xl */}
+            </div>{/* close px wrapper */}
+          </div>{/* close scrollable */}
+        </div>{/* close main content area */}
+      </div>{/* close flex h-screen */}
 
       {/* ── Tournament Wizard (owner-only, pre-linked to this club) ──────────── */}
       <TournamentWizard
@@ -2629,6 +2470,39 @@ export default function ClubProfile() {
       )}
       {/* Auth modal — shown when guest tries to join, follow, or request a league */}
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+
+      {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        style={{
+          background: isDark ? "oklch(0.17 0.05 145 / 0.97)" : "rgba(15,31,20,0.97)",
+          backdropFilter: "blur(12px)",
+          borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
+        }}
+      >
+        {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((t) => {
+          const iconMap: Record<string, React.ReactNode> = {
+            feed: <Megaphone size={18} />,
+            events: <Calendar size={18} />,
+            members: <Users size={18} />,
+            tournaments: <Trophy size={18} />,
+            about: <Globe size={18} />,
+            leagues: <Award size={18} />,
+          };
+          const isActive = activeTab === t;
+          return (
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
+              style={{ color: isActive ? accent : "oklch(0.55 0.08 145)" }}
+            >
+              {iconMap[t]}
+              <span className="text-[9px] font-medium">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
