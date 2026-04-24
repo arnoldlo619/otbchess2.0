@@ -31,6 +31,7 @@ import {
   Clock,
   RefreshCw,
   Library,
+  Target,
 } from "lucide-react";
 import { Chess } from "chess.js";
 
@@ -639,115 +640,107 @@ export default function GameRecorder() {
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Manual PGN Entry */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* ── Card 1: Analyze PGN ── */}
                 <button
                   onClick={() => setMode("manual")}
-                  className={`group relative overflow-hidden rounded-2xl border p-6 text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                  className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                     isDark
-                      ? "bg-white/5 border-white/10 hover:border-[#3D6B47]/60 hover:bg-white/8"
-                      : "bg-white border-gray-200 hover:border-[#3D6B47]/40 hover:shadow-lg"
+                      ? "bg-white/5 border-white/10 hover:border-emerald-600/50 hover:bg-white/[0.08]"
+                      : "bg-white border-gray-200 hover:border-emerald-600/40 hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isDark ? "bg-[#3D6B47]/30" : "bg-[#3D6B47]/10"
-                      }`}
-                    >
-                      <FileText className="w-6 h-6 text-[#3D6B47]" />
+                    <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-emerald-900/40" : "bg-emerald-50"}`}>
+                      <FileText className="w-7 h-7 text-emerald-500" />
                     </div>
-                    <div className="space-y-1.5">
-                      <h3 className="font-semibold text-lg">Enter PGN</h3>
-                      <p
-                        className={`text-sm leading-relaxed ${
-                          isDark ? "text-white/50" : "text-gray-500"
-                        }`}
-                      >
-                        Paste or type your game notation for instant Stockfish analysis
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-emerald-400/70" : "text-emerald-600/70"}`}>Analysis</p>
+                      <h3 className="font-bold text-base leading-tight">Analyze PGN</h3>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                        Paste game notation for instant Stockfish engine analysis
                       </p>
                     </div>
                   </div>
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3D6B47] to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left`}
-                  />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                 </button>
 
-                {/* Camera Recording (Coming Soon) */}
-                <div
-                  className={`relative overflow-hidden rounded-2xl border p-6 text-left opacity-60 ${
+                {/* ── Card 2: Openings & Repertoire ── */}
+                <button
+                  onClick={() => navigate("/openings")}
+                  className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                     isDark
-                      ? "bg-white/5 border-white/10"
-                      : "bg-white border-gray-200"
+                      ? "bg-white/5 border-white/10 hover:border-emerald-600/50 hover:bg-white/[0.08]"
+                      : "bg-white border-gray-200 hover:border-emerald-600/40 hover:shadow-md"
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isDark ? "bg-white/10" : "bg-gray-100"
-                      }`}
-                    >
-                      <Camera className="w-6 h-6 text-gray-400" />
+                    <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-emerald-900/40" : "bg-emerald-50"}`}>
+                      <Library className="w-7 h-7 text-emerald-500" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">Record via Camera</h3>
-                        <span
-                          className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
-                            isDark
-                              ? "bg-white/10 text-white/40"
-                              : "bg-gray-100 text-gray-400"
-                          }`}
-                        >
-                          Coming Soon
-                        </span>
+                        <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-emerald-400/70" : "text-emerald-600/70"}`}>Openings</p>
+                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">NEW</span>
                       </div>
-                      <p
-                        className={`text-sm leading-relaxed ${
-                          isDark ? "text-white/40" : "text-gray-400"
-                        }`}
-                      >
+                      <h3 className="font-bold text-base leading-tight">Openings &amp; Repertoire</h3>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                        Study openings, build your repertoire, and prep against opponents
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                </button>
+
+                {/* ── Card 3: Matchup Prep ── */}
+                <button
+                  onClick={() => navigate("/matchup-prep")}
+                  className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                    isDark
+                      ? "bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-amber-900/10"
+                      : "bg-white border-gray-200 hover:border-amber-500/40 hover:shadow-md"
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-amber-900/30" : "bg-amber-50"}`}>
+                      <Target className="w-7 h-7 text-amber-500" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-amber-400/70" : "text-amber-600/70"}`}>Preparation</p>
+                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">NEW</span>
+                      </div>
+                      <h3 className="font-bold text-base leading-tight">Matchup Prep</h3>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                        Research your next opponent&apos;s games, tendencies, and weaknesses
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                </button>
+
+                {/* ── Card 4: Record via Camera (Coming Soon) ── */}
+                <div
+                  className={`relative overflow-hidden rounded-2xl border p-5 text-left cursor-not-allowed select-none opacity-50 ${
+                    isDark ? "bg-white/[0.03] border-white/[0.08]" : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/[0.08]" : "bg-gray-100"}`}>
+                      <Camera className="w-7 h-7 text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>Recording</p>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${isDark ? "bg-white/10 text-white/35" : "bg-gray-200 text-gray-400"}`}>SOON</span>
+                      </div>
+                      <h3 className={`font-bold text-base leading-tight ${isDark ? "text-white/50" : "text-gray-400"}`}>Record via Camera</h3>
+                      <p className={`text-sm leading-relaxed ${isDark ? "text-white/30" : "text-gray-400"}`}>
                         Point your phone camera at the board for automatic move detection
                       </p>
                     </div>
                   </div>
                 </div>
-
-                {/* Openings & Repertoire */}
-                <button
-                  onClick={() => navigate("/openings")}
-                  className={`group relative overflow-hidden rounded-2xl border p-6 text-left transition-all hover:scale-[1.02] active:scale-[0.98] sm:col-span-2 lg:col-span-1 ${
-                    isDark
-                      ? "bg-white/5 border-white/10 hover:border-[#3D6B47]/60 hover:bg-white/8"
-                      : "bg-white border-gray-200 hover:border-[#3D6B47]/40 hover:shadow-lg"
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isDark ? "bg-[#3D6B47]/30" : "bg-[#3D6B47]/10"
-                      }`}
-                    >
-                      <Library className="w-6 h-6 text-[#3D6B47]" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">Openings &amp; Repertoire</h3>
-                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">NEW!</span>
-                      </div>
-                      <p
-                        className={`text-sm leading-relaxed ${
-                          isDark ? "text-white/50" : "text-gray-500"
-                        }`}
-                      >
-                        Study openings, build your repertoire, and prep against opponents
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3D6B47] to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left`}
-                  />
-                </button>
               </div>
             </div>
 
