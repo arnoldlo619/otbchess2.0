@@ -673,9 +673,9 @@ export default function GameRecorder() {
                   />
                 </button>
 
-                {/* Camera Recording */}
+                {/* Camera Recording (Coming Soon) */}
                 <div
-                  className={`relative overflow-hidden rounded-2xl border p-6 text-left ${
+                  className={`relative overflow-hidden rounded-2xl border p-6 text-left opacity-60 ${
                     isDark
                       ? "bg-white/5 border-white/10"
                       : "bg-white border-gray-200"
@@ -693,9 +693,13 @@ export default function GameRecorder() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg">Record via Camera</h3>
                         <span
-                          className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400"
+                          className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
+                            isDark
+                              ? "bg-white/10 text-white/40"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
                         >
-                          NEW!
+                          Coming Soon
                         </span>
                       </div>
                       <p
@@ -727,7 +731,10 @@ export default function GameRecorder() {
                       <Library className="w-6 h-6 text-[#3D6B47]" />
                     </div>
                     <div className="space-y-1.5">
-                      <h3 className="font-semibold text-lg">Openings &amp; Repertoire</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">Openings &amp; Repertoire</h3>
+                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">NEW!</span>
+                      </div>
                       <p
                         className={`text-sm leading-relaxed ${
                           isDark ? "text-white/50" : "text-gray-500"
