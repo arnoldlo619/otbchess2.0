@@ -5308,3 +5308,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix StudyMode tab buttons tap target size (p-1.5 → p-2.5)
 - [x] Fix StudyMode board nav buttons tap target size
 - [x] Add mobile progress indicator to StudyMode (replace hidden sm:flex)
+
+## Swipe Gesture Navigation
+- [x] Add swipe left/right gesture to navigate between My Board, Standings, and Tools tabs
+- [x] Add slide transition animation between tabs on swipe
+- [x] Show swipe indicator dots below tabs on mobile

@@ -11,7 +11,7 @@
  *   new_round_flash  — brief animated transition when a new round starts
  *   tournament_complete — final standings
  */
-import {useEffect, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
@@ -571,15 +571,58 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 }
 
 function MyBoardScreen({
-  tournamentId, tournamentName, username, round, totalRounds, game, myColor,
-  opponent, players, isDark, rejoinUrl, connected, timerSnapshot,
+  tournamentId, tournamentName, username, round, totalRounds,
+  game, myColor, opponent, players, isDark, rejoinUrl, connected, timerSnapshot,
 }: {
   tournamentId: string; tournamentName: string; username: string;
   round: number; totalRounds: number; game: Game; myColor: "white" | "black";
   opponent: Player | undefined; players: Player[]; isDark: boolean;
   rejoinUrl: string; connected: boolean; timerSnapshot: TimerSnap;
 }) {
-  const [activeTab, setActiveTab] = useState<"board" | "standings" | "tools">("board");
+  const TABS = ["board", "standings", "tools"] as const;
+  type Tab = typeof TABS[number];
+
+  const [activeTab, setActiveTab] = useState<Tab>("board");
+  const tabIndex = TABS.indexOf(activeTab);
+
+  // Swipe state
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    // Only hijack horizontal swipes (angle < 40° from horizontal)
+    if (Math.abs(dy) > Math.abs(dx) * 0.85) return;
+    // Clamp: can't swipe past first or last tab
+    if (dx > 0 && tabIndex === 0) return;
+    if (dx < 0 && tabIndex === TABS.length - 1) return;
+    setDragOffset(dx);
+  };
+
+  const handleTouchEnd = () => {
+    const threshold = 50;
+    if (dragOffset < -threshold && tabIndex < TABS.length - 1) {
+      setIsAnimating(true);
+      setActiveTab(TABS[tabIndex + 1]);
+    } else if (dragOffset > threshold && tabIndex > 0) {
+      setIsAnimating(true);
+      setActiveTab(TABS[tabIndex - 1]);
+    }
+    setDragOffset(0);
+    setTimeout(() => setIsAnimating(false), 300);
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
 
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-white/50" : "text-gray-500";
@@ -591,8 +634,11 @@ function MyBoardScreen({
   const colorLabel = myColor === "white" ? "White ♔" : "Black ♚";
   const rank = myRank(username, players);
 
+  // Compute the translateX: each panel is 100vw wide
+  const translateX = -(tabIndex * 100) + (dragOffset / window.innerWidth) * 100;
+
   return (
-    <div className={`min-h-screen ${bg} flex flex-col`}>
+    <div className={`min-h-screen ${bg} flex flex-col overflow-hidden`}>
       {/* Header */}
       <div className={`px-5 otb-header-safe pb-4 border-b ${divider}`}>
         {/* Top row: Logo + Connection Badge */}
@@ -608,13 +654,12 @@ function MyBoardScreen({
           </span>
         </div>
       </div>
-
       {/* Tab bar */}
-      <div className={`flex border-b ${divider}`}>
-        {(["board", "standings", "tools"] as const).map((tab) => (
+      <div className={`flex border-b ${divider} relative`}>
+        {TABS.map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
             className={`flex-1 py-3 text-sm font-semibold transition-colors ${
               activeTab === tab
                 ? `${accent} border-b-2 ${isDark ? "border-[#4CAF50]" : "border-[#3D6B47]"}`
@@ -625,148 +670,168 @@ function MyBoardScreen({
           </button>
         ))}
       </div>
-
-      {/* Board tab */}
-      {activeTab === "board" && (
-        <div className="flex-1 flex flex-col overflow-y-auto">
-          {/* Board assignment */}
-          <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-1`}>Your Assignment</p>
-                <p className={`text-3xl font-black ${textMain}`}>Board {game.board}</p>
-                <p className={`text-sm font-semibold mt-0.5 ${accent}`}>Playing as {colorLabel}</p>
+      {/* Swipe dot indicators */}
+      <div className="flex justify-center gap-1.5 py-2">
+        {TABS.map((tab, i) => (
+          <button
+            key={tab}
+            onClick={() => { setIsAnimating(true); setActiveTab(tab); setTimeout(() => setIsAnimating(false), 300); }}
+            className={`rounded-full transition-all duration-300 ${
+              activeTab === tab
+                ? `w-5 h-1.5 ${isDark ? "bg-[#4CAF50]" : "bg-[#3D6B47]"}`
+                : `w-1.5 h-1.5 ${isDark ? "bg-white/20" : "bg-gray-300"}`
+            }`}
+            aria-label={`Go to ${tab} tab`}
+          />
+        ))}
+      </div>
+      {/* Sliding panel container */}
+      <div
+        className="flex-1 flex overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="flex flex-none w-full"
+          style={{
+            width: `${TABS.length * 100}%`,
+            transform: `translateX(${translateX / TABS.length}%)`,
+            transition: dragOffset === 0 ? "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)" : "none",
+          }}
+        >
+          {/* ── Board panel ── */}
+          <div className="flex flex-col overflow-y-auto" style={{ width: `${100 / TABS.length}%` }}>
+            {/* Board assignment */}
+            <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-1`}>Your Assignment</p>
+                  <p className={`text-3xl font-black ${textMain}`}>Board {game.board}</p>
+                  <p className={`text-sm font-semibold mt-0.5 ${accent}`}>Playing as {colorLabel}</p>
+                </div>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${
+                  isDark ? "bg-white/05" : "bg-white"
+                }`}>
+                  {myColor === "white" ? "♔" : "♚"}
+                </div>
               </div>
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${
-                myColor === "white"
-                  ? isDark ? "bg-white/90" : "bg-white border-2 border-gray-200"
-                  : isDark ? "bg-[#1a1a1a]" : "bg-gray-800"
-              }`}>
-                {myColor === "white" ? "♔" : "♚"}
-              </div>
+            </div>
+            {/* Timer banner */}
+            <div className="mx-4 mt-3">
+              <PlayerTimerBanner snap={timerSnapshot} isDark={isDark} />
+            </div>
+            {/* Opponent card */}
+            <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
+              <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-3`}>Your Opponent</p>
+              {opponent ? (
+                <div className="flex items-center gap-4">
+                  <PlayerAvatar
+                    username={opponent.username}
+                    name={opponent.name || opponent.username}
+                    platform={opponent.platform ?? "chesscom"}
+                    avatarUrl={opponent.avatarUrl}
+                    size={56}
+                    className="flex-shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
+                    <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
+                    <p className={`text-sm font-semibold mt-0.5 ${accent}`}>{opponent.elo} ELO</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className={`w-14 h-14 rounded-full ${accentBg} flex items-center justify-center`}>
+                    <Circle className={`w-6 h-6 ${accent}`} />
+                  </div>
+                  <div>
+                    <p className={`text-base font-bold ${textMain}`}>Bye</p>
+                    <p className={`text-sm ${textMuted}`}>You receive a half-point bye this round</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex-1" />
+            {/* Post-game instruction */}
+            <div className={`px-4 pb-safe pt-4 border-t ${divider} space-y-3`}>
+              {opponent ? (
+                <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
+                  <p className="text-2xl mb-2">🏁</p>
+                  <p className={`text-sm font-bold ${accent} mb-1`}>Game finished?</p>
+                  <p className={`text-sm ${textMuted}`}>
+                    The winner should report the result to the director at the registration table.
+                  </p>
+                </div>
+              ) : (
+                <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
+                  <p className={`text-sm font-semibold ${accent}`}>
+                    You have a bye this round — ½ point awarded automatically.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Timer banner */}
-          <PlayerTimerBanner snap={timerSnapshot} isDark={isDark} />
+          {/* ── Standings panel ── */}
+          <div className="overflow-y-auto px-4 py-4 pb-safe" style={{ width: `${100 / TABS.length}%` }}>
+            <LiveStandingsPanel
+              players={players}
+              username={username}
+              currentRound={round}
+              totalRounds={totalRounds}
+              isDark={isDark}
+            />
+          </div>
 
-          {/* Opponent card */}
-          <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
-            <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-3`}>Your Opponent</p>
-            {opponent ? (
-              <div className="flex items-center gap-4">
-                <PlayerAvatar
-                  username={opponent.username}
-                  name={opponent.name || opponent.username}
-                  platform={opponent.platform ?? "chesscom"}
-                  avatarUrl={opponent.avatarUrl}
-                  size={56}
-                  className="flex-shrink-0"
-                />
-                <div className="min-w-0">
-                  <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
-                  <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
-                  <p className={`text-sm font-semibold mt-0.5 ${accent}`}>{opponent.elo} ELO</p>
-                </div>
-              </div>
-            ) : (
+          {/* ── Tools panel ── */}
+          <div className="overflow-y-auto px-4 py-4 pb-safe space-y-3" style={{ width: `${100 / TABS.length}%` }}>
+            <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
+            {/* Chess Clock */}
+            <a
+              href={`/tournament/${tournamentId}/clock?from=player`}
+              className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+                isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
+              } transition-colors`}
+            >
               <div className="flex items-center gap-3">
-                <div className={`w-14 h-14 rounded-full ${accentBg} flex items-center justify-center`}>
-                  <Circle className={`w-6 h-6 ${accent}`} />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
+                }`}>
+                  <Timer className={`w-5 h-5 ${accent}`} />
                 </div>
                 <div>
-                  <p className={`text-base font-bold ${textMain}`}>Bye</p>
-                  <p className={`text-sm ${textMuted}`}>You receive a half-point bye this round</p>
+                  <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
+                  <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
                 </div>
               </div>
-            )}
+              <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </a>
+            {/* Record Game */}
+            <a
+              href={`/record/camera?tournamentId=${tournamentId}&boardNumber=${game.board ?? ""}&white=${encodeURIComponent(username)}&black=${encodeURIComponent(opponent?.username ?? opponent?.name ?? "")}`}
+              className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+                isDark
+                  ? "bg-[#1a1a2e] hover:bg-[#22223a] border border-[#4CAF50]/20"
+                  : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
+              } transition-colors`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  isDark ? "bg-[#4CAF50]/15" : "bg-indigo-100"
+                }`}>
+                  <Video className={`w-5 h-5 ${isDark ? accent : "text-indigo-600"}`} />
+                </div>
+                <div>
+                  <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
+                  <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish</p>
+                </div>
+              </div>
+              <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </a>
           </div>
-
-          <div className="flex-1" />
-
-          {/* Post-game instruction */}
-          <div className={`px-4 pb-safe pt-4 border-t ${divider} space-y-3`}>
-            {opponent ? (
-              <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-                <p className="text-2xl mb-2">🏁</p>
-                <p className={`text-sm font-bold ${accent} mb-1`}>Game finished?</p>
-                <p className={`text-sm ${textMuted}`}>
-                  The winner should report the result to the director at the registration table.
-                </p>
-              </div>
-            ) : (
-              <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
-                <p className={`text-sm font-semibold ${accent}`}>
-                  You have a bye this round — ½ point awarded automatically.
-                </p>
-              </div>
-            )}
-
-          </div>
         </div>
-      )}
-
-      {/* Standings tab */}
-      {activeTab === "standings" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe">
-          <LiveStandingsPanel
-            players={players}
-            username={username}
-            currentRound={round}
-            totalRounds={totalRounds}
-            isDark={isDark}
-          />
-        </div>
-      )}
-
-      {/* Tools tab */}
-      {activeTab === "tools" && (
-        <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe space-y-3">
-          <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
-          {/* Chess Clock */}
-          <a
-            href={`/tournament/${tournamentId}/clock?from=player`}
-            className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
-              isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
-            } transition-colors`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
-              }`}>
-                <Timer className={`w-5 h-5 ${accent}`} />
-              </div>
-              <div>
-                <p className={`text-sm font-bold ${textMain}`}>Chess Clock</p>
-                <p className={`text-xs ${textMuted}`}>Full-screen clock for your game</p>
-              </div>
-            </div>
-            <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </a>
-          {/* Record Game */}
-          <a
-            href={`/record/camera?tournamentId=${tournamentId}&boardNumber=${game.board ?? ""}&white=${encodeURIComponent(username)}&black=${encodeURIComponent(opponent?.username ?? opponent?.name ?? "")}`}
-            className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
-              isDark
-                ? "bg-[#1a1a2e] hover:bg-[#22223a] border border-[#4CAF50]/20"
-                : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
-            } transition-colors`}
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                isDark ? "bg-[#4CAF50]/15" : "bg-indigo-100"
-              }`}>
-                <Video className={`w-5 h-5 ${isDark ? accent : "text-indigo-600"}`} />
-              </div>
-              <div>
-                <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
-                <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish</p>
-              </div>
-            </div>
-            <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </a>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
