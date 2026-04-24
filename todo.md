@@ -5329,3 +5329,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Profile Page Club Buttons
 - [x] Add Manage and New Tournament buttons to owned clubs in Profile.tsx
+
+## Transfer Club Ownership
+- [x] Add Transfer Ownership section to club settings panel in ClubProfile.tsx
+- [x] Member selector dropdown showing all non-owner members
+- [x] Two-step confirmation before transferring

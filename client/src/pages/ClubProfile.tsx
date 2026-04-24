@@ -99,6 +99,7 @@ import {
   ClipboardList,
   Award,
   Swords,
+  ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
@@ -2409,22 +2410,36 @@ export default function ClubProfile() {
                 )}
                 {/* Transfer Ownership */}
                 {deleteStep === 0 && transferStep === 0 && (
-                  <div className="mt-4 pt-4 border-t border-red-500/10 flex items-center justify-between gap-3">
-                    <div>
-                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Transfer ownership</p>
-                      <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>Hand off the club to another member.</p>
+                  <div className="mt-4 pt-4 border-t border-orange-500/15 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isDark ? "bg-orange-500/10" : "bg-orange-50"
+                      }`}>
+                        <ArrowRightLeft className="w-3.5 h-3.5 text-orange-400" />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Transfer ownership</p>
+                        <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>Hand off this club to another member.</p>
+                      </div>
                     </div>
                     <button
                       onClick={() => { setTransferStep(1); setSelectedTransferMemberId(""); }}
-                      className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-colors"
+                      className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+                        isDark
+                          ? "bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20"
+                          : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                      }`}
                     >
                       Transfer
                     </button>
                   </div>
                 )}
                 {transferStep === 1 && (
-                  <div className="mt-4 pt-4 border-t border-red-500/10 space-y-3">
-                    <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Select new owner</p>
+                  <div className="mt-4 pt-4 border-t border-orange-500/15 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <ArrowRightLeft className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                      <p className={`text-sm font-semibold ${isDark ? "text-white/80" : "text-gray-700"}`}>Select new owner</p>
+                    </div>
                     <select
                       value={selectedTransferMemberId}
                       onChange={(e) => setSelectedTransferMemberId(e.target.value)}
