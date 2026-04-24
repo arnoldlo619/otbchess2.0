@@ -154,7 +154,7 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all min-h-[40px] ${
         active
           ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
           : "text-white/40 hover:text-white/60 border border-transparent"
@@ -380,12 +380,12 @@ function StudyModeContent() {
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate(`/openings/${openingSlug}`)}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors"
+              className="shrink-0 p-2.5 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <div className="min-w-0">
-              <p className="text-[10px] text-white/30 truncate">{lineData.opening.name}</p>
+              <p className="text-[11px] text-white/30 truncate">{lineData.opening.name}</p>
               <h1 className="text-sm font-semibold text-white/90 truncate">{lineData.title}</h1>
             </div>
           </div>
@@ -412,7 +412,7 @@ function StudyModeContent() {
             />
           </div>
 
-          {/* Progress bar */}
+          {/* Progress bar — desktop inline */}
           <div className="hidden sm:flex items-center gap-2 w-32">
             <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div
@@ -420,8 +420,15 @@ function StudyModeContent() {
                 style={{ width: `${progressPct}%` }}
               />
             </div>
-            <span className="text-[10px] text-white/30 font-mono w-8 text-right">{progressPct}%</span>
+            <span className="text-[11px] text-white/30 font-mono w-8 text-right">{progressPct}%</span>
           </div>
+        </div>
+        {/* Progress bar — mobile full-width strip */}
+        <div className="sm:hidden h-0.5 bg-white/[0.06]">
+          <div
+            className="h-full bg-emerald-500 transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 
@@ -514,7 +521,7 @@ function StudyModeContent() {
           {/* Right: Explanation panel */}
           <div className="flex-1 space-y-4 min-w-0">
             {/* Move list */}
-            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] max-h-32 overflow-y-auto">
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] max-h-48 overflow-y-auto">
               <MoveList nodes={mainNodes} currentPly={currentPly} onJumpTo={jumpTo} />
             </div>
 

@@ -5290,3 +5290,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove "Your Rejoin Link" component from tournament lobby
 - [x] Add "Tools" tab alongside "My Board" and "Standings" tabs
 - [x] Move Chess Clock and Record Game buttons into the Tools tab
+
+## Mobile UI/UX Audit Fixes
+
+### Tournament Participant Flow
+- [x] Fix LobbyScreen double safe-area padding (pt-safe-top pt-6 → otb-header-safe)
+- [x] Fix WaitingRoundScreen double padding + add pb-safe to standings panel
+- [x] Fix MyBoardScreen double bottom padding (pb-safe-bottom pb-6)
+- [x] Fix text-[10px] timer labels → min text-[11px] for WCAG AA
+- [x] Fix FinalStandings table horizontal overflow on 320px screens
+
+### Openings & Training
+- [x] Fix OpeningsLibrary header search bar stacking on small screens
+- [x] Fix OpeningDetail CTA button width on small screens
+- [x] Fix OpeningDetail board colors for light mode
+- [x] Fix StudyMode move list max-h-32 too short on mobile
+- [x] Fix StudyMode tab buttons tap target size (p-1.5 → p-2.5)
+- [x] Fix StudyMode board nav buttons tap target size
+- [x] Add mobile progress indicator to StudyMode (replace hidden sm:flex)

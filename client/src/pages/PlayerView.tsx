@@ -306,7 +306,7 @@ function LobbyScreen({
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
-      <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
+      <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
         <div className="flex items-center justify-between mb-1">
           <NavLogo linked={false} />
           <ConnectionBadge connected={connected} isDark={isDark} />
@@ -389,7 +389,7 @@ function WaitingRoundScreen({
 
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
-      <div className={`px-5 pt-safe-top pt-6 pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
+      <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
         <div className="flex items-center justify-between mb-1">
           <NavLogo linked={false} />
           <ConnectionBadge connected={connected} isDark={isDark} />
@@ -429,7 +429,7 @@ function WaitingRoundScreen({
           </div>
         </div>
       )}
-      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-4 py-4 flex-1 overflow-y-auto`}>
+      <div className={`mx-4 mt-3 mb-6 rounded-2xl ${isDark ? "bg-[#1a2e1e]" : "bg-gray-50"} px-4 py-4 flex-1 overflow-y-auto pb-safe`}>
         <LiveStandingsPanel
           players={players}
           username={username}
@@ -546,14 +546,14 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
       {/* Time display */}
       <div className="flex-1 min-w-0">
-        <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+          <p className={`text-[11px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
           {isExpired ? "Time's Up" : isPaused ? "Round Timer — Paused" : "Round Timer"}
         </p>
         <p className={`text-3xl font-black font-mono leading-none tracking-tight ${textColor}`}>
           {isExpired ? "0:00" : display}
         </p>
-        {!isExpired && !isPaused && remaining > 0 && (
-          <p className={`text-[10px] mt-1 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          {!isExpired && !isPaused && remaining > 0 && (
+          <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-gray-400"}`}>
             {Math.round(fraction * 100)}% remaining
           </p>
         )}
@@ -561,10 +561,10 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
       {/* Status badge */}
       {isPaused && (
-        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"}`}>Paused</span>
+        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"}`}>Paused</span>
       )}
       {isExpired && (
-        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>Ended</span>
+        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? "bg-red-500/15 text-red-400" : "bg-red-50 text-red-600"}`}>Ended</span>
       )}
     </div>
   );
@@ -594,7 +594,7 @@ function MyBoardScreen({
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
       {/* Header */}
-      <div className={`px-5 pt-safe-top pt-4 pb-4 border-b ${divider}`}>
+      <div className={`px-5 otb-header-safe pb-4 border-b ${divider}`}>
         {/* Top row: Logo + Connection Badge */}
         <div className="flex items-center justify-between mb-3">
           <NavLogo linked={false} />
@@ -685,7 +685,7 @@ function MyBoardScreen({
           <div className="flex-1" />
 
           {/* Post-game instruction */}
-          <div className={`px-4 pb-safe-bottom pb-6 pt-4 border-t ${divider} space-y-3`}>
+          <div className={`px-4 pb-safe pt-4 border-t ${divider} space-y-3`}>
             {opponent ? (
               <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
                 <p className="text-2xl mb-2">🏁</p>

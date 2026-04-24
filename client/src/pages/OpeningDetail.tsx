@@ -244,8 +244,8 @@ function OpeningDetailContent() {
                   boardOrientation: opening.side === "black" ? "black" : "white",
                   allowDragging: false,
                   boardStyle: { borderRadius: "0" },
-                  darkSquareStyle: { backgroundColor: "#2d5a3a" },
-                  lightSquareStyle: { backgroundColor: "#8fbc8f" },
+                  darkSquareStyle: { backgroundColor: isDark ? "#2d5a3a" : "#769656" },
+                  lightSquareStyle: { backgroundColor: isDark ? "#8fbc8f" : "#eeeed2" },
                 }}
               />
             </div>
@@ -331,7 +331,7 @@ function OpeningDetailContent() {
                 }
               }}
               disabled={allLines.length === 0}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[52px]"
             >
               <Play className="w-4 h-4" />
               {masteredCount > 0 ? "Continue Studying" : "Start Studying"}

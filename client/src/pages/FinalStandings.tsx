@@ -734,8 +734,8 @@ export default function FinalStandings() {
               </div>
 
               {/* Scrollable table wrapper */}
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px] border-collapse">
+              <div className="overflow-x-auto -mx-0">
+                <table className="w-full min-w-[520px] border-collapse">
                   {/* Header */}
                   <thead>
                     <tr className={`${thBg} border-b ${border}`}>

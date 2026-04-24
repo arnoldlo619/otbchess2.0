@@ -363,51 +363,49 @@ function OpeningsLibraryContent() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={`min-h-screen ${isDark ? "bg-[#0a1a0e]" : "bg-gray-50"}`}>
-      {/* Header */}
       <div className="border-b border-white/[0.06] bg-[#0a1a0e]/80 backdrop-blur-xl sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <BookOpen className="w-5 h-5 text-emerald-400" />
-              <div>
-                <h1 className="text-lg font-bold text-white/90">Openings Library</h1>
-                <p className="text-[11px] text-white/40">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          {/* Title row + filter toggle */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <BookOpen className="w-5 h-5 text-emerald-400 shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-base font-bold text-white/90 truncate">Openings Library</h1>
+                <p className="text-[11px] text-white/40 hidden sm:block">
                   {allOpenings.length} openings &middot; {allOpenings.reduce((s, o) => s + o.lineCount, 0)} study lines
                 </p>
               </div>
             </div>
-
-            {/* Search */}
-            <div className="flex items-center gap-2 flex-1 max-w-md">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                <input
-                  type="text"
-                  placeholder="Search openings..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-sm text-white/80 placeholder:text-white/25 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.06] transition-all"
-                />
-                {search && (
-                  <button
-                    onClick={() => setSearch("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-white/10"
-                  >
-                    <X className="w-3 h-3 text-white/40" />
-                  </button>
-                )}
-              </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`shrink-0 p-2.5 rounded-lg border transition-all ${
+                showFilters || hasActiveFilters
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  : "bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/60"
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+            </button>
+          </div>
+          {/* Search bar — full width below title on all screen sizes */}
+          <div className="mt-2.5 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search openings..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/80 placeholder:text-white/25 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.06] transition-all"
+              style={{ fontSize: "16px" }}
+            />
+            {search && (
               <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`p-2 rounded-lg border transition-all ${
-                  showFilters || hasActiveFilters
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                    : "bg-white/[0.04] border-white/[0.06] text-white/40 hover:text-white/60"
-                }`}
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10"
               >
-                <Filter className="w-4 h-4" />
+                <X className="w-3.5 h-3.5 text-white/40" />
               </button>
-            </div>
+            )}
           </div>
 
           {/* Filter bar */}
