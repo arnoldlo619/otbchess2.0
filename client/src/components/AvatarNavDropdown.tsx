@@ -520,6 +520,33 @@ export function AvatarNavDropdown({
                     <span>Sign In</span>
                   </button>
                 </div>
+                {/* Divider */}
+                <div
+                  className="mx-3 my-1 h-px"
+                  style={{ background: `${OTB_GREEN_GLOW}0.15)` }}
+                />
+                {/* Appearance toggle */}
+                <div className="px-2 pb-2">
+                  <button
+                    onClick={() => toggleTheme?.()}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                    style={{ border: "1px solid transparent" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                  >
+                    {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+                    <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                    <div
+                      className="ml-auto w-8 h-4 rounded-full flex items-center transition-colors flex-shrink-0"
+                      style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full bg-white shadow transition-transform mx-0.5"
+                        style={{ transform: isDark ? "translateX(0)" : "translateX(16px)" }}
+                      />
+                    </div>
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
