@@ -1127,24 +1127,12 @@ export default function ClubProfile() {
             >
               <ChevronLeft size={15} />
             </button>
-            {/* Club logo + name (desktop) */}
-            <div className="hidden lg:flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
-                style={{ background: accent }}
-              >
-                {club.avatarUrl && !avatarBroken ? (
-                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Crown size={14} style={{ color: "#fff" }} />
-                )}
-              </div>
-              <div className="leading-tight">
-                <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
-                  {club.name}
-                </span>
-                <span className="text-xs font-medium ml-1" style={{ color: "oklch(0.65 0.12 145)" }}>Club</span>
-              </div>
+            {/* Club name (desktop) — avatar shown in sidebar */}
+            <div className="hidden lg:flex items-center gap-2">
+              <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
+                {club.name}
+              </span>
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-md" style={{ color: "oklch(0.65 0.12 145)", background: "oklch(0.20 0.06 145)" }}>Club</span>
             </div>
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
@@ -1177,7 +1165,89 @@ export default function ClubProfile() {
           <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
-
+                {/* ── CLUB BANNER + WELCOME HEADER ──────────────────────────── */}
+                <div
+                  className="relative rounded-3xl overflow-hidden mb-5 chess-board-bg"
+                  style={{ minHeight: "120px" }}
+                >
+                  {/* Dark gradient overlay */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${accent}33 0%, oklch(0.12 0.06 145 / 0.92) 60%, oklch(0.10 0.04 145 / 0.97) 100%)`,
+                    }}
+                  />
+                  {/* Content */}
+                  <div className="relative z-10 flex items-center gap-5 p-5 sm:p-6">
+                    {/* Club avatar */}
+                    <div
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg"
+                      style={{ background: accent, border: `2px solid ${accent}66` }}
+                    >
+                      {club.avatarUrl && !avatarBroken ? (
+                        <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-3xl">{flag}</span>
+                      )}
+                    </div>
+                    {/* Club identity */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white truncate">
+                          {club.name}
+                        </h1>
+                        {club.isPublic ? (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: `${accent}33`, color: accent }}>Public</span>
+                        ) : (
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.25 0.04 145)", color: "oklch(0.55 0.08 145)" }}>Private</span>
+                        )}
+                      </div>
+                      {club.description && (
+                        <p className="text-sm leading-relaxed line-clamp-2" style={{ color: "oklch(0.70 0.08 145)" }}>
+                          {club.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
+                        <span className="flex items-center gap-1">
+                          <Users size={11} style={{ color: accent }} />
+                          <span className="font-semibold text-white">{club.memberCount}</span> members
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Trophy size={11} style={{ color: accent }} />
+                          <span className="font-semibold text-white">{club.tournamentCount}</span> tournaments
+                        </span>
+                        {club.location && (
+                          <span className="hidden sm:flex items-center gap-1">
+                            <MapPin size={11} />
+                            {flag} {club.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Join / Leave CTA */}
+                    {!isOwner && !isDirector && (
+                      <div className="flex-shrink-0">
+                        {joined ? (
+                          <button
+                            onClick={handleLeave}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80"
+                            style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.55 0.08 145)" }}
+                          >
+                            Leave
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleJoin}
+                            className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90"
+                            style={{ background: accent, color: "#fff" }}
+                          >
+                            {club.isPublic ? "Join Club" : "Request to Join"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
         {/* ── About tab ───────────────────────────────────────────────────── */}
         {activeTab === "about" && (
