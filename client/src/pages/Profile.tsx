@@ -36,7 +36,7 @@ import { useMyAnalysedGames } from "../hooks/useMyAnalysedGames";
 import AnalysedGameCard from "../components/AnalysedGameCard";
 import type { Club } from "../lib/clubRegistry";
 import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
-import { Users, Settings } from "lucide-react";
+import { Users, Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
 interface EditState {
@@ -1123,15 +1123,28 @@ export default function ProfilePage() {
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                           {isOwner && (
-                            <a
-                              href={`/clubs/${club.slug ?? club.id}/dashboard`}
-                              className={`p-1.5 rounded-xl transition ${
-                                isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"
-                              }`}
-                              title="Manage club"
-                            >
-                              <Settings className="w-3.5 h-3.5" />
-                            </a>
+                            <>
+                              <button
+                                onClick={() => navigate(`/clubs/${club.slug ?? club.id}?settings=1`)}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition ${
+                                  isDark ? "bg-amber-400/10 text-amber-400 hover:bg-amber-400/20 border border-amber-400/20" : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                                }`}
+                                title="Manage club"
+                              >
+                                <Crown className="w-3 h-3" />
+                                Manage
+                              </button>
+                              <button
+                                onClick={() => navigate(`/clubs/${club.slug ?? club.id}?create=1`)}
+                                className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition ${
+                                  isDark ? "bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20 border border-[#4CAF50]/20" : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                                }`}
+                                title="New tournament"
+                              >
+                                <PlusCircle className="w-3 h-3" />
+                                New
+                              </button>
+                            </>
                           )}
                           {isOwner ? (
                             <button

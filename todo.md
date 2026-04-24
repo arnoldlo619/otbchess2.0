@@ -5326,3 +5326,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## New Tournament Shortcut on Club Cards
 - [x] Add "New Tournament" button to owned club cards in My Clubs
 - [x] Button links to /clubs/:id?create=1 which auto-opens tournament wizard
+
+## Profile Page Club Buttons
+- [x] Add Manage and New Tournament buttons to owned clubs in Profile.tsx
