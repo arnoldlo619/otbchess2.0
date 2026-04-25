@@ -167,6 +167,7 @@ import {
   GitBranch as _GitBranch,
   Bell as _Bell,
   Camera,
+  Settings2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -175,8 +176,10 @@ import { computeWeeklyBattleTrend } from "@/lib/battleTrend";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { apiGetClub, apiListClubMembers, apiTransferOwnership } from "@/lib/clubsApi";
 import { logger } from "@/lib/logger";
-
-import { authFetch } from "@/lib/apiFetch";
+import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
+import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
+import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
+import { authFetch, apiFetch } from "@/lib/apiFetch";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -2277,7 +2280,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "analytics" | "payments";
+type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "analytics" | "payments" | "settings";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -2897,7 +2900,7 @@ export default function ClubDashboard() {
     }
   }
 
-  const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number }[] = [
+  const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
     { id: "feed", label: "Feed", icon: Megaphone },
     { id: "events", label: "Events", icon: Calendar, badge: upcomingEvents.length > 0 ? upcomingEvents.length : undefined },
     { id: "members", label: "Members", icon: Users },
@@ -2905,6 +2908,7 @@ export default function ClubDashboard() {
     { id: "leagues", label: "Leagues", icon: Trophy },
     { id: "analytics", label: "Analytics", icon: BarChart2 },
     { id: "payments", label: "Payments", icon: Wallet },
+    { id: "settings", label: "Settings", icon: Settings2, ownerOnly: true },
   ];
 
   return (
@@ -2946,7 +2950,7 @@ export default function ClubDashboard() {
           <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
           {/* Nav icons */}
           <nav className="flex flex-col items-center gap-1 flex-1">
-            {clubTabs.map((ct) => {
+            {clubTabs.filter((ct) => !ct.ownerOnly).map((ct) => {
               const Icon = ct.icon;
               const isActive = tab === ct.id;
               return (
@@ -2994,6 +2998,25 @@ export default function ClubDashboard() {
                   <MessageSquare size={16} />
                 </button>
               </Link>
+            )}
+            {isOwnerOrDirector && (
+              <button
+                onClick={() => setTab("settings")}
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                style={{
+                  background: tab === "settings" ? accent : "transparent",
+                  color: tab === "settings" ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                }}
+                title="Club Settings"
+              >
+                <Settings2 size={17} />
+                <span
+                  className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                  style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
+                >
+                  Club Settings
+                </span>
+              </button>
             )}
           </div>
           </div>{/* end z-10 sidebar content wrapper */}
@@ -3062,15 +3085,24 @@ export default function ClubDashboard() {
                       />
                       {/* Content */}
                       <div className="relative z-10 flex items-center gap-5 p-5 sm:p-6">
-                        {/* Club avatar */}
+                        {/* Club avatar — clickable for owners to open Settings */}
                         <div
-                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg"
+                          className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg${isOwnerOrDirector ? " cursor-pointer group/avatar" : ""}`}
                           style={{ background: accent, border: `2px solid ${accent}66` }}
+                          onClick={isOwnerOrDirector ? () => setTab("settings") : undefined}
+                          title={isOwnerOrDirector ? "Manage club settings" : undefined}
                         >
                           {club.avatarUrl ? (
                             <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
                           ) : (
                             <span className="text-3xl">{flag}</span>
+                          )}
+                          {/* Camera overlay for owners */}
+                          {isOwnerOrDirector && (
+                            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                              <Camera className="w-5 h-5 text-white" />
+                              <span className="text-[9px] font-bold text-white leading-tight">Edit</span>
+                            </div>
                           )}
                         </div>
                         {/* Club identity */}
@@ -3109,11 +3141,19 @@ export default function ClubDashboard() {
                         </div>
                         {/* Admin CTA */}
                         {isOwnerOrDirector && (
-                          <div className="flex-shrink-0 flex items-center gap-2">
+                          <div className="flex-shrink-0 flex flex-col items-end gap-2">
                             <button
-                              onClick={() => setTab("analytics")}
+                              onClick={() => setTab("settings")}
                               className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90 flex items-center gap-1.5"
                               style={{ background: accent, color: "#fff" }}
+                            >
+                              <Settings2 className="w-3 h-3" />
+                              Manage Club
+                            </button>
+                            <button
+                              onClick={() => setTab("analytics")}
+                              className="text-xs font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-80 flex items-center gap-1.5"
+                              style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.75)" }}
                             >
                               <BarChart2 className="w-3 h-3" />
                               Analytics
@@ -5349,6 +5389,20 @@ export default function ClubDashboard() {
             )}
           </div>
         )}
+
+        {/* ── SETTINGS TAB ─────────────────────────────────────────────────────────── */}
+        {tab === "settings" && isOwnerOrDirector && (
+          <ClubSettingsPanel
+            club={club}
+            accent={accent}
+            isDark={isDark}
+            onClubChange={(patch: Partial<Omit<Club, "id" | "slug" | "foundedAt">>) => {
+              updateClub(club.id, patch);
+              setClub((prev) => prev ? { ...prev, ...patch } : prev);
+            }}
+          />
+        )}
+
               </div>{/* end max-w-4xl */}
             </div>{/* end px wrapper */}
           </div>{/* end scrollable content */}

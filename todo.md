@@ -5435,3 +5435,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix hero banner overlay in ClubProfile.tsx — replace raw FileReader + alert() with cropBannerImage + toast + loading state + remove button + drag-and-drop
 - [x] Add 45KB size guard to ClubBannerUpload.tsx cropBannerImage (auto-fallback quality 0.88 → 0.65)
 - [x] Add bannerUploading + bannerDragOver states to ClubProfile for the hero overlay
+
+## Club Owner UX — Settings & Upload Discoverability
+- [x] Auto-redirect owners/directors from /clubs/:id to /clubs/:id/home (ClubDashboard)
+- [x] Add camera overlay on avatar circle in hero banner for owners (click to open Settings tab)
+- [x] Add prominent "Manage Club" CTA button in hero banner for owners
+- [x] Add Settings tab to ClubDashboard sidebar (bottom, owners/directors only)
+- [x] Build ClubSettingsPanel component with avatar upload, banner upload, club info form

@@ -730,6 +730,17 @@ export default function ClubProfile() {
     const id = params.id;
 
     const loadClubData = (found: Club) => {
+      // Auto-redirect owners and directors to the ClubDashboard (/clubs/:id/home)
+      // unless the URL already has ?settings=1 (direct deep-link to settings modal)
+      if (user) {
+        const membership = getMembership(found.id, user.id);
+        const isOwnerOrDir = membership?.role === "owner" || membership?.role === "director";
+        const hasSettingsParam = new URLSearchParams(window.location.search).get("settings") === "1";
+        if (isOwnerOrDir && !hasSettingsParam) {
+          navigate(`/clubs/${encodeURIComponent(id)}/home`);
+          return;
+        }
+      }
       setClub(found);
       const clubMembers = getClubMembers(found.id);
       setMembers(clubMembers);
