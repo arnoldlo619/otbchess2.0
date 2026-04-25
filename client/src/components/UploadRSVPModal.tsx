@@ -64,15 +64,16 @@ async function lookupChessCom(username: string): Promise<Partial<Player>> {
   if (!profileRes.ok) throw new Error("Not found on chess.com");
   const profile = await profileRes.json();
   const stats = statsRes.ok ? await statsRes.json() : {};
-  const elo =
-    stats?.chess_rapid?.last?.rating ??
-    stats?.chess_blitz?.last?.rating ??
-    stats?.chess_bullet?.last?.rating ??
-    1200;
+  const rapidElo: number | undefined = stats?.chess_rapid?.last?.rating;
+  const blitzElo: number | undefined = stats?.chess_blitz?.last?.rating;
+  // Active ELO: prefer rapid, then blitz, then bullet, then default
+  const elo = rapidElo ?? blitzElo ?? stats?.chess_bullet?.last?.rating ?? 1200;
   return {
     name: profile.name || profile.username,
     username: profile.username,
     elo,
+    rapidElo,
+    blitzElo,
     avatarUrl: profile.avatar,
     country: profile.country?.split("/").pop()?.toUpperCase() ?? "US",
     title: profile.title,
@@ -107,6 +108,8 @@ function makePlayer(partial: Partial<Player>): Player {
     name: partial.name ?? partial.username ?? "Unknown",
     username: partial.username ?? "",
     elo: partial.elo ?? 1200,
+    rapidElo: partial.rapidElo,
+    blitzElo: partial.blitzElo,
     title: partial.title,
     country: partial.country ?? "US",
     points: 0,
@@ -592,10 +595,12 @@ export function UploadRSVPModal({
                 {/* Column headers */}
                 <div className={`grid text-xs font-semibold px-4 py-2 border-b ${
                   isDark ? "bg-white/04 text-white/40 border-white/08" : "bg-gray-50 text-gray-500 border-gray-100"
-                }`} style={{ gridTemplateColumns: "1.5rem 1fr 1fr auto" }}>
+                }`} style={{ gridTemplateColumns: "1.5rem 1fr 1fr 4rem 4rem auto" }}>
                   <span />
                   <span>Username</span>
-                  <span>Name / ELO</span>
+                  <span>Name</span>
+                  <span className="text-center">RAPID</span>
+                  <span className="text-center">BLITZ</span>
                   <span>Status</span>
                 </div>
 
@@ -617,7 +622,7 @@ export function UploadRSVPModal({
                           ? isDark ? "bg-white/02" : "bg-gray-50/60"
                           : ""
                       }`}
-                      style={{ gridTemplateColumns: "1.5rem 1fr 1fr auto" }}
+                      style={{ gridTemplateColumns: "1.5rem 1fr 1fr 4rem 4rem auto" }}
                     >
                       {/* Checkbox */}
                       <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
@@ -634,11 +639,27 @@ export function UploadRSVPModal({
                         {row.rawUsername}
                       </span>
 
-                      {/* Name / ELO */}
+                      {/* Name */}
                       <span className={`truncate ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                        {row.player
-                          ? `${row.player.name} · ${row.player.elo}`
-                          : "—"}
+                        {row.player ? row.player.name : "—"}
+                      </span>
+
+                      {/* Rapid ELO */}
+                      <span className={`text-center font-mono font-semibold ${
+                        row.player?.rapidElo
+                          ? isDark ? "text-[#6FCF7F]" : "text-[#3D6B47]"
+                          : isDark ? "text-white/20" : "text-gray-300"
+                      }`}>
+                        {row.player?.rapidElo ?? "—"}
+                      </span>
+
+                      {/* Blitz ELO */}
+                      <span className={`text-center font-mono font-semibold ${
+                        row.player?.blitzElo
+                          ? isDark ? "text-amber-400" : "text-amber-600"
+                          : isDark ? "text-white/20" : "text-gray-300"
+                      }`}>
+                        {row.player?.blitzElo ?? "—"}
                       </span>
 
                       {/* Status */}

@@ -2589,6 +2589,45 @@ export default function Director() {
                       </div>
                     </div>
 
+                    {/* Rating type selector — shown when players have dual ratings */}
+                    {state.players.some((p) => p.rapidElo || p.blitzElo) && (
+                      <div className={`px-4 sm:px-6 py-3 border-b flex items-center justify-between gap-3 ${
+                        isDark ? "border-white/06" : "border-gray-100"
+                      }`}>
+                        <span className={`text-xs font-semibold ${
+                          isDark ? "text-white/40" : "text-gray-500"
+                        }`}>Pairing Rating</span>
+                        <div className="flex gap-1.5">
+                          {(["rapid", "blitz"] as const).map((rt) => {
+                            const active = (tournamentConfig?.ratingType ?? "rapid") === rt;
+                            return (
+                              <button
+                                key={rt}
+                                type="button"
+                                onClick={() => {
+                                  updateTournamentConfig(tournamentId, { ratingType: rt });
+                                  state.players.forEach((p) => {
+                                    const newElo = rt === "blitz"
+                                      ? (p.blitzElo || p.rapidElo || p.elo)
+                                      : (p.rapidElo || p.blitzElo || p.elo);
+                                    if (newElo !== p.elo) updatePlayer(p.id, { elo: newElo });
+                                  });
+                                  toast.success(`Pairings will use ${rt === "blitz" ? "Blitz" : "Rapid"} ratings`);
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                  active
+                                    ? isDark ? "bg-[#3D6B47]/25 text-[#6FCF7F] border border-[#3D6B47]/40" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/25"
+                                    : isDark ? "bg-white/05 text-white/40 border border-transparent" : "bg-gray-100 text-gray-400 border border-transparent"
+                                }`}
+                              >
+                                {rt === "rapid" ? "⚡ Rapid" : "🔥 Blitz"}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Join link + QR row */}
                     <div className={`px-4 sm:px-6 py-4 border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
                       <p className={`text-xs font-semibold uppercase tracking-widest mb-2 ${

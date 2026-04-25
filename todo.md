@@ -5457,3 +5457,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Tournament Manage Page — Nested Button Fix
 - [x] Find and fix nested <button> inside <button> on /tournament/:slug/manage page — UploadRSVPModal.tsx line 566 outer button → div[role=button]
+
+## Upload RSVP — Dual ELO (Rapid + Blitz) Display & Pairing Selector
+- [ ] Fetch both Rapid and Blitz ELO from chess.com API in UploadRSVPModal lookup
+- [ ] Store both eloRapid and eloBlitz on the player data model
+- [ ] Show RAPID and BLITZ columns side-by-side in UploadRSVPModal preview table
+- [ ] Add rating-type selector (RAPID / BLITZ) in Director players tab header
+- [ ] Default rating type to tournament time format (Rapid → RAPID, Blitz → BLITZ)
+- [ ] Wire selected rating type into pairing ELO used for Swiss pairings
+
+## Upload RSVP — Dual ELO (Rapid + Blitz) Display
+- [x] Fetch both rapidElo and blitzElo from chess.com in UploadRSVPModal lookupChessCom
+- [x] Preserve rapidElo and blitzElo in makePlayer() factory function
+- [x] Add RAPID and BLITZ columns to UploadRSVPModal preview table (green for rapid, amber for blitz)
+- [x] Add compact RAPID/BLITZ rating-type toggle to Director players tab header (shown when any player has dual ratings)
+- [x] Smart default already in TournamentWizard — blitz time controls → blitz, rapid → rapid
+- [x] Pairing ELO re-syncs via updatePlayer() when director switches rating type
