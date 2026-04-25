@@ -56,12 +56,31 @@ interface UploadRSVPModalProps {
 }
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
+
+/** Retry-aware fetch: retries on 429 / 503 with exponential backoff (up to 3 attempts). */
+async function fetchWithRetry(url: string, maxRetries = 3): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fetch(url);
+    if (res.status === 429 || res.status === 503) {
+      // Rate limited or temporarily unavailable — wait and retry
+      const delay = Math.min(1000 * Math.pow(2, attempt), 8000); // 1s, 2s, 4s
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+    return res;
+  }
+  // Final attempt without retry
+  return fetch(url);
+}
+
 // Route all chess.com lookups through the server proxy (/api/chess/player/:username)
 // to avoid CORS issues, IP-based rate limiting, and 404s for high-profile accounts
 // (e.g. @magnuscarlsen, @hikaru) that chess.com blocks from direct browser requests.
 async function lookupChessCom(username: string): Promise<Partial<Player>> {
-  const res = await fetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
-  if (!res.ok) throw new Error("Not found on chess.com");
+  const res = await fetchWithRetry(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
+  if (res.status === 404) throw new Error("Not found on chess.com");
+  if (res.status === 429) throw new Error("Rate limited — try again in a moment");
+  if (!res.ok) throw new Error(`chess.com error (${res.status})`);
   const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
   const profile = data.profile ?? {};
   const stats = data.stats ?? {};
@@ -101,8 +120,10 @@ async function lookupChessCom(username: string): Promise<Partial<Player>> {
 
 async function lookupLichess(username: string): Promise<Partial<Player>> {
   // Route through the server-side proxy to avoid CORS and IP-based rate limiting
-  const res = await fetch(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
-  if (!res.ok) throw new Error("Not found on Lichess");
+  const res = await fetchWithRetry(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
+  if (res.status === 404) throw new Error("Not found on Lichess");
+  if (res.status === 429) throw new Error("Rate limited — try again in a moment");
+  if (!res.ok) throw new Error(`Lichess error (${res.status})`);
   const data = await res.json();
   const perfs = data.perfs ?? {};
   // Extract rapid and blitz ratings individually (mirrors chess.com dual-ELO logic)
@@ -346,7 +367,7 @@ export function UploadRSVPModal({
     lookupInProgress.current = true;
     setLookupStarted(true);
 
-    const BATCH = 3;
+    const BATCH = 2; // Keep concurrency low to avoid chess.com / proxy rate limits
     const indices = rows
       .map((r, i) => (r.status === "pending" ? i : -1))
       .filter((i) => i >= 0);
@@ -383,7 +404,8 @@ export function UploadRSVPModal({
           }
         })
       );
-      if (b + BATCH < indices.length) await new Promise((r) => setTimeout(r, 400));
+      // 800ms gap between batches to stay well under chess.com's rate limit
+      if (b + BATCH < indices.length) await new Promise((r) => setTimeout(r, 800));
     }
     lookupInProgress.current = false;
   }, [rows, platform]);

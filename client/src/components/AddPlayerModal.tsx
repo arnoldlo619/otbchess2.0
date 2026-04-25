@@ -90,15 +90,29 @@ const AMBER = "#D97706";
 const AMBER_BG = "rgba(217,119,6,0.08)";
 const _AMBER_RING = "rgba(217,119,6,0.25)";
 
-// ─── ELO lookup helpers ───────────────────────────────────────────────────────
+// ─── ELO lookup helpers ─────────────────────────────────────────────────────────
+
+/** Retry-aware fetch: retries on 429 / 503 with exponential backoff (up to 3 attempts). */
+async function fetchWithRetry(url: string, fetchFn: (url: string) => Promise<Response> = fetch, maxRetries = 3): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fetchFn(url);
+    if (res.status === 429 || res.status === 503) {
+      const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+    return res;
+  }
+  return fetchFn(url);
+}
 
 async function lookupChessCom(username: string): Promise<LookupResult> {
   // Route through server proxy to avoid browser User-Agent restrictions and
   // Cloudflare rate-limiting on direct browser → api.chess.com calls
-  const res = await authFetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
+  const res = await fetchWithRetry(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`, authFetch);
   if (res.status === 404) throw new Error("Player not found on chess.com");
-  if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`);
-  const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
+  if (res.status === 429) throw new Error("Rate limited — try again in a moment");
+  if (!res.ok) throw new Error(`chess.com lookup failed (${res.status})`); const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
   const { profile, stats } = data;
   const rapid = (stats?.chess_rapid as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
   const blitz = (stats?.chess_blitz as Record<string, Record<string, number>> | undefined)?.last?.rating ?? 0;
@@ -116,8 +130,10 @@ async function lookupChessCom(username: string): Promise<LookupResult> {
 
 async function lookupLichess(username: string): Promise<LookupResult> {
   // Route through the server-side proxy to avoid CORS and IP-based rate limiting
-  const res = await fetch(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
-  if (!res.ok) throw new Error("Player not found on Lichess");
+  const res = await fetchWithRetry(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
+  if (res.status === 404) throw new Error("Player not found on Lichess");
+  if (res.status === 429) throw new Error("Rate limited — try again in a moment");
+  if (!res.ok) throw new Error(`Lichess lookup failed (${res.status})`);
   const data = await res.json();
   const perfs = data.perfs ?? {};
   const rapidElo: number | undefined = perfs.rapid?.rating ?? undefined;

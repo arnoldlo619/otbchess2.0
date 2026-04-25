@@ -5573,3 +5573,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added tooltip: "Download player roster as CSV (includes check-in & payment status)"
 - [x] 24 Vitest tests for exportPlayersCSV — all pass
 - [x] TypeScript: 0 errors
+
+## URGENT BUG: chess.com RSVP Upload — 80/100 players "Not found"
+- [x] Diagnosed: chessProxyLimiter was set to max:10 req/min — blocked after 10th player in production
+- [x] Fix: Raised server rate limit to 150 req/min, added server-side retry (fetchWithRetryServer) for upstream 429/503, added client-side retry (fetchWithRetry) with exponential backoff, reduced batch size to 2 with 800ms delay, improved error messages to distinguish 404 vs 429
+- [x] Tested: 19/20 real usernames pass (1 genuine 404), 18 Vitest tests pass, TypeScript 0 errors

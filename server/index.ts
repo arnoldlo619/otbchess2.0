@@ -146,12 +146,30 @@ function broadcastTournamentStarted(
   const subs = sseSubscribers.get(tournamentId);
   if (!subs || subs.size === 0) return;
   const data = `event: tournament_started\ndata: ${JSON.stringify(payload)}\n\n`;
-  for (const res of Array.from(subs)) {
-    try { res.write(data); } catch { /* client already disconnected */ }
+  for (const res of Array.from(subs)) {    try { res.write(data); } catch { /* client already disconnected */ }
   }
 }
+// ─── Chess.com & Lichess proxy ──────────────────────────────────────────────────────────
+/** Server-side fetch with retry for upstream 429/503 (chess.com rate limiting). */
+async function fetchWithRetryServer(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const res = await fetch(url, options);
+    if (res.status === 429 || res.status === 503) {
+      const delay = Math.min(1000 * Math.pow(2, attempt), 8000); // 1s, 2s, 4s
+      logger.warn(`[chess proxy] Upstream ${res.status} for ${url}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+    return res;
+  }
+  // Final attempt without retry
+  return fetch(url, options);
+}
 
-// ─── Chess.com & Lichess proxy ────────────────────────────────────────────────
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
   const base = "https://api.chess.com/pub/player";
@@ -161,12 +179,15 @@ async function proxyChessCom(username: string): Promise<{ status: number; body: 
   };
 
   const [profileRes, statsRes] = await Promise.all([
-    fetch(`${base}/${key}`, { headers }),
-    fetch(`${base}/${key}/stats`, { headers }),
+    fetchWithRetryServer(`${base}/${key}`, { headers }),
+    fetchWithRetryServer(`${base}/${key}/stats`, { headers }),
   ]);
 
   if (profileRes.status === 404) {
     return { status: 404, body: { error: "not_found" } };
+  }
+  if (profileRes.status === 429) {
+    return { status: 429, body: { error: "chess.com rate limit — please try again in a moment" } };
   }
   if (!profileRes.ok) {
     return { status: profileRes.status, body: { error: `chess.com returned ${profileRes.status}` } };
@@ -179,7 +200,6 @@ async function proxyChessCom(username: string): Promise<{ status: number; body: 
 
   return { status: 200, body: { profile: profileData, stats: statsData } };
 }
-
 async function proxyLichess(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
   const headers = {
@@ -216,11 +236,11 @@ const globalLimiter = rateLimit({
   skip: () => process.env.NODE_ENV !== "production",
 });
 
-// Chess.com / Lichess proxy: 10 lookups per minute per IP.
-// Tightened from 20 → 10 to reduce upstream API pressure and prevent scraping.
+// Chess.com / Lichess proxy: 150 lookups per minute per IP.
+// Raised from 10 → 150 to support bulk RSVP uploads (100+ players per tournament).
 const chessProxyLimiter = rateLimit({
   windowMs: 60_000,
-  max: 10,
+  max: 150,  // Supports bulk RSVP uploads of 100+ players (each lookup = 1 proxy call)
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
