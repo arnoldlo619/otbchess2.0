@@ -5400,3 +5400,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update clubs.avatar_url in database for Chicago Chess Club (id: n3hjjygu) with base64 data URL
 - [x] Add onError handlers to both avatar img tags in ClubProfile.tsx to set avatarBroken state
 - [x] TypeScript: 0 errors after fix
+
+## Club Avatar Migration Audit
+- [x] Audit all 15 clubs in DB for /uploads/ broken paths — 0 found (Chicago was already fixed)
+- [x] Audit users table (4 avatars) — all external chess.com CDN URLs, none broken
+- [x] Audit club_members table — 0 broken /uploads/ avatar_url entries
+- [x] Audit leagues table — no image columns present
+- [x] Verify upload-avatar and upload-banner server endpoints already return base64 data URL (no file writes)
+- [x] Verify all 3 client callers (CreateClubWizard, ClubProfile settings, ClubDashboard) correctly persist returned base64 URL to DB
+- [x] TypeScript: 0 errors
