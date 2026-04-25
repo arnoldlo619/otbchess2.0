@@ -3139,27 +3139,7 @@ export default function ClubDashboard() {
                             )}
                           </div>
                         </div>
-                        {/* Admin CTA */}
-                        {isOwnerOrDirector && (
-                          <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                            <button
-                              onClick={() => setTab("settings")}
-                              className="text-xs font-bold px-4 py-1.5 rounded-xl transition-all hover:opacity-90 flex items-center gap-1.5"
-                              style={{ background: accent, color: "#fff" }}
-                            >
-                              <Settings2 className="w-3 h-3" />
-                              Manage Club
-                            </button>
-                            <button
-                              onClick={() => setTab("analytics")}
-                              className="text-xs font-semibold px-4 py-1.5 rounded-xl transition-all hover:opacity-80 flex items-center gap-1.5"
-                              style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.75)" }}
-                            >
-                              <BarChart2 className="w-3 h-3" />
-                              Analytics
-                            </button>
-                          </div>
-                        )}
+
                       {/* Banner upload overlay (owners/directors) */}
                       {isOwnerOrDirector && (
                         <>
@@ -3205,28 +3185,15 @@ export default function ClubDashboard() {
                                 Uploading…
                               </div>
                             ) : (
-                              <>
-                                <label
+                              <label
                                   htmlFor="banner-upload-dash"
                                   className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
                                   style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                                  title="Change banner image"
+                                  title={club.bannerUrl ? "Change banner image" : "Add banner image"}
                                 >
                                   <Camera className="w-3.5 h-3.5" />
                                   {club.bannerUrl ? "Change Banner" : "Add Banner"}
                                 </label>
-                                {club.bannerUrl && (
-                                  <button
-                                    onClick={handleRemoveBanner}
-                                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
-                                    style={{ background: "rgba(180,0,0,0.65)", color: "#fff", backdropFilter: "blur(4px)" }}
-                                    title="Remove banner image"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                    Remove
-                                  </button>
-                                )}
-                              </>
                             )}
                           </div>
                           <input
