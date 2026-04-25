@@ -1020,7 +1020,7 @@ export default function ReportPage() {
                       tournamentName={tournamentName}
                       tournamentDate={tournamentDate}
                       isDark={isDark}
-                      avatarUrl={avatars.get(perf.player.username.toLowerCase())}
+                      avatarUrl={toProxiedAvatarUrl(avatars.get(perf.player.username.toLowerCase()))}
                       avatarStatus={avatarsLoaded ? "loaded" : "loading"}
                       onShareSingle={shareModal.openSingle}
                       exportRef={exportRef}

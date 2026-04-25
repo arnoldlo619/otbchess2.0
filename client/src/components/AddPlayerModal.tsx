@@ -39,6 +39,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
+import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
 import { authFetch } from "@/lib/apiFetch";
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1031,7 +1032,7 @@ export function AddPlayerModal({
                       style={{ background: isDark ? G_BG : "#F0FDF4", border: `1.5px solid ${isDark ? "rgba(61,107,71,0.35)" : "#BBF7D0"}`, animation: "fadeInUp 0.2s ease both" }}
                     >
                       {lookupResult.avatar ? (
-                        <img src={lookupResult.avatar} alt={lookupResult.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                        <img src={toProxiedAvatarUrl(lookupResult.avatar) ?? undefined} alt={lookupResult.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" crossOrigin="anonymous" />
                       ) : (
                         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style={{ background: G }}>
                           {(lookupResult.name || lookupResult.username)[0]?.toUpperCase()}

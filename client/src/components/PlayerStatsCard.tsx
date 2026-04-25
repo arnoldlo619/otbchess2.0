@@ -20,6 +20,7 @@
 import { forwardRef, useState, useEffect } from "react";
 import type { PlayerPerformance } from "@/lib/performanceStats";
 import { FLAG_EMOJI } from "@/lib/tournamentData";
+import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
 // ─── Accent palette ───────────────────────────────────────────────────────────
 /** Curated palette exposed to the Report page color picker. */
@@ -198,7 +199,7 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
       perf,
       tournamentName,
       tournamentDate,
-      avatarUrl,
+      avatarUrl: avatarUrlRaw,
       avatarStatus = "loaded",
       forExport = false,
       accentColor: accentColorProp,
@@ -235,6 +236,9 @@ const PlayerStatsCard = forwardRef<HTMLDivElement, PlayerStatsCardProps>(
     const flag = FLAG_EMOJI[player.country] ?? "";
     const ordinal = rank === 1 ? "1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}th`;
     const ratingSign = ratingChange >= 0 ? "+" : "";
+    // Route avatar URL through /api/avatar-proxy to prevent mixed-content warnings
+    // and allow html2canvas to draw it without "tainted canvas" CORS errors.
+    const avatarUrl = toProxiedAvatarUrl(avatarUrlRaw);
     const showPhoto = avatarStatus === "loaded" && avatarUrl && !imgError;
 
     const total = wins + draws + losses;

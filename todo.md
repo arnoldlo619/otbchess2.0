@@ -5545,3 +5545,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Confirmed zero direct lichess.org image URLs rendered as <img src> in client source
 - [x] Report.tsx already uses toProxiedAvatarUrl for canvas exports — no change needed
 - [x] TypeScript: 0 errors
+
+## crossOrigin="anonymous" + Avatar Proxy Audit
+- [x] Audited all <img> tags rendering player avatars across client source
+- [x] PlayerAvatar.tsx — already had crossOrigin + proxy (from previous task)
+- [x] PlayerStatsCard.tsx — added toProxiedAvatarUrl() internally; both img tags already had crossOrigin
+- [x] Home.tsx L1132 — added crossOrigin + /api/avatar-proxy for profile.avatar
+- [x] Join.tsx L1569 — added crossOrigin + /api/avatar-proxy for profile.avatar
+- [x] MatchupPrep.tsx L741 — added crossOrigin + /api/avatar-proxy for opponentProfile.avatar
+- [x] Report.tsx L1023 — proxied avatarUrl in ExportableCard (visible card) call
+- [x] AddPlayerModal.tsx — added toProxiedAvatarUrl import + applied to lookupResult.avatar with crossOrigin
+- [x] Confirmed zero remaining unproxied chess.com/lichess avatar img tags in client source
+- [x] TypeScript: 0 errors

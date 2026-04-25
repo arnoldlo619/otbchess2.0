@@ -738,9 +738,10 @@ export default function MatchupPrep() {
                   }`}>
                     {opponentProfile?.avatar ? (
                       <img
-                        src={opponentProfile.avatar}
+                        src={`/api/avatar-proxy?url=${encodeURIComponent(opponentProfile.avatar)}`}
                         alt={report.opponent.username}
                         className="w-full h-full object-cover"
+                        crossOrigin="anonymous"
                         aria-hidden="true"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                       />

@@ -1566,7 +1566,7 @@ export default function JoinPage() {
                     <div className="relative flex-shrink-0">
                       <div className="w-14 h-14 rounded-2xl bg-[#3D6B47]/12 flex items-center justify-center overflow-hidden">
                         {profile.avatar ? (
-                          <img src={profile.avatar} alt={profile.username} className="w-full h-full object-cover" />
+                          <img src={`/api/avatar-proxy?url=${encodeURIComponent(profile.avatar)}`} alt={profile.username} className="w-full h-full object-cover" crossOrigin="anonymous" />
                         ) : (
                           <span className="text-2xl font-bold text-[#3D6B47]"
                             style={{ fontFamily: "'Clash Display', sans-serif" }}>

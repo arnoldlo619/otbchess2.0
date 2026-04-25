@@ -1129,7 +1129,7 @@ function PlayerDemo() {
                     <div className="flex items-center gap-3.5">
                       <div className="relative">
                         {profile.avatar ? (
-                          <img src={profile.avatar} alt={profile.username} className="w-12 h-12 rounded-xl object-cover" style={{ boxShadow: isDark ? "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" : "0 0 0 2px rgba(61,107,71,0.2)" }} />
+                          <img src={`/api/avatar-proxy?url=${encodeURIComponent(profile.avatar)}`} alt={profile.username} className="w-12 h-12 rounded-xl object-cover" crossOrigin="anonymous" style={{ boxShadow: isDark ? "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" : "0 0 0 2px rgba(61,107,71,0.2)" }} />
                         ) : (
                           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-base" style={{ background: "oklch(0.45 0.14 145)", boxShadow: "0 0 0 2px oklch(0.65 0.14 145 / 0.3)" }}>
                             {profile.username[0].toUpperCase()}
