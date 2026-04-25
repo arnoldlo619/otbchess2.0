@@ -5447,3 +5447,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Audit accentColor field in Club schema and PATCH endpoint
 - [x] Add accent color picker to ClubSettingsPanel — 16 preset swatches + custom hex input + native color picker + live preview strip
 - [x] Persist accent color via PATCH /api/clubs/:id and update local state + clubRegistry
+
+## Real-time Accent Color Sync (ClubProfile ↔ ClubSettings)
+- [x] Audit clubRegistry updateClub and how ClubProfile reads accentColor
+- [x] Add onClubChange() subscriber system to clubRegistry.ts — notifies all listeners on every updateClub call
+- [x] ClubProfile subscribes via useEffect and patches local club state immediately on change
+- [x] accent variable in ClubProfile now reads from club.accentColor (reactive) instead of hardcoded fallback
+- [x] FeedEventCard receives accentColor as a prop so feed cards also update instantly

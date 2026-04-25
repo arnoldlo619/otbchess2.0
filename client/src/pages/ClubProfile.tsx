@@ -29,6 +29,7 @@ import {
   unfollowClub,
   isFollowing,
   getFollowerCount,
+  onClubChange,
   type Club,
   type ClubMember,
   type ClubTournament,
@@ -375,6 +376,7 @@ function FeedEventCard({
   avatarUrl,
   clubId,
   isMemberUser,
+  accentColor,
   onVoted,
   onRsvped,
 }: {
@@ -389,6 +391,7 @@ function FeedEventCard({
   avatarUrl?: string | null;
   clubId: string;
   isMemberUser: boolean;
+  accentColor?: string;
   onVoted?: () => void;
   onRsvped?: () => void;
 }) {
@@ -401,7 +404,8 @@ function FeedEventCard({
   const totalPollVotes = (event.pollOptions ?? []).reduce((s, o) => s + Object.keys(o.votes).length, 0);
   const userVotedOptions = userId ? (event.pollOptions ?? []).filter((o) => o.votes[userId]).map((o) => o.id) : [];
   const userRsvp = userId ? (event.rsvpEntries ?? []).find((r) => r.userId === userId) : undefined;
-  const accent = isDark ? "#4CAF50" : "#3D6B47";
+  // Use the club's accent color passed as a prop (keeps FeedEventCard stateless)
+  const accent = accentColor ?? (isDark ? "#4CAF50" : "#3D6B47");
 
   function handleVote(optionId: string) {
     if (pollExpired || !userId || !isMemberUser) return;
@@ -723,6 +727,18 @@ export default function ClubProfile() {
   // Reset broken-image flags when the club's image URLs change (e.g., after owner uploads a new image)
   useEffect(() => { setAvatarBroken(false); }, [club?.avatarUrl]);
   useEffect(() => { setBannerBroken(false); }, [club?.bannerUrl]);
+
+  // Subscribe to club mutations from ClubDashboard/Settings so this page
+  // updates instantly (e.g., accent color, name, banner) without a refresh.
+  useEffect(() => {
+    if (!club) return;
+    const unsub = onClubChange((changedId, patch) => {
+      if (changedId === club.id) {
+        setClub((prev) => prev ? { ...prev, ...patch } : prev);
+      }
+    });
+    return unsub;
+  }, [club?.id]);
 
   // Seed and load
   useEffect(() => {
@@ -1059,7 +1075,10 @@ export default function ClubProfile() {
   const divider = isDark ? "border-white/8" : "border-gray-100";
   const tabActive = isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
   const tabInactive = isDark ? "text-white/50 hover:text-white/80" : "text-gray-400 hover:text-gray-700";
-  const accent = isDark ? "#4CAF50" : "#3D6B47";
+  // Use the club's stored accent color — falls back to platform defaults if not set.
+  // Because `club` is in React state and updated by the onClubChange subscriber,
+  // this re-derives automatically whenever the owner saves a new color in Settings.
+  const accent = club?.accentColor ?? (isDark ? "#4CAF50" : "#3D6B47");
 
   return (
     <div className={`min-h-screen ${bg}`}>
@@ -1557,6 +1576,7 @@ export default function ClubProfile() {
                       avatarUrl={user?.avatarUrl}
                       clubId={club.id}
                       isMemberUser={joined}
+                      accentColor={accent}
                       onVoted={refreshFeed}
                       onRsvped={refreshFeed}
                     />

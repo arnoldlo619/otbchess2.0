@@ -95,6 +95,26 @@ export interface ClubTournament {
   winnerName?: string;
 }
 
+// ── In-memory subscriber system ─────────────────────────────────────────────
+// Allows React components to react instantly when any club is mutated in the
+// same browser tab, without polling or a full page refresh.
+
+type ClubChangeListener = (clubId: string, patch: Partial<Club>) => void;
+const clubListeners = new Set<ClubChangeListener>();
+
+/**
+ * Subscribe to club mutations. Returns an unsubscribe function.
+ * Usage: const unsub = onClubChange((id, patch) => { ... });
+ */
+export function onClubChange(listener: ClubChangeListener): () => void {
+  clubListeners.add(listener);
+  return () => clubListeners.delete(listener);
+}
+
+function notifyClubChange(clubId: string, patch: Partial<Club>): void {
+  clubListeners.forEach((l) => l(clubId, patch));
+}
+
 // ── Storage keys ──────────────────────────────────────────────────────────────
 
 const CLUBS_KEY = "otb-clubs-v1";
@@ -291,6 +311,8 @@ export function updateClub(id: string, patch: Partial<Omit<Club, "id" | "slug" |
   const updated = { ...clubs[idx], ...patch };
   clubs[idx] = updated;
   saveClubs(clubs);
+  // Notify all in-tab subscribers (e.g. ClubProfile) so they re-render immediately
+  notifyClubChange(id, patch);
   return updated;
 }
 
