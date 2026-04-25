@@ -5442,3 +5442,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add prominent "Manage Club" CTA button in hero banner for owners
 - [x] Add Settings tab to ClubDashboard sidebar (bottom, owners/directors only)
 - [x] Build ClubSettingsPanel component with avatar upload, banner upload, club info form
+
+## Club Accent Color Picker
+- [x] Audit accentColor field in Club schema and PATCH endpoint
+- [x] Add accent color picker to ClubSettingsPanel — 16 preset swatches + custom hex input + native color picker + live preview strip
+- [x] Persist accent color via PATCH /api/clubs/:id and update local state + clubRegistry
