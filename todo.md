@@ -5524,3 +5524,14 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] makePlayer() already passes rapidElo/blitzElo through — no changes needed
 - [x] RAPID/BLITZ columns in preview table already work for Lichess players
 - [x] TypeScript: 0 errors
+
+## Lichess Server-Side Proxy
+- [x] Add /api/lichess/games/:username proxy endpoint to server/index.ts (NDJSON stream forwarding)
+- [x] Reuse chessProxyLimiter (10 req/min per IP) and proxyLichess() helper pattern
+- [x] Forward only safe query params (max, rated, perfType, moves, clocks, evals, opening)
+- [x] Update UploadRSVPModal.tsx lookupLichess() to use /api/lichess/player/:username
+- [x] Update AddPlayerModal.tsx lookupLichess() to use /api/lichess/player/:username
+- [x] Update useRatingHistory.ts fetchLichessHistory() to use /api/lichess/games/:username
+- [x] Add rapidElo/blitzElo fields to LookupResult interface in AddPlayerModal.tsx
+- [x] Confirm zero remaining direct lichess.org/api fetch calls in client source
+- [x] TypeScript: 0 errors

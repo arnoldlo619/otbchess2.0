@@ -52,6 +52,8 @@ interface LookupResult {
   rapid?: number;
   blitz?: number;
   bullet?: number;
+  rapidElo?: number;
+  blitzElo?: number;
   avatar?: string;
   country?: string;
   title?: string;
@@ -112,16 +114,21 @@ async function lookupChessCom(username: string): Promise<LookupResult> {
 }
 
 async function lookupLichess(username: string): Promise<LookupResult> {
-  const res = await fetch(`https://lichess.org/api/user/${username.toLowerCase()}`);
+  // Route through the server-side proxy to avoid CORS and IP-based rate limiting
+  const res = await fetch(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
   if (!res.ok) throw new Error("Player not found on Lichess");
   const data = await res.json();
   const perfs = data.perfs ?? {};
+  const rapidElo: number | undefined = perfs.rapid?.rating ?? undefined;
+  const blitzElo: number | undefined = perfs.blitz?.rating ?? undefined;
   const elo =
-    perfs.rapid?.rating ?? perfs.blitz?.rating ?? perfs.bullet?.rating ?? perfs.classical?.rating ?? 1500;
+    rapidElo ?? blitzElo ?? perfs.bullet?.rating ?? perfs.classical?.rating ?? 1500;
   return {
     name: data.profile?.realName || data.username,
     username: data.username,
     elo,
+    rapidElo,
+    blitzElo,
     country: data.profile?.country,
     title: data.title,
   };

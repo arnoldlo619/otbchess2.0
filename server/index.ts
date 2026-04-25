@@ -789,6 +789,43 @@ export function createApp() {
     }
   });
 
+  // ── Proxy: GET /api/lichess/games/:username ──────────────────────────────────
+  // Streams the player's recent rated games from lichess.org as NDJSON and
+  // forwards the raw text to the client. Routing through the server avoids
+  // CORS preflight failures and IP-based rate limiting that Lichess applies to
+  // direct browser requests.
+  //
+  // Supported query params: max, rated, perfType, moves, clocks, evals, opening
+  app.get("/api/lichess/games/:username", chessProxyLimiter, async (req, res) => {
+    try {
+      const username = encodeURIComponent(req.params.username.toLowerCase().trim());
+      // Forward only safe, known query params to prevent injection
+      const allowed = ["max", "rated", "perfType", "moves", "clocks", "evals", "opening"];
+      const qs = allowed
+        .filter((k) => req.query[k] !== undefined)
+        .map((k) => `${k}=${encodeURIComponent(String(req.query[k]))}`)
+        .join("&");
+      const url = `https://lichess.org/api/games/user/${username}${qs ? `?${qs}` : ""}`;
+      const upstream = await fetch(url, {
+        headers: {
+          "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
+          "Accept": "application/x-ndjson",
+        },
+      });
+      if (!upstream.ok) {
+        res.status(upstream.status).json({ error: `Lichess games API returned ${upstream.status}` });
+        return;
+      }
+      // Stream the NDJSON body straight through to the client
+      res.setHeader("Content-Type", "application/x-ndjson");
+      const text = await upstream.text();
+      res.send(text);
+    } catch (err) {
+      logger.error("[lichess games proxy]", err);
+      res.status(502).json({ error: "Could not reach lichess.org" });
+    }
+  });
+
   // ── Game Recorder routes ───────────────────────────────────────────────────
   // Mount at /api/recordings for session routes and /api/games for game routes.
   // Using two explicit mounts instead of a broad /api mount prevents the

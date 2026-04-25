@@ -100,7 +100,8 @@ async function lookupChessCom(username: string): Promise<Partial<Player>> {
 }
 
 async function lookupLichess(username: string): Promise<Partial<Player>> {
-  const res = await fetch(`https://lichess.org/api/user/${username.toLowerCase()}`);
+  // Route through the server-side proxy to avoid CORS and IP-based rate limiting
+  const res = await fetch(`/api/lichess/player/${encodeURIComponent(username.toLowerCase())}`);
   if (!res.ok) throw new Error("Not found on Lichess");
   const data = await res.json();
   const perfs = data.perfs ?? {};

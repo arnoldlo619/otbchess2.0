@@ -194,15 +194,15 @@ async function fetchLichessHistory(
   if (cached) return cached;
 
   const u = encodeURIComponent(username.toLowerCase().trim());
-  // Request more than needed to fill all time-control buckets
+  // Route through the server-side proxy to avoid CORS and IP-based rate limiting.
+  // The proxy at /api/lichess/games/:username forwards all query params to
+  // lichess.org/api/games/user/:username and streams the NDJSON response back.
   const url =
-    `https://lichess.org/api/games/user/${u}` +
+    `/api/lichess/games/${u}` +
     `?max=${count * 4}&rated=true&perfType=rapid,blitz,bullet,classical` +
     `&moves=false&clocks=false&evals=false&opening=false`;
 
-  const res = await fetch(url, {
-    headers: { Accept: "application/x-ndjson" },
-  });
+  const res = await fetch(url);
 
   if (!res.ok) throw new Error(`Lichess games API error: ${res.status}`);
 
