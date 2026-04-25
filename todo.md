@@ -5489,3 +5489,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix useChessAvatar fetchAvatar — now uses /api/chess/player/:username server proxy (also fixes avatar loading for high-profile accounts)
 - [x] AddPlayerModal and useChessComProfile already used proxy correctly (confirmed, no change needed)
 - [x] TypeScript: 0 errors
+
+## Server Rate Limit IPv6 Fix
+- [x] Import ipKeyGenerator from express-rate-limit in server/index.ts
+- [x] Fix chessProxyLimiter — keyGenerator: (req) => ipKeyGenerator(req.ip ?? "")
+- [x] Fix prepLimiter — keyGenerator: (req) => ipKeyGenerator(req.ip ?? "")
+- [x] Fix pushSubscribeLimiter — keyGenerator: (req) => ipKeyGenerator(req.ip ?? "")
+- [x] Fix analyticsLimiter — keyGenerator: (req) => ipKeyGenerator(req.ip ?? "")
+- [x] Confirmed auth.ts loginRegisterRateLimiter and refreshRateLimiter already correct
+- [x] TypeScript: 0 errors

@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
-import { rateLimit } from "express-rate-limit";
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
 import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports } from "../shared/schema.js";
@@ -208,6 +208,7 @@ const chessProxyLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many requests — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
@@ -218,6 +219,7 @@ const prepLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many prep requests — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
@@ -228,6 +230,7 @@ const pushSubscribeLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
   message: { error: "Too many requests — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
@@ -1702,7 +1705,7 @@ export function createApp() {
   // Lightweight client-side event tracking endpoint (no auth required).
   // Accepts: { tournamentId, eventType, metadata? }
   // Rate-limited to prevent abuse.
-  const analyticsLimiter = rateLimit({ windowMs: 60_000, max: 60, keyGenerator: (req) => req.ip ?? "unknown" });
+  const analyticsLimiter = rateLimit({ windowMs: 60_000, max: 60, keyGenerator: (req) => ipKeyGenerator(req.ip ?? "") });
   app.post("/api/analytics/event", analyticsLimiter, async (req, res) => {
     const { tournamentId, eventType, metadata } = req.body ?? {};
     if (!tournamentId || !eventType) return res.status(400).json({ error: "Missing fields" });
