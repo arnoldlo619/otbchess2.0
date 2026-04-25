@@ -5498,3 +5498,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix analyticsLimiter — keyGenerator: (req) => ipKeyGenerator(req.ip ?? "")
 - [x] Confirmed auth.ts loginRegisterRateLimiter and refreshRateLimiter already correct
 - [x] TypeScript: 0 errors
+
+## Rate Limit Tightening
+- [x] Reduce chessProxyLimiter from 20 → 10 requests/minute per IP
+- [x] Add globalLimiter: 200 req/min per IP applied to all /api routes
+- [x] TypeScript: 0 errors, server restarted cleanly

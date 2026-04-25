@@ -202,14 +202,29 @@ async function proxyLichess(username: string): Promise<{ status: number; body: u
 
 // ─── Build the Express app (exported for Vite dev middleware) ─────────────────
 // ─── Rate Limiters ──────────────────────────────────────────────────────────
-// Chess.com / Lichess proxy: 20 lookups per minute per IP (generous for tournament use)
-const chessProxyLimiter = rateLimit({
+
+// Global app-level limiter: 200 requests per minute per IP.
+// Protects all endpoints from general abuse and DDoS amplification.
+// Generous enough for normal tournament use (directors, players, spectators).
+const globalLimiter = rateLimit({
   windowMs: 60_000,
-  max: 20,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
-  message: { error: "Too many requests — please wait a moment." },
+  message: { error: "Too many requests — please slow down." },
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
+// Chess.com / Lichess proxy: 10 lookups per minute per IP.
+// Tightened from 20 → 10 to reduce upstream API pressure and prevent scraping.
+const chessProxyLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
+  message: { error: "Too many player lookups — please wait a moment." },
   skip: () => process.env.NODE_ENV !== "production",
 });
 
@@ -255,10 +270,15 @@ export function createApp() {
     next();
   });
 
-  // ── Auth routes ─────────────────────────────────────────────────────────────
+  // ── Global rate limiter ─────────────────────────────────────────────────────────
+  // Applied to all /api routes — 200 req/min per IP in production.
+  // Static assets and Vite HMR are excluded (they don't match /api).
+  app.use("/api", globalLimiter);
+
+  // ── Auth routes ─────────────────────────────────────────────────────────────────────
   app.use("/api/auth", createAuthRouter());
 
-  // ── Prep Cache Helper ──────────────────────────────────────────────────────
+  // ── Prep Cache Helper ─────────────────────────────────────────────────────────
   // 24-hour TTL: returns cached report if fresh, otherwise builds + caches.
   const PREP_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
