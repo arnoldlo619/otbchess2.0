@@ -15,6 +15,9 @@
  * 2. html-to-image IS installed and exports the expected API surface
  * 3. The export helper files no longer import html2canvas at runtime
  * 4. The hidden export card uses fixed positioning (not sr-only) so it has real dimensions
+ * 5. Avatar proxy CORS configuration is correct
+ * 6. Every player avatar <img> tag carries crossOrigin="anonymous" and routes through
+ *    /api/avatar-proxy (prevents mixed-content warnings and tainted-canvas errors)
  */
 
 import { describe, it, expect } from "vitest";
@@ -152,7 +155,7 @@ describe("Fix: hidden export card has real dimensions", () => {
   });
 });
 
-// ── 5. Avatar proxy still serves correct CORS headers ─────────────────────────
+// ── 5. Avatar proxy CORS configuration ───────────────────────────────────────
 describe("Avatar proxy CORS configuration", () => {
   it("server/index.ts avatar-proxy sets Access-Control-Allow-Origin: *", () => {
     const src = readFileSync(resolve(ROOT, "server/index.ts"), "utf8");
@@ -164,10 +167,119 @@ describe("Avatar proxy CORS configuration", () => {
     const src = readSrc("hooks/useChessAvatar.ts");
     expect(src).toContain("/api/avatar-proxy");
     expect(src).toContain("images.chess.com");
+    // Also rewrites the actual CDN domain chess.com API returns
+    expect(src).toContain("images.chesscomfiles.com");
+  });
+
+  it("toProxiedAvatarUrl allowlist includes lichess.org and lichess1.org", () => {
+    const src = readSrc("hooks/useChessAvatar.ts");
+    expect(src).toContain("lichess.org");
+    expect(src).toContain("lichess1.org");
+  });
+
+  it("server/index.ts avatar-proxy allowlist includes all chess.com and lichess domains", () => {
+    const src = readFileSync(resolve(ROOT, "server/index.ts"), "utf8");
+    // Find the app.get handler (not just the comment that mentions the path)
+    const handlerIdx = src.indexOf('app.get("/api/avatar-proxy"');
+    expect(handlerIdx).toBeGreaterThan(0);
+    // The allowed-domains array is within the first 600 chars of the handler
+    const proxySection = src.slice(handlerIdx, handlerIdx + 600);
+    expect(proxySection).toContain("images.chess.com");
+    // The actual CDN domain returned by chess.com API
+    expect(proxySection).toContain("images.chesscomfiles.com");
+    expect(proxySection).toContain("lichess.org");
+    expect(proxySection).toContain("lichess1.org");
   });
 
   it("Report.tsx hidden card uses toProxiedAvatarUrl for avatarUrl", () => {
     const src = readSrc("pages/Report.tsx");
     expect(src).toContain("toProxiedAvatarUrl(");
+  });
+});
+
+// ── 6. crossOrigin="anonymous" coverage across all avatar render sites ────────
+describe("crossOrigin='anonymous' coverage on all avatar img tags", () => {
+  it("PlayerAvatar.tsx img tag has crossOrigin='anonymous'", () => {
+    const src = readSrc("components/PlayerAvatar.tsx");
+    // The img tag that renders the avatar photo
+    expect(src).toContain('crossOrigin="anonymous"');
+  });
+
+  it("PlayerAvatar.tsx applies toProxiedAvatarUrl to resolvedUrl before img src", () => {
+    const src = readSrc("components/PlayerAvatar.tsx");
+    expect(src).toContain("toProxiedAvatarUrl(");
+    // The proxied URL must be used as the img src
+    expect(src).toContain("src={resolvedUrl");
+  });
+
+  it("PlayerStatsCard.tsx applies toProxiedAvatarUrl internally", () => {
+    const src = readSrc("components/PlayerStatsCard.tsx");
+    expect(src).toContain("toProxiedAvatarUrl(avatarUrlRaw)");
+  });
+
+  it("PlayerStatsCard.tsx both avatar img tags have crossOrigin='anonymous'", () => {
+    const src = readSrc("components/PlayerStatsCard.tsx");
+    // Count occurrences — there are two img tags (blurred bg + main avatar)
+    const matches = src.match(/crossOrigin="anonymous"/g) ?? [];
+    expect(matches.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("Home.tsx profile.avatar img routes through /api/avatar-proxy", () => {
+    const src = readSrc("pages/Home.tsx");
+    // The profile avatar img must use the proxy URL
+    expect(src).toContain("/api/avatar-proxy?url=");
+    expect(src).toContain('crossOrigin="anonymous"');
+  });
+
+  it("Join.tsx profile.avatar img routes through /api/avatar-proxy", () => {
+    const src = readSrc("pages/Join.tsx");
+    expect(src).toContain("/api/avatar-proxy?url=");
+    expect(src).toContain('crossOrigin="anonymous"');
+  });
+
+  it("MatchupPrep.tsx opponentProfile.avatar img routes through /api/avatar-proxy", () => {
+    const src = readSrc("pages/MatchupPrep.tsx");
+    expect(src).toContain("/api/avatar-proxy?url=");
+    expect(src).toContain('crossOrigin="anonymous"');
+  });
+
+  it("AddPlayerModal.tsx lookupResult.avatar img routes through toProxiedAvatarUrl", () => {
+    const src = readSrc("components/AddPlayerModal.tsx");
+    expect(src).toContain("toProxiedAvatarUrl(lookupResult.avatar)");
+    expect(src).toContain('crossOrigin="anonymous"');
+  });
+
+  it("Report.tsx visible ExportableCard receives toProxiedAvatarUrl for avatarUrl", () => {
+    const src = readSrc("pages/Report.tsx");
+    // Both the hidden export card and the visible card must use toProxiedAvatarUrl
+    const matches = src.match(/toProxiedAvatarUrl\(/g) ?? [];
+    expect(matches.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("ShareResultsModal.tsx avatar img has crossOrigin='anonymous'", () => {
+    const src = readSrc("components/ShareResultsModal.tsx");
+    expect(src).toContain('crossOrigin="anonymous"');
+  });
+
+  it("no player avatar img tag in client source renders a raw lichess.org URL as src", () => {
+    // Verify there are no direct lichess.org API fetch calls left in client source
+    const filesToCheck = [
+      "pages/Home.tsx",
+      "pages/Join.tsx",
+      "pages/MatchupPrep.tsx",
+      "components/PlayerAvatar.tsx",
+      "components/PlayerStatsCard.tsx",
+      "components/AddPlayerModal.tsx",
+      "components/UploadRSVPModal.tsx",
+      "hooks/useRatingHistory.ts",
+      "hooks/useLichessProfile.ts",
+    ];
+    for (const file of filesToCheck) {
+      const src = readSrc(file);
+      // Must not contain a raw fetch to lichess.org/api (all should go through proxy)
+      expect(src, `${file} should not fetch lichess.org/api directly`).not.toMatch(
+        /fetch\s*\(\s*`https:\/\/lichess\.org\/api/
+      );
+    }
   });
 });

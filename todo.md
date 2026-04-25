@@ -5557,3 +5557,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] AddPlayerModal.tsx — added toProxiedAvatarUrl import + applied to lookupResult.avatar with crossOrigin
 - [x] Confirmed zero remaining unproxied chess.com/lichess avatar img tags in client source
 - [x] TypeScript: 0 errors
+
+## PNG Export Avatar Proxy Smoke Test
+- [x] Discovered images.chesscomfiles.com missing from server avatar-proxy allowlist (was causing 403)
+- [x] Added images.chesscomfiles.com to server/index.ts avatar-proxy allowlist
+- [x] Added images.chesscomfiles.com to toProxiedAvatarUrl client-side allowlist in useChessAvatar.ts
+- [x] Live browser test confirmed: proxy returns HTTP 200, Access-Control-Allow-Origin: *, Content-Type: image/png
+- [x] All 39 pngExport.test.ts tests pass (updated to assert chesscomfiles.com in both allowlists)
+- [x] TypeScript: 0 errors

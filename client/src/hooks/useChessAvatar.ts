@@ -222,7 +222,7 @@ export function toProxiedAvatarUrl(url: string | null | undefined): string | nul
   if (!url) return null;
   try {
     const parsed = new URL(url);
-    const allowed = ["images.chess.com", "www.chess.com", "lichess.org", "lichess1.org"];
+    const allowed = ["images.chess.com", "www.chess.com", "images.chesscomfiles.com", "lichess.org", "lichess1.org"];
     if (allowed.some((h) => parsed.hostname === h || parsed.hostname.endsWith("." + h))) {
       return `/api/avatar-proxy?url=${encodeURIComponent(url)}`;
     }

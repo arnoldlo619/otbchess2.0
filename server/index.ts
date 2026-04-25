@@ -749,7 +749,7 @@ export function createApp() {
     try {
       const parsed = new URL(raw);
       // Only allow well-known chess avatar CDNs to prevent open-proxy abuse
-      const allowed = ["images.chess.com", "www.chess.com", "lichess.org", "lichess1.org"];
+      const allowed = ["images.chess.com", "www.chess.com", "images.chesscomfiles.com", "lichess.org", "lichess1.org"];
       if (!allowed.some((h) => parsed.hostname === h || parsed.hostname.endsWith("." + h))) {
         res.status(403).json({ error: "Domain not allowed" }); return;
       }
