@@ -5503,3 +5503,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Reduce chessProxyLimiter from 20 → 10 requests/minute per IP
 - [x] Add globalLimiter: 200 req/min per IP applied to all /api routes
 - [x] TypeScript: 0 errors, server restarted cleanly
+
+## Director Players Tab — Payment Column
+- [x] Add paymentStatus field to Player type: "unpaid" | "cash" | "card"
+- [x] Add Payment column to players tab table with Cash/Card toggle buttons (green for cash, blue for card)
+- [x] Persist paymentStatus via updatePlayer() in directorState
+- [x] Show payment summary count (paid/total) in players tab header (turns emerald when all paid)
+- [x] TypeScript: 0 errors

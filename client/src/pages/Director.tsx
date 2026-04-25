@@ -2576,7 +2576,7 @@ export default function Director() {
                           Check-In Roster
                         </span>
                       </div>
-                      {/* Check-in count badge */}
+                      {/* Check-in + Payment count badges */}
                       <div className="flex items-center gap-2">
                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                           checkedInIds.size === state.players.length && state.players.length > 0
@@ -2586,6 +2586,18 @@ export default function Director() {
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>{checkedInIds.size} / {state.players.length} checked in</span>
                         </div>
+                        {state.players.length > 0 && (() => {
+                          const paid = state.players.filter((p) => p.paymentStatus === "cash" || p.paymentStatus === "card").length;
+                          return (
+                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                              paid === state.players.length
+                                ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-700"
+                                : isDark ? "bg-white/08 text-white/70" : "bg-gray-100 text-gray-600"
+                            }`}>
+                              <span>💰 {paid} / {state.players.length} paid</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -2766,6 +2778,31 @@ export default function Director() {
                                       isDark ? "bg-white/06 text-white/60" : "bg-gray-100 text-gray-500"
                                     }`}>{p.elo}</span>
                                   ) : null}
+                                  {/* Payment status */}
+                                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "cash" ? "unpaid" : "cash" })}
+                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                                        p.paymentStatus === "cash"
+                                          ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                                          : isDark ? "bg-white/05 text-white/25 hover:text-white/50" : "bg-gray-100 text-gray-300 hover:text-gray-500"
+                                      }`}
+                                      title="Toggle cash payment"
+                                    >
+                                      💵 Cash
+                                    </button>
+                                    <button
+                                      onClick={() => updatePlayer(p.id, { paymentStatus: p.paymentStatus === "card" ? "unpaid" : "card" })}
+                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-all ${
+                                        p.paymentStatus === "card"
+                                          ? isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
+                                          : isDark ? "bg-white/05 text-white/25 hover:text-white/50" : "bg-gray-100 text-gray-300 hover:text-gray-500"
+                                      }`}
+                                      title="Toggle card payment"
+                                    >
+                                      💳 Card
+                                    </button>
+                                  </div>
                                   {/* Edit player button */}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); setEditingPlayer(p); }}

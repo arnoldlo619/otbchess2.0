@@ -30,6 +30,8 @@ export interface Player {
   flairEmoji?: string;
   phone?: string;
   email?: string;
+  /** Payment status for the tournament entry fee */
+  paymentStatus?: "unpaid" | "cash" | "card";
 }
 
 export interface Game {
