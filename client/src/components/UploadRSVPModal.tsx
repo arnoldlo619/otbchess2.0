@@ -32,6 +32,7 @@ import {
   Users,
   Info,
   Search,
+  RefreshCw,
 } from "lucide-react";
 import type { Player } from "@/lib/tournamentData";
 
@@ -410,6 +411,19 @@ export function UploadRSVPModal({
     lookupInProgress.current = false;
   }, [rows, platform]);
 
+  // ── Retry failed rows ──────────────────────────────────────────────────────
+  const handleRetryFailed = useCallback(() => {
+    if (rows.some((r) => r.status === "loading")) return;
+    // Reset all error rows back to pending so handleLookup picks them up
+    setRows((prev) =>
+      prev.map((r) =>
+        r.status === "error" ? { ...r, status: "pending", errorMsg: undefined } : r
+      )
+    );
+    // Trigger lookup on the next tick after state has settled
+    setTimeout(() => handleLookup(), 0);
+  }, [rows, handleLookup]);
+
   // ── Checkbox helpers ────────────────────────────────────────────────────────
   const toggleRow = useCallback((idx: number) => {
     setRows((prev) =>
@@ -757,6 +771,23 @@ export function UploadRSVPModal({
                   Look up {pendingCount} username{pendingCount > 1 ? "s" : ""}
                 </button>
               )}
+
+              {/* Retry Failed button — shown when there are error rows and no lookup in progress */}
+              {errorCount > 0 && !isLookingUp && pendingCount === 0 && (
+                <button
+                  onClick={handleRetryFailed}
+                  className={`flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border transition-all ${
+                    isDark
+                      ? "border-amber-500/40 text-amber-400 hover:bg-amber-900/20"
+                      : "border-amber-500/40 text-amber-600 hover:bg-amber-50"
+                  }`}
+                  title={`Retry ${errorCount} failed lookup${errorCount > 1 ? "s" : ""}`}
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Retry {errorCount} Failed
+                </button>
+              )}
+
               {isLookingUp && (
                 <span className={`flex items-center gap-2 text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

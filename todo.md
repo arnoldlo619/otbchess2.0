@@ -5578,3 +5578,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Diagnosed: chessProxyLimiter was set to max:10 req/min — blocked after 10th player in production
 - [x] Fix: Raised server rate limit to 150 req/min, added server-side retry (fetchWithRetryServer) for upstream 429/503, added client-side retry (fetchWithRetry) with exponential backoff, reduced batch size to 2 with 800ms delay, improved error messages to distinguish 404 vs 429
 - [x] Tested: 19/20 real usernames pass (1 genuine 404), 18 Vitest tests pass, TypeScript 0 errors
+
+## Retry Failed Button — RSVP Upload Modal
+- [x] Add handleRetryFailed callback that resets error rows to pending and re-triggers handleLookup
+- [x] Show Retry Failed button only when errorCount > 0, not looking up, and pendingCount === 0
+- [x] Display failed count on button label (e.g. "Retry 3 Failed") with RefreshCw icon
+- [x] 11 Vitest tests pass, TypeScript 0 errors
