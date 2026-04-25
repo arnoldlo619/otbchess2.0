@@ -5517,3 +5517,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Pass paymentStatus through the player mapping in Director.tsx
 - [x] Add 💵/💳 icon next to both white and black player names in pairings view
 - [x] TypeScript: 0 errors
+
+## Lichess Dual ELO (Rapid + Blitz) in UploadRSVPModal
+- [x] Extract rapidElo and blitzElo individually from Lichess perfs in lookupLichess()
+- [x] Return both fields in the Partial<Player> result (mirrors chess.com dual-ELO logic)
+- [x] makePlayer() already passes rapidElo/blitzElo through — no changes needed
+- [x] RAPID/BLITZ columns in preview table already work for Lichess players
+- [x] TypeScript: 0 errors

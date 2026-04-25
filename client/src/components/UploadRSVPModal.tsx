@@ -104,9 +104,13 @@ async function lookupLichess(username: string): Promise<Partial<Player>> {
   if (!res.ok) throw new Error("Not found on Lichess");
   const data = await res.json();
   const perfs = data.perfs ?? {};
+  // Extract rapid and blitz ratings individually (mirrors chess.com dual-ELO logic)
+  const rapidElo: number | undefined = perfs.rapid?.rating ?? undefined;
+  const blitzElo: number | undefined = perfs.blitz?.rating ?? undefined;
+  // Active ELO: prefer rapid → blitz → bullet → classical → 1500
   const elo =
-    perfs.rapid?.rating ??
-    perfs.blitz?.rating ??
+    rapidElo ??
+    blitzElo ??
     perfs.bullet?.rating ??
     perfs.classical?.rating ??
     1500;
@@ -114,6 +118,8 @@ async function lookupLichess(username: string): Promise<Partial<Player>> {
     name: data.profile?.realName || data.username,
     username: data.username,
     elo,
+    rapidElo,
+    blitzElo,
     country: data.profile?.country ?? "US",
     title: data.title,
     platform: "lichess",
