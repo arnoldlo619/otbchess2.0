@@ -475,7 +475,7 @@ export function AvatarNavDropdown({
           >
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.08)" }}
+              style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }}
             >
               <LogIn className={`w-3.5 h-3.5 ${isDark ? "text-white/50" : "text-gray-500"}`} />
             </div>
@@ -574,7 +574,7 @@ export function AvatarNavDropdown({
                 ? "#3D6B47"
                 : user?.isGuest
                 ? "rgba(245,158,11,0.15)"
-                : "rgba(255,255,255,0.08)",
+                : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
           }}
         >
           <AvatarCircle user={user} />
@@ -647,7 +647,7 @@ export function AvatarNavDropdown({
                 </button>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="text-sm font-semibold text-white truncate leading-tight">
+                    <p className={`text-sm font-semibold truncate leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>
                       {user.displayName || user.email}
                     </p>
                     {user.isStaff && (
@@ -720,11 +720,11 @@ export function AvatarNavDropdown({
               <div
                 className="mx-3 mb-2 rounded-xl px-3 py-2"
                 style={{
-                  background: "rgba(0,0,0,0.25)",
-                  border: `1px solid ${OTB_GREEN_GLOW}0.12)`,
+                  background: isDark ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.04)",
+                  border: isDark ? `1px solid ${OTB_GREEN_GLOW}0.12)` : "1px solid rgba(0,0,0,0.08)",
                 }}
               >
-                <p className="text-[9px] font-semibold uppercase tracking-widest text-white/25 mb-1.5">
+                <p className={`text-[9px] font-semibold uppercase tracking-widest mb-1.5 ${isDark ? "text-white/25" : "text-gray-400"}`}>
                   Rating History
                 </p>
                 <div className="flex flex-col gap-1.5">
@@ -740,7 +740,7 @@ export function AvatarNavDropdown({
                     return (
                       <div key={label} className="flex items-center gap-2">
                         {/* Format label */}
-                        <span className="text-[10px] text-white/35 w-10 flex-shrink-0 flex items-center gap-0.5">
+                        <span className={`text-[10px] w-10 flex-shrink-0 flex items-center gap-0.5 ${isDark ? "text-white/35" : "text-gray-400"}`}>
                           <span>{icon}</span>
                           <span>{label.slice(0, 1)}</span>
                         </span>
@@ -791,14 +791,14 @@ export function AvatarNavDropdown({
                             color: "#fff",
                           }
                         : {
-                            color: "rgba(255,255,255,0.65)",
+                            color: isDark ? "rgba(255,255,255,0.65)" : "var(--dropdown-text-secondary)",
                             border: "1px solid transparent",
                           }
                     }
                     onMouseEnter={(e) => {
                       if (!active)
                         (e.currentTarget as HTMLElement).style.background =
-                          "rgba(255,255,255,0.07)";
+                          isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)";
                     }}
                     onMouseLeave={(e) => {
                       if (!active)
@@ -807,7 +807,7 @@ export function AvatarNavDropdown({
                   >
                     <item.icon
                       className="w-4 h-4 flex-shrink-0"
-                      style={{ color: active ? OTB_GREEN : undefined }}
+                      style={{ color: active ? OTB_GREEN : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }}
                     />
                     <span>{item.name}</span>
                     {active && (
@@ -832,9 +832,9 @@ export function AvatarNavDropdown({
             <div className="px-2 pb-1">
               <button
                 onClick={() => toggleTheme?.()}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
                 style={{ border: "1px solid transparent" }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)")}
                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
               >
                 {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
@@ -863,11 +863,11 @@ export function AvatarNavDropdown({
                 <Link
                   href="/profile"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
                   style={{ border: "1px solid transparent" }}
                   onMouseEnter={(e) =>
                     ((e.currentTarget as HTMLElement).style.background =
-                      "rgba(255,255,255,0.07)")
+                      isDark ? "rgba(255,255,255,0.07)" : "var(--dropdown-item-hover-bg)")
                   }
                   onMouseLeave={(e) =>
                     ((e.currentTarget as HTMLElement).style.background = "transparent")
@@ -1007,7 +1007,7 @@ export function AvatarNavDropdown({
                   </button>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-sm font-semibold text-white truncate">
+                      <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
                         {user.displayName || user.email}
                       </p>
                       {user.isStaff && (
@@ -1053,14 +1053,14 @@ export function AvatarNavDropdown({
                         className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors"
                         style={active
                           ? { background: `${OTB_GREEN_GLOW}0.22)`, border: `1px solid ${OTB_GREEN_GLOW}0.28)`, color: "#fff" }
-                          : { color: "rgba(255,255,255,0.65)", border: "1px solid transparent" }
+                          : { color: isDark ? "rgba(255,255,255,0.65)" : "var(--dropdown-text-secondary)", border: "1px solid transparent" }
                         }
                       >
                         <div
                           className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: active ? `${OTB_GREEN_GLOW}0.25)` : "rgba(255,255,255,0.06)" }}
+                          style={{ background: active ? `${OTB_GREEN_GLOW}0.25)` : isDark ? "rgba(255,255,255,0.06)" : "var(--dropdown-icon-bg)" }}
                         >
-                          <item.icon className="w-4 h-4" style={{ color: active ? "#4CAF50" : "rgba(255,255,255,0.5)" }} />
+                          <item.icon className="w-4 h-4" style={{ color: active ? "#4CAF50" : isDark ? "rgba(255,255,255,0.5)" : "var(--dropdown-icon-color)" }} />
                         </div>
                         <span>{item.name}</span>
                         {active && (
@@ -1079,10 +1079,10 @@ export function AvatarNavDropdown({
               <div className="px-3 pb-1">
                 <button
                   onClick={() => toggleTheme?.()}
-                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                  className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
                   style={{ border: "1px solid transparent" }}
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "var(--dropdown-icon-bg)" }}>
                     {isDark ? <Sun className="w-4 h-4 text-white/50" /> : <Moon className="w-4 h-4 text-gray-500" />}
                   </div>
                   <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
@@ -1107,10 +1107,10 @@ export function AvatarNavDropdown({
                   <Link
                     href="/profile"
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white transition-colors"
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
                     style={{ border: "1px solid transparent" }}
                   >
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "var(--dropdown-icon-bg)" }}>
                       <Crown className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-500"}`} />
                     </div>
                     <span>My Profile</span>

@@ -5371,3 +5371,26 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add club avatar/flag to sidebar with back-to-clubs navigation
 - [x] Apply new layout to all clubs including demo clubs (verified London, Saint Louis)
 - [x] Verify TypeScript compiles clean and save checkpoint
+
+## AvatarNavDropdown Light Mode Visibility Fix
+- [x] Add dropdown semantic CSS tokens to index.css :root (light) and .dark sections
+- [x] Fix desktop dropdown nav link inactive color (rgba(255,255,255,0.65) → isDark conditional)
+- [x] Fix desktop dropdown nav link hover bg (rgba(255,255,255,0.07) → isDark conditional)
+- [x] Fix desktop dropdown nav link icon color (rgba(255,255,255,0.5) → isDark conditional)
+- [x] Fix desktop dropdown appearance toggle text (text-white/65 → isDark conditional)
+- [x] Fix desktop dropdown appearance toggle hover bg (isDark conditional)
+- [x] Fix desktop dropdown My Profile link text (text-white/65 → isDark conditional)
+- [x] Fix desktop dropdown user display name (text-white → isDark conditional)
+- [x] Fix desktop dropdown sparkline section bg and label text (isDark conditional)
+- [x] Fix desktop dropdown sparkline row labels (text-white/35 → isDark conditional)
+- [x] Fix mobile sheet nav link inactive color (isDark conditional)
+- [x] Fix mobile sheet nav link icon bg (isDark conditional)
+- [x] Fix mobile sheet nav link icon color (isDark conditional)
+- [x] Fix mobile sheet appearance toggle text (text-white/65 → isDark conditional)
+- [x] Fix mobile sheet appearance toggle icon bg (isDark conditional)
+- [x] Fix mobile sheet My Profile link text (text-white/65 → isDark conditional)
+- [x] Fix mobile sheet My Profile icon bg (isDark conditional)
+- [x] Fix mobile sheet user display name (text-white → isDark conditional)
+- [x] Fix guest trigger button avatar bg (isDark conditional)
+- [x] Fix signed-out trigger avatar circle fallback bg (isDark conditional)
+- [x] TypeScript: 0 errors after all fixes

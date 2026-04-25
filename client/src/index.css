@@ -81,6 +81,20 @@
   --chess-cream-dark: oklch(0.88 0.03 95);    /* #D4D4B0 slightly darker cream */
   --chess-sage: oklch(0.97 0.01 145);         /* #F0F5EE sage white */
 
+  /* ── Dropdown / Popover semantic tokens (light mode) ── */
+  --dropdown-bg: rgba(255,255,255,0.97);
+  --dropdown-border: rgba(0,0,0,0.08);
+  --dropdown-text-primary: oklch(0.12 0.01 145);
+  --dropdown-text-secondary: oklch(0.30 0.02 145);
+  --dropdown-text-muted: oklch(0.50 0.02 145);
+  --dropdown-item-hover-bg: rgba(0,0,0,0.05);
+  --dropdown-item-active-bg: rgba(34,197,94,0.12);
+  --dropdown-icon-bg: rgba(0,0,0,0.06);
+  --dropdown-icon-color: oklch(0.35 0.04 145);
+  --dropdown-section-label: oklch(0.50 0.02 145);
+  --dropdown-divider: rgba(0,0,0,0.08);
+  --dropdown-toggle-track: rgba(0,0,0,0.12);
+
   /* Semantic tokens */
   --primary: var(--chess-green);
   --primary-foreground: oklch(1 0 0);
@@ -151,6 +165,20 @@
   --sidebar-accent-foreground: oklch(0.97 0.01 95);
   --sidebar-border: oklch(1 0 0 / 0.10);
   --sidebar-ring: oklch(0.55 0.13 145);
+
+  /* ── Dropdown / Popover semantic tokens (dark mode) ── */
+  --dropdown-bg: oklch(0.17 0.06 145 / 0.97);
+  --dropdown-border: rgba(34,197,94,0.22);
+  --dropdown-text-primary: oklch(0.97 0.01 95);
+  --dropdown-text-secondary: rgba(255,255,255,0.65);
+  --dropdown-text-muted: rgba(255,255,255,0.30);
+  --dropdown-item-hover-bg: rgba(255,255,255,0.07);
+  --dropdown-item-active-bg: rgba(34,197,94,0.22);
+  --dropdown-icon-bg: rgba(255,255,255,0.06);
+  --dropdown-icon-color: rgba(255,255,255,0.50);
+  --dropdown-section-label: rgba(255,255,255,0.30);
+  --dropdown-divider: rgba(34,197,94,0.15);
+  --dropdown-toggle-track: rgba(255,255,255,0.12);
 
   /* OTB Chess dark brand overrides */
   --chess-green: oklch(0.55 0.13 145);          /* brighter in dark mode */
