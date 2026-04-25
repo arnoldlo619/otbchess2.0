@@ -399,6 +399,12 @@ function PairingPreviewRow({
             >
               {white?.name ?? pairing.whiteId}
             </span>
+            {white?.paymentStatus === "cash" && (
+              <span title="Paid (Cash)" className="text-[11px] leading-none flex-shrink-0">💵</span>
+            )}
+            {white?.paymentStatus === "card" && (
+              <span title="Paid (Card)" className="text-[11px] leading-none flex-shrink-0">💳</span>
+            )}
             <span
               className="text-xs font-mono"
               style={{ color: isDark ? T.dMuted : T.lMuted }}
@@ -418,6 +424,12 @@ function PairingPreviewRow({
             >
               {black?.elo ?? "—"}
             </span>
+            {black?.paymentStatus === "cash" && (
+              <span title="Paid (Cash)" className="text-[11px] leading-none flex-shrink-0">💵</span>
+            )}
+            {black?.paymentStatus === "card" && (
+              <span title="Paid (Card)" className="text-[11px] leading-none flex-shrink-0">💳</span>
+            )}
             <span
               className="text-sm font-semibold truncate"
               style={{ color: isDark ? T.dText : T.lText, fontFamily: "'Clash Display', sans-serif" }}

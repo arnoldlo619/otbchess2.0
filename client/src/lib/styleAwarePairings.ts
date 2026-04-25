@@ -388,6 +388,8 @@ export interface StylePairingPlayer {
   styleProfile?: StyleProfile;
   /** IDs of players this player has already faced */
   previousOpponents?: string[];
+  /** Payment status for the tournament entry fee */
+  paymentStatus?: "unpaid" | "cash" | "card";
 }
 
 /**

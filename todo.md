@@ -5510,3 +5510,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Persist paymentStatus via updatePlayer() in directorState
 - [x] Show payment summary count (paid/total) in players tab header (turns emerald when all paid)
 - [x] TypeScript: 0 errors
+
+## Payment Icon in Pairings View
+- [x] Find pairings board component and player name rendering (StyleAwarePairingsPanel.tsx)
+- [x] Add paymentStatus to StylePairingPlayer interface in styleAwarePairings.ts
+- [x] Pass paymentStatus through the player mapping in Director.tsx
+- [x] Add 💵/💳 icon next to both white and black player names in pairings view
+- [x] TypeScript: 0 errors

@@ -4914,6 +4914,7 @@ export default function Director() {
                         elo: p.elo,
                         styleProfile: undefined,
                         previousOpponents: [],
+                        paymentStatus: p.paymentStatus,
                       }))}
                     isDark={isDark}
                   />
