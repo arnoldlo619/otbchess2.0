@@ -5473,3 +5473,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add compact RAPID/BLITZ rating-type toggle to Director players tab header (shown when any player has dual ratings)
 - [x] Smart default already in TournamentWizard — blitz time controls → blitz, rapid → rapid
 - [x] Pairing ELO re-syncs via updatePlayer() when director switches rating type
+
+## Chess.com ELO API Fix (Critical)
+- [ ] Investigate chess.com /pub/player/:username/stats API response structure
+- [ ] Fix ELO extraction in UploadRSVPModal lookupChessCom — correctly parse rapid/blitz/bullet/daily
+- [ ] Fix ELO extraction in AddPlayerModal — same issue
+- [ ] Fix ELO extraction in Join page useChessComProfile hook
+- [ ] Ensure fallback chain: rapid → blitz → bullet → daily → 1200
+- [ ] Test with @magnuscarlsen, @hikaru, @nemsko
+
+## Chess.com ELO API Fix (Critical)
+- [x] Root cause: direct browser calls to api.chess.com are blocked/404 for high-profile accounts (@magnuscarlsen, @hikaru, @nemsko)
+- [x] Fix UploadRSVPModal lookupChessCom — now uses /api/chess/player/:username server proxy
+- [x] Fix EditPlayerModal fetchAlternateElo — now uses /api/chess/player/:username server proxy
+- [x] Fix useChessAvatar fetchAvatar — now uses /api/chess/player/:username server proxy (also fixes avatar loading for high-profile accounts)
+- [x] AddPlayerModal and useChessComProfile already used proxy correctly (confirmed, no change needed)
+- [x] TypeScript: 0 errors

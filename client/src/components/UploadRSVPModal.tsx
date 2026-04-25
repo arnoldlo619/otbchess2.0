@@ -55,28 +55,46 @@ interface UploadRSVPModalProps {
   existingUsernames: string[];
 }
 
-// ─── API helpers (same logic as AddPlayerModal) ───────────────────────────────
+// ─── API helpers ─────────────────────────────────────────────────────────────
+// Route all chess.com lookups through the server proxy (/api/chess/player/:username)
+// to avoid CORS issues, IP-based rate limiting, and 404s for high-profile accounts
+// (e.g. @magnuscarlsen, @hikaru) that chess.com blocks from direct browser requests.
 async function lookupChessCom(username: string): Promise<Partial<Player>> {
-  const [profileRes, statsRes] = await Promise.all([
-    fetch(`https://api.chess.com/pub/player/${username.toLowerCase()}`),
-    fetch(`https://api.chess.com/pub/player/${username.toLowerCase()}/stats`),
-  ]);
-  if (!profileRes.ok) throw new Error("Not found on chess.com");
-  const profile = await profileRes.json();
-  const stats = statsRes.ok ? await statsRes.json() : {};
-  const rapidElo: number | undefined = stats?.chess_rapid?.last?.rating;
-  const blitzElo: number | undefined = stats?.chess_blitz?.last?.rating;
-  // Active ELO: prefer rapid, then blitz, then bullet, then default
-  const elo = rapidElo ?? blitzElo ?? stats?.chess_bullet?.last?.rating ?? 1200;
+  const res = await fetch(`/api/chess/player/${encodeURIComponent(username.toLowerCase())}`);
+  if (!res.ok) throw new Error("Not found on chess.com");
+  const data = await res.json() as { profile: Record<string, unknown>; stats: Record<string, unknown> };
+  const profile = data.profile ?? {};
+  const stats = data.stats ?? {};
+  // Parse all rating categories with safe optional chaining
+  const rapidElo: number | undefined =
+    (stats.chess_rapid as Record<string, unknown> | undefined)?.last
+      ? ((stats.chess_rapid as Record<string, unknown>).last as Record<string, unknown>).rating as number
+      : undefined;
+  const blitzElo: number | undefined =
+    (stats.chess_blitz as Record<string, unknown> | undefined)?.last
+      ? ((stats.chess_blitz as Record<string, unknown>).last as Record<string, unknown>).rating as number
+      : undefined;
+  const bulletElo: number | undefined =
+    (stats.chess_bullet as Record<string, unknown> | undefined)?.last
+      ? ((stats.chess_bullet as Record<string, unknown>).last as Record<string, unknown>).rating as number
+      : undefined;
+  const dailyElo: number | undefined =
+    (stats.chess_daily as Record<string, unknown> | undefined)?.last
+      ? ((stats.chess_daily as Record<string, unknown>).last as Record<string, unknown>).rating as number
+      : undefined;
+  // Active ELO: prefer rapid → blitz → bullet → daily → 1200
+  const elo = rapidElo ?? blitzElo ?? bulletElo ?? dailyElo ?? 1200;
   return {
-    name: profile.name || profile.username,
-    username: profile.username,
+    name: (profile.name as string | undefined) || (profile.username as string | undefined),
+    username: profile.username as string | undefined,
     elo,
     rapidElo,
     blitzElo,
-    avatarUrl: profile.avatar,
-    country: profile.country?.split("/").pop()?.toUpperCase() ?? "US",
-    title: profile.title,
+    avatarUrl: profile.avatar as string | undefined,
+    country: typeof profile.country === "string"
+      ? profile.country.split("/").pop()?.toUpperCase() ?? "US"
+      : "US",
+    title: profile.title as "GM" | "IM" | "WGM" | "WIM" | "FM" | "WFM" | "CM" | "NM" | undefined,
     platform: "chesscom",
   };
 }

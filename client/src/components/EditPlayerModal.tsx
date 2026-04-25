@@ -111,11 +111,14 @@ export function EditPlayerModal({
     setFetchError(null);
     setFetchSuccess(false);
     try {
+      // Route through server proxy to avoid browser IP restrictions and 404s
+      // for high-profile accounts (e.g. @magnuscarlsen, @hikaru)
       const res = await fetch(
-        `https://api.chess.com/pub/player/${encodeURIComponent(p.username.toLowerCase())}/stats`
+        `/api/chess/player/${encodeURIComponent(p.username.toLowerCase())}`
       );
       if (!res.ok) throw new Error(`chess.com returned ${res.status}`);
-      const data: ChessComStats = await res.json();
+      const proxyData = await res.json() as { profile: Record<string, unknown>; stats: ChessComStats };
+      const data: ChessComStats = proxyData.stats ?? {};
 
       const rapidRating = data.chess_rapid?.last?.rating ?? null;
       const blitzRating = data.chess_blitz?.last?.rating ?? null;

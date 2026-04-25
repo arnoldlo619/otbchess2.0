@@ -59,10 +59,10 @@ async function fetchAvatar(username: string): Promise<string | null> {
     return sessionVal;
   }
 
-  // 3. Fetch from chess.com
+  // 3. Fetch via server proxy (avoids CORS and IP restrictions for high-profile accounts
+  //    like @magnuscarlsen and @hikaru that chess.com blocks from direct browser requests)
   try {
-    const res = await fetch(`https://api.chess.com/pub/player/${key}`, {
-      headers: { "User-Agent": "OTBChess/1.0 (tournament management app)" },
+    const res = await fetch(`/api/chess/player/${encodeURIComponent(key)}`, {
       signal: AbortSignal.timeout(5000), // 5 s timeout
     });
 
@@ -72,8 +72,8 @@ async function fetchAvatar(username: string): Promise<string | null> {
       return null;
     }
 
-    const data = await res.json();
-    const url: string | null = data.avatar ?? null;
+    const data = await res.json() as { profile?: { avatar?: string } };
+    const url: string | null = data.profile?.avatar ?? null;
 
     memCache.set(key, url);
     writeSession(key, url);
