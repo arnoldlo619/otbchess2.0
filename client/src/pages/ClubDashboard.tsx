@@ -2895,43 +2895,14 @@ export default function ClubDashboard() {
             >
               <ChevronLeft size={15} />
             </button>
-            {/* Club logo + name (desktop) */}
-            <div className="hidden lg:flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
-                style={{ background: accent }}
-              >
-                {club.avatarUrl ? (
-                  <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
-                ) : (
-                  <Crown size={14} style={{ color: "#fff" }} />
-                )}
-              </div>
-              <div className="leading-tight">
-                <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
-                  {club.name}
-                </span>
-                <span className="text-xs font-medium ml-1" style={{ color: "oklch(0.65 0.12 145)" }}>Club</span>
-              </div>
-            </div>
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
               <span className="text-sm font-bold truncate" style={{ color: "#ffffff" }}>
                 {club.name}
               </span>
             </div>
-            {/* Right side: stats + avatar */}
+            {/* Right side: avatar dropdown */}
             <div className="flex items-center gap-3 ml-auto">
-              <div className="hidden md:flex items-center gap-3 text-xs" style={{ color: "oklch(0.55 0.08 145)" }}>
-                <span className="flex items-center gap-1">
-                  <Users size={12} style={{ color: accent }} />
-                  <span className="font-semibold" style={{ color: "#fff" }}>{club.memberCount}</span> members
-                </span>
-                <span className="flex items-center gap-1">
-                  <Trophy size={12} style={{ color: accent }} />
-                  <span className="font-semibold" style={{ color: "#fff" }}>{club.tournamentCount}</span> tournaments
-                </span>
-              </div>
               <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>

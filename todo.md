@@ -5409,3 +5409,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Verify upload-avatar and upload-banner server endpoints already return base64 data URL (no file writes)
 - [x] Verify all 3 client callers (CreateClubWizard, ClubProfile settings, ClubDashboard) correctly persist returned base64 URL to DB
 - [x] TypeScript: 0 errors
+
+## ClubDashboard Top Bar Cleanup
+- [x] Remove repetitive desktop club logo+name block from top bar (already shown in banner below)
+- [x] Remove repetitive member/tournament stats row from top bar (already shown in banner below)
+- [x] Keep mobile club name title and avatar dropdown in top bar
+- [x] TypeScript: 0 errors
