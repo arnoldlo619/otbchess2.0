@@ -18,7 +18,7 @@
  */
 
 import { useState } from "react";
-import { useChessAvatar } from "@/hooks/useChessAvatar";
+import { useChessAvatar, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 
 // Deterministic colour from username for the initials background
 function usernameToColor(username: string): string {
@@ -77,8 +77,12 @@ export function PlayerAvatar({
     .toUpperCase();
 
   const colorClass = usernameToColor(username);
-  const resolvedUrl = propAvatarUrl || fetchedUrl;
-  const showPhoto = resolvedUrl && !imgError && platform === "chesscom";
+  // Route all avatar URLs (chess.com and any future lichess.org image URLs) through
+  // the server-side /api/avatar-proxy to prevent mixed-content warnings on HTTPS
+  // and to allow html2canvas to draw them without "tainted canvas" errors.
+  const resolvedUrl = toProxiedAvatarUrl(propAvatarUrl || fetchedUrl);
+  // Show a photo for chess.com players and for Lichess players who have an avatarUrl
+  const showPhoto = resolvedUrl && !imgError && (platform === "chesscom" || (platform === "lichess" && !!propAvatarUrl));
   const showShimmer = !propAvatarUrl && status === "loading" && platform === "chesscom";
   const showFlair = platform === "lichess" && flairEmoji;
   const fontSize = Math.round(size * 0.38);
@@ -94,7 +98,7 @@ export function PlayerAvatar({
         /* Shimmer skeleton while chess.com avatar loads */
         <div className="w-full h-full animate-shimmer rounded-full" />
       ) : showPhoto ? (
-        /* chess.com avatar photo */
+        /* chess.com / Lichess avatar photo (proxied through /api/avatar-proxy) */
         <img
           src={resolvedUrl!}
           alt={`${username}'s avatar`}

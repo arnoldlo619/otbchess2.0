@@ -5535,3 +5535,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add rapidElo/blitzElo fields to LookupResult interface in AddPlayerModal.tsx
 - [x] Confirm zero remaining direct lichess.org/api fetch calls in client source
 - [x] TypeScript: 0 errors
+
+## Lichess Avatar Proxy
+- [x] Confirmed Lichess does not expose profile photos — flair emoji is the visual identifier
+- [x] toProxiedAvatarUrl() in useChessAvatar already rewrites lichess.org/lichess1.org URLs
+- [x] Server /api/avatar-proxy already allowlists lichess.org and lichess1.org
+- [x] PlayerAvatar: import toProxiedAvatarUrl and apply to resolvedUrl before <img src>
+- [x] PlayerAvatar: extend showPhoto to render Lichess avatarUrl when propAvatarUrl is set
+- [x] Confirmed zero direct lichess.org image URLs rendered as <img src> in client source
+- [x] Report.tsx already uses toProxiedAvatarUrl for canvas exports — no change needed
+- [x] TypeScript: 0 errors
