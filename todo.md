@@ -5421,3 +5421,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add bannerRef and scrollContainerRef with useRef
 - [x] Add useEffect scroll listener on the scrollable container to drive backgroundPositionY parallax
 - [x] Parallax only applies when bannerUrl is set (background image); chess-board-bg fallback stays static
+
+## ClubDashboard Banner Upload Upgrade
+- [x] Create resizeBannerImage() utility — 1920×480 landscape crop, JPEG 0.82, max 45KB guard
+- [x] Add bannerUploading state for loading spinner during upload
+- [x] Replace raw FileReader with resizeBannerImage() in the banner upload handler
+- [x] Add "Remove Banner" button when a banner is set (owners/directors only)
+- [x] Add drag-and-drop support on the banner area for owners/directors
+- [x] Replace alert() error with toast.error()
+- [x] Update localStorage via updateClub() after banner change
