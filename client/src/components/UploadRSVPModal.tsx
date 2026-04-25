@@ -563,9 +563,12 @@ export function UploadRSVPModal({
 
                 {/* Select All / Deselect All — only shown when there are ready rows */}
                 {readyRows.length > 0 && !isLookingUp && (
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={toggleSelectAll}
-                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggleSelectAll()}
+                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer select-none ${
                       isDark
                         ? "text-white/50 hover:text-white/80"
                         : "text-gray-500 hover:text-gray-700"
@@ -578,7 +581,7 @@ export function UploadRSVPModal({
                       isDark={isDark}
                     />
                     {allSelected ? "Deselect all" : someSelected ? "Select all" : "Select all"}
-                  </button>
+                  </div>
                 )}
               </div>
 

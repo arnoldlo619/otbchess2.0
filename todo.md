@@ -5454,3 +5454,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] ClubProfile subscribes via useEffect and patches local club state immediately on change
 - [x] accent variable in ClubProfile now reads from club.accentColor (reactive) instead of hardcoded fallback
 - [x] FeedEventCard receives accentColor as a prop so feed cards also update instantly
+
+## Tournament Manage Page — Nested Button Fix
+- [x] Find and fix nested <button> inside <button> on /tournament/:slug/manage page — UploadRSVPModal.tsx line 566 outer button → div[role=button]
