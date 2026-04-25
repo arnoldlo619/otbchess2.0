@@ -106,19 +106,34 @@ import { apiFetch, authFetch } from "@/lib/apiFetch";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Download the current player roster as a CSV file. */
-function exportPlayersCSV(players: import("@/lib/tournamentData").Player[], tournamentName: string) {
-  const headers = ["name", "username", "elo", "title", "country", "wins", "draws", "losses", "points"];
-  const escape = (v: string | number | undefined) => {
+/** Download the current player roster as a CSV file.
+ *  Includes check-in status and payment method for treasurer reconciliation.
+ */
+function exportPlayersCSV(
+  players: import("@/lib/tournamentData").Player[],
+  tournamentName: string,
+  checkedInIds: Set<string> = new Set()
+) {
+  const headers = [
+    "name", "username", "platform", "elo", "rapid_elo", "blitz_elo",
+    "title", "country", "checked_in", "payment_status",
+    "wins", "draws", "losses", "points",
+  ];
+  const escape = (v: string | number | boolean | undefined) => {
     const s = String(v ?? "");
     return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const rows = players.map((p) => [
     escape(p.name),
     escape(p.username),
+    escape(p.platform ?? "chesscom"),
     escape(p.elo),
+    escape(p.rapidElo ?? ""),
+    escape(p.blitzElo ?? ""),
     escape(p.title ?? ""),
     escape(p.country ?? ""),
+    escape(checkedInIds.has(p.id) ? "yes" : "no"),
+    escape(p.paymentStatus ?? "unpaid"),
     escape(p.wins),
     escape(p.draws),
     escape(p.losses),
@@ -3978,16 +3993,16 @@ export default function Director() {
                     {/* Export players CSV — always visible when roster has players */}
                     {state.players.length > 0 && (
                       <button
-                        onClick={() => exportPlayersCSV(state.players, state.tournamentName)}
+                        onClick={() => exportPlayersCSV(state.players, state.tournamentName, checkedInIds)}
                         className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all ${
                           isDark
                             ? "border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
                             : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
                         }`}
-                        title="Download player roster as CSV"
+                        title="Download player roster as CSV (includes check-in & payment status)"
                       >
                         <Download className="w-3.5 h-3.5" />
-                        Export
+                        Download CSV
                       </button>
                     )}
                     {/* Add Player + Upload RSVPs buttons — registration phase */}

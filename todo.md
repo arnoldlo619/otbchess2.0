@@ -5565,3 +5565,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Live browser test confirmed: proxy returns HTTP 200, Access-Control-Allow-Origin: *, Content-Type: image/png
 - [x] All 39 pngExport.test.ts tests pass (updated to assert chesscomfiles.com in both allowlists)
 - [x] TypeScript: 0 errors
+
+## Download CSV — Director Players Tab
+- [x] Updated exportPlayersCSV to include checked_in, payment_status, platform, rapid_elo, blitz_elo columns
+- [x] Updated button onClick to pass checkedInIds to exportPlayersCSV
+- [x] Renamed button label from "Export" to "Download CSV"
+- [x] Added tooltip: "Download player roster as CSV (includes check-in & payment status)"
+- [x] 24 Vitest tests for exportPlayersCSV — all pass
+- [x] TypeScript: 0 errors
