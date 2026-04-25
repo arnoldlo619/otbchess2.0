@@ -2367,6 +2367,27 @@ export default function ClubDashboard() {
     } catch { /* ignore */ }
   }
 
+  // ── Parallax banner refs (must be before any early returns) ───────────────────────
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [bannerBgY, setBannerBgY] = useState(50);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const banner = bannerRef.current;
+      if (!banner) return;
+      const rect = banner.getBoundingClientRect();
+      const bannerH = banner.offsetHeight || 1;
+      const scrolled = -rect.top;
+      const pct = 50 + (scrolled / bannerH) * 15;
+      setBannerBgY(Math.max(35, Math.min(65, pct)));
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // Seed and load
   useEffect(() => {
     if (!id) { navigate("/clubs"); return; }
@@ -2908,7 +2929,7 @@ export default function ClubDashboard() {
           </div>
 
           {/* ── SCROLLABLE CONTENT ─────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pb-20 lg:pb-6">
             <div className="px-4 lg:px-6 py-4">
               <div className="max-w-4xl mx-auto">
                 {/* ── CLUB BANNER ─────────────────────────────────────────── */}
@@ -2916,13 +2937,15 @@ export default function ClubDashboard() {
                   const flag = COUNTRY_FLAGS[club.country ?? ""] ?? "🌍";
                   return (
                     <div
+                      ref={bannerRef}
                       className={`relative rounded-3xl overflow-hidden mb-5${!club.bannerUrl ? " chess-board-bg" : ""}`}
                       style={{
-                        minHeight: "120px",
+                        minHeight: "clamp(120px, 20vw, 200px)",
                         ...(club.bannerUrl ? {
                           backgroundImage: `url(${club.bannerUrl})`,
                           backgroundSize: "cover",
-                          backgroundPosition: "center",
+                          backgroundPosition: `center ${bannerBgY}%`,
+                          transition: "background-position 0.05s linear",
                         } : {}),
                       }}
                     >

@@ -5415,3 +5415,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove repetitive member/tournament stats row from top bar (already shown in banner below)
 - [x] Keep mobile club name title and avatar dropdown in top bar
 - [x] TypeScript: 0 errors
+
+## ClubDashboard Banner Parallax
+- [x] Increase banner minHeight: 120px → clamp(120px, 20vw, 200px) — fluid scaling up to 200px on desktop
+- [x] Add bannerRef and scrollContainerRef with useRef
+- [x] Add useEffect scroll listener on the scrollable container to drive backgroundPositionY parallax
+- [x] Parallax only applies when bannerUrl is set (background image); chess-board-bg fallback stays static
