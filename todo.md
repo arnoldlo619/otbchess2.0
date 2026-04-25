@@ -5584,3 +5584,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show Retry Failed button only when errorCount > 0, not looking up, and pendingCount === 0
 - [x] Display failed count on button label (e.g. "Retry 3 Failed") with RefreshCw icon
 - [x] 11 Vitest tests pass, TypeScript 0 errors
+
+## Server-Side Chess.com Player Cache
+- [x] Added chess_player_cache table to schema (username PK, profile_json, stats_json, cached_at)
+- [x] Ran migration — table confirmed created in TiDB Cloud
+- [x] Integrated cache read (HIT/STALE) and write (upsert) into proxyChessCom with 1-hour TTL
+- [x] Cache errors are non-fatal — falls back to live chess.com fetch
+- [x] 14 Vitest tests pass, TypeScript 0 errors

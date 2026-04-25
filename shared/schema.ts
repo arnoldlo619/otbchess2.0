@@ -1663,3 +1663,18 @@ export const userFavoriteLines = mysqlTable(
 );
 export type UserFavoriteLineRow = typeof userFavoriteLines.$inferSelect;
 export type NewUserFavoriteLineRow = typeof userFavoriteLines.$inferInsert;
+
+// ─── chess_player_cache ───────────────────────────────────────────────────────
+// Short-lived cache for successful chess.com profile + stats lookups.
+// TTL is enforced at read time (1 hour). Rows are keyed by lowercase username.
+// This prevents repeated chess.com API calls during bulk RSVP imports and
+// eliminates rate-limit failures for large rosters.
+export const chessPlayerCache = mysqlTable(
+  "chess_player_cache",
+  {
+    username: varchar("username", { length: 100 }).primaryKey(),
+    profileJson: text("profile_json").notNull(),
+    statsJson: text("stats_json").notNull(),
+    cachedAt: timestamp("cached_at").notNull().defaultNow(),
+  }
+);

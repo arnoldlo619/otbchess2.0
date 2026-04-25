@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -172,6 +172,37 @@ async function fetchWithRetryServer(
 
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
+  const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+  // ── Cache read ────────────────────────────────────────────────────────────
+  try {
+    const db = await getDb();
+    const [cached] = await db
+      .select()
+      .from(chessPlayerCache)
+      .where(eq(chessPlayerCache.username, key))
+      .limit(1);
+    if (cached) {
+      const age = Date.now() - new Date(cached.cachedAt).getTime();
+      if (age < CACHE_TTL_MS) {
+        logger.info(`[chess cache] HIT for ${key} (age ${Math.round(age / 1000)}s)`);
+        return {
+          status: 200,
+          body: {
+            profile: JSON.parse(cached.profileJson),
+            stats: JSON.parse(cached.statsJson),
+            cached: true,
+          },
+        };
+      }
+      // Stale — fall through to re-fetch
+      logger.info(`[chess cache] STALE for ${key} (age ${Math.round(age / 1000)}s), re-fetching`);
+    }
+  } catch (cacheErr) {
+    logger.warn("[chess cache] read error, falling back to live fetch:", cacheErr);
+  }
+
+  // ── Live fetch from chess.com ─────────────────────────────────────────────
   const base = "https://api.chess.com/pub/player";
   const headers = {
     "User-Agent": "OTBChess/1.0 (https://chessotb.club; tournament management app)",
@@ -197,6 +228,29 @@ async function proxyChessCom(username: string): Promise<{ status: number; body: 
     profileRes.json() as Promise<Record<string, unknown>>,
     statsRes.ok ? (statsRes.json() as Promise<Record<string, unknown>>) : Promise.resolve({}),
   ]);
+
+  // ── Cache write ───────────────────────────────────────────────────────────
+  try {
+    const db = await getDb();
+    await db
+      .insert(chessPlayerCache)
+      .values({
+        username: key,
+        profileJson: JSON.stringify(profileData),
+        statsJson: JSON.stringify(statsData),
+        cachedAt: new Date(),
+      })
+      .onDuplicateKeyUpdate({
+        set: {
+          profileJson: JSON.stringify(profileData),
+          statsJson: JSON.stringify(statsData),
+          cachedAt: new Date(),
+        },
+      });
+    logger.info(`[chess cache] WRITE for ${key}`);
+  } catch (cacheErr) {
+    logger.warn("[chess cache] write error (non-fatal):", cacheErr);
+  }
 
   return { status: 200, body: { profile: profileData, stats: statsData } };
 }
