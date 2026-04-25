@@ -36,7 +36,7 @@ import {
 import { apiJoinClub, apiLeaveClub } from "@/lib/clubsApi";
 import { useClubPresence } from "@/hooks/useClubPresence";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
-import { ClubBannerUpload } from "@/components/ClubBannerUpload";
+import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { listTournamentsByClub, type TournamentConfig } from "@/lib/tournamentRegistry";
 import {
@@ -696,6 +696,8 @@ export default function ClubProfile() {
   // Track broken images so we can fall back to placeholder gracefully
   const [avatarBroken, setAvatarBroken] = useState(false);
   const [bannerBroken, setBannerBroken] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerDragOver, setBannerDragOver] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [deleteStep, setDeleteStep] = useState<number>(0); // 0=hidden, 1=confirm prompt
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -963,6 +965,53 @@ export default function ClubProfile() {
       navigator.clipboard.writeText(url).then(() => toast.success("Link copied!"));
     }
   };
+
+  // ── Hero banner upload handlers ─────────────────────────────────────────────
+  async function handleBannerFile(file: File) {
+    if (!club) return;
+    const err = validateBannerFile(file);
+    if (err) { toast.error(err); return; }
+    setBannerUploading(true);
+    try {
+      const dataUrl = await cropBannerImage(file);
+      const { url } = await apiFetch<{ url: string }>("/api/clubs/upload-banner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      });
+      await apiFetch(`/api/clubs/${club.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bannerUrl: url }),
+      });
+      updateClub(club.id, { bannerUrl: url });
+      setClub((prev) => prev ? { ...prev, bannerUrl: url } : prev);
+      toast.success("Banner updated!");
+    } catch {
+      toast.error("Failed to upload banner. Please try again.");
+    } finally {
+      setBannerUploading(false);
+    }
+  }
+
+  async function handleRemoveBannerHero() {
+    if (!club) return;
+    setBannerUploading(true);
+    try {
+      await apiFetch(`/api/clubs/${club.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bannerUrl: null }),
+      });
+      updateClub(club.id, { bannerUrl: null });
+      setClub((prev) => prev ? { ...prev, bannerUrl: null } : prev);
+      toast.success("Banner removed.");
+    } catch {
+      toast.error("Failed to remove banner. Please try again.");
+    } finally {
+      setBannerUploading(false);
+    }
+  }
 
   // ── Derived display values ──────────────────────────────────────────────────
   const flag = COUNTRY_FLAGS[club.country] ?? "🌍";
@@ -1234,54 +1283,87 @@ export default function ClubProfile() {
                         )}
                       </div>
                     </div>
-                    {/* Banner upload button (owners/directors only) */}
+                    {/* Banner upload overlay (owners/directors only) */}
                     {(isOwner || isDirector) && (
-                      <div className="absolute top-3 right-3 z-20">
-                        <label
-                          htmlFor="banner-upload-profile"
-                          className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
-                          style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                          title="Change banner image"
+                      <>
+                        {/* Drag-and-drop highlight overlay */}
+                        <div
+                          className="absolute inset-0 z-30 pointer-events-none transition-all duration-200"
+                          style={{
+                            background: bannerDragOver ? "rgba(0,0,0,0.55)" : "transparent",
+                            border: bannerDragOver ? `2px dashed ${club.accentColor ?? "#4CAF50"}` : "2px dashed transparent",
+                            borderRadius: "1.5rem",
+                          }}
                         >
-                          <Camera size={13} />
-                          Edit Banner
-                        </label>
+                          {bannerDragOver && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                              <Camera size={28} style={{ color: club.accentColor ?? "#4CAF50" }} />
+                              <span className="text-sm font-bold text-white">Drop to upload banner</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Invisible drag target covering the whole banner */}
+                        <div
+                          className="absolute inset-0 z-20"
+                          onDragOver={(e) => { e.preventDefault(); setBannerDragOver(true); }}
+                          onDragLeave={() => setBannerDragOver(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setBannerDragOver(false);
+                            const file = e.dataTransfer.files?.[0];
+                            if (file) handleBannerFile(file);
+                          }}
+                        />
+                        {/* Action buttons top-right */}
+                        <div className="absolute top-3 right-3 z-40 flex items-center gap-2">
+                          {bannerUploading ? (
+                            <div
+                              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                              style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
+                            >
+                              <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                              </svg>
+                              Uploading…
+                            </div>
+                          ) : (
+                            <>
+                              <label
+                                htmlFor="banner-upload-profile"
+                                className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
+                                style={{ background: "rgba(0,0,0,0.55)", color: "#fff", backdropFilter: "blur(4px)" }}
+                                title="Change banner image"
+                              >
+                                <Camera size={13} />
+                                {club.bannerUrl ? "Change Banner" : "Add Banner"}
+                              </label>
+                              {club.bannerUrl && (
+                                <button
+                                  onClick={handleRemoveBannerHero}
+                                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-90"
+                                  style={{ background: "rgba(180,0,0,0.65)", color: "#fff", backdropFilter: "blur(4px)" }}
+                                  title="Remove banner image"
+                                >
+                                  <X size={13} />
+                                  Remove
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                         <input
                           id="banner-upload-profile"
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/png,image/webp"
                           className="hidden"
-                          onChange={async (e) => {
+                          onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = async (ev) => {
-                              const dataUrl = ev.target?.result as string;
-                              try {
-                                const uploadRes = await fetch("/api/clubs/upload-banner", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ dataUrl }),
-                                  credentials: "include",
-                                });
-                                if (!uploadRes.ok) throw new Error("Upload failed");
-                                const { url } = await uploadRes.json() as { url: string };
-                                await fetch(`/api/clubs/${club.id}`, {
-                                  method: "PATCH",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ bannerUrl: url }),
-                                  credentials: "include",
-                                });
-                                setClub((prev) => prev ? { ...prev, bannerUrl: url } : prev);
-                              } catch {
-                                alert("Failed to upload banner image. Please try again.");
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            if (file) handleBannerFile(file);
                             e.target.value = "";
                           }}
                         />
-                      </div>
+                      </>
                     )}
                     {/* Join / Leave CTA */}
                     {!isOwner && !isDirector && (

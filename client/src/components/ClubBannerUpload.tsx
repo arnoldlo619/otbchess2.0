@@ -74,7 +74,12 @@ export function cropBannerImage(
           sy = Math.round((img.height - sh) / 2);
         }
         ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
-        resolve(canvas.toDataURL("image/jpeg", 0.88));
+        // Auto-fallback quality: 0.88 first; drop to 0.65 if > 45 KB base64
+        let dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+        if (dataUrl.length > 45 * 1024 * (4 / 3)) {
+          dataUrl = canvas.toDataURL("image/jpeg", 0.65);
+        }
+        resolve(dataUrl);
       };
       img.onerror = () => reject(new Error("Failed to load image"));
       img.src = e.target?.result as string;

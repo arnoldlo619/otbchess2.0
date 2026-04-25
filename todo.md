@@ -5430,3 +5430,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add drag-and-drop support on the banner area for owners/directors
 - [x] Replace alert() error with toast.error()
 - [x] Update localStorage via updateClub() after banner change
+
+## ClubProfile Banner Upload Consistency
+- [x] Fix hero banner overlay in ClubProfile.tsx — replace raw FileReader + alert() with cropBannerImage + toast + loading state + remove button + drag-and-drop
+- [x] Add 45KB size guard to ClubBannerUpload.tsx cropBannerImage (auto-fallback quality 0.88 → 0.65)
+- [x] Add bannerUploading + bannerDragOver states to ClubProfile for the hero overlay
