@@ -170,6 +170,39 @@ async function fetchWithRetryServer(
   return fetch(url, options);
 }
 
+/**
+ * Background cache warm-up: fires sequential proxyChessCom calls for each username,
+ * skipping any that are already cached and fresh. Designed to be called fire-and-forget.
+ * Sequential (not parallel) to avoid hammering chess.com with a burst.
+ */
+async function warmChessPlayerCache(usernames: string[]): Promise<void> {
+  const CACHE_TTL_MS = 60 * 60 * 1000;
+  for (const raw of usernames) {
+    const key = raw.toLowerCase().trim();
+    if (!key) continue;
+    try {
+      // Skip if already cached and fresh
+      const db = await getDb();
+      const [cached] = await db
+        .select({ cachedAt: chessPlayerCache.cachedAt })
+        .from(chessPlayerCache)
+        .where(eq(chessPlayerCache.username, key))
+        .limit(1);
+      if (cached && Date.now() - new Date(cached.cachedAt).getTime() < CACHE_TTL_MS) {
+        logger.info(`[chess warm-up] SKIP ${key} (already cached)`);
+        continue;
+      }
+      logger.info(`[chess warm-up] FETCH ${key}`);
+      await proxyChessCom(key); // writes to cache internally
+    } catch (err) {
+      logger.warn(`[chess warm-up] error for ${key}:`, err);
+    }
+    // Small delay between requests to be a good API citizen
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  logger.info(`[chess warm-up] completed ${usernames.length} username(s)`);
+}
+
 async function proxyChessCom(username: string): Promise<{ status: number; body: unknown }> {
   const key = username.toLowerCase().trim();
   const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -1540,13 +1573,36 @@ export function createApp() {
           playerJson: JSON.stringify(player),
         });
       }
-      // Broadcast the new/updated player to all connected SSE director clients
+       // Broadcast the new/updated player to all connected SSE director clients
       broadcastPlayerJoined(id, player);
       res.json({ ok: true, username });
+      // Fire-and-forget cache warm-up for chess.com players
+      const platform = (player.platform as string | undefined) ?? "chesscom";
+      if (platform === "chesscom") {
+        warmChessPlayerCache([username]).catch(() => {});
+      }
     } catch (err) {
       logger.error("[players] POST error:", err);
       res.status(500).json({ error: "Database error" });
     }
+  });
+
+  // ── Tournament Players: POST /api/tournament/:id/players/warm-cache ──────────
+  // Accepts an array of { username, platform } objects and pre-warms the
+  // chess_player_cache for all chess.com players that are not already cached.
+  // Fire-and-forget: responds immediately with { queued: N } and runs in background.
+  app.post("/api/tournament/:id/players/warm-cache", async (req, res) => {
+    const { players } = req.body as { players?: Array<{ username: string; platform?: string }> };
+    if (!Array.isArray(players)) {
+      return res.status(400).json({ error: "players array required" });
+    }
+    const chesscomUsernames = players
+      .filter((p) => (p.platform ?? "chesscom") === "chesscom" && typeof p.username === "string")
+      .map((p) => p.username.toLowerCase().trim())
+      .filter(Boolean);
+    // Respond immediately — warm-up runs in background
+    res.json({ ok: true, queued: chesscomUsernames.length });
+    warmChessPlayerCache(chesscomUsernames).catch(() => {});
   });
 
   // ── Tournament SSE: GET /api/tournament/:id/stream ──────────────────────────

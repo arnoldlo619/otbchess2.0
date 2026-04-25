@@ -54,6 +54,8 @@ interface UploadRSVPModalProps {
   onClose: () => void;
   onAdd: (player: Player) => void;
   existingUsernames: string[];
+  /** Optional tournament ID — when provided, triggers background cache warm-up for all imported players */
+  tournamentId?: string;
 }
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
@@ -278,6 +280,7 @@ export function UploadRSVPModal({
   onClose,
   onAdd,
   existingUsernames,
+  tournamentId,
 }: UploadRSVPModalProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -447,14 +450,31 @@ export function UploadRSVPModal({
     );
   }, [allSelected]);
 
-  // ── Import selected players ─────────────────────────────────────────────────
+  // ── Import selected players ───────────────────────────────────────────────────────────────────────
   const handleImportSelected = useCallback(() => {
     const toAdd = rows.filter((r) => r.status === "ready" && r.selected && r.player);
     if (toAdd.length === 0) return;
     toAdd.forEach((r) => onAdd(r.player!));
     toast.success(`Added ${toAdd.length} player${toAdd.length > 1 ? "s" : ""} to the tournament`);
+    // Fire-and-forget background cache warm-up for all imported chess.com players.
+    // The import already wrote each player to cache during the lookup phase, so this
+    // is a safety net to ensure the cache is warm for any players that were looked up
+    // before the cache was implemented (e.g. from a previous session).
+    if (tournamentId) {
+      const warmPayload = toAdd
+        .filter((r) => r.player)
+        .map((r) => ({ username: r.player!.username, platform: r.player!.platform ?? "chesscom" }));
+      if (warmPayload.length > 0) {
+        fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/players/warm-cache`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ players: warmPayload }),
+        }).catch(() => {}); // non-fatal
+      }
+    }
     handleClose();
-  }, [rows, onAdd, handleClose]);
+  }, [rows, onAdd, handleClose, tournamentId]);
 
   const pendingCount = rows.filter((r) => r.status === "pending").length;
   const errorCount = rows.filter((r) => r.status === "error").length;

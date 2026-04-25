@@ -5283,6 +5283,7 @@ export default function Director() {
           addPlayer(player);
         }}
         existingUsernames={existingUsernames}
+        tournamentId={tournamentId}
       />
 
       {/* ── Start Tournament Confirmation Dialog ─────────────────────────────── */}

@@ -5591,3 +5591,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Integrated cache read (HIT/STALE) and write (upsert) into proxyChessCom with 1-hour TTL
 - [x] Cache errors are non-fatal — falls back to live chess.com fetch
 - [x] 14 Vitest tests pass, TypeScript 0 errors
+
+## Cache Warm-Up on Tournament Creation / Player Import
+- [x] Add warmChessPlayerCache(usernames) helper that fires background proxyChessCom calls sequentially (skips fresh cache hits, 300ms delay between requests)
+- [x] Add POST /api/tournament/:id/players/warm-cache endpoint (fire-and-forget, responds instantly with { queued: N })
+- [x] Trigger warm-up after successful RSVP bulk import (UploadRSVPModal) when tournamentId prop is provided
+- [x] Trigger warm-up after single player added via POST /api/tournament/:id/players endpoint
+- [x] 16 Vitest tests pass, TypeScript 0 errors
