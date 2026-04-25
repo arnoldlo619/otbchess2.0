@@ -1026,7 +1026,7 @@ export default function ClubProfile() {
             title="Back to My Clubs"
           >
             {club.avatarUrl && !avatarBroken ? (
-              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
             ) : (
               <span className="text-lg">{flag}</span>
             )}
@@ -1195,7 +1195,7 @@ export default function ClubProfile() {
                       style={{ background: accent, border: `2px solid ${accent}66` }}
                     >
                       {club.avatarUrl && !avatarBroken ? (
-                        <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+                        <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" onError={() => setAvatarBroken(true)} />
                       ) : (
                         <span className="text-3xl">{flag}</span>
                       )}

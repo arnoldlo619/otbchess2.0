@@ -5394,3 +5394,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix guest trigger button avatar bg (isDark conditional)
 - [x] Fix signed-out trigger avatar circle fallback bg (isDark conditional)
 - [x] TypeScript: 0 errors after all fixes
+
+## Chicago Chess Club Logo Fix
+- [x] Convert uploaded Chicago Chess Club PNG logo to optimized base64 data URL (400×400, 40KB)
+- [x] Update clubs.avatar_url in database for Chicago Chess Club (id: n3hjjygu) with base64 data URL
+- [x] Add onError handlers to both avatar img tags in ClubProfile.tsx to set avatarBroken state
+- [x] TypeScript: 0 errors after fix
