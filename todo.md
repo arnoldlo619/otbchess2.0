@@ -5598,3 +5598,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Trigger warm-up after successful RSVP bulk import (UploadRSVPModal) when tournamentId prop is provided
 - [x] Trigger warm-up after single player added via POST /api/tournament/:id/players endpoint
 - [x] 16 Vitest tests pass, TypeScript 0 errors
+
+## Refresh All Players Button — Director Players Tab
+- [ ] Add handleRefreshAllPlayers that re-fetches chess.com/Lichess data for every player
+- [ ] Show progress indicator (e.g. "Refreshing 12/47...") while running
+- [ ] Update player ELO, name, avatar, title after each successful fetch
+- [ ] Disable button while refresh is in progress
+- [ ] Write Vitest tests, TypeScript check, save checkpoint
+
+## Chess.com Proxy Timeout Fix (Root Cause of 80/100 "Not Found")
+- [x] Diagnosed: fetchWithRetryServer had no AbortSignal.timeout — requests to chess.com for usernames with underscores/numbers hung indefinitely
+- [x] Fix: added AbortSignal.timeout(8000) to every fetch() call in fetchWithRetryServer and proxyLichess
+- [x] Verified: 10/11 real usernames (Polish_fighter3000, Dolphin_2010, spicycaterpillar, LyonBeast, Parhamov, DenLaz, hikaru, magnuscarlsen, GothamChess, fabianocaruana) return correct rapidElo + blitzElo; sina_movahedi is genuine 404
+- [x] 13 Vitest tests pass, TypeScript 0 errors

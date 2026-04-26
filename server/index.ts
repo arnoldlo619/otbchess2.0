@@ -154,10 +154,11 @@ function broadcastTournamentStarted(
 async function fetchWithRetryServer(
   url: string,
   options: RequestInit,
-  maxRetries = 3
+  maxRetries = 3,
+  timeoutMs = 8000
 ): Promise<Response> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    const res = await fetch(url, options);
+    const res = await fetch(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
     if (res.status === 429 || res.status === 503) {
       const delay = Math.min(1000 * Math.pow(2, attempt), 8000); // 1s, 2s, 4s
       logger.warn(`[chess proxy] Upstream ${res.status} for ${url}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
@@ -167,7 +168,7 @@ async function fetchWithRetryServer(
     return res;
   }
   // Final attempt without retry
-  return fetch(url, options);
+  return fetch(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
 }
 
 /**
@@ -294,7 +295,7 @@ async function proxyLichess(username: string): Promise<{ status: number; body: u
     "Accept": "application/json",
   };
 
-  const res = await fetch(`https://lichess.org/api/user/${key}`, { headers });
+  const res = await fetch(`https://lichess.org/api/user/${key}`, { headers, signal: AbortSignal.timeout(8000) });
 
   if (res.status === 404) {
     return { status: 404, body: { error: "not_found" } };
