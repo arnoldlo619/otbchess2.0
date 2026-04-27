@@ -5658,3 +5658,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] All 5 lines: is_published=1, expert strategicSummary + hintText + punishment_idea
 - [x] API verified: Sicilian now 12 lines, KID now 10 lines, Grünfeld 1 line — all appear in openings library
 - [x] Line detail API confirmed: nodes load correctly, coaching content present for all 5 lines
+
+## Add 2 More Grünfeld Defense Lines — April 27, 2026
+- [x] Inserted Grünfeld Russian System (ECO D97): 7.Qb3 c5 8.dxc5 Qa5 — 16 nodes, full coaching content
+- [x] Inserted Grünfeld Classical Exchange (ECO D86): 7.Nf3 c5 8.Be3 Qa5 9.Qd2 Nc6 — 18 nodes, full coaching content
+- [x] Grünfeld Defense now has 3 published lines (Exchange D85, Russian System D97, Classical D86)
+- [x] API verified: all 3 lines appear in opening detail, nodes and coaching content load correctly
