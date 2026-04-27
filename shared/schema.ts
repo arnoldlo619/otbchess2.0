@@ -16,6 +16,7 @@ import {
   text,
   timestamp,
   index,
+  uniqueIndex,
   int,
   float,
   tinyint,
@@ -1602,7 +1603,8 @@ export const openingTagMap = mysqlTable(
   (table) => ({
     tagIdx: index("otm_tag_id_idx").on(table.tagId),
     openingIdx: index("otm_opening_id_idx").on(table.openingId),
-    tagOpeningIdx: index("otm_tag_opening_idx").on(table.tagId, table.openingId),
+    /** Prevent duplicate (opening, tag) assignments — enforced at DB level */
+    uniqueOpeningTag: uniqueIndex("otm_unique_opening_tag").on(table.openingId, table.tagId),
   })
 );
 export type OpeningTagMapRow = typeof openingTagMap.$inferSelect;

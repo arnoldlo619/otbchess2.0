@@ -5671,3 +5671,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Also verified `line_tag_map` — 0 duplicates found there
 - [x] API re-verified: all 18 openings now return unique tag slugs per opening
 - [x] React key warnings for `piece-activity`, `solid`, `kingside-attack`, `space-advantage` resolved
+
+## Add UNIQUE Constraint to opening_tag_map — April 27, 2026
+- [x] Updated Drizzle schema: added uniqueIndex("otm_unique_opening_tag") on (opening_id, tag_id) in openingTagMap
+- [x] Applied UNIQUE INDEX directly via SQL (db:push failed on unrelated TiDB syntax issue for club_chess_games.pgn default)
+- [x] Verified constraint live: SHOW INDEX confirms Non_unique=0 on (opening_id, tag_id)
+- [x] Constraint enforcement tested: duplicate insert correctly rejected with ER_DUP_ENTRY
+- [x] API verified: all 18 openings still return correct tag data
