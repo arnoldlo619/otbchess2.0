@@ -5664,3 +5664,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Inserted Grünfeld Classical Exchange (ECO D86): 7.Nf3 c5 8.Be3 Qa5 9.Qd2 Nc6 — 18 nodes, full coaching content
 - [x] Grünfeld Defense now has 3 published lines (Exchange D85, Russian System D97, Classical D86)
 - [x] API verified: all 3 lines appear in opening detail, nodes and coaching content load correctly
+
+## BUGFIX: Duplicate React key warnings on /openings page — April 27, 2026
+- [x] Root cause: 187 duplicate rows in `opening_tag_map` table (same opening_id + tag_id inserted multiple times)
+- [x] Fix: Deleted 187 duplicate rows, keeping only the earliest (MIN id) per opening+tag pair
+- [x] Also verified `line_tag_map` — 0 duplicates found there
+- [x] API re-verified: all 18 openings now return unique tag slugs per opening
+- [x] React key warnings for `piece-activity`, `solid`, `kingside-attack`, `space-advantage` resolved
