@@ -5646,3 +5646,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Fill 43 Missing Opening Line Summaries + Hints
 - [x] Wrote and inserted strategicSummary + hintText for all 43 published lines (43/43 updated, 0 remaining)
 - [x] Kan/Taimanov (1 additional line) also filled — 103/103 published lines now have complete content
+
+## Add 5 New Opening Lines — April 27, 2026
+- [x] Discovered actual node table name: `line_nodes` (not `opening_nodes`)
+- [x] Inserted Sicilian Open (ECO B54): Open Sicilian 5.Nc3 Main Line — 10 nodes, full coaching content
+- [x] Inserted Sicilian Dragon (ECO B70): 5...g6 Main Line with 6.Be3 Yugoslav Attack setup — 14 nodes
+- [x] Inserted Sicilian Najdorf English Attack (ECO B90): 6.Be3 e5 7.Nb3 Be6 — 14 nodes
+- [x] Inserted King's Indian Classical (ECO E92): 6.Be2 e5 7.O-O Nc6 — 14 nodes
+- [x] Created new Grünfeld Defense opening (ECO D80, sort_order 170) — published
+- [x] Inserted Grünfeld Exchange Variation (ECO D85): 4.cxd5 Nxd5 5.e4 Nxc3 6.bxc3 Bg7 7.Bc4 c5 — 14 nodes
+- [x] All 5 lines: is_published=1, expert strategicSummary + hintText + punishment_idea
+- [x] API verified: Sicilian now 12 lines, KID now 10 lines, Grünfeld 1 line — all appear in openings library
+- [x] Line detail API confirmed: nodes load correctly, coaching content present for all 5 lines
