@@ -10,6 +10,7 @@
  * - Board auto-orientation: flips to Black's perspective when the line starts with Black
  * - Compact Chessable-inspired layout: board left, move list + controls right
  * - Fully themed to the OTB Chess dark/light design system
+ * - Fullscreen overlay: immersive full-screen board view with Escape to close
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -21,6 +22,9 @@ import {
   RotateCcw,
   FlipHorizontal,
   BookOpen,
+  Maximize2,
+  Minimize2,
+  X,
 } from "lucide-react";
 
 interface ChessLineViewerProps {
@@ -67,22 +71,38 @@ function buildPositions(sanMoves: string[]): { fen: string; san: string; from: s
   return positions;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-export default function ChessLineViewer({
-  moves,
-  lineName,
-  rationale,
-  eco,
+// ── Shared board renderer (used in both normal and fullscreen mode) ────────────
+function BoardView({
+  positions,
+  totalSteps,
+  stepIndex,
+  boardFlipped,
   isDark,
-}: ChessLineViewerProps) {
-  const sanMoves = parseMoves(moves);
-  const positions = buildPositions(sanMoves);
-  const totalSteps = positions.length;
-
-  const [stepIndex, setStepIndex] = useState(-1); // -1 = starting position
-  const [boardFlipped, setBoardFlipped] = useState(false);
-  const moveListRef = useRef<HTMLDivElement>(null);
-
+  isFullscreen,
+  goTo,
+  setBoardFlipped,
+  moveListRef,
+  movePairs,
+  rationale,
+  lineName,
+  eco,
+  onToggleFullscreen,
+}: {
+  positions: { fen: string; san: string; from: string; to: string }[];
+  totalSteps: number;
+  stepIndex: number;
+  boardFlipped: boolean;
+  isDark: boolean;
+  isFullscreen: boolean;
+  goTo: (idx: number) => void;
+  setBoardFlipped: React.Dispatch<React.SetStateAction<boolean>>;
+  moveListRef: React.RefObject<HTMLDivElement | null>;
+  movePairs: { moveNum: number; white: { san: string; idx: number } | null; black: { san: string; idx: number } | null }[];
+  rationale?: string;
+  lineName: string;
+  eco?: string;
+  onToggleFullscreen: () => void;
+}) {
   const currentFen =
     stepIndex === -1
       ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -95,31 +115,6 @@ export default function ChessLineViewer({
           [positions[stepIndex].to]: { background: isDark ? "rgba(93,180,107,0.55)" : "rgba(61,107,71,0.45)" },
         }
       : {};
-
-  const goTo = useCallback(
-    (idx: number) => {
-      const clamped = Math.max(-1, Math.min(totalSteps - 1, idx));
-      setStepIndex(clamped);
-    },
-    [totalSteps]
-  );
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") goTo(stepIndex + 1);
-      if (e.key === "ArrowLeft") goTo(stepIndex - 1);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [stepIndex, goTo]);
-
-  // Scroll active move into view
-  useEffect(() => {
-    if (!moveListRef.current) return;
-    const active = moveListRef.current.querySelector("[data-active='true']");
-    if (active) active.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [stepIndex]);
 
   // Design tokens
   const bg = isDark ? "bg-[#0f1c11]" : "bg-white";
@@ -141,27 +136,10 @@ export default function ChessLineViewer({
     : "border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900";
   const btnDisabled = isDark ? "border-[#1e2e22]/40 text-white/15 cursor-not-allowed" : "border-gray-100 text-gray-300 cursor-not-allowed";
 
-  // Group moves into pairs for the move list (White + Black per row)
-  const movePairs: { moveNum: number; white: { san: string; idx: number } | null; black: { san: string; idx: number } | null }[] = [];
-  for (let i = 0; i < positions.length; i += 2) {
-    movePairs.push({
-      moveNum: Math.floor(i / 2) + 1,
-      white: positions[i] ? { san: positions[i].san, idx: i } : null,
-      black: positions[i + 1] ? { san: positions[i + 1].san, idx: i + 1 } : null,
-    });
-  }
-
-  if (totalSteps === 0) {
-    return (
-      <div className={`rounded-2xl border p-6 text-center ${bg} ${border}`}>
-        <BookOpen className={`w-8 h-8 mx-auto mb-2 ${accentText}`} />
-        <p className={`text-sm ${textSecondary}`}>No moves to display for this line.</p>
-      </div>
-    );
-  }
+  const boardMaxWidth = isFullscreen ? "min(60vh, 560px)" : "280px";
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${bg} ${border}`}>
+    <div className={isFullscreen ? "flex flex-col h-full" : ""}>
       {/* Header */}
       <div className={`px-4 py-3 border-b ${border} flex items-center gap-3`}>
         <BookOpen className={`w-4 h-4 shrink-0 ${accentText}`} />
@@ -176,13 +154,30 @@ export default function ChessLineViewer({
         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${accentBg}`}>
           {totalSteps} moves
         </span>
+        {/* Fullscreen toggle button */}
+        <button
+          onClick={onToggleFullscreen}
+          className={`${btnBase} w-7 h-7 ml-1 ${btnEnabled}`}
+          title={isFullscreen ? "Exit fullscreen (Esc)" : "Fullscreen view"}
+        >
+          {isFullscreen
+            ? <Minimize2 className="w-3.5 h-3.5" />
+            : <Maximize2 className="w-3.5 h-3.5" />
+          }
+        </button>
       </div>
 
       {/* Body: board + move list */}
-      <div className="flex flex-col gap-0">
+      <div className={isFullscreen
+        ? "flex flex-1 min-h-0 gap-0"
+        : "flex flex-col gap-0"
+      }>
         {/* Board */}
-        <div className="flex-shrink-0 p-3">
-          <div className="w-full max-w-[280px] mx-auto">
+        <div className={isFullscreen
+          ? "flex flex-col items-center justify-center p-6 shrink-0"
+          : "flex-shrink-0 p-3"
+        }>
+          <div style={{ width: "100%", maxWidth: boardMaxWidth }} className="mx-auto">
             <Chessboard
               options={{
                 position: currentFen,
@@ -207,7 +202,7 @@ export default function ChessLineViewer({
           </div>
 
           {/* Board controls */}
-          <div className="flex items-center justify-center gap-2 mt-3 max-w-[280px] mx-auto">
+          <div style={{ maxWidth: boardMaxWidth }} className="flex items-center justify-center gap-2 mt-3 mx-auto w-full">
             <button
               onClick={() => goTo(-1)}
               disabled={stepIndex === -1}
@@ -255,11 +250,11 @@ export default function ChessLineViewer({
         </div>
 
         {/* Move list + rationale */}
-        <div className={`flex-1 flex flex-col border-t ${border}`}>
+        <div className={`flex flex-col border-t ${border} ${isFullscreen ? "flex-1 min-h-0 border-t-0 border-l" : ""}`}>
           {/* Move list */}
           <div
             ref={moveListRef}
-            className="flex-1 overflow-y-auto p-3 max-h-[180px]"
+            className={`flex-1 overflow-y-auto p-3 ${isFullscreen ? "" : "max-h-[180px]"}`}
           >
             <p className={`text-[10px] font-semibold uppercase tracking-widest mb-2 px-1 ${textTertiary}`}>
               Moves
@@ -315,9 +310,154 @@ export default function ChessLineViewer({
             <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${isDark ? "border-white/10 bg-white/05" : "border-gray-200 bg-gray-50"}`}>←</kbd>
             <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ${isDark ? "border-white/10 bg-white/05" : "border-gray-200 bg-gray-50"}`}>→</kbd>
             <span className="text-[10px]">navigate moves</span>
+            {isFullscreen && (
+              <>
+                <span className="text-[10px] ml-2">·</span>
+                <kbd className={`text-[9px] px-1.5 py-0.5 rounded border font-mono ml-1 ${isDark ? "border-white/10 bg-white/05" : "border-gray-200 bg-gray-50"}`}>Esc</kbd>
+                <span className="text-[10px]">exit fullscreen</span>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+export default function ChessLineViewer({
+  moves,
+  lineName,
+  rationale,
+  eco,
+  isDark,
+}: ChessLineViewerProps) {
+  const sanMoves = parseMoves(moves);
+  const positions = buildPositions(sanMoves);
+  const totalSteps = positions.length;
+
+  const [stepIndex, setStepIndex] = useState(-1); // -1 = starting position
+  const [boardFlipped, setBoardFlipped] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const moveListRef = useRef<HTMLDivElement>(null);
+
+  const goTo = useCallback(
+    (idx: number) => {
+      const clamped = Math.max(-1, Math.min(totalSteps - 1, idx));
+      setStepIndex(clamped);
+    },
+    [totalSteps]
+  );
+
+  // Keyboard navigation + Escape to close fullscreen
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goTo(stepIndex + 1);
+      if (e.key === "ArrowLeft") goTo(stepIndex - 1);
+      if (e.key === "Escape" && isFullscreen) setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [stepIndex, goTo, isFullscreen]);
+
+  // Prevent body scroll when fullscreen is open
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isFullscreen]);
+
+  // Scroll active move into view
+  useEffect(() => {
+    if (!moveListRef.current) return;
+    const active = moveListRef.current.querySelector("[data-active='true']");
+    if (active) active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [stepIndex]);
+
+  // Design tokens (needed for outer wrappers)
+  const bg = isDark ? "bg-[#0f1c11]" : "bg-white";
+  const border = isDark ? "border-[#1e2e22]/70" : "border-gray-200/80";
+
+  // Group moves into pairs for the move list (White + Black per row)
+  const movePairs: { moveNum: number; white: { san: string; idx: number } | null; black: { san: string; idx: number } | null }[] = [];
+  for (let i = 0; i < positions.length; i += 2) {
+    movePairs.push({
+      moveNum: Math.floor(i / 2) + 1,
+      white: positions[i] ? { san: positions[i].san, idx: i } : null,
+      black: positions[i + 1] ? { san: positions[i + 1].san, idx: i + 1 } : null,
+    });
+  }
+
+  const sharedProps = {
+    positions,
+    totalSteps,
+    stepIndex,
+    boardFlipped,
+    isDark,
+    goTo,
+    setBoardFlipped,
+    moveListRef,
+    movePairs,
+    rationale,
+    lineName,
+    eco,
+  };
+
+  if (totalSteps === 0) {
+    const accentText = isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]";
+    const textSecondary = isDark ? "text-white/55" : "text-gray-500";
+    return (
+      <div className={`rounded-2xl border p-6 text-center ${bg} ${border}`}>
+        <BookOpen className={`w-8 h-8 mx-auto mb-2 ${accentText}`} />
+        <p className={`text-sm ${textSecondary}`}>No moves to display for this line.</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Normal (compact) view */}
+      <div className={`rounded-2xl border overflow-hidden ${bg} ${border}`}>
+        <BoardView
+          {...sharedProps}
+          isFullscreen={false}
+          onToggleFullscreen={() => setIsFullscreen(true)}
+        />
+      </div>
+
+      {/* Fullscreen overlay */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-50 flex items-stretch"
+          style={{ background: isDark ? "rgba(5,12,7,0.97)" : "rgba(240,245,241,0.97)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setIsFullscreen(false); }}
+        >
+          {/* Close button (top-right corner) */}
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className={`absolute top-4 right-4 z-10 flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
+              isDark
+                ? "border-[#2e4a34]/60 text-white/60 hover:bg-[#162018] hover:text-white"
+                : "border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+            }`}
+            title="Exit fullscreen (Esc)"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Fullscreen board container */}
+          <div className={`flex-1 flex flex-col rounded-none border-0 overflow-hidden ${bg}`}>
+            <BoardView
+              {...sharedProps}
+              isFullscreen={true}
+              onToggleFullscreen={() => setIsFullscreen(false)}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

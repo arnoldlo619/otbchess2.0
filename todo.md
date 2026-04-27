@@ -5696,3 +5696,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] MatchupPrep.tsx: added useState(false) showAllProblemLines in ScoutReportTab
 - [x] MatchupPrep.tsx: slices problemLines to 3 when collapsed, shows all when expanded
 - [x] MatchupPrep.tsx: added "Show N more problem lines" / "Show less" toggle button below the list (only renders when >3 lines exist)
+
+## ChessLineViewer: Fullscreen Mode — April 27, 2026
+- [x] Added Maximize2/Minimize2/X icon imports from lucide-react
+- [x] Added useState(false) isFullscreen in ChessLineViewer
+- [x] Added fullscreen button (Maximize2 icon) in the board header next to the move count badge
+- [x] Renders fixed inset-0 z-50 overlay with large board (min(60vh, 560px)) and side-by-side move list
+- [x] Overlay includes X close button (top-right), full navigation controls, and move list
+- [x] Escape key closes fullscreen; body scroll locked while open
+- [x] Minimize2 icon shown inside overlay header for in-context exit; TypeScript clean
