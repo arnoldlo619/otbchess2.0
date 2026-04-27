@@ -5642,3 +5642,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Found: 0 lines without nodes, 0 lines with < 5 nodes, 0 openings without lines
 - [x] Fix: Added server-side fallback text generation in openingsPublic.ts for missing strategicSummary/hintText
 - [ ] TODO: Add expert-written strategicSummary + hintText for the 43 lines listed in openings-audit-report.md via Admin panel
+
+## Fill 43 Missing Opening Line Summaries + Hints
+- [x] Wrote and inserted strategicSummary + hintText for all 43 published lines (43/43 updated, 0 remaining)
+- [x] Kan/Taimanov (1 additional line) also filled — 103/103 published lines now have complete content
