@@ -2,7 +2,7 @@
  * GuestMobileMenu
  *
  * A simple hamburger button + compact dropdown menu for unauthenticated
- * mobile users. Shows Clubs, Battle, Analyze, and Sign In in a clean list.
+ * mobile users. Shows Clubs, Training, Chess Clock, and Sign In in a clean list.
  *
  * The dropdown is rendered via ReactDOM.createPortal at document.body to
  * escape any backdrop-filter / transform stacking contexts in parent navbars.
@@ -10,16 +10,15 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Building2, Swords, Video, LogIn, Trophy, Shield, Timer, Sun, Moon } from "lucide-react";
+import { Building2, GraduationCap, LogIn, Trophy, Shield, Timer, Sun, Moon } from "lucide-react";
 import { useLocation } from "wouter";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const NAV_ITEMS = [
-  { name: "Clubs",        href: "/clubs",  icon: Building2 },
-  { name: "Battle",      href: "/battle", icon: Swords },
-  { name: "Chess Clock", href: "/clock",  icon: Timer },
-  { name: "Analyze",     href: "/record", icon: Video },
+  { name: "Clubs",        href: "/clubs",    icon: Building2 },
+  { name: "Training",    href: "/training", icon: GraduationCap },
+  { name: "Chess Clock", href: "/clock",    icon: Timer },
 ] as const;
 
 interface GuestMobileMenuProps {

@@ -5705,3 +5705,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Overlay includes X close button (top-right), full navigation controls, and move list
 - [x] Escape key closes fullscreen; body scroll locked while open
 - [x] Minimize2 icon shown inside overlay header for in-context exit; TypeScript clean
+
+## Remove Battle / Add Training Hub — April 27, 2026
+- [x] Deleted Battle.tsx and BattleHistory.tsx pages
+- [x] Deleted battle-specific test files (battle.test.ts, battleStatBadge.test.ts, battleTrend.test.ts, clubBattleApi.test.ts)
+- [x] Removed /battle and /battle/history routes from App.tsx
+- [x] Removed Battle lazy import from App.tsx; added Training lazy import
+- [x] Created Training.tsx hub page with Openings & Repertoire and Matchup Prep feature cards + Coming Soon teaser
+- [x] Added /training route to App.tsx
+- [x] Created TrainingDropdown component (Openings + Matchup Prep links)
+- [x] AppNavBar: replaced Battle (Swords) with Training (GraduationCap, /training, TrainingDropdown)
+- [x] MobileNavDrawer: replaced Battle with Training; removed Analyze
+- [x] GuestMobileMenu: replaced Battle with Training; removed Analyze
+- [x] AvatarNavDropdown: replaced Battle+Analyze with Training; removed Video/Swords imports
+- [x] Home.tsx: replaced Battle nav item with Training; added GraduationCap import
+- [x] TypeScript: 0 errors after all changes

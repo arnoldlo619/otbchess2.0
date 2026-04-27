@@ -60,6 +60,7 @@ import {
   Brain,
   Maximize2,
   Link2,
+  GraduationCap,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
@@ -1646,9 +1647,8 @@ export default function Home() {
   // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
-    { name: "Clubs", url: "/clubs", icon: Building2, sectionId: "for-clubs" },
-    { name: "Battle", url: "/battle", icon: Swords },
-    { name: "Analyze", url: "/record", icon: Video, sectionId: "how-it-works" },
+    { name: "Clubs",    url: "/clubs",    icon: Building2, sectionId: "for-clubs" },
+    { name: "Training", url: "/training", icon: GraduationCap },
   ];
 
   const logoEl = (

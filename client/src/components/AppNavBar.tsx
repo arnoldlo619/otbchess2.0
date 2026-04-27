@@ -1,7 +1,7 @@
 /**
  * AppNavBar — shared animated navigation bar for all pages.
  *
- * Wraps AnimeNavBar with the standard 4-item nav (Dashboard, Clubs, Battle, Analyze),
+ * Wraps AnimeNavBar with the standard 4-item nav (Dashboard, Clubs, Training, Analyze),
  * smart Dashboard routing, auth-aware right slot, and theme toggle.
  *
  * On desktop: full animated pill nav centred + theme toggle + avatar dropdown (right).
@@ -15,7 +15,7 @@
 
 import { useState } from "react";
 import { Link } from "wouter";
-import { Building2, Swords, Video, LayoutDashboard } from "lucide-react";
+import { Building2, GraduationCap, LayoutDashboard } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
@@ -23,7 +23,7 @@ import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/to
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
-import { AnalyzeDropdown } from "@/components/AnalyzeDropdown";
+import { TrainingDropdown } from "@/components/TrainingDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 
@@ -106,9 +106,8 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
         window.location.href = getDashboardUrl();
       },
     },
-    { name: "Clubs",   url: "/clubs",   icon: Building2 },
-    { name: "Battle",  url: "/battle",  icon: Swords },
-    { name: "Analyze", url: "/prep",  icon: Video, dropdown: <AnalyzeDropdown /> },
+    { name: "Clubs",    url: "/clubs",    icon: Building2 },
+    { name: "Training", url: "/training", icon: GraduationCap, dropdown: <TrainingDropdown /> },
   ];
 
   const logoEl = (

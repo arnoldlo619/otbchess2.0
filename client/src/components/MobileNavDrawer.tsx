@@ -2,22 +2,21 @@
  * MobileNavDrawer — shared hamburger menu for all inner-page headers.
  *
  * Renders a ☰ / ✕ button that opens a slide-down drawer with the four
- * primary nav links: Dashboard, Clubs, Battle, Analyze.
+ * primary nav links: Tournaments, Clubs, Training.
  *
  * Usage:
- *   <MobileNavDrawer currentPage="Battle" />
+ *   <MobileNavDrawer currentPage="Training" />
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Building2, Swords, Video } from "lucide-react";
+import { Menu, X, LayoutDashboard, Building2, GraduationCap } from "lucide-react";
 import { useLocation } from "wouter";
 
 const NAV_ITEMS = [
-  { name: "Tournaments", href: "/join",    icon: LayoutDashboard },
-  { name: "Clubs",     href: "/clubs",   icon: Building2 },
-  { name: "Battle",    href: "/battle",  icon: Swords },
-  { name: "Analyze",   href: "/record",  icon: Video },
+  { name: "Tournaments", href: "/join",      icon: LayoutDashboard },
+  { name: "Clubs",       href: "/clubs",     icon: Building2 },
+  { name: "Training",    href: "/training",  icon: GraduationCap },
 ] as const;
 
 const OTB_GREEN      = "#4CAF50";

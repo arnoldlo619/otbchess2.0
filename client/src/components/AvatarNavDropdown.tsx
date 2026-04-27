@@ -5,14 +5,14 @@
  *   1. User identity header (avatar, display name, chess.com handle)
  *   2. Rating pills (rapid / blitz / bullet) with trend arrows
  *   3. Compact sparkline chart for recent rating history
- *   4. Nav links  — Dashboard, Clubs, Battle, Analyze
+ *   4. Nav links  — Dashboard, Clubs, Training, Chess Clock
  *   5. User actions — My Profile, Sign Out  (or Sign In for guests)
  *
  * The avatar button shows the user's Chess.com profile picture when available,
  * with a shimmer loading state and an initials/icon fallback.
  *
  * Usage:
- *   <AvatarNavDropdown currentPage="Battle" onSignInClick={() => setAuthOpen(true)} />
+ *   <AvatarNavDropdown currentPage="Training" onSignInClick={() => setAuthOpen(true)} />
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -21,8 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Building2,
-  Swords,
-  Video,
+  GraduationCap,
   Crown,
   LogOut,
   LogIn,
@@ -48,11 +47,10 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "Tournaments",  href: "/join",    icon: LayoutDashboard },
-  { name: "Clubs",        href: "/clubs",   icon: Building2 },
-  { name: "Battle",       href: "/battle",  icon: Swords },
-  { name: "Chess Clock",  href: "/clock",   icon: Timer },
-  { name: "Analyze",      href: "/record",  icon: Video },
+  { name: "Tournaments",  href: "/join",      icon: LayoutDashboard },
+  { name: "Clubs",        href: "/clubs",     icon: Building2 },
+  { name: "Training",     href: "/training",  icon: GraduationCap },
+  { name: "Chess Clock",  href: "/clock",     icon: Timer },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -63,7 +61,7 @@ interface RatingPoint {
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface AvatarNavDropdownProps {
-  /** Highlight this nav item as active (e.g. "Battle"). Falls back to URL matching. */
+  /** Highlight this nav item as active (e.g. "Training"). Falls back to URL matching. */
   currentPage?: string;
   /** Called when the guest/unauthenticated user clicks "Sign In". */
   onSignInClick?: () => void;
