@@ -5629,3 +5629,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fixed win rate display (0-1 → percentage), double 1. prefix in game plan, ChessLineViewer layout overlap
 - [x] Removed old 4-filter segmented control, flashcard PracticeMode, excessive badges/tags
 - [x] 27 Vitest tests pass, TypeScript 0 errors
+
+## BUGFIX: StudyMode TypeError — Cannot read 'side' of undefined
+- [x] Root cause: setLineData(data.line) lost the opening, nodes, and navigation fields from the API response
+- [x] Fix: Merge data.opening, data.nodes, data.navigation into lineData; map strategicSummary → strategicGoal/lineSummary
+- [x] Added fallback defaults for opening and nodes to prevent crashes when API returns unexpected shapes
+- [x] 11 Vitest tests pass, TypeScript 0 errors

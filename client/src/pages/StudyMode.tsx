@@ -56,6 +56,7 @@ interface LineData {
   lineType: string;
   nodes: LineNode[];
   opening: { name: string; slug: string; side: string };
+  navigation?: { prev: { slug: string; title: string } | null; next: { slug: string; title: string } | null };
 }
 
 type StudyState = "learn" | "practice" | "drill";
@@ -223,7 +224,20 @@ function StudyModeContent() {
         const res = await authFetch(`/api/openings/${openingSlug}/lines/${lineSlug}`);
         if (!res.ok) throw new Error("Line not found");
         const data = await res.json();
-        setLineData(data.line);
+        // API returns { opening, line, nodes, progress, navigation } as separate top-level fields.
+        // Merge them into a single LineData object for the component.
+        setLineData({
+          ...data.line,
+          // Map API field names to LineData field names
+          lineSummary: data.line.strategicSummary ?? data.line.lineSummary ?? null,
+          strategicGoal: data.line.strategicSummary ?? data.line.strategicGoal ?? null,
+          commonMistake: data.line.commonMistake ?? null,
+          branchLabel: data.line.branchLabel ?? data.line.lineType ?? "",
+          // Merge top-level siblings into the object
+          opening: data.opening ?? { name: "Unknown", slug: "", side: "white" },
+          nodes: data.nodes ?? [],
+          navigation: data.navigation ?? null,
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load line");
       } finally {
