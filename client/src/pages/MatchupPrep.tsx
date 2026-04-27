@@ -764,6 +764,7 @@ function ScoutReportTab({
   t: Tokens;
 }) {
   const opp = report.opponent;
+  const [showAllProblemLines, setShowAllProblemLines] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -896,7 +897,7 @@ function ScoutReportTab({
             </span>
           </div>
           <div className="space-y-4">
-            {report.problemLines.map((pl, i) => {
+            {(showAllProblemLines ? report.problemLines : report.problemLines.slice(0, 3)).map((pl, i) => {
               const moveNum = Math.ceil(pl.problemHalfMove / 2);
               const isWhiteMove = pl.problemHalfMove % 2 === 1;
               const moveLabel = isWhiteMove ? `${moveNum}.${pl.problemMove}` : `${moveNum}...${pl.problemMove}`;
@@ -957,6 +958,29 @@ function ScoutReportTab({
               );
             })}
           </div>
+          {/* Show more / Show less toggle */}
+          {report.problemLines.length > 3 && (
+            <button
+              onClick={() => setShowAllProblemLines(prev => !prev)}
+              className={`mt-4 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-colors ${
+                isDark
+                  ? "text-red-400/70 hover:text-red-400 hover:bg-red-500/06"
+                  : "text-red-500/70 hover:text-red-600 hover:bg-red-50/60"
+              }`}
+            >
+              {showAllProblemLines ? (
+                <>
+                  <ChevronRight className="w-3.5 h-3.5 rotate-[-90deg]" />
+                  Show less
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="w-3.5 h-3.5 rotate-90" />
+                  Show {report.problemLines.length - 3} more problem {report.problemLines.length - 3 === 1 ? "line" : "lines"}
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
 

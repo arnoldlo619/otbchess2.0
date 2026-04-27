@@ -5690,3 +5690,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] prepEngine: added problemLines to PrepReport interface and buildPrepReport()
 - [x] MatchupPrep.tsx: added "Problem Lines" card to ScoutReportTab with red-highlighted problem move badge and green better-move suggestion
 - [x] 10/10 vitest tests passing for extractProblemLines()
+
+## Problem Lines: Show More Toggle — April 27, 2026
+- [x] prepEngine: increased default maxLines from 3 to 6 in buildPrepReport() call
+- [x] MatchupPrep.tsx: added useState(false) showAllProblemLines in ScoutReportTab
+- [x] MatchupPrep.tsx: slices problemLines to 3 when collapsed, shows all when expanded
+- [x] MatchupPrep.tsx: added "Show N more problem lines" / "Show less" toggle button below the list (only renders when >3 lines exist)

@@ -1589,7 +1589,7 @@ export async function buildPrepReport(
   const profile = analyzePlayStyle(games, username);
   const prepLines = generatePrepLines(profile, myColor);
   const insights = generateInsights(profile);
-  const problemLines = extractProblemLines(games, username);
+  const problemLines = extractProblemLines(games, username, 6);
   return {
     opponent: profile,
     prepLines,
