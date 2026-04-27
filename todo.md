@@ -5683,3 +5683,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Updated Drizzle schema: added uniqueIndex("ltm_unique_line_tag") on (line_id, tag_id) in lineTagMap
 - [x] Applied UNIQUE INDEX directly to live database via CREATE UNIQUE INDEX
 - [x] Verified: SHOW INDEX confirms Non_unique=0 on (line_id, tag_id); duplicate insert rejected with ER_DUP_ENTRY
+
+## Scout Report: Problem Lines Feature — April 27, 2026
+- [x] prepEngine: added ProblemLine interface with opening name, ECO, full move sequence, problem move number, frequency, and loss rate
+- [x] prepEngine: added extractProblemLines() — groups games by ECO letter family, compares winning vs losing move sequences to find the divergence point
+- [x] prepEngine: added problemLines to PrepReport interface and buildPrepReport()
+- [x] MatchupPrep.tsx: added "Problem Lines" card to ScoutReportTab with red-highlighted problem move badge and green better-move suggestion
+- [x] 10/10 vitest tests passing for extractProblemLines()

@@ -16,7 +16,7 @@ import {
   TrendingUp, Eye, Loader2,
   CircleDot, RefreshCw, ChevronRight, Trophy,
   Activity, Bookmark, BookmarkCheck,
-  Trash2, AlertCircle, Crosshair, Flame, Dumbbell,
+  Trash2, AlertCircle, Crosshair, Flame, Dumbbell, AlertTriangle, ArrowRight,
 } from "lucide-react";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
@@ -84,10 +84,24 @@ interface PrepLine {
   lineType?: "main" | "surprise";
 }
 
+interface ProblemLine {
+  name: string;
+  eco: string;
+  color: "white" | "black";
+  moves: string;
+  problemHalfMove: number;
+  problemMove: string;
+  betterMove?: string;
+  gamesCount: number;
+  lossCount: number;
+  lossRate: number;
+}
+
 interface PrepReport {
   opponent: PlayStyleProfile;
   prepLines: PrepLine[];
   insights: string[];
+  problemLines?: ProblemLine[];
   generatedAt: string;
   _cached?: boolean;
 }
@@ -870,6 +884,81 @@ function ScoutReportTab({
           <span>Avg game length: <span className={`font-semibold ${t.textSecondary}`}>{opp.avgGameLength} moves</span></span>
         </div>
       </div>
+
+      {/* ── Problem Lines ── */}
+      {report.problemLines && report.problemLines.length > 0 && (
+        <div className={`${t.card} p-4 sm:p-5`}>
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className={`w-4 h-4 ${isDark ? "text-red-400" : "text-red-500"}`} />
+            <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Problem Lines</h3>
+            <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full ${isDark ? "bg-red-500/12 text-red-400" : "bg-red-50 text-red-600 border border-red-200/60"}`}>
+              Based on {report.opponent.gamesAnalyzed} games
+            </span>
+          </div>
+          <div className="space-y-4">
+            {report.problemLines.map((pl, i) => {
+              const moveNum = Math.ceil(pl.problemHalfMove / 2);
+              const isWhiteMove = pl.problemHalfMove % 2 === 1;
+              const moveLabel = isWhiteMove ? `${moveNum}.${pl.problemMove}` : `${moveNum}...${pl.problemMove}`;
+              const betterLabel = pl.betterMove
+                ? (isWhiteMove ? `${moveNum}.${pl.betterMove}` : `${moveNum}...${pl.betterMove}`)
+                : null;
+              const lossRatePct = Math.round(pl.lossRate * 100);
+              return (
+                <div key={i} className={`rounded-xl overflow-hidden border ${
+                  isDark ? "border-red-500/15 bg-red-500/04" : "border-red-200/60 bg-red-50/40"
+                }`}>
+                  {/* Header row */}
+                  <div className="flex items-start gap-3 p-3 pb-2">
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
+                      isDark ? "bg-red-500/15 text-red-400" : "bg-red-100 text-red-600"
+                    }`}>{i + 1}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-sm font-semibold ${t.textPrimary}`}>{pl.name}</p>
+                        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${t.monoBlock}`}>{pl.eco}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-500"
+                        }`}>as {pl.color}</span>
+                      </div>
+                      <p className={`text-xs mt-1 ${t.textTertiary}`}>
+                        {pl.lossCount} losses in {pl.gamesCount} games ({lossRatePct}% loss rate)
+                      </p>
+                    </div>
+                  </div>
+                  {/* Problem move highlight */}
+                  <div className={`mx-3 mb-3 p-3 rounded-lg ${
+                    isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-white border border-gray-200/70"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                        isDark ? "text-red-400/70" : "text-red-500/80"
+                      }`}>Problem Move</span>
+                      <span className={`text-[10px] ${t.textTertiary}`}>move {moveNum}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`font-mono text-sm font-bold px-2.5 py-1 rounded-lg ${
+                        isDark ? "bg-red-500/15 text-red-400 border border-red-500/20" : "bg-red-50 text-red-600 border border-red-200"
+                      }`}>{moveLabel}</span>
+                      {betterLabel && (
+                        <>
+                          <ArrowRight className={`w-3.5 h-3.5 shrink-0 ${t.textTertiary}`} />
+                          <span className={`font-mono text-sm font-bold px-2.5 py-1 rounded-lg ${
+                            isDark ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                          }`}>{betterLabel}</span>
+                          <span className={`text-xs ${t.textTertiary}`}>is stronger</span>
+                        </>
+                      )}
+                    </div>
+                    {/* Move sequence leading to the problem */}
+                    <p className={`mt-2 text-[11px] font-mono leading-relaxed ${t.textTertiary}`}>{pl.moves}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Next Step Nudge ── */}
       {enrichedLines.length > 0 && (

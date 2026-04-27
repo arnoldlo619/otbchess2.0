@@ -115,11 +115,40 @@ export interface PrepLine {
   exploits?: string;
 }
 
+/**
+ * A specific opening line the opponent plays poorly, with the exact move
+ * where they most commonly go wrong based on their game history.
+ */
+export interface ProblemLine {
+  /** Opening name (e.g. "Sicilian Najdorf") */
+  name: string;
+  /** ECO code */
+  eco: string;
+  /** Color the opponent was playing */
+  color: "white" | "black";
+  /** The most common move sequence from lost/poor games (up to the problem move) */
+  moves: string;
+  /** The 1-indexed half-move number where the opponent most often diverges/goes wrong */
+  problemHalfMove: number;
+  /** The move the opponent usually plays at the problem point (the bad move) */
+  problemMove: string;
+  /** A better alternative move at the problem point (from winning games), if found */
+  betterMove?: string;
+  /** Number of games analyzed for this line */
+  gamesCount: number;
+  /** Number of those games that were lost */
+  lossCount: number;
+  /** Loss rate in this specific line (0–1) */
+  lossRate: number;
+}
+
 export interface PrepReport {
   opponent: PlayStyleProfile;
   prepLines: PrepLine[];
   /** Key insights as short sentences */
   insights: string[];
+  /** Lines the opponent plays poorly with the exact problem move identified */
+  problemLines: ProblemLine[];
   generatedAt: string;
 }
 
@@ -1340,6 +1369,213 @@ export function generateInsights(profile: PlayStyleProfile): string[] {
   return insights.slice(0, 8);
 }
 
+// ─── Problem Lines Analysis ──────────────────────────────────────────────────
+
+/**
+ * Tokenize a PGN body into an array of half-move strings.
+ * e.g. "1.e4 e5 2.Nf3" → ["e4", "e5", "Nf3"]
+ */
+function tokenizePgn(pgn: string): string[] {
+  const body = pgn.replace(/\[.*?\]/g, "").trim();
+  const cleaned = body
+    .replace(/\{[^}]*\}/g, "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\$\d+/g, "")
+    .replace(/1-0|0-1|1\/2-1\/2|\*/g, "")
+    .trim();
+  return cleaned
+    .split(/\s+/)
+    .map(t => t.replace(/^\d+\.+/, ""))
+    .filter(t => t.length > 0);
+}
+
+/**
+ * Find the most common move at a given half-move index among a set of token arrays.
+ * Returns [move, count] for the plurality move.
+ */
+function pluralityMove(tokenArrays: string[][], halfMoveIdx: number): [string, number] {
+  const freq = new Map<string, number>();
+  for (const tokens of tokenArrays) {
+    if (tokens.length > halfMoveIdx) {
+      const m = tokens[halfMoveIdx];
+      freq.set(m, (freq.get(m) ?? 0) + 1);
+    }
+  }
+  if (freq.size === 0) return ["", 0];
+  return Array.from(freq.entries()).sort((a, b) => b[1] - a[1])[0];
+}
+
+/**
+ * Rebuild a move string from a token array (first N half-moves).
+ * e.g. ["e4","e5","Nf3"] → "1.e4 e5 2.Nf3"
+ */
+function rebuildMoves(tokens: string[], halfMoves: number): string {
+  const out: string[] = [];
+  for (let i = 0; i < Math.min(tokens.length, halfMoves); i++) {
+    if (i % 2 === 0) out.push(`${Math.floor(i / 2) + 1}.${tokens[i]}`);
+    else out.push(tokens[i]);
+  }
+  return out.join(" ");
+}
+
+/**
+ * For each opening the opponent plays frequently, identify the exact move
+ * where they most commonly go wrong by comparing winning vs losing game sequences.
+ *
+ * Algorithm:
+ *   1. Group games by classified opening (min 3 games)
+ *   2. Split into won/drawn (good) vs lost (bad) groups
+ *   3. Walk half-moves 1..MAX_DEPTH; at each position find the plurality move
+ *      in bad games vs good games — the first significant divergence is the
+ *      "problem move"
+ *   4. Return the top N problem lines sorted by loss rate × frequency
+ */
+export function extractProblemLines(
+  games: ChessComGame[],
+  username: string,
+  maxLines = 3,
+  maxDepth = 20
+): ProblemLine[] {
+  const lc = username.toLowerCase();
+
+  // Group games by opening family (ECO letter + 2-digit prefix) and color.
+  // Using the family prefix (e.g. "C84" and "C95" both map to "C8") ensures
+  // that variations of the same opening are analyzed together, which gives
+  // enough games to detect a divergence point.
+  type GameGroup = {
+    eco: string;       // most specific ECO seen in this group
+    name: string;      // most specific name seen in this group
+    color: "white" | "black";
+    goodTokens: string[][]; // won or drawn
+    badTokens: string[][];  // lost
+  };
+  const groups = new Map<string, GameGroup>();
+
+  // Helper: reduce ECO to a broad family group by letter + tens digit.
+  // This groups related openings together:
+  //   C84 (Ruy Lopez: Closed) and C95 (Ruy Lopez: Breyer) → both "C" (Spanish)
+  //   B20–B99 (Sicilian) → "B"
+  //   D00–D69 (Queen's Gambit) → "D"
+  //   E00–E99 (Indian) → "E"
+  // Using just the letter gives the broadest useful grouping.
+  function ecoFamily(eco: string): string {
+    return eco.charAt(0);
+  }
+
+  for (const game of games) {
+    const isWhite = game.white.username.toLowerCase() === lc;
+    const color: "white" | "black" = isWhite ? "white" : "black";
+    const playerResult = isWhite ? game.white.result : game.black.result;
+    const won = playerResult === "win";
+    const drew = ["agreed", "repetition", "stalemate", "insufficient", "50move", "timevsinsufficient"].includes(playerResult);
+    const lost = !won && !drew;
+
+    const opening = classifyOpening(game.pgn);
+    const family = ecoFamily(opening.eco);
+    const key = `${family}|${color}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, { eco: opening.eco, name: opening.name, color, goodTokens: [], badTokens: [] });
+    }
+    const group = groups.get(key)!;
+    // Keep the most specific (longest) opening name for display
+    if (opening.name.length > group.name.length) {
+      group.eco = opening.eco;
+      group.name = opening.name;
+    }
+    const tokens = tokenizePgn(game.pgn);
+    if (tokens.length < 4) continue; // skip very short games
+    if (won || drew) group.goodTokens.push(tokens);
+    else if (lost) group.badTokens.push(tokens);
+  }
+
+  const results: ProblemLine[] = [];
+
+  for (const [, group] of Array.from(groups.entries())) {
+    const totalGames = group.goodTokens.length + group.badTokens.length;
+    if (totalGames < 3 || group.badTokens.length < 2) continue;
+
+    const lossRate = group.badTokens.length / totalGames;
+    if (lossRate < 0.35) continue; // only show lines with meaningful loss rate
+
+    // Walk half-moves to find the first divergence point
+    let problemHalfMove = -1;
+    let problemMove = "";
+    let betterMove: string | undefined;
+
+    for (let i = 0; i < maxDepth; i++) {
+      const [badMove, badCount] = pluralityMove(group.badTokens, i);
+      const [goodMove, goodCount] = pluralityMove(group.goodTokens, i);
+
+      if (!badMove) break;
+
+      // Divergence: bad games go one way, good games go another
+      const hasDivergence = goodMove && goodMove !== badMove && goodCount >= 2 && badCount >= 2;
+      // Or: bad games have a very low success rate at this move (even without good game comparison)
+      const badMoveFreqPct = badCount / group.badTokens.length;
+
+      if (hasDivergence && badMoveFreqPct >= 0.4) {
+        problemHalfMove = i + 1; // 1-indexed
+        problemMove = badMove;
+        betterMove = goodMove;
+        break;
+      }
+    }
+
+    // If no clear divergence found, use the move where bad games most commonly end the opening
+    if (problemHalfMove === -1) {
+      // Find the half-move with the highest variance between bad and good
+      let maxDiff = 0;
+      for (let i = 4; i < maxDepth; i++) {
+        const [badMove, badCount] = pluralityMove(group.badTokens, i);
+        const [goodMove, goodCount] = pluralityMove(group.goodTokens, i);
+        if (!badMove || !goodMove) break;
+        if (badMove !== goodMove) {
+          const diff = (badCount / group.badTokens.length) + (goodCount / Math.max(group.goodTokens.length, 1));
+          if (diff > maxDiff) {
+            maxDiff = diff;
+            problemHalfMove = i + 1;
+            problemMove = badMove;
+            betterMove = goodMove || undefined;
+          }
+        }
+      }
+    }
+
+    if (problemHalfMove === -1 || !problemMove) continue;
+
+    // Build the move string: use the most common bad-game sequence up to the problem move
+    // Use the plurality token at each position from bad games
+    const representativeTokens: string[] = [];
+    for (let i = 0; i < problemHalfMove; i++) {
+      const [move] = pluralityMove(group.badTokens, i);
+      if (!move) break;
+      representativeTokens.push(move);
+    }
+
+    const movesStr = rebuildMoves(representativeTokens, problemHalfMove);
+    if (!movesStr) continue;
+
+    results.push({
+      name: group.name,
+      eco: group.eco,
+      color: group.color,
+      moves: movesStr,
+      problemHalfMove,
+      problemMove,
+      betterMove,
+      gamesCount: totalGames,
+      lossCount: group.badTokens.length,
+      lossRate,
+    });
+  }
+
+  // Sort by (lossRate × lossCount) descending — most impactful problems first
+  return results
+    .sort((a, b) => (b.lossRate * b.lossCount) - (a.lossRate * a.lossCount))
+    .slice(0, maxLines);
+}
+
 /** Build the full prep report */
 export async function buildPrepReport(
   username: string,
@@ -1353,10 +1589,12 @@ export async function buildPrepReport(
   const profile = analyzePlayStyle(games, username);
   const prepLines = generatePrepLines(profile, myColor);
   const insights = generateInsights(profile);
+  const problemLines = extractProblemLines(games, username);
   return {
     opponent: profile,
     prepLines,
     insights,
+    problemLines,
     generatedAt: new Date().toISOString(),
   };
 }
