@@ -5678,3 +5678,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Verified constraint live: SHOW INDEX confirms Non_unique=0 on (opening_id, tag_id)
 - [x] Constraint enforcement tested: duplicate insert correctly rejected with ER_DUP_ENTRY
 - [x] API verified: all 18 openings still return correct tag data
+
+## Add UNIQUE Constraint to line_tag_map — April 27, 2026
+- [x] Updated Drizzle schema: added uniqueIndex("ltm_unique_line_tag") on (line_id, tag_id) in lineTagMap
+- [x] Applied UNIQUE INDEX directly to live database via CREATE UNIQUE INDEX
+- [x] Verified: SHOW INDEX confirms Non_unique=0 on (line_id, tag_id); duplicate insert rejected with ER_DUP_ENTRY

@@ -1628,7 +1628,8 @@ export const lineTagMap = mysqlTable(
   (table) => ({
     tagIdx: index("ltm_tag_id_idx").on(table.tagId),
     lineIdx: index("ltm_line_id_idx").on(table.lineId),
-    tagLineIdx: index("ltm_tag_line_idx").on(table.tagId, table.lineId),
+    /** Prevent duplicate (line, tag) assignments — enforced at DB level */
+    uniqueLineTag: uniqueIndex("ltm_unique_line_tag").on(table.lineId, table.tagId),
   })
 );
 export type LineTagMapRow = typeof lineTagMap.$inferSelect;
