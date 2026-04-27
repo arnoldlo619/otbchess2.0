@@ -357,6 +357,17 @@ export function registerOpeningsPublicRoutes(router: Router) {
       const prevLine = currentIdx > 0 ? siblings[currentIdx - 1] : null;
       const nextLine = currentIdx < siblings.length - 1 ? siblings[currentIdx + 1] : null;
 
+      // Build fallback text for lines missing strategicSummary / hintText
+      // so StudyMode always shows useful coaching content.
+      const side = opening.color === "black" ? "Black" : "White";
+      const fallbackStrategicSummary = line.strategicSummary ||
+        `Study the ${line.title} to understand ${side}'s key ideas and typical plans in the ${opening.name}. ` +
+        `Focus on the move order and the positional goals behind each move.`;
+
+      const firstMainNode = nodes.find((n: { isMainLine: number; moveSan: string | null }) => n.isMainLine === 1 && n.moveSan);
+      const fallbackHintText = line.hintText ||
+        (firstMainNode ? `Think about why ${firstMainNode.moveSan} is played here and what it prepares.` : null);
+
       res.json({
         opening: { id: opening.id, slug: opening.slug, name: opening.name, side: opening.color },
         line: {
@@ -372,8 +383,8 @@ export function registerOpeningsPublicRoutes(router: Router) {
           priority: line.priority,
           mustKnow: line.isMustKnow === 1,
           trapLine: line.isTrap === 1,
-          strategicSummary: line.strategicSummary,
-          hintText: line.hintText,
+          strategicSummary: fallbackStrategicSummary,
+          hintText: fallbackHintText,
           punishmentIdea: line.punishmentIdea,
           lineType: line.lineType,
           tags: lineTags,

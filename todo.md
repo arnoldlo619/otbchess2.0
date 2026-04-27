@@ -5635,3 +5635,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: Merge data.opening, data.nodes, data.navigation into lineData; map strategicSummary → strategicGoal/lineSummary
 - [x] Added fallback defaults for opening and nodes to prevent crashes when API returns unexpected shapes
 - [x] 11 Vitest tests pass, TypeScript 0 errors
+
+## Openings Library Audit — April 27, 2026
+- [x] Ran full database audit: 17 published openings, 103 published lines
+- [x] Found: 43/103 lines missing strategicSummary + hintText (empty coaching panels)
+- [x] Found: 0 lines without nodes, 0 lines with < 5 nodes, 0 openings without lines
+- [x] Fix: Added server-side fallback text generation in openingsPublic.ts for missing strategicSummary/hintText
+- [ ] TODO: Add expert-written strategicSummary + hintText for the 43 lines listed in openings-audit-report.md via Admin panel
