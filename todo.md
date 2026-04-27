@@ -5611,3 +5611,21 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix: added AbortSignal.timeout(8000) to every fetch() call in fetchWithRetryServer and proxyLichess
 - [x] Verified: 10/11 real usernames (Polish_fighter3000, Dolphin_2010, spicycaterpillar, LyonBeast, Parhamov, DenLaz, hikaru, magnuscarlsen, GothamChess, fabianocaruana) return correct rapidElo + blitzElo; sina_movahedi is genuine 404
 - [x] 13 Vitest tests pass, TypeScript 0 errors
+
+## MatchupPrep Redesign — 3-Tab Interface
+- [ ] Rewrite MatchupPrep with 3 tabs: Scout Report, Study Lines, Practice Board
+- [ ] Scout Report: compact opponent profile, weakness ranking, game plan summary
+- [ ] Study Lines: ranked prep lines with inline ChessLineViewer (interactive board)
+- [ ] Practice Board: wire in ChessPracticeBoard (SRS quiz with real chessboard)
+- [ ] Remove fluff: excessive badges, tags, filter categories
+- [ ] Clear 1-2-3 flow: Scout → Study → Practice
+- [ ] TypeScript 0 errors, Vitest tests, save checkpoint
+
+## MatchupPrep Redesign — 3-Tab Interface
+- [x] Rewrite MatchupPrep.tsx from 2041 lines to clean 3-tab design (Scout Report, Study Lines, Practice Board)
+- [x] Scout Report: Exploitable Weaknesses (ranked), Your Game Plan, Opening Tendencies, How Games End
+- [x] Study Lines: ChessLineViewer with interactive board, move list, rationale, Practice this line button
+- [x] Practice Board: ChessPracticeBoard fully wired in with drag-and-drop, SRS quiz, hints, session score
+- [x] Fixed win rate display (0-1 → percentage), double 1. prefix in game plan, ChessLineViewer layout overlap
+- [x] Removed old 4-filter segmented control, flashcard PracticeMode, excessive badges/tags
+- [x] 27 Vitest tests pass, TypeScript 0 errors

@@ -368,15 +368,15 @@ export function generateMatchupSummary(
   if (repertoire.expectedColor === "white") {
     if (opponentProfile.blackOpenings.length > 0) {
       const top = opponentProfile.blackOpenings[0];
-      likelyBattle = `Expect the ${top.name} (${top.count} games, ${top.winRate}% win rate as Black).`;
+      likelyBattle = `Expect the ${top.name} (${top.count} games, ${Math.round(top.winRate * 100)}% win rate as Black).`;
     }
   } else if (repertoire.expectedColor === "black") {
     if (opponentProfile.firstMoveAsWhite.length > 0) {
       const top = opponentProfile.firstMoveAsWhite[0];
-      likelyBattle = `Opponent plays 1.${top.move} in ${top.pct}% of White games — prepare your ${
-        top.move === "e4"
+      likelyBattle = `Opponent plays ${top.move} in ${top.pct}% of White games — prepare your ${
+        (top.move === "e4" || top.move === "1.e4")
           ? (repertoire.blackVsE4 ?? "response to 1.e4")
-          : top.move === "d4"
+          : (top.move === "d4" || top.move === "1.d4")
           ? (repertoire.blackVsD4 ?? "response to 1.d4")
           : "response"
       }.`;
@@ -386,7 +386,7 @@ export function generateMatchupSummary(
     if (opponentProfile.firstMoveAsWhite.length > 0 && opponentProfile.blackOpenings.length > 0) {
       const topW = opponentProfile.firstMoveAsWhite[0];
       const topB = opponentProfile.blackOpenings[0];
-      likelyBattle = `As White: 1.${topW.move} (${topW.pct}%). As Black: ${topB.name} (${topB.count} games).`;
+      likelyBattle = `As White: ${topW.move} (${topW.pct}%). As Black: ${topB.name} (${topB.count} games).`;
     }
   }
 
@@ -405,10 +405,10 @@ export function generateMatchupSummary(
   // Color advice
   let colorAdvice: string | null = null;
   if (opponentProfile.asWhite.games > 5 && opponentProfile.asBlack.games > 5) {
-    if (opponentProfile.asWhite.winRate > opponentProfile.asBlack.winRate + 10) {
-      colorAdvice = `Opponent is stronger as White (${opponentProfile.asWhite.winRate}% vs ${opponentProfile.asBlack.winRate}%) — if you have Black, be extra prepared.`;
-    } else if (opponentProfile.asBlack.winRate > opponentProfile.asWhite.winRate + 10) {
-      colorAdvice = `Opponent is stronger as Black (${opponentProfile.asBlack.winRate}% vs ${opponentProfile.asWhite.winRate}%) — if you have White, be extra prepared.`;
+    if (opponentProfile.asWhite.winRate > opponentProfile.asBlack.winRate + 0.10) {
+      colorAdvice = `Opponent is stronger as White (${Math.round(opponentProfile.asWhite.winRate * 100)}% vs ${Math.round(opponentProfile.asBlack.winRate * 100)}%) — if you have Black, be extra prepared.`;
+    } else if (opponentProfile.asBlack.winRate > opponentProfile.asWhite.winRate + 0.10) {
+      colorAdvice = `Opponent is stronger as Black (${Math.round(opponentProfile.asBlack.winRate * 100)}% vs ${Math.round(opponentProfile.asWhite.winRate * 100)}%) — if you have White, be extra prepared.`;
     }
   }
 

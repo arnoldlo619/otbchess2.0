@@ -1,14 +1,10 @@
 /**
  * Matchup Prep Page — /prep/:username
  *
- * Phase 4: Opponent Prep Workspace
- * - Guided study flow: Scout → Key Lines → Practice
- * - Opponent snapshot hero with 3 key prep signals
- * - Key Lines with Must Know / Likely / Useful priority tiers
- * - Memorization cues and "why this matters" context
- * - Flashcard-style Practice mode (one line at a time)
- * - "What to study next" nudge at bottom of each tab
- * - Apple-like minimalist design: disciplined whitespace, quiet secondary data
+ * Redesigned 3-tab interface: Scout Report → Study Lines → Practice Board
+ * - Scout Report: opponent profile, top weaknesses, game plan summary
+ * - Study Lines: ranked prep lines with inline ChessLineViewer (interactive board)
+ * - Practice Board: ChessPracticeBoard (SRS quiz with real chessboard)
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
@@ -20,12 +16,10 @@ import {
   TrendingUp, Eye, Loader2,
   CircleDot, RefreshCw, ChevronRight, Trophy,
   Activity, Bookmark, BookmarkCheck,
-  Trash2, ChevronLeft, Check, RotateCcw,
-  Zap, AlertCircle, Info, Crosshair, Flame, Dumbbell
+  Trash2, AlertCircle, Crosshair, Flame, Dumbbell,
 } from "lucide-react";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
-import { CoachInsightCard } from "../components/CoachInsightCard";
 import {
   UserRepertoire,
   loadUserRepertoire,
@@ -33,14 +27,6 @@ import {
   generateMatchupSummary,
   type EnrichedPrepLine,
 } from "../lib/userRepertoire";
-import {
-  type InsightContext as _InsightContext,
-  type QuotaState,
-  type CoachInsight as _CoachInsight,
-  getQuotaState,
-  getSavedInsights as _getSavedInsights,
-  getInsightsForOpponent,
-} from "../lib/coachInsight";
 import {
   getRecentlyScouted,
   addRecentlyScouted,
@@ -54,6 +40,7 @@ import {
 import { authFetch } from "@/lib/apiFetch";
 import { NavLogo } from "@/components/NavLogo";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface OpeningStat {
@@ -80,9 +67,7 @@ interface PlayStyleProfile {
   endgameProfile: { checkmates: number; resignations: number; timeouts: number; draws: number; total: number };
   firstMoveAsWhite: { move: string; count: number; pct: number }[];
   avgGameLength: number;
-  /** Dominant time control (most games played in) */
   dominantTimeControl?: "rapid" | "blitz" | "bullet" | "mixed";
-  /** Per-TC game counts and win rates */
   timeControlSplit?: {
     rapid: { games: number; winRate: number };
     blitz: { games: number; winRate: number };
@@ -119,50 +104,9 @@ interface SavedReportMeta {
   savedAt: string;
 }
 
-// Priority tier derived from confidence
-type Priority = "must-know" | "likely" | "useful";
-
-function getPriority(confidence: PrepLine["confidence"]): Priority {
-  if (confidence === "high") return "must-know";
-  if (confidence === "medium") return "likely";
-  return "useful";
-}
-
-const PRIORITY_CONFIG: Record<Priority, {
-  label: string;
-  shortLabel: string;
-  darkBg: string;
-  lightBg: string;
-  dot: string;
-  order: number;
-}> = {
-  "must-know": {
-    label: "Must Know",
-    shortLabel: "Must Know",
-    darkBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-    lightBg: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    dot: "bg-emerald-500",
-    order: 0,
-  },
-  "likely": {
-    label: "Likely",
-    shortLabel: "Likely",
-    darkBg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-    lightBg: "bg-amber-50 border-amber-200 text-amber-700",
-    dot: "bg-amber-500",
-    order: 1,
-  },
-  "useful": {
-    label: "Useful",
-    shortLabel: "Useful",
-    darkBg: "bg-white/05 border-white/10 text-white/35",
-    lightBg: "bg-gray-50 border-gray-200 text-gray-400",
-    dot: "bg-gray-400",
-    order: 2,
-  },
-};
-
 // ── Design tokens ─────────────────────────────────────────────────────────────
+
+type Tokens = ReturnType<typeof useDesignTokens>;
 
 function useDesignTokens(isDark: boolean) {
   return {
@@ -185,8 +129,6 @@ function useDesignTokens(isDark: boolean) {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-
-type LineFilter = "all" | "main" | "surprise" | "must-know";
 
 export default function MatchupPrep() {
   const params = useParams<{ username?: string }>();
@@ -211,16 +153,13 @@ export default function MatchupPrep() {
   const [loadingSaved, setLoadingSaved] = useState(false);
 
   // Repertoire state (persisted in localStorage)
-  const [repertoire, _setRepertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
-
-  // Key Lines filter
-  const [lineFilter, setLineFilter] = useState<LineFilter>("all");
+  const [repertoire] = useState<UserRepertoire>(() => loadUserRepertoire());
 
   // Time-control filter for prep report
   type TcFilter = "all" | "rapid" | "blitz";
   const [tcFilter, setTcFilter] = useState<TcFilter>("all");
 
-  // Enriched prep lines with collision scores (recomputed when report or repertoire changes)
+  // Enriched prep lines with collision scores
   const enrichedLines = useMemo<EnrichedPrepLine[]>(() => {
     if (!report) return [];
     return enrichPrepLines(report.prepLines, repertoire, {
@@ -231,16 +170,7 @@ export default function MatchupPrep() {
     });
   }, [report, repertoire]);
 
-  // Filtered lines based on active filter
-  const filteredLines = useMemo<EnrichedPrepLine[]>(() => {
-    if (lineFilter === "all") return enrichedLines;
-    if (lineFilter === "main") return enrichedLines.filter(l => l.lineType === "main" || !l.lineType);
-    if (lineFilter === "surprise") return enrichedLines.filter(l => l.lineType === "surprise");
-    if (lineFilter === "must-know") return enrichedLines.filter(l => l.confidence === "high");
-    return enrichedLines;
-  }, [enrichedLines, lineFilter]);
-
-  // Strategic matchup summary (recomputed when enrichedLines change)
+  // Strategic matchup summary
   const matchupSummary = useMemo(() => {
     if (!report || enrichedLines.length === 0) return null;
     return generateMatchupSummary(repertoire, {
@@ -253,13 +183,7 @@ export default function MatchupPrep() {
     }, enrichedLines);
   }, [report, repertoire, enrichedLines]);
 
-  // Coach insight quota state
-  const [quota, setQuota] = useState<QuotaState>(() => getQuotaState("free"));
-  const refreshQuota = useCallback(() => {
-    setQuota(getQuotaState("free"));
-  }, []);
-
-  // Opponent profile (avatar, title, country) — fetched when report is loaded
+  // Opponent profile (avatar, title, country)
   const { profile: opponentProfile } = useOpponentProfile(
     report ? report.opponent.username : null
   );
@@ -267,26 +191,8 @@ export default function MatchupPrep() {
   // Recently scouted chips
   const [recentlyScouted, setRecentlyScouted] = useState<string[]>(() => getRecentlyScouted());
 
-  // "Practice this line" — jump from Key Lines to Practice tab
+  // "Practice this line" — jump from Study Lines to Practice tab
   const [practiceLineIndex, setPracticeLineIndex] = useState<number | undefined>(undefined);
-
-  // Practice mode state
-  const [practiceIndex, setPracticeIndex] = useState(0);
-  const [_practiceRevealed, setPracticeRevealed] = useState(false);
-  const [practiceCompleted, setPracticeCompleted] = useState<Set<number>>(new Set());
-  const [practiceQueue, setPracticeQueue] = useState<number[]>([]);
-
-  // Re-sort practice queue by collision score when enrichedLines change (repertoire updated)
-  useEffect(() => {
-    if (enrichedLines.length === 0) return;
-    const sorted = enrichedLines
-      .map((_, i) => i)
-      .sort((a, b) => enrichedLines[b].collisionScore - enrichedLines[a].collisionScore);
-    setPracticeQueue(sorted);
-    setPracticeIndex(0);
-    setPracticeRevealed(false);
-    setPracticeCompleted(new Set());
-  }, [enrichedLines]);
 
   useEffect(() => {
     if (params.username) {
@@ -328,15 +234,6 @@ export default function MatchupPrep() {
       // Persist to recently scouted list
       const updated = addRecentlyScouted(username.trim());
       setRecentlyScouted(updated);
-      // Initialize practice queue sorted by priority (will be re-sorted by collision after enrichment)
-      const sorted = data.prepLines
-        .map((_, i) => i)
-        .sort((a, b) => PRIORITY_CONFIG[getPriority(data.prepLines[a].confidence)].order
-                      - PRIORITY_CONFIG[getPriority(data.prepLines[b].confidence)].order);
-      setPracticeQueue(sorted);
-      setPracticeIndex(0);
-      setPracticeRevealed(false);
-      setPracticeCompleted(new Set());
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to fetch prep report");
     } finally {
@@ -414,110 +311,64 @@ export default function MatchupPrep() {
     fetchReport(u);
   }
 
-  // Practice mode helpers
-  function practiceNext() {
-    setPracticeRevealed(false);
-    if (practiceIndex < practiceQueue.length - 1) {
-      setPracticeIndex(i => i + 1);
-    }
-  }
-  function _practicePrev() {
-    setPracticeRevealed(false);
-    if (practiceIndex > 0) {
-      setPracticeIndex(i => i - 1);
-    }
-  }
-  function _markCompleted(idx: number) {
-    setPracticeCompleted(prev => new Set(Array.from(prev).concat(idx)));
-    practiceNext();
-  }
-  function _resetPractice() {
-    setPracticeCompleted(new Set());
-    setPracticeIndex(0);
-    setPracticeRevealed(false);
-  }
-
-  const tabs: { id: Tab; label: string; step: string }[] = [
-    { id: "scout",    label: "Scout",     step: "1" },
-    { id: "lines",    label: "Key Lines", step: "2" },
-    { id: "practice", label: "Practice",  step: "3" },
-  ];
-
-  // Derive 3 key prep signals from the report
-  function getKeySignals(r: PrepReport): { icon: React.ReactNode; label: string; value: string; highlight?: boolean }[] {
-    const signals: { icon: React.ReactNode; label: string; value: string; highlight?: boolean }[] = [];
+  // ── Derive top weaknesses from opponent data ──
+  function getWeaknesses(r: PrepReport): { label: string; detail: string; severity: "high" | "medium" }[] {
+    const weaknesses: { label: string; detail: string; severity: "high" | "medium" }[] = [];
     const opp = r.opponent;
 
-    // Signal 1: Dominant color tendency
-    const whiteDiff = opp.asWhite.winRate - opp.asBlack.winRate;
-    if (Math.abs(whiteDiff) >= 8) {
-      signals.push({
-        icon: <CircleDot className="w-4 h-4" />,
-        label: whiteDiff > 0 ? "Stronger as White" : "Stronger as Black",
-        value: whiteDiff > 0
-          ? `${opp.asWhite.winRate}% vs ${opp.asBlack.winRate}%`
-          : `${opp.asBlack.winRate}% vs ${opp.asWhite.winRate}%`,
-        highlight: true,
-      });
-    } else {
-      signals.push({
-        icon: <CircleDot className="w-4 h-4" />,
-        label: "Balanced both sides",
-        value: `W ${opp.asWhite.winRate}% · B ${opp.asBlack.winRate}%`,
-      });
+    // Color imbalance
+    const whiteWR = Math.round(opp.asWhite.winRate * 100);
+    const blackWR = Math.round(opp.asBlack.winRate * 100);
+    const whiteDiff = whiteWR - blackWR;
+    if (whiteDiff >= 12) {
+      weaknesses.push({ label: "Weak as Black", detail: `Only ${blackWR}% win rate (vs ${whiteWR}% as White)`, severity: "high" });
+    } else if (whiteDiff <= -12) {
+      weaknesses.push({ label: "Weak as White", detail: `Only ${whiteWR}% win rate (vs ${blackWR}% as Black)`, severity: "high" });
     }
 
-    // Signal 2: Game length tendency
-    if (opp.avgGameLength <= 30) {
-      signals.push({
-        icon: <Clock className="w-4 h-4" />,
-        label: "Plays short games",
-        value: `Avg ${opp.avgGameLength} moves`,
-        highlight: true,
-      });
-    } else if (opp.avgGameLength >= 50) {
-      signals.push({
-        icon: <Clock className="w-4 h-4" />,
-        label: "Plays long games",
-        value: `Avg ${opp.avgGameLength} moves`,
-      });
-    } else {
-      signals.push({
-        icon: <Clock className="w-4 h-4" />,
-        label: "Medium game length",
-        value: `Avg ${opp.avgGameLength} moves`,
-      });
-    }
-
-    // Signal 3: Endgame tendency
+    // Endgame tendencies
     const ep = opp.endgameProfile;
     if (ep.total > 0) {
       const resignPct = Math.round((ep.resignations / ep.total) * 100);
-      const matePct = Math.round((ep.checkmates / ep.total) * 100);
+      const timeoutPct = Math.round((ep.timeouts / ep.total) * 100);
       if (resignPct >= 40) {
-        signals.push({
-          icon: <Shield className="w-4 h-4" />,
-          label: "Resigns often",
-          value: `${resignPct}% of losses`,
-          highlight: resignPct >= 55,
-        });
-      } else if (matePct >= 20) {
-        signals.push({
-          icon: <Crown className="w-4 h-4" />,
-          label: "Fights to checkmate",
-          value: `${matePct}% checkmates`,
-        });
-      } else {
-        signals.push({
-          icon: <Activity className="w-4 h-4" />,
-          label: "Draw tendency",
-          value: `${Math.round((ep.draws / ep.total) * 100)}% draws`,
-        });
+        weaknesses.push({ label: "Resigns under pressure", detail: `${resignPct}% of losses are resignations — apply pressure early`, severity: "high" });
+      }
+      if (timeoutPct >= 25) {
+        weaknesses.push({ label: "Time trouble prone", detail: `${timeoutPct}% of losses are timeouts — play complex positions`, severity: "medium" });
       }
     }
 
-    return signals.slice(0, 3);
+    // Short game tendency
+    if (opp.avgGameLength <= 28) {
+      weaknesses.push({ label: "Plays too fast", detail: `Avg ${opp.avgGameLength} moves — drag them into longer games`, severity: "medium" });
+    }
+
+    // Low win rate openings (as White)
+    const weakWhiteOpening = opp.whiteOpenings.find(o => o.winRate < 0.40 && o.count >= 3);
+    if (weakWhiteOpening) {
+      weaknesses.push({ label: `Struggles in ${weakWhiteOpening.name}`, detail: `${Math.round(weakWhiteOpening.winRate * 100)}% win rate over ${weakWhiteOpening.count} games as White`, severity: "medium" });
+    }
+
+    // Low win rate openings (as Black)
+    const weakBlackOpening = opp.blackOpenings.find(o => o.winRate < 0.40 && o.count >= 3);
+    if (weakBlackOpening) {
+      weaknesses.push({ label: `Struggles in ${weakBlackOpening.name}`, detail: `${Math.round(weakBlackOpening.winRate * 100)}% win rate over ${weakBlackOpening.count} games as Black`, severity: "medium" });
+    }
+
+    // Overall low win rate
+    if (opp.overall.winRate < 0.45 && weaknesses.length < 2) {
+      weaknesses.push({ label: "Below 50% overall", detail: `${Math.round(opp.overall.winRate * 100)}% win rate across ${opp.gamesAnalyzed} games`, severity: "medium" });
+    }
+
+    return weaknesses.slice(0, 4);
   }
+
+  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: "scout",    label: "Scout Report", icon: <Eye className="w-3.5 h-3.5" /> },
+    { id: "lines",    label: "Study Lines",  icon: <Target className="w-3.5 h-3.5" /> },
+    { id: "practice", label: "Practice",     icon: <Dumbbell className="w-3.5 h-3.5" /> },
+  ];
 
   return (
     <div className={`min-h-screen ${t.page}`}>
@@ -531,8 +382,6 @@ export default function MatchupPrep() {
         </div>
         {/* Search row */}
         <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2 flex items-center gap-2 sm:gap-3">
-
-          {/* Search bar */}
           <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2">
             <div className="relative flex-1">
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${isDark ? "text-white/70" : t.textTertiary}`} />
@@ -564,7 +413,6 @@ export default function MatchupPrep() {
           {/* Action buttons — only when report is loaded */}
           {report && (
             <div className="flex items-center gap-1 shrink-0">
-              {/* Refresh */}
               <button
                 onClick={() => fetchReport(report.opponent.username, true)}
                 disabled={refreshing}
@@ -575,8 +423,6 @@ export default function MatchupPrep() {
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
               </button>
-
-              {/* Save — only for logged-in users */}
               {user && (
                 <button
                   onClick={savedId ? () => setShowSavedPanel(p => !p) : handleSaveReport}
@@ -596,7 +442,7 @@ export default function MatchupPrep() {
         </div>
 
         {/* ── Time-Control Filter Row ── */}
-        <div className={`max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2`}>
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 pb-2.5 flex items-center gap-2">
           <span className={`text-[10px] font-semibold uppercase tracking-wider shrink-0 ${t.textTertiary}`}>Games</span>
           <div className={`flex items-center gap-1 p-0.5 rounded-lg ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
             {(["all", "rapid", "blitz"] as const).map((tc) => (
@@ -606,32 +452,19 @@ export default function MatchupPrep() {
                 onClick={() => {
                   if (tc === tcFilter) return;
                   setTcFilter(tc);
-                  if (report) {
-                    // Re-fetch with the new TC filter
-                    fetchReport(report.opponent.username, false, tc);
-                  } else if (searchInput.trim()) {
-                    fetchReport(searchInput.trim(), false, tc);
-                  }
+                  if (report) fetchReport(report.opponent.username, false, tc);
+                  else if (searchInput.trim()) fetchReport(searchInput.trim(), false, tc);
                 }}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all capitalize ${
                   tcFilter === tc
-                    ? isDark
-                      ? "bg-[#3D6B47] text-white shadow-sm"
-                      : "bg-[#3D6B47] text-white shadow-sm"
-                    : isDark
-                      ? "text-white/40 hover:text-white/70"
-                      : "text-gray-400 hover:text-gray-700"
+                    ? "bg-[#3D6B47] text-white shadow-sm"
+                    : isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-700"
                 }`}
               >
                 {tc === "all" ? "All" : tc === "rapid" ? "Rapid" : "Blitz"}
               </button>
             ))}
           </div>
-          {report && (
-            <span className={`text-[10px] ${t.textTertiary} ml-1`}>
-              {tcFilter === "all" ? "Rapid + Blitz" : tcFilter === "rapid" ? "Rapid only" : "Blitz only"}
-            </span>
-          )}
         </div>
       </div>
 
@@ -640,63 +473,16 @@ export default function MatchupPrep() {
 
         {/* ── Saved Reports Panel ── */}
         {showSavedPanel && user && (
-          <div className={`${t.card} p-4 sm:p-5`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <BookmarkCheck className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Saved Reports</h3>
-              </div>
-              <button
-                onClick={() => setShowSavedPanel(false)}
-                className={`text-xs ${t.textTertiary} hover:${t.textSecondary} transition-colors`}
-              >
-                Close
-              </button>
-            </div>
-            {loadingSaved ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className={`w-5 h-5 animate-spin ${t.textTertiary}`} />
-              </div>
-            ) : savedReports.length === 0 ? (
-              <p className={`text-sm text-center py-4 ${t.textTertiary}`}>No saved reports yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {savedReports.map((r) => (
-                  <div
-                    key={r.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${t.cardSubtle} ${t.rowHover}`}
-                  >
-                    <button
-                      className="flex-1 flex items-center gap-3 text-left min-w-0"
-                      onClick={() => {
-                        navigate(`/prep/${encodeURIComponent(r.opponentUsername)}`);
-                        setShowSavedPanel(false);
-                      }}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/08"}`}>
-                        <Target className="w-4 h-4 text-[#5B9A6A]" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-medium truncate ${t.textPrimary}`}>{r.opponentUsername}</p>
-                        <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${t.textTertiary} mt-0.5`}>
-                          {r.winRate !== null && <span>{r.winRate}% win rate</span>}
-                          {r.gamesAnalyzed !== null && <span>{r.gamesAnalyzed} games</span>}
-                          {r.prepLinesCount !== null && r.prepLinesCount > 0 && <span>{r.prepLinesCount} lines</span>}
-                        </div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSaved(r.id)}
-                      className={`p-1.5 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-red-500/10 text-white/20 hover:text-red-400" : "hover:bg-red-50 text-gray-300 hover:text-red-500"}`}
-                      title="Delete saved report"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <SavedReportsPanel
+            reports={savedReports}
+            loading={loadingSaved}
+            savedId={savedId}
+            onSelect={(u) => { navigate(`/prep/${encodeURIComponent(u)}`); setShowSavedPanel(false); }}
+            onDelete={handleDeleteSaved}
+            onClose={() => setShowSavedPanel(false)}
+            isDark={isDark}
+            t={t}
+          />
         )}
 
         {/* ── Loading State ── */}
@@ -727,122 +513,10 @@ export default function MatchupPrep() {
         {report && !loading && (
           <div className="space-y-4 sm:space-y-5">
 
-            {/* Opponent Snapshot Hero */}
-            <div className={`${t.card} p-5 sm:p-6`}>
-              <div className="flex items-start justify-between gap-4 mb-5">
-                {/* Left: avatar + identity */}
-                <div className="flex items-center gap-3.5 min-w-0">
-                  {/* Avatar */}
-                  <div className={`relative shrink-0 w-14 h-14 rounded-2xl overflow-hidden ${
-                    isDark ? "bg-[#162018] border border-[#2e4a34]/40" : "bg-[#3D6B47]/06 border border-[#3D6B47]/15"
-                  }`}>
-                    {opponentProfile?.avatar ? (
-                      <img
-                        src={`/api/avatar-proxy?url=${encodeURIComponent(opponentProfile.avatar)}`}
-                        alt={report.opponent.username}
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                        aria-hidden="true"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className={`text-xl font-bold ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/40"}`}>
-                          {report.opponent.username.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    {/* Country flag badge */}
-                    {opponentProfile?.countryCode && (
-                      <div className="absolute bottom-0.5 right-0.5 text-[13px] leading-none select-none">
-                        {countryCodeToFlag(opponentProfile.countryCode)}
-                      </div>
-                    )}
-                  </div>
+            {/* ── Compact Opponent Hero ── */}
+            <OpponentHero report={report} opponentProfile={opponentProfile} isDark={isDark} t={t} />
 
-                  {/* Identity text */}
-                  <div className="min-w-0">
-                    <p className={`text-[11px] font-semibold uppercase tracking-widest mb-0.5 ${t.textTertiary}`}>Opponent</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className={`text-xl sm:text-2xl font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                        {report.opponent.username}
-                      </h2>
-                      {/* Title badge (GM / IM / FM etc.) */}
-                      {opponentProfile?.title && (
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
-                          isDark
-                            ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
-                            : "bg-amber-50 border-amber-200 text-amber-700"
-                        }`}>
-                          {opponentProfile.title}
-                        </span>
-                      )}
-                      {/* Dominant TC badge — auto-detects most-played time control */}
-                      {report.opponent.dominantTimeControl && (
-                        <DominantTCBadge
-                          tc={report.opponent.dominantTimeControl}
-                          games={
-                            report.opponent.dominantTimeControl !== "mixed" && report.opponent.timeControlSplit
-                              ? report.opponent.timeControlSplit[report.opponent.dominantTimeControl as "rapid" | "blitz" | "bullet"].games
-                              : undefined
-                          }
-                          isDark={isDark}
-                          onClick={
-                            report.opponent.dominantTimeControl !== "mixed" &&
-                            (report.opponent.dominantTimeControl === "rapid" || report.opponent.dominantTimeControl === "blitz")
-                              ? () => {
-                                  const dominant = report.opponent.dominantTimeControl as "rapid" | "blitz";
-                                  setTcFilter(dominant);
-                                  fetchReport(report.opponent.username, false, dominant);
-                                }
-                              : undefined
-                          }
-                        />
-                      )}
-                    </div>
-                    <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
-                      {opponentProfile?.name && (
-                        <span className="mr-2">{opponentProfile.name}</span>
-                      )}
-                      {report.opponent.gamesAnalyzed} games analyzed
-                      {report._cached && <span className="ml-2 opacity-60">· cached</span>}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Ratings */}
-                <div className="flex flex-col gap-1.5 shrink-0 items-end">
-                  {report.opponent.rating.rapid  && <RatingBadge label="Rapid"  value={report.opponent.rating.rapid}  isDark={isDark} />}
-                  {report.opponent.rating.blitz  && <RatingBadge label="Blitz"  value={report.opponent.rating.blitz}  isDark={isDark} />}
-                  {report.opponent.rating.bullet && <RatingBadge label="Bullet" value={report.opponent.rating.bullet} isDark={isDark} />}
-                </div>
-              </div>
-
-              {/* 3 Key Prep Signals */}
-              <div className={`pt-4 border-t ${t.divider}`}>
-                <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>Key Signals</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {getKeySignals(report).map((sig, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-3 px-3.5 py-3 rounded-xl ${
-                        sig.highlight
-                          ? isDark ? "bg-[#3D6B47]/12 border border-[#3D6B47]/25" : "bg-[#3D6B47]/06 border border-[#3D6B47]/15"
-                          : isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50" : "bg-gray-50/80 border border-gray-200/60"
-                      }`}
-                    >
-                      <span className={sig.highlight ? "text-[#5B9A6A]" : t.textTertiary}>{sig.icon}</span>
-                      <div className="min-w-0">
-                        <p className={`text-xs font-medium truncate ${sig.highlight ? (isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]") : t.textSecondary}`}>{sig.label}</p>
-                        <p className={`text-[11px] truncate ${t.textTertiary}`}>{sig.value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Tab Navigation — step-based */}
+            {/* ── Tab Navigation ── */}
             <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-[#0f1c11] border border-[#1e2e22]/70" : "bg-gray-100/80 border border-gray-200/60"}`}>
               {tabs.map((tab) => (
                 <button
@@ -852,489 +526,53 @@ export default function MatchupPrep() {
                     activeTab === tab.id ? t.tabActive + " border" : t.tabInactive
                   }`}
                 >
-                  <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
-                    activeTab === tab.id
-                      ? isDark ? "bg-[#3D6B47]/30 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                      : isDark ? "bg-white/06 text-white/30" : "bg-gray-300/60 text-gray-400"
-                  }`}>
-                    {tab.step}
-                  </span>
+                  <span className={activeTab === tab.id ? (isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]") : ""}>{tab.icon}</span>
                   <span>{tab.label}</span>
-                  {tab.id === "lines" && report.prepLines.length > 0 && (
+                  {tab.id === "lines" && enrichedLines.length > 0 && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                       activeTab === "lines"
                         ? isDark ? "bg-[#3D6B47]/25 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
                         : isDark ? "bg-white/06 text-white/30" : "bg-gray-300/50 text-gray-400"
                     }`}>
-                      {report.prepLines.length}
-                    </span>
-                  )}
-                  {tab.id === "practice" && practiceCompleted.size > 0 && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-600"
-                    }`}>
-                      {practiceCompleted.size}/{report.prepLines.length}
+                      {enrichedLines.length}
                     </span>
                   )}
                 </button>
               ))}
             </div>
 
-            {/* ── Tab 1: Scout ── */}
+            {/* ── Tab 1: Scout Report ── */}
             {activeTab === "scout" && (
-              <div className="space-y-3 sm:space-y-4">
-
-                {/* ── Section 1: What they play — White + Black side-by-side ── */}
-                <div className={`${t.card} p-4 sm:p-5`}>
-                  <div className="flex items-center gap-2 mb-4">
-                    <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                    <h3 className={`font-semibold text-sm ${t.textPrimary}`}>What They Play</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-
-                    {/* As White */}
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2.5">
-                        <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
-                        <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As White</span>
-                        <span className={`ml-auto text-[11px] font-bold ${
-                          report.opponent.asWhite.winRate >= 55
-                            ? isDark ? "text-emerald-400" : "text-emerald-600"
-                            : t.textTertiary
-                        }`}>{report.opponent.asWhite.winRate}% WR</span>
-                      </div>
-                      {/* First moves */}
-                      {report.opponent.firstMoveAsWhite.length > 0 && (
-                        <div className="flex gap-1 mb-2 flex-wrap">
-                          {report.opponent.firstMoveAsWhite.slice(0, 2).map((fm) => (
-                            <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
-                              isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
-                            }`}>
-                              {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {/* Top openings */}
-                      <div className="space-y-1">
-                        {report.opponent.whiteOpenings.slice(0, 3).map((o, i) => (
-                          <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
-                            <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {o.weaknessScore >= 70 && (
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                  isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"
-                                }`}>High Exploit</span>
-                              )}
-                              {o.weaknessScore >= 40 && o.weaknessScore < 70 && (
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-                                  isDark ? "bg-yellow-500/10 text-yellow-500/70" : "bg-yellow-50 text-yellow-600/80"
-                                }`}>Moderate</span>
-                              )}
-                              <span className={`text-[11px] font-semibold ${
-                                o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-                              }`}>{o.winRate}%</span>
-                            </div>
-                          </div>
-                        ))}
-                        {report.opponent.whiteOpenings.length === 0 && (
-                          <p className={`text-xs ${t.textTertiary}`}>No data</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Divider */}
-                    <div className={`border-l ${t.divider}`} style={{ display: "none" }} />
-
-                    {/* As Black */}
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2.5">
-                        <CircleDot className={`w-3 h-3 fill-current opacity-50 ${t.textTertiary}`} />
-                        <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As Black</span>
-                        <span className={`ml-auto text-[11px] font-bold ${
-                          report.opponent.asBlack.winRate >= 55
-                            ? isDark ? "text-emerald-400" : "text-emerald-600"
-                            : t.textTertiary
-                        }`}>{report.opponent.asBlack.winRate}% WR</span>
-                      </div>
-                      {/* Top openings */}
-                      <div className="space-y-1">
-                        {report.opponent.blackOpenings.slice(0, 3).map((o, i) => (
-                          <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
-                            <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              {o.weaknessScore >= 70 && (
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                                  isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-700"
-                                }`}>High Exploit</span>
-                              )}
-                              {o.weaknessScore >= 40 && o.weaknessScore < 70 && (
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-                                  isDark ? "bg-yellow-500/10 text-yellow-500/70" : "bg-yellow-50 text-yellow-600/80"
-                                }`}>Moderate</span>
-                              )}
-                              <span className={`text-[11px] font-semibold ${
-                                o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-                              }`}>{o.winRate}%</span>
-                            </div>
-                          </div>
-                        ))}
-                        {report.opponent.blackOpenings.length === 0 && (
-                          <p className={`text-xs ${t.textTertiary}`}>No data</p>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* ── Section 2: Suggested Prep Lines (top 3, compact) ── */}
-                {enrichedLines.length > 0 && (
-                  <div className={`${t.card} p-4 sm:p-5`}>
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-2">
-                        <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                        <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Suggested Lines</h3>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab("lines")}
-                        className={`text-xs font-medium transition-colors ${
-                          isDark ? "text-[#5B9A6A] hover:text-[#7BC88A]" : "text-[#3D6B47] hover:text-[#2d5236]"
-                        }`}
-                      >
-                        View all {enrichedLines.length} →
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {enrichedLines.slice(0, 3).map((line, i) => {
-                        const priority = getPriority(line.confidence);
-                        const cfg = PRIORITY_CONFIG[priority];
-                        return (
-                          <div
-                            key={i}
-                            className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
-                              isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/50 hover:bg-[#162018]/80" : "bg-gray-50/80 border border-gray-200/60 hover:bg-gray-100/80"
-                            }`}
-                            onClick={() => setActiveTab("lines")}
-                          >
-                            <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${
-                              isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"
-                            }`}>{i + 1}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                <span className={`text-sm font-semibold truncate ${t.textPrimary}`}>{line.name}</span>
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${
-                                  isDark ? cfg.darkBg : cfg.lightBg
-                                }`}>
-                                  <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
-                                  {cfg.shortLabel}
-                                </span>
-                              </div>
-                              <p className={`text-xs leading-relaxed line-clamp-2 ${t.textTertiary}`}>{line.rationale}</p>
-                            </div>
-                            <ChevronRight className={`w-3.5 h-3.5 shrink-0 mt-1 ${t.textTertiary}`} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Section 3: Prep Summary (Likely Battle + Study First only) ── */}
-                {matchupSummary && (
-                  <div className={`${t.card} p-4 sm:p-5`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Crosshair className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                      <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Summary</h3>
-                    </div>
-                    <div className="space-y-2">
-                      <div className={`flex items-start gap-3 p-3 rounded-xl ${
-                        isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"
-                      }`}>
-                        <Target className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-                        <div className="min-w-0">
-                          <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${
-                            isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"
-                          }`}>Likely Battle</p>
-                          <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.likelyBattle}</p>
-                        </div>
-                      </div>
-                      {matchupSummary.studyFirst && (
-                        <div className={`flex items-start gap-3 p-3 rounded-xl ${
-                          isDark ? "bg-amber-500/08 border border-amber-500/15" : "bg-amber-50/80 border border-amber-200/60"
-                        }`}>
-                          <Flame className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
-                          <div className="min-w-0">
-                            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${
-                              isDark ? "text-amber-400/60" : "text-amber-600/50"
-                            }`}>Study First</p>
-                            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.studyFirst}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Section 4: Coach Insight (collapsed by default) ── */}
-                {report && (
-                  <CoachInsightCard
-                    context={{
-                      opponentUsername: report.opponent.username,
-                      insightType: "matchup_overview",
-                      gamesAnalyzed: report.opponent.gamesAnalyzed,
-                      overallWinRate: report.opponent.overall.winRate,
-                      asWhiteWinRate: report.opponent.asWhite.winRate,
-                      asBlackWinRate: report.opponent.asBlack.winRate,
-                      avgGameLength: report.opponent.avgGameLength,
-                      topWhiteOpenings: report.opponent.whiteOpenings.slice(0, 3).map(o => ({
-                        name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
-                      })),
-                      topBlackOpenings: report.opponent.blackOpenings.slice(0, 3).map(o => ({
-                        name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
-                      })),
-                      firstMoveAsWhite: report.opponent.firstMoveAsWhite.map(m => ({
-                        move: m.move, pct: m.pct,
-                      })),
-                      endgameProfile: {
-                        checkmates: report.opponent.endgameProfile.checkmates,
-                        resignations: report.opponent.endgameProfile.resignations,
-                        timeouts: report.opponent.endgameProfile.timeouts,
-                        total: report.opponent.endgameProfile.total,
-                      },
-                      userRepertoire: repertoire.whiteFirstMove !== null ? {
-                        whiteFirstMove: repertoire.whiteFirstMove,
-                        blackVsE4: repertoire.blackVsE4,
-                        blackVsD4: repertoire.blackVsD4,
-                        expectedColor: repertoire.expectedColor,
-                      } : undefined,
-                      topPrepLines: enrichedLines.slice(0, 3).map(l => ({
-                        name: l.name, moves: l.moves, rationale: l.rationale,
-                        confidence: l.confidence, collisionScore: l.collisionScore,
-                      })),
-                      matchupSummary: matchupSummary ? {
-                        likelyBattle: matchupSummary.likelyBattle,
-                        studyFirst: matchupSummary.studyFirst ?? "",
-                        prepRisk: matchupSummary.prepRisk ?? "",
-                        colorAdvice: matchupSummary.colorAdvice ?? "",
-                      } : undefined,
-                    }}
-                    quota={quota}
-                    onQuotaConsumed={refreshQuota}
-                    existingInsight={
-                      getInsightsForOpponent(report.opponent.username)
-                        .find(i => i.insightType === "matchup_overview") ?? null
-                    }
-                  />
-                )}
-
-              </div>
+              <ScoutReportTab
+                report={report}
+                weaknesses={getWeaknesses(report)}
+                matchupSummary={matchupSummary}
+                enrichedLines={enrichedLines}
+                onViewLines={() => setActiveTab("lines")}
+                isDark={isDark}
+                t={t}
+              />
             )}
 
-            {/* ── Tab 2: Key Lines ── */}
+            {/* ── Tab 2: Study Lines ── */}
             {activeTab === "lines" && (
-              <div className="space-y-4">
-                {enrichedLines.length === 0 ? (
-                  <EmptyState
-                    icon={<Target className="w-6 h-6 text-[#5B9A6A]" />}
-                    title="No key lines generated"
-                    description="Not enough opening data was found to generate preparation lines."
-                    isDark={isDark}
-                    t={t}
-                  />
-                ) : (
-                  <>
-                    {/* Filter segmented control */}
-                    <div className={`flex items-center gap-1 p-1 rounded-xl ${isDark ? "bg-[#0d1a0f]/80 border border-[#1e2e22]/60" : "bg-gray-100/80 border border-gray-200/60"}`}>
-                      {([
-                        { id: "all",       label: "All",        count: enrichedLines.length },
-                        { id: "main",      label: "Main Lines", count: enrichedLines.filter(l => l.lineType === "main" || !l.lineType).length },
-                        { id: "surprise",  label: "Surprises",  count: enrichedLines.filter(l => l.lineType === "surprise").length },
-                        { id: "must-know", label: "Must Know",  count: enrichedLines.filter(l => l.confidence === "high").length },
-                      ] as { id: LineFilter; label: string; count: number }[]).map(({ id, label, count }) => (
-                        <button
-                          key={id}
-                          onClick={() => setLineFilter(id)}
-                          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                            lineFilter === id
-                              ? isDark
-                                ? "bg-[#162018] text-white border border-[#2e4a34]/50 shadow-sm"
-                                : "bg-white text-gray-900 border border-gray-300 shadow-sm"
-                              : isDark
-                                ? "text-white/40 hover:text-white/70"
-                                : "text-gray-400 hover:text-gray-700"
-                          }`}
-                        >
-                          {label}
-                          {count > 0 && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
-                              lineFilter === id
-                                ? isDark ? "bg-[#5B9A6A]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                                : isDark ? "bg-white/08 text-white/40" : "bg-gray-200/80 text-gray-400"
-                            }`}>{count}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Collision sort indicator */}
-                    {enrichedLines.some(l => l.collisionScore > 0) && (
-                      <div className="flex items-center gap-1.5 px-1">
-                        <Crosshair className={`w-3 h-3 ${t.textTertiary}`} />
-                        <span className={`text-xs ${t.textTertiary}`}>Sorted by collision score</span>
-                      </div>
-                    )}
-
-                    {/* Empty filter state */}
-                    {filteredLines.length === 0 && (
-                      <div className={`flex flex-col items-center justify-center py-10 gap-2 rounded-xl ${isDark ? "bg-[#0d1a0f]/40 border border-[#1e2e22]/40" : "bg-gray-50/60 border border-gray-200/50"}`}>
-                        <span className={`text-sm ${t.textSecondary}`}>No lines match this filter</span>
-                        <button onClick={() => setLineFilter("all")} className={`text-xs underline ${t.accent}`}>Show all lines</button>
-                      </div>
-                    )}
-
-                    {/* Interactive chessboard viewers — one per filtered line */}
-                    <div className="space-y-4">
-                      {filteredLines.map((line, i) => (
-                        <div key={i} className="space-y-2">
-                          {/* Priority badge row */}
-                          <div className="flex items-center gap-2 px-1">
-                            <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
-                              {i + 1}
-                            </span>
-                            {line.isTrainFirst && (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
-                                <Flame className="w-2.5 h-2.5" /> Train First
-                              </span>
-                            )}
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${isDark ? PRIORITY_CONFIG[getPriority(line.confidence)].darkBg : PRIORITY_CONFIG[getPriority(line.confidence)].lightBg}`}>
-                              <span className={`w-1 h-1 rounded-full ${PRIORITY_CONFIG[getPriority(line.confidence)].dot}`} />
-                              {PRIORITY_CONFIG[getPriority(line.confidence)].shortLabel}
-                            </span>
-                          </div>
-                          {/* Interactive board */}
-                          <ChessLineViewer
-                            moves={line.moves}
-                            lineName={line.name}
-                            rationale={line.rationale}
-                            eco={line.eco}
-                            isDark={isDark}
-                          />
-                          {/* Practice this line button */}
-                          <button
-                            data-testid={`practice-line-btn-${i}`}
-                            onClick={() => {
-                              // Find the index in the full enrichedLines array (not filtered)
-                              const fullIndex = enrichedLines.findIndex(
-                                (el) => el.name === line.name && el.moves === line.moves
-                              );
-                              setPracticeLineIndex(fullIndex >= 0 ? fullIndex : i);
-                              setActiveTab("practice");
-                            }}
-                            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                              isDark
-                                ? "text-[#5B9A6A] hover:bg-[#5B9A6A]/10 border border-[#5B9A6A]/20 hover:border-[#5B9A6A]/40"
-                                : "text-[#3D6B47] hover:bg-[#3D6B47]/08 border border-[#3D6B47]/15 hover:border-[#3D6B47]/30"
-                            }`}
-                          >
-                            <Dumbbell className="w-3 h-3" />
-                            Practice this line
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Coach Insight for top Train First line */}
-                    {report && enrichedLines.length > 0 && (() => {
-                      const topLine = enrichedLines[0];
-                      return (
-                        <CoachInsightCard
-                          context={{
-                            opponentUsername: report.opponent.username,
-                            insightType: "key_line",
-                            gamesAnalyzed: report.opponent.gamesAnalyzed,
-                            overallWinRate: report.opponent.overall.winRate,
-                            asWhiteWinRate: report.opponent.asWhite.winRate,
-                            asBlackWinRate: report.opponent.asBlack.winRate,
-                            avgGameLength: report.opponent.avgGameLength,
-                            topWhiteOpenings: report.opponent.whiteOpenings.slice(0, 2).map(o => ({
-                              name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
-                            })),
-                            topBlackOpenings: report.opponent.blackOpenings.slice(0, 2).map(o => ({
-                              name: o.name, count: o.count, winRate: o.winRate, moves: o.moves ?? "",
-                            })),
-                            firstMoveAsWhite: report.opponent.firstMoveAsWhite.map(m => ({ move: m.move, pct: m.pct })),
-                            endgameProfile: {
-                              checkmates: report.opponent.endgameProfile.checkmates,
-                              resignations: report.opponent.endgameProfile.resignations,
-                              timeouts: report.opponent.endgameProfile.timeouts,
-                              total: report.opponent.endgameProfile.total,
-                            },
-                            userRepertoire: repertoire.whiteFirstMove !== null ? {
-                              whiteFirstMove: repertoire.whiteFirstMove,
-                              blackVsE4: repertoire.blackVsE4,
-                              blackVsD4: repertoire.blackVsD4,
-                              expectedColor: repertoire.expectedColor,
-                            } : undefined,
-                            focusLine: { name: topLine.name, moves: topLine.moves, rationale: topLine.rationale },
-                          }}
-                          quota={quota}
-                          onQuotaConsumed={refreshQuota}
-                          existingInsight={
-                            getInsightsForOpponent(report.opponent.username)
-                              .find(i => i.insightType === "key_line") ?? null
-                          }
-                        />
-                      );
-                    })()}
-
-                    {/* Next step nudge */}
-                    <NextStepNudge
-                      label="Ready to practice these lines?"
-                      action="Start Practice"
-                      onClick={() => setActiveTab("practice")}
-                      isDark={isDark}
-                      t={t}
-                    />
-                  </>
-                )}
-              </div>
+              <StudyLinesTab
+                enrichedLines={enrichedLines}
+                onPracticeLine={(idx) => { setPracticeLineIndex(idx); setActiveTab("practice"); }}
+                onStartPractice={() => setActiveTab("practice")}
+                isDark={isDark}
+                t={t}
+              />
             )}
 
-            {/* ── Tab 3: Practice ── */}
+            {/* ── Tab 3: Practice Board ── */}
             {activeTab === "practice" && (
-              <div className="space-y-4">
-                {enrichedLines.length === 0 ? (
-                  <EmptyState
-                    icon={<Trophy className="w-6 h-6 text-[#5B9A6A]" />}
-                    title="No lines to practice"
-                    description="Generate prep lines first by running a report on an opponent with enough game history."
-                    isDark={isDark}
-                    t={t}
-                  />
-                ) : (
-                  <>
-                    {/* Intro strip */}
-                    <div className={`flex items-center gap-3 px-1`}>
-                      <span className={`text-xs ${t.textSecondary}`}>
-                        Find the correct move for each position. The computer plays the opponent's moves automatically.
-                      </span>
-                    </div>
-                    {/* Interactive SRS practice board */}
-                    <ChessPracticeBoard
-                      lines={enrichedLines.map((l, i) => ({
-                        id: String(i),
-                        name: l.name,
-                        moves: l.moves,
-                        eco: l.eco,
-                        rationale: l.rationale,
-                      }))}
-                      isDark={isDark}
-                      initialLineIndex={practiceLineIndex}
-                    />
-                  </>
-                )}
-              </div>
+              <PracticeBoardTab
+                enrichedLines={enrichedLines}
+                practiceLineIndex={practiceLineIndex}
+                isDark={isDark}
+                t={t}
+              />
             )}
 
           </div>
@@ -1344,15 +582,8 @@ export default function MatchupPrep() {
         {!report && !loading && !error && recentlyScouted.length > 0 && (
           <RecentlyScoutedChips
             usernames={recentlyScouted}
-            onSelect={(u) => {
-              setSearchInput(u);
-              navigate(`/prep/${encodeURIComponent(u)}`);
-              fetchReport(u);
-            }}
-            onRemove={(u) => {
-              const updated = removeRecentlyScouted(u);
-              setRecentlyScouted(updated);
-            }}
+            onSelect={(u) => { setSearchInput(u); navigate(`/prep/${encodeURIComponent(u)}`); fetchReport(u); }}
+            onRemove={(u) => { const updated = removeRecentlyScouted(u); setRecentlyScouted(updated); }}
             isDark={isDark}
             t={t}
           />
@@ -1373,13 +604,13 @@ export default function MatchupPrep() {
                 Prepare for your next match
               </h3>
               <p className={`text-sm ${t.textSecondary} leading-relaxed`}>
-                Enter your opponent's chess.com username to scout their tendencies, study key lines, and practice before match day.
+                Enter your opponent's chess.com username to scout their weaknesses, study counter-lines, and drill them on a real board.
               </p>
             </div>
-            <div className={`flex flex-wrap justify-center gap-4 text-xs ${t.textTertiary}`}>
+            <div className={`flex gap-6 text-xs ${t.textTertiary}`}>
               <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> Scout</span>
-              <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Key Lines</span>
-              <span className="flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Practice</span>
+              <span className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Study</span>
+              <span className="flex items-center gap-1.5"><Dumbbell className="w-3.5 h-3.5" /> Practice</span>
             </div>
           </div>
         )}
@@ -1388,577 +619,489 @@ export default function MatchupPrep() {
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Sub-components ──
+// ══════════════════════════════════════════════════════════════════════════════
 
-type Tokens = ReturnType<typeof useDesignTokens>;
+// ── Opponent Hero ──────────────────────────────────────────────────────────────
 
-function RatingBadge({ label, value, isDark }: { label: string; value: number; isDark: boolean }) {
-  return (
-    <div className={`px-2.5 py-1.5 rounded-xl text-center min-w-[50px] ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/70" : "bg-gray-50 border border-gray-200"}`}>
-      <div className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? "text-white/25" : "text-gray-400"}`}>{label}</div>
-      <div className={`text-sm font-bold mt-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
-    </div>
-  );
-}
-
-/** Maps a dominant TC value to a display config */
-function getDominantTCConfig(tc: "rapid" | "blitz" | "bullet" | "mixed") {
-  switch (tc) {
-    case "rapid":  return { label: "Rapid",  icon: "\u23F1", colorDark: "bg-sky-500/10 border-sky-500/25 text-sky-400",    colorLight: "bg-sky-50 border-sky-200 text-sky-700" };
-    case "blitz":  return { label: "Blitz",  icon: "\u26A1", colorDark: "bg-orange-500/10 border-orange-500/25 text-orange-400", colorLight: "bg-orange-50 border-orange-200 text-orange-700" };
-    case "bullet": return { label: "Bullet", icon: "\u2022", colorDark: "bg-red-500/10 border-red-500/25 text-red-400",    colorLight: "bg-red-50 border-red-200 text-red-700" };
-    case "mixed":  return { label: "Mixed",  icon: "\u223C", colorDark: "bg-white/06 border-white/10 text-white/40",        colorLight: "bg-gray-100 border-gray-200 text-gray-500" };
-  }
-}
-
-function DominantTCBadge({
-  tc, games, isDark, onClick
+function OpponentHero({
+  report, opponentProfile, isDark, t
 }: {
-  tc: "rapid" | "blitz" | "bullet" | "mixed";
-  games?: number;
-  isDark: boolean;
-  onClick?: () => void;
-}) {
-  const cfg = getDominantTCConfig(tc);
-  const colorCls = isDark ? cfg.colorDark : cfg.colorLight;
-  const isClickable = onClick && tc !== "mixed";
-  return (
-    <span
-      data-testid="dominant-tc-badge"
-      onClick={isClickable ? onClick : undefined}
-      role={isClickable ? "button" : undefined}
-      title={isClickable ? `Filter by ${cfg.label}` : undefined}
-      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
-        colorCls
-      } ${
-        isClickable ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
-      }`}
-    >
-      <span aria-hidden="true">{cfg.icon}</span>
-      <span>{cfg.label}</span>
-      {games !== undefined && games > 0 && (
-        <span className="opacity-60 font-medium">·\u00a0{games}g</span>
-      )}
-    </span>
-  );
-}
-
-function _ColorStatCard({
-  title, icon, wins, draws, losses, winRate, games, isDark, t
-}: {
-  title: string; icon: React.ReactNode;
-  wins: number; draws: number; losses: number; winRate: number; games?: number;
-  isDark: boolean; t: Tokens;
-}) {
-  const total = wins + draws + losses;
-  const wPct = total > 0 ? (wins / total) * 100 : 0;
-  const dPct = total > 0 ? (draws / total) * 100 : 0;
-  const lPct = total > 0 ? (losses / total) * 100 : 0;
-
-  return (
-    <div className={`${t.card} p-4`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className={t.textTertiary}>{icon}</span>
-          <span className={`text-sm font-semibold ${t.textPrimary}`}>{title}</span>
-        </div>
-        <span className={`text-lg font-bold ${winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textPrimary}`}>
-          {winRate}%
-        </span>
-      </div>
-      {/* Bar */}
-      <div className="h-1.5 rounded-full overflow-hidden flex gap-px mb-2.5" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}>
-        <div className="bg-emerald-500 rounded-l-full transition-all" style={{ width: `${wPct}%` }} />
-        <div className="bg-amber-400 transition-all" style={{ width: `${dPct}%` }} />
-        <div className="bg-red-400 rounded-r-full transition-all" style={{ width: `${lPct}%` }} />
-      </div>
-      <div className={`flex gap-3 text-xs ${t.textTertiary}`}>
-        <span><span className="text-emerald-500 font-semibold">{wins}</span> W</span>
-        <span><span className="text-amber-400 font-semibold">{draws}</span> D</span>
-        <span><span className="text-red-400 font-semibold">{losses}</span> L</span>
-        {games !== undefined && <span className="ml-auto">{games} games</span>}
-      </div>
-    </div>
-  );
-}
-
-function _OpeningMiniList({
-  title, openings, firstMoves, isDark, t
-}: {
-  title: string;
-  openings: OpeningStat[];
-  firstMoves?: { move: string; count: number; pct: number }[];
+  report: PrepReport;
+  opponentProfile: { avatar?: string | null; name?: string | null; title?: string | null; countryCode?: string | null } | null;
   isDark: boolean;
   t: Tokens;
 }) {
-  if (openings.length === 0 && (!firstMoves || firstMoves.length === 0)) {
-    return (
-      <div>
-        <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>{title}</p>
-        <p className={`text-xs ${t.textTertiary}`}>No data</p>
-      </div>
-    );
-  }
+  const opp = report.opponent;
   return (
-    <div>
-      <p className={`text-xs font-semibold mb-2.5 ${t.textTertiary}`}>{title}</p>
-      {firstMoves && firstMoves.length > 0 && (
-        <div className="flex gap-1.5 mb-2.5 flex-wrap">
-          {firstMoves.slice(0, 3).map((fm) => (
-            <span
-              key={fm.move}
-              className={`font-mono text-[11px] px-2 py-1 rounded-lg font-semibold ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}
-            >
-              {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="space-y-1.5">
-        {openings.map((o, i) => (
-          <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg ${t.cardSubtle}`}>
-            <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-            <span className={`text-xs font-semibold shrink-0 ${o.winRate >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary}`}>
-              {o.winRate}%
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function KeyLineCard({
-  line, index, priority, isDark, t
-}: {
-  line: PrepLine; index: number; priority: Priority; isDark: boolean; t: Tokens;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const cfg = PRIORITY_CONFIG[priority];
-  const priorityStyle = isDark ? cfg.darkBg : cfg.lightBg;
-
-  return (
-    <div className={`rounded-2xl overflow-hidden border transition-all duration-150 ${
-      isDark ? "bg-[#0f1c11] border-[#1e2e22]/70" : "bg-white border-gray-200/80 shadow-sm"
-    }`}>
-      <button
-        className={`w-full text-left p-4 sm:p-5 transition-colors ${t.rowHover}`}
-        onClick={() => setExpanded(e => !e)}
-      >
-        <div className="flex items-start gap-3">
-          <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
-            {index + 1}
-          </span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h4 className={`font-semibold text-sm ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                {line.name}
-              </h4>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${priorityStyle}`}>
-                <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
-                {cfg.shortLabel}
+    <div className={`${t.card} p-5 sm:p-6`}>
+      <div className="flex items-center gap-3.5">
+        {/* Avatar */}
+        <div className={`relative shrink-0 w-12 h-12 rounded-xl overflow-hidden ${
+          isDark ? "bg-[#162018] border border-[#2e4a34]/40" : "bg-[#3D6B47]/06 border border-[#3D6B47]/15"
+        }`}>
+          {opponentProfile?.avatar ? (
+            <img
+              src={`/api/avatar-proxy?url=${encodeURIComponent(opponentProfile.avatar)}`}
+              alt={opp.username}
+              className="w-full h-full object-cover"
+              crossOrigin="anonymous"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className={`text-lg font-bold ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/40"}`}>
+                {opp.username.charAt(0).toUpperCase()}
               </span>
-              {line.lineType === "surprise" ? (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  isDark
-                    ? "bg-violet-500/15 text-violet-300 border border-violet-500/25"
-                    : "bg-violet-50 text-violet-700 border border-violet-200"
-                }`}>
-                  ⚡ Surprise
-                </span>
-              ) : line.lineType === "main" ? (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  isDark
-                    ? "bg-sky-500/12 text-sky-300 border border-sky-500/20"
-                    : "bg-sky-50 text-sky-700 border border-sky-200"
-                }`}>
-                  ✦ Main Line
-                </span>
-              ) : null}
             </div>
-            {line.eco !== "---" && (
-              <span className={`text-[11px] font-mono ${t.textTertiary}`}>{line.eco}</span>
+          )}
+          {opponentProfile?.countryCode && (
+            <div className="absolute bottom-0 right-0 text-[11px] leading-none select-none">
+              {countryCodeToFlag(opponentProfile.countryCode)}
+            </div>
+          )}
+        </div>
+
+        {/* Identity */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className={`text-lg sm:text-xl font-bold truncate ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {opp.username}
+            </h2>
+            {opponentProfile?.title && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
+                isDark ? "bg-amber-500/10 border-amber-500/25 text-amber-400" : "bg-amber-50 border-amber-200 text-amber-700"
+              }`}>{opponentProfile.title}</span>
             )}
           </div>
-          <ChevronRight className={`w-4 h-4 shrink-0 transition-transform duration-150 ${t.textTertiary} ${expanded ? "rotate-90" : ""}`} />
+          <p className={`text-xs mt-0.5 ${t.textTertiary}`}>
+            {opp.gamesAnalyzed} games analyzed
+            {report._cached && <span className="ml-2 opacity-60">· cached</span>}
+          </p>
         </div>
-      </button>
 
-      {expanded && (
-        <div className={`px-4 sm:px-5 pb-4 sm:pb-5 pt-0 space-y-3 border-t ${t.divider}`}>
-          {/* Move sequence */}
-          {line.eco !== "---" && line.moves && (
-            <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl overflow-x-auto whitespace-nowrap mt-3 ${t.monoBlock}`}>
-              {line.moves}
-            </div>
-          )}
+        {/* Ratings — compact inline */}
+        <div className="flex items-center gap-2 shrink-0">
+          {opp.rating.rapid && <RatingChip label="R" value={opp.rating.rapid} isDark={isDark} />}
+          {opp.rating.blitz && <RatingChip label="B" value={opp.rating.blitz} isDark={isDark} />}
+        </div>
+      </div>
 
-          {/* Why this matters */}
-          <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? "bg-[#0a1409]/80" : "bg-gray-50/80"}`}>
-            <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`} />
-            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{line.rationale}</p>
+      {/* Quick stats row */}
+      <div className={`mt-4 pt-3 border-t ${t.divider} grid grid-cols-3 gap-3`}>
+        <QuickStat
+          label="Win Rate"
+          value={`${Math.round(opp.overall.winRate * 100)}%`}
+          highlight={opp.overall.winRate >= 0.55}
+          isDark={isDark}
+          t={t}
+        />
+        <QuickStat
+          label="As White"
+          value={`${Math.round(opp.asWhite.winRate * 100)}%`}
+          highlight={opp.asWhite.winRate >= 0.55}
+          isDark={isDark}
+          t={t}
+        />
+        <QuickStat
+          label="As Black"
+          value={`${Math.round(opp.asBlack.winRate * 100)}%`}
+          highlight={opp.asBlack.winRate >= 0.55}
+          isDark={isDark}
+          t={t}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RatingChip({ label, value, isDark }: { label: string; value: number; isDark: boolean }) {
+  return (
+    <div className={`text-center px-2.5 py-1.5 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/70" : "bg-gray-50 border border-gray-200"}`}>
+      <div className={`text-[9px] font-semibold uppercase ${isDark ? "text-white/25" : "text-gray-400"}`}>{label}</div>
+      <div className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{value}</div>
+    </div>
+  );
+}
+
+function QuickStat({ label, value, highlight, isDark, t }: { label: string; value: string; highlight?: boolean; isDark: boolean; t: Tokens }) {
+  return (
+    <div className="text-center">
+      <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textTertiary}`}>{label}</p>
+      <p className={`text-lg font-bold mt-0.5 ${
+        highlight ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textPrimary
+      }`}>{value}</p>
+    </div>
+  );
+}
+
+// ── Scout Report Tab ──────────────────────────────────────────────────────────
+
+function ScoutReportTab({
+  report, weaknesses, matchupSummary, enrichedLines, onViewLines, isDark, t
+}: {
+  report: PrepReport;
+  weaknesses: { label: string; detail: string; severity: "high" | "medium" }[];
+  matchupSummary: { likelyBattle: string; studyFirst?: string | null; prepRisk?: string | null; colorAdvice?: string | null } | null;
+  enrichedLines: EnrichedPrepLine[];
+  onViewLines: () => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  const opp = report.opponent;
+
+  return (
+    <div className="space-y-4">
+
+      {/* ── Weaknesses ── */}
+      {weaknesses.length > 0 && (
+        <div className={`${t.card} p-4 sm:p-5`}>
+          <div className="flex items-center gap-2 mb-3">
+            <Crosshair className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+            <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Exploitable Weaknesses</h3>
           </div>
-
-          {/* Memorization cue */}
-          {priority === "must-know" && (
-            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-emerald-400/70" : "text-emerald-700/70"}`}>
-              <Zap className="w-3 h-3" />
-              <span>Memorize this line — it's the most likely scenario you'll face.</span>
-            </div>
-          )}
-          {priority === "likely" && (
-            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-amber-400/70" : "text-amber-700/70"}`}>
-              <Eye className="w-3 h-3" />
-              <span>Review this line — you'll probably encounter it.</span>
-            </div>
-          )}
+          <div className="space-y-2">
+            {weaknesses.map((w, i) => (
+              <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${
+                w.severity === "high"
+                  ? isDark ? "bg-red-500/08 border border-red-500/15" : "bg-red-50/80 border border-red-200/60"
+                  : isDark ? "bg-amber-500/06 border border-amber-500/12" : "bg-amber-50/60 border border-amber-200/50"
+              }`}>
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
+                  w.severity === "high"
+                    ? isDark ? "bg-red-500/15 text-red-400" : "bg-red-100 text-red-600"
+                    : isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600"
+                }`}>{i + 1}</div>
+                <div className="min-w-0">
+                  <p className={`text-sm font-semibold ${t.textPrimary}`}>{w.label}</p>
+                  <p className={`text-xs mt-0.5 ${t.textTertiary}`}>{w.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+
+      {/* ── Game Plan ── */}
+      {matchupSummary && (
+        <div className={`${t.card} p-4 sm:p-5`}>
+          <div className="flex items-center gap-2 mb-3">
+            <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+            <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Your Game Plan</h3>
+          </div>
+          <div className="space-y-3">
+            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.likelyBattle}</p>
+            {matchupSummary.studyFirst && (
+              <div className={`flex items-start gap-2.5 p-3 rounded-xl ${
+                isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"
+              }`}>
+                <Flame className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                <div className="min-w-0">
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${isDark ? "text-amber-400/60" : "text-amber-600/50"}`}>Study First</p>
+                  <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.studyFirst}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Opening Tendencies — Compact ── */}
+      <div className={`${t.card} p-4 sm:p-5`}>
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Tendencies</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {/* As White */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
+              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As White</span>
+              <span className={`ml-auto text-[11px] font-bold ${
+                opp.asWhite.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+              }`}>{Math.round(opp.asWhite.winRate * 100)}%</span>
+            </div>
+            {opp.firstMoveAsWhite.length > 0 && (
+              <div className="flex gap-1 mb-2 flex-wrap">
+                {opp.firstMoveAsWhite.slice(0, 2).map((fm) => (
+                  <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
+                    isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                  }`}>
+                    {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="space-y-1">
+              {opp.whiteOpenings.slice(0, 3).map((o, i) => (
+                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+              ))}
+            </div>
+          </div>
+          {/* As Black */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
+              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As Black</span>
+              <span className={`ml-auto text-[11px] font-bold ${
+                opp.asBlack.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+              }`}>{Math.round(opp.asBlack.winRate * 100)}%</span>
+            </div>
+            <div className="space-y-1">
+              {opp.blackOpenings.slice(0, 3).map((o, i) => (
+                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Endgame Profile — Compact ── */}
+      <div className={`${t.card} p-4 sm:p-5`}>
+        <div className="flex items-center gap-2 mb-3">
+          <Crown className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>How Games End</h3>
+        </div>
+        <EndgameBar profile={opp.endgameProfile} isDark={isDark} t={t} />
+        <div className={`mt-3 flex items-center gap-2 text-xs ${t.textTertiary}`}>
+          <Clock className="w-3 h-3" />
+          <span>Avg game length: <span className={`font-semibold ${t.textSecondary}`}>{opp.avgGameLength} moves</span></span>
+        </div>
+      </div>
+
+      {/* ── Next Step Nudge ── */}
+      {enrichedLines.length > 0 && (
+        <button
+          onClick={onViewLines}
+          className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] group ${
+            isDark
+              ? "border-[#2e4a34]/40 hover:border-[#3D6B47]/50 hover:bg-[#162018]/50"
+              : "border-gray-200/80 hover:border-[#3D6B47]/20 hover:bg-[#3D6B47]/02"
+          }`}
+        >
+          <span className={`text-sm ${t.textTertiary}`}>{enrichedLines.length} counter-lines ready</span>
+          <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`}>
+            Study Lines
+            <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          </div>
+        </button>
       )}
     </div>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function EnrichedKeyLineCard({
-  line, index, priority, isDark, t
-}: {
-  line: EnrichedPrepLine; index: number; priority: Priority; isDark: boolean; t: Tokens;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const cfg = PRIORITY_CONFIG[priority];
-  const priorityStyle = isDark ? cfg.darkBg : cfg.lightBg;
+function OpeningRow({ name, winRate, count, isDark, t }: { name: string; winRate: number; count: number; isDark: boolean; t: Tokens }) {
+  const wr = Math.round(winRate * 100);
+  return (
+    <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${t.cardSubtle}`}>
+      <span className={`text-xs truncate ${t.textSecondary}`}>{name}</span>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className={`text-[10px] ${t.textTertiary}`}>{count}g</span>
+        <span className={`text-xs font-semibold ${wr >= 55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : wr < 40 ? (isDark ? "text-red-400" : "text-red-500") : t.textTertiary}`}>
+          {wr}%
+        </span>
+      </div>
+    </div>
+  );
+}
 
-  const fitColor = line.repertoireFit === "core"
-    ? isDark ? "text-emerald-400" : "text-emerald-600"
-    : line.repertoireFit === "adjacent"
-    ? isDark ? "text-amber-400" : "text-amber-600"
-    : isDark ? "text-white/30" : "text-gray-400";
-
-  const fitLabel = line.repertoireFit === "core" ? "In repertoire"
-    : line.repertoireFit === "adjacent" ? "Adjacent"
-    : "Outside";
+function EndgameBar({ profile, isDark, t }: { profile: { checkmates: number; resignations: number; timeouts: number; draws: number; total: number }; isDark: boolean; t: Tokens }) {
+  if (profile.total === 0) return <p className={`text-xs ${t.textTertiary}`}>No endgame data</p>;
+  const matePct = Math.round((profile.checkmates / profile.total) * 100);
+  const resignPct = Math.round((profile.resignations / profile.total) * 100);
+  const timeoutPct = Math.round((profile.timeouts / profile.total) * 100);
+  const drawPct = Math.round((profile.draws / profile.total) * 100);
 
   return (
-    <div className={`rounded-2xl overflow-hidden border transition-all duration-150 ${
-      line.isTrainFirst
-        ? isDark ? "bg-[#0f1c11] border-[#3D6B47]/50 ring-1 ring-[#3D6B47]/20" : "bg-white border-[#3D6B47]/30 shadow-sm ring-1 ring-[#3D6B47]/10"
-        : isDark ? "bg-[#0f1c11] border-[#1e2e22]/70" : "bg-white border-gray-200/80 shadow-sm"
-    }`}>
-      <button
-        className={`w-full text-left p-4 sm:p-5 transition-colors ${t.rowHover}`}
-        onClick={() => setExpanded(e => !e)}
-      >
-        <div className="flex items-start gap-3">
-          <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
-            {index + 1}
-          </span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h4 className={`font-semibold text-sm ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                {line.name}
-              </h4>
+    <div>
+      <div className="h-2 rounded-full overflow-hidden flex gap-px" style={{ background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}>
+        <div className="bg-emerald-500 rounded-l-full transition-all" style={{ width: `${matePct}%` }} title={`Checkmates ${matePct}%`} />
+        <div className="bg-red-400 transition-all" style={{ width: `${resignPct}%` }} title={`Resignations ${resignPct}%`} />
+        <div className="bg-amber-400 transition-all" style={{ width: `${timeoutPct}%` }} title={`Timeouts ${timeoutPct}%`} />
+        <div className="bg-gray-400 rounded-r-full transition-all" style={{ width: `${drawPct}%` }} title={`Draws ${drawPct}%`} />
+      </div>
+      <div className={`flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs ${t.textTertiary}`}>
+        <span><span className="text-emerald-500 font-semibold">{matePct}%</span> Checkmate</span>
+        <span><span className="text-red-400 font-semibold">{resignPct}%</span> Resign</span>
+        <span><span className="text-amber-400 font-semibold">{timeoutPct}%</span> Timeout</span>
+        <span><span className="text-gray-400 font-semibold">{drawPct}%</span> Draw</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Study Lines Tab ───────────────────────────────────────────────────────────
+
+function StudyLinesTab({
+  enrichedLines, onPracticeLine, onStartPractice, isDark, t
+}: {
+  enrichedLines: EnrichedPrepLine[];
+  onPracticeLine: (idx: number) => void;
+  onStartPractice: () => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  if (enrichedLines.length === 0) {
+    return (
+      <EmptyState
+        icon={<Target className="w-6 h-6 text-[#5B9A6A]" />}
+        title="No lines generated"
+        description="Not enough opening data was found to generate preparation lines."
+        isDark={isDark}
+        t={t}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Lines list — each with inline ChessLineViewer */}
+      {enrichedLines.map((line, i) => {
+        const priority = line.confidence === "high" ? "must-know" : line.confidence === "medium" ? "likely" : "useful";
+        return (
+          <div key={i} className="space-y-2">
+            {/* Priority + metadata row */}
+            <div className="flex items-center gap-2 px-1 flex-wrap">
+              <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"
+              }`}>{i + 1}</span>
               {line.isTrainFirst && (
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
                   isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
                 }`}>
-                  <Flame className="w-2.5 h-2.5" /> Train First
+                  <Flame className="w-2.5 h-2.5" /> Study First
                 </span>
               )}
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${priorityStyle}`}>
-                <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
-                {cfg.shortLabel}
-              </span>
-              {line.lineType === "surprise" ? (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  isDark
-                    ? "bg-violet-500/15 text-violet-300 border border-violet-500/25"
-                    : "bg-violet-50 text-violet-700 border border-violet-200"
-                }`}>
-                  ⚡ Surprise
-                </span>
-              ) : line.lineType === "main" ? (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  isDark
-                    ? "bg-sky-500/12 text-sky-300 border border-sky-500/20"
-                    : "bg-sky-50 text-sky-700 border border-sky-200"
-                }`}>
-                  ✦ Main Line
-                </span>
-              ) : null}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {line.eco !== "---" && (
-                <span className={`text-[11px] font-mono ${t.textTertiary}`}>{line.eco}</span>
-              )}
-              {line.structureLabel && (
-                <span className={`text-[10px] ${t.textTertiary}`}>· {line.structureLabel}</span>
+              <PriorityBadge priority={priority} isDark={isDark} />
+              {line.lineType === "surprise" && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  isDark ? "bg-violet-500/15 text-violet-300 border border-violet-500/25" : "bg-violet-50 text-violet-700 border border-violet-200"
+                }`}>Surprise</span>
               )}
               {line.collisionScore > 0 && (
-                <span className={`text-[10px] font-medium flex items-center gap-1 ${fitColor}`}>
+                <span className={`text-[10px] font-medium flex items-center gap-1 ml-auto ${
+                  line.collisionScore >= 70 ? (isDark ? "text-emerald-400" : "text-emerald-600")
+                  : line.collisionScore >= 40 ? (isDark ? "text-amber-400" : "text-amber-600")
+                  : t.textTertiary
+                }`}>
                   <Crosshair className="w-2.5 h-2.5" />
-                  {fitLabel}
+                  {line.collisionScore}% match
                 </span>
               )}
             </div>
+
+            {/* Interactive board */}
+            <ChessLineViewer
+              moves={line.moves}
+              lineName={line.name}
+              rationale={line.rationale}
+              eco={line.eco}
+              isDark={isDark}
+            />
+
+            {/* Practice this line button */}
+            <button
+              data-testid={`practice-line-btn-${i}`}
+              onClick={() => {
+                const fullIndex = enrichedLines.findIndex(
+                  (el) => el.name === line.name && el.moves === line.moves
+                );
+                onPracticeLine(fullIndex >= 0 ? fullIndex : i);
+              }}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                isDark
+                  ? "text-[#5B9A6A] hover:bg-[#5B9A6A]/10 border border-[#5B9A6A]/20 hover:border-[#5B9A6A]/40"
+                  : "text-[#3D6B47] hover:bg-[#3D6B47]/08 border border-[#3D6B47]/15 hover:border-[#3D6B47]/30"
+              }`}
+            >
+              <Dumbbell className="w-3 h-3" />
+              Practice this line
+            </button>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {line.collisionScore > 0 && (
-              <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                line.collisionScore >= 70 ? isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-50 text-emerald-700"
-                : line.collisionScore >= 40 ? isDark ? "bg-amber-500/12 text-amber-400" : "bg-amber-50 text-amber-700"
-                : isDark ? "bg-white/06 text-white/30" : "bg-gray-100 text-gray-400"
-              }`}>
-                {line.collisionScore}%
-              </div>
-            )}
-            <ChevronRight className={`w-4 h-4 transition-transform duration-150 ${t.textTertiary} ${expanded ? "rotate-90" : ""}`} />
-          </div>
+        );
+      })}
+
+      {/* Next step nudge */}
+      <button
+        onClick={onStartPractice}
+        className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] group ${
+          isDark
+            ? "border-[#2e4a34]/40 hover:border-[#3D6B47]/50 hover:bg-[#162018]/50"
+            : "border-gray-200/80 hover:border-[#3D6B47]/20 hover:bg-[#3D6B47]/02"
+        }`}
+      >
+        <span className={`text-sm ${t.textTertiary}`}>Ready to drill these lines?</span>
+        <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`}>
+          Start Practice
+          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </div>
       </button>
-
-      {expanded && (
-        <div className={`px-4 sm:px-5 pb-4 sm:pb-5 pt-0 space-y-3 border-t ${t.divider}`}>
-          {line.eco !== "---" && line.moves && (
-            <div className={`font-mono text-xs px-3.5 py-2.5 rounded-xl overflow-x-auto whitespace-nowrap mt-3 ${t.monoBlock}`}>
-              {line.moves}
-            </div>
-          )}
-          <div className={`flex items-start gap-2.5 p-3 rounded-xl ${isDark ? "bg-[#0a1409]/80" : "bg-gray-50/80"}`}>
-            <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`} />
-            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{line.rationale}</p>
-          </div>
-          {priority === "must-know" && (
-            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-emerald-400/70" : "text-emerald-700/70"}`}>
-              <Zap className="w-3 h-3" />
-              <span>Memorize this line — it's the most likely scenario you'll face.</span>
-            </div>
-          )}
-          {priority === "likely" && (
-            <div className={`flex items-center gap-2 text-xs ${isDark ? "text-amber-400/70" : "text-amber-700/70"}`}>
-              <Eye className="w-3 h-3" />
-              <span>Review this line — you'll probably encounter it.</span>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-function _PracticeMode({
-  lines, queue, currentIndex, revealed, completed,
-  onReveal, onGotIt, onReviewAgain, onPrev, onNext, onReset,
-  isDark, t
+function PriorityBadge({ priority, isDark }: { priority: "must-know" | "likely" | "useful"; isDark: boolean }) {
+  const config = {
+    "must-know": { label: "Must Know", dot: "bg-emerald-500", dark: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400", light: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+    "likely":    { label: "Likely",    dot: "bg-amber-500",   dark: "bg-amber-500/10 border-amber-500/20 text-amber-400",     light: "bg-amber-50 border-amber-200 text-amber-700" },
+    "useful":    { label: "Useful",    dot: "bg-gray-400",    dark: "bg-white/05 border-white/10 text-white/35",               light: "bg-gray-50 border-gray-200 text-gray-400" },
+  };
+  const c = config[priority];
+  return (
+    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${isDark ? c.dark : c.light}`}>
+      <span className={`w-1 h-1 rounded-full ${c.dot}`} />
+      {c.label}
+    </span>
+  );
+}
+
+// ── Practice Board Tab ────────────────────────────────────────────────────────
+
+function PracticeBoardTab({
+  enrichedLines, practiceLineIndex, isDark, t
 }: {
-  lines: (PrepLine | EnrichedPrepLine)[];
-  queue: number[];
-  currentIndex: number;
-  revealed: boolean;
-  completed: Set<number>;
-  onReveal: () => void;
-  onGotIt: () => void;
-  onReviewAgain: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-  onReset: () => void;
+  enrichedLines: EnrichedPrepLine[];
+  practiceLineIndex: number | undefined;
   isDark: boolean;
   t: Tokens;
 }) {
-  const totalLines = queue.length;
-  const completedCount = completed.size;
-  const allDone = completedCount >= totalLines;
-
-  if (allDone) {
+  if (enrichedLines.length === 0) {
     return (
-      <div className={`${t.card} py-14 px-6 flex flex-col items-center gap-5 text-center`}>
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? "bg-emerald-500/10" : "bg-emerald-50"}`}>
-          <Trophy className="w-7 h-7 text-emerald-500" />
-        </div>
-        <div className="space-y-2">
-          <h3 className={`text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            Prep complete
-          </h3>
-          <p className={`text-sm ${t.textSecondary} max-w-xs mx-auto`}>
-            You've reviewed all {totalLines} lines. You're ready for this matchup.
-          </p>
-        </div>
-        <button
-          onClick={onReset}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-            isDark ? "bg-[#162018] border border-[#2e4a34]/50 text-white hover:bg-[#1e2e22]" : "bg-gray-100 border border-gray-200 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Practice again
-        </button>
-      </div>
+      <EmptyState
+        icon={<Trophy className="w-6 h-6 text-[#5B9A6A]" />}
+        title="No lines to practice"
+        description="Generate prep lines first by running a report on an opponent with enough game history."
+        isDark={isDark}
+        t={t}
+      />
     );
   }
 
-  const lineIndex = queue[currentIndex];
-  const line = lines[lineIndex];
-  const priority = getPriority(line.confidence);
-  const cfg = PRIORITY_CONFIG[priority];
-  const priorityStyle = isDark ? cfg.darkBg : cfg.lightBg;
-  const isCompleted = completed.has(lineIndex);
-
   return (
-    <div className="space-y-3">
-      {/* Progress bar */}
-      <div className="flex items-center gap-3 px-1">
-        <div className={`flex-1 h-1 rounded-full overflow-hidden ${isDark ? "bg-white/06" : "bg-gray-200"}`}>
-          <div
-            className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-            style={{ width: `${(completedCount / totalLines) * 100}%` }}
-          />
-        </div>
-        <span className={`text-xs font-medium shrink-0 ${t.textTertiary}`}>
-          {completedCount}/{totalLines}
+    <div className="space-y-4">
+      <div className={`flex items-center gap-3 px-1`}>
+        <span className={`text-xs ${t.textSecondary}`}>
+          Find the correct move for each position. The computer plays the opponent's moves automatically.
         </span>
       </div>
-
-      {/* Card */}
-      <div className={`${t.card} overflow-hidden`}>
-        {/* Card header */}
-        <div className={`px-5 pt-5 pb-4 border-b ${t.divider}`}>
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center ${isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"}`}>
-                {lineIndex + 1}
-              </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1 ${priorityStyle}`}>
-                <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
-                {cfg.label}
-              </span>
-              {isCompleted && (
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"}`}>
-                  <Check className="w-2.5 h-2.5" /> Done
-                </span>
-              )}
-            </div>
-            <span className={`text-xs ${t.textTertiary}`}>{currentIndex + 1} of {totalLines}</span>
-          </div>
-          <h3 className={`text-base sm:text-lg font-bold ${t.textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            {line.name}
-          </h3>
-          {line.eco !== "---" && (
-            <span className={`text-xs font-mono ${t.textTertiary}`}>{line.eco}</span>
-          )}
-        </div>
-
-        {/* Move sequence — always visible */}
-        {line.eco !== "---" && line.moves && (
-          <div className="px-5 py-4">
-            <p className={`text-[10px] font-semibold uppercase tracking-widest mb-2 ${t.textTertiary}`}>Moves</p>
-            <div className={`font-mono text-sm px-4 py-3 rounded-xl overflow-x-auto whitespace-nowrap ${t.monoBlock}`}>
-              {line.moves}
-            </div>
-          </div>
-        )}
-
-        {/* Rationale — hidden until revealed */}
-        {!revealed ? (
-          <div className="px-5 pb-5">
-            <button
-              onClick={onReveal}
-              className={`w-full py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
-                isDark
-                  ? "border-[#2e4a34]/50 text-[#5B9A6A] hover:bg-[#162018]"
-                  : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/04"
-              }`}
-            >
-              Why does this matter?
-            </button>
-          </div>
-        ) : (
-          <div className="px-5 pb-5 space-y-4">
-            <div className={`flex items-start gap-2.5 p-3.5 rounded-xl ${isDark ? "bg-[#0a1409]/80" : "bg-gray-50/80"}`}>
-              <Info className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-[#5B9A6A]/60" : "text-[#3D6B47]/50"}`} />
-              <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{line.rationale}</p>
-            </div>
-
-            {/* Action buttons */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                onClick={onReviewAgain}
-                className={`py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98] border ${
-                  isDark
-                    ? "border-[#2e4a34]/40 text-white/50 hover:bg-[#162018] hover:text-white/70"
-                    : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                }`}
-              >
-                Review again
-              </button>
-              <button
-                onClick={onGotIt}
-                className={`py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
-                  isDark
-                    ? "bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20"
-                    : "bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                }`}
-              >
-                <Check className="w-4 h-4" />
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <div className="flex items-center justify-between px-1">
-        <button
-          onClick={onPrev}
-          disabled={currentIndex === 0}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-            currentIndex === 0
-              ? `${t.textTertiary} opacity-30 cursor-not-allowed`
-              : `${t.textSecondary} hover:${t.textPrimary} ${t.rowHover}`
-          }`}
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-          Previous
-        </button>
-        <button
-          onClick={onNext}
-          disabled={currentIndex >= queue.length - 1}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-            currentIndex >= queue.length - 1
-              ? `${t.textTertiary} opacity-30 cursor-not-allowed`
-              : `${t.textSecondary} hover:${t.textPrimary} ${t.rowHover}`
-          }`}
-        >
-          Next
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      <ChessPracticeBoard
+        lines={enrichedLines.map((l, i) => ({
+          id: String(i),
+          name: l.name,
+          moves: l.moves,
+          eco: l.eco,
+          rationale: l.rationale,
+        }))}
+        isDark={isDark}
+        initialLineIndex={practiceLineIndex}
+      />
     </div>
   );
 }
 
-function NextStepNudge({
-  label, action, onClick, isDark, t
-}: {
-  label: string; action: string; onClick: () => void; isDark: boolean; t: Tokens;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all active:scale-[0.99] group ${
-        isDark
-          ? "border-[#2e4a34]/40 hover:border-[#3D6B47]/50 hover:bg-[#162018]/50"
-          : "border-gray-200/80 hover:border-[#3D6B47]/20 hover:bg-[#3D6B47]/02"
-      }`}
-    >
-      <span className={`text-sm ${t.textTertiary} group-hover:${t.textSecondary} transition-colors`}>{label}</span>
-      <div className={`flex items-center gap-1.5 text-sm font-medium ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`}>
-        {action}
-        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-      </div>
-    </button>
-  );
-}
+// ── Shared Components ─────────────────────────────────────────────────────────
 
 function EmptyState({
   icon, title, description, isDark, t
@@ -1978,7 +1121,62 @@ function EmptyState({
   );
 }
 
-// ── Recently Scouted Chips ─────────────────────────────────────────────────────
+function SavedReportsPanel({
+  reports, loading, savedId: _savedId, onSelect, onDelete, onClose, isDark, t
+}: {
+  reports: SavedReportMeta[];
+  loading: boolean;
+  savedId: number | null;
+  onSelect: (username: string) => void;
+  onDelete: (id: number) => void;
+  onClose: () => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  return (
+    <div className={`${t.card} p-4 sm:p-5`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <BookmarkCheck className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Saved Reports</h3>
+        </div>
+        <button onClick={onClose} className={`text-xs ${t.textTertiary} transition-colors`}>Close</button>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-4"><Loader2 className={`w-5 h-5 animate-spin ${t.textTertiary}`} /></div>
+      ) : reports.length === 0 ? (
+        <p className={`text-sm text-center py-4 ${t.textTertiary}`}>No saved reports yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {reports.map((r) => (
+            <div key={r.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${t.cardSubtle} ${t.rowHover}`}>
+              <button className="flex-1 flex items-center gap-3 text-left min-w-0" onClick={() => onSelect(r.opponentUsername)}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDark ? "bg-[#3D6B47]/15" : "bg-[#3D6B47]/08"}`}>
+                  <Target className="w-4 h-4 text-[#5B9A6A]" />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-sm font-medium truncate ${t.textPrimary}`}>{r.opponentUsername}</p>
+                  <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${t.textTertiary} mt-0.5`}>
+                    {r.winRate !== null && <span>{r.winRate}% win rate</span>}
+                    {r.gamesAnalyzed !== null && <span>{r.gamesAnalyzed} games</span>}
+                    {r.prepLinesCount !== null && r.prepLinesCount > 0 && <span>{r.prepLinesCount} lines</span>}
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => onDelete(r.id)}
+                className={`p-1.5 rounded-lg transition-colors shrink-0 ${isDark ? "hover:bg-red-500/10 text-white/20 hover:text-red-400" : "hover:bg-red-50 text-gray-300 hover:text-red-500"}`}
+                title="Delete saved report"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function RecentlyScoutedChips({
   usernames, onSelect, onRemove, isDark, t
@@ -1992,9 +1190,7 @@ function RecentlyScoutedChips({
   if (usernames.length === 0) return null;
   return (
     <div className={`${t.card} p-4`}>
-      <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>
-        Recently Scouted
-      </p>
+      <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${t.textTertiary}`}>Recently Scouted</p>
       <div className="flex flex-wrap gap-2">
         {usernames.map((username) => (
           <div
@@ -2005,32 +1201,19 @@ function RecentlyScoutedChips({
                 : "bg-gray-50/80 border-gray-200/60 text-gray-600 hover:border-[#3D6B47]/30 hover:text-gray-900"
             }`}
           >
-            {/* Clickable username area */}
-            <button
-              onClick={() => onSelect(username)}
-              className="flex items-center gap-1.5 min-w-0"
-              aria-label={`Scout ${username}`}
-            >
-              <span
-                className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${
-                  isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
-                }`}
-              >
-                {username.charAt(0).toUpperCase()}
-              </span>
+            <button onClick={() => onSelect(username)} className="flex items-center gap-1.5 min-w-0">
+              <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                isDark ? "bg-[#3D6B47]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+              }`}>{username.charAt(0).toUpperCase()}</span>
               <span className="truncate max-w-[120px]">{username}</span>
             </button>
-            {/* Remove button */}
             <button
               onClick={(e) => { e.stopPropagation(); onRemove(username); }}
               className={`ml-0.5 w-4 h-4 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
                 isDark ? "hover:bg-white/10 text-white/30 hover:text-white/60" : "hover:bg-gray-200 text-gray-300 hover:text-gray-500"
               }`}
-              aria-label={`Remove ${username} from recent`}
             >
-              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                <path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
             </button>
           </div>
         ))}

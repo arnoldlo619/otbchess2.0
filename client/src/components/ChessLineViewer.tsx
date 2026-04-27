@@ -179,10 +179,10 @@ export default function ChessLineViewer({
       </div>
 
       {/* Body: board + move list */}
-      <div className="flex flex-col lg:flex-row gap-0">
+      <div className="flex flex-col gap-0">
         {/* Board */}
-        <div className="flex-shrink-0 p-3 lg:p-4">
-          <div className="w-full max-w-[340px] mx-auto lg:mx-0">
+        <div className="flex-shrink-0 p-3">
+          <div className="w-full max-w-[280px] mx-auto">
             <Chessboard
               options={{
                 position: currentFen,
@@ -207,7 +207,7 @@ export default function ChessLineViewer({
           </div>
 
           {/* Board controls */}
-          <div className="flex items-center justify-center gap-2 mt-3 max-w-[340px] mx-auto lg:mx-0">
+          <div className="flex items-center justify-center gap-2 mt-3 max-w-[280px] mx-auto">
             <button
               onClick={() => goTo(-1)}
               disabled={stepIndex === -1}
@@ -255,11 +255,11 @@ export default function ChessLineViewer({
         </div>
 
         {/* Move list + rationale */}
-        <div className={`flex-1 flex flex-col border-t lg:border-t-0 lg:border-l ${border}`}>
+        <div className={`flex-1 flex flex-col border-t ${border}`}>
           {/* Move list */}
           <div
             ref={moveListRef}
-            className="flex-1 overflow-y-auto p-3 max-h-[220px] lg:max-h-[300px]"
+            className="flex-1 overflow-y-auto p-3 max-h-[180px]"
           >
             <p className={`text-[10px] font-semibold uppercase tracking-widest mb-2 px-1 ${textTertiary}`}>
               Moves
