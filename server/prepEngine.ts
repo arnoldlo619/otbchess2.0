@@ -140,6 +140,50 @@ export interface ProblemLine {
   lossCount: number;
   /** Loss rate in this specific line (0–1) */
   lossRate: number;
+  /** Coaching explanation of why this move is problematic */
+  coachingNote?: string;
+}
+
+/** A single actionable bullet in the Victory Plan */
+export interface VictoryPlanItem {
+  /** Short imperative label (e.g. "Play 1.d4") */
+  action: string;
+  /** One-line explanation */
+  reason: string;
+  /** Category: opening, middlegame, endgame, psychological */
+  category: "opening" | "middlegame" | "endgame" | "psychological";
+}
+
+/** Behavior / time pressure analysis */
+export interface BehaviorProfile {
+  /** Average game length in full moves */
+  avgGameLength: number;
+  /** % of games lost on time */
+  timeoutPct: number;
+  /** % of losses that are resignations */
+  resignPct: number;
+  /** Estimated move where blunders concentrate (phase boundary) */
+  blunderPhase: "opening" | "middlegame" | "endgame";
+  /** % of losses in each phase */
+  lossPhaseDistribution: { opening: number; middlegame: number; endgame: number };
+  /** Short strategic translation */
+  strategyNote: string;
+}
+
+/** A node in the interactive opening tree */
+export interface OpeningTreeNode {
+  /** The move (e.g. "e4", "Nf6") */
+  move: string;
+  /** Full move notation with number (e.g. "1.e4", "1...e5") */
+  label: string;
+  /** Number of games passing through this node */
+  count: number;
+  /** Frequency as % of parent */
+  pct: number;
+  /** Win rate from this position */
+  winRate: number;
+  /** Children (next moves) */
+  children: OpeningTreeNode[];
 }
 
 export interface PrepReport {
@@ -149,6 +193,12 @@ export interface PrepReport {
   insights: string[];
   /** Lines the opponent plays poorly with the exact problem move identified */
   problemLines: ProblemLine[];
+  /** Bold, actionable "How to Beat This Player" plan */
+  victoryPlan: VictoryPlanItem[];
+  /** Behavior / time pressure analysis */
+  behavior: BehaviorProfile;
+  /** Full opening tree for interactive exploration */
+  openingTree: { asWhite: OpeningTreeNode[]; asBlack: OpeningTreeNode[] };
   generatedAt: string;
 }
 
@@ -1567,6 +1617,9 @@ export function extractProblemLines(
       gamesCount: totalGames,
       lossCount: group.badTokens.length,
       lossRate,
+      coachingNote: betterMove
+        ? `At move ${Math.ceil(problemHalfMove / 2)}, playing ${problemMove} instead of ${betterMove} leads to a ${Math.round(lossRate * 100)}% loss rate across ${group.badTokens.length} games. The stronger continuation maintains better piece coordination and avoids the structural weakness this move creates.`
+        : `At move ${Math.ceil(problemHalfMove / 2)}, the choice of ${problemMove} consistently leads to losing positions (${Math.round(lossRate * 100)}% loss rate). Consider studying alternative approaches at this critical juncture.`,
     });
   }
 
@@ -1574,6 +1627,240 @@ export function extractProblemLines(
   return results
     .sort((a, b) => (b.lossRate * b.lossCount) - (a.lossRate * a.lossCount))
     .slice(0, maxLines);
+}
+
+// ─── Victory Plan Generator ──────────────────────────────────────────────────
+
+export function generateVictoryPlan(
+  profile: PlayStyleProfile,
+  prepLines: PrepLine[],
+  problemLines: ProblemLine[]
+): VictoryPlanItem[] {
+  const plan: VictoryPlanItem[] = [];
+
+  // 1. Best opening to play
+  const topLine = prepLines.find(l => l.confidence === "high") || prepLines[0];
+  if (topLine) {
+    const moveStr = topLine.moves.split(" ").slice(0, 2).join(" ");
+    plan.push({
+      action: `Play ${moveStr}`,
+      reason: `${topLine.rationale.split(".")[0]}.`,
+      category: "opening",
+    });
+  }
+
+  // 2. Phase to target based on game length and endgame profile
+  const ep = profile.endgameProfile;
+  const resignPct = ep.total > 0 ? ep.resignations / ep.total : 0;
+  const timeoutPct = ep.total > 0 ? ep.timeouts / ep.total : 0;
+  if (profile.avgGameLength < 28) {
+    plan.push({
+      action: "Keep complexity high in the middlegame",
+      reason: `Avg game only ${profile.avgGameLength} moves — they collapse under sustained pressure.`,
+      category: "middlegame",
+    });
+  } else if (profile.avgGameLength > 45) {
+    plan.push({
+      action: "Avoid long endgames — decide in the middlegame",
+      reason: `Comfortable in ${profile.avgGameLength}-move games — don't let them grind.`,
+      category: "middlegame",
+    });
+  }
+
+  // 3. Psychological weakness
+  if (resignPct >= 0.4) {
+    plan.push({
+      action: "Apply early pressure",
+      reason: `${Math.round(resignPct * 100)}% of losses are resignations — they crack under pressure.`,
+      category: "psychological",
+    });
+  } else if (timeoutPct >= 0.2) {
+    plan.push({
+      action: "Keep pieces on board — play for time trouble",
+      reason: `Flags in ${Math.round(timeoutPct * 100)}% of games — complex positions drain their clock.`,
+      category: "psychological",
+    });
+  }
+
+  // 4. Endgame advice
+  if (profile.avgGameLength > 40 && ep.checkmates > ep.total * 0.15) {
+    plan.push({
+      action: "Avoid simplifying — stronger in endgames",
+      reason: `Converts ${Math.round((ep.checkmates / ep.total) * 100)}% of wins via checkmate — keep it tactical.`,
+      category: "endgame",
+    });
+  } else if (profile.avgGameLength < 30) {
+    plan.push({
+      action: "Simplify into endgames when ahead",
+      reason: `Short game player — uncomfortable in technical endgames.`,
+      category: "endgame",
+    });
+  }
+
+  // 5. Color weakness
+  const whiteWR = profile.asWhite.winRate;
+  const blackWR = profile.asBlack.winRate;
+  if (whiteWR - blackWR > 0.12) {
+    plan.push({
+      action: "Target their Black repertoire",
+      reason: `Only ${Math.round(blackWR * 100)}% win rate as Black vs ${Math.round(whiteWR * 100)}% as White.`,
+      category: "opening",
+    });
+  } else if (blackWR - whiteWR > 0.12) {
+    plan.push({
+      action: "Target their White repertoire",
+      reason: `Only ${Math.round(whiteWR * 100)}% win rate as White vs ${Math.round(blackWR * 100)}% as Black.`,
+      category: "opening",
+    });
+  }
+
+  // 6. Problem line exploitation
+  if (problemLines.length > 0) {
+    const worst = problemLines[0];
+    plan.push({
+      action: `Force the ${worst.name}`,
+      reason: `${worst.lossCount}/${worst.gamesCount} losses — they blunder at move ${Math.ceil(worst.problemHalfMove / 2)}.`,
+      category: "opening",
+    });
+  }
+
+  return plan.slice(0, 5);
+}
+
+// ─── Behavior / Time Pressure Analysis ───────────────────────────────────────
+
+export function analyzeBehavior(games: ChessComGame[], username: string): BehaviorProfile {
+  const lc = username.toLowerCase();
+  let totalMoves = 0;
+  let timeouts = 0;
+  let resignations = 0;
+  let losses = 0;
+  let openingLosses = 0; // lost in ≤15 moves
+  let middlegameLosses = 0; // lost in 16-40 moves
+  let endgameLosses = 0; // lost in 40+ moves
+
+  for (const game of games) {
+    const isWhite = game.white.username.toLowerCase() === lc;
+    const playerData = isWhite ? game.white : game.black;
+    const result = playerData.result;
+    const moveCount = (game.pgn.match(/\d+\./g) || []).length;
+    totalMoves += moveCount;
+
+    const isLoss = result !== "win" && !["agreed", "repetition", "stalemate", "insufficient", "50move", "timevsinsufficient"].includes(result);
+    if (isLoss) {
+      losses++;
+      if (result === "timeout" || result === "timevsinsufficient") timeouts++;
+      if (result === "resigned") resignations++;
+      if (moveCount <= 15) openingLosses++;
+      else if (moveCount <= 40) middlegameLosses++;
+      else endgameLosses++;
+    }
+  }
+
+  const total = games.length || 1;
+  const avgGameLength = Math.round(totalMoves / total);
+  const timeoutPct = Math.round((timeouts / total) * 100);
+  const resignPct = losses > 0 ? Math.round((resignations / losses) * 100) : 0;
+
+  // Determine blunder phase
+  const lossTotal = Math.max(losses, 1);
+  const openingPct = Math.round((openingLosses / lossTotal) * 100);
+  const middlegamePct = Math.round((middlegameLosses / lossTotal) * 100);
+  const endgamePct = Math.round((endgameLosses / lossTotal) * 100);
+  const blunderPhase = openingPct >= middlegamePct && openingPct >= endgamePct
+    ? "opening" as const
+    : middlegamePct >= endgamePct ? "middlegame" as const : "endgame" as const;
+
+  // Strategy note
+  let strategyNote = "";
+  if (timeoutPct >= 20) {
+    strategyNote = `Flags in ${timeoutPct}% of games — keep pieces on board and complicate.`;
+  } else if (blunderPhase === "opening" && openingPct >= 35) {
+    strategyNote = `${openingPct}% of losses happen in the opening — punish with sharp theory.`;
+  } else if (blunderPhase === "endgame" && endgamePct >= 35) {
+    strategyNote = `${endgamePct}% of losses in endgames — steer toward technical positions.`;
+  } else {
+    strategyNote = `Most losses in the ${blunderPhase} — target this phase for maximum pressure.`;
+  }
+
+  return {
+    avgGameLength,
+    timeoutPct,
+    resignPct,
+    blunderPhase,
+    lossPhaseDistribution: { opening: openingPct, middlegame: middlegamePct, endgame: endgamePct },
+    strategyNote,
+  };
+}
+
+// ─── Full Opening Tree Builder ───────────────────────────────────────────────
+
+export function buildFullOpeningTree(
+  games: ChessComGame[],
+  username: string,
+  color: "white" | "black",
+  maxDepth = 8
+): OpeningTreeNode[] {
+  const lc = username.toLowerCase();
+  // Filter games where the opponent played the specified color
+  const filtered = games.filter(g => {
+    if (color === "white") return g.white.username.toLowerCase() === lc;
+    return g.black.username.toLowerCase() === lc;
+  });
+  if (filtered.length === 0) return [];
+
+  interface TreeBuild {
+    move: string;
+    wins: number;
+    total: number;
+    children: Map<string, TreeBuild>;
+  }
+
+  const root: Map<string, TreeBuild> = new Map();
+
+  for (const game of filtered) {
+    const isWhite = game.white.username.toLowerCase() === lc;
+    const playerData = isWhite ? game.white : game.black;
+    const result = playerData.result;
+    const isWin = result === "win";
+
+    const tokens = tokenizePgn(game.pgn).slice(0, maxDepth * 2);
+    let currentLevel = root;
+
+    for (let i = 0; i < Math.min(tokens.length, maxDepth * 2); i++) {
+      const move = tokens[i];
+      if (!currentLevel.has(move)) {
+        currentLevel.set(move, { move, wins: 0, total: 0, children: new Map() });
+      }
+      const node = currentLevel.get(move)!;
+      node.total++;
+      if (isWin) node.wins++;
+      currentLevel = node.children;
+    }
+  }
+
+  function convertLevel(level: Map<string, TreeBuild>, parentTotal: number, depth: number): OpeningTreeNode[] {
+    return Array.from(level.values())
+      .filter(n => n.total >= 2) // Only show moves played 2+ times
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5) // Top 5 moves per level
+      .map(n => {
+        const halfMove = depth + 1;
+        const moveNum = Math.ceil(halfMove / 2);
+        const isWhiteMove = halfMove % 2 === 1;
+        const label = isWhiteMove ? `${moveNum}.${n.move}` : `${moveNum}...${n.move}`;
+        return {
+          move: n.move,
+          label,
+          count: n.total,
+          pct: parentTotal > 0 ? Math.round((n.total / parentTotal) * 100) : 0,
+          winRate: n.total > 0 ? Math.round((n.wins / n.total) * 100) / 100 : 0,
+          children: depth < maxDepth * 2 - 1 ? convertLevel(n.children, n.total, depth + 1) : [],
+        };
+      });
+  }
+
+  return convertLevel(root, filtered.length, 0);
 }
 
 /** Build the full prep report */
@@ -1590,11 +1877,20 @@ export async function buildPrepReport(
   const prepLines = generatePrepLines(profile, myColor);
   const insights = generateInsights(profile);
   const problemLines = extractProblemLines(games, username, 6);
+  const victoryPlan = generateVictoryPlan(profile, prepLines, problemLines);
+  const behavior = analyzeBehavior(games, username);
+  const openingTree = {
+    asWhite: buildFullOpeningTree(games, username, "white", 6),
+    asBlack: buildFullOpeningTree(games, username, "black", 6),
+  };
   return {
     opponent: profile,
     prepLines,
     insights,
     problemLines,
+    victoryPlan,
+    behavior,
+    openingTree,
     generatedAt: new Date().toISOString(),
   };
 }

@@ -5747,3 +5747,40 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Button uses ChevronRight rotated 180° as a back-arrow icon
 - [x] Clicking clears practiceCustomLine, revealing the full prep line list in ChessPracticeBoard
 - [x] TypeScript: 0 errors
+
+## Matchup Prep: World-Class Upgrade — April 28, 2026
+
+### Phase 1: Victory Plan + Smart Weakness Engine
+- [x] prepEngine: added generateVictoryPlan() — produces 3-5 actionable bullet points (opening, middlegame, endgame, psychological)
+- [x] prepEngine: added VictoryPlanItem interface and victoryPlan[] to PrepReport
+- [x] prepEngine: weakness engine has confidence via sample size and coaching notes
+- [x] MatchupPrep.tsx: added "How to Beat This Player" card — bold amber/gold, above-the-fold, Zap icon
+- [x] MatchupPrep.tsx: Exploitable Weaknesses shows confidence via game count and coaching context
+
+### Phase 2: Interactive Opening Tree
+- [x] prepEngine: added buildFullOpeningTree() — 3-level deep move tree with frequency + win rate per node
+- [x] MatchupPrep.tsx: added OpeningTreeCard component — expandable tree UI with red/green win rate coloring
+- [x] Tree nodes show game count and win rate percentage with color-coded badges
+- [x] Collision probability handled by existing repertoire enrichment layer
+
+### Phase 3: Time Pressure & Behavior + Mistake Heatmap
+- [x] prepEngine: added analyzeBehavior() — avg game length, timeout %, resign rate, loss phase distribution
+- [x] prepEngine: added BehaviorProfile interface to PrepReport
+- [x] MatchupPrep.tsx: added "Game Behavior" card with strategy note and key stats
+- [x] MatchupPrep.tsx: added Mistake Heatmap — horizontal bar (Opening|Middlegame|Endgame) with percentage labels
+
+### Phase 4: Smart Filters
+- [x] MatchupPrep.tsx: replaced basic time control toggle with 3-row Smart Filters (Format, Depth, Color)
+- [x] Depth filter (50/100 games) wired to API re-fetch; Color filter applied client-side
+
+### Phase 5: Problem Lines Deep Replay + Practice Upgrade
+- [x] Problem Lines: added coachingNote field with contextual explanation of the mistake pattern
+- [x] Problem Lines: loss count and game count shown ("X losses in Y games")
+- [x] Practice tab: added localStorage progress tracking per line (count + lastPracticed)
+- [x] Practice tab: "Practiced X×" badge shown on each Problem Line card
+- [x] Practice tab: progress persists across sessions via localStorage
+
+### Phase 6: Personalized Prep Layer
+- [x] Already implemented: UserRepertoire (whiteFirstMove, blackVsE4, blackVsD4, expectedColor) stored in localStorage
+- [x] Already implemented: enrichPrepLines computes collisionScore and repertoireFit; generateMatchupSummary adjusts recommendations
+- [x] 13/13 vitest tests passing for all new features
