@@ -5720,3 +5720,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] AvatarNavDropdown: replaced Battle+Analyze with Training; removed Video/Swords imports
 - [x] Home.tsx: replaced Battle nav item with Training; added GraduationCap import
 - [x] TypeScript: 0 errors after all changes
+
+## Home Page: Replace Battle with Training Features — April 27, 2026
+- [x] Features grid: replaced "Chess Club League" card (Swords) with "Openings & Repertoire" card (BookOpen, tag: Training)
+- [x] Features grid: updated "Match Prep Analysis & Coach" → "Scout Report & Matchup Prep" with richer description (problem lines, blunder patterns)
+- [x] Carousel: added "Openings & Repertoire" slide (slide 3) with 3 bullets and CTA → /openings
+- [x] Carousel: updated "Matchup Prep" slide with deeper description (problem lines, deep scout report)
+- [x] Fixed Target import alias (_Target → Target) for use in carousel bullets
+- [x] TypeScript: 0 errors
