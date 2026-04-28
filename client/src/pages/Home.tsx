@@ -797,8 +797,8 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Explore Openings", href: "/openings" },
     ctaSecondary: null,
-    screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/egoqlJMBXSPNmqIb.png",
-    screenshotAlt: "Openings Library — Interactive chessboard study",
+    screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/GQIyLOLccvTIgVEV.webp",
+    screenshotAlt: "Openings Library — Featured openings with chessboard previews",
   },
   {
     id: "prep",
