@@ -813,8 +813,8 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Try Matchup Prep", href: "/prep" },
     ctaSecondary: null,
-    screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/egoqlJMBXSPNmqIb.png",
-    screenshotAlt: "Matchup Prep — Scout Report with Problem Lines",
+    screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/ldjNZgAdszCUXLEl.webp",
+    screenshotAlt: "Matchup Prep — Scout Report showing hikaru's weaknesses and game plan",
   },
 ];
 
