@@ -5738,3 +5738,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] PracticeBoardTab updated to accept practiceCustomLine prop; renders it directly with a "Drilling problem line" header when set
 - [x] Added PlayCircle to lucide-react imports
 - [x] TypeScript: 0 errors
+
+## Practice Tab: "Back to all lines" button — April 27, 2026
+
+- [x] Added onClearCustomLine prop to PracticeBoardTab
+- [x] Wired onClearCustomLine in parent: calls setPracticeCustomLine(null)
+- [x] Button renders in the custom line header row (right-aligned, only when enrichedLines.length > 0)
+- [x] Button uses ChevronRight rotated 180° as a back-arrow icon
+- [x] Clicking clears practiceCustomLine, revealing the full prep line list in ChessPracticeBoard
+- [x] TypeScript: 0 errors
