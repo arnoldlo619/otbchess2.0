@@ -16,7 +16,7 @@ import {
   TrendingUp, Eye, Loader2,
   CircleDot, RefreshCw, ChevronRight, Trophy,
   Activity, Bookmark, BookmarkCheck,
-  Trash2, AlertCircle, Crosshair, Flame, Dumbbell, AlertTriangle, ArrowRight,
+  Trash2, AlertCircle, Crosshair, Flame, Dumbbell, AlertTriangle, ArrowRight, PlayCircle,
 } from "lucide-react";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
@@ -207,6 +207,29 @@ export default function MatchupPrep() {
 
   // "Practice this line" — jump from Study Lines to Practice tab
   const [practiceLineIndex, setPracticeLineIndex] = useState<number | undefined>(undefined);
+
+  // "Practice this problem line" — jump from Scout Report Problem Lines to Practice tab
+  const [practiceCustomLine, setPracticeCustomLine] = useState<{ id: string; name: string; moves: string; eco: string; rationale: string } | null>(null);
+
+  function handlePracticeProblemLine(pl: ProblemLine) {
+    const moveNum = Math.ceil(pl.problemHalfMove / 2);
+    const isWhiteMove = pl.problemHalfMove % 2 === 1;
+    const problemLabel = isWhiteMove ? `${moveNum}.${pl.problemMove}` : `${moveNum}...${pl.problemMove}`;
+    const betterLabel = pl.betterMove
+      ? (isWhiteMove ? `${moveNum}.${pl.betterMove}` : `${moveNum}...${pl.betterMove}`)
+      : null;
+    setPracticeCustomLine({
+      id: `problem-${pl.eco}-${pl.problemHalfMove}`,
+      name: `${pl.name} — Problem at move ${moveNum}`,
+      moves: pl.moves,
+      eco: pl.eco,
+      rationale: betterLabel
+        ? `Opponent usually plays ${problemLabel} here. The stronger response is ${betterLabel}. Practice finding the best move.`
+        : `Opponent usually goes wrong at move ${moveNum} with ${problemLabel}. Practice the correct continuation.`,
+    });
+    setPracticeLineIndex(undefined);
+    setActiveTab("practice");
+  }
 
   useEffect(() => {
     if (params.username) {
@@ -563,6 +586,7 @@ export default function MatchupPrep() {
                 matchupSummary={matchupSummary}
                 enrichedLines={enrichedLines}
                 onViewLines={() => setActiveTab("lines")}
+                onPracticeProblemLine={handlePracticeProblemLine}
                 isDark={isDark}
                 t={t}
               />
@@ -584,6 +608,7 @@ export default function MatchupPrep() {
               <PracticeBoardTab
                 enrichedLines={enrichedLines}
                 practiceLineIndex={practiceLineIndex}
+                practiceCustomLine={practiceCustomLine}
                 isDark={isDark}
                 t={t}
               />
@@ -753,13 +778,14 @@ function QuickStat({ label, value, highlight, isDark, t }: { label: string; valu
 // ── Scout Report Tab ──────────────────────────────────────────────────────────
 
 function ScoutReportTab({
-  report, weaknesses, matchupSummary, enrichedLines, onViewLines, isDark, t
+  report, weaknesses, matchupSummary, enrichedLines, onViewLines, onPracticeProblemLine, isDark, t
 }: {
   report: PrepReport;
   weaknesses: { label: string; detail: string; severity: "high" | "medium" }[];
   matchupSummary: { likelyBattle: string; studyFirst?: string | null; prepRisk?: string | null; colorAdvice?: string | null } | null;
   enrichedLines: EnrichedPrepLine[];
   onViewLines: () => void;
+  onPracticeProblemLine: (pl: ProblemLine) => void;
   isDark: boolean;
   t: Tokens;
 }) {
@@ -953,6 +979,20 @@ function ScoutReportTab({
                     </div>
                     {/* Move sequence leading to the problem */}
                     <p className={`mt-2 text-[11px] font-mono leading-relaxed ${t.textTertiary}`}>{pl.moves}</p>
+                  </div>
+                  {/* Practice shortcut */}
+                  <div className="px-3 pb-3">
+                    <button
+                      onClick={() => onPracticeProblemLine(pl)}
+                      className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                        isDark
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/18 hover:border-emerald-500/35"
+                          : "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                      }`}
+                    >
+                      <PlayCircle className="w-3.5 h-3.5" />
+                      Practice this problem line
+                    </button>
                   </div>
                 </div>
               );
@@ -1173,13 +1213,33 @@ function PriorityBadge({ priority, isDark }: { priority: "must-know" | "likely" 
 // ── Practice Board Tab ────────────────────────────────────────────────────────
 
 function PracticeBoardTab({
-  enrichedLines, practiceLineIndex, isDark, t
+  enrichedLines, practiceLineIndex, practiceCustomLine, isDark, t
 }: {
   enrichedLines: EnrichedPrepLine[];
   practiceLineIndex: number | undefined;
+  practiceCustomLine: { id: string; name: string; moves: string; eco: string; rationale: string } | null;
   isDark: boolean;
   t: Tokens;
 }) {
+  // If a custom problem line was requested, show it directly
+  if (practiceCustomLine) {
+    return (
+      <div className="space-y-4">
+        <div className={`flex items-center gap-2 px-1`}>
+          <PlayCircle className={`w-4 h-4 ${isDark ? "text-emerald-400" : "text-emerald-600"}`} />
+          <span className={`text-xs font-semibold ${isDark ? "text-emerald-400" : "text-emerald-700"}`}>
+            Drilling problem line: {practiceCustomLine.name}
+          </span>
+        </div>
+        <ChessPracticeBoard
+          lines={[practiceCustomLine]}
+          isDark={isDark}
+          initialLineIndex={0}
+        />
+      </div>
+    );
+  }
+
   if (enrichedLines.length === 0) {
     return (
       <EmptyState

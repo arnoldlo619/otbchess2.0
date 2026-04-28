@@ -5728,3 +5728,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Carousel: updated "Matchup Prep" slide with deeper description (problem lines, deep scout report)
 - [x] Fixed Target import alias (_Target → Target) for use in carousel bullets
 - [x] TypeScript: 0 errors
+
+## Scout Report: "Practice this problem line" shortcut button — April 27, 2026
+
+- [x] Added practiceCustomLine state and handlePracticeProblemLine() to MatchupPrep parent
+- [x] handlePracticeProblemLine builds a synthetic practice line from ProblemLine data (name, moves, eco, rationale with problem/better move labels)
+- [x] Added onPracticeProblemLine prop to ScoutReportTab function signature
+- [x] Added "Practice this problem line" button (PlayCircle icon, emerald style) to each Problem Line card footer
+- [x] PracticeBoardTab updated to accept practiceCustomLine prop; renders it directly with a "Drilling problem line" header when set
+- [x] Added PlayCircle to lucide-react imports
+- [x] TypeScript: 0 errors
