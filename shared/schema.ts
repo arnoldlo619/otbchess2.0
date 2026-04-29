@@ -1354,7 +1354,12 @@ export const repertoires = mysqlTable(
 
     /** Sort order for curated browsing */
     sortOrder: int("sort_order").notNull().default(100),
-
+    /**
+     * JSON-encoded move tree for the repertoire builder.
+     * Shape: { fen, move?, san?, children: MoveNode[], comment?, eval? }
+     * Null for curated repertoires that use repertoire_lines instead.
+     */
+    moveTree: text("move_tree"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -1681,3 +1686,4 @@ export const chessPlayerCache = mysqlTable(
     cachedAt: timestamp("cached_at").notNull().defaultNow(),
   }
 );
+

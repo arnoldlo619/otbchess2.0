@@ -5817,3 +5817,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Updates elo, rapidElo, blitzElo on each player via updatePlayer
 - [x] Success toast: "ELO refreshed for N players." / warning toast if some failed
 - [x] TypeScript: 0 errors
+
+## Opening Repertoire Builder Feature
+- [x] DB schema: repertoires table (id, userId, name, color, moveTree JSON, createdAt, updatedAt)
+- [x] Server API: CRUD routes for repertoires with Pro limit enforcement (1 free, unlimited Pro)
+- [x] Repertoire Builder page: full-page interactive chessboard (left) + move-tree panel (right)
+- [x] Move-tree panel: shows candidate moves, opening names, frequency stats, coverage bars
+- [x] Stockfish engine integration via stockfish.js WASM for move evaluation
+- [x] Engine eval bar + best move suggestions in the move-tree panel
+- [x] Move navigation: click moves in tree to jump to position, back/forward arrows
+- [x] Repertoire List page: list saved repertoires, create new, delete, rename
+- [x] Free/Pro gating: free users limited to 1 saved repertoire, Pro users unlimited
+- [x] Route wiring + navigation link in header/Training section
+- [x] TypeScript: 0 errors
+- [x] Vitest: tests for API routes and key logic (15 tests passing)

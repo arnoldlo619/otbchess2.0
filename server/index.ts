@@ -25,6 +25,8 @@ import { createOpeningsAdminRouter } from "./openingsAdmin.js";
 import { registerOpeningsPublicRoutes } from "./openingsPublic.js";
 import { createBillingRouter } from "./billing.js";
 import { createAdminStaffRouter } from "./adminStaff.js";
+import { createRepertoireBuilderRouter } from "./repertoireBuilder.js";
+import { registerStorageProxy } from "./storageProxy.js";
 export { _startCvJobQueue as startCvJobQueue };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -964,6 +966,8 @@ export function createApp() {
   app.use("/api/billing/webhook", express.raw({ type: "application/json" }));
   app.use("/api/billing", createBillingRouter());
   app.use("/api/admin/staff", createAdminStaffRouter());
+  app.use("/api/repertoire-builder", createRepertoireBuilderRouter());
+  registerStorageProxy(app);
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.
   app.get("/api/push/vapid-public-key", (_req, res) => {

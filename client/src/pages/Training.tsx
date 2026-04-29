@@ -7,7 +7,7 @@
  */
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
-import { BookOpen, Target, ChevronRight, GraduationCap, Zap, Brain } from "lucide-react";
+import { BookOpen, Target, ChevronRight, GraduationCap, Zap, Brain, Swords } from "lucide-react";
 import { AppNavBar } from "@/components/AppNavBar";
 
 export default function Training() {
@@ -41,6 +41,19 @@ export default function Training() {
       accentBg: isDark ? "bg-blue-500/10" : "bg-blue-50",
       border: isDark ? "border-blue-500/20 hover:border-blue-500/40" : "border-blue-200/60 hover:border-blue-400/60",
       highlights: ["Opening tendency analysis", "Preparation depth scoring", "Recurring mistake patterns"],
+    },
+    {
+      icon: Swords,
+      title: "Repertoire Builder",
+      subtitle: "Interactive Board · Move Tree · Stockfish Engine",
+      description:
+        "Build your own opening repertoire with an interactive chessboard powered by Stockfish. Explore candidate moves from the Lichess database, see frequency and win-rate data, and save your preparation lines.",
+      cta: "Build Repertoire",
+      href: "/repertoire",
+      accent: isDark ? "text-purple-400" : "text-purple-600",
+      accentBg: isDark ? "bg-purple-500/10" : "bg-purple-50",
+      border: isDark ? "border-purple-500/20 hover:border-purple-500/40" : "border-purple-200/60 hover:border-purple-400/60",
+      highlights: ["Stockfish 18 engine analysis", "Lichess database explorer", "Save & manage repertoires"],
     },
   ];
 

@@ -50,6 +50,8 @@ const ProSuccess = lazy(() => import("./pages/ProSuccess"));
 const OpeningsLibraryDemo = lazy(() => import("./pages/OpeningsLibraryDemo"));
 const OpeningDetailDemo = lazy(() => import("./pages/OpeningDetailDemo"));
 const AdminStaff = lazy(() => import("./pages/AdminStaff"));
+const RepertoireList = lazy(() => import("./pages/RepertoireList"));
+const RepertoireBuilder = lazy(() => import("./pages/RepertoireBuilder"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -104,6 +106,8 @@ function Router() {
         <Route path={"/openings/demo"} component={OpeningsLibraryDemo} />
         <Route path={"/openings/:slug"} component={OpeningDetail} />
         <Route path={"/openings"} component={OpeningsLibrary} />
+        <Route path={"/repertoire/:id"} component={RepertoireBuilder} />
+        <Route path={"/repertoire"} component={RepertoireList} />
         <Route path={"/pricing"} component={Pricing} />
         <Route path={"/pro/success"} component={ProSuccess} />
         <Route path={"/admin/staff"} component={AdminStaff} />
