@@ -67,7 +67,7 @@ import {
   Bell as _Bell,
   Settings as _Settings,
   BarChart3,
-  RefreshCw as _RefreshCw,
+  RefreshCw,
   Shield,
   Search,
   X,
@@ -103,6 +103,8 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
 import { apiFetch, authFetch } from "@/lib/apiFetch";
+import { fetchFromChessCom } from "@/hooks/useChessComProfile";
+import { fetchFromLichess } from "@/hooks/useLichessProfile";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1815,6 +1817,9 @@ export default function Director() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // ── Bulk ELO refresh state ────────────────────────────────────────────────
+  const [isRefreshingElo, setIsRefreshingElo] = useState(false);
+  const [eloRefreshProgress, setEloRefreshProgress] = useState<{ done: number; total: number } | null>(null);
 
   // ── Keyboard shortcuts for score entry (Boards tab only) ─────────────────
   // When the Boards tab is active, pressing 1 / D / 0 records the result for
@@ -1879,7 +1884,60 @@ export default function Director() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [activeTab, isRegistration, boardGames, focusedBoardIdx, state.players, recordWithUndo, pushStandingsNow]); // keyboard shortcuts always active on home tab
 
-  // ── Push notification broadcasts ────────────────────────────────────────
+    // ── Bulk ELO refresh ─────────────────────────────────────────────────────────
+  /**
+   * Re-fetch ELO ratings for every player who has a username.
+   * Skips walk-in players (no platform set or username looks like a walk-in id).
+   * Runs sequentially with a small delay to avoid hammering the API.
+   */
+  const refreshAllElo = useCallback(async () => {
+    const refreshable = state.players.filter(
+      (p) => p.username && p.username.trim().length > 0 && p.platform
+    );
+    if (refreshable.length === 0) {
+      toast.info("No players with usernames to refresh.");
+      return;
+    }
+    setIsRefreshingElo(true);
+    setEloRefreshProgress({ done: 0, total: refreshable.length });
+    let updated = 0;
+    let failed = 0;
+    for (let i = 0; i < refreshable.length; i++) {
+      const p = refreshable[i];
+      try {
+        if (p.platform === "lichess") {
+          const profile = await fetchFromLichess(p.username);
+          updatePlayer(p.id, {
+            elo: profile.elo,
+            rapidElo: profile.rapid || undefined,
+            blitzElo: profile.blitz || undefined,
+          });
+        } else {
+          const profile = await fetchFromChessCom(p.username);
+          updatePlayer(p.id, {
+            elo: profile.elo,
+            rapidElo: profile.rapid || undefined,
+            blitzElo: profile.blitz || undefined,
+          });
+        }
+        updated++;
+      } catch {
+        failed++;
+      }
+      setEloRefreshProgress({ done: i + 1, total: refreshable.length });
+      // Small delay between requests to be polite to the API
+      if (i < refreshable.length - 1) await new Promise((r) => setTimeout(r, 120));
+    }
+    setIsRefreshingElo(false);
+    setEloRefreshProgress(null);
+    if (failed === 0) {
+      toast.success(`ELO refreshed for ${updated} player${updated !== 1 ? "s" : ""}.`);
+    } else {
+      toast.warning(`Updated ${updated} player${updated !== 1 ? "s" : ""}, ${failed} failed (username not found).`);
+    }
+  }, [state.players, updatePlayer]);
+
+  // ── Push notification broadcasts ──────────────────────────────────────
   const broadcastRoundStart = useCallback(async (round: number) => {
     const tournamentName = state.tournamentName ?? "OTB Chess Tournament";
     try {
@@ -4003,6 +4061,24 @@ export default function Director() {
                       >
                         <Download className="w-3.5 h-3.5" />
                         Download CSV
+                      </button>
+                    )}
+                    {/* Refresh All ELO — re-fetches ratings for all players with usernames */}
+                    {state.players.length > 0 && (
+                      <button
+                        onClick={refreshAllElo}
+                        disabled={isRefreshingElo}
+                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                          isDark
+                            ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                            : "border-[#3D6B47]/30 text-[#3D6B47] hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/50"
+                        }`}
+                        title="Re-fetch ELO ratings from chess.com / Lichess for all players"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingElo ? "animate-spin" : ""}`} />
+                        {isRefreshingElo && eloRefreshProgress
+                          ? `${eloRefreshProgress.done}/${eloRefreshProgress.total}`
+                          : "Refresh ELO"}
                       </button>
                     )}
                     {/* Add Player + Upload RSVPs buttons — registration phase */}

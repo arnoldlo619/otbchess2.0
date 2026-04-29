@@ -5807,3 +5807,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Ensure move list, coaching notes, and navigation controls are in a side panel
 - [x] Keep the layout responsive for mobile
 - [x] TypeScript: 0 errors
+
+## Director Dashboard: Refresh All Players ELO
+- [x] Add "Refresh ELO" button to Players tab toolbar (next to Download CSV)
+- [x] Button calls fetchFromChessCom / fetchFromLichess for each player with a username
+- [x] Sequential fetch with 120ms delay between requests to avoid rate-limiting
+- [x] Spinning RefreshCw icon + live progress counter (e.g. "3/12") while running
+- [x] Button disabled while refresh is in progress
+- [x] Updates elo, rapidElo, blitzElo on each player via updatePlayer
+- [x] Success toast: "ELO refreshed for N players." / warning toast if some failed
+- [x] TypeScript: 0 errors
