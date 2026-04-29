@@ -40,6 +40,10 @@ interface MoveNode {
   move?: string;
   /** SAN move e.g. "e4" */
   san?: string;
+  /** ECO code e.g. "B20" */
+  openingEco?: string;
+  /** Opening name e.g. "Sicilian Defense" */
+  openingName?: string;
   /** User comment / annotation */
   comment?: string;
   /** Stockfish eval in centipawns (from White's POV) */
@@ -56,6 +60,10 @@ interface ExplorerMove {
   draws: number;
   black: number;
   averageRating?: number;
+  /** Opening name for the resulting position (fetched lazily) */
+  openingName?: string;
+  /** ECO code for the resulting position */
+  openingEco?: string;
 }
 
 interface ExplorerResponse {
@@ -69,6 +77,29 @@ interface ExplorerResponse {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+/** Module-level cache: FEN → { eco, name } to avoid redundant Lichess fetches */
+const openingCache = new Map<string, { eco: string; name: string } | null>();
+
+/**
+ * Fetch the opening name for a given FEN from the Lichess Explorer.
+ * Returns null if not found or on error. Results are cached.
+ */
+async function fetchOpeningForFen(fen: string): Promise<{ eco: string; name: string } | null> {
+  if (openingCache.has(fen)) return openingCache.get(fen) ?? null;
+  try {
+    const url = `https://explorer.lichess.ovh/lichess?variant=standard&speeds=rapid,classical&ratings=1600,1800,2000,2200,2500&fen=${encodeURIComponent(fen)}`;
+    const res = await fetch(url);
+    if (!res.ok) { openingCache.set(fen, null); return null; }
+    const data = await res.json() as { opening?: { eco: string; name: string } };
+    const opening = data.opening ?? null;
+    openingCache.set(fen, opening);
+    return opening;
+  } catch {
+    openingCache.set(fen, null);
+    return null;
+  }
+}
 
 function createEmptyTree(): MoveNode {
   return { fen: STARTING_FEN, children: [] };
@@ -182,41 +213,61 @@ function MoveTreeBreadcrumb({
   if (path.length <= 1) return null;
 
   const moves = path.slice(1); // Skip root
+  const currentNode = moves[moves.length - 1];
   return (
-    <div className="flex flex-wrap items-center gap-1 text-sm mb-3">
-      <button
-        onClick={() => onNavigate(STARTING_FEN)}
-        className={`px-1.5 py-0.5 rounded text-xs font-mono ${
-          isDark ? "bg-white/5 hover:bg-white/10 text-white/60" : "bg-gray-100 hover:bg-gray-200 text-gray-500"
-        }`}
-      >
-        Start
-      </button>
-      {moves.map((node, i) => {
-        const moveNum = Math.floor(i / 2) + 1;
-        const isWhite = i % 2 === 0;
-        const prefix = isWhite ? `${moveNum}.` : `${moveNum}...`;
-        const isLast = i === moves.length - 1;
-        return (
-          <React.Fragment key={node.fen}>
-            <span className={isDark ? "text-white/30" : "text-gray-300"}>/</span>
-            <button
-              onClick={() => onNavigate(node.fen)}
-              className={`px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
-                isLast
-                  ? isDark
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-emerald-100 text-emerald-700"
-                  : isDark
-                  ? "bg-white/5 hover:bg-white/10 text-white/70"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-              }`}
-            >
-              {prefix} {node.san || "?"}
-            </button>
-          </React.Fragment>
-        );
-      })}
+    <div className="mb-3">
+      <div className="flex flex-wrap items-center gap-1 text-sm">
+        <button
+          onClick={() => onNavigate(STARTING_FEN)}
+          className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+            isDark ? "bg-white/5 hover:bg-white/10 text-white/60" : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+          }`}
+        >
+          Start
+        </button>
+        {moves.map((node, i) => {
+          const moveNum = Math.floor(i / 2) + 1;
+          const isWhite = i % 2 === 0;
+          const prefix = isWhite ? `${moveNum}.` : `${moveNum}...`;
+          const isLast = i === moves.length - 1;
+          return (
+            <React.Fragment key={node.fen}>
+              <span className={isDark ? "text-white/30" : "text-gray-300"}>/</span>
+              <button
+                onClick={() => onNavigate(node.fen)}
+                className={`px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
+                  isLast
+                    ? isDark
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "bg-emerald-100 text-emerald-700"
+                    : isDark
+                    ? "bg-white/5 hover:bg-white/10 text-white/70"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                }`}
+              >
+                {prefix} {node.san || "?"}
+              </button>
+            </React.Fragment>
+          );
+        })}
+      </div>
+      {/* Show opening name for current position */}
+      {currentNode?.openingName && (
+        <div className="flex items-center gap-1.5 mt-1">
+          {currentNode.openingEco && (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${
+              isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+            }`}>
+              {currentNode.openingEco}
+            </span>
+          )}
+          <span className={`text-xs font-medium ${
+            isDark ? "text-white/60" : "text-gray-500"
+          }`}>
+            {currentNode.openingName}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -232,6 +283,7 @@ function ExplorerMoveRow({
   onPlay,
   isDark,
   openingName,
+  openingEco,
 }: {
   move: ExplorerMove;
   totalGames: number;
@@ -241,6 +293,7 @@ function ExplorerMoveRow({
   onPlay: () => void;
   isDark: boolean;
   openingName?: string;
+  openingEco?: string;
 }) {
   const games = move.white + move.draws + move.black;
   const freq = totalGames > 0 ? games / totalGames : 0;
@@ -268,13 +321,22 @@ function ExplorerMoveRow({
         </span>
       </div>
 
-      {/* Opening name */}
+      {/* Opening name + ECO badge */}
       <div className="flex-1 min-w-0">
-        {openingName && (
-          <span className={`text-xs truncate block ${isDark ? "text-white/50" : "text-gray-400"}`}>
-            {openingName}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 min-w-0">
+          {openingEco && (
+            <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${
+              isDark ? "bg-white/10 text-white/60" : "bg-gray-100 text-gray-500"
+            }`}>
+              {openingEco}
+            </span>
+          )}
+          {openingName && (
+            <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-gray-500"}`}>
+              {openingName}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Frequency */}
@@ -405,10 +467,37 @@ export default function RepertoireBuilder() {
         if (!res.ok) throw new Error("Explorer fetch failed");
         const data = (await res.json()) as ExplorerResponse;
         if (!cancelled) {
-          setExplorerMoves(data.moves || []);
+          const rawMoves = data.moves || [];
+          setExplorerMoves(rawMoves);
           if (data.opening) {
             setOpeningName(data.opening.name);
             setOpeningEco(data.opening.eco);
+          }
+          // Fetch opening names for each candidate move's resulting FEN (top 8 only)
+          const topMoves = rawMoves.slice(0, 8);
+          const fenMoveMap: Array<{ uci: string; fen: string }> = [];
+          for (const m of topMoves) {
+            try {
+              const tempChess = new Chess(currentFen);
+              const r = tempChess.move(m.san);
+              if (r) fenMoveMap.push({ uci: m.uci, fen: tempChess.fen() });
+            } catch { /* skip */ }
+          }
+          // Fetch in parallel (all cached after first visit)
+          const openings = await Promise.all(
+            fenMoveMap.map(({ fen }) => fetchOpeningForFen(fen))
+          );
+          if (!cancelled) {
+            setExplorerMoves((prev) =>
+              prev.map((m) => {
+                const idx = fenMoveMap.findIndex((fm) => fm.uci === m.uci);
+                if (idx === -1) return m;
+                const opening = openings[idx];
+                return opening
+                  ? { ...m, openingName: opening.name, openingEco: opening.eco }
+                  : m;
+              })
+            );
           }
         }
       } catch {
@@ -481,11 +570,26 @@ export default function RepertoireBuilder() {
       if (parentNode) {
         const existing = parentNode.children.find((c) => c.fen === newFen);
         if (!existing) {
-          parentNode.children.push({
+          const newNode: MoveNode = {
             fen: newFen,
             move: uci,
             san: result.san,
             children: [],
+          };
+          parentNode.children.push(newNode);
+          // Fetch opening annotation asynchronously and backfill
+          fetchOpeningForFen(newFen).then((opening) => {
+            if (opening) {
+              setMoveTree((prev) => {
+                const clone = JSON.parse(JSON.stringify(prev)) as MoveNode;
+                const target = findNode(clone, newFen);
+                if (target) {
+                  target.openingEco = opening.eco;
+                  target.openingName = opening.name;
+                }
+                return clone;
+              });
+            }
           });
         }
       }
@@ -534,10 +638,29 @@ export default function RepertoireBuilder() {
             fen: newFen,
             move: move.uci,
             san: move.san,
+            // Carry over opening annotation if already fetched from explorer
+            openingEco: move.openingEco,
+            openingName: move.openingName,
             children: [],
           });
           setMoveTree(updatedTree);
           autoSave(updatedTree);
+          // Backfill opening annotation if not yet available
+          if (!move.openingName) {
+            fetchOpeningForFen(newFen).then((opening) => {
+              if (opening) {
+                setMoveTree((prev) => {
+                  const clone = JSON.parse(JSON.stringify(prev)) as MoveNode;
+                  const target = findNode(clone, newFen);
+                  if (target) {
+                    target.openingEco = opening.eco;
+                    target.openingName = opening.name;
+                  }
+                  return clone;
+                });
+              }
+            });
+          }
         }
       }
     },
@@ -563,10 +686,28 @@ export default function RepertoireBuilder() {
             fen: newFen,
             move: move.uci,
             san: move.san,
+            openingEco: move.openingEco,
+            openingName: move.openingName,
             children: [],
           });
           setMoveTree(updatedTree);
           autoSave(updatedTree);
+          // Backfill opening annotation if not yet available
+          if (!move.openingName) {
+            fetchOpeningForFen(newFen).then((opening) => {
+              if (opening) {
+                setMoveTree((prev) => {
+                  const clone = JSON.parse(JSON.stringify(prev)) as MoveNode;
+                  const target = findNode(clone, newFen);
+                  if (target) {
+                    target.openingEco = opening.eco;
+                    target.openingName = opening.name;
+                  }
+                  return clone;
+                });
+              }
+            });
+          }
         }
       }
 
@@ -896,10 +1037,27 @@ export default function RepertoireBuilder() {
                     }`}
                   >
                     <BookOpen size={14} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                    <span className="font-bold font-mono">{child.san || "?"}</span>
-                    <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                      ({countMoves({ ...child, children: child.children }) + 1} move{countMoves({ ...child, children: child.children }) + 1 !== 1 ? "s" : ""} deep)
-                    </span>
+                    <span className="font-bold font-mono text-sm">{child.san || "?"}</span>
+                    {/* Opening annotation */}
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      {child.openingEco && (
+                        <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${
+                          isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                        }`}>
+                          {child.openingEco}
+                        </span>
+                      )}
+                      {child.openingName && (
+                        <span className={`text-xs truncate ${isDark ? "text-white/50" : "text-gray-400"}`}>
+                          {child.openingName}
+                        </span>
+                      )}
+                      {!child.openingName && (
+                        <span className={`text-xs ${isDark ? "text-white/30" : "text-gray-300"}`}>
+                          {countMoves({ ...child, children: child.children }) + 1} move{countMoves({ ...child, children: child.children }) + 1 !== 1 ? "s" : ""} deep
+                        </span>
+                      )}
+                    </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -907,7 +1065,7 @@ export default function RepertoireBuilder() {
                         setMoveTree(updated);
                         autoSave(updated);
                       }}
-                      className="ml-auto text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100"
+                      className="ml-auto shrink-0 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100"
                       title="Remove"
                     >
                       <Trash2 size={14} />
@@ -950,6 +1108,8 @@ export default function RepertoireBuilder() {
                     onRemove={() => removeExplorerMove(move)}
                     onPlay={() => playExplorerMove(move)}
                     isDark={isDark}
+                    openingName={move.openingName}
+                    openingEco={move.openingEco}
                   />
                 ))
               )}

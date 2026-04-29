@@ -5831,3 +5831,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Route wiring + navigation link in header/Training section
 - [x] TypeScript: 0 errors
 - [x] Vitest: tests for API routes and key logic (15 tests passing)
+
+## Opening Repertoire Builder: Opening Name Annotations
+- [x] Extend MoveNode type with openingEco and openingName fields
+- [x] Add module-level Lichess Explorer cache (fetchOpeningForFen) to avoid redundant fetches
+- [x] makeMove: fetch and backfill opening annotation on new nodes asynchronously
+- [x] addExplorerMove: carry over and backfill opening annotation
+- [x] playExplorerMove: carry over and backfill opening annotation
+- [x] Explorer fetch: batch-fetch opening names for top-8 candidate moves in parallel
+- [x] ExplorerMoveRow: show ECO badge + opening name in the candidate list
+- [x] Repertoire tree rows: show ECO badge + opening name next to each saved move
+- [x] MoveTreeBreadcrumb: show ECO badge + opening name for the current position
+- [x] TypeScript: 0 errors
