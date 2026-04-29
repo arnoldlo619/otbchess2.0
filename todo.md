@@ -5784,3 +5784,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Already implemented: UserRepertoire (whiteFirstMove, blackVsE4, blackVsD4, expectedColor) stored in localStorage
 - [x] Already implemented: enrichPrepLines computes collisionScore and repertoireFit; generateMatchupSummary adjusts recommendations
 - [x] 13/13 vitest tests passing for all new features
+
+## Openings Library: Search Bar
+- [x] Search state already exists (useState("") for `search`)
+- [x] Real-time filtering by name, ECO code, and description already implemented
+- [x] Full-width search input with Search icon and X clear button already in header
+- [x] Empty state "No openings match your filters" already implemented
+- [x] Verified working: "sicilian" filters to Sicilian Najdorf; "D02" filters to London System
+
+## OpeningDetail: Board-First Redesign
+- [x] Chessboard is now the dominant element: 55% width on desktop (lg:w-[55%]) with rounded-2xl border and shadow
+- [x] Info panel (name, ECO, stats, tags, progress, CTA) is sticky on the right side (lg:sticky lg:top-24)
+- [x] Opening name enlarged to text-3xl lg:text-4xl font-bold; description to text-base
+- [x] CTA button enlarged to py-4 text-base font-bold with shadow
+- [x] Study Lines list below spans full max-w-7xl width
+- [x] Fully responsive: board stacks full-width on mobile, two-column on lg+
+- [x] TypeScript: 0 errors

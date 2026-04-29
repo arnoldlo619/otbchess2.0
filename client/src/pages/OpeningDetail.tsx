@@ -289,12 +289,13 @@ function OpeningDetailContent() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
-        {/* Hero section */}
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Board */}
-          <div className="w-full md:w-64 shrink-0">
-            <div className={`rounded-xl overflow-hidden border pointer-events-none ${isDark ? "border-white/[0.06]" : "border-gray-200"}`}>
+       {/* ── Board-First Hero ─────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
+        {/* Hero: large board left, info panel right */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Board — dominant element, fills ~55% on desktop */}
+          <div className="w-full lg:w-[55%] shrink-0">
+            <div className={`rounded-2xl overflow-hidden border-2 pointer-events-none shadow-2xl ${isDark ? "border-emerald-500/20 shadow-emerald-900/40" : "border-[#3D6B47]/20 shadow-gray-300/60"}`}>
               <Chessboard
                 options={{
                   position: opening.thumbnailFen,
@@ -307,9 +308,8 @@ function OpeningDetailContent() {
               />
             </div>
           </div>
-
-          {/* Info */}
-          <div className="flex-1 space-y-4">
+          {/* Info panel — right side, scrollable */}
+          <div className="flex-1 space-y-5 lg:sticky lg:top-24">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <div className={`w-3 h-3 rounded-full ${opening.side === "white" ? "bg-white border border-white/30" : "bg-gray-800 border border-white/20"}`} />
@@ -320,9 +320,9 @@ function OpeningDetailContent() {
                   </span>
                 )}
               </div>
-              <h1 className={`text-2xl font-bold ${isDark ? "text-white/95" : "text-gray-900"}`}>{opening.name}</h1>
+              <h1 className={`text-3xl lg:text-4xl font-bold leading-tight ${isDark ? "text-white/95" : "text-gray-900"}`}>{opening.name}</h1>
               {opening.shortDescription && (
-                <p className={`text-sm mt-1 leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>{opening.shortDescription}</p>
+                <p className={`text-base mt-2 leading-relaxed ${isDark ? "text-white/55" : "text-gray-500"}`}>{opening.shortDescription}</p>
               )}
             </div>
 
@@ -388,7 +388,7 @@ function OpeningDetailContent() {
                 }
               }}
               disabled={allLines.length === 0}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed min-h-[52px]"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-40 disabled:cursor-not-allowed min-h-[56px]"
             >
               <Play className="w-4 h-4" />
               {masteredCount > 0 ? "Continue Studying" : "Start Studying"}
