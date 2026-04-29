@@ -5800,3 +5800,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Study Lines list below spans full max-w-7xl width
 - [x] Fully responsive: board stacks full-width on mobile, two-column on lg+
 - [x] TypeScript: 0 errors
+
+## Study Page: Board-First Redesign
+- [x] Make the chessboard the dominant full-screen component on the Study page
+- [x] Match the board-first layout from OpeningDetail (large board left, info/moves panel right)
+- [x] Ensure move list, coaching notes, and navigation controls are in a side panel
+- [x] Keep the layout responsive for mobile
+- [x] TypeScript: 0 errors

@@ -545,12 +545,12 @@ function StudyModeContent() {
 
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Left: Board */}
-          <div className="lg:w-[480px] xl:w-[520px] shrink-0 space-y-3">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Left: Board — dominant element, fills ~55% on desktop */}
+          <div className="w-full lg:w-[55%] shrink-0 space-y-3">
             <div
               ref={boardContainerRef}
-              className={`rounded-xl overflow-hidden border ${isDark ? "border-white/[0.06]" : "border-gray-200"}`}
+              className={`rounded-2xl overflow-hidden border-2 shadow-2xl ${isDark ? "border-emerald-500/20 shadow-emerald-900/40" : "border-[#3D6B47]/20 shadow-gray-300/60"}`}
             >
               <Chessboard
                 options={{
@@ -642,8 +642,8 @@ function StudyModeContent() {
             )}
           </div>
 
-          {/* Right: Explanation panel */}
-          <div className="flex-1 space-y-4 min-w-0">
+          {/* Right: Explanation panel — sticky on desktop */}
+          <div className="flex-1 space-y-4 min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
             {/* Move list */}
             <div className={`p-3 rounded-xl max-h-48 overflow-y-auto ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
               <MoveList nodes={mainNodes} currentPly={currentPly} onJumpTo={jumpTo} />
