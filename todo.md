@@ -5843,3 +5843,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Repertoire tree rows: show ECO badge + opening name next to each saved move
 - [x] MoveTreeBreadcrumb: show ECO badge + opening name for the current position
 - [x] TypeScript: 0 errors
+
+## Opening Repertoire Builder: PGN Import / Export
+- [x] PGN export: convert MoveNode tree to PGN string with variations (parentheses) and comments
+- [x] PGN export: download as .pgn file + copy to clipboard button
+- [x] PGN import: parse PGN (including variations) into MoveNode tree
+- [x] PGN import: file picker modal with textarea fallback, preview move count before confirming
+- [x] PGN import: merge mode (add to existing tree) vs replace mode
+- [x] Wire Import PGN and Export PGN buttons into the Repertoire Builder toolbar
+- [x] TypeScript: 0 errors

@@ -29,6 +29,12 @@ import {
   BookOpen,
   Loader2,
   Zap,
+  Upload,
+  Download,
+  Copy,
+  Check,
+  FileText,
+  X,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -141,6 +147,224 @@ function countMoves(root: MoveNode): number {
   }
   dfs(root);
   return count;
+}
+
+// ─── PGN Export ──────────────────────────────────────────────────────────────
+
+/**
+ * Recursively build a PGN move-text string from a MoveNode tree.
+ * Variations (siblings) are wrapped in parentheses per the PGN standard.
+ *
+ * @param node   Current node
+ * @param depth  Ply depth from root (0 = root, 1 = first move)
+ * @param isFirst Whether this is the first child (main line vs variation)
+ */
+function treeToMoveText(node: MoveNode, depth: number, isFirst: boolean): string {
+  if (!node.san) return "";
+
+  const plyFromStart = depth; // depth is already 1-based ply
+  const moveNum = Math.ceil(plyFromStart / 2);
+  const isWhiteMove = plyFromStart % 2 === 1;
+
+  let text = "";
+
+  // Prefix: move number indicator
+  if (isWhiteMove) {
+    text += `${moveNum}. `;
+  } else if (!isFirst) {
+    // After a variation we need to re-state the move number with ellipsis
+    text += `${moveNum}... `;
+  }
+
+  text += node.san;
+
+  // Inline comment
+  if (node.comment) {
+    text += ` { ${node.comment.replace(/[{}]/g, "")} }`;
+  }
+
+  if (node.children.length === 0) return text;
+
+  // Main line (first child) continues inline
+  const [mainChild, ...variations] = node.children;
+
+  // Recurse into main line
+  const mainText = treeToMoveText(mainChild, depth + 1, true);
+  if (mainText) text += " " + mainText;
+
+  // Variations wrapped in parentheses
+  for (const varChild of variations) {
+    const varText = treeToMoveText(varChild, depth + 1, false);
+    if (varText) text += " ( " + varText + " )";
+  }
+
+  return text;
+}
+
+/**
+ * Convert the full MoveNode tree to a PGN string.
+ * Includes standard PGN headers and the full move text with variations.
+ */
+function exportToPgn(tree: MoveNode, name: string, color: "white" | "black"): string {
+  const date = new Date().toISOString().split("T")[0].replace(/-/g, ".");
+  const headers = [
+    `[Event "${name}"]`,
+    `[Site "ChessOTB.club"]`,
+    `[Date "${date}"]`,
+    `[White "${color === "white" ? "Repertoire" : "Opponent"}"]`,
+    `[Black "${color === "black" ? "Repertoire" : "Opponent"}"]`,
+    `[Result "*"]`,
+  ].join("\n");
+
+  // Build move text from all children of root
+  const moveParts: string[] = [];
+  const [mainChild, ...variations] = tree.children;
+
+  if (mainChild) {
+    const mainText = treeToMoveText(mainChild, 1, true);
+    if (mainText) moveParts.push(mainText);
+    for (const varChild of variations) {
+      const varText = treeToMoveText(varChild, 1, false);
+      if (varText) moveParts.push("( " + varText + " )");
+    }
+  }
+
+  const moveText = moveParts.join(" ") + (moveParts.length ? " *" : "*");
+  return headers + "\n\n" + moveText + "\n";
+}
+
+// ─── PGN Import ───────────────────────────────────────────────────────────────
+
+/**
+ * Parse a PGN string (including variations) into a MoveNode tree.
+ * Supports:
+ *  - Main line moves
+ *  - Variations in parentheses (nested)
+ *  - Inline comments in { ... }
+ *  - Move number indicators (1. e4, 1... e5, etc.)
+ *
+ * Returns the root MoveNode (STARTING_FEN, no san/move) with children populated.
+ * Throws on invalid PGN.
+ */
+function importFromPgn(pgn: string): MoveNode {
+  // Strip headers (lines starting with [)
+  const moveSection = pgn
+    .split("\n")
+    .filter((l) => !l.trim().startsWith("["))
+    .join(" ");
+
+  // Tokenise: moves, move numbers, comments, variation brackets, result
+  const tokens = tokenisePgn(moveSection);
+
+  const root: MoveNode = { fen: STARTING_FEN, children: [] };
+  const stack: { node: MoveNode; chess: Chess }[] = [{ node: root, chess: new Chess() }];
+
+  let pendingComment: string | undefined;
+
+  for (const token of tokens) {
+    if (token === "(" ) {
+      // Start variation: go back one ply from current position
+      const current = stack[stack.length - 1];
+      const parent = stack[stack.length - 2] ?? stack[0];
+      // The variation starts from the parent's position
+      const parentChess = parent ? new Chess(parent.chess.fen()) : new Chess();
+      // Actually we need the grandparent FEN — the position before the last move
+      // We achieve this by cloning the parent node's chess state
+      const varChess = new Chess(parent.node.fen);
+      stack.push({ node: parent.node, chess: varChess });
+      void current; // suppress unused warning
+      continue;
+    }
+    if (token === ")") {
+      // End variation: pop back
+      if (stack.length > 1) stack.pop();
+      continue;
+    }
+    // Skip result tokens
+    if (token === "*" || token === "1-0" || token === "0-1" || token === "1/2-1/2") continue;
+    // Skip move number tokens like "1." "1..."
+    if (/^\d+\.+$/.test(token)) continue;
+    // Comment
+    if (token.startsWith("{") && token.endsWith("}")) {
+      pendingComment = token.slice(1, -1).trim();
+      continue;
+    }
+
+    // It's a SAN move
+    const top = stack[stack.length - 1];
+    try {
+      const result = top.chess.move(token);
+      if (!result) continue;
+      const newFen = top.chess.fen();
+      const uci = result.from + result.to + (result.promotion || "");
+
+      // Check if this node already exists as a child
+      let child = top.node.children.find((c) => c.fen === newFen);
+      if (!child) {
+        child = {
+          fen: newFen,
+          move: uci,
+          san: result.san,
+          comment: pendingComment,
+          children: [],
+        };
+        top.node.children.push(child);
+      } else if (pendingComment && !child.comment) {
+        child.comment = pendingComment;
+      }
+      pendingComment = undefined;
+
+      // Advance stack top to this child
+      stack[stack.length - 1] = { node: child, chess: top.chess };
+    } catch {
+      // Invalid move — skip gracefully
+    }
+  }
+
+  return root;
+}
+
+/** Tokenise PGN move section into an array of tokens */
+function tokenisePgn(text: string): string[] {
+  const tokens: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    // Skip whitespace
+    if (/\s/.test(ch)) { i++; continue; }
+    // Comment { ... }
+    if (ch === "{") {
+      const end = text.indexOf("}", i);
+      if (end === -1) { i++; continue; }
+      tokens.push(text.slice(i, end + 1));
+      i = end + 1;
+      continue;
+    }
+    // Parentheses
+    if (ch === "(" || ch === ")") { tokens.push(ch); i++; continue; }
+    // Semicolon comment (rest of line)
+    if (ch === ";") {
+      const end = text.indexOf("\n", i);
+      i = end === -1 ? text.length : end + 1;
+      continue;
+    }
+    // Word token (move, move number, result)
+    const match = text.slice(i).match(/^[^\s{}();]+/);
+    if (match) { tokens.push(match[0]); i += match[0].length; continue; }
+    i++;
+  }
+  return tokens;
+}
+
+/** Count total ply in a MoveNode tree */
+function countPly(root: MoveNode): number {
+  let max = 0;
+  function dfs(node: MoveNode, depth: number) {
+    if (depth > max) max = depth;
+    for (const child of node.children) dfs(child, depth + 1);
+  }
+  dfs(root, 0);
+  return max;
 }
 
 /** Remove a child node from the tree by FEN */
@@ -411,6 +635,15 @@ export default function RepertoireBuilder() {
   const [showEngine, setShowEngine] = useState(true);
   const [lastMove, setLastMove] = useState<[string, string] | null>(null);
   const [editingName, setEditingName] = useState(false);
+  // PGN import/export state
+  const [showPgnExport, setShowPgnExport] = useState(false);
+  const [showPgnImport, setShowPgnImport] = useState(false);
+  const [pgnImportText, setPgnImportText] = useState("");
+  const [pgnImportError, setPgnImportError] = useState<string | null>(null);
+  const [pgnImportPreview, setPgnImportPreview] = useState<MoveNode | null>(null);
+  const [pgnImportMode, setPgnImportMode] = useState<"replace" | "merge">("replace");
+  const [pgnCopied, setPgnCopied] = useState(false);
+  const pgnImportFileRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -766,7 +999,88 @@ export default function RepertoireBuilder() {
     });
   }, [repertoireId, repertoireName]);
 
-  // ── Determine which explorer moves are in the repertoire ────────────────────
+  // ── PGN Export ──────────────────────────────────────────────────────────────────────────────────
+  const handleExportPgn = useCallback(() => {
+    setShowPgnExport(true);
+    setPgnCopied(false);
+  }, []);
+
+  const handleDownloadPgn = useCallback(() => {
+    const pgn = exportToPgn(moveTree, repertoireName, color);
+    const blob = new Blob([pgn], { type: "application/x-chess-pgn" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${repertoireName.replace(/[^a-z0-9]/gi, "_")}.pgn`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [moveTree, repertoireName, color]);
+
+  const handleCopyPgn = useCallback(async () => {
+    const pgn = exportToPgn(moveTree, repertoireName, color);
+    await navigator.clipboard.writeText(pgn);
+    setPgnCopied(true);
+    setTimeout(() => setPgnCopied(false), 2000);
+  }, [moveTree, repertoireName, color]);
+
+  // ── PGN Import ──────────────────────────────────────────────────────────────────────────────────
+  const handlePgnTextChange = useCallback((text: string) => {
+    setPgnImportText(text);
+    setPgnImportError(null);
+    setPgnImportPreview(null);
+    if (!text.trim()) return;
+    try {
+      const tree = importFromPgn(text);
+      setPgnImportPreview(tree);
+    } catch (e) {
+      setPgnImportError(e instanceof Error ? e.message : "Invalid PGN");
+    }
+  }, []);
+
+  const handlePgnFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      handlePgnTextChange(text);
+    };
+    reader.readAsText(file);
+  }, [handlePgnTextChange]);
+
+  const handleConfirmImport = useCallback(() => {
+    if (!pgnImportPreview) return;
+    let newTree: MoveNode;
+    if (pgnImportMode === "replace") {
+      newTree = pgnImportPreview;
+    } else {
+      // Merge: deep-merge the imported tree into the existing tree
+      const mergeInto = (target: MoveNode, source: MoveNode) => {
+        for (const srcChild of source.children) {
+          const existing = target.children.find((c) => c.fen === srcChild.fen);
+          if (existing) {
+            // Merge comment if missing
+            if (!existing.comment && srcChild.comment) existing.comment = srcChild.comment;
+            mergeInto(existing, srcChild);
+          } else {
+            target.children.push(JSON.parse(JSON.stringify(srcChild)) as MoveNode);
+          }
+        }
+      };
+      newTree = JSON.parse(JSON.stringify(moveTree)) as MoveNode;
+      mergeInto(newTree, pgnImportPreview);
+    }
+    setMoveTree(newTree);
+    setCurrentFen(STARTING_FEN);
+    setLastMove(null);
+    autoSave(newTree);
+    setShowPgnImport(false);
+    setPgnImportText("");
+    setPgnImportPreview(null);
+    setPgnImportError(null);
+  }, [pgnImportPreview, pgnImportMode, moveTree, autoSave]);
+
+  // ── Determine which explorer moves are in the repertoire ────────────────────────────────────
   const repertoireFens = useMemo(() => {
     const fens = new Set<string>();
     if (!currentNode) return fens;
@@ -871,12 +1185,37 @@ export default function RepertoireBuilder() {
                 <Loader2 size={12} className="animate-spin" /> Saving…
               </span>
             )}
+            {/* PGN Import / Export buttons */}
+            <button
+              onClick={() => setShowPgnImport(true)}
+              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                isDark
+                  ? "border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5"
+                  : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50"
+              }`}
+              title="Import PGN"
+            >
+              <Upload size={13} />
+              <span className="hidden sm:inline">Import</span>
+            </button>
+            <button
+              onClick={handleExportPgn}
+              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                isDark
+                  ? "border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5"
+                  : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50"
+              }`}
+              title="Export PGN"
+            >
+              <Download size={13} />
+              <span className="hidden sm:inline">Export</span>
+            </button>
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               color === "white"
                 ? "bg-white text-gray-900 border border-gray-200"
                 : "bg-gray-800 text-white border border-gray-600"
             }`}>
-              {color === "white" ? "♔ White" : "♚ Black"}
+              {color === "white" ? "♜ White" : "♚ Black"}
             </span>
           </div>
         </div>
@@ -1117,6 +1456,210 @@ export default function RepertoireBuilder() {
           </div>
         </div>
       </div>
+
+      {/* ── PGN Export Modal ──────────────────────────────────────────────────────────────── */}
+      {showPgnExport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
+            isDark ? "bg-gray-900 border border-white/10" : "bg-white border border-gray-200"
+          }`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${
+              isDark ? "border-white/10" : "border-gray-200"
+            }`}>
+              <div className="flex items-center gap-2">
+                <FileText size={18} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
+                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Export PGN</h2>
+              </div>
+              <button onClick={() => setShowPgnExport(false)} className={isDark ? "text-white/50 hover:text-white" : "text-gray-400 hover:text-gray-700"}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* PGN text */}
+            <div className="px-6 py-4">
+              <p className={`text-sm mb-3 ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                Copy or download the PGN to use in Chessbase, Lichess studies, or any other chess software.
+              </p>
+              <textarea
+                readOnly
+                value={exportToPgn(moveTree, repertoireName, color)}
+                rows={12}
+                className={`w-full text-xs font-mono rounded-xl p-3 resize-none outline-none ${
+                  isDark
+                    ? "bg-gray-800 text-white/80 border border-white/10"
+                    : "bg-gray-50 text-gray-800 border border-gray-200"
+                }`}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className={`flex items-center justify-end gap-3 px-6 py-4 border-t ${
+              isDark ? "border-white/10" : "border-gray-200"
+            }`}>
+              <button
+                onClick={handleCopyPgn}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  isDark
+                    ? "border-white/20 text-white/80 hover:bg-white/5"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {pgnCopied ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
+                {pgnCopied ? "Copied!" : "Copy to clipboard"}
+              </button>
+              <button
+                onClick={handleDownloadPgn}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+              >
+                <Download size={15} />
+                Download .pgn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PGN Import Modal ──────────────────────────────────────────────────────────────── */}
+      {showPgnImport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`w-full max-w-2xl rounded-2xl shadow-2xl ${
+            isDark ? "bg-gray-900 border border-white/10" : "bg-white border border-gray-200"
+          }`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${
+              isDark ? "border-white/10" : "border-gray-200"
+            }`}>
+              <div className="flex items-center gap-2">
+                <Upload size={18} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
+                <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Import PGN</h2>
+              </div>
+              <button onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }} className={isDark ? "text-white/50 hover:text-white" : "text-gray-400 hover:text-gray-700"}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4">
+              {/* File picker */}
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                  Upload a .pgn file
+                </label>
+                <div
+                  onClick={() => pgnImportFileRef.current?.click()}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                    isDark
+                      ? "border-white/20 hover:border-emerald-500/50 text-white/50 hover:text-white/80"
+                      : "border-gray-300 hover:border-emerald-500 text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  <Upload size={18} />
+                  <span className="text-sm">Click to choose a .pgn file</span>
+                </div>
+                <input
+                  ref={pgnImportFileRef}
+                  type="file"
+                  accept=".pgn,text/plain"
+                  className="hidden"
+                  onChange={handlePgnFileChange}
+                />
+              </div>
+
+              {/* Or paste */}
+              <div>
+                <label className={`block text-sm font-medium mb-1.5 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                  Or paste PGN text
+                </label>
+                <textarea
+                  value={pgnImportText}
+                  onChange={(e) => handlePgnTextChange(e.target.value)}
+                  rows={8}
+                  placeholder={`[Event "My Opening"]\n\n1. e4 e5 2. Nf3 Nc6 *`}
+                  className={`w-full text-xs font-mono rounded-xl p-3 resize-none outline-none ${
+                    isDark
+                      ? "bg-gray-800 text-white/80 border border-white/10 placeholder:text-white/20"
+                      : "bg-gray-50 text-gray-800 border border-gray-200 placeholder:text-gray-400"
+                  }`}
+                />
+              </div>
+
+              {/* Error */}
+              {pgnImportError && (
+                <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 rounded-xl px-4 py-2.5">
+                  <X size={15} className="shrink-0" />
+                  {pgnImportError}
+                </div>
+              )}
+
+              {/* Preview */}
+              {pgnImportPreview && !pgnImportError && (
+                <div className={`rounded-xl px-4 py-3 ${
+                  isDark ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-200"
+                }`}>
+                  <p className={`text-sm font-medium ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
+                    ✓ Valid PGN — {countMoves(pgnImportPreview)} move{countMoves(pgnImportPreview) !== 1 ? "s" : ""} ({countPly(pgnImportPreview)} ply deep)
+                  </p>
+                </div>
+              )}
+
+              {/* Import mode */}
+              {pgnImportPreview && (
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? "text-white/70" : "text-gray-700"}`}>
+                    Import mode
+                  </label>
+                  <div className="flex gap-3">
+                    {(["replace", "merge"] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setPgnImportMode(mode)}
+                        className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                          pgnImportMode === mode
+                            ? isDark
+                              ? "bg-emerald-600 border-emerald-600 text-white"
+                              : "bg-emerald-600 border-emerald-600 text-white"
+                            : isDark
+                              ? "border-white/20 text-white/60 hover:bg-white/5"
+                              : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {mode === "replace" ? "Replace current tree" : "Merge into current tree"}
+                      </button>
+                    ))}
+                  </div>
+                  <p className={`text-xs mt-1.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    {pgnImportMode === "replace"
+                      ? "The imported PGN will replace your entire current repertoire."
+                      : "New lines from the PGN will be added to your existing repertoire without removing anything."}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className={`flex items-center justify-end gap-3 px-6 py-4 border-t ${
+              isDark ? "border-white/10" : "border-gray-200"
+            }`}>
+              <button
+                onClick={() => { setShowPgnImport(false); setPgnImportText(""); setPgnImportPreview(null); setPgnImportError(null); }}
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  isDark ? "border-white/20 text-white/70 hover:bg-white/5" : "border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmImport}
+                disabled={!pgnImportPreview || !!pgnImportError}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+              >
+                <Upload size={15} />
+                Import PGN
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
