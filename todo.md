@@ -5852,3 +5852,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] PGN import: merge mode (add to existing tree) vs replace mode
 - [x] Wire Import PGN and Export PGN buttons into the Repertoire Builder toolbar
 - [x] TypeScript: 0 errors
+
+## Opening Repertoire Builder: Coverage Tracker
+- [x] Calculate coverage: count how many top-N opponent moves (by frequency) the user has a prepared response for
+- [x] Coverage progress bar: show X/N moves covered with a colored bar (green = good, orange = partial, red = low)
+- [x] Coverage breakdown: list uncovered moves with their frequency so user knows what to prepare next
+- [x] Coverage threshold: only count moves that appear in at least 1 in 20 games (5%) as "popular"
+- [x] Coverage updates live as user adds/removes moves from the tree
+- [x] TypeScript: 0 errors

@@ -267,7 +267,7 @@ function importFromPgn(pgn: string): MoveNode {
       const current = stack[stack.length - 1];
       const parent = stack[stack.length - 2] ?? stack[0];
       // The variation starts from the parent's position
-      const parentChess = parent ? new Chess(parent.chess.fen()) : new Chess();
+      const _parentChess = parent ? new Chess(parent.chess.fen()) : new Chess();
       // Actually we need the grandparent FEN — the position before the last move
       // We achieve this by cloning the parent node's chess state
       const varChess = new Chess(parent.node.fen);
@@ -1105,8 +1105,48 @@ export default function RepertoireBuilder() {
     () => explorerMoves.reduce((sum, m) => sum + m.white + m.draws + m.black, 0),
     [explorerMoves]
   );
+  /**
+   * Coverage = fraction of "popular" opponent moves that have a prepared response.
+   * A move is "popular" if it appears in ≥5% of games (1 in 20).
+   * We check whether the user has a child node for the FEN reached after each popular move.
+   */
+  const coverage = useMemo(() => {
+    if (totalGames === 0 || explorerMoves.length === 0) return null;
+    // Determine whose moves are the opponent's
+    const isOpponentTurn = chess.turn() === (color === "white" ? "b" : "w");
+    if (!isOpponentTurn) return null; // only show coverage when it's the opponent's turn
 
-  // ── Whose turn is it? ──────────────────────────────────────────────────────
+    const THRESHOLD = 0.05; // 5% of games
+    const popularMoves = explorerMoves.filter((m) => {
+      const games = m.white + m.draws + m.black;
+      return totalGames > 0 && games / totalGames >= THRESHOLD;
+    });
+    if (popularMoves.length === 0) return null;
+
+    const covered: ExplorerMove[] = [];
+    const uncovered: ExplorerMove[] = [];
+
+    for (const m of popularMoves) {
+      try {
+        const tempChess = new Chess(currentFen);
+        const result = tempChess.move(m.san);
+        if (!result) continue;
+        const reachedFen = tempChess.fen();
+        // Check if the user has a child from that FEN (i.e. a prepared response)
+        const opponentNode = findNode(moveTree, reachedFen);
+        if (opponentNode && opponentNode.children.length > 0) {
+          covered.push(m);
+        } else {
+          uncovered.push(m);
+        }
+      } catch { /* skip */ }
+    }
+
+    const pct = popularMoves.length > 0 ? (covered.length / popularMoves.length) * 100 : 0;
+    return { covered: covered.length, total: popularMoves.length, pct, uncovered };
+  }, [explorerMoves, totalGames, currentFen, moveTree, color, chess]);
+
+  // ── Whose turn is it? ────────────────────────────────────────────────────────────────────────────
   const turnLabel = chess.turn() === "w" ? "White" : "Black";
   const moveNumber = Math.floor(chess.moveNumber());
 
@@ -1354,6 +1394,80 @@ export default function RepertoireBuilder() {
                 </span>
               </div>
             </div>
+
+            {/* ── Coverage Tracker ──────────────────────────────────────────────────────────────────────── */}
+            {coverage && (
+              <div className={`px-4 py-3 border-b ${
+                isDark ? "border-white/10" : "border-gray-100"
+              }`}>
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs font-semibold ${
+                    isDark ? "text-white/70" : "text-gray-600"
+                  }`}>
+                    Your coverage
+                  </span>
+                  <span className={`text-xs font-bold ${
+                    coverage.pct >= 80
+                      ? "text-emerald-500"
+                      : coverage.pct >= 40
+                      ? "text-amber-500"
+                      : "text-red-400"
+                  }`}>
+                    {coverage.covered}/{coverage.total} popular moves prepared
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className={`h-2 w-full rounded-full overflow-hidden ${
+                  isDark ? "bg-white/10" : "bg-gray-200"
+                }`}>
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      coverage.pct >= 80
+                        ? "bg-emerald-500"
+                        : coverage.pct >= 40
+                        ? "bg-amber-500"
+                        : "bg-red-400"
+                    }`}
+                    style={{ width: `${coverage.pct}%` }}
+                  />
+                </div>
+
+                {/* Uncovered moves hint */}
+                {coverage.uncovered.length > 0 && (
+                  <div className="mt-2">
+                    <span className={`text-[11px] ${
+                      isDark ? "text-white/40" : "text-gray-400"
+                    }`}>
+                      Not yet prepared:{" "}
+                    </span>
+                    {coverage.uncovered.map((m, i) => (
+                      <button
+                        key={m.uci}
+                        onClick={() => playExplorerMove(m)}
+                        className={`text-[11px] font-mono font-bold ${
+                          isDark
+                            ? "text-amber-400 hover:text-amber-300"
+                            : "text-amber-600 hover:text-amber-500"
+                        }`}
+                        title={`Navigate to ${m.san}`}
+                      >
+                        {m.san}{i < coverage.uncovered.length - 1 ? ", " : ""}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {coverage.uncovered.length === 0 && (
+                  <p className={`mt-1.5 text-[11px] ${
+                    isDark ? "text-emerald-400" : "text-emerald-600"
+                  }`}>
+                    ✓ All popular moves covered!
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Repertoire children (moves already in tree) */}
             {currentNode && currentNode.children.length > 0 && (
