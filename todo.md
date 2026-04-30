@@ -5860,3 +5860,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Coverage threshold: only count moves that appear in at least 1 in 20 games (5%) as "popular"
 - [x] Coverage updates live as user adds/removes moves from the tree
 - [x] TypeScript: 0 errors
+
+## Opening Repertoire Builder: Quiz Mode
+- [x] Quiz state machine: idle → playing → correct/wrong → complete
+- [x] Quiz hides the move tree panel and explorer moves while active
+- [x] Quiz plays opponent moves automatically from the repertoire tree
+- [x] User must find the correct prepared move from memory (drag or click)
+- [x] Correct move: green flash + advance to next position
+- [x] Wrong move: red flash + show the correct move + allow retry
+- [x] Score tracking: correct / total attempts, accuracy percentage
+- [x] Session summary modal: final score, accuracy, moves reviewed
+- [x] "Test yourself" button in the Repertoire Builder toolbar
+- [x] TypeScript: 0 errors

@@ -35,6 +35,9 @@ import {
   Check,
   FileText,
   X,
+  Brain,
+  Trophy,
+  SkipForward,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -647,6 +650,17 @@ export default function RepertoireBuilder() {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Quiz mode state ─────────────────────────────────────────────────────────
+  type QuizStatus = "idle" | "playing" | "correct" | "wrong" | "complete";
+  const [quizStatus, setQuizStatus] = useState<QuizStatus>("idle");
+  const [quizCorrect, setQuizCorrect] = useState(0);
+  const [quizTotal, setQuizTotal] = useState(0);
+  const [quizHintFen, setQuizHintFen] = useState<string | null>(null); // FEN of the correct move's target square
+  const [quizHintSan, setQuizHintSan] = useState<string | null>(null);
+  const [quizMoveLog, setQuizMoveLog] = useState<Array<{ san: string; correct: boolean }>>([]); // history for summary
+  const [showQuizSummary, setShowQuizSummary] = useState(false);
+  const quizFlashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { ready: sfReady, evaluate, stop: sfStop } = useStockfish();
 
   const chess = useMemo(() => new Chess(currentFen), [currentFen]);
@@ -787,6 +801,127 @@ export default function RepertoireBuilder() {
     [repertoireId]
   );
 
+  // ── Quiz mode callbacks ─────────────────────────────────────────────────────
+
+  /** Start a quiz session from the root of the repertoire */
+  const startQuiz = useCallback(() => {
+    if (countMoves(moveTree) === 0) return; // nothing to quiz on
+    setQuizStatus("playing");
+    setQuizCorrect(0);
+    setQuizTotal(0);
+    setQuizHintFen(null);
+    setQuizHintSan(null);
+    setQuizMoveLog([]);
+    setShowQuizSummary(false);
+    // Reset board to start
+    setCurrentFen(STARTING_FEN);
+    setLastMove(null);
+  }, [moveTree]);
+
+  /** Auto-play the opponent's move (random child from the tree) */
+  const quizOpponentMove = useCallback(
+    (fen: string, tree: MoveNode) => {
+      const node = findNode(tree, fen);
+      if (!node || node.children.length === 0) {
+        // No more moves — quiz complete
+        setQuizStatus("complete");
+        setShowQuizSummary(true);
+        return;
+      }
+      // Pick a random child
+      const child = node.children[Math.floor(Math.random() * node.children.length)];
+      setTimeout(() => {
+        setCurrentFen(child.fen);
+        if (child.move) setLastMove([child.move.slice(0, 2), child.move.slice(2, 4)]);
+      }, 400);
+    },
+    []
+  );
+
+  /** Handle a move attempt in quiz mode */
+  const handleQuizMove = useCallback(
+    (from: string, to: string, promotion?: string): boolean => {
+      if (quizStatus !== "playing") return false;
+
+      const tempChess = new Chess(currentFen);
+      const result = tempChess.move({ from: from as Square, to: to as Square, promotion: promotion || "q" });
+      if (!result) return false;
+
+      const newFen = tempChess.fen();
+      const currentNode = findNode(moveTree, currentFen);
+
+      // Check if this move is in the repertoire
+      const matchingChild = currentNode?.children.find((c) => c.fen === newFen);
+
+      if (matchingChild) {
+        // Correct!
+        setQuizCorrect((n) => n + 1);
+        setQuizTotal((n) => n + 1);
+        setQuizMoveLog((log) => [...log, { san: result.san, correct: true }]);
+        setQuizStatus("correct");
+        setQuizHintFen(null);
+        setQuizHintSan(null);
+        setCurrentFen(newFen);
+        setLastMove([from, to]);
+
+        if (quizFlashTimeout.current) clearTimeout(quizFlashTimeout.current);
+        quizFlashTimeout.current = setTimeout(() => {
+          setQuizStatus("playing");
+          // Determine if the next position is the opponent's turn
+          const nextNode = findNode(moveTree, newFen);
+          const isOpponentNext = new Chess(newFen).turn() === (color === "white" ? "b" : "w");
+          if (nextNode && nextNode.children.length > 0 && isOpponentNext) {
+            quizOpponentMove(newFen, moveTree);
+          } else if (!nextNode || nextNode.children.length === 0) {
+            setQuizStatus("complete");
+            setShowQuizSummary(true);
+          }
+        }, 600);
+      } else {
+        // Wrong move
+        setQuizTotal((n) => n + 1);
+        const correctChild = currentNode?.children[0]; // show the first prepared move as hint
+        setQuizMoveLog((log) => [...log, { san: result.san, correct: false }]);
+        setQuizStatus("wrong");
+        setQuizHintFen(correctChild?.fen ?? null);
+        setQuizHintSan(correctChild?.san ?? null);
+      }
+      return true;
+    },
+    [quizStatus, currentFen, moveTree, color, quizOpponentMove]
+  );
+
+  /** Skip the current position and advance to the next */
+  const skipQuizPosition = useCallback(() => {
+    const node = findNode(moveTree, currentFen);
+    if (!node || node.children.length === 0) {
+      setQuizStatus("complete");
+      setShowQuizSummary(true);
+      return;
+    }
+    const child = node.children[0];
+    setCurrentFen(child.fen);
+    if (child.move) setLastMove([child.move.slice(0, 2), child.move.slice(2, 4)]);
+    setQuizStatus("playing");
+    setQuizHintFen(null);
+    setQuizHintSan(null);
+    // If next is opponent's turn, auto-play
+    const isOpponentNext = new Chess(child.fen).turn() === (color === "white" ? "b" : "w");
+    if (isOpponentNext) {
+      quizOpponentMove(child.fen, moveTree);
+    }
+  }, [currentFen, moveTree, color, quizOpponentMove]);
+
+  /** Exit quiz mode and return to builder */
+  const exitQuiz = useCallback(() => {
+    setQuizStatus("idle");
+    setShowQuizSummary(false);
+    setCurrentFen(STARTING_FEN);
+    setLastMove(null);
+    setQuizHintFen(null);
+    setQuizHintSan(null);
+  }, []);
+
   // ── Make a move on the board ────────────────────────────────────────────────
   const makeMove = useCallback(
     (from: string, to: string, promotion?: string) => {
@@ -839,9 +974,13 @@ export default function RepertoireBuilder() {
   const handlePieceDrop = useCallback(
     ({ sourceSquare, targetSquare }: PieceDropHandlerArgs) => {
       if (!targetSquare) return false;
+      // In quiz mode, route to quiz handler instead of builder handler
+      if (quizStatus === "playing" || quizStatus === "wrong") {
+        return handleQuizMove(sourceSquare, targetSquare);
+      }
       return makeMove(sourceSquare, targetSquare);
     },
-    [makeMove]
+    [makeMove, handleQuizMove, quizStatus]
   );
 
   // ── Navigate to a position ──────────────────────────────────────────────────
@@ -1150,16 +1289,40 @@ export default function RepertoireBuilder() {
   const turnLabel = chess.turn() === "w" ? "White" : "Black";
   const moveNumber = Math.floor(chess.moveNumber());
 
-  // ── Custom square styles for last move ──────────────────────────────────────
+  // ── Custom square styles for last move + quiz highlights ────────────────────────────────────────────────────────────────────────────
   const customSquareStyles = useMemo(() => {
-    if (!lastMove) return {};
-    return {
-      [lastMove[0]]: { backgroundColor: "rgba(16, 185, 129, 0.25)" },
-      [lastMove[1]]: { backgroundColor: "rgba(16, 185, 129, 0.35)" },
-    };
-  }, [lastMove]);
+    const styles: Record<string, React.CSSProperties> = {};
+    if (lastMove) {
+      if (quizStatus === "correct") {
+        styles[lastMove[0]] = { backgroundColor: "rgba(34, 197, 94, 0.35)" };
+        styles[lastMove[1]] = { backgroundColor: "rgba(34, 197, 94, 0.55)" };
+      } else if (quizStatus === "wrong") {
+        styles[lastMove[0]] = { backgroundColor: "rgba(239, 68, 68, 0.25)" };
+        styles[lastMove[1]] = { backgroundColor: "rgba(239, 68, 68, 0.35)" };
+      } else {
+        styles[lastMove[0]] = { backgroundColor: "rgba(16, 185, 129, 0.25)" };
+        styles[lastMove[1]] = { backgroundColor: "rgba(16, 185, 129, 0.35)" };
+      }
+    }
+    // Highlight the correct move hint in quiz wrong state
+    if (quizStatus === "wrong" && quizHintFen) {
+      try {
+        const hintChess = new Chess(currentFen);
+        const node = findNode(moveTree, currentFen);
+        const hintChild = node?.children.find((c) => c.fen === quizHintFen);
+        if (hintChild?.move) {
+          const from = hintChild.move.slice(0, 2);
+          const to = hintChild.move.slice(2, 4);
+          styles[from] = { backgroundColor: "rgba(251, 191, 36, 0.35)" };
+          styles[to] = { backgroundColor: "rgba(251, 191, 36, 0.55)" };
+        }
+        void hintChess;
+      } catch { /* skip */ }
+    }
+    return styles;
+  }, [lastMove, quizStatus, quizHintFen, currentFen, moveTree]);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+
 
   if (loading) {
     return (
@@ -1250,6 +1413,36 @@ export default function RepertoireBuilder() {
               <Download size={13} />
               <span className="hidden sm:inline">Export</span>
             </button>
+            {/* Test Yourself button (hidden during quiz) */}
+            {quizStatus === "idle" && totalMoves > 0 && (
+              <button
+                onClick={startQuiz}
+                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                  isDark
+                    ? "border-purple-500/50 text-purple-400 hover:text-purple-300 hover:border-purple-400 hover:bg-purple-500/10"
+                    : "border-purple-400 text-purple-600 hover:text-purple-700 hover:border-purple-500 hover:bg-purple-50"
+                }`}
+                title="Test yourself on this repertoire"
+              >
+                <Brain size={13} />
+                <span className="hidden sm:inline">Test Yourself</span>
+              </button>
+            )}
+            {/* Exit quiz button (shown during quiz) */}
+            {quizStatus !== "idle" && quizStatus !== "complete" && (
+              <button
+                onClick={exitQuiz}
+                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                  isDark
+                    ? "border-red-500/50 text-red-400 hover:text-red-300 hover:border-red-400 hover:bg-red-500/10"
+                    : "border-red-400 text-red-600 hover:text-red-700 hover:border-red-500 hover:bg-red-50"
+                }`}
+                title="Exit quiz mode"
+              >
+                <X size={13} />
+                <span className="hidden sm:inline">Exit Quiz</span>
+              </button>
+            )}
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               color === "white"
                 ? "bg-white text-gray-900 border border-gray-200"
@@ -1260,6 +1453,42 @@ export default function RepertoireBuilder() {
           </div>
         </div>
       </div>
+
+      {/* Quiz mode banner */}
+      {quizStatus !== "idle" && quizStatus !== "complete" && (
+        <div className={`border-b ${
+          quizStatus === "correct"
+            ? isDark ? "bg-emerald-900/30 border-emerald-500/30" : "bg-emerald-50 border-emerald-200"
+            : quizStatus === "wrong"
+            ? isDark ? "bg-red-900/30 border-red-500/30" : "bg-red-50 border-red-200"
+            : isDark ? "bg-purple-900/20 border-purple-500/20" : "bg-purple-50 border-purple-200"
+        }`}>
+          <div className="max-w-[1600px] mx-auto px-4 py-2 flex items-center gap-4">
+            <Brain size={16} className={quizStatus === "correct" ? "text-emerald-500" : quizStatus === "wrong" ? "text-red-400" : isDark ? "text-purple-400" : "text-purple-600"} />
+            <span className={`text-sm font-semibold ${
+              quizStatus === "correct" ? "text-emerald-500" : quizStatus === "wrong" ? "text-red-400" : isDark ? "text-purple-300" : "text-purple-700"
+            }`}>
+              {quizStatus === "correct" ? "✓ Correct!" : quizStatus === "wrong" ? `✗ Wrong — correct move: ${quizHintSan ?? "?"}` : "Quiz Mode — find your prepared move"}
+            </span>
+            <span className={`ml-auto text-xs ${
+              isDark ? "text-white/50" : "text-gray-500"
+            }`}>
+              Score: {quizCorrect}/{quizTotal} ({quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 100}%)
+            </span>
+            {quizStatus === "wrong" && (
+              <button
+                onClick={skipQuizPosition}
+                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg ${
+                  isDark ? "text-white/60 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                }`}
+              >
+                <SkipForward size={13} />
+                Skip
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Main Content ────────────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-4 py-6">
@@ -1377,7 +1606,114 @@ export default function RepertoireBuilder() {
             </div>
           </div>
 
-          {/* ── Right: Explorer Panel ───────────────────────────────────────── */}
+          {/* ── Right: Quiz Panel OR Explorer Panel ─────────────────────────────────────────────── */}
+          {quizStatus !== "idle" && quizStatus !== "complete" ? (
+            /* ── Quiz Status Panel ── */
+            <div className={`w-full lg:w-[45%] lg:sticky lg:top-20 rounded-2xl border ${
+              isDark ? "bg-gray-900/50 border-purple-500/20" : "bg-white border-purple-200"
+            } overflow-hidden`}>
+              <div className={`px-4 py-3 border-b ${
+                isDark ? "border-purple-500/20" : "border-purple-100"
+              }`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Brain size={18} className={isDark ? "text-purple-400" : "text-purple-600"} />
+                  <h3 className={`text-base font-semibold ${
+                    isDark ? "text-purple-300" : "text-purple-700"
+                  }`}>Quiz Mode</h3>
+                </div>
+                <p className={`text-xs ${
+                  isDark ? "text-white/50" : "text-gray-500"
+                }`}>
+                  Find your prepared move from memory. Drag a piece to make your move.
+                </p>
+              </div>
+              {/* Score card */}
+              <div className="px-4 py-4">
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className={`rounded-xl p-3 text-center ${
+                    isDark ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-100"
+                  }`}>
+                    <div className={`text-2xl font-bold ${
+                      isDark ? "text-emerald-400" : "text-emerald-600"
+                    }`}>{quizCorrect}</div>
+                    <div className={`text-[11px] mt-0.5 ${
+                      isDark ? "text-white/40" : "text-gray-400"
+                    }`}>Correct</div>
+                  </div>
+                  <div className={`rounded-xl p-3 text-center ${
+                    isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-100"
+                  }`}>
+                    <div className={`text-2xl font-bold ${
+                      isDark ? "text-white/80" : "text-gray-700"
+                    }`}>{quizTotal}</div>
+                    <div className={`text-[11px] mt-0.5 ${
+                      isDark ? "text-white/40" : "text-gray-400"
+                    }`}>Attempts</div>
+                  </div>
+                  <div className={`rounded-xl p-3 text-center ${
+                    isDark ? "bg-purple-500/10 border border-purple-500/20" : "bg-purple-50 border border-purple-100"
+                  }`}>
+                    <div className={`text-2xl font-bold ${
+                      isDark ? "text-purple-400" : "text-purple-600"
+                    }`}>
+                      {quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 100}%
+                    </div>
+                    <div className={`text-[11px] mt-0.5 ${
+                      isDark ? "text-white/40" : "text-gray-400"
+                    }`}>Accuracy</div>
+                  </div>
+                </div>
+
+                {/* Move log */}
+                {quizMoveLog.length > 0 && (
+                  <div className={`rounded-xl p-3 ${
+                    isDark ? "bg-white/5" : "bg-gray-50"
+                  }`}>
+                    <div className={`text-xs font-medium mb-2 ${
+                      isDark ? "text-white/50" : "text-gray-500"
+                    }`}>Move history</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {quizMoveLog.map((entry, i) => (
+                        <span
+                          key={i}
+                          className={`text-xs font-mono px-2 py-0.5 rounded-full ${
+                            entry.correct
+                              ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                              : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {entry.san}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {quizStatus === "wrong" && quizHintSan && (
+                  <div className={`mt-3 rounded-xl p-3 ${
+                    isDark ? "bg-amber-500/10 border border-amber-500/20" : "bg-amber-50 border border-amber-200"
+                  }`}>
+                    <p className={`text-sm ${
+                      isDark ? "text-amber-300" : "text-amber-700"
+                    }`}>
+                      Correct move was: <span className="font-bold font-mono">{quizHintSan}</span>
+                    </p>
+                    <button
+                      onClick={skipQuizPosition}
+                      className={`mt-2 flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg ${
+                        isDark
+                          ? "bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                          : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                      }`}
+                    >
+                      <SkipForward size={13} /> Continue anyway
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* ── Explorer Panel ── */
           <div className={`w-full lg:w-[45%] lg:sticky lg:top-20 rounded-2xl border ${
             isDark ? "bg-gray-900/50 border-white/10" : "bg-white border-gray-200"
           } overflow-hidden`}>
@@ -1393,9 +1729,7 @@ export default function RepertoireBuilder() {
                   {turnLabel} to move · Move {moveNumber}
                 </span>
               </div>
-            </div>
-
-            {/* ── Coverage Tracker ──────────────────────────────────────────────────────────────────────── */}
+            </div>{/* ── Coverage Tracker ──────────────────────────────────────────────────────────────────────── */}
             {coverage && (
               <div className={`px-4 py-3 border-b ${
                 isDark ? "border-white/10" : "border-gray-100"
@@ -1568,8 +1902,108 @@ export default function RepertoireBuilder() {
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
+
+      {/* ── Quiz Summary Modal ──────────────────────────────────────────────────────────────────────────── */}
+      {showQuizSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl ${
+            isDark ? "bg-gray-900 border border-white/10" : "bg-white border border-gray-200"
+          }`}>
+            <div className="px-6 py-6 text-center">
+              <Trophy size={40} className="mx-auto mb-3 text-amber-400" />
+              <h2 className={`text-2xl font-bold mb-1 ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}>Quiz Complete!</h2>
+              <p className={`text-sm mb-6 ${
+                isDark ? "text-white/50" : "text-gray-500"
+              }`}>
+                You reached the end of your prepared repertoire.
+              </p>
+
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className={`rounded-xl p-3 ${
+                  isDark ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-emerald-50 border border-emerald-100"
+                }`}>
+                  <div className={`text-3xl font-bold ${
+                    isDark ? "text-emerald-400" : "text-emerald-600"
+                  }`}>{quizCorrect}</div>
+                  <div className={`text-xs mt-0.5 ${
+                    isDark ? "text-white/40" : "text-gray-400"
+                  }`}>Correct</div>
+                </div>
+                <div className={`rounded-xl p-3 ${
+                  isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-100"
+                }`}>
+                  <div className={`text-3xl font-bold ${
+                    isDark ? "text-white/80" : "text-gray-700"
+                  }`}>{quizTotal}</div>
+                  <div className={`text-xs mt-0.5 ${
+                    isDark ? "text-white/40" : "text-gray-400"
+                  }`}>Attempts</div>
+                </div>
+                <div className={`rounded-xl p-3 ${
+                  isDark ? "bg-purple-500/10 border border-purple-500/20" : "bg-purple-50 border border-purple-100"
+                }`}>
+                  <div className={`text-3xl font-bold ${
+                    isDark ? "text-purple-400" : "text-purple-600"
+                  }`}>
+                    {quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 100}%
+                  </div>
+                  <div className={`text-xs mt-0.5 ${
+                    isDark ? "text-white/40" : "text-gray-400"
+                  }`}>Accuracy</div>
+                </div>
+              </div>
+
+              {quizMoveLog.length > 0 && (
+                <div className={`rounded-xl p-3 mb-6 text-left ${
+                  isDark ? "bg-white/5" : "bg-gray-50"
+                }`}>
+                  <div className={`text-xs font-medium mb-2 ${
+                    isDark ? "text-white/50" : "text-gray-500"
+                  }`}>Moves reviewed</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {quizMoveLog.map((entry, i) => (
+                      <span
+                        key={i}
+                        className={`text-xs font-mono px-2 py-0.5 rounded-full ${
+                          entry.correct
+                            ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                            : isDark ? "bg-red-500/20 text-red-400" : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {entry.san}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={startQuiz}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-purple-600 hover:bg-purple-500 text-white transition-colors"
+                >
+                  <Brain size={15} /> Try Again
+                </button>
+                <button
+                  onClick={exitQuiz}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
+                    isDark
+                      ? "border-white/20 text-white/80 hover:bg-white/5"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Back to Builder
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── PGN Export Modal ──────────────────────────────────────────────────────────────── */}
       {showPgnExport && (
