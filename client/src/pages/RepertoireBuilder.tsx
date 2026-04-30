@@ -676,6 +676,42 @@ export default function RepertoireBuilder() {
   const [noteSaved, setNoteSaved] = useState(false);
   const noteSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Dynamic board sizing ────────────────────────────────────────────────────
+  // Measures the left column height and computes the optimal board pixel size
+  // so the board + controls + notes all fit within the viewport without scrolling.
+  const boardContainerRef = useRef<HTMLDivElement>(null);
+  const [boardSize, setBoardSize] = useState(480);
+
+  useEffect(() => {
+    const CONTROLS_HEIGHT = 160; // board controls (44px) + notes area (100px) + gaps
+    const compute = () => {
+      if (!boardContainerRef.current) return;
+      const rect = boardContainerRef.current.getBoundingClientRect();
+      const availableHeight = window.innerHeight - rect.top - CONTROLS_HEIGHT;
+      const availableWidth = rect.width;
+      const size = Math.max(200, Math.min(availableWidth, availableHeight));
+      setBoardSize(Math.floor(size));
+    };
+    // Only set up the observer after the board container is in the DOM (loading=false)
+    if (loading) return;
+    // Use two rAF frames to ensure the flex layout has fully settled after loading
+    let rafId: number;
+    const scheduleCompute = () => {
+      rafId = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(compute);
+      });
+    };
+    scheduleCompute();
+    const ro = new ResizeObserver(compute);
+    if (boardContainerRef.current) ro.observe(boardContainerRef.current);
+    window.addEventListener("resize", compute);
+    return () => {
+      cancelAnimationFrame(rafId);
+      ro.disconnect();
+      window.removeEventListener("resize", compute);
+    };
+  }, [loading]);
+
   const { ready: sfReady, evaluate, stop: sfStop } = useStockfish();
 
   const chess = useMemo(() => new Chess(currentFen), [currentFen]);
@@ -1396,7 +1432,7 @@ export default function RepertoireBuilder() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`h-screen flex flex-col overflow-hidden ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className={`border-b ${isDark ? "border-white/10 bg-gray-950/80" : "border-gray-200 bg-white/80"} backdrop-blur-sm sticky top-0 z-30`}>
         <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center gap-4">
@@ -1554,10 +1590,11 @@ export default function RepertoireBuilder() {
       )}
 
       {/* ── Main Content ────────────────────────────────────────────────────── */}
-      <div className="max-w-[1600px] mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex-1 overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-4 py-3 h-full">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
           {/* ── Left: Board + Eval Bar ──────────────────────────────────────── */}
-          <div className="w-full lg:w-[55%] flex gap-2">
+          <div className="w-full lg:w-[55%] flex gap-2 items-start lg:items-center min-h-0">
             {/* Eval bar */}
             {showEngine && sfEval && (
               <div className="hidden sm:block h-[min(55vw,560px)]">
@@ -1566,8 +1603,8 @@ export default function RepertoireBuilder() {
             )}
 
             {/* Board */}
-            <div className="flex-1">
-              <div className={`rounded-2xl overflow-hidden border-2 shadow-2xl ${
+            <div className="flex-1 flex flex-col min-h-0" ref={boardContainerRef}>
+              <div className={`rounded-2xl overflow-hidden border-2 shadow-2xl flex-shrink-0 ${
                 isDark
                   ? "border-emerald-500/30 shadow-emerald-500/10"
                   : "border-emerald-600/20 shadow-emerald-600/5"
@@ -1580,6 +1617,8 @@ export default function RepertoireBuilder() {
                     squareStyles: customSquareStyles,
                     boardStyle: {
                       borderRadius: "0",
+                      width: `${boardSize}px`,
+                      height: `${boardSize}px`,
                     },
                     darkSquareStyle: { backgroundColor: "#779952" },
                     lightSquareStyle: { backgroundColor: "#edeed1" },
@@ -2071,6 +2110,7 @@ export default function RepertoireBuilder() {
           </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* ── Quiz Summary Modal ──────────────────────────────────────────────────────────────────────────── */}
