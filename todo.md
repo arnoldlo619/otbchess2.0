@@ -5872,3 +5872,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Session summary modal: final score, accuracy, moves reviewed
 - [x] "Test yourself" button in the Repertoire Builder toolbar
 - [x] TypeScript: 0 errors
+
+## Opening Repertoire Builder: Annotation Notes
+- [x] Textarea below the board for coaching notes on the current move node
+- [x] Notes auto-save on blur and on Ctrl+Enter / Cmd+Enter
+- [x] Notes clear and reload when navigating to a different node
+- [x] Saved note displayed with a pencil badge on the move in the tree
+- [x] Notes persist in the MoveNode comment field (already in the type)
+- [x] TypeScript: 0 errors

@@ -38,6 +38,8 @@ import {
   Brain,
   Trophy,
   SkipForward,
+  MessageSquare,
+  Pencil,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -661,6 +663,11 @@ export default function RepertoireBuilder() {
   const [showQuizSummary, setShowQuizSummary] = useState(false);
   const quizFlashTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Annotation notes state ──────────────────────────────────────────────────
+  const [noteText, setNoteText] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
+  const noteSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { ready: sfReady, evaluate, stop: sfStop } = useStockfish();
 
   const chess = useMemo(() => new Chess(currentFen), [currentFen]);
@@ -992,6 +999,36 @@ export default function RepertoireBuilder() {
       setLastMove(null);
     }
   }, []);
+
+  // ── Sync note textarea when current node changes ──────────────────────────────────
+  useEffect(() => {
+    setNoteText(currentNode?.comment ?? "");
+    setNoteSaved(false);
+  }, [currentFen, currentNode]);
+
+  /** Persist a comment on the current node in the move tree */
+  const saveNote = useCallback(
+    (text: string) => {
+      if (!currentNode) return;
+      setMoveTree((prev) => {
+        const clone = JSON.parse(JSON.stringify(prev)) as MoveNode;
+        const target = findNode(clone, currentFen);
+        if (target) target.comment = text.trim() || undefined;
+        return clone;
+      });
+      // Debounce the server save
+      if (noteSaveTimeout.current) clearTimeout(noteSaveTimeout.current);
+      noteSaveTimeout.current = setTimeout(() => {
+        setMoveTree((latest) => {
+          autoSave(latest);
+          return latest;
+        });
+        setNoteSaved(true);
+        setTimeout(() => setNoteSaved(false), 2000);
+      }, 600);
+    },
+    [currentNode, currentFen, autoSave]
+  );
 
   // ── Add explorer move to repertoire ─────────────────────────────────────────
   const addExplorerMove = useCallback(
@@ -1603,6 +1640,55 @@ export default function RepertoireBuilder() {
                   )}
                 </div>
               )}
+
+              {/* ── Annotation Notes ──────────────────────────────────────────────────────────────── */}
+              {quizStatus === "idle" && (
+                <div className={`mt-3 rounded-xl border ${
+                  isDark ? "bg-gray-900/60 border-white/10" : "bg-gray-50 border-gray-200"
+                }`}>
+                  {/* Header */}
+                  <div className={`flex items-center justify-between px-3 py-2 border-b ${
+                    isDark ? "border-white/10" : "border-gray-200"
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      <MessageSquare size={13} className={isDark ? "text-white/40" : "text-gray-400"} />
+                      <span className={`text-xs font-medium ${
+                        isDark ? "text-white/50" : "text-gray-500"
+                      }`}>
+                        {currentNode && currentNode.fen !== moveTree.fen
+                          ? `Note on ${currentNode.san ?? "starting position"}`
+                          : "Note on starting position"}
+                      </span>
+                    </div>
+                    {noteSaved && (
+                      <span className="flex items-center gap-1 text-[11px] text-emerald-500">
+                        <Check size={11} /> Saved
+                      </span>
+                    )}
+                  </div>
+                  {/* Textarea */}
+                  <textarea
+                    value={noteText}
+                    onChange={(e) => {
+                      setNoteText(e.target.value);
+                      saveNote(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        saveNote(noteText);
+                      }
+                    }}
+                    placeholder={`Add coaching notes for this position… (Ctrl+Enter to save)`}
+                    rows={3}
+                    className={`w-full px-3 py-2 text-sm resize-none bg-transparent outline-none placeholder:text-sm ${
+                      isDark
+                        ? "text-white/80 placeholder-white/25"
+                        : "text-gray-700 placeholder-gray-400"
+                    }`}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -1845,6 +1931,17 @@ export default function RepertoireBuilder() {
                         </span>
                       )}
                     </div>
+                    {/* Pencil badge if this node has a note */}
+                    {child.comment && (
+                      <span
+                        className={`shrink-0 ml-1 ${
+                          isDark ? "text-amber-400/70" : "text-amber-500/80"
+                        }`}
+                        title={child.comment}
+                      >
+                        <Pencil size={11} />
+                      </span>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
