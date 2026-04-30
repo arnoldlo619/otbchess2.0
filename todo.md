@@ -5880,3 +5880,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Saved note displayed with a pencil badge on the move in the tree
 - [x] Notes persist in the MoveNode comment field (already in the type)
 - [x] TypeScript: 0 errors
+
+## Repertoire Builder — Coverage Chip Navigation
+
+- [x] Redesign 'Not yet prepared' chips as pill-shaped buttons with arrow icon, amber colour, hover/active states
+- [x] Clicking a chip calls playExplorerMove to navigate to the unprepared position and add it to the tree
+- [x] Toast notification guides user to add their response after navigating
+- [x] Fix playExplorerMove crash: wrap isExplorerMoveInRepertoire chess.move() in try-catch
+- [x] Clear explorerMoves on FEN change to prevent stale data during debounce window

@@ -11,6 +11,7 @@
  * Inspired by chessbook.com's repertoire builder UI.
  */
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { toast } from "sonner";
 import { Chessboard, type PieceDropHandlerArgs } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -1867,26 +1868,36 @@ export default function RepertoireBuilder() {
 
                 {/* Uncovered moves hint */}
                 {coverage.uncovered.length > 0 && (
-                  <div className="mt-2">
-                    <span className={`text-[11px] ${
+                  <div className="mt-2.5">
+                    <span className={`text-[11px] block mb-1.5 ${
                       isDark ? "text-white/40" : "text-gray-400"
                     }`}>
-                      Not yet prepared:{" "}
+                      Not yet prepared — click to prepare:
                     </span>
-                    {coverage.uncovered.map((m, i) => (
-                      <button
-                        key={m.uci}
-                        onClick={() => playExplorerMove(m)}
-                        className={`text-[11px] font-mono font-bold ${
-                          isDark
-                            ? "text-amber-400 hover:text-amber-300"
-                            : "text-amber-600 hover:text-amber-500"
-                        }`}
-                        title={`Navigate to ${m.san}`}
-                      >
-                        {m.san}{i < coverage.uncovered.length - 1 ? ", " : ""}
-                      </button>
-                    ))}
+                    <div className="flex flex-wrap gap-1.5">
+                      {coverage.uncovered.map((m) => (
+                        <button
+                          key={m.uci}
+                          onClick={() => {
+                            playExplorerMove(m);
+                            toast.info(`Navigated to after ${m.san} — now add your response from here.`, { duration: 3000 });
+                          }}
+                          title={`Navigate to position after ${m.san} and add your response`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold
+                            border transition-all duration-150 cursor-pointer
+                            ${
+                              isDark
+                                ? "border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/25 hover:border-amber-400 hover:text-amber-300 active:scale-95"
+                                : "border-amber-400/50 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:text-amber-800 active:scale-95"
+                            }`}
+                        >
+                          <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth="1.8">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2 5h6M5.5 2.5L8 5l-2.5 2.5" />
+                          </svg>
+                          {m.san}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
