@@ -104,7 +104,7 @@ export default function RepertoireList() {
         });
         if (res.ok) {
           const data = await res.json();
-          navigate(`/repertoire/${data.repertoire.id}`);
+          navigate(`/repertoire/${data.id}`);
         } else {
           const err = await res.json().catch(() => ({}));
           if (res.status === 403) {

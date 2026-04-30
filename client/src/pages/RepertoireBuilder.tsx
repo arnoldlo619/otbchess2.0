@@ -99,7 +99,7 @@ const openingCache = new Map<string, { eco: string; name: string } | null>();
 async function fetchOpeningForFen(fen: string): Promise<{ eco: string; name: string } | null> {
   if (openingCache.has(fen)) return openingCache.get(fen) ?? null;
   try {
-    const url = `https://explorer.lichess.ovh/lichess?variant=standard&speeds=rapid,classical&ratings=1600,1800,2000,2200,2500&fen=${encodeURIComponent(fen)}`;
+    const url = `/api/repertoire-builder/explorer?variant=standard&speeds=rapid,classical&ratings=1600,1800,2000,2200,2500&fen=${encodeURIComponent(fen)}`;
     const res = await fetch(url);
     if (!res.ok) { openingCache.set(fen, null); return null; }
     const data = await res.json() as { opening?: { eco: string; name: string } };
@@ -713,10 +713,11 @@ export default function RepertoireBuilder() {
   useEffect(() => {
     let cancelled = false;
     setExplorerLoading(true);
+    setExplorerMoves([]); // Clear stale moves immediately to prevent invalid move errors
 
     const fetchExplorer = async () => {
       try {
-        const url = `https://explorer.lichess.ovh/lichess?variant=standard&speeds=rapid,classical&ratings=1600,1800,2000,2200,2500&fen=${encodeURIComponent(currentFen)}`;
+        const url = `/api/repertoire-builder/explorer?variant=standard&speeds=rapid,classical&ratings=1600,1800,2000,2200,2500&fen=${encodeURIComponent(currentFen)}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Explorer fetch failed");
         const data = (await res.json()) as ExplorerResponse;
@@ -933,7 +934,8 @@ export default function RepertoireBuilder() {
   const makeMove = useCallback(
     (from: string, to: string, promotion?: string) => {
       const tempChess = new Chess(currentFen);
-      const result = tempChess.move({ from: from as Square, to: to as Square, promotion: promotion || "q" });
+      let result;
+      try { result = tempChess.move({ from: from as Square, to: to as Square, promotion: promotion || "q" }); } catch { return false; }
       if (!result) return false;
 
       const newFen = tempChess.fen();
@@ -1032,14 +1034,16 @@ export default function RepertoireBuilder() {
 
   // ── Add explorer move to repertoire ─────────────────────────────────────────
   const addExplorerMove = useCallback(
-    (move: ExplorerMove) => {
-      const tempChess = new Chess(currentFen);
-      const result = tempChess.move(move.san);
+    (move: ExplorerMove, parentFen?: string) => {
+      const baseFen = parentFen ?? currentFen;
+      const tempChess = new Chess(baseFen);
+      let result;
+      try { result = tempChess.move(move.san); } catch { return; }
       if (!result) return;
 
       const newFen = tempChess.fen();
       const updatedTree = JSON.parse(JSON.stringify(moveTree)) as MoveNode;
-      const parentNode = findNode(updatedTree, currentFen);
+      const parentNode = findNode(updatedTree, baseFen);
       if (parentNode) {
         const existing = parentNode.children.find((c) => c.fen === newFen);
         if (!existing) {
@@ -1076,11 +1080,12 @@ export default function RepertoireBuilder() {
     [currentFen, moveTree, autoSave]
   );
 
-  // ── Play an explorer move (navigate to it) ─────────────────────────────────
+  // ── Play an explorer move (navigate to it) ─────────────────────────────
   const playExplorerMove = useCallback(
     (move: ExplorerMove) => {
       const tempChess = new Chess(currentFen);
-      const result = tempChess.move(move.san);
+      let result;
+      try { result = tempChess.move(move.san); } catch { return; }
       if (!result) return;
 
       const newFen = tempChess.fen();
@@ -1128,9 +1133,11 @@ export default function RepertoireBuilder() {
 
   // ── Remove a move from the repertoire ───────────────────────────────────────
   const removeExplorerMove = useCallback(
-    (move: ExplorerMove) => {
-      const tempChess = new Chess(currentFen);
-      const result = tempChess.move(move.san);
+    (move: ExplorerMove, parentFen?: string) => {
+      const baseFen = parentFen ?? currentFen;
+      const tempChess = new Chess(baseFen);
+      let result;
+      try { result = tempChess.move(move.san); } catch { return; }
       if (!result) return;
       const newFen = tempChess.fen();
       const updatedTree = removeNode(moveTree, newFen);
@@ -1268,10 +1275,14 @@ export default function RepertoireBuilder() {
 
   const isExplorerMoveInRepertoire = useCallback(
     (move: ExplorerMove): boolean => {
-      const tempChess = new Chess(currentFen);
-      const result = tempChess.move(move.san);
-      if (!result) return false;
-      return repertoireFens.has(tempChess.fen());
+      try {
+        const tempChess = new Chess(currentFen);
+        const result = tempChess.move(move.san);
+        if (!result) return false;
+        return repertoireFens.has(tempChess.fen());
+      } catch {
+        return false;
+      }
     },
     [currentFen, repertoireFens]
   );
@@ -1988,8 +1999,8 @@ export default function RepertoireBuilder() {
                     move={move}
                     totalGames={totalGames}
                     isInRepertoire={isExplorerMoveInRepertoire(move)}
-                    onAdd={() => addExplorerMove(move)}
-                    onRemove={() => removeExplorerMove(move)}
+                    onAdd={() => addExplorerMove(move, currentFen)}
+                    onRemove={() => removeExplorerMove(move, currentFen)}
                     onPlay={() => playExplorerMove(move)}
                     isDark={isDark}
                     openingName={move.openingName}

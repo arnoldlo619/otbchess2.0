@@ -14,6 +14,7 @@ import {
   mysqlTable,
   varchar,
   text,
+  mediumtext,
   timestamp,
   index,
   uniqueIndex,
@@ -1359,7 +1360,7 @@ export const repertoires = mysqlTable(
      * Shape: { fen, move?, san?, children: MoveNode[], comment?, eval? }
      * Null for curated repertoires that use repertoire_lines instead.
      */
-    moveTree: text("move_tree"),
+    moveTree: mediumtext("move_tree"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
