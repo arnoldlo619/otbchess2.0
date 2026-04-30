@@ -658,6 +658,13 @@ export default function RepertoireBuilder() {
   const [quizStatus, setQuizStatus] = useState<QuizStatus>("idle");
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
+
+  // ── Coverage chip flash state ────────────────────────────────────────────────
+  // When a coverage chip is clicked, the board navigates to the new FEN and the
+  // chip disappears from coverage.uncovered. We persist the chip's SAN label in
+  // flashedChipSan so we can render a "ghost" green chip for 800ms as confirmation.
+  const [flashedChipSan, setFlashedChipSan] = useState<string | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [quizHintFen, setQuizHintFen] = useState<string | null>(null); // FEN of the correct move's target square
   const [quizHintSan, setQuizHintSan] = useState<string | null>(null);
   const [quizMoveLog, setQuizMoveLog] = useState<Array<{ san: string; correct: boolean }>>([]); // history for summary
@@ -1171,6 +1178,13 @@ export default function RepertoireBuilder() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [currentPath, currentNode, navigateTo]);
+
+  // ── Cleanup flash timer on unmount ───────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    };
+  }, []);
 
   // ── Save name ───────────────────────────────────────────────────────────────
   const saveName = useCallback(async () => {
@@ -1879,8 +1893,15 @@ export default function RepertoireBuilder() {
                         <button
                           key={m.uci}
                           onClick={() => {
+                            // Clear any previous flash timer
+                            if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+                            // Show ghost chip with this move's SAN
+                            setFlashedChipSan(m.san);
+                            // Navigate to the position
                             playExplorerMove(m);
                             toast.info(`Navigated to after ${m.san} — now add your response from here.`, { duration: 3000 });
+                            // Clear ghost chip after 800ms
+                            flashTimerRef.current = setTimeout(() => setFlashedChipSan(null), 800);
                           }}
                           title={`Navigate to position after ${m.san} and add your response`}
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold
@@ -1908,6 +1929,33 @@ export default function RepertoireBuilder() {
                     ✓ All popular moves covered!
                   </p>
                 )}
+              </div>
+            )}
+
+            {/* Ghost chip: shown for 800ms after a coverage chip is clicked to confirm navigation */}
+            {flashedChipSan && !coverage && (
+              <div className={`px-4 py-2 border-b ${
+                isDark ? "border-white/10" : "border-gray-100"
+              }`}>
+                <span className={`text-[11px] block mb-1.5 ${
+                  isDark ? "text-white/40" : "text-gray-400"
+                }`}>
+                  Navigated to:
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold
+                    border pointer-events-none select-none
+                    ${
+                      isDark
+                        ? "border-emerald-400 bg-emerald-500/20 text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.5)]"
+                        : "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    }`}
+                >
+                  <svg className="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M1.5 5.5l2.5 2.5 4.5-5" />
+                  </svg>
+                  {flashedChipSan}
+                </span>
               </div>
             )}
 
