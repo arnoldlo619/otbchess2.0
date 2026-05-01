@@ -1,12 +1,13 @@
 /**
- * RepertoireList — Lists the user's saved opening repertoires.
+ * RepertoireList — Lists the user's saved opening repertoires with a statistics dashboard.
  *
  * Free users: limited to 1 saved repertoire (shows Pro upgrade prompt for more).
  * Pro users: unlimited repertoires.
  *
  * Provides "New Repertoire" creation (pick color → auto-create → navigate to builder).
+ * Dashboard shows: total moves, max depth, unique lines, and last-updated per repertoire.
  */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch } from "@/lib/apiFetch";
@@ -20,6 +21,11 @@ import {
   Crown,
   ArrowLeft,
   ChevronRight,
+  GitBranch,
+  Layers,
+  Clock,
+  TrendingUp,
+  BarChart2,
 } from "lucide-react";
 
 interface Repertoire {
@@ -31,22 +37,59 @@ interface Repertoire {
   updatedAt: string;
 }
 
-function countTreeMoves(treeJson: string | null): number {
-  if (!treeJson) return 0;
+interface RepertoireStats {
+  totalMoves: number;
+  maxDepth: number;
+  uniqueLines: number;
+  rootMoves: string[];
+}
+
+/** Parse moveTree JSON and compute per-repertoire statistics */
+function computeStats(treeJson: string | null): RepertoireStats {
+  if (!treeJson) return { totalMoves: 0, maxDepth: 0, uniqueLines: 0, rootMoves: [] };
   try {
-    const tree = JSON.parse(treeJson);
-    let count = 0;
-    const dfs = (node: { children?: unknown[] }) => {
-      if (node.children) {
-        count += node.children.length;
-        node.children.forEach((c) => dfs(c as { children?: unknown[] }));
-      }
+    interface TreeNode {
+      san?: string;
+      children?: TreeNode[];
     }
-    dfs(tree);
-    return count;
+    const tree: TreeNode = JSON.parse(treeJson);
+    let totalMoves = 0;
+    let maxDepth = 0;
+    let uniqueLines = 0;
+
+    const dfs = (node: TreeNode, depth: number) => {
+      if (!node.children || node.children.length === 0) {
+        uniqueLines++;
+        if (depth > maxDepth) maxDepth = depth;
+        return;
+      }
+      totalMoves += node.children.length;
+      node.children.forEach((child) => dfs(child, depth + 1));
+    };
+    dfs(tree, 0);
+
+    const rootMoves = (tree.children || [])
+      .slice(0, 4)
+      .map((c) => c.san || "")
+      .filter(Boolean);
+
+    return { totalMoves, maxDepth, uniqueLines, rootMoves };
   } catch {
-    return 0;
+    return { totalMoves: 0, maxDepth: 0, uniqueLines: 0, rootMoves: [] };
   }
+}
+
+function formatRelativeDate(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+  return `${Math.floor(diffDays / 365)}y ago`;
 }
 
 export default function RepertoireList() {
@@ -82,6 +125,18 @@ export default function RepertoireList() {
       }
     })();
   }, []);
+
+  // ── Aggregate stats across all repertoires ──────────────────────────────────
+  const allStats = useMemo(() => repertoires.map((r) => computeStats(r.moveTree)), [repertoires]);
+
+  const totalMovesAll = useMemo(() => allStats.reduce((s, st) => s + st.totalMoves, 0), [allStats]);
+  const totalLinesAll = useMemo(() => allStats.reduce((s, st) => s + st.uniqueLines, 0), [allStats]);
+  const mostRecentUpdate = useMemo(() => {
+    if (repertoires.length === 0) return null;
+    return repertoires.reduce((latest, r) =>
+      new Date(r.updatedAt) > new Date(latest.updatedAt) ? r : latest
+    );
+  }, [repertoires]);
 
   // ── Create new repertoire ───────────────────────────────────────────────────
   const createRepertoire = useCallback(
@@ -283,65 +338,206 @@ export default function RepertoireList() {
             </div>
           </div>
         ) : (
-          /* Repertoire cards */
-          <div className="grid gap-3">
-            {repertoires.map((rep) => {
-              const moveCount = countTreeMoves(rep.moveTree);
-              return (
-                <div
-                  key={rep.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate(`/repertoire/${rep.id}`)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/repertoire/${rep.id}`); }}
-                  className={`group flex items-center gap-4 w-full text-left px-5 py-4 rounded-xl border transition cursor-pointer ${
-                    isDark
-                      ? "bg-gray-900/50 border-white/10 hover:border-emerald-500/30 hover:bg-gray-900"
-                      : "bg-white border-gray-200 hover:border-emerald-300 hover:shadow-md"
-                  }`}
-                >
-                  {/* Color indicator */}
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
-                    rep.color === "white"
-                      ? "bg-white border border-gray-200 text-gray-900"
-                      : "bg-gray-800 border border-gray-600 text-white"
-                  }`}>
-                    {rep.color === "white" ? "♔" : "♚"}
+          <>
+            {/* ── Summary Dashboard ─────────────────────────────────────────── */}
+            <div className={`mb-6 rounded-2xl border p-5 ${
+              isDark ? "bg-gray-900/60 border-white/10" : "bg-white border-gray-200 shadow-sm"
+            }`}>
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart2 size={16} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
+                <h2 className={`text-sm font-semibold tracking-wide uppercase ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                  Overall Progress
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {/* Stat: Repertoires */}
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    <BookOpen size={13} />
+                    <span className="text-[11px] uppercase tracking-wide font-medium">Repertoires</span>
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                      {rep.title}
-                    </h3>
-                    <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                      {moveCount} move{moveCount !== 1 ? "s" : ""} ·{" "}
-                      {new Date(rep.updatedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteRepertoire(rep.id);
-                    }}
-                    className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition ${
-                      isDark ? "hover:bg-red-500/20 text-red-400" : "hover:bg-red-50 text-red-500"
-                    }`}
-                    title="Delete repertoire"
-                  >
-                    {deleting === rep.id ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={16} />
-                    )}
-                  </button>
-
-                  <ChevronRight size={18} className={`${isDark ? "text-white/20" : "text-gray-300"} group-hover:translate-x-0.5 transition-transform`} />
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`}>
+                    {repertoires.length}
+                  </p>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    {repertoires.filter(r => r.color === "white").length}W · {repertoires.filter(r => r.color === "black").length}B
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Stat: Total Moves */}
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    <TrendingUp size={13} />
+                    <span className="text-[11px] uppercase tracking-wide font-medium">Total Moves</span>
+                  </div>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`}>
+                    {totalMovesAll}
+                  </p>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    across all repertoires
+                  </p>
+                </div>
+
+                {/* Stat: Unique Lines */}
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    <GitBranch size={13} />
+                    <span className="text-[11px] uppercase tracking-wide font-medium">Lines</span>
+                  </div>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`}>
+                    {totalLinesAll}
+                  </p>
+                  <p className={`text-[11px] mt-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    unique variations
+                  </p>
+                </div>
+
+                {/* Stat: Last Updated */}
+                <div className={`rounded-xl p-3 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                  <div className={`flex items-center gap-1.5 mb-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    <Clock size={13} />
+                    <span className="text-[11px] uppercase tracking-wide font-medium">Last Updated</span>
+                  </div>
+                  <p className={`text-2xl font-bold tabular-nums ${isDark ? "text-white" : "text-gray-900"}`}>
+                    {mostRecentUpdate ? formatRelativeDate(mostRecentUpdate.updatedAt) : "—"}
+                  </p>
+                  <p className={`text-[11px] mt-0.5 truncate ${isDark ? "text-white/30" : "text-gray-400"}`}>
+                    {mostRecentUpdate?.title || ""}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Repertoire Cards ──────────────────────────────────────────── */}
+            <div className="grid gap-3">
+              {repertoires.map((rep, idx) => {
+                const stats = allStats[idx];
+                const depthLabel = stats.maxDepth > 0
+                  ? `${stats.maxDepth} ply deep`
+                  : "empty";
+
+                return (
+                  <div
+                    key={rep.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate(`/repertoire/${rep.id}`)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/repertoire/${rep.id}`); }}
+                    className={`group w-full text-left rounded-2xl border transition cursor-pointer ${
+                      isDark
+                        ? "bg-gray-900/50 border-white/10 hover:border-emerald-500/40 hover:bg-gray-900"
+                        : "bg-white border-gray-200 hover:border-emerald-300 hover:shadow-md"
+                    }`}
+                  >
+                    {/* Card top row */}
+                    <div className="flex items-center gap-4 px-5 pt-4 pb-3">
+                      {/* Color indicator */}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0 ${
+                        rep.color === "white"
+                          ? "bg-white border border-gray-200 text-gray-900"
+                          : "bg-gray-800 border border-gray-600 text-white"
+                      }`}>
+                        {rep.color === "white" ? "♔" : "♚"}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                          {rep.title}
+                        </h3>
+                        <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                          Updated {formatRelativeDate(rep.updatedAt)}
+                        </p>
+                      </div>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteRepertoire(rep.id);
+                        }}
+                        className={`opacity-0 group-hover:opacity-100 p-2 rounded-lg transition ${
+                          isDark ? "hover:bg-red-500/20 text-red-400" : "hover:bg-red-50 text-red-500"
+                        }`}
+                        title="Delete repertoire"
+                      >
+                        {deleting === rep.id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
+                      </button>
+
+                      <ChevronRight size={18} className={`shrink-0 ${isDark ? "text-white/20" : "text-gray-300"} group-hover:translate-x-0.5 transition-transform`} />
+                    </div>
+
+                    {/* Stats row */}
+                    <div className={`flex items-center gap-0 border-t px-5 py-3 ${
+                      isDark ? "border-white/5" : "border-gray-100"
+                    }`}>
+                      {/* Moves */}
+                      <div className="flex-1 flex items-center gap-1.5">
+                        <TrendingUp size={13} className={isDark ? "text-emerald-400/70" : "text-emerald-600"} />
+                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                          {stats.totalMoves}
+                        </span>
+                        <span className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>moves</span>
+                      </div>
+
+                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+
+                      {/* Lines */}
+                      <div className="flex-1 flex items-center gap-1.5 px-4">
+                        <GitBranch size={13} className={isDark ? "text-blue-400/70" : "text-blue-500"} />
+                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                          {stats.uniqueLines}
+                        </span>
+                        <span className={`text-xs ${isDark ? "text-white/30" : "text-gray-400"}`}>lines</span>
+                      </div>
+
+                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+
+                      {/* Depth */}
+                      <div className="flex-1 flex items-center gap-1.5 px-4">
+                        <Layers size={13} className={isDark ? "text-purple-400/70" : "text-purple-500"} />
+                        <span className={`text-xs font-semibold tabular-nums ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                          {depthLabel}
+                        </span>
+                      </div>
+
+                      <div className={`w-px h-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+
+                      {/* Root moves */}
+                      <div className="flex-1 flex items-center gap-1 pl-4 overflow-hidden">
+                        {stats.rootMoves.length > 0 ? (
+                          <>
+                            {stats.rootMoves.map((san) => (
+                              <span
+                                key={san}
+                                className={`text-[11px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                                  isDark
+                                    ? "bg-emerald-500/15 text-emerald-400"
+                                    : "bg-emerald-50 text-emerald-700"
+                                }`}
+                              >
+                                {san}
+                              </span>
+                            ))}
+                            {stats.totalMoves > 4 && (
+                              <span className={`text-[11px] ${isDark ? "text-white/30" : "text-gray-400"}`}>…</span>
+                            )}
+                          </>
+                        ) : (
+                          <span className={`text-xs italic ${isDark ? "text-white/20" : "text-gray-300"}`}>
+                            No moves yet
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
