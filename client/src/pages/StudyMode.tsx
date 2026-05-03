@@ -672,8 +672,8 @@ function StudyModeContent() {
                 </div>
               )}
 
-              {/* Punishment Idea: shown once past the first two plies */}
-              {lineData.punishmentIdea && currentPly > 2 && (
+              {/* Punishment Idea: shown for plies 3-4 only, then hidden so focus shifts to annotations */}
+              {lineData.punishmentIdea && currentPly > 2 && currentPly <= 4 && (
                 <div className="p-3 rounded-lg bg-amber-500/[0.05] border border-amber-500/[0.10]">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Zap className="w-3.5 h-3.5 text-amber-400" />
