@@ -4,14 +4,15 @@
  * using popular chess.com usernames as mock players.
  * Mirrors the exact UI design system of LeagueDashboard.tsx.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users as _Users, Calendar, BarChart3, ListOrdered,
   Clock, Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
-  History, Shield as _Shield, Zap, CheckCircle2,
+  History, Shield as _Shield, Zap, CheckCircle2, Plus,
 } from "lucide-react";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
@@ -154,6 +155,17 @@ export default function LeagueDemo() {
   const themeCtx = useTheme();
   const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
   const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const { user } = useAuthContext();
+  // Determine if the user already has a league (to conditionally show CTA)
+  const [hasLeague, setHasLeague] = useState(false);
+  const isGuest = !user || user.isGuest;
+  useEffect(() => {
+    if (isGuest) { setHasLeague(false); return; }
+    fetch("/api/leagues/mine", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: unknown[]) => setHasLeague(Array.isArray(data) && data.length > 0))
+      .catch(() => setHasLeague(false));
+  }, [isGuest]);
 
   // Color tokens — identical to LeagueDashboard
   const pageBg    = isDark ? "oklch(0.15 0.04 145)" : "#f0f5ee";
@@ -517,8 +529,48 @@ export default function LeagueDemo() {
                       </div>
                     ))}
                   </div>
-                </div>
 
+                  {/* ── Create a League CTA (shown only to users without a league) ── */}
+                  {!hasLeague && (
+                    <div
+                      className="rounded-2xl overflow-hidden relative"
+                      style={{
+                        background: `linear-gradient(135deg, ${isDark ? "oklch(0.20 0.08 145)" : "#f0f9f4"} 0%, ${isDark ? "oklch(0.22 0.10 145)" : "#e8f5ec"} 100%)`,
+                        border: `1.5px solid ${accent}44`,
+                      }}
+                    >
+                      {/* Subtle chess-pattern overlay */}
+                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%)", backgroundSize: "20px 20px" }} />
+                      <div className="relative px-6 py-6 flex flex-col sm:flex-row items-center gap-5">
+                        {/* Icon */}
+                        <div
+                          className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
+                          style={{ background: accent }}
+                        >
+                          <Trophy size={26} color="#0a1a0f" strokeWidth={2.5} />
+                        </div>
+                        {/* Text */}
+                        <div className="flex-1 text-center sm:text-left">
+                          <div className="text-base font-black mb-1" style={{ color: textMain }}>
+                            Run your own Chess Club League
+                          </div>
+                          <div className="text-sm leading-relaxed" style={{ color: textMuted }}>
+                            Weekly matchups, live standings, and a full season schedule — for your club. Set it up in minutes.
+                          </div>
+                        </div>
+                        {/* CTA Button */}
+                        <button
+                          onClick={() => navigate("/clubs")}
+                          className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg"
+                          style={{ background: accent, color: "#0a1a0f" }}
+                        >
+                          <Plus size={15} strokeWidth={3} />
+                          Create a League
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {/* ── RIGHT PANEL: Upcoming Matchups ─────────────────────────── */}
                 <div
                   className="hidden xl:flex flex-col w-72 flex-shrink-0 border-l overflow-y-auto"
