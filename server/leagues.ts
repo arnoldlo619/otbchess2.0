@@ -26,7 +26,7 @@ import {
   users,
   prepCache,
 } from "../shared/schema.js";
-import { buildPrepReport } from "./prepEngine.js";
+import { buildPrepReport as _buildPrepReport, prewarmPrepCacheForPairings } from "./prepEngine.js";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import webpush from "web-push";
@@ -506,39 +506,18 @@ leaguesRouter.post("/:leagueId/start", requireAuth, async (req: Request, res: Re
     await db.update(leagues).set({ status: "active", currentWeek: 1 }).where(eq(leagues.id, league.id));
 
     // ── Pre-warm prep cache for all league players (fire-and-forget) ──────
-    // This runs in the background so the response isn't delayed.
-    // Each player with a chess.com username gets their prep report cached
-    // so opponents can one-click access it from match cards.
-    const playersWithChessCom = updatedPlayers.filter(p => p.chesscomUsername);
+    // Runs in the background so the response isn't delayed.
+    // Uses the shared prewarmPrepCacheForPairings helper which:
+    //   - Uses the correct composite cache key (username:all)
+    //   - Checks ENGINE_VERSION for staleness
+    //   - Rate-limits to 1 report per 3s to respect chess.com API
+    const playersWithChessCom = updatedPlayers
+      .filter(p => p.chesscomUsername)
+      .map(p => p.chesscomUsername!);
     if (playersWithChessCom.length > 0) {
-      (async () => {
-        for (const p of playersWithChessCom) {
-          try {
-            const username = p.chesscomUsername!.toLowerCase().trim();
-            // Check if already cached and fresh
-            const [existing] = await db.select().from(prepCache)
-              .where(eq(prepCache.username, username)).limit(1);
-            if (existing) {
-              const age = Date.now() - new Date(existing.cachedAt).getTime();
-              if (age < 24 * 60 * 60 * 1000) {
-                continue;
-              }
-            }
-            const report = await buildPrepReport(username, ["rapid", "blitz"], "white");
-            const reportStr = JSON.stringify(report);
-            await db.insert(prepCache).values({
-              username,
-              reportJson: reportStr,
-              gamesAnalyzed: report.opponent.gamesAnalyzed,
-              cachedAt: new Date(),
-            }).onDuplicateKeyUpdate({
-              set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date() },
-            });
-          } catch (err) {
-            logger.warn(`[league-prep] Failed to pre-warm for ${p.chesscomUsername}:`, err);
-          }
-        }
-      })();
+      prewarmPrepCacheForPairings(playersWithChessCom, db, logger).catch(err =>
+        logger.warn("[league-prep] Pre-warm error:", err)
+      );
     }
 
     res.json({ success: true, message: "Season started!", status: "active" });
@@ -936,6 +915,22 @@ leaguesRouter.post("/:leagueId/advance-week", requireAuth, async (req: Request, 
       .update(leagues)
       .set({ currentWeek: nextWeek })
       .where(eq(leagues.id, req.params.leagueId));
+
+    // ── Pre-warm prep cache for all players in the new week (fire-and-forget) ──
+    // Fetch all players in this league with a chess.com username and pre-build
+    // their prep reports so opponents can one-click access analysis instantly.
+    const allPlayers = await db
+      .select({ chesscomUsername: leaguePlayers.chesscomUsername })
+      .from(leaguePlayers)
+      .where(eq(leaguePlayers.leagueId, req.params.leagueId));
+    const usernames = allPlayers
+      .map(p => p.chesscomUsername)
+      .filter((u): u is string => Boolean(u));
+    if (usernames.length > 0) {
+      prewarmPrepCacheForPairings(usernames, db, logger).catch(err =>
+        logger.warn("[league-prep] advance-week pre-warm error:", err)
+      );
+    }
 
     res.json({ success: true, newWeek: nextWeek });
   } catch (err) {

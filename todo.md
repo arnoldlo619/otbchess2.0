@@ -5924,3 +5924,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Auto-invalidate cached reports when engine_version doesn't match current
 - [x] Ensure force-refresh (refresh button) bypasses cache and stores new version
 - [x] Purge all existing cached reports once (one-time migration for Jobava London fix)
+
+## Prep Cache Pre-warm on League Round Generation
+
+- [x] Add prewarmPrepCacheForRound(pairings) function to prepEngine.ts
+- [x] Wire pre-warm into league round generation endpoint (fire-and-forget)
+- [x] Rate-limit pre-warm to avoid overwhelming chess.com API (sequential with delay)
+- [x] Log pre-warm progress per pairing for observability

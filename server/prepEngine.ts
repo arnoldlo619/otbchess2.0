@@ -2049,3 +2049,72 @@ export async function buildPrepReport(
     generatedAt: new Date().toISOString(),
   };
 }
+
+// ─── Pre-warm Prep Cache ─────────────────────────────────────────────────────
+// Builds and caches prep reports for a list of chess.com usernames in the
+// background. Designed to be called fire-and-forget after a league round is
+// generated so players open their analysis instantly.
+//
+// Rate-limited to 1 report per 3 seconds to avoid overwhelming chess.com API.
+// Skips usernames that already have a fresh, version-matched cached report.
+
+export async function prewarmPrepCacheForPairings(
+  usernames: string[],
+  db: Awaited<ReturnType<typeof import("./db.js").getDb>>,
+  logger: { info: (msg: string) => void; warn: (msg: string, ...args: unknown[]) => void }
+): Promise<void> {
+  const { prepCache } = await import("../shared/schema.js");
+  const { eq } = await import("drizzle-orm");
+  const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+  const DELAY_MS = 3000; // 3s between requests to respect chess.com rate limits
+
+  const unique = Array.from(new Set(usernames.map(u => u.toLowerCase().trim()).filter(Boolean)));
+  logger.info(`[prep-prewarm] Starting pre-warm for ${unique.length} usernames: ${unique.join(", ")}`);
+
+  for (const username of unique) {
+    try {
+      const cacheKey = `${username}:all`;
+
+      // Check if already cached, fresh, and version-matched
+      const [existing] = await db.select().from(prepCache)
+        .where(eq(prepCache.username, cacheKey)).limit(1);
+
+      if (existing) {
+        const age = Date.now() - new Date(existing.cachedAt).getTime();
+        if (age < CACHE_TTL_MS && existing.engineVersion === ENGINE_VERSION) {
+          logger.info(`[prep-prewarm] SKIP ${username} — already cached (age ${Math.round(age / 60000)}m, v${existing.engineVersion})`);
+          continue;
+        }
+      }
+
+      logger.info(`[prep-prewarm] Building report for ${username}...`);
+      const report = await buildPrepReport(username, ["rapid", "blitz"], "white");
+      const reportStr = JSON.stringify(report);
+
+      await db.insert(prepCache).values({
+        username: cacheKey,
+        reportJson: reportStr,
+        gamesAnalyzed: report.opponent.gamesAnalyzed,
+        cachedAt: new Date(),
+        engineVersion: ENGINE_VERSION,
+      }).onDuplicateKeyUpdate({
+        set: {
+          reportJson: reportStr,
+          gamesAnalyzed: report.opponent.gamesAnalyzed,
+          cachedAt: new Date(),
+          engineVersion: ENGINE_VERSION,
+        },
+      });
+
+      logger.info(`[prep-prewarm] CACHED ${username} (${report.opponent.gamesAnalyzed} games analyzed)`);
+
+      // Rate-limit: wait 3s before the next request
+      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+    } catch (err) {
+      logger.warn(`[prep-prewarm] FAILED for ${username}:`, err instanceof Error ? err.message : err);
+      // Continue with remaining usernames even if one fails
+    }
+  }
+
+  logger.info(`[prep-prewarm] Pre-warm complete for ${unique.length} usernames`);
+}
