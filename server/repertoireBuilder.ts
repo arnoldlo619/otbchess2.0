@@ -16,12 +16,73 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
 import { eq, and, desc } from "drizzle-orm";
+import { readFileSync, existsSync } from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
 import { getDb } from "./db.js";
 import { repertoires, users } from "../shared/schema.js";
 import { requireFullAuth } from "./auth.js";
 import { logger } from "./logger.js";
 
 const FREE_REPERTOIRE_LIMIT = 1;
+
+// ── Load fallback explorer database at module startup ─────────────────────────
+// This is a static JSON file built from our 158 seeded opening lines.
+// It covers ~1,400+ positions up to 20+ moves deep across all 16 openings.
+// Used when the Lichess explorer API is unavailable (e.g., IP-blocked).
+
+interface ExplorerMove {
+  uci: string;
+  san: string;
+  white: number;
+  draws: number;
+  black: number;
+  averageRating: number;
+}
+
+interface ExplorerPosition {
+  white: number;
+  draws: number;
+  black: number;
+  opening: { eco: string; name: string } | null;
+  moves: ExplorerMove[];
+}
+
+interface FallbackDb {
+  _meta: { positionCount: number; version: string };
+  positions: Record<string, ExplorerPosition>;
+}
+
+let fallbackDb: FallbackDb | null = null;
+
+function loadFallbackDb(): void {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const dbPath = path.resolve(__dirname, "..", "data", "explorer-fallback.json");
+    if (existsSync(dbPath)) {
+      const raw = readFileSync(dbPath, "utf-8");
+      fallbackDb = JSON.parse(raw) as FallbackDb;
+      logger.info(`[repertoire-builder] Loaded fallback explorer DB: ${fallbackDb._meta.positionCount} positions`);
+    } else {
+      logger.warn(`[repertoire-builder] Fallback explorer DB not found at ${dbPath}`);
+    }
+  } catch (err) {
+    logger.warn("[repertoire-builder] Failed to load fallback explorer DB:", err);
+  }
+}
+
+// Load immediately at module import time
+loadFallbackDb();
+
+// ── FEN normalization ─────────────────────────────────────────────────────────
+// Normalize FEN to first 4 fields (ignore halfmove clock and fullmove number)
+// to match the keys in the fallback database.
+function normalizeFen(fen: string): string {
+  if (!fen) return "";
+  const parts = fen.trim().split(/\s+/);
+  return parts.slice(0, 4).join(" ");
+}
 
 export function createRepertoireBuilderRouter(): Router {
   const router = Router();
@@ -48,7 +109,6 @@ export function createRepertoireBuilderRouter(): Router {
       });
       if (!response.ok) {
         logger.warn(`[repertoire-builder] Lichess explorer returned ${response.status} — serving fallback data`);
-        // Return fallback data so the UI is functional even when Lichess blocks the server IP
         return res.json(getFallbackExplorerData(String(req.query.fen ?? "")));
       }
       const data = await response.json();
@@ -61,19 +121,42 @@ export function createRepertoireBuilderRouter(): Router {
     }
   });
 
+  // ── GET /explorer/status — check fallback DB status (public) ─────────────────
+  router.get("/explorer/status", (_req, res) => {
+    return res.json({
+      fallbackDb: fallbackDb
+        ? {
+            loaded: true,
+            positionCount: fallbackDb._meta.positionCount,
+            version: fallbackDb._meta.version,
+          }
+        : { loaded: false },
+    });
+  });
+
   // ── Fallback explorer data ─────────────────────────────────────────────────
-  // Provides realistic static move frequency data when the Lichess API is
-  // unavailable (e.g. IP-blocked in the dev sandbox). Production deployments
-  // will use real Lichess data.
-  function getFallbackExplorerData(fen: string): object {
-    const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    const isStarting = fen.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+  // Looks up the position in the static fallback database first.
+  // If not found, returns a generic empty response.
+  function getFallbackExplorerData(fen: string): ExplorerPosition {
+    const key = normalizeFen(fen);
+
+    // Try the static fallback database first
+    if (fallbackDb && key) {
+      const pos = fallbackDb.positions[key];
+      if (pos) {
+        return pos;
+      }
+    }
+
+    // Hard-coded fallbacks for the most common positions
+    // (these are also in the JSON but kept here as a safety net)
+    const isStarting = !fen || fen.startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
     const isAfterE4 = fen.includes("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b");
     const isAfterD4 = fen.includes("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b");
     const isAfterNf3 = fen.includes("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b");
     const isAfterC4 = fen.includes("rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b");
 
-    if (isStarting || fen === STARTING_FEN || !fen) {
+    if (isStarting) {
       return {
         white: 1200000, draws: 800000, black: 1000000,
         opening: null,
@@ -146,6 +229,7 @@ export function createRepertoireBuilderRouter(): Router {
         ],
       };
     }
+
     // Generic fallback for unknown positions
     return { white: 0, draws: 0, black: 0, moves: [], opening: null };
   }

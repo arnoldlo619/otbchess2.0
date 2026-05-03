@@ -5943,9 +5943,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 208 total lines in DB across all 16 openings with full node trees (2,676 nodes, accurate FEN positions)
 
 ## Repertoire Builder Buildout — Phase B: Fallback Explorer Database
-- [ ] Build deep static fallback explorer database covering first 8-10 moves
-- [ ] Source data from Lichess API in bulk (one-time fetch), store server-side
-- [ ] Ensure Repertoire Builder works without live Lichess access
+- [x] Fetch bulk opening positions from Lichess API (BFS traversal, 8-10 moves deep)
+- [x] Build static fallback JSON database keyed by FEN (1,426 positions from 158 lines)
+- [x] Load fallback JSON into server memory at startup
+- [x] Replace hardcoded 4-position fallback with full lookup table
+- [x] Ensure Repertoire Builder works without live Lichess access
+- [x] Write tests for fallback explorer lookup (23 tests passing)
 
 ## Repertoire Builder Buildout — Phase C: UX Enhancements
 - [ ] Add move annotations (!, !!, ?, ??, !?, ?!) with Stockfish evaluation display
