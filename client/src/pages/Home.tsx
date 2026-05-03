@@ -1586,7 +1586,24 @@ export default function Home() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === "dark";
-  const { user: _user, logout: _logout } = useAuthContext();
+  const { user } = useAuthContext();
+  // League smart routing: fetch user's leagues to pick the best destination
+  interface MyLeague { id: string; name: string; status: string; }
+  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
+  const isGuest = !user || user.isGuest;
+  useEffect(() => {
+    if (isGuest) { setMyLeagues([]); return; }
+    fetch("/api/leagues/mine", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: MyLeague[]) => setMyLeagues(Array.isArray(data) ? data : []))
+      .catch(() => setMyLeagues([]));
+  }, [isGuest]);
+  const leagueNavUrl = (() => {
+    if (!myLeagues.length) return "/league-demo";
+    const active = myLeagues.find((l) => l.status === "active");
+    const target = active ?? myLeagues[0];
+    return `/league/${target.id}`;
+  })();
   // Active tab state — synced with AnimeNavBar via IntersectionObserver
   const [activeNavTab, setActiveNavTab] = useState("Tournaments");
 
@@ -1662,6 +1679,7 @@ export default function Home() {
 
   // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
+    { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "Clubs",    url: "/clubs",    icon: Building2, sectionId: "for-clubs" },
     { name: "Training", url: "/training", icon: GraduationCap },
@@ -1682,6 +1700,7 @@ export default function Home() {
       currentPage={activeNavTab}
       onSignInClick={() => setAuthOpen(true)}
       dashboardUrl={getDashboardUrl()}
+      leagueUrl={leagueNavUrl}
     />
   );
 

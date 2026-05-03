@@ -10,13 +10,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LayoutDashboard, Building2, GraduationCap } from "lucide-react";
+import { Menu, X, LayoutDashboard, Building2, GraduationCap, Trophy } from "lucide-react";
 import { useLocation } from "wouter";
 
 const NAV_ITEMS = [
-  { name: "Tournaments", href: "/join",      icon: LayoutDashboard },
-  { name: "Clubs",       href: "/clubs",     icon: Building2 },
-  { name: "Training",    href: "/training",  icon: GraduationCap },
+  { name: "League",      href: "/league-demo", icon: Trophy },
+  { name: "Tournaments", href: "/join",         icon: LayoutDashboard },
+  { name: "Clubs",       href: "/clubs",        icon: Building2 },
+  { name: "Training",    href: "/training",     icon: GraduationCap },
 ] as const;
 
 const OTB_GREEN      = "#4CAF50";

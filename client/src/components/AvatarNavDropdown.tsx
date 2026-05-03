@@ -32,6 +32,7 @@ import {
   Timer,
   Camera,
   Shield,
+  Trophy,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
@@ -47,10 +48,11 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "Tournaments",  href: "/join",      icon: LayoutDashboard },
-  { name: "Clubs",        href: "/clubs",     icon: Building2 },
-  { name: "Training",     href: "/training",  icon: GraduationCap },
-  { name: "Chess Clock",  href: "/clock",     icon: Timer },
+  { name: "League",       href: "/league-demo", icon: Trophy },
+  { name: "Tournaments",  href: "/join",        icon: LayoutDashboard },
+  { name: "Clubs",        href: "/clubs",       icon: Building2 },
+  { name: "Training",     href: "/training",    icon: GraduationCap },
+  { name: "Chess Clock",  href: "/clock",       icon: Timer },
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -69,6 +71,8 @@ interface AvatarNavDropdownProps {
   className?: string;
   /** Smart dashboard URL (resolves to active tournament or /join). Passed from AppNavBar. */
   dashboardUrl?: string;
+  /** Smart league URL (resolves to user's active league or /league-demo). Passed from AppNavBar. */
+  leagueUrl?: string;
 }
 
 // ─── Sparkline SVG (interactive with hover tooltip) ──────────────────────────
@@ -295,6 +299,7 @@ export function AvatarNavDropdown({
   onSignInClick,
   className = "",
   dashboardUrl,
+  leagueUrl,
 }: AvatarNavDropdownProps) {
   const { user, loading: authLoading, logout, updateProfile } = useAuthContext();
   const { theme, toggleTheme } = useTheme();
@@ -414,12 +419,12 @@ export function AvatarNavDropdown({
     if (open) fetchHistory();
   }, [open, fetchHistory]);
 
-  // Build nav items — use smart dashboardUrl if provided, else fall back to /join
-  const resolvedNavItems = NAV_ITEMS.map((item) =>
-    item.name === "Tournaments" && dashboardUrl
-      ? { ...item, href: dashboardUrl }
-      : item
-  );
+  // Build nav items — use smart dashboardUrl/leagueUrl if provided, else fall back to defaults
+  const resolvedNavItems = NAV_ITEMS.map((item) => {
+    if (item.name === "Tournaments" && dashboardUrl) return { ...item, href: dashboardUrl };
+    if (item.name === "League" && leagueUrl) return { ...item, href: leagueUrl };
+    return item;
+  });
 
   const isActive = (item: (typeof NAV_ITEMS)[number]) => {
     if (currentPage) return item.name === currentPage;

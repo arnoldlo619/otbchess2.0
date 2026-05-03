@@ -13,15 +13,16 @@
  *   <AppNavBar defaultActive="Clubs" />
  */
 
-import { useState } from "react";
+
 import { Link } from "wouter";
-import { Building2, GraduationCap, LayoutDashboard } from "lucide-react";
+import { Building2, GraduationCap, LayoutDashboard, Trophy } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/tournamentRegistry";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
+import { useEffect, useState } from "react";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 import { TrainingDropdown } from "@/components/TrainingDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -55,6 +56,8 @@ function getDashboardUrl(): string {
   return "/join";
 }
 
+interface MyLeague { id: string; name: string; status: string; currentWeek: number; totalWeeks: number; }
+
 function getDashboardTooltip(): string | undefined {
   const allTournaments = listTournaments();
   const directed = allTournaments.find((t) => hasDirectorSession(t.id));
@@ -81,6 +84,28 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   const [activeTab, setActiveTab] = useState(defaultActive);
   const activeTournament = useActiveTournament();
 
+  // Fetch user's leagues to compute smart League nav URL
+  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
+  const isGuest2 = !user || user.isGuest;
+  useEffect(() => {
+    if (isGuest2) { setMyLeagues([]); return; }
+    fetch("/api/leagues/mine", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: MyLeague[]) => setMyLeagues(Array.isArray(data) ? data : []))
+      .catch(() => setMyLeagues([]));
+  }, [isGuest2]);
+
+  // Pick the best league to navigate to:
+  // 1. Active league (status = "active") first
+  // 2. Any league (draft, completed)
+  // 3. Fallback to demo page
+  const leagueNavUrl = (() => {
+    if (!myLeagues.length) return "/league-demo";
+    const active = myLeagues.find((l) => l.status === "active");
+    const target = active ?? myLeagues[0];
+    return `/league/${target.id}`;
+  })();
+
   const dashboardUrl     = getDashboardUrl();
   const dashboardTooltip = getDashboardTooltip();
 
@@ -90,6 +115,17 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
     (activeTournament.status === "in_progress" || activeTournament.status === "registration" || activeTournament.status === "unknown");
 
   const navItems = [
+    { name: "League",
+      url: leagueNavUrl,
+      icon: Trophy,
+      tooltip: myLeagues.length
+        ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name)
+        : "View League Demo",
+      onClick: (e: React.MouseEvent) => {
+        e.preventDefault();
+        window.location.href = leagueNavUrl;
+      },
+    },
     { name: "Tournaments",
       url: dashboardUrl,
       icon: LayoutDashboard,
@@ -145,6 +181,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
           currentPage={activeTab}
           onSignInClick={onSignInClick}
           dashboardUrl={dashboardUrl}
+          leagueUrl={leagueNavUrl}
         />
       </div>
     </div>
