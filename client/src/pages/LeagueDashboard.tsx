@@ -273,9 +273,9 @@ function resultLabel(r: string, wName: string, bName: string) {
 }
 
 function ReportResultModal({
-  match, isDark, onClose, onSubmit, currentUserId,
+  match, isDark, onClose, onSubmit, currentUserId, isCommissionerOverride,
 }: {
-  match: LeagueMatch; isDark: boolean; currentUserId?: string;
+  match: LeagueMatch; isDark: boolean; currentUserId?: string; isCommissionerOverride?: boolean;
   onClose: () => void;
   onSubmit: (result: "white_win" | "black_win" | "draw") => Promise<void>;
 }) {
@@ -319,9 +319,23 @@ function ReportResultModal({
           <div className="flex items-center gap-2 mb-1">
             <Swords size={16} style={{ color: accent }} />
             <span className="font-bold text-base" style={{ color: textMain }}>
-              {isConfirming ? "Confirm Result" : "Report Result"}
+              {isConfirming ? "Confirm Result" : isCommissionerOverride ? "Submit Official Report" : "Report Result"}
             </span>
+            {isCommissionerOverride && (
+              <span
+                className="ml-auto flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: "oklch(0.32 0.10 80)", color: "oklch(0.88 0.15 80)", border: "1px solid oklch(0.65 0.14 80 / 0.4)" }}
+              >
+                <Crown size={9} />
+                Commissioner
+              </span>
+            )}
           </div>
+          {isCommissionerOverride && (
+            <p className="text-xs mt-1 mb-1 px-3 py-2 rounded-xl" style={{ background: "oklch(0.32 0.10 80 / 0.25)", color: "oklch(0.80 0.12 80)" }}>
+              This will immediately lock in the result. No player confirmation required.
+            </p>
+          )}
           <p className="text-sm" style={{ color: textMuted }}>
             {match.playerWhiteName} vs {match.playerBlackName} — Week {match.weekNumber}
           </p>
@@ -427,6 +441,7 @@ export default function LeagueDashboard() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
+  const [isCommissionerReport, setIsCommissionerReport] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [advancingWeek, setAdvancingWeek] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -2410,6 +2425,23 @@ export default function LeagueDashboard() {
                           </div>
                         );
                       })()}
+                      {/* Commissioner: Submit Report button — locks in result for any non-completed match */}
+                      {isCommissioner && match.resultStatus !== "completed" && (
+                        <div className="px-4 pb-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setIsCommissionerReport(true); setReportingMatch(match); }}
+                            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11px] font-semibold transition-all hover:opacity-90 active:scale-95"
+                            style={{
+                              background: isDark ? "oklch(0.32 0.10 80)" : "oklch(0.92 0.08 80)",
+                              color: isDark ? "oklch(0.88 0.15 80)" : "oklch(0.40 0.12 80)",
+                              border: `1px solid oklch(0.65 0.14 80 / 0.4)`,
+                            }}
+                          >
+                            <Crown size={11} />
+                            Submit Report
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -3595,7 +3627,8 @@ export default function LeagueDashboard() {
           match={reportingMatch}
           isDark={isDark}
           currentUserId={user?.id}
-          onClose={() => setReportingMatch(null)}
+          isCommissionerOverride={isCommissionerReport}
+          onClose={() => { setReportingMatch(null); setIsCommissionerReport(false); }}
           onSubmit={handleReportResult}
         />
       )}
