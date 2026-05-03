@@ -9,6 +9,7 @@ import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
+import AuthModal from "@/components/AuthModal";
 import {
   Trophy, Users as _Users, Calendar, BarChart3, ListOrdered,
   Clock, Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
@@ -161,6 +162,18 @@ export default function LeagueDemo() {
   const [hasClub, setHasClub] = useState(false);
   const [firstClubId, setFirstClubId] = useState<string | null>(null);
   const isGuest = !user || user.isGuest;
+  // Sign-in gate for guest CTA clicks
+  const [authOpen, setAuthOpen] = useState(false);
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
+  /** Intercept CTA clicks — open sign-in modal for guests, navigate directly for authed users */
+  const handleCtaClick = (url: string) => {
+    if (isGuest) {
+      setPendingNavUrl(url);
+      setAuthOpen(true);
+    } else {
+      navigate(url);
+    }
+  };
   useEffect(() => {
     if (isGuest) { setHasLeague(false); setHasClub(false); setFirstClubId(null); return; }
     // Check leagues
@@ -202,6 +215,7 @@ export default function LeagueDemo() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
+    <>
     <div className="min-h-screen" style={{ background: pageBg }}>
       {/* Demo Banner */}
       <div
@@ -577,7 +591,7 @@ export default function LeagueDemo() {
                           {/* Join a League — only for users who are in a club */}
                           {hasClub && firstClubId && (
                             <button
-                              onClick={() => navigate(`/clubs/${firstClubId}/home`)}
+                              onClick={() => handleCtaClick(`/clubs/${firstClubId}/home`)}
                               className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 border"
                               style={{
                                 background: "transparent",
@@ -591,7 +605,7 @@ export default function LeagueDemo() {
                           )}
                           {/* Create a League */}
                           <button
-                            onClick={() => navigate("/clubs")}
+                            onClick={() => handleCtaClick("/clubs")}
                             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg"
                             style={{ background: accent, color: "#0a1a0f" }}
                           >
@@ -1071,11 +1085,26 @@ export default function LeagueDemo() {
                   </button>
                 );
               })}
-            </div>
-
+             </div>
           </div>
         </div>
       </div>
     </div>
+
+    {/* ── Sign-in gate modal for guest CTA clicks ── */}
+    <AuthModal
+      isOpen={authOpen}
+      onClose={() => { setAuthOpen(false); setPendingNavUrl(null); }}
+      onSuccess={() => {
+        setAuthOpen(false);
+        if (pendingNavUrl) {
+          navigate(pendingNavUrl);
+          setPendingNavUrl(null);
+        }
+      }}
+      isDark={isDark}
+      initialTab="signin"
+    />
+    </>
   );
 }
