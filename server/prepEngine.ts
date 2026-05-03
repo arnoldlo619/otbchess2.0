@@ -1097,7 +1097,7 @@ export function classifyOpening(pgn: string): OpeningInfo {
 /** Compute weakness score: 0–100 (high = exploitable) */
 function computeWeaknessScore(stat: Omit<OpeningStat, "weaknessScore">): number {
   const totalGames = stat.wins + stat.draws + stat.losses;
-  if (totalGames < 3) return 0;
+  if (totalGames < 5) return 0;
   // Frequency component (0–50): how often they play this
   const freqScore = Math.min(50, (stat.count / 20) * 50);
   // Weakness component (0–50): how bad their win rate is
@@ -1465,7 +1465,7 @@ export function generateInsights(profile: PlayStyleProfile): string[] {
 
   // Weakness: low win rate opening
   const weakOpening = [...p.whiteOpenings, ...p.blackOpenings]
-    .filter(o => o.count >= 3 && o.winRate < 0.4)
+    .filter(o => o.count >= 5 && o.winRate < 0.4)
     .sort((a, b) => b.weaknessScore - a.weaknessScore)[0];
   if (weakOpening) {
     insights.push(`Struggles in ${weakOpening.name} (${Math.round(weakOpening.winRate * 100)}% win rate in ${weakOpening.count} games) — high exploitability.`);
@@ -1625,7 +1625,8 @@ export function extractProblemLines(
 
   for (const [, group] of Array.from(groups.entries())) {
     const totalGames = group.goodTokens.length + group.badTokens.length;
-    if (totalGames < 3 || group.badTokens.length < 2) continue;
+    // Require at least 8 games per group with 3+ losses for statistically reliable divergence detection
+    if (totalGames < 8 || group.badTokens.length < 3) continue;
 
     const lossRate = group.badTokens.length / totalGames;
     if (lossRate < 0.35) continue; // only show lines with meaningful loss rate
@@ -1729,28 +1730,40 @@ export function generateVictoryPlan(
   };
 
   // ── 1. As White, they play 1.X — They struggle against [Opening] ──
+  const whiteGameCount = profile.asWhite.games;
+  const MIN_GAMES = 20; // Minimum games per color for reliable analysis
   if (profile.whiteOpenings.length > 0) {
     const firstMove = getFirstMove(profile.whiteOpenings);
     const firstMoveDisplay = firstMove ? `1.${firstMove}` : "";
-    // Find the opening they lose against the most (opponent's response that beats them)
-    const weakestWhite = [...profile.whiteOpenings]
-      .sort((a, b) => a.winRate - b.winRate)
-      .find(o => o.count >= 3 && o.winRate < 0.5);
-    if (weakestWhite) {
-      const friendlyName = mainstreamName(weakestWhite.name, firstMove);
-      const lossPct = Math.round((1 - weakestWhite.winRate) * 100);
-      plan.push({
-        action: `As White, they play ${firstMoveDisplay} — They struggle against the ${friendlyName}`,
-        reason: `They lose ${lossPct}% of their games when facing the ${friendlyName} (${weakestWhite.losses} losses in ${weakestWhite.count} games). Steer into this opening when you have Black.`,
-        category: "opening",
-      });
-    } else {
+    if (whiteGameCount < MIN_GAMES) {
+      // Not enough games — show what we have with a caveat
       const topName = mainstreamName(profile.whiteOpenings[0].name, firstMove);
       plan.push({
         action: `As White, they play ${firstMoveDisplay} — primarily the ${topName}`,
-        reason: `Win rate ${Math.round(profile.whiteOpenings[0].winRate * 100)}% across ${profile.whiteOpenings[0].count} games. Look for sidelines they haven't faced to take them out of preparation.`,
+        reason: `Only ${whiteGameCount} White games analyzed (${MIN_GAMES}+ recommended for reliable insights). Win rate ${Math.round(profile.whiteOpenings[0].winRate * 100)}% so far — more games needed to identify consistent weaknesses.`,
         category: "opening",
       });
+    } else {
+      // Find the opening they lose against the most (opponent's response that beats them)
+      const weakestWhite = [...profile.whiteOpenings]
+        .sort((a, b) => a.winRate - b.winRate)
+        .find(o => o.count >= 5 && o.winRate < 0.5);
+      if (weakestWhite) {
+        const friendlyName = mainstreamName(weakestWhite.name, firstMove);
+        const lossPct = Math.round((1 - weakestWhite.winRate) * 100);
+        plan.push({
+          action: `As White, they play ${firstMoveDisplay} — They struggle against the ${friendlyName}`,
+          reason: `They lose ${lossPct}% of their games when facing the ${friendlyName} (${weakestWhite.losses} losses in ${weakestWhite.count} games). Steer into this opening when you have Black.`,
+          category: "opening",
+        });
+      } else {
+        const topName = mainstreamName(profile.whiteOpenings[0].name, firstMove);
+        plan.push({
+          action: `As White, they play ${firstMoveDisplay} — primarily the ${topName}`,
+          reason: `Win rate ${Math.round(profile.whiteOpenings[0].winRate * 100)}% across ${profile.whiteOpenings[0].count} games. Look for sidelines they haven't faced to take them out of preparation.`,
+          category: "opening",
+        });
+      }
     }
   }
 
@@ -1777,17 +1790,21 @@ export function generateVictoryPlan(
   }
 
   // ── 3. As Black, they play [Opening] against 1.e4 and [Opening] against 1.d4 ──
+  const blackGameCount = profile.asBlack.games;
   if (profile.blackOpenings.length > 0) {
-    const totalBlackGames = profile.asBlack.games || profile.blackOpenings.reduce((s, o) => s + o.count, 0);
+    const totalBlackGames = blackGameCount || profile.blackOpenings.reduce((s, o) => s + o.count, 0);
     const blackOpeningsList = profile.blackOpenings.slice(0, 4);
     const descriptions = blackOpeningsList.map(o => {
       const pct = totalBlackGames > 0 ? Math.round((o.count / totalBlackGames) * 100) : 0;
       const friendlyName = mainstreamName(o.name);
       return `the ${friendlyName} (${pct}%)`;
     });
+    const caveat = totalBlackGames < MIN_GAMES
+      ? ` (only ${totalBlackGames} games — ${MIN_GAMES}+ recommended for reliable insights)`
+      : "";
     plan.push({
       action: `As Black, they play ${descriptions.join(", ")}`,
-      reason: `Their Black repertoire across ${totalBlackGames} games. Prepare your White opening to exploit their most-played defense.`,
+      reason: `Their Black repertoire across ${totalBlackGames} games${caveat}. Prepare your White opening to exploit their most-played defense.`,
       category: "opening",
     });
   }

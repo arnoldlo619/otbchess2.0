@@ -5904,3 +5904,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Simplify language: "As White, they play 1.d4 — They struggle against [opening]" format
 - [x] Item 2 should reference specific named opening: "Lines of the London they struggle with"
 - [x] Unify all items in the section with consistent, intuitive framing
+
+## Victory Plan Analysis Depth
+
+- [x] Increase minimum game sample to 20 recent games as white and 20 as black for victory plan analysis
+- [x] Refine logic flow to gracefully handle cases where fewer than 20 games exist per color
