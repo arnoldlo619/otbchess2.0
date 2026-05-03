@@ -268,7 +268,7 @@ const ECO_BOOK: EcoEntry[] = [
   // A40–A49 — Queen's Pawn misc, Torre, Trompowsky
   { eco: "A40", name: "Queen's Pawn Opening", moves: "1.d4 e6" },
   { eco: "A40", name: "Modern Defense: Averbakh", moves: "1.d4 g6" },
-  { eco: "A41", name: "Queen's Pawn: Wade Defense", moves: "1.d4 d6" },
+  { eco: "A41", name: "Modern Defense", moves: "1.d4 d6" },
   { eco: "A41", name: "Queen's Pawn: Rat Defense", moves: "1.d4 d6 2.Nf3 g6 3.c4 Bg7" },
   { eco: "A43", name: "Old Benoni", moves: "1.d4 c5" },
   { eco: "A44", name: "Old Benoni: Czech Benoni", moves: "1.d4 c5 2.d5 e5" },
@@ -556,6 +556,8 @@ const ECO_BOOK: EcoEntry[] = [
   { eco: "D00", name: "Blackmar-Diemer Gambit", moves: "1.d4 d5 2.e4" },
   { eco: "D00", name: "London System", moves: "1.d4 d5 2.Bf4" },
   { eco: "D00", name: "London System", moves: "1.d4 Nf6 2.Bf4" },
+  { eco: "D00", name: "London System", moves: "1.d4 d5 2.Nf3 Nf6 3.Bf4" },
+  { eco: "D00", name: "Veresov System", moves: "1.d4 d5 2.Nc3" },
   { eco: "D01", name: "Veresov Attack", moves: "1.d4 d5 2.Nc3 Nf6 3.Bg5" },
   { eco: "D02", name: "Queen's Pawn: Symmetrical", moves: "1.d4 d5 2.Nf3 Nf6" },
   { eco: "D04", name: "Colle System", moves: "1.d4 d5 2.Nf3 Nf6 3.e3" },
@@ -774,6 +776,85 @@ const ECO_BOOK: EcoEntry[] = [
 
 // Pre-sort ECO book: longest move sequences first (most specific match wins)
 const SORTED_ECO = [...ECO_BOOK].sort((a, b) => b.moves.length - a.moves.length);
+
+/**
+ * Simplify verbose ECO names to mainstream, player-friendly opening names.
+ * e.g. "Queen's Pawn: Wade Defense" → "Modern Defense"
+ *      "Scandinavian: Mieses-Kotrč" → "Scandinavian Defense"
+ *      "Queen's Pawn Game" → "Queen's Pawn (1.d4 d5)"
+ */
+function mainstreamName(ecoName: string, firstMove?: string): string {
+  const n = ecoName.toLowerCase();
+  // Direct mappings for generic/verbose names
+  if (n === "queen's pawn game" || n === "queen's pawn opening") {
+    return firstMove ? `Queen's Pawn (1.${firstMove})` : "Queen's Pawn";
+  }
+  if (n === "king's pawn game" || n === "king's pawn opening") {
+    return firstMove ? `King's Pawn (1.${firstMove})` : "King's Pawn";
+  }
+  // Strip verbose sub-variation suffixes for cleaner display
+  // "Scandinavian: Modern" → "Scandinavian Defense"
+  // "Sicilian: Najdorf" → "Sicilian Najdorf"
+  const familyMappings: [string, string][] = [
+    ["queen's pawn: wade defense", "Modern Defense"],
+    ["queen's pawn: rat defense", "Pirc Defense"],
+    ["queen's pawn: symmetrical", "Queen's Pawn"],
+    ["scandinavian: mieses", "Scandinavian Defense"],
+    ["scandinavian: modern", "Scandinavian Defense (Modern)"],
+    ["scandinavian: icelandic", "Scandinavian Defense (Icelandic Gambit)"],
+    ["scandinavian: portuguese", "Scandinavian Defense (Portuguese Gambit)"],
+    ["scandinavian defense", "Scandinavian Defense"],
+    ["french: advance", "French Defense (Advance)"],
+    ["french: winawer", "French Defense (Winawer)"],
+    ["french: classical", "French Defense (Classical)"],
+    ["french defense", "French Defense"],
+    ["caro-kann: advance", "Caro-Kann (Advance)"],
+    ["caro-kann: exchange", "Caro-Kann (Exchange)"],
+    ["caro-kann: panov", "Caro-Kann (Panov Attack)"],
+    ["caro-kann defense", "Caro-Kann Defense"],
+    ["sicilian: najdorf", "Sicilian Najdorf"],
+    ["sicilian: dragon", "Sicilian Dragon"],
+    ["sicilian: scheveningen", "Sicilian Scheveningen"],
+    ["sicilian: alapin", "Sicilian Alapin"],
+    ["sicilian defense", "Sicilian Defense"],
+    ["italian game", "Italian Game"],
+    ["ruy lopez", "Ruy Lopez"],
+    ["london system", "London System"],
+    ["king's indian defense", "King's Indian Defense"],
+    ["king's indian: classical", "King's Indian (Classical)"],
+    ["nimzo-indian", "Nimzo-Indian Defense"],
+    ["queen's gambit declined", "Queen's Gambit Declined"],
+    ["queen's gambit accepted", "Queen's Gambit Accepted"],
+    ["queen's gambit", "Queen's Gambit"],
+    ["slav defense", "Slav Defense"],
+    ["pirc defense", "Pirc Defense"],
+    ["pirc: austrian", "Pirc (Austrian Attack)"],
+    ["pirc: classical", "Pirc (Classical)"],
+    ["modern defense", "Modern Defense"],
+    ["english opening", "English Opening"],
+    ["reti opening", "Reti Opening"],
+    ["veresov", "Veresov System"],
+    ["trompowsky", "Trompowsky Attack"],
+    ["colle system", "Colle System"],
+    ["dutch defense", "Dutch Defense"],
+    ["grünfeld", "Grünfeld Defense"],
+    ["benoni", "Benoni Defense"],
+    ["alekhine", "Alekhine Defense"],
+    ["van't kruijs", "King's Pawn (1.e3)"],
+    ["sokolsky", "Sokolsky Opening (1.b4)"],
+    ["grob", "Grob Attack (1.g4)"],
+  ];
+  for (const [pattern, friendly] of familyMappings) {
+    if (n.includes(pattern)) return friendly;
+  }
+  // If name has a colon, simplify: "X: Y Variation" → "X (Y)"
+  if (ecoName.includes(":")) {
+    const [family, variant] = ecoName.split(":").map(s => s.trim());
+    const cleanVariant = variant.replace(/ Variation$/, "").replace(/ Defense$/, "");
+    return `${family} (${cleanVariant})`;
+  }
+  return ecoName;
+}
 
 // ─── Counter-Lines Database (sub-variation aware) ─────────────────────────────
 // Maps opponent opening patterns to recommended counter-lines.
@@ -1087,7 +1168,8 @@ function buildOpeningStats(
   return Array.from(statsMap.entries())
     .map(([name, s]) => {
       const winRate = s.count > 0 ? s.wins / s.count : 0;
-      const base = { name, eco: s.eco, moves: s.moves, count: s.count, wins: s.wins, draws: s.draws, losses: s.losses, winRate };
+      const friendlyName = mainstreamName(name);
+      const base = { name: friendlyName, eco: s.eco, moves: s.moves, count: s.count, wins: s.wins, draws: s.draws, losses: s.losses, winRate };
       return { ...base, weaknessScore: computeWeaknessScore(base) };
     })
     .sort((a, b) => b.count - a.count)
@@ -1607,7 +1689,7 @@ export function extractProblemLines(
     if (!movesStr) continue;
 
     results.push({
-      name: group.name,
+      name: mainstreamName(group.name),
       eco: group.eco,
       color: group.color,
       moves: movesStr,
@@ -1638,79 +1720,94 @@ export function generateVictoryPlan(
 ): VictoryPlanItem[] {
   const plan: VictoryPlanItem[] = [];
 
-  // ── 1. Their White repertoire — what they play as White and where they lose ──
+  // Helper: get the first move from the top opening's moves field (e.g. "d4" from "1.d4 d5")
+  const getFirstMove = (openings: OpeningStat[]): string => {
+    if (openings.length === 0) return "";
+    const moves = openings[0].moves;
+    const match = moves.match(/1\.([A-Za-z0-9]+)/);
+    return match ? match[1] : "";
+  };
+
+  // ── 1. As White, they play 1.X — They struggle against [Opening] ──
   if (profile.whiteOpenings.length > 0) {
-    const topWhite = profile.whiteOpenings[0];
-    const totalWhiteGames = profile.asWhite.games || profile.whiteOpenings.reduce((s, o) => s + o.count, 0);
-    const pct = totalWhiteGames > 0 ? Math.round((topWhite.count / totalWhiteGames) * 100) : 0;
-    // Find the opening they lose the most in as White
-    const weakestWhite = [...profile.whiteOpenings].sort((a, b) => a.winRate - b.winRate).find(o => o.count >= 3 && o.winRate < 0.5);
+    const firstMove = getFirstMove(profile.whiteOpenings);
+    const firstMoveDisplay = firstMove ? `1.${firstMove}` : "";
+    // Find the opening they lose against the most (opponent's response that beats them)
+    const weakestWhite = [...profile.whiteOpenings]
+      .sort((a, b) => a.winRate - b.winRate)
+      .find(o => o.count >= 3 && o.winRate < 0.5);
     if (weakestWhite) {
+      const friendlyName = mainstreamName(weakestWhite.name, firstMove);
+      const lossPct = Math.round((1 - weakestWhite.winRate) * 100);
       plan.push({
-        action: `As White they play ${topWhite.name} (${pct}% of games) — they lose ${Math.round((1 - weakestWhite.winRate) * 100)}% when opponents play the ${weakestWhite.name}`,
-        reason: `${weakestWhite.losses} losses in ${weakestWhite.count} games with this opening. Steer into this structure when you have Black.`,
+        action: `As White, they play ${firstMoveDisplay} — They struggle against the ${friendlyName}`,
+        reason: `They lose ${lossPct}% of their games when facing the ${friendlyName} (${weakestWhite.losses} losses in ${weakestWhite.count} games). Steer into this opening when you have Black.`,
         category: "opening",
       });
     } else {
+      const topName = mainstreamName(profile.whiteOpenings[0].name, firstMove);
       plan.push({
-        action: `As White they play ${topWhite.name} (${pct}% of games) — win rate ${Math.round(topWhite.winRate * 100)}%`,
-        reason: `Their primary White opening. Look for sidelines they haven't faced often to take them out of preparation.`,
+        action: `As White, they play ${firstMoveDisplay} — primarily the ${topName}`,
+        reason: `Win rate ${Math.round(profile.whiteOpenings[0].winRate * 100)}% across ${profile.whiteOpenings[0].count} games. Look for sidelines they haven't faced to take them out of preparation.`,
         category: "opening",
       });
     }
   }
 
-  // ── 2. Lines they struggle with as White (your Black repertoire targets) ──
+  // ── 2. Lines of the [Opening] they struggle with ──
   const whiteProblemLines = problemLines.filter(pl => pl.color === "white");
   if (whiteProblemLines.length > 0) {
     const worst = whiteProblemLines[0];
+    const friendlyName = mainstreamName(worst.name);
     plan.push({
-      action: `Lines of the ${worst.name} they struggle with`,
+      action: `Lines of the ${friendlyName} they struggle with`,
       reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). They blunder at move ${Math.ceil(worst.problemHalfMove / 2)} with ${worst.problemMove}${worst.betterMove ? ` — ${worst.betterMove} is stronger` : ""}.`,
       category: "opening",
     });
   } else if (profile.whiteOpenings.length > 1) {
-    // Fallback: show their weakest White opening line
     const weakWhite = [...profile.whiteOpenings].sort((a, b) => a.winRate - b.winRate)[0];
     if (weakWhite && weakWhite.winRate < 0.55) {
+      const friendlyName = mainstreamName(weakWhite.name);
       plan.push({
-        action: `Target the ${weakWhite.name} — their weakest White line`,
+        action: `Target the ${friendlyName} — their weakest White line`,
         reason: `Only ${Math.round(weakWhite.winRate * 100)}% win rate across ${weakWhite.count} games. Prepare a sharp response here.`,
         category: "opening",
       });
     }
   }
 
-  // ── 3. Their Black repertoire — what they play against 1.e4 and 1.d4 ──
+  // ── 3. As Black, they play [Opening] against 1.e4 and [Opening] against 1.d4 ──
   if (profile.blackOpenings.length > 0) {
     const totalBlackGames = profile.asBlack.games || profile.blackOpenings.reduce((s, o) => s + o.count, 0);
-    // Group by response to 1.e4 vs 1.d4
     const blackOpeningsList = profile.blackOpenings.slice(0, 4);
     const descriptions = blackOpeningsList.map(o => {
       const pct = totalBlackGames > 0 ? Math.round((o.count / totalBlackGames) * 100) : 0;
-      return `${o.name} (${pct}%)`;
+      const friendlyName = mainstreamName(o.name);
+      return `the ${friendlyName} (${pct}%)`;
     });
     plan.push({
-      action: `As Black, they play: ${descriptions.join(", ")}`,
-      reason: `Their Black repertoire across ${totalBlackGames} games. Prepare your White opening to target their most-played defense.`,
+      action: `As Black, they play ${descriptions.join(", ")}`,
+      reason: `Their Black repertoire across ${totalBlackGames} games. Prepare your White opening to exploit their most-played defense.`,
       category: "opening",
     });
   }
 
-  // ── 4. Recommended lines against their Black defense (e.g. lines of the Scandinavian they struggle with) ──
+  // ── 4. Lines of the [Black defense] they struggle with ──
   const blackProblemLines = problemLines.filter(pl => pl.color === "black");
   if (blackProblemLines.length > 0) {
     const worst = blackProblemLines[0];
+    const friendlyName = mainstreamName(worst.name);
     plan.push({
-      action: `Lines of the ${worst.name} they struggle with as Black`,
+      action: `Lines of the ${friendlyName} they struggle with as Black`,
       reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). Critical mistake at move ${Math.ceil(worst.problemHalfMove / 2)}: ${worst.problemMove}${worst.betterMove ? ` — better is ${worst.betterMove}` : ""}.`,
       category: "opening",
     });
   } else if (profile.blackOpenings.length > 0) {
     const weakBlack = [...profile.blackOpenings].sort((a, b) => a.winRate - b.winRate)[0];
     if (weakBlack && weakBlack.winRate < 0.5) {
+      const friendlyName = mainstreamName(weakBlack.name);
       plan.push({
-        action: `Target the ${weakBlack.name} — their weakest Black defense`,
+        action: `Target the ${friendlyName} — their weakest Black defense`,
         reason: `Only ${Math.round(weakBlack.winRate * 100)}% win rate across ${weakBlack.count} games. Steer into this with your White opening choice.`,
         category: "opening",
       });
@@ -1731,7 +1828,6 @@ export function generateVictoryPlan(
       category: "middlegame",
     });
   } else {
-    // Color weakness as a fallback 5th insight
     const whiteWR = profile.asWhite.winRate;
     const blackWR = profile.asBlack.winRate;
     if (whiteWR - blackWR > 0.1) {

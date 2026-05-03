@@ -5896,3 +5896,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Enhance "Suggested Repertoire" section to be strategically specific covering white and black piece weaknesses
 - [x] Remove "How Games End" section from scouting report
 - [x] Add interactive chessboard opening decision tree (like chessbook.com) to opening explorer
+
+## How to Beat Section Language Improvements
+
+- [x] Use mainstream opening names (London, Scandinavian, Queen's Gambit) instead of generic "Queen's Pawn Game" labels
+- [x] Base opening identification on 5+ moves for more specific naming
+- [x] Simplify language: "As White, they play 1.d4 — They struggle against [opening]" format
+- [x] Item 2 should reference specific named opening: "Lines of the London they struggle with"
+- [x] Unify all items in the section with consistent, intuitive framing
