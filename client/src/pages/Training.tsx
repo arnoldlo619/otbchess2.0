@@ -2,7 +2,7 @@
  * Training Hub — /training
  *
  * Central hub for all player development features:
- *   1. Openings & Repertoire — study and drill opening lines
+ *   1. Openings Library — study and drill opening lines
  *   2. Matchup Prep — deep scout analysis against any chess.com player
  */
 import { useLocation } from "wouter";
@@ -18,7 +18,7 @@ export default function Training() {
   const features = [
     {
       icon: BookOpen,
-      title: "Openings & Repertoire",
+      title: "Openings Library",
       subtitle: "Study Lines · Drill Positions · Build Your Book",
       description:
         "Explore a curated library of 18+ openings and 110+ annotated lines. Study move-by-move with interactive boards, drill critical positions with spaced-repetition flashcards, and build a personalized repertoire tailored to your playing style.",
