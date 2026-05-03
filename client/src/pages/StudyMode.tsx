@@ -659,15 +659,27 @@ function StudyModeContent() {
               </div>
             )}
 
-            {/* Strategic info cards */}
+            {/* Strategic info cards — Strategic Goal for moves 1-2, Punishment Idea for moves 3+ */}
             <div className="space-y-2">
-              {lineData.strategicGoal && (
+              {/* Strategic Goal: only shown for the first two plies */}
+              {lineData.strategicGoal && currentPly <= 2 && (
                 <div className={`p-3 rounded-lg ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
                   <div className="flex items-center gap-1.5 mb-1">
                     <Target className="w-3.5 h-3.5 text-emerald-400" />
                     <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Strategic Goal</span>
                   </div>
                   <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>{lineData.strategicGoal}</p>
+                </div>
+              )}
+
+              {/* Punishment Idea: shown once past the first two plies */}
+              {lineData.punishmentIdea && currentPly > 2 && (
+                <div className="p-3 rounded-lg bg-amber-500/[0.05] border border-amber-500/[0.10]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-amber-400/70" : "text-amber-600"}`}>Punishment Idea</span>
+                  </div>
+                  <p className={`text-sm leading-relaxed font-medium ${isDark ? "text-white/75" : "text-gray-700"}`}>{lineData.punishmentIdea}</p>
                 </div>
               )}
 
@@ -678,16 +690,6 @@ function StudyModeContent() {
                     <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Common Mistake</span>
                   </div>
                   <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>{lineData.commonMistake}</p>
-                </div>
-              )}
-
-              {lineData.punishmentIdea && (
-                <div className="p-3 rounded-lg bg-amber-500/[0.03] border border-amber-500/[0.06]">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Zap className="w-3.5 h-3.5 text-amber-400" />
-                    <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/40" : "text-gray-400"}`}>Punishment Idea</span>
-                  </div>
-                  <p className={`text-xs leading-relaxed ${isDark ? "text-white/60" : "text-gray-600"}`}>{lineData.punishmentIdea}</p>
                 </div>
               )}
             </div>
@@ -759,22 +761,20 @@ function StudyModeContent() {
               </div>
             )}
 
-            {/* Line summary */}
-            {lineData.lineSummary && (
-              <div className={`p-3 rounded-lg ${isDark ? "bg-white/[0.02] border border-white/[0.04]" : "bg-gray-50 border border-gray-200/70"}`}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <BookOpen className={`w-3.5 h-3.5 ${isDark ? "text-white/30" : "text-gray-400"}`} />
-                  <span className={`text-[10px] uppercase tracking-wider font-medium ${isDark ? "text-white/30" : "text-gray-400"}`}>Line Summary</span>
-                </div>
-                <p className={`text-xs leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>{lineData.lineSummary}</p>
-              </div>
-            )}
+
 
             {/* Keyboard shortcuts hint (Learn mode) */}
             {studyState === "learn" && (
-              <div className={`text-[10px] text-center ${isDark ? "text-white/20" : "text-gray-400"}`}>
-                Use <kbd className={`px-1 py-0.5 rounded font-mono ${isDark ? "bg-white/[0.05] text-white/30" : "bg-gray-100 text-gray-500"}`}>←</kbd>{" "}
-                <kbd className="px-1 py-0.5 rounded bg-white/[0.05] text-white/30 font-mono">→</kbd> arrow keys to navigate
+              <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-center ${
+                isDark ? "bg-white/[0.03] border-white/[0.06] text-white/50" : "bg-gray-50 border-gray-200 text-gray-500"
+              }`}>
+                <kbd className={`px-2 py-1 rounded-lg text-xs font-mono font-semibold ${
+                  isDark ? "bg-white/[0.08] text-white/60 border border-white/10" : "bg-white text-gray-600 border border-gray-300 shadow-sm"
+                }`}>←</kbd>
+                <span className="text-xs font-medium">arrow keys to navigate</span>
+                <kbd className={`px-2 py-1 rounded-lg text-xs font-mono font-semibold ${
+                  isDark ? "bg-white/[0.08] text-white/60 border border-white/10" : "bg-white text-gray-600 border border-gray-300 shadow-sm"
+                }`}>→</kbd>
               </div>
             )}
           </div>

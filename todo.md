@@ -5931,3 +5931,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire pre-warm into league round generation endpoint (fire-and-forget)
 - [x] Rate-limit pre-warm to avoid overwhelming chess.com API (sequential with delay)
 - [x] Log pre-warm progress per pairing for observability
+
+## StudyMode UX Improvements
+- [x] Increase size/visibility of move navigator div (line 775)
+- [x] Layer Strategic Goal (moves 1-2) and Punishment Idea (moves 3+) display
+- [x] Remove redundant Line Summary div (line 764)
