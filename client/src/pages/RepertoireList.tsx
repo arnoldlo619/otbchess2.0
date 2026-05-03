@@ -26,6 +26,9 @@ import {
   Clock,
   TrendingUp,
   BarChart2,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 interface Repertoire {
@@ -105,6 +108,12 @@ export default function RepertoireList() {
   const [showProModal, setShowProModal] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
 
+  // ── Inline rename state ─────────────────────────────────────────────────────
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [renaming, setRenaming] = useState<number | null>(null);
+  const renameInputRef = React.useRef<HTMLInputElement>(null);
+
   const isPro = user?.isPro || user?.isStaff;
   const FREE_LIMIT = 1;
   const canCreateMore = isPro || repertoires.length < FREE_LIMIT;
@@ -176,6 +185,52 @@ export default function RepertoireList() {
       }
     },
     [canCreateMore, navigate]
+  );
+
+  // ── Rename repertoire ───────────────────────────────────────────────────────
+  const startRename = useCallback((e: React.MouseEvent, rep: Repertoire) => {
+    e.stopPropagation();
+    setEditingId(rep.id);
+    setEditingTitle(rep.title);
+    // Focus the input on next tick after render
+    setTimeout(() => renameInputRef.current?.select(), 0);
+  }, []);
+
+  const cancelRename = useCallback(() => {
+    setEditingId(null);
+    setEditingTitle("");
+  }, []);
+
+  const saveRename = useCallback(
+    async (id: number) => {
+      const trimmed = editingTitle.trim();
+      if (!trimmed) { cancelRename(); return; }
+      const original = repertoires.find((r) => r.id === id)?.title;
+      if (trimmed === original) { cancelRename(); return; }
+
+      setRenaming(id);
+      try {
+        const res = await authFetch(`/api/repertoire-builder/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: trimmed }),
+        });
+        if (res.ok) {
+          setRepertoires((prev) =>
+            prev.map((r) => (r.id === id ? { ...r, title: trimmed } : r))
+          );
+        } else {
+          alert("Failed to rename repertoire");
+        }
+      } catch {
+        alert("Failed to rename repertoire");
+      } finally {
+        setRenaming(null);
+        setEditingId(null);
+        setEditingTitle("");
+      }
+    },
+    [editingTitle, repertoires, cancelRename]
   );
 
   // ── Delete repertoire ───────────────────────────────────────────────────────
@@ -421,8 +476,8 @@ export default function RepertoireList() {
                     key={rep.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => navigate(`/repertoire/${rep.id}`)}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/repertoire/${rep.id}`); }}
+                    onClick={() => { if (editingId !== rep.id) navigate(`/repertoire/${rep.id}`); }}
+                    onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && editingId !== rep.id) navigate(`/repertoire/${rep.id}`); }}
                     className={`group w-full text-left rounded-2xl border transition cursor-pointer ${
                       isDark
                         ? "bg-gray-900/50 border-white/10 hover:border-emerald-500/40 hover:bg-gray-900"
@@ -441,9 +496,64 @@ export default function RepertoireList() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                          {rep.title}
-                        </h3>
+                        {editingId === rep.id ? (
+                          /* ── Inline rename input ── */
+                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              ref={renameInputRef}
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") { e.preventDefault(); saveRename(rep.id); }
+                                if (e.key === "Escape") { e.preventDefault(); cancelRename(); }
+                              }}
+                              onBlur={() => saveRename(rep.id)}
+                              className={`flex-1 min-w-0 text-sm font-semibold rounded-lg px-2 py-1 border outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+                                isDark
+                                  ? "bg-gray-800 border-emerald-500/50 text-white"
+                                  : "bg-white border-emerald-400 text-gray-900"
+                              }`}
+                              maxLength={80}
+                              autoFocus
+                            />
+                            {renaming === rep.id ? (
+                              <Loader2 size={14} className="animate-spin text-emerald-400 shrink-0" />
+                            ) : (
+                              <>
+                                <button
+                                  onMouseDown={(e) => { e.preventDefault(); saveRename(rep.id); }}
+                                  className="p-1 rounded text-emerald-400 hover:text-emerald-300"
+                                  title="Save"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  onMouseDown={(e) => { e.preventDefault(); cancelRename(); }}
+                                  className={`p-1 rounded ${isDark ? "text-white/40 hover:text-white/70" : "text-gray-400 hover:text-gray-600"}`}
+                                  title="Cancel"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          /* ── Static title with pencil affordance ── */
+                          <div className="flex items-center gap-1.5 group/title">
+                            <h3 className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                              {rep.title}
+                            </h3>
+                            <button
+                              onClick={(e) => startRename(e, rep)}
+                              className={`opacity-0 group-hover/title:opacity-100 p-0.5 rounded transition-opacity ${
+                                isDark ? "text-white/30 hover:text-white/70" : "text-gray-300 hover:text-gray-600"
+                              }`}
+                              title="Rename repertoire"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                          </div>
+                        )}
                         <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
                           Updated {formatRelativeDate(rep.updatedAt)}
                         </p>
