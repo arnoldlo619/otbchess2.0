@@ -12,7 +12,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import {
   Trophy, Users as _Users, Calendar, BarChart3, ListOrdered,
   Clock, Swords, Target as _Target, ArrowLeft, Crown, ChevronRight,
-  History, Shield as _Shield, Zap, CheckCircle2, Plus,
+  History, Shield as _Shield, Zap, CheckCircle2, Plus, Users2,
 } from "lucide-react";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
@@ -156,15 +156,27 @@ export default function LeagueDemo() {
   const isDark = (themeCtx as { isDark?: boolean }).isDark ?? true;
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const { user } = useAuthContext();
-  // Determine if the user already has a league (to conditionally show CTA)
+  // Determine if the user already has a league and/or a club (to conditionally show CTAs)
   const [hasLeague, setHasLeague] = useState(false);
+  const [hasClub, setHasClub] = useState(false);
+  const [firstClubId, setFirstClubId] = useState<string | null>(null);
   const isGuest = !user || user.isGuest;
   useEffect(() => {
-    if (isGuest) { setHasLeague(false); return; }
+    if (isGuest) { setHasLeague(false); setHasClub(false); setFirstClubId(null); return; }
+    // Check leagues
     fetch("/api/leagues/mine", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
       .then((data: unknown[]) => setHasLeague(Array.isArray(data) && data.length > 0))
       .catch(() => setHasLeague(false));
+    // Check clubs
+    fetch("/api/clubs/mine", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: Array<{ id: string }>) => {
+        const clubs = Array.isArray(data) ? data : [];
+        setHasClub(clubs.length > 0);
+        setFirstClubId(clubs.length > 0 ? clubs[0].id : null);
+      })
+      .catch(() => { setHasClub(false); setFirstClubId(null); });
   }, [isGuest]);
 
   // Color tokens — identical to LeagueDashboard
@@ -530,7 +542,7 @@ export default function LeagueDemo() {
                     ))}
                   </div>
 
-                  {/* ── Create a League CTA (shown only to users without a league) ── */}
+                  {/* ── League CTAs (shown only to users without a league) ── */}
                   {!hasLeague && (
                     <div
                       className="rounded-2xl overflow-hidden relative"
@@ -552,21 +564,41 @@ export default function LeagueDemo() {
                         {/* Text */}
                         <div className="flex-1 text-center sm:text-left">
                           <div className="text-base font-black mb-1" style={{ color: textMain }}>
-                            Run your own Chess Club League
+                            {hasClub ? "Get into a Chess Club League" : "Run your own Chess Club League"}
                           </div>
                           <div className="text-sm leading-relaxed" style={{ color: textMuted }}>
-                            Weekly matchups, live standings, and a full season schedule — for your club. Set it up in minutes.
+                            {hasClub
+                              ? "Join an existing league in your club, or start a new one as commissioner."
+                              : "Weekly matchups, live standings, and a full season schedule — for your club. Set it up in minutes."}
                           </div>
                         </div>
-                        {/* CTA Button */}
-                        <button
-                          onClick={() => navigate("/clubs")}
-                          className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg"
-                          style={{ background: accent, color: "#0a1a0f" }}
-                        >
-                          <Plus size={15} strokeWidth={3} />
-                          Create a League
-                        </button>
+                        {/* CTA Buttons */}
+                        <div className="flex-shrink-0 flex flex-col sm:flex-row items-center gap-2">
+                          {/* Join a League — only for users who are in a club */}
+                          {hasClub && firstClubId && (
+                            <button
+                              onClick={() => navigate(`/clubs/${firstClubId}/home`)}
+                              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 border"
+                              style={{
+                                background: "transparent",
+                                border: `1.5px solid ${accent}`,
+                                color: accent,
+                              }}
+                            >
+                              <Users2 size={15} strokeWidth={2.5} />
+                              Join a League
+                            </button>
+                          )}
+                          {/* Create a League */}
+                          <button
+                            onClick={() => navigate("/clubs")}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg"
+                            style={{ background: accent, color: "#0a1a0f" }}
+                          >
+                            <Plus size={15} strokeWidth={3} />
+                            Create a League
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
