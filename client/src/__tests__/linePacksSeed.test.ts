@@ -26,7 +26,7 @@ interface Line {
   commonness: number;
   priority: number;
   isMustKnow: boolean;
-  starterFriendly: boolean;
+  starterFriendly?: boolean;
   isTrap: boolean;
   lineType: string;
   lineSummary: string;
@@ -39,6 +39,7 @@ interface Line {
   themes: string[];
   sortOrder: number;
   studyMode: StudyMode;
+  nodes?: unknown[];
 }
 
 interface LinePack {
@@ -66,11 +67,11 @@ const data = seedData as unknown as SeedData;
 describe("Line Packs Seed — Meta", () => {
   it("has correct version and counts", () => {
     expect(data._meta.version).toBe("1.0.0");
-    expect(data._meta.openingCount).toBe(6);
-    expect(data._meta.totalLines).toBe(56);
+    expect(data._meta.openingCount).toBe(16);
+    expect(data._meta.totalLines).toBe(158);
   });
 
-  it("has all 6 expected opening packs", () => {
+  it("has all 16 expected opening packs", () => {
     const expected = [
       "jobava-london",
       "vienna-gambit",
@@ -78,6 +79,16 @@ describe("Line Packs Seed — Meta", () => {
       "caro-kann-defense",
       "kings-indian-defense",
       "anti-london-system",
+      "london-system",
+      "vienna-game",
+      "italian-game",
+      "queens-gambit",
+      "scandinavian-defense",
+      "french-defense",
+      "sicilian-defense",
+      "queens-gambit-declined",
+      "slav-defense",
+      "nimzo-indian-defense",
     ];
     expect(Object.keys(data.linePacks).sort()).toEqual(expected.sort());
   });
@@ -141,7 +152,7 @@ describe("Line Packs Seed — Pack Structure", () => {
 describe("Line Packs Seed — Line Data Quality", () => {
   const allLines = Object.values(data.linePacks).flatMap((p) => p.lines);
 
-  it("all 56 lines have non-empty required fields", () => {
+  it("all 158 lines have non-empty required fields", () => {
     for (const line of allLines) {
       expect(line.slug).toBeTruthy();
       expect(line.title).toBeTruthy();
@@ -271,7 +282,7 @@ describe("Line Packs Seed — Study Mode Metadata", () => {
     }
   });
 
-  it("learnFirst lines have unlockOrder <= 3", () => {
+  it("learnFirst lines have unlockOrder <= 4", () => {
     const learn = allLines.filter((l) => l.studyMode.learnFirst);
     for (const line of learn) {
       expect(line.studyMode.unlockOrder).toBeLessThanOrEqual(4);
@@ -292,9 +303,18 @@ describe("Line Packs Seed — Study Mode Metadata", () => {
 
 describe("Line Packs Seed — Color Consistency", () => {
   it("White openings have all white lines", () => {
-    const whiteOpenings = ["jobava-london", "vienna-gambit", "scotch-game"];
+    const whiteOpenings = [
+      "jobava-london",
+      "vienna-gambit",
+      "scotch-game",
+      "london-system",
+      "vienna-game",
+      "italian-game",
+      "queens-gambit",
+    ];
     for (const slug of whiteOpenings) {
       const pack = data.linePacks[slug];
+      if (!pack) continue;
       for (const line of pack.lines) {
         expect(line.color).toBe("white");
       }
@@ -306,9 +326,16 @@ describe("Line Packs Seed — Color Consistency", () => {
       "caro-kann-defense",
       "kings-indian-defense",
       "anti-london-system",
+      "french-defense",
+      "sicilian-defense",
+      "queens-gambit-declined",
+      "slav-defense",
+      "nimzo-indian-defense",
+      "scandinavian-defense",
     ];
     for (const slug of blackOpenings) {
       const pack = data.linePacks[slug];
+      if (!pack) continue;
       for (const line of pack.lines) {
         expect(line.color).toBe("black");
       }
@@ -350,5 +377,36 @@ describe("Line Packs Seed — Content Quality", () => {
   it("no duplicate titles across all packs", () => {
     const allTitles = allLines.map((l) => l.title);
     expect(new Set(allTitles).size).toBe(allTitles.length);
+  });
+});
+
+// ── Node tree tests ───────────────────────────────────────────────────────────
+
+describe("Line Packs Seed — Node Trees", () => {
+  const allLines = Object.values(data.linePacks).flatMap((p) => p.lines);
+  const linesWithNodes = allLines.filter((l) => l.nodes && l.nodes.length > 0);
+
+  it("at least 100 lines have node trees", () => {
+    expect(linesWithNodes.length).toBeGreaterThanOrEqual(100);
+  });
+
+  it("node trees have valid structure", () => {
+    for (const line of linesWithNodes.slice(0, 20)) {
+      const nodes = line.nodes as Array<{
+        ply: number;
+        fen: string;
+        moveSan: string | null;
+        moveUci: string | null;
+        isMainLine: boolean;
+      }>;
+      // First node is root (ply 0, no move)
+      expect(nodes[0].ply).toBe(0);
+      expect(nodes[0].moveSan).toBeNull();
+      // All nodes have FEN
+      for (const node of nodes) {
+        expect(node.fen).toBeTruthy();
+        expect(node.fen.split(" ").length).toBe(6);
+      }
+    }
   });
 });

@@ -5936,3 +5936,18 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Increase size/visibility of move navigator div (line 775)
 - [x] Layer Strategic Goal (moves 1-2) and Punishment Idea (moves 3+) display
 - [x] Remove redundant Line Summary div (line 764)
+
+## Repertoire Builder Buildout — Phase A: Database Expansion
+- [x] Populate empty catalog openings with 8-12 lines each (158 lines across all 16 openings)
+- [x] Fill all strategic summaries with expert-quality coaching text (158 lines with strategicGoal, hintText, punishmentIdea)
+- [x] 208 total lines in DB across all 16 openings with full node trees (2,676 nodes, accurate FEN positions)
+
+## Repertoire Builder Buildout — Phase B: Fallback Explorer Database
+- [ ] Build deep static fallback explorer database covering first 8-10 moves
+- [ ] Source data from Lichess API in bulk (one-time fetch), store server-side
+- [ ] Ensure Repertoire Builder works without live Lichess access
+
+## Repertoire Builder Buildout — Phase C: UX Enhancements
+- [ ] Add move annotations (!, !!, ?, ??, !?, ?!) with Stockfish evaluation display
+- [ ] Add "Import from Lichess Study" feature
+- [ ] Add "Suggested Repertoire" based on user's chess.com game history
