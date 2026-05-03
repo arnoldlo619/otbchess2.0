@@ -828,6 +828,8 @@ export const prepCache = mysqlTable('prep_cache', {
   gamesAnalyzed: int('games_analyzed').notNull().default(0),
   /** When this cache entry was created / last refreshed */
   cachedAt: timestamp('cached_at').defaultNow().notNull(),
+  /** Engine version that generated this cache entry — used for auto-invalidation */
+  engineVersion: varchar('engine_version', { length: 20 }).default('1.0.0'),
 }, (t) => ({
   usernameIdx: index('pc_username_idx').on(t.username),
   cachedAtIdx: index('pc_cached_at_idx').on(t.cachedAt),

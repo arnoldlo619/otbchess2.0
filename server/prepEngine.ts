@@ -14,6 +14,11 @@
  *   5. buildPrepReport()    — orchestrates the full pipeline into a PrepReport
  */
 
+// ─── Engine Version ─────────────────────────────────────────────────────────
+// Bump this whenever the ECO book, opening classification logic, or victory plan
+// generation changes. Cached reports with a different version will be auto-invalidated.
+export const ENGINE_VERSION = '2.0.0'; // Jobava London ECO + mainstream names + 20-game minimum
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface ChessComGame {

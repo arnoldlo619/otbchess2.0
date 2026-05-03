@@ -5916,3 +5916,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Merge duplicate opening names in buildOpeningStats before displaying
 - [x] Limit Opening Tendencies display to top 2 openings per color
 - [x] Apply font size increases from visual editor (18px on section headings)
+
+## Cache Invalidation Strategy
+
+- [x] Add ENGINE_VERSION constant to prepEngine.ts (bump on ECO/logic changes)
+- [x] Store engine_version in cached prep reports in the database
+- [x] Auto-invalidate cached reports when engine_version doesn't match current
+- [x] Ensure force-refresh (refresh button) bypasses cache and stores new version
+- [x] Purge all existing cached reports once (one-time migration for Jobava London fix)

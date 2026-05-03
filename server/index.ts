@@ -18,7 +18,7 @@ import clubBattlesRouter from "./clubBattles.js";
 import { clubsRouter } from "./clubs.js";
 import { leaguesRouter } from "./leagues.js";
 import { emailRouter } from "./email.js";
-import {buildPrepReport} from "./prepEngine.js";
+import { buildPrepReport, ENGINE_VERSION } from "./prepEngine.js";
 import { startCvJobQueue as _startCvJobQueue } from "./cvJobQueue.js";
 import { logger } from "./logger.js";
 import { createOpeningsAdminRouter } from "./openingsAdmin.js";
@@ -409,10 +409,13 @@ export function createApp() {
 
       if (cached) {
         const age = Date.now() - new Date(cached.cachedAt).getTime();
-        if (age < PREP_CACHE_TTL_MS) {
+        const versionMatch = cached.engineVersion === ENGINE_VERSION;
+        if (age < PREP_CACHE_TTL_MS && versionMatch) {
           return { report: JSON.parse(cached.reportJson), fromCache: true };
         }
-      } else {
+        if (!versionMatch) {
+          logger.info(`[prep-cache] VERSION MISMATCH for ${cacheKey} (cached: ${cached.engineVersion}, current: ${ENGINE_VERSION}) — rebuilding`);
+        }
       }
     } catch (dbErr) {
       logger.warn("[prep-cache] DB read error, falling through to live fetch:", dbErr);
@@ -430,11 +433,13 @@ export function createApp() {
         reportJson: reportStr,
         gamesAnalyzed: report.opponent.gamesAnalyzed,
         cachedAt: new Date(),
+        engineVersion: ENGINE_VERSION,
       }).onDuplicateKeyUpdate({
         set: {
           reportJson: reportStr,
           gamesAnalyzed: report.opponent.gamesAnalyzed,
           cachedAt: new Date(),
+          engineVersion: ENGINE_VERSION,
         },
       });
     } catch (dbErr) {
@@ -477,8 +482,9 @@ export function createApp() {
             reportJson: reportStr,
             gamesAnalyzed: report.opponent.gamesAnalyzed,
             cachedAt: new Date(),
+            engineVersion: ENGINE_VERSION,
           }).onDuplicateKeyUpdate({
-            set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date() },
+            set: { reportJson: reportStr, gamesAnalyzed: report.opponent.gamesAnalyzed, cachedAt: new Date(), engineVersion: ENGINE_VERSION },
           });
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_) { /* non-fatal */ }
