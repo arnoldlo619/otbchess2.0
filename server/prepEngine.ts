@@ -1638,90 +1638,115 @@ export function generateVictoryPlan(
 ): VictoryPlanItem[] {
   const plan: VictoryPlanItem[] = [];
 
-  // 1. Best opening to play
-  const topLine = prepLines.find(l => l.confidence === "high") || prepLines[0];
-  if (topLine) {
-    const moveStr = topLine.moves.split(" ").slice(0, 2).join(" ");
+  // ── 1. Their White repertoire — what they play as White and where they lose ──
+  if (profile.whiteOpenings.length > 0) {
+    const topWhite = profile.whiteOpenings[0];
+    const totalWhiteGames = profile.asWhite.games || profile.whiteOpenings.reduce((s, o) => s + o.count, 0);
+    const pct = totalWhiteGames > 0 ? Math.round((topWhite.count / totalWhiteGames) * 100) : 0;
+    // Find the opening they lose the most in as White
+    const weakestWhite = [...profile.whiteOpenings].sort((a, b) => a.winRate - b.winRate).find(o => o.count >= 3 && o.winRate < 0.5);
+    if (weakestWhite) {
+      plan.push({
+        action: `As White they play ${topWhite.name} (${pct}% of games) — they lose ${Math.round((1 - weakestWhite.winRate) * 100)}% when opponents play the ${weakestWhite.name}`,
+        reason: `${weakestWhite.losses} losses in ${weakestWhite.count} games with this opening. Steer into this structure when you have Black.`,
+        category: "opening",
+      });
+    } else {
+      plan.push({
+        action: `As White they play ${topWhite.name} (${pct}% of games) — win rate ${Math.round(topWhite.winRate * 100)}%`,
+        reason: `Their primary White opening. Look for sidelines they haven't faced often to take them out of preparation.`,
+        category: "opening",
+      });
+    }
+  }
+
+  // ── 2. Lines they struggle with as White (your Black repertoire targets) ──
+  const whiteProblemLines = problemLines.filter(pl => pl.color === "white");
+  if (whiteProblemLines.length > 0) {
+    const worst = whiteProblemLines[0];
     plan.push({
-      action: `Play ${moveStr}`,
-      reason: `${topLine.rationale.split(".")[0]}.`,
+      action: `Lines of the ${worst.name} they struggle with`,
+      reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). They blunder at move ${Math.ceil(worst.problemHalfMove / 2)} with ${worst.problemMove}${worst.betterMove ? ` — ${worst.betterMove} is stronger` : ""}.`,
+      category: "opening",
+    });
+  } else if (profile.whiteOpenings.length > 1) {
+    // Fallback: show their weakest White opening line
+    const weakWhite = [...profile.whiteOpenings].sort((a, b) => a.winRate - b.winRate)[0];
+    if (weakWhite && weakWhite.winRate < 0.55) {
+      plan.push({
+        action: `Target the ${weakWhite.name} — their weakest White line`,
+        reason: `Only ${Math.round(weakWhite.winRate * 100)}% win rate across ${weakWhite.count} games. Prepare a sharp response here.`,
+        category: "opening",
+      });
+    }
+  }
+
+  // ── 3. Their Black repertoire — what they play against 1.e4 and 1.d4 ──
+  if (profile.blackOpenings.length > 0) {
+    const totalBlackGames = profile.asBlack.games || profile.blackOpenings.reduce((s, o) => s + o.count, 0);
+    // Group by response to 1.e4 vs 1.d4
+    const blackOpeningsList = profile.blackOpenings.slice(0, 4);
+    const descriptions = blackOpeningsList.map(o => {
+      const pct = totalBlackGames > 0 ? Math.round((o.count / totalBlackGames) * 100) : 0;
+      return `${o.name} (${pct}%)`;
+    });
+    plan.push({
+      action: `As Black, they play: ${descriptions.join(", ")}`,
+      reason: `Their Black repertoire across ${totalBlackGames} games. Prepare your White opening to target their most-played defense.`,
       category: "opening",
     });
   }
 
-  // 2. Phase to target based on game length and endgame profile
-  const ep = profile.endgameProfile;
-  const resignPct = ep.total > 0 ? ep.resignations / ep.total : 0;
-  const timeoutPct = ep.total > 0 ? ep.timeouts / ep.total : 0;
+  // ── 4. Recommended lines against their Black defense (e.g. lines of the Scandinavian they struggle with) ──
+  const blackProblemLines = problemLines.filter(pl => pl.color === "black");
+  if (blackProblemLines.length > 0) {
+    const worst = blackProblemLines[0];
+    plan.push({
+      action: `Lines of the ${worst.name} they struggle with as Black`,
+      reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). Critical mistake at move ${Math.ceil(worst.problemHalfMove / 2)}: ${worst.problemMove}${worst.betterMove ? ` — better is ${worst.betterMove}` : ""}.`,
+      category: "opening",
+    });
+  } else if (profile.blackOpenings.length > 0) {
+    const weakBlack = [...profile.blackOpenings].sort((a, b) => a.winRate - b.winRate)[0];
+    if (weakBlack && weakBlack.winRate < 0.5) {
+      plan.push({
+        action: `Target the ${weakBlack.name} — their weakest Black defense`,
+        reason: `Only ${Math.round(weakBlack.winRate * 100)}% win rate across ${weakBlack.count} games. Steer into this with your White opening choice.`,
+        category: "opening",
+      });
+    }
+  }
+
+  // ── 5. Middlegame / Endgame strategic advice ──
   if (profile.avgGameLength < 28) {
     plan.push({
-      action: "Keep complexity high in the middlegame",
-      reason: `Avg game only ${profile.avgGameLength} moves — they collapse under sustained pressure.`,
+      action: "Keep complexity high — they collapse in long middlegames",
+      reason: `Avg game only ${profile.avgGameLength} moves. Avoid simplifications and maintain tension on the board.`,
       category: "middlegame",
     });
   } else if (profile.avgGameLength > 45) {
     plan.push({
-      action: "Avoid long endgames — decide in the middlegame",
-      reason: `Comfortable in ${profile.avgGameLength}-move games — don't let them grind.`,
+      action: "Decide the game in the middlegame — avoid long endgames",
+      reason: `Comfortable grinding ${profile.avgGameLength}-move games. Create tactical complications before the endgame.`,
       category: "middlegame",
     });
-  }
-
-  // 3. Psychological weakness
-  if (resignPct >= 0.4) {
-    plan.push({
-      action: "Apply early pressure",
-      reason: `${Math.round(resignPct * 100)}% of losses are resignations — they crack under pressure.`,
-      category: "psychological",
-    });
-  } else if (timeoutPct >= 0.2) {
-    plan.push({
-      action: "Keep pieces on board — play for time trouble",
-      reason: `Flags in ${Math.round(timeoutPct * 100)}% of games — complex positions drain their clock.`,
-      category: "psychological",
-    });
-  }
-
-  // 4. Endgame advice
-  if (profile.avgGameLength > 40 && ep.checkmates > ep.total * 0.15) {
-    plan.push({
-      action: "Avoid simplifying — stronger in endgames",
-      reason: `Converts ${Math.round((ep.checkmates / ep.total) * 100)}% of wins via checkmate — keep it tactical.`,
-      category: "endgame",
-    });
-  } else if (profile.avgGameLength < 30) {
-    plan.push({
-      action: "Simplify into endgames when ahead",
-      reason: `Short game player — uncomfortable in technical endgames.`,
-      category: "endgame",
-    });
-  }
-
-  // 5. Color weakness
-  const whiteWR = profile.asWhite.winRate;
-  const blackWR = profile.asBlack.winRate;
-  if (whiteWR - blackWR > 0.12) {
-    plan.push({
-      action: "Target their Black repertoire",
-      reason: `Only ${Math.round(blackWR * 100)}% win rate as Black vs ${Math.round(whiteWR * 100)}% as White.`,
-      category: "opening",
-    });
-  } else if (blackWR - whiteWR > 0.12) {
-    plan.push({
-      action: "Target their White repertoire",
-      reason: `Only ${Math.round(whiteWR * 100)}% win rate as White vs ${Math.round(blackWR * 100)}% as Black.`,
-      category: "opening",
-    });
-  }
-
-  // 6. Problem line exploitation
-  if (problemLines.length > 0) {
-    const worst = problemLines[0];
-    plan.push({
-      action: `Force the ${worst.name}`,
-      reason: `${worst.lossCount}/${worst.gamesCount} losses — they blunder at move ${Math.ceil(worst.problemHalfMove / 2)}.`,
-      category: "opening",
-    });
+  } else {
+    // Color weakness as a fallback 5th insight
+    const whiteWR = profile.asWhite.winRate;
+    const blackWR = profile.asBlack.winRate;
+    if (whiteWR - blackWR > 0.1) {
+      plan.push({
+        action: `Weaker as Black (${Math.round(blackWR * 100)}% win rate vs ${Math.round(whiteWR * 100)}% as White)`,
+        reason: `Their Black repertoire is significantly weaker. If you have White, play aggressively into their main defense.`,
+        category: "opening",
+      });
+    } else if (blackWR - whiteWR > 0.1) {
+      plan.push({
+        action: `Weaker as White (${Math.round(whiteWR * 100)}% win rate vs ${Math.round(blackWR * 100)}% as Black)`,
+        reason: `Their White game is less confident. As Black, challenge them with sharp defenses to exploit this.`,
+        category: "opening",
+      });
+    }
   }
 
   return plan.slice(0, 5);

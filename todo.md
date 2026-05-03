@@ -5888,3 +5888,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Toast notification guides user to add their response after navigating
 - [x] Fix playExplorerMove crash: wrap isExplorerMoveInRepertoire chess.move() in try-catch
 - [x] Clear explorerMoves on FEN change to prevent stale data during debounce window
+
+## Scouting Report Overhaul (MatchupPrep)
+
+- [x] Move "Playing Style & Patterns" section to top of scouting report (above "How to Beat")
+- [x] Rewrite "How to Beat This Player" insights with strategic opening-specific weaknesses (opponent's openings as white/black, their losing lines)
+- [x] Enhance "Suggested Repertoire" section to be strategically specific covering white and black piece weaknesses
+- [x] Remove "How Games End" section from scouting report
+- [x] Add interactive chessboard opening decision tree (like chessbook.com) to opening explorer

@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import ChessLineViewer from "../components/ChessLineViewer";
 import ChessPracticeBoard from "../components/ChessPracticeBoard";
+import { Chess } from "chess.js";
+import { Chessboard } from "react-chessboard";
 import {
   UserRepertoire,
   loadUserRepertoire,
@@ -880,29 +882,43 @@ function QuickStat({ label, value, highlight, isDark, t }: { label: string; valu
   );
 }
 
-// ── Opening Tree Card ─────────────────────────────────────────────────────────────────
+// ── Opening Tree Card with Interactive Chessboard ────────────────────────────────────
 
-function OpeningTreeBranch({ node, depth, isDark, t }: { node: OpeningTreeNode; depth: number; isDark: boolean; t: Tokens }) {
+function OpeningTreeBranch({
+  node, depth, isDark, t, activePath, onSelect
+}: {
+  node: OpeningTreeNode; depth: number; isDark: boolean; t: Tokens;
+  activePath: string[]; onSelect: (moves: string[], node: OpeningTreeNode) => void;
+}) {
   const [expanded, setExpanded] = useState(depth < 2);
+  const isActive = activePath.length > depth && activePath[depth] === node.move;
   const wrColor = node.winRate >= 0.55
     ? isDark ? "text-emerald-400" : "text-emerald-600"
     : node.winRate <= 0.40
       ? isDark ? "text-red-400" : "text-red-500"
       : t.textSecondary;
 
+  // Build the move path up to this node
+  const pathToHere = [...activePath.slice(0, depth), node.move];
+
   return (
     <div className={`${depth > 0 ? "ml-4 pl-3 border-l" : ""} ${isDark ? "border-[#1e2e22]/60" : "border-gray-200/60"}`}>
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => {
+          setExpanded(!expanded);
+          onSelect(pathToHere, node);
+        }}
         className={`flex items-center gap-2 py-1.5 w-full text-left group transition-colors rounded-lg px-2 -mx-2 ${
-          isDark ? "hover:bg-white/03" : "hover:bg-gray-50"
+          isActive
+            ? isDark ? "bg-[#3D6B47]/15 border border-[#3D6B47]/30" : "bg-[#3D6B47]/08 border border-[#3D6B47]/15"
+            : isDark ? "hover:bg-white/03" : "hover:bg-gray-50"
         }`}
       >
         {node.children.length > 0 && (
           <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${!expanded ? "-rotate-90" : ""} ${t.textTertiary}`} />
         )}
         {node.children.length === 0 && <span className="w-3" />}
-        <span className={`font-mono text-sm font-semibold ${t.textPrimary}`}>{node.label}</span>
+        <span className={`font-mono text-sm font-semibold ${isActive ? (isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]") : t.textPrimary}`}>{node.label}</span>
         <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${isDark ? "bg-white/06" : "bg-gray-100"} ${t.textTertiary}`}>
           {node.pct}%
         </span>
@@ -916,7 +932,7 @@ function OpeningTreeBranch({ node, depth, isDark, t }: { node: OpeningTreeNode; 
       {expanded && node.children.length > 0 && (
         <div className="mt-0.5">
           {node.children.map((child, i) => (
-            <OpeningTreeBranch key={`${child.move}-${i}`} node={child} depth={depth + 1} isDark={isDark} t={t} />
+            <OpeningTreeBranch key={`${child.move}-${i}`} node={child} depth={depth + 1} isDark={isDark} t={t} activePath={activePath} onSelect={onSelect} />
           ))}
         </div>
       )}
@@ -926,7 +942,37 @@ function OpeningTreeBranch({ node, depth, isDark, t }: { node: OpeningTreeNode; 
 
 function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: OpeningTreeNode[]; asBlack: OpeningTreeNode[] }; isDark: boolean; t: Tokens }) {
   const [treeColor, setTreeColor] = useState<"white" | "black">("white");
+  const [activePath, setActivePath] = useState<string[]>([]);
+  const [boardFen, setBoardFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  const [selectedNode, setSelectedNode] = useState<OpeningTreeNode | null>(null);
   const nodes = treeColor === "white" ? openingTree.asWhite : openingTree.asBlack;
+
+  const handleBranchSelect = useCallback((moves: string[], node: OpeningTreeNode) => {
+    setActivePath(moves);
+    setSelectedNode(node);
+    // Build FEN from the move path
+    try {
+      const chess = new Chess();
+      for (const m of moves) {
+        const result = chess.move(m);
+        if (!result) break;
+      }
+      setBoardFen(chess.fen());
+    } catch {
+      // Keep current FEN on error
+    }
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setActivePath([]);
+    setSelectedNode(null);
+    setBoardFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  }, []);
+
+  // Reset board when switching colors
+  useEffect(() => {
+    handleReset();
+  }, [treeColor, handleReset]);
 
   return (
     <div className={`${t.card} p-4 sm:p-5`}>
@@ -952,11 +998,53 @@ function OpeningTreeCard({ openingTree, isDark, t }: { openingTree: { asWhite: O
           >As Black</button>
         </div>
       </div>
+
       {nodes.length > 0 ? (
-        <div className="space-y-0.5">
-          {nodes.map((node, i) => (
-            <OpeningTreeBranch key={`${node.move}-${i}`} node={node} depth={0} isDark={isDark} t={t} />
-          ))}
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Interactive Chessboard */}
+          <div className="shrink-0">
+            <div className="w-[200px] h-[200px] sm:w-[240px] sm:h-[240px] mx-auto lg:mx-0">
+              <Chessboard
+                options={{
+                  position: boardFen,
+                  boardOrientation: treeColor,
+                  allowDragging: false,
+                  boardStyle: {
+                    borderRadius: "8px",
+                    boxShadow: isDark ? "0 2px 8px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.1)",
+                  },
+                  darkSquareStyle: { backgroundColor: isDark ? "#4a7c59" : "#779952" },
+                  lightSquareStyle: { backgroundColor: isDark ? "#8fbc8f" : "#edeed1" },
+                }}
+              />
+            </div>
+            {/* Selected node info */}
+            {selectedNode && (
+              <div className={`mt-2 text-center p-2 rounded-lg ${isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"}`}>
+                <p className={`text-xs font-semibold ${t.textPrimary}`}>{selectedNode.label}</p>
+                <p className={`text-[10px] ${t.textTertiary}`}>
+                  {selectedNode.count} games • {Math.round(selectedNode.winRate * 100)}% win rate
+                </p>
+              </div>
+            )}
+            {activePath.length > 0 && (
+              <button
+                onClick={handleReset}
+                className={`mt-2 w-full text-[10px] font-semibold py-1.5 rounded-lg transition-colors ${
+                  isDark ? "text-white/50 hover:text-white/70 hover:bg-white/05" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                ↺ Reset Board
+              </button>
+            )}
+          </div>
+
+          {/* Tree branches */}
+          <div className="flex-1 space-y-0.5 overflow-y-auto max-h-[320px]">
+            {nodes.map((node, i) => (
+              <OpeningTreeBranch key={`${node.move}-${i}`} node={node} depth={0} isDark={isDark} t={t} activePath={activePath} onSelect={handleBranchSelect} />
+            ))}
+          </div>
         </div>
       ) : (
         <p className={`text-xs ${t.textTertiary}`}>No games found for this color.</p>
@@ -984,6 +1072,57 @@ function ScoutReportTab({
 
   return (
     <div className="space-y-4">
+
+      {/* ── Opening Tendencies — Compact (moved to top) ── */}
+      <div className={`${t.card} p-4 sm:p-5`}>
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Tendencies</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {/* As White */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
+              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As White</span>
+              <span className={`ml-auto text-[11px] font-bold ${
+                opp.asWhite.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+              }`}>{Math.round(opp.asWhite.winRate * 100)}%</span>
+            </div>
+            {opp.firstMoveAsWhite.length > 0 && (
+              <div className="flex gap-1 mb-2 flex-wrap">
+                {opp.firstMoveAsWhite.slice(0, 2).map((fm) => (
+                  <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
+                    isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                  }`}>
+                    {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="space-y-1">
+              {opp.whiteOpenings.slice(0, 3).map((o, i) => (
+                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+              ))}
+            </div>
+          </div>
+          {/* As Black */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
+              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As Black</span>
+              <span className={`ml-auto text-[11px] font-bold ${
+                opp.asBlack.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
+              }`}>{Math.round(opp.asBlack.winRate * 100)}%</span>
+            </div>
+            <div className="space-y-1">
+              {opp.blackOpenings.slice(0, 3).map((o, i) => (
+                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Victory Plan — "How to Beat This Player" ── */}
       {report.victoryPlan && report.victoryPlan.length > 0 && (
@@ -1078,69 +1217,7 @@ function ScoutReportTab({
         </div>
       )}
 
-      {/* ── Opening Tendencies — Compact ── */}
-      <div className={`${t.card} p-4 sm:p-5`}>
-        <div className="flex items-center gap-2 mb-4">
-          <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Tendencies</h3>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {/* As White */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
-              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As White</span>
-              <span className={`ml-auto text-[11px] font-bold ${
-                opp.asWhite.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-              }`}>{Math.round(opp.asWhite.winRate * 100)}%</span>
-            </div>
-            {opp.firstMoveAsWhite.length > 0 && (
-              <div className="flex gap-1 mb-2 flex-wrap">
-                {opp.firstMoveAsWhite.slice(0, 2).map((fm) => (
-                  <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
-                    isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
-                  }`}>
-                    {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="space-y-1">
-              {opp.whiteOpenings.slice(0, 3).map((o, i) => (
-                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
-              ))}
-            </div>
-          </div>
-          {/* As Black */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
-              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As Black</span>
-              <span className={`ml-auto text-[11px] font-bold ${
-                opp.asBlack.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-              }`}>{Math.round(opp.asBlack.winRate * 100)}%</span>
-            </div>
-            <div className="space-y-1">
-              {opp.blackOpenings.slice(0, 3).map((o, i) => (
-                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* ── Endgame Profile — Compact ── */}
-      <div className={`${t.card} p-4 sm:p-5`}>
-        <div className="flex items-center gap-2 mb-3">
-          <Crown className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>How Games End</h3>
-        </div>
-        <EndgameBar profile={opp.endgameProfile} isDark={isDark} t={t} />
-        <div className={`mt-3 flex items-center gap-2 text-xs ${t.textTertiary}`}>
-          <Clock className="w-3 h-3" />
-          <span>Avg game length: <span className={`font-semibold ${t.textSecondary}`}>{opp.avgGameLength} moves</span></span>
-        </div>
-      </div>
 
       {/* ── Behavior & Mistake Heatmap ── */}
       {report.behavior && (

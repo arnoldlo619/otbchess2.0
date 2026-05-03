@@ -363,36 +363,49 @@ export function generateMatchupSummary(
 } {
   const topLine = enrichedLines.find(l => l.isTrainFirst) ?? enrichedLines[0] ?? null;
 
-  // Likely battle
+  // Likely battle — strategic repertoire overview
   let likelyBattle = "Opening battle unclear — not enough data.";
   if (repertoire.expectedColor === "white") {
     if (opponentProfile.blackOpenings.length > 0) {
       const top = opponentProfile.blackOpenings[0];
-      likelyBattle = `Expect the ${top.name} (${top.count} games, ${Math.round(top.winRate * 100)}% win rate as Black).`;
+      const weakest = [...opponentProfile.blackOpenings].sort((a, b) => a.winRate - b.winRate)[0];
+      const weakNote = weakest && weakest.winRate < 0.5
+        ? ` Their weakest defense is the ${weakest.name} (${Math.round(weakest.winRate * 100)}% win rate) — steer into this structure.`
+        : "";
+      likelyBattle = `As White, target their ${top.name} (${top.count} games, ${Math.round(top.winRate * 100)}% win rate).${weakNote}`;
     }
   } else if (repertoire.expectedColor === "black") {
     if (opponentProfile.firstMoveAsWhite.length > 0) {
       const top = opponentProfile.firstMoveAsWhite[0];
-      likelyBattle = `Opponent plays ${top.move} in ${top.pct}% of White games — prepare your ${
-        (top.move === "e4" || top.move === "1.e4")
-          ? (repertoire.blackVsE4 ?? "response to 1.e4")
-          : (top.move === "d4" || top.move === "1.d4")
-          ? (repertoire.blackVsD4 ?? "response to 1.d4")
-          : "response"
-      }.`;
+      const yourResponse = (top.move === "e4" || top.move === "1.e4")
+        ? (repertoire.blackVsE4 ?? "your response to 1.e4")
+        : (top.move === "d4" || top.move === "1.d4")
+        ? (repertoire.blackVsD4 ?? "your response to 1.d4")
+        : "your response";
+      const weakestWhite = [...opponentProfile.whiteOpenings].sort((a, b) => a.winRate - b.winRate)[0];
+      const weakNote = weakestWhite && weakestWhite.winRate < 0.55
+        ? ` They struggle in the ${weakestWhite.name} (${Math.round(weakestWhite.winRate * 100)}% win rate) — aim for this structure.`
+        : "";
+      likelyBattle = `They play ${top.move} in ${top.pct}% of White games. Prepare ${yourResponse}.${weakNote}`;
     }
   } else {
-    // Unknown color
+    // Unknown color — cover both scenarios
     if (opponentProfile.firstMoveAsWhite.length > 0 && opponentProfile.blackOpenings.length > 0) {
       const topW = opponentProfile.firstMoveAsWhite[0];
       const topB = opponentProfile.blackOpenings[0];
-      likelyBattle = `As White: ${topW.move} (${topW.pct}%). As Black: ${topB.name} (${topB.count} games).`;
+      const weakBlack = [...opponentProfile.blackOpenings].sort((a, b) => a.winRate - b.winRate)[0];
+      const weakWhite = [...opponentProfile.whiteOpenings].sort((a, b) => a.winRate - b.winRate)[0];
+      let advice = `If you're White: target their ${topB.name} (${Math.round(topB.winRate * 100)}% WR).`;
+      if (weakBlack && weakBlack.winRate < 0.5) advice += ` Weakest: ${weakBlack.name} (${Math.round(weakBlack.winRate * 100)}%).`;
+      advice += ` If you're Black: they open ${topW.move} (${topW.pct}%).`;
+      if (weakWhite && weakWhite.winRate < 0.55) advice += ` Weakest White line: ${weakWhite.name} (${Math.round(weakWhite.winRate * 100)}%).`;
+      likelyBattle = advice;
     }
   }
 
-  // Study first
+  // Study first — with specific line and why
   const studyFirst = topLine
-    ? `Study "${topLine.name}" first — highest collision probability with this opponent.`
+    ? `Study "${topLine.name}" first — highest collision probability with this opponent's repertoire.`
     : null;
 
   // Prep risk
