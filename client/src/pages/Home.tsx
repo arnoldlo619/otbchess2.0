@@ -1679,7 +1679,7 @@ export default function Home() {
 
   // AnimeNavBar items — Home removed; logo navigates to landing page
   const navItems = [
-    { name: "League",      url: leagueNavUrl,    icon: Trophy,         onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
+    { name: "League",      url: leagueNavUrl,    icon: Trophy,         tooltip: myLeagues.length ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name) : "View League Demo", onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = leagueNavUrl; } },
     { name: "Tournaments", url: getDashboardUrl(), icon: LayoutDashboard, dropdown: <DashboardDropdown />, onClick: (e: React.MouseEvent) => { e.preventDefault(); window.location.href = getDashboardUrl(); } },
     { name: "Clubs",    url: "/clubs",    icon: Building2, sectionId: "for-clubs" },
     { name: "Training", url: "/training", icon: GraduationCap },
