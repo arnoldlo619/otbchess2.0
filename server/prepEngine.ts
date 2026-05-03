@@ -559,6 +559,16 @@ const ECO_BOOK: EcoEntry[] = [
   { eco: "D00", name: "London System", moves: "1.d4 d5 2.Nf3 Nf6 3.Bf4" },
   { eco: "D00", name: "Veresov System", moves: "1.d4 d5 2.Nc3" },
   { eco: "D01", name: "Veresov Attack", moves: "1.d4 d5 2.Nc3 Nf6 3.Bg5" },
+  // Jobava London System (1.d4 + Nc3 + Bf4 without Nf3)
+  { eco: "D00", name: "Jobava London", moves: "1.d4 d5 2.Nc3 Nf6 3.Bf4" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 Nf6 2.Nc3 d5 3.Bf4" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 Nf6 2.Nc3 e6 3.Bf4" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 d5 2.Nc3 Nf6 3.Bf4 e6" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 d5 2.Nc3 Nf6 3.Bf4 c5" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 d5 2.Nc3 Nf6 3.Bf4 e6 4.e3" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 Nf6 2.Nc3 d5 3.Bf4 e6 4.e3" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 d5 2.Nc3 Bf5" },
+  { eco: "D00", name: "Jobava London", moves: "1.d4 d5 2.Nc3 e6 3.Bf4" },
   { eco: "D02", name: "Queen's Pawn: Symmetrical", moves: "1.d4 d5 2.Nf3 Nf6" },
   { eco: "D04", name: "Colle System", moves: "1.d4 d5 2.Nf3 Nf6 3.e3" },
   { eco: "D05", name: "Colle: Zukertort Variation", moves: "1.d4 d5 2.Nf3 Nf6 3.e3 e6 4.Bd3" },
@@ -1149,6 +1159,8 @@ function buildOpeningStats(
   username: string,
   color: "white" | "black"
 ): OpeningStat[] {
+  // Group by the FRIENDLY (mainstream) name so duplicates like "Queen's Pawn Game" and
+  // "Queen's Pawn: Wade Defense" that both map to "Queen's Pawn" are merged into one entry.
   const statsMap = new Map<string, { eco: string; moves: string; wins: number; draws: number; losses: number; count: number }>();
 
   for (const game of games) {
@@ -1156,24 +1168,24 @@ function buildOpeningStats(
     if (playerSide !== color) continue;
     const opening = classifyOpening(game.pgn);
     const result = color === "white" ? game.white.result : game.black.result;
-    const key = opening.name;
-    const existing = statsMap.get(key) || { eco: opening.eco, moves: opening.moves, wins: 0, draws: 0, losses: 0, count: 0 };
+    // Use the friendly name as the grouping key to merge duplicates
+    const friendlyKey = mainstreamName(opening.name);
+    const existing = statsMap.get(friendlyKey) || { eco: opening.eco, moves: opening.moves, wins: 0, draws: 0, losses: 0, count: 0 };
     existing.count++;
     if (result === "win") existing.wins++;
     else if (result === "agreed" || result === "repetition" || result === "stalemate" || result === "insufficient" || result === "50move" || result === "timevsinsufficient") existing.draws++;
     else existing.losses++;
-    statsMap.set(key, existing);
+    statsMap.set(friendlyKey, existing);
   }
 
   return Array.from(statsMap.entries())
-    .map(([name, s]) => {
+    .map(([friendlyName, s]) => {
       const winRate = s.count > 0 ? s.wins / s.count : 0;
-      const friendlyName = mainstreamName(name);
       const base = { name: friendlyName, eco: s.eco, moves: s.moves, count: s.count, wins: s.wins, draws: s.draws, losses: s.losses, winRate };
       return { ...base, weaknessScore: computeWeaknessScore(base) };
     })
     .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+    .slice(0, 10); // Keep top 10 for analysis; display layer limits to top 2
 }
 
 /** Build a move-order tree for the opponent's first 2 moves as white */

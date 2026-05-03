@@ -5909,3 +5909,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 - [x] Increase minimum game sample to 20 recent games as white and 20 as black for victory plan analysis
 - [x] Refine logic flow to gracefully handle cases where fewer than 20 games exist per color
+
+## Opening Tendencies Accuracy
+
+- [x] Add Jobava London ECO entry (1.d4 d5 2.Nc3 Nf6 3.Bf4 / 1.d4 Nf6 2.Nc3 d5 3.Bf4)
+- [x] Merge duplicate opening names in buildOpeningStats before displaying
+- [x] Limit Opening Tendencies display to top 2 openings per color
+- [x] Apply font size increases from visual editor (18px on section headings)

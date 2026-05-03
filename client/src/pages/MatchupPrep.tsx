@@ -1077,7 +1077,7 @@ function ScoutReportTab({
       <div className={`${t.card} p-4 sm:p-5`}>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Tendencies</h3>
+          <h3 className={`font-semibold text-lg ${t.textPrimary}`}>Opening Tendencies</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
           {/* As White */}
@@ -1101,7 +1101,7 @@ function ScoutReportTab({
               </div>
             )}
             <div className="space-y-1">
-              {opp.whiteOpenings.slice(0, 3).map((o, i) => (
+              {opp.whiteOpenings.slice(0, 2).map((o, i) => (
                 <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
               ))}
             </div>
@@ -1116,7 +1116,7 @@ function ScoutReportTab({
               }`}>{Math.round(opp.asBlack.winRate * 100)}%</span>
             </div>
             <div className="space-y-1">
-              {opp.blackOpenings.slice(0, 3).map((o, i) => (
+              {opp.blackOpenings.slice(0, 2).map((o, i) => (
                 <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
               ))}
             </div>
@@ -1131,7 +1131,7 @@ function ScoutReportTab({
         }`}>
           <div className="flex items-center gap-2 mb-4">
             <Zap className={`w-5 h-5 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
-            <h3 className={`font-bold text-base ${t.textPrimary}`}>How to Beat This Player</h3>
+            <h3 className={`font-bold text-lg ${t.textPrimary}`}>How to Beat This Player</h3>
           </div>
           <div className="space-y-3">
             {report.victoryPlan.map((item, i) => {
