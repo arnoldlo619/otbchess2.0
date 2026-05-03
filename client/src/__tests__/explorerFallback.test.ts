@@ -63,8 +63,8 @@ describe("Explorer Fallback DB — Meta", () => {
     expect(db._meta.sourceOpenings).toBe(16);
   });
 
-  it("was built from 158 lines", () => {
-    expect(db._meta.sourceLines).toBe(158);
+  it("was built from 170 lines", () => {
+    expect(db._meta.sourceLines).toBe(170);
   });
 });
 

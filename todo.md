@@ -5954,3 +5954,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Add move annotations (!, !!, ?, ??, !?, ?!) with Stockfish evaluation display
 - [ ] Add "Import from Lichess Study" feature
 - [ ] Add "Suggested Repertoire" based on user's chess.com game history
+
+## Sicilian Defense Expansion — Najdorf & Dragon
+- [x] Add 6 Najdorf lines (6.Bg5 Classical, 6.Be3 English Attack, 6.Bc4 Sozin, 6.f4 Fischer, 6.g3 Fianchetto, Poisoned Pawn Trap)
+- [x] Add 6 Dragon lines (Yugoslav 9.Bc4, Soltis Variation, Classical 6.Be2, Chinese Dragon, h-file Attack Trap, Levenfish 6.f4)
+- [x] Regenerate fallback explorer DB with expanded coverage (1,590 positions from 170 lines)
+- [x] Sicilian Defense now has 22 lines — most comprehensive opening in the library
+- [x] All 164 tests passing (141 seed + 23 fallback DB)
+- [x] Total DB: 219 lines, 3,861 nodes across all 16 openings

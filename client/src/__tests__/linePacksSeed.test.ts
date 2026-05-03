@@ -68,7 +68,7 @@ describe("Line Packs Seed — Meta", () => {
   it("has correct version and counts", () => {
     expect(data._meta.version).toBe("1.0.0");
     expect(data._meta.openingCount).toBe(16);
-    expect(data._meta.totalLines).toBe(158);
+    expect(data._meta.totalLines).toBe(170);
   });
 
   it("has all 16 expected opening packs", () => {
@@ -107,9 +107,9 @@ describe("Line Packs Seed — Meta", () => {
 describe("Line Packs Seed — Pack Structure", () => {
   for (const [slug, pack] of Object.entries(data.linePacks)) {
     describe(pack.openingName, () => {
-      it(`has 8-15 lines (has ${pack.lineCount})`, () => {
+      it(`has 8-25 lines (has ${pack.lineCount})`, () => {
         expect(pack.lineCount).toBeGreaterThanOrEqual(8);
-        expect(pack.lineCount).toBeLessThanOrEqual(15);
+        expect(pack.lineCount).toBeLessThanOrEqual(25);
         expect(pack.lines.length).toBe(pack.lineCount);
       });
 
@@ -152,7 +152,7 @@ describe("Line Packs Seed — Pack Structure", () => {
 describe("Line Packs Seed — Line Data Quality", () => {
   const allLines = Object.values(data.linePacks).flatMap((p) => p.lines);
 
-  it("all 158 lines have non-empty required fields", () => {
+  it("all 170 lines have non-empty required fields", () => {
     for (const line of allLines) {
       expect(line.slug).toBeTruthy();
       expect(line.title).toBeTruthy();
