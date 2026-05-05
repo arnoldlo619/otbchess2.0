@@ -683,11 +683,15 @@ export default function RepertoireBuilder() {
   const [boardSize, setBoardSize] = useState(480);
 
   useEffect(() => {
-    const CONTROLS_HEIGHT = 160; // board controls (44px) + notes area (100px) + gaps
+    // CONTROLS_HEIGHT: board controls bar (44px) + notes header (32px) + notes textarea (72px) + border/gaps (32px)
+    const CONTROLS_HEIGHT = 180;
     const compute = () => {
       if (!boardContainerRef.current) return;
       const rect = boardContainerRef.current.getBoundingClientRect();
-      const availableHeight = window.innerHeight - rect.top - CONTROLS_HEIGHT;
+      // Use the actual measured top from the DOM — this is the most accurate
+      // way to know how much vertical space is available below the headers.
+      // We add a small safety margin (8px) so the board never clips.
+      const availableHeight = window.innerHeight - rect.top - CONTROLS_HEIGHT - 8;
       const availableWidth = rect.width;
       const size = Math.max(200, Math.min(availableWidth, availableHeight));
       setBoardSize(Math.floor(size));
@@ -1591,19 +1595,19 @@ export default function RepertoireBuilder() {
 
       {/* ── Main Content ────────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-4 py-3 h-full">
+        <div className="max-w-[1600px] mx-auto px-4 py-2 h-full">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
           {/* ── Left: Board + Eval Bar ──────────────────────────────────────── */}
-          <div className="w-full lg:w-[55%] flex gap-2 items-start lg:items-center min-h-0">
+          <div className="w-full lg:w-[55%] flex gap-2 items-start justify-center min-h-0 pt-1">
             {/* Eval bar */}
             {showEngine && sfEval && (
-              <div className="hidden sm:block h-[min(55vw,560px)]">
+              <div className="hidden sm:block" style={{ height: `${boardSize}px` }}>
                 <EvalBar cp={sfEval.cp} mate={sfEval.mate} isDark={isDark} />
               </div>
             )}
 
             {/* Board */}
-            <div className="flex-1 flex flex-col min-h-0" ref={boardContainerRef}>
+            <div className="flex-1 flex flex-col" ref={boardContainerRef}>
               <div className={`rounded-2xl overflow-hidden border-2 shadow-2xl flex-shrink-0 ${
                 isDark
                   ? "border-emerald-500/30 shadow-emerald-500/10"

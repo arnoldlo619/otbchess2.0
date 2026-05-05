@@ -5955,6 +5955,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Add "Import from Lichess Study" feature
 - [ ] Add "Suggested Repertoire" based on user's chess.com game history
 
+## Repertoire Builder UX
+- [x] Fix chessboard cut off at top — board now starts at y=65 (below 53px header), all 8 ranks visible
+
 ## Sicilian Defense Expansion — Najdorf & Dragon
 - [x] Add 6 Najdorf lines (6.Bg5 Classical, 6.Be3 English Attack, 6.Bc4 Sozin, 6.f4 Fischer, 6.g3 Fianchetto, Poisoned Pawn Trap)
 - [x] Add 6 Dragon lines (Yugoslav 9.Bc4, Soltis Variation, Classical 6.Be2, Chinese Dragon, h-file Attack Trap, Levenfish 6.f4)
