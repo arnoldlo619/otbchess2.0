@@ -9,6 +9,7 @@ import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 import { BookOpen, Target, ChevronRight, GraduationCap, Zap, Brain, Swords } from "lucide-react";
 import { AppNavBar } from "@/components/AppNavBar";
+import { BGPattern } from "@/components/ui/bg-pattern";
 
 export default function Training() {
   const [, navigate] = useLocation();
@@ -58,7 +59,8 @@ export default function Training() {
   ];
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-[#0a1409]" : "bg-[#f8faf8]"}`}>
+    <div className={`relative min-h-screen ${isDark ? "bg-[#0a1409]" : "bg-[#f8faf8]"}`}>
+      <BGPattern variant="checkerboard" mask="fade-top" fill={isDark ? "#5B9A6A" : "#3D6B47"} size={32} />
       <AppNavBar defaultActive="Training" />
 
       <div className="max-w-3xl mx-auto px-4 pt-16 pb-24">
