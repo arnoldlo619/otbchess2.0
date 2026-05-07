@@ -89,10 +89,10 @@ export default function Training() {
               <button
                 key={f.href}
                 onClick={() => navigate(f.href)}
-                className={`w-full text-left rounded-2xl border p-5 sm:p-6 transition-all duration-200 active:scale-[0.99] group ${
+                className={`w-full text-left rounded-2xl border p-5 sm:p-6 transition-all duration-300 active:scale-[0.98] group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   isDark
-                    ? `bg-[#0f1c11] ${f.border}`
-                    : `bg-white shadow-sm ${f.border}`
+                    ? `bg-[#0f1c11] hover:bg-[#132817] hover:shadow-lg hover:shadow-[#5B9A6A]/20 focus-visible:ring-[#5B9A6A] focus-visible:ring-offset-[#0a1409] ${f.border}`
+                    : `bg-white shadow-sm hover:shadow-md hover:shadow-[#3D6B47]/15 focus-visible:ring-[#3D6B47] focus-visible:ring-offset-[#f8faf8] ${f.border}`
                 }`}
               >
                 {/* Header row */}
@@ -108,7 +108,7 @@ export default function Training() {
                       {f.subtitle}
                     </p>
                   </div>
-                  <ChevronRight className={`w-5 h-5 shrink-0 mt-1 transition-transform group-hover:translate-x-0.5 ${isDark ? "text-white/20" : "text-gray-300"}`} />
+                  <ChevronRight className={`w-5 h-5 shrink-0 mt-1 transition-all duration-300 group-hover:translate-x-1 group-hover:text-[#5B9A6A] ${isDark ? "text-white/20" : "text-gray-300"}`} />
                 </div>
 
                 {/* Description */}
