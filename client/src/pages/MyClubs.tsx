@@ -231,13 +231,13 @@ function ClubCard({
     </Link>
     {/* Owner action buttons — floats below card for owned clubs */}
     {isOwned && (
-      <div className="mt-2 grid grid-cols-2 gap-2">
+      <div className="mt-3 flex gap-2">
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/clubs/${club.id}?settings=1`); }}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-2xl text-xs font-semibold transition-all duration-150 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
             isDark
-              ? "bg-amber-400/10 text-amber-400 hover:bg-amber-400/20 border border-amber-400/20"
-              : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+              ? "bg-white/6 text-white/60 hover:bg-white/10 hover:text-white/80"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700"
           }`}
         >
           <Crown className="w-3.5 h-3.5" />
@@ -245,10 +245,10 @@ function ClubCard({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/clubs/${club.id}?create=1`); }}
-          className={`flex items-center justify-center gap-1.5 py-2 rounded-2xl text-xs font-semibold transition-all duration-150 ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
             isDark
-              ? "bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20 border border-[#4CAF50]/20"
-              : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+              ? "bg-white/6 text-white/60 hover:bg-white/10 hover:text-white/80"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700"
           }`}
         >
           <PlusCircle className="w-3.5 h-3.5" />
