@@ -5965,3 +5965,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Sicilian Defense now has 22 lines — most comprehensive opening in the library
 - [x] All 164 tests passing (141 seed + 23 fallback DB)
 - [x] Total DB: 219 lines, 3,861 nodes across all 16 openings
+
+## Club Profile Page Consolidation
+- [x] Remove "About" tab from side navigation
+- [x] Move About component (description, details, social links) to always display below club banner
+- [x] Set "Feed" as default active tab when users visit a club profile
+- [x] Keep About section always visible above tabbed content (Feed, Events, Members, Tournaments, Leagues)

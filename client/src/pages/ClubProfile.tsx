@@ -670,7 +670,7 @@ export default function ClubProfile() {
     const search = typeof window !== "undefined" ? window.location.search : "";
     const p = new URLSearchParams(search);
     const t = p.get("tab");
-    const valid = ["about", "events", "members", "tournaments", "feed", "leagues"] as const;
+    const valid = ["events", "members", "tournaments", "feed", "leagues"] as const;
     return (valid as readonly string[]).includes(t ?? "") ? (t as typeof valid[number]) : "feed";
   })();
 
@@ -678,7 +678,7 @@ export default function ClubProfile() {
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [tournaments, setTournaments] = useState<ClubTournament[]>([]);
   const [joined, setJoined] = useState(false);
-  const [activeTab, setActiveTab] = useState<"about" | "events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
+  const [activeTab, setActiveTab] = useState<"events" | "members" | "tournaments" | "feed" | "leagues">(initialTab);
   const [clubLeagues, setClubLeagues] = useState<Array<{ id: string; name: string; status: string; currentWeek: number; totalWeeks: number; playerCount: number; maxPlayers?: number }>>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [showCreateLeague, setShowCreateLeague] = useState(false);
@@ -1114,7 +1114,7 @@ export default function ClubProfile() {
           <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
           {/* Nav icons */}
           <nav className="flex flex-col items-center gap-1 flex-1">
-            {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((t) => {
+            {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
               const iconMap: Record<string, React.ReactNode> = {
                 feed: <Megaphone size={17} />,
                 events: <Calendar size={17} />,
@@ -1420,68 +1420,66 @@ export default function ClubProfile() {
                   </div>
                 </div>
 
-        {/* ── About tab ───────────────────────────────────────────────────── */}
-        {activeTab === "about" && (
-          <div className="space-y-4 animate-in fade-in duration-200">
-            {/* Description */}
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                About
-              </h2>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
-                {club.description}
-              </p>
-            </div>
+        {/* ── Club Description & Details (always visible below banner) ────────────────────── */}
+        <div className="space-y-4">
+          {/* Description */}
+          <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+            <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              About
+            </h2>
+            <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
+              {club.description}
+            </p>
+          </div>
 
-            {/* Details grid */}
+          {/* Details grid */}
+          <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+            <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              Details
+            </h2>
+            <div className="space-y-3">
+              <DetailRow icon={<MapPin className="w-4 h-4" />} label="Location" value={`${flag} ${club.location}`} isDark={isDark} />
+              <DetailRow icon={<Hash className="w-4 h-4" />} label="Type" value={categoryLabel} isDark={isDark} />
+              <DetailRow icon={<Calendar className="w-4 h-4" />} label="Founded" value={formatDate(club.foundedAt)} isDark={isDark} />
+              <DetailRow icon={<Crown className="w-4 h-4" />} label="Director" value={club.ownerName} isDark={isDark} />
+            </div>
+          </div>
+
+          {/* Social links */}
+          {(club.website || club.discord || club.twitter) && (
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
               <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                Details
+                Links
               </h2>
-              <div className="space-y-3">
-                <DetailRow icon={<MapPin className="w-4 h-4" />} label="Location" value={`${flag} ${club.location}`} isDark={isDark} />
-                <DetailRow icon={<Hash className="w-4 h-4" />} label="Type" value={categoryLabel} isDark={isDark} />
-                <DetailRow icon={<Calendar className="w-4 h-4" />} label="Founded" value={formatDate(club.foundedAt)} isDark={isDark} />
-                <DetailRow icon={<Crown className="w-4 h-4" />} label="Director" value={club.ownerName} isDark={isDark} />
+              <div className="flex flex-col gap-2">
+                {club.website && (
+                  <a
+                    href={club.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
+                  >
+                    <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                    <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Website</span>
+                    <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                  </a>
+                )}
+                {club.discord && (
+                  <a
+                    href={club.discord}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
+                  >
+                    <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
+                    <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Discord</span>
+                    <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                  </a>
+                )}
               </div>
             </div>
-
-            {/* Social links */}
-            {(club.website || club.discord || club.twitter) && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                  Links
-                </h2>
-                <div className="flex flex-col gap-2">
-                  {club.website && (
-                    <a
-                      href={club.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
-                    >
-                      <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Website</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                  {club.discord && (
-                    <a
-                      href={club.discord}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
-                    >
-                      <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
-                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Discord</span>
-                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (
@@ -2731,7 +2729,7 @@ export default function ClubProfile() {
           borderTop: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
         }}
       >
-        {(["feed", "events", "members", "tournaments", "about", "leagues"] as const).map((t) => {
+        {(["feed", "events", "members", "tournaments", "leagues"] as const).map((t) => {
           const iconMap: Record<string, React.ReactNode> = {
             feed: <Megaphone size={18} />,
             events: <Calendar size={18} />,
