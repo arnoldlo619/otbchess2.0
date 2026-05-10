@@ -1806,9 +1806,11 @@ export default function ClubProfile() {
         })()}
 
         {/* ── Tournaments tab ─────────────────────────────────────────────────────── */}
+        {/* Club owners should be able to populate new tournaments in the Club Tournaments tab page. Optimally implement while efficiently conserving tokens */}
         {activeTab === "tournaments" && (         <div className="space-y-4 animate-in fade-in duration-200">
 
             {/* ── Owner-only Host Tournament CTA ────────────────────────────── */}
+            {/* TODO: Ensure tournament creation flow is optimized and user-friendly */}
             {isOwner ? (
               <button
                 onClick={() => setShowWizard(true)}
