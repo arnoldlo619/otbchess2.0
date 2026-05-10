@@ -5971,3 +5971,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Move About component (description, details, social links) to Feed tab only
 - [x] Set "Feed" as default active tab when users visit a club profile
 - [x] About and Details sections now only appear on Feed tab (not on Events, Members, Tournaments, Leagues)
+
+## Edit Club Details Modal
+- [x] Create EditClubDetailsModal component with description and location fields
+- [x] Add edit button to About section on Feed tab (owners only)
+- [x] Implement form submission and API integration
+- [x] Update club details in database and UI
+- [x] Add success/error toast notifications

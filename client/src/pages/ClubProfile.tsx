@@ -107,6 +107,7 @@ import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
 import { apiFetch } from "@/lib/apiFetch";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { EditClubDetailsModal } from "@/components/EditClubDetailsModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -723,6 +724,7 @@ export default function ClubProfile() {
   const [followingLoading, setFollowingLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Reset broken-image flags when the club's image URLs change (e.g., after owner uploads a new image)
   useEffect(() => { setAvatarBroken(false); }, [club?.avatarUrl]);
@@ -1445,9 +1447,23 @@ export default function ClubProfile() {
             {/* Club Description & Details (Feed tab only) */}
             {/* Description */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                About
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  About
+                </h2>
+                {(isOwner || isDirector) && (
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                      isDark
+                        ? "bg-white/10 text-white hover:bg-white/20"
+                        : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                    }`}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
               <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
                 {club.description}
               </p>
@@ -2717,6 +2733,29 @@ export default function ClubProfile() {
       )}
       {/* Auth modal — shown when guest tries to join, follow, or request a league */}
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+
+      {/* Edit Club Details Modal */}
+      {club && (
+        <EditClubDetailsModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          clubId={club.id}
+          currentDescription={club.description}
+          currentLocation={club.location}
+          onSave={async (description, location) => {
+            try {
+              const updated = await updateClub(club.id, { description, location });
+              if (updated) {
+                setClub(updated);
+                toast.success("Club details updated successfully");
+              }
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Failed to update club details");
+              throw err;
+            }
+          }}
+        />
+      )}
 
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
       <div
