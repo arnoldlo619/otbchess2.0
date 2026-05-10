@@ -5968,6 +5968,6 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 
 ## Club Profile Page Consolidation
 - [x] Remove "About" tab from side navigation
-- [x] Move About component (description, details, social links) to always display below club banner
+- [x] Move About component (description, details, social links) to Feed tab only
 - [x] Set "Feed" as default active tab when users visit a club profile
-- [x] Keep About section always visible above tabbed content (Feed, Events, Members, Tournaments, Leagues)
+- [x] About and Details sections now only appear on Feed tab (not on Events, Members, Tournaments, Leagues)

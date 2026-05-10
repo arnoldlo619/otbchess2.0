@@ -1420,67 +1420,6 @@ export default function ClubProfile() {
                   </div>
                 </div>
 
-        {/* ── Club Description & Details (always visible below banner) ────────────────────── */}
-        <div className="space-y-4">
-          {/* Description */}
-          <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-            <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-              About
-            </h2>
-            <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
-              {club.description}
-            </p>
-          </div>
-
-          {/* Details grid */}
-          <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-            <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-              Details
-            </h2>
-            <div className="space-y-3">
-              <DetailRow icon={<MapPin className="w-4 h-4" />} label="Location" value={`${flag} ${club.location}`} isDark={isDark} />
-              <DetailRow icon={<Hash className="w-4 h-4" />} label="Type" value={categoryLabel} isDark={isDark} />
-              <DetailRow icon={<Calendar className="w-4 h-4" />} label="Founded" value={formatDate(club.foundedAt)} isDark={isDark} />
-              <DetailRow icon={<Crown className="w-4 h-4" />} label="Director" value={club.ownerName} isDark={isDark} />
-            </div>
-          </div>
-
-          {/* Social links */}
-          {(club.website || club.discord || club.twitter) && (
-            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
-              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                Links
-              </h2>
-              <div className="flex flex-col gap-2">
-                {club.website && (
-                  <a
-                    href={club.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
-                  >
-                    <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
-                    <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Website</span>
-                    <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                  </a>
-                )}
-                {club.discord && (
-                  <a
-                    href={club.discord}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
-                  >
-                    <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
-                    <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Discord</span>
-                    <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* ── Members tab ─────────────────────────────────────────────────── */}
         {activeTab === "members" && (
           <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden animate-in fade-in duration-200`}>
@@ -1503,6 +1442,65 @@ export default function ClubProfile() {
         {/* ── Feed tab ──────────────────────────────────────────────────────── */}
         {activeTab === "feed" && (
           <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Club Description & Details (Feed tab only) */}
+            {/* Description */}
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                About
+              </h2>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                {club.description}
+              </p>
+            </div>
+
+            {/* Details grid */}
+            <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+              <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                Details
+              </h2>
+              <div className="space-y-3">
+                <DetailRow icon={<MapPin className="w-4 h-4" />} label="Location" value={`${flag} ${club.location}`} isDark={isDark} />
+                <DetailRow icon={<Hash className="w-4 h-4" />} label="Type" value={categoryLabel} isDark={isDark} />
+                <DetailRow icon={<Calendar className="w-4 h-4" />} label="Founded" value={formatDate(club.foundedAt)} isDark={isDark} />
+                <DetailRow icon={<Crown className="w-4 h-4" />} label="Director" value={club.ownerName} isDark={isDark} />
+              </div>
+            </div>
+
+            {/* Social links */}
+            {(club.website || club.discord || club.twitter) && (
+              <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  Links
+                </h2>
+                <div className="flex flex-col gap-2">
+                  {club.website && (
+                    <a
+                      href={club.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
+                    >
+                      <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Website</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.discord && (
+                    <a
+                      href={club.discord}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
+                    >
+                      <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Discord</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
 
             {/* ── Announcement composer (owner/director only) ────────────────── */}
             {(isOwner || isDirector) && (
