@@ -5978,3 +5978,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Implement form submission and API integration
 - [x] Update club details in database and UI
 - [x] Add success/error toast notifications
+
+## League Demo Navigation
+- [x] Convert club logo div to clickable button in LeagueDemo
+- [x] Implement navigation to landing page ("/") when logo is clicked
+- [x] Add hover effect and accessibility improvements
+- [x] Test navigation functionality

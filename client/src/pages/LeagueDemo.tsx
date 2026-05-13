@@ -244,18 +244,19 @@ export default function LeagueDemo() {
             borderRight: `1px solid ${isDark ? "oklch(0.22 0.06 145)" : "oklch(0.25 0.08 145)"}`,
           }}
         >
-          {/* Club logo */}
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden"
+          {/* Club logo - this div button should navigate users back to the landing page when clicked */}
+          <button
+            onClick={() => navigate("/")}
+            className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 flex-shrink-0 overflow-hidden hover:opacity-80 transition-opacity"
             style={{ background: accent }}
-            title="ChessOTB Club League"
+            title="Back to home"
           >
             <img
               src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
               alt="OTB!!"
               className="w-8 h-8 object-contain"
             />
-          </div>
+          </button>
 
           {/* Divider */}
           <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
