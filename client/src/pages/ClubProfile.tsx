@@ -60,6 +60,7 @@ import {
   countRSVPs,
   getUserRSVP,
   upsertRSVP,
+  createClubEvent,
   type ClubEvent,
   type RSVPStatus as _RSVPStatus,
 } from "@/lib/clubEventRegistry";
@@ -76,6 +77,7 @@ import {
   Globe,
   MessageSquare,
   ChevronLeft,
+  ChevronRight,
   Crown,
   Shield,
   UserPlus,
@@ -725,6 +727,9 @@ export default function ClubProfile() {
   const [followerCount, setFollowerCount] = useState(0);
   const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
+  const [creatingEvent, setCreatingEvent] = useState(false);
 
   // Reset broken-image flags when the club's image URLs change (e.g., after owner uploads a new image)
   useEffect(() => { setAvatarBroken(false); }, [club?.avatarUrl]);
@@ -1601,112 +1606,148 @@ export default function ClubProfile() {
 
         {/* ── Events tab ──────────────────────────────────────────────────────────── */}
         {activeTab === "events" && (() => {
-          // Merge clubEvents and tournaments into a unified list
-          const allEvents = [
+          const now = new Date();
+          // Merge clubEvents and live tournaments into a unified list
+          const allItems = [
             ...clubEvents.map((e) => ({ type: "event" as const, data: e, startAt: e.startAt })),
-            ...liveTournaments.map((t) => ({ type: "tournament" as const, data: t, startAt: t.date || new Date().toISOString() })),
+            ...liveTournaments.map((t) => ({ type: "tournament" as const, data: t, startAt: t.date || now.toISOString() })),
           ].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+
+          const upcoming = allItems.filter((e) => new Date(e.startAt) >= now);
+          const past = allItems.filter((e) => new Date(e.startAt) < now).reverse();
 
           return (
           <div className="space-y-4 animate-in fade-in duration-200">
-            {allEvents.length === 0 ? (
+            {/* Header row with Create Event button for owners */}
+            {(isOwner || isDirector) && (
+              <div className="flex items-center justify-between px-1">
+                <span className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
+                  {upcoming.length} upcoming · {past.length} past
+                </span>
+                <button
+                  onClick={() => setShowCreateEvent(true)}
+                  className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors ${
+                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                  }`}
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  New Event
+                </button>
+              </div>
+            )}
+
+            {allItems.length === 0 ? (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
                 <Calendar className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
-                <p className={`text-sm font-semibold ${textMain} mb-1`}>No upcoming events</p>
-                <p className={`text-xs ${textMuted}`}>Events hosted by this club will appear here.</p>
+                <p className={`text-sm font-semibold ${textMain} mb-1`}>No events yet</p>
+                <p className={`text-xs ${textMuted}`}>Events and tournaments hosted by this club will appear here.</p>
+                {(isOwner || isDirector) && (
+                  <button
+                    onClick={() => setShowCreateEvent(true)}
+                    className={`mt-4 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
+                      isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                    }`}
+                  >
+                    Create First Event
+                  </button>
+                )}
               </div>
             ) : (
               <>
                 {/* Upcoming events */}
-                 {allEvents.filter((e) => new Date(e.startAt) >= new Date()).length > 0 && (
+                {upcoming.length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                    <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
-                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
-                      <span className={`text-xs font-medium ${textMuted}`}>
-                        {allEvents.filter((e) => new Date(e.startAt) >= new Date()).length}
-                      </span>
+                    <div className={`px-5 py-3.5 border-b ${divider} flex items-center justify-between`}>
+                      <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                      }`}>{upcoming.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {allEvents.filter((e) => new Date(e.startAt) >= new Date()).map((item) => (
+                      {upcoming.map((item) => (
                         item.type === "event" ? (() => {
-                          const ev = item.data;
+                          const ev = item.data as ClubEvent;
+                          const myRsvp = (joined && user) ? getUserRSVP(ev.id, user.id) : null;
+                          const rsvpCount = countRSVPs(ev.id);
+                          const dateObj = new Date(ev.startAt);
                           return (
                           <div key={ev.id} className={`px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
                             <div className="flex items-start gap-3">
+                              {/* Date badge */}
                               <div
-                                className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+                                className="w-11 h-11 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center text-center"
                                 style={{ background: (ev.accentColor ?? "#4CAF50") + "22" }}
                               >
-                                <Calendar className="w-5 h-5" style={{ color: ev.accentColor ?? "#4CAF50" }} />
+                                <span className="text-[9px] font-bold uppercase leading-none" style={{ color: ev.accentColor ?? "#4CAF50" }}>
+                                  {dateObj.toLocaleDateString("en-US", { month: "short" })}
+                                </span>
+                                <span className="text-base font-black leading-tight" style={{ color: ev.accentColor ?? "#4CAF50" }}>
+                                  {dateObj.getDate()}
+                                </span>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
-                                <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs ${textMuted}`}>
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    {new Date(ev.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                                  </span>
-                                  {ev.venue && (
-                                    <span className="flex items-center gap-1">
-                                      <MapPin className="w-3 h-3" />
-                                      <span className="truncate max-w-[140px]">{ev.venue}</span>
-                                    </span>
-                                  )}
+                                <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs ${textMuted}`}>
+                                  <span>{dateObj.toLocaleDateString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</span>
+                                  {ev.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{ev.venue}</span>}
+                                  {ev.admissionNote && <span className="opacity-70">{ev.admissionNote}</span>}
                                 </div>
                                 {ev.description && (
-                                  <p className={`text-xs mt-1.5 leading-relaxed line-clamp-2 ${textMuted}`}>{ev.description}</p>
+                                  <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${textMuted} opacity-80`}>{ev.description}</p>
                                 )}
                               </div>
                               {joined && user && (
-                                <div className="flex-shrink-0">
-                                  {(() => {
-                                    const myRsvp = getUserRSVP(ev.id, user.id);
-                                    const rsvpCount = countRSVPs(ev.id);
-                                    return (
-                                      <div className="flex flex-col items-end gap-1">
-                                        <button
-                                          onClick={() => {
-                                            const next = myRsvp?.status === "going" ? "not_going" : "going";
-                                            upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
-                                          }}
-                                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                                            myRsvp?.status === "going"
-                                              ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
-                                              : isDark ? "bg-white/8 text-white/60 hover:bg-white/15" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                          }`}
-                                        >
-                                          {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
-                                        </button>
-                                        {rsvpCount.going > 0 && (
-                                          <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
-                                        )}
-                                      </div>
-                                    );
-                                  })()}
+                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                  <button
+                                    onClick={() => {
+                                      const next = myRsvp?.status === "going" ? "not_going" : "going";
+                                      upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
+                                    }}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                                      myRsvp?.status === "going"
+                                        ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
+                                        : isDark ? "bg-white/8 text-white/60 hover:bg-white/15" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                    }`}
+                                  >
+                                    {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
+                                  </button>
+                                  {rsvpCount.going > 0 && (
+                                    <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
+                                  )}
                                 </div>
                               )}
                             </div>
                           </div>
                           );
                         })() : (() => {
-                          const t = item.data;
+                          const t = item.data as TournamentConfig;
+                          const dateObj = new Date(t.date);
                           return (
                           <a
                             key={t.id}
                             href={`/tournament/${t.id}`}
-                            className={`block px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                            className={`flex items-start gap-3 px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
                           >
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center bg-[#4CAF50]/15">
-                                <Trophy className="w-5 h-5 text-[#4CAF50]" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-semibold ${textMain} truncate`}>{t.name}</p>
-                                <p className={`text-xs ${textMuted} mt-1`}>
-                                  {new Date(t.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                                </p>
-                              </div>
+                            {/* Date badge */}
+                            <div className="w-11 h-11 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center text-center bg-[#4CAF50]/15">
+                              <span className="text-[9px] font-bold uppercase leading-none text-[#4CAF50]">
+                                {dateObj.toLocaleDateString("en-US", { month: "short" })}
+                              </span>
+                              <span className="text-base font-black leading-tight text-[#4CAF50]">{dateObj.getDate()}</span>
                             </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className={`text-sm font-semibold ${textMain} truncate`}>{t.name}</p>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                                  isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                }`}>Tournament</span>
+                              </div>
+                              <p className={`text-xs ${textMuted} mt-0.5`}>
+                                {dateObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                {t.format ? ` · ${t.format}` : ""}
+                              </p>
+                            </div>
+                            <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-1 ${textMuted}`} />
                           </a>
                           );
                         })()
@@ -1716,102 +1757,159 @@ export default function ClubProfile() {
                 )}
 
                 {/* Past events */}
-                {allEvents.filter((e) => new Date(e.startAt) < new Date()).length > 0 && (
+                {past.length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                    <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
-                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
-                      <span className={`text-xs font-medium ${textMuted}`}>
-                        {clubEvents.filter((e) => new Date(e.startAt) >= new Date()).length}
-                      </span>
+                    <div className={`px-5 py-3.5 border-b ${divider} flex items-center justify-between`}>
+                      <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Past</h2>
+                      <span className={`text-xs font-medium ${textMuted}`}>{past.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {clubEvents.filter((e) => new Date(e.startAt) >= new Date()).map((ev) => (
-                        <div key={ev.id} className={`px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
-                          <div className="flex items-start gap-3">
-                            <div
-                              className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
-                              style={{ background: (ev.accentColor ?? "#4CAF50") + "22" }}
-                            >
-                              <Calendar className="w-5 h-5" style={{ color: ev.accentColor ?? "#4CAF50" }} />
+                      {past.map((item) => {
+                        const isPastEvent = item.type === "event";
+                        const title = isPastEvent ? (item.data as ClubEvent).title : (item.data as TournamentConfig).name;
+                        const venue = isPastEvent ? (item.data as ClubEvent).venue : undefined;
+                        return (
+                          <div key={item.type === "event" ? (item.data as ClubEvent).id : (item.data as TournamentConfig).id}
+                            className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}
+                          >
+                            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+                              {isPastEvent
+                                ? <CheckCircle2 className={`w-4 h-4 ${textMuted}`} />
+                                : <Trophy className={`w-4 h-4 ${textMuted}`} />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
-                              <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs ${textMuted}`}>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {new Date(ev.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                                </span>
-                                {ev.venue && (
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" />
-                                    <span className="truncate max-w-[140px]">{ev.venue}</span>
-                                  </span>
-                                )}
-                              </div>
-                              {ev.description && (
-                                <p className={`text-xs mt-1.5 leading-relaxed line-clamp-2 ${textMuted}`}>{ev.description}</p>
-                              )}
+                              <p className={`text-sm font-medium truncate ${textMain}`}>{title}</p>
+                              <p className={`text-xs ${textMuted}`}>
+                                {new Date(item.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                {venue ? ` · ${venue}` : ""}
+                              </p>
                             </div>
-                            {joined && user && (
-                              <div className="flex-shrink-0">
-                                {(() => {
-                                  const myRsvp = getUserRSVP(ev.id, user.id);
-                                  const rsvpCount = countRSVPs(ev.id);
-                                  return (
-                                    <div className="flex flex-col items-end gap-1">
-                                      <button
-                                        onClick={() => {
-                                          const next = myRsvp?.status === "going" ? "not_going" : "going";
-                                          upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
-                                        }}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                                          myRsvp?.status === "going"
-                                            ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
-                                            : isDark ? "bg-white/8 text-white/60 hover:bg-white/15" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                        }`}
-                                      >
-                                        {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
-                                      </button>
-                                      {rsvpCount.going > 0 && (
-                                        <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            )}
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                              isDark ? "bg-white/8 text-white/30" : "bg-gray-100 text-gray-400"
+                            }`}>{isPastEvent ? "Past" : "Ended"}</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {/* Past events */}
-                {clubEvents.filter((e) => new Date(e.startAt) < new Date()).length > 0 && (
-                  <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
-                    <div className={`px-5 py-4 border-b ${divider}`}>
-                      <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Past Events</h2>
-                    </div>
-                    <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {clubEvents.filter((e) => new Date(e.startAt) < new Date()).map((ev) => (
-                        <div key={ev.id} className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
-                          <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
-                            <CheckCircle2 className={`w-4 h-4 ${textMuted}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${textMain}`}>{ev.title}</p>
-                            <p className={`text-xs ${textMuted}`}>
-                              {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                              {ev.venue ? ` · ${ev.venue}` : ""}
-                            </p>
-                          </div>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${isDark ? "bg-white/8 text-white/30" : "bg-gray-100 text-gray-400"}`}>Past</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
               </>
+            )}
+
+            {/* Create Event Modal */}
+            {showCreateEvent && (isOwner || isDirector) && (
+              <div
+                className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+                style={{ background: "rgba(0,0,0,0.6)" }}
+                onClick={() => setShowCreateEvent(false)}
+              >
+                <div
+                  className={`w-full max-w-sm rounded-3xl border ${cardBorder} ${card} p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>New Event</h2>
+                    <button onClick={() => setShowCreateEvent(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}>
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Title *</label>
+                      <input
+                        type="text"
+                        value={eventForm.title}
+                        onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
+                        placeholder="e.g. Thursday Night Blitz"
+                        className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Date & Time *</label>
+                      <input
+                        type="datetime-local"
+                        value={eventForm.startAt}
+                        onChange={(e) => setEventForm((f) => ({ ...f, startAt: e.target.value }))}
+                        className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                          isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-gray-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Venue</label>
+                      <input
+                        type="text"
+                        value={eventForm.venue}
+                        onChange={(e) => setEventForm((f) => ({ ...f, venue: e.target.value }))}
+                        placeholder="e.g. Club Room 2B"
+                        className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Description</label>
+                      <textarea
+                        value={eventForm.description}
+                        onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
+                        placeholder="Optional event details..."
+                        rows={2}
+                        className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors resize-none ${
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Admission</label>
+                      <input
+                        type="text"
+                        value={eventForm.admissionNote}
+                        onChange={(e) => setEventForm((f) => ({ ...f, admissionNote: e.target.value }))}
+                        placeholder="e.g. Free with RSVP or $5 at door"
+                        className={`w-full px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                          isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    disabled={!eventForm.title.trim() || !eventForm.startAt || creatingEvent}
+                    onClick={async () => {
+                      if (!club || !user || !eventForm.title.trim() || !eventForm.startAt) return;
+                      setCreatingEvent(true);
+                      try {
+                        const newEvent = createClubEvent({
+                          clubId: club.id,
+                          title: eventForm.title.trim(),
+                          description: eventForm.description.trim() || undefined,
+                          startAt: new Date(eventForm.startAt).toISOString(),
+                          venue: eventForm.venue.trim() || undefined,
+                          admissionNote: eventForm.admissionNote.trim() || undefined,
+                          accentColor: club.accentColor ?? "#4CAF50",
+                          creatorId: user.id,
+                          creatorName: user.displayName,
+                          isPublished: true,
+                        });
+                        setClubEvents(listClubEvents(club.id));
+                        setShowCreateEvent(false);
+                        setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
+                        toast.success(`"${newEvent.title}" created`);
+                      } catch (err) {
+                        toast.error("Failed to create event");
+                      } finally {
+                        setCreatingEvent(false);
+                      }
+                    }}
+                    className={`w-full mt-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isDark ? "bg-[#4CAF50] text-black hover:bg-[#45a049]" : "bg-[#3D6B47] text-white hover:bg-[#2d5236]"
+                    }`}
+                  >
+                    {creatingEvent ? "Creating..." : "Create Event"}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
           );

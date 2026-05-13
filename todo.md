@@ -5984,3 +5984,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Implement navigation to landing page ("/") when logo is clicked
 - [x] Add hover effect and accessibility improvements
 - [x] Test navigation functionality
+
+## Club Events Tab Redesign
+- [x] Consolidate Events tab layout for minimalist, clear design
+- [x] Fix duplicate "Upcoming" section header (was showing "Upcoming" for both upcoming and past)
+- [x] Remove redundant duplicate upcoming events section
+- [x] Improve event card layout with date badge (month + day number)
+- [x] Add "Create Event" modal for owners/directors with title, date, venue, description, admission fields
+- [x] Unified list merges clubEvents and liveTournaments with correct upcoming/past separation
+- [x] Tournament items show chevron and "Tournament" badge for clear distinction
