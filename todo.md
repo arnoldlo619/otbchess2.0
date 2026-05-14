@@ -6024,3 +6024,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Create Settings sub-tab: "Payments" — owners see club payment management UI, members see invoice/payment history with empty state
 - [x] Role-based content rendering (owner vs member views)
 - [x] Clean minimalist design with pill-style sub-tab toggle
+
+## ClubDashboard Feed + Battles Consolidation
+- [x] Move "Player of the Month" component from Feed tab to Members tab (shows when battle data exists)
+- [x] Add Feed sub-tabs: ACTIVITY and BATTLES pill buttons at top of Feed content
+- [x] Remove "Battles" from main ClubDashboard navigation (nav now: Feed, Events, Members, Leagues, Settings)
+- [x] Set "Activity" as default Feed sub-tab
+- [x] Inline Leaderboard and Battles views in Feed Battles sub-tab with correct BattleResult types
