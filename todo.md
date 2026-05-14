@@ -6016,3 +6016,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add image upload UI to Edit Event modal (replace or remove existing cover)
 - [x] Display cover image on event cards (full-width 140px banner above event details with gradient overlay)
 - [x] Cover image stored as base64 data URL in localStorage (consistent with avatar/banner pattern)
+
+## Settings Page Consolidation (Analytics + Payments)
+- [x] Remove "Analytics" and "Payments" tabs from ClubDashboard navigation
+- [x] Add new "Settings" tab to ClubDashboard navigation (visible to all members, not just owners)
+- [x] Create Settings sub-tab: "Home" — owners see full Analytics dashboard (engagement metrics, battle trends, member stats, POTM), members see Performance Overview (Battles Played, Wins, Win Rate, Draws + Recent Battles)
+- [x] Create Settings sub-tab: "Payments" — owners see club payment management UI, members see invoice/payment history with empty state
+- [x] Role-based content rendering (owner vs member views)
+- [x] Clean minimalist design with pill-style sub-tab toggle

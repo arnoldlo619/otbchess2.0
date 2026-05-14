@@ -168,6 +168,7 @@ import {
   Bell as _Bell,
   Camera,
   Settings2,
+  Minus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -2280,7 +2281,8 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "analytics" | "payments" | "settings";
+type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "settings";
+type SettingsSubTab = "home" | "payments";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -2294,6 +2296,7 @@ export default function ClubDashboard() {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("events");
+  const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("home");
   const [loading, setLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
@@ -2906,9 +2909,7 @@ export default function ClubDashboard() {
     { id: "members", label: "Members", icon: Users },
     { id: "battles", label: "Battles", icon: Swords },
     { id: "leagues", label: "Leagues", icon: Trophy },
-    { id: "analytics", label: "Analytics", icon: BarChart2 },
-    { id: "payments", label: "Payments", icon: Wallet },
-    { id: "settings", label: "Settings", icon: Settings2, ownerOnly: true },
+    { id: "settings", label: "Settings", icon: Settings2 },
   ];
 
   return (
@@ -4075,9 +4076,9 @@ export default function ClubDashboard() {
           </div>
         )}
 
-        {/* ── ANALYTICS TAB ─────────────────────────────────────────────── */}
-        {tab === "analytics" && (() => {
-          // ── Derived analytics data ────────────────────────────────────────
+        {/* ── SETTINGS TAB (consolidated: Home + Payments) ──────────────────── */}
+        {tab === "settings" && (() => {
+          // ── Derived analytics data (for owner Home sub-tab) ────────────────
           const completedBattles = battles.filter(b => b.status === "completed");
           const activePlayers = new Set([
             ...completedBattles.map(b => b.playerAId),
@@ -4086,10 +4087,7 @@ export default function ClubDashboard() {
           const pollVotes = feedEvents.filter(e => e.type === "poll").reduce(
             (sum, e) => sum + (e.pollOptions ?? []).reduce((s: number, o) => s + Object.keys(o.votes).length, 0), 0
           );
-          // Weekly battle trend (last 8 weeks)
           const weeklyTrend = computeWeeklyBattleTrend(battles, 8);
-
-          // Per-member battle stats (top 8 by total battles played)
           const memberBattleStats = members.map(m => {
             const myBattles = completedBattles.filter(b => b.playerAId === m.userId || b.playerBId === m.userId);
             const wins = myBattles.filter(b =>
@@ -4101,31 +4099,61 @@ export default function ClubDashboard() {
             const winRate = myBattles.length > 0 ? Math.round((wins / myBattles.length) * 100) : 0;
             return { memberId: m.userId, name: m.displayName, avatarUrl: m.avatarUrl, total: myBattles.length, wins, draws, losses, winRate };
           }).filter(s => s.total > 0).sort((a, b) => b.total - a.total).slice(0, 8);
-          // Player of the Month — computed from actual battle wins in last 30 days
           const potmRanked = computePlayerOfMonth(members, battles, events);
           const potmTop = potmRanked[0] ?? null;
           const potmMember = potmTop ? members.find(m => m.userId === potmTop.memberId) : null;
 
+          // ── Member's personal performance data ────────────────────────────
+          const myBattles = user ? completedBattles.filter(b => b.playerAId === user.id || b.playerBId === user.id) : [];
+          const myWins = user ? myBattles.filter(b =>
+            (b.result === "player_a" && b.playerAId === user.id) ||
+            (b.result === "player_b" && b.playerBId === user.id)
+          ).length : 0;
+          const myDraws = user ? myBattles.filter(b => b.result === "draw").length : 0;
+          const myLosses = myBattles.length - myWins - myDraws;
+          const myWinRate = myBattles.length > 0 ? Math.round((myWins / myBattles.length) * 100) : 0;
+
           return (
           <div className="space-y-6">
-            {/* Header with Refresh button */}
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5" style={{ color: accent }} />
-              <h2 className="text-white font-bold text-lg">Club Engagement Analytics</h2>
-              <button
-                onClick={async () => {
-                  if (!club) return;
-                  setMembers(getClubMembers(club.id));
-                  setFeedEvents(listFeedEvents(club.id, 50));
-                  await refreshBattles();
-                  toast.success("Analytics refreshed");
-                }}
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Refresh
-              </button>
+            {/* Settings sub-tab navigation */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
+              {(["home", "payments"] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setSettingsSubTab(v)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    settingsSubTab === v
+                      ? "bg-white/10 text-white"
+                      : "text-white/40 hover:text-white/70"
+                  }`}
+                >
+                  {v === "home" ? <BarChart2 className="w-3.5 h-3.5" /> : <Wallet className="w-3.5 h-3.5" />}
+                  {v === "home" ? (isOwnerOrDirector ? "Analytics" : "Home") : "Payments"}
+                </button>
+              ))}
             </div>
+
+            {/* ── HOME / ANALYTICS SUB-TAB ──────────────────────────────────── */}
+            {settingsSubTab === "home" && isOwnerOrDirector && (
+              <div className="space-y-6">
+              {/* Header with Refresh button */}
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-5 h-5" style={{ color: accent }} />
+                <h2 className="text-white font-bold text-lg">Club Engagement Analytics</h2>
+                <button
+                  onClick={async () => {
+                    if (!club) return;
+                    setMembers(getClubMembers(club.id));
+                    setFeedEvents(listFeedEvents(club.id, 50));
+                    await refreshBattles();
+                    toast.success("Analytics refreshed");
+                  }}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Refresh
+                </button>
+              </div>
 
             {/* Key metrics — now includes battle stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -4413,105 +4441,210 @@ export default function ClubDashboard() {
             </div>
               );
             })()}
-          </div>
-          );
-        })()}
-
-        {/* ── PAYMENTS TAB ─────────────────────────────────────────────────── */}
-        {tab === "payments" && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5" style={{ color: accent }} />
-              <h3 className="text-white font-bold text-lg">Tournament Buy-In Payments</h3>
             </div>
+            )}
 
-            {/* Stripe-ready notice */}
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 flex items-start gap-3">
-              <CreditCard className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-amber-400 font-semibold text-sm">Stripe Payments — Coming Soon</p>
-                <p className="text-white/50 text-xs mt-1">The payment infrastructure is built and ready. Connect your Stripe account to start collecting tournament buy-ins and automatically distribute prize pools to winners.</p>
-                <button className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-amber-400 text-xs font-semibold border border-amber-400/20 transition">
-                  <CreditCard className="w-3.5 h-3.5" /> Connect Stripe Account
-                </button>
-              </div>
-            </div>
+            {/* ── MEMBER HOME SUB-TAB (Performance Overview) ──────────────── */}
+            {settingsSubTab === "home" && !isOwnerOrDirector && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart2 className="w-5 h-5" style={{ color: accent }} />
+                  <h2 className="text-white font-bold text-lg">Performance Overview</h2>
+                </div>
 
-            {/* Buy-in configuration per event */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Wallet className="w-4 h-4" style={{ color: accent }} />
-                <h3 className="text-white font-semibold text-sm">Configure Buy-Ins for Upcoming Events</h3>
-              </div>
-              {upcomingEvents.length === 0 ? (
-                <p className="text-white/30 text-sm text-center py-4">No upcoming events. Create an event first.</p>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((ev) => (
-                    <div key={ev.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-3 border-b border-white/5 last:border-0">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{ev.title}</p>
-                        <p className="text-xs text-white/40">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                          <DollarSign className="w-3 h-3 text-white/40" />
-                          <input
-                            type="number"
-                            placeholder="0.00"
-                            min="0"
-                            step="0.50"
-                            className="w-16 bg-transparent text-sm text-white outline-none"
-                            disabled
-                          />
-                        </div>
-                        <span className="text-[10px] text-white/25 hidden sm:inline">Stripe required</span>
-                      </div>
+                {/* Personal stats cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Battles Played", value: myBattles.length, icon: Swords },
+                    { label: "Wins", value: myWins, icon: Trophy },
+                    { label: "Win Rate", value: `${myWinRate}%`, icon: TrendingUp },
+                    { label: "Draws", value: myDraws, icon: Minus },
+                  ].map(({ label, value, icon: Icon }) => (
+                    <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <Icon className="w-4 h-4 text-white/40 mb-2" />
+                      <p className="text-2xl font-black text-white">{value}</p>
+                      <p className="text-xs text-white/40 mt-0.5">{label}</p>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
 
-            {/* Prize pool distribution preview */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="w-4 h-4 text-amber-400" />
-                <h3 className="text-white font-semibold text-sm">Prize Pool Distribution</h3>
-                <span className="ml-auto text-[10px] text-white/30">Auto-allocated on tournament completion</span>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { place: "1st Place", pct: 50, color: "text-amber-400" },
-                  { place: "2nd Place", pct: 30, color: "text-gray-300" },
-                  { place: "3rd Place", pct: 20, color: "text-amber-700" },
-                ].map(({ place, pct, color }) => (
-                  <div key={place} className="flex items-center gap-3">
-                    <span className={`text-sm font-bold w-20 ${color}`}>{place}</span>
-                    <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: accent }} />
-                    </div>
-                    <span className="text-sm font-semibold text-white/60 w-10 text-right">{pct}%</span>
+                {/* Recent battle history */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Swords className="w-4 h-4" style={{ color: accent }} />
+                    <h3 className="text-white font-semibold text-sm">Recent Battles</h3>
+                    <span className="ml-auto text-[10px] text-white/30">{myBattles.length} total</span>
                   </div>
-                ))}
+                  {myBattles.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Swords className="w-10 h-10 text-white/10 mx-auto mb-3" />
+                      <p className="text-white/30 text-sm">No battles yet.</p>
+                      <p className="text-white/20 text-xs mt-1">Challenge a club member to start building your record.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                      {myBattles.slice(0, 20).map((b) => {
+                        const isPlayerA = b.playerAId === user?.id;
+                        const opponentName = isPlayerA ? b.playerBName : b.playerAName;
+                        const won = (b.result === "player_a" && isPlayerA) || (b.result === "player_b" && !isPlayerA);
+                        const drew = b.result === "draw";
+                        const resultLabel = won ? "Won" : drew ? "Draw" : "Lost";
+                        const resultColor = won ? "text-green-400" : drew ? "text-amber-400" : "text-red-400/70";
+                        return (
+                          <div key={b.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-[#2d6a4f] flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0">
+                                {(opponentName ?? "?").charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="text-sm text-white font-medium">{opponentName ?? "Unknown"}</p>
+                                <p className="text-[10px] text-white/30">{new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                              </div>
+                            </div>
+                            <span className={`text-xs font-bold ${resultColor}`}>{resultLabel}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-white/30 mt-4">Distribution percentages are configurable per tournament once Stripe is connected.</p>
-            </div>
+            )}
 
-            {/* Transaction history placeholder */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <CheckSquare className="w-4 h-4" style={{ color: accent }} />
-                <h3 className="text-white font-semibold text-sm">Transaction History</h3>
+            {/* ── PAYMENTS SUB-TAB ────────────────────────────────────────── */}
+            {settingsSubTab === "payments" && isOwnerOrDirector && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="w-5 h-5" style={{ color: accent }} />
+                  <h3 className="text-white font-bold text-lg">Tournament Buy-In Payments</h3>
+                </div>
+
+                {/* Stripe-ready notice */}
+                <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 flex items-start gap-3">
+                  <CreditCard className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-amber-400 font-semibold text-sm">Stripe Payments — Coming Soon</p>
+                    <p className="text-white/50 text-xs mt-1">The payment infrastructure is built and ready. Connect your Stripe account to start collecting tournament buy-ins and automatically distribute prize pools to winners.</p>
+                    <button className="mt-3 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400/15 hover:bg-amber-400/25 text-amber-400 text-xs font-semibold border border-amber-400/20 transition">
+                      <CreditCard className="w-3.5 h-3.5" /> Connect Stripe Account
+                    </button>
+                  </div>
+                </div>
+
+                {/* Buy-in configuration per event */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Wallet className="w-4 h-4" style={{ color: accent }} />
+                    <h3 className="text-white font-semibold text-sm">Configure Buy-Ins for Upcoming Events</h3>
+                  </div>
+                  {upcomingEvents.length === 0 ? (
+                    <p className="text-white/30 text-sm text-center py-4">No upcoming events. Create an event first.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {upcomingEvents.map((ev) => (
+                        <div key={ev.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-3 border-b border-white/5 last:border-0">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{ev.title}</p>
+                            <p className="text-xs text-white/40">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                              <DollarSign className="w-3 h-3 text-white/40" />
+                              <input
+                                type="number"
+                                placeholder="0.00"
+                                min="0"
+                                step="0.50"
+                                className="w-16 bg-transparent text-sm text-white outline-none"
+                                disabled
+                              />
+                            </div>
+                            <span className="text-[10px] text-white/25 hidden sm:inline">Stripe required</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Prize pool distribution preview */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <h3 className="text-white font-semibold text-sm">Prize Pool Distribution</h3>
+                    <span className="ml-auto text-[10px] text-white/30">Auto-allocated on tournament completion</span>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { place: "1st Place", pct: 50, color: "text-amber-400" },
+                      { place: "2nd Place", pct: 30, color: "text-gray-300" },
+                      { place: "3rd Place", pct: 20, color: "text-amber-700" },
+                    ].map(({ place, pct, color }) => (
+                      <div key={place} className="flex items-center gap-3">
+                        <span className={`text-sm font-bold w-20 ${color}`}>{place}</span>
+                        <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: accent }} />
+                        </div>
+                        <span className="text-sm font-semibold text-white/60 w-10 text-right">{pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-white/30 mt-4">Distribution percentages are configurable per tournament once Stripe is connected.</p>
+                </div>
+
+                {/* Transaction history placeholder */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckSquare className="w-4 h-4" style={{ color: accent }} />
+                    <h3 className="text-white font-semibold text-sm">Transaction History</h3>
+                  </div>
+                  <div className="text-center py-8">
+                    <Wallet className="w-10 h-10 text-white/10 mx-auto mb-3" />
+                    <p className="text-white/30 text-sm">No transactions yet.</p>
+                    <p className="text-white/20 text-xs mt-1">Transactions will appear here once Stripe is connected and buy-ins are collected.</p>
+                  </div>
+                </div>
               </div>
-              <div className="text-center py-8">
-                <Wallet className="w-10 h-10 text-white/10 mx-auto mb-3" />
-                <p className="text-white/30 text-sm">No transactions yet.</p>
-                <p className="text-white/20 text-xs mt-1">Transactions will appear here once Stripe is connected and buy-ins are collected.</p>
+            )}
+
+            {/* ── MEMBER PAYMENTS SUB-TAB (Invoice/Payment History) ──────── */}
+            {settingsSubTab === "payments" && !isOwnerOrDirector && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className="w-5 h-5" style={{ color: accent }} />
+                  <h3 className="text-white font-bold text-lg">Payment History</h3>
+                </div>
+
+                {/* Payment history empty state */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CheckSquare className="w-4 h-4" style={{ color: accent }} />
+                    <h3 className="text-white font-semibold text-sm">Invoices & Payments</h3>
+                  </div>
+                  <div className="text-center py-8">
+                    <Wallet className="w-10 h-10 text-white/10 mx-auto mb-3" />
+                    <p className="text-white/30 text-sm">No payments yet.</p>
+                    <p className="text-white/20 text-xs mt-1">Your tournament buy-in payments and invoices will appear here.</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* ── CLUB SETTINGS (owner only, always at bottom of Settings tab) ── */}
+            {isOwnerOrDirector && (
+              <ClubSettingsPanel
+                club={club}
+                accent={accent}
+                isDark={isDark}
+                onClubChange={(patch: Partial<Omit<Club, "id" | "slug" | "foundedAt">>) => {
+                  updateClub(club.id, patch);
+                  setClub((prev) => prev ? { ...prev, ...patch } : prev);
+                }}
+              />
+            )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── BATTLES TAB ─────────────────────────────────────────────────── */}
         {tab === "battles" && (
@@ -5355,19 +5488,6 @@ export default function ClubDashboard() {
               </div>
             )}
           </div>
-        )}
-
-        {/* ── SETTINGS TAB ─────────────────────────────────────────────────────────── */}
-        {tab === "settings" && isOwnerOrDirector && (
-          <ClubSettingsPanel
-            club={club}
-            accent={accent}
-            isDark={isDark}
-            onClubChange={(patch: Partial<Omit<Club, "id" | "slug" | "foundedAt">>) => {
-              updateClub(club.id, patch);
-              setClub((prev) => prev ? { ...prev, ...patch } : prev);
-            }}
-          />
         )}
 
               </div>{/* end max-w-4xl */}
