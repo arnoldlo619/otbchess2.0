@@ -5993,3 +5993,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add "Create Event" modal for owners/directors with title, date, venue, description, admission fields
 - [x] Unified list merges clubEvents and liveTournaments with correct upcoming/past separation
 - [x] Tournament items show chevron and "Tournament" badge for clear distinction
+
+## Event Editing and Deletion
+- [x] Add updateClubEvent and deleteClubEvent functions to clubEventRegistry if missing
+- [x] Add state for edit modal (editingEvent, editForm, deletingEventId)
+- [x] Add edit/delete action buttons to event cards (owners/directors only)
+- [x] Implement Edit Event modal pre-populated with existing event data
+- [x] Implement delete confirmation dialog
+- [x] Refresh event list after edit or delete

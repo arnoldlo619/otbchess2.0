@@ -61,6 +61,8 @@ import {
   getUserRSVP,
   upsertRSVP,
   createClubEvent,
+  updateClubEvent,
+  deleteClubEvent,
   type ClubEvent,
   type RSVPStatus as _RSVPStatus,
 } from "@/lib/clubEventRegistry";
@@ -104,6 +106,7 @@ import {
   Swords,
   ArrowRightLeft,
   Camera,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
@@ -730,6 +733,11 @@ export default function ClubProfile() {
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
   const [creatingEvent, setCreatingEvent] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<ClubEvent | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState(false);
 
   // Reset broken-image flags when the club's image URLs change (e.g., after owner uploads a new image)
   useEffect(() => { setAvatarBroken(false); }, [club?.avatarUrl]);
@@ -1696,8 +1704,8 @@ export default function ClubProfile() {
                                   <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${textMuted} opacity-80`}>{ev.description}</p>
                                 )}
                               </div>
-                              {joined && user && (
-                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                {joined && user && (
                                   <button
                                     onClick={() => {
                                       const next = myRsvp?.status === "going" ? "not_going" : "going";
@@ -1711,11 +1719,37 @@ export default function ClubProfile() {
                                   >
                                     {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
                                   </button>
-                                  {rsvpCount.going > 0 && (
-                                    <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
-                                  )}
-                                </div>
-                              )}
+                                )}
+                                {rsvpCount.going > 0 && (
+                                  <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
+                                )}
+                                {(isOwner || isDirector) && (
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <button
+                                      onClick={() => {
+                                        setEditingEvent(ev);
+                                        const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16);
+                                        setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "" });
+                                      }}
+                                      title="Edit event"
+                                      className={`p-1.5 rounded-lg transition-colors ${
+                                        isDark ? "text-white/30 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                                      }`}
+                                    >
+                                      <Pencil className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmDeleteId(ev.id)}
+                                      title="Delete event"
+                                      className={`p-1.5 rounded-lg transition-colors ${
+                                        isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                      }`}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                           );
@@ -2853,6 +2887,172 @@ export default function ClubProfile() {
             }
           }}
         />
+      )}
+
+      {/* ── Edit Event Modal ────────────────────────────────────────────── */}
+      {editingEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
+          <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-white" }`}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className={`text-lg font-bold ${textMain}`}>Edit Event</h2>
+              <button onClick={() => setEditingEvent(null)} className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/8 text-white/50" : "hover:bg-gray-100 text-gray-400"}`}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Event Title *</label>
+                <input
+                  value={editForm.title}
+                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Wednesday Night Blitz"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                  }`}
+                />
+              </div>
+              <div>
+                <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Date &amp; Time *</label>
+                <input
+                  type="datetime-local"
+                  value={editForm.startAt}
+                  onChange={e => setEditForm(f => ({ ...f, startAt: e.target.value }))}
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                    isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#3D6B47]"
+                  }`}
+                />
+              </div>
+              <div>
+                <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Venue</label>
+                <input
+                  value={editForm.venue}
+                  onChange={e => setEditForm(f => ({ ...f, venue: e.target.value }))}
+                  placeholder="e.g. Club Hall, Room 2"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                  }`}
+                />
+              </div>
+              <div>
+                <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Admission</label>
+                <input
+                  value={editForm.admissionNote}
+                  onChange={e => setEditForm(f => ({ ...f, admissionNote: e.target.value }))}
+                  placeholder="e.g. Free · Members only"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                  }`}
+                />
+              </div>
+              <div>
+                <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Description</label>
+                <textarea
+                  value={editForm.description}
+                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  placeholder="What should members know about this event?"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors resize-none ${
+                    isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#3D6B47]"
+                  }`}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingEvent(null)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={savingEdit || !editForm.title.trim() || !editForm.startAt}
+                onClick={async () => {
+                  if (!editForm.title.trim() || !editForm.startAt) return;
+                  setSavingEdit(true);
+                  try {
+                    const updated = updateClubEvent(editingEvent.id, {
+                      title: editForm.title.trim(),
+                      description: editForm.description.trim() || undefined,
+                      startAt: new Date(editForm.startAt).toISOString(),
+                      venue: editForm.venue.trim() || undefined,
+                      admissionNote: editForm.admissionNote.trim() || undefined,
+                    });
+                    if (updated) {
+                      setClubEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
+                      toast.success("Event updated");
+                    }
+                    setEditingEvent(null);
+                  } catch {
+                    toast.error("Failed to update event");
+                  } finally {
+                    setSavingEdit(false);
+                  }
+                }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                  savingEdit || !editForm.title.trim() || !editForm.startAt
+                    ? isDark ? "bg-white/10 text-white/30 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : isDark ? "bg-[#4CAF50] text-black hover:bg-[#5DBF62]" : "bg-[#3D6B47] text-white hover:bg-[#2E5236]"
+                }`}
+              >
+                {savingEdit ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Event Confirmation ────────────────────────────────────── */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
+          <div className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${ isDark ? "bg-[oklch(0.17_0.05_145)]" : "bg-white" }`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ isDark ? "bg-red-500/15" : "bg-red-50" }`}>
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h2 className={`text-base font-bold ${textMain}`}>Delete Event</h2>
+                <p className={`text-xs ${textMuted}`}>This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className={`text-sm ${textMuted} mb-6`}>Are you sure you want to delete this event? All RSVPs and comments will also be removed.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isDark ? "bg-white/8 text-white/60 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deletingEvent}
+                onClick={async () => {
+                  if (!confirmDeleteId) return;
+                  setDeletingEvent(true);
+                  try {
+                    deleteClubEvent(confirmDeleteId);
+                    setClubEvents(prev => prev.filter(e => e.id !== confirmDeleteId));
+                    toast.success("Event deleted");
+                    setConfirmDeleteId(null);
+                  } catch {
+                    toast.error("Failed to delete event");
+                  } finally {
+                    setDeletingEvent(false);
+                  }
+                }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${
+                  deletingEvent
+                    ? "bg-red-400/50 text-white/50 cursor-not-allowed"
+                    : "bg-red-500 text-white hover:bg-red-600"
+                }`}
+              >
+                {deletingEvent ? "Deleting…" : "Delete Event"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
