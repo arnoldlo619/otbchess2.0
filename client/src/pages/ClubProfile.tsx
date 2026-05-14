@@ -63,6 +63,8 @@ import {
   createClubEvent,
   updateClubEvent,
   deleteClubEvent,
+  createRecurringEvents,
+  deleteRecurringSeries,
   type ClubEvent,
   type RSVPStatus as _RSVPStatus,
 } from "@/lib/clubEventRegistry";
@@ -731,10 +733,10 @@ export default function ClubProfile() {
   const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
-  const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
+  const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "" });
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ClubEvent | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", editScope: "this" as "this" | "all" });
   const [savingEdit, setSavingEdit] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingEvent, setDeletingEvent] = useState(false);
@@ -1694,7 +1696,16 @@ export default function ClubProfile() {
                                 </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
+                                  {ev.recurrence && ev.recurrence !== "none" && (
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                                      isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                    }`}>
+                                      {ev.recurrence === "biweekly" ? "BI-WK" : ev.recurrence.toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
                                 <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs ${textMuted}`}>
                                   <span>{dateObj.toLocaleDateString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</span>
                                   {ev.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{ev.venue}</span>}
@@ -1729,7 +1740,7 @@ export default function ClubProfile() {
                                       onClick={() => {
                                         setEditingEvent(ev);
                                         const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16);
-                                        setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "" });
+                                        setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this" });
                                       }}
                                       title="Edit event"
                                       className={`p-1.5 rounded-lg transition-colors ${
@@ -1907,6 +1918,36 @@ export default function ClubProfile() {
                         }`}
                       />
                     </div>
+                    {/* Recurrence */}
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Repeat</label>
+                      <div className="flex gap-2 flex-wrap">
+                        {(["none", "weekly", "biweekly", "monthly"] as const).map((opt) => (
+                          <button key={opt} type="button"
+                            onClick={() => setEventForm((f) => ({ ...f, recurrence: opt }))}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                              eventForm.recurrence === opt
+                                ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
+                                : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                            }`}>
+                            {opt === "none" ? "One-time" : opt === "biweekly" ? "Bi-weekly" : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                      {eventForm.recurrence !== "none" && (
+                        <div className="mt-2">
+                          <label className={`text-xs ${textMuted} block mb-1`}>End date (optional)</label>
+                          <input type="date" value={eventForm.recurrenceEndDate}
+                            onChange={(e) => setEventForm((f) => ({ ...f, recurrenceEndDate: e.target.value }))}
+                            className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
+                              isDark ? "bg-white/5 border-white/10 text-white focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-gray-400"
+                            }`} />
+                          <p className={`text-[10px] mt-1 ${textMuted} opacity-60`}>
+                            {eventForm.recurrence === "weekly" ? "Up to 12 weekly occurrences" : eventForm.recurrence === "biweekly" ? "Up to 12 bi-weekly occurrences" : "Up to 6 monthly occurrences"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <button
                     disabled={!eventForm.title.trim() || !eventForm.startAt || creatingEvent}
@@ -1925,11 +1966,23 @@ export default function ClubProfile() {
                           creatorId: user.id,
                           creatorName: user.displayName,
                           isPublished: true,
+                          recurrence: eventForm.recurrence !== "none" ? eventForm.recurrence : undefined,
+                          recurrenceEndDate: eventForm.recurrence !== "none" && eventForm.recurrenceEndDate ? eventForm.recurrenceEndDate : undefined,
                         });
+                        // Generate recurring instances and tag series
+                        if (eventForm.recurrence !== "none") {
+                          updateClubEvent(newEvent.id, { recurrenceSeriesId: newEvent.id });
+                          createRecurringEvents(
+                            { ...newEvent, recurrenceSeriesId: newEvent.id },
+                            eventForm.recurrence,
+                            eventForm.recurrenceEndDate || undefined
+                          );
+                        }
                         setClubEvents(listClubEvents(club.id));
                         setShowCreateEvent(false);
-                        setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "" });
-                        toast.success(`"${newEvent.title}" created`);
+                        setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none", recurrenceEndDate: "" });
+                        const seriesNote = eventForm.recurrence !== "none" ? " (series created)" : "";
+                        toast.success(`"${newEvent.title}" created${seriesNote}`);
                       } catch (err) {
                         toast.error("Failed to create event");
                       } finally {
@@ -1940,7 +1993,7 @@ export default function ClubProfile() {
                       isDark ? "bg-[#4CAF50] text-black hover:bg-[#45a049]" : "bg-[#3D6B47] text-white hover:bg-[#2d5236]"
                     }`}
                   >
-                    {creatingEvent ? "Creating..." : "Create Event"}
+                    {creatingEvent ? "Creating..." : eventForm.recurrence !== "none" ? "Create Series" : "Create Event"}
                   </button>
                 </div>
               </div>
@@ -2956,6 +3009,53 @@ export default function ClubProfile() {
                   }`}
                 />
               </div>
+              {/* Recurrence controls */}
+              <div>
+                <label className={`block text-xs font-semibold mb-1.5 ${textMuted}`}>Repeat</label>
+                <div className="flex gap-2 flex-wrap">
+                  {(["none", "weekly", "biweekly", "monthly"] as const).map((opt) => (
+                    <button key={opt} type="button"
+                      onClick={() => setEditForm(f => ({ ...f, recurrence: opt }))}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        editForm.recurrence === opt
+                          ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
+                          : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}>
+                      {opt === "none" ? "One-time" : opt === "biweekly" ? "Bi-weekly" : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                {editForm.recurrence !== "none" && (
+                  <div className="mt-2 space-y-2">
+                    <div>
+                      <label className={`text-xs ${textMuted} block mb-1`}>End date (optional)</label>
+                      <input type="date" value={editForm.recurrenceEndDate}
+                        onChange={e => setEditForm(f => ({ ...f, recurrenceEndDate: e.target.value }))}
+                        className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${
+                          isDark ? "bg-white/5 border-white/10 text-white focus:border-[#4CAF50]/50" : "bg-gray-50 border-gray-200 text-gray-900 focus:border-[#3D6B47]"
+                        }`} />
+                    </div>
+                    {editingEvent?.recurrenceSeriesId && (
+                      <div>
+                        <label className={`text-xs font-semibold ${textMuted} block mb-1`}>Apply changes to</label>
+                        <div className="flex gap-2">
+                          {(["this", "all"] as const).map(scope => (
+                            <button key={scope} type="button"
+                              onClick={() => setEditForm(f => ({ ...f, editScope: scope }))}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                                editForm.editScope === scope
+                                  ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
+                                  : isDark ? "bg-white/8 text-white/50 hover:bg-white/12" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              }`}>
+                              {scope === "this" ? "This event only" : "All future events"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
@@ -2972,16 +3072,28 @@ export default function ClubProfile() {
                   if (!editForm.title.trim() || !editForm.startAt) return;
                   setSavingEdit(true);
                   try {
-                    const updated = updateClubEvent(editingEvent.id, {
+                    const patch = {
                       title: editForm.title.trim(),
                       description: editForm.description.trim() || undefined,
                       startAt: new Date(editForm.startAt).toISOString(),
                       venue: editForm.venue.trim() || undefined,
                       admissionNote: editForm.admissionNote.trim() || undefined,
-                    });
-                    if (updated) {
-                      setClubEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
-                      toast.success("Event updated");
+                      recurrence: editForm.recurrence !== "none" ? editForm.recurrence : undefined,
+                      recurrenceEndDate: editForm.recurrence !== "none" && editForm.recurrenceEndDate ? editForm.recurrenceEndDate : undefined,
+                    };
+                    if (editForm.editScope === "all" && editingEvent.recurrenceSeriesId) {
+                      // Update all future events in the series
+                      const seriesEvents = listClubEvents(editingEvent.clubId)
+                        .filter(e => e.recurrenceSeriesId === editingEvent.recurrenceSeriesId && new Date(e.startAt) >= new Date(editingEvent.startAt));
+                      seriesEvents.forEach(e => updateClubEvent(e.id, { ...patch, startAt: e.startAt }));
+                      setClubEvents(listClubEvents(editingEvent.clubId));
+                      toast.success(`${seriesEvents.length} events updated`);
+                    } else {
+                      const updated = updateClubEvent(editingEvent.id, patch);
+                      if (updated) {
+                        setClubEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
+                        toast.success("Event updated");
+                      }
                     }
                     setEditingEvent(null);
                   } catch {

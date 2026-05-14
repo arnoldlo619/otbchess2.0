@@ -63,6 +63,12 @@ export interface ClubEvent {
   puzzleRelayTeams?: number;
   /** Puzzle Relay: puzzle difficulty */
   puzzleRelayDifficulty?: "beginner" | "intermediate" | "advanced";
+  /** Recurrence pattern: "none" = one-off, "weekly", "biweekly", "monthly" */
+  recurrence?: "none" | "weekly" | "biweekly" | "monthly";
+  /** Shared ID for all events in the same recurring series */
+  recurrenceSeriesId?: string;
+  /** ISO date string — no new instances generated after this date */
+  recurrenceEndDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -247,6 +253,55 @@ export function deleteClubEvent(eventId: string): void {
   saveEvents(loadEvents().filter((e) => e.id !== eventId));
   saveRSVPs(loadRSVPs().filter((r) => r.eventId !== eventId));
   saveComments(loadComments().filter((c) => c.eventId !== eventId));
+}
+
+/**
+ * Delete all events in a recurring series on or after `fromDate`.
+ * If `fromDate` is omitted, deletes every event in the series.
+ */
+export function deleteRecurringSeries(seriesId: string, fromDate?: string): void {
+  const cutoff = fromDate ? new Date(fromDate).getTime() : 0;
+  const toDelete = new Set(
+    loadEvents()
+      .filter((e) => e.recurrenceSeriesId === seriesId && new Date(e.startAt).getTime() >= cutoff)
+      .map((e) => e.id)
+  );
+  saveEvents(loadEvents().filter((e) => !toDelete.has(e.id)));
+  saveRSVPs(loadRSVPs().filter((r) => !toDelete.has(r.eventId)));
+  saveComments(loadComments().filter((c) => !toDelete.has(c.eventId)));
+}
+
+/**
+ * Generate recurring instances of a seed event and persist them.
+ * weekly: up to 12 occurrences | biweekly: up to 12 | monthly: up to 6
+ */
+export function createRecurringEvents(
+  seed: ClubEvent,
+  recurrence: "weekly" | "biweekly" | "monthly",
+  endDate?: string
+): ClubEvent[] {
+  const seriesId = seed.recurrenceSeriesId ?? seed.id;
+  const maxInstances = recurrence === "monthly" ? 6 : 12;
+  const cutoff = endDate ? new Date(endDate).getTime() : Infinity;
+  const created: ClubEvent[] = [];
+  let cursor = new Date(seed.startAt);
+  const seedDuration = seed.endAt ? new Date(seed.endAt).getTime() - new Date(seed.startAt).getTime() : 0;
+  for (let i = 0; i < maxInstances; i++) {
+    if (recurrence === "weekly") cursor = new Date(cursor.getTime() + 7 * 86400000);
+    else if (recurrence === "biweekly") cursor = new Date(cursor.getTime() + 14 * 86400000);
+    else { const n = new Date(cursor); n.setMonth(n.getMonth() + 1); cursor = n; }
+    if (cursor.getTime() > cutoff) break;
+    const instance = createClubEvent({
+      ...seed,
+      startAt: cursor.toISOString(),
+      endAt: seedDuration > 0 ? new Date(cursor.getTime() + seedDuration).toISOString() : undefined,
+      recurrence,
+      recurrenceSeriesId: seriesId,
+      recurrenceEndDate: endDate,
+    });
+    created.push(instance);
+  }
+  return created;
 }
 
 // ── RSVP API ──────────────────────────────────────────────────────────────────

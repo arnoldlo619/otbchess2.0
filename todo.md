@@ -6001,3 +6001,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Implement Edit Event modal pre-populated with existing event data
 - [x] Implement delete confirmation dialog
 - [x] Refresh event list after edit or delete
+
+## Recurring Events
+- [x] Extend ClubEvent type with recurrence fields (recurrence, recurrenceSeriesId, recurrenceEndDate)
+- [x] Add createRecurringEvents() function (weekly up to 12, biweekly up to 12, monthly up to 6 instances)
+- [x] Add recurrence toggle and controls to Create Event modal (One-time / Weekly / Bi-weekly / Monthly + optional end date)
+- [x] Add recurrence toggle and controls to Edit Event modal (edit this event only vs. all future events in series)
+- [x] Show recurring badge on event cards (WEEKLY / BI-WK / MONTHLY pill badge next to title)
+- [x] deleteRecurringSeries() function added for series deletion support
