@@ -3001,25 +3001,7 @@ export default function ClubDashboard() {
                 </button>
               </Link>
             )}
-            {isOwnerOrDirector && (
-              <button
-                onClick={() => setTab("settings")}
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
-                style={{
-                  background: tab === "settings" ? accent : "transparent",
-                  color: tab === "settings" ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
-                }}
-                title="Club Settings"
-              >
-                <Settings2 size={17} />
-                <span
-                  className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
-                  style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
-                >
-                  Club Settings
-                </span>
-              </button>
-            )}
+
           </div>
           </div>{/* end z-10 sidebar content wrapper */}
         </aside>
