@@ -2297,7 +2297,8 @@ export default function ClubDashboard() {
   const [feedEvents, setFeedEvents] = useState<FeedEvent[]>([]);
   const [tab, setTab] = useState<Tab>("feed");
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("home");
-  const [feedSubTab, setFeedSubTab] = useState<"activity" | "battles">("activity");
+  const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
+  const [membersSubTab, setMembersSubTab] = useState<"members" | "battles">("members");
   const [loading, setLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
@@ -3272,6 +3273,106 @@ export default function ClubDashboard() {
         {/* ── MEMBERS TAB ───────────────────────────────────────────────────── */}
         {tab === "members" && (
           <div className="space-y-5">
+            {/* Members sub-tab toggle: Members | Battles */}
+            <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "oklch(0.16 0.05 145)" }}>
+              {(["members", "battles"] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setMembersSubTab(st)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                  style={membersSubTab === st
+                    ? { background: "oklch(0.22 0.08 145)", color: "#4CAF50" }
+                    : { color: "oklch(0.55 0.08 145)" }
+                  }
+                >
+                  {st === "members" ? <Users className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
+                  {st === "members" ? "Members" : "Battles"}
+                </button>
+              ))}
+            </div>
+
+            {/* Members sub-tab content */}
+            {membersSubTab === "battles" && (
+              <div className="space-y-6">
+                {/* Sub-nav: Leaderboard | Battles */}
+                <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
+                  {(["leaderboard", "battles"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setBattleView(v)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        battleView === v ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
+                      }`}
+                    >
+                      {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
+                      {v === "leaderboard" ? "Leaderboard" : "Battles"}
+                    </button>
+                  ))}
+                </div>
+                {/* Leaderboard view */}
+                {battleView === "leaderboard" && (() => {
+                  const sorted = [...members].sort((a, b) => {
+                    const winsA = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === a.userId) || (bt.result === "player_b" && bt.playerBId === a.userId))).length;
+                    const winsB = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === b.userId) || (bt.result === "player_b" && bt.playerBId === b.userId))).length;
+                    return winsB - winsA;
+                  });
+                  return (
+                    <div className="space-y-2">
+                      {sorted.slice(0, 10).map((m, idx) => {
+                        const wins = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === m.userId) || (bt.result === "player_b" && bt.playerBId === m.userId))).length;
+                        const losses = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_b" && bt.playerAId === m.userId) || (bt.result === "player_a" && bt.playerBId === m.userId))).length;
+                        const draws = battles.filter(bt => bt.status === "completed" && bt.result === "draw" && (bt.playerAId === m.userId || bt.playerBId === m.userId)).length;
+                        return (
+                          <div key={m.userId} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.16 0.05 145)" }}>
+                            <span className="text-white/30 text-xs font-bold w-5 text-center">{idx + 1}</span>
+                            <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={32} className="rounded-full" />
+                            <span className="flex-1 text-white text-sm font-semibold truncate">{m.displayName}</span>
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="text-green-400 font-bold">{wins}W</span>
+                              <span className="text-red-400">{losses}L</span>
+                              <span className="text-white/40">{draws}D</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {members.length === 0 && (
+                        <div className="text-center py-12 text-white/30">
+                          <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                          <p className="text-sm">No battle results yet</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                {/* Recent battles view */}
+                {battleView === "battles" && (
+                  <div className="space-y-3">
+                    {[...battles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 20).map((bt) => (
+                      <div key={bt.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.16 0.05 145)" }}>
+                        <Swords className="w-4 h-4 text-white/30 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-semibold truncate">{bt.playerAName} vs {bt.playerBName}</p>
+                          <p className="text-white/30 text-xs">{new Date(bt.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          bt.status === "completed" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+                        }`}>
+                          {bt.status === "completed" ? (bt.result === "draw" ? "Draw" : bt.result === "player_a" ? `${bt.playerAName} won` : `${bt.playerBName} won`) : "In Progress"}
+                        </span>
+                      </div>
+                    ))}
+                    {battles.length === 0 && (
+                      <div className="text-center py-12 text-white/30">
+                        <Swords className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm">No battles yet</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {membersSubTab === "members" && <>
             {/* Player of the Month */}
             <PlayerOfMonthWidget
               clubId={club.id}
@@ -3491,7 +3592,8 @@ export default function ClubDashboard() {
                               onClick={() => {
                                 setBattlePlayerA(user?.id ?? "");
                                 setBattlePlayerB(m.userId);
-                                setTab("battles");
+                                setMembersSubTab("battles");
+                                setBattleView("battles");
                                 setTimeout(() => {
                                   document.getElementById("create-battle-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
                                 }, 80);
@@ -3546,6 +3648,7 @@ export default function ClubDashboard() {
                 </div>
               </div>
             )}
+            </>}
           </div>
         )}
 
@@ -3711,26 +3814,10 @@ export default function ClubDashboard() {
         {tab === "feed" && (
           <div className="space-y-5">
 
-            {/* Feed sub-tab toggle: Activity | Battles */}
-            <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "oklch(0.16 0.05 145)" }}>
-              {(["activity", "battles"] as const).map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setFeedSubTab(st)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
-                  style={feedSubTab === st
-                    ? { background: "oklch(0.22 0.08 145)", color: "#4CAF50" }
-                    : { color: "oklch(0.55 0.08 145)" }
-                  }
-                >
-                  {st === "activity" ? <Megaphone className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
-                  {st === "activity" ? "Activity" : "Battles"}
-                </button>
-              ))}
-            </div>
+            {/* Feed: Announcements only */}
 
-            {/* ── ACTIVITY SUB-TAB ──────────────────────────────────── */}
-            {feedSubTab === "activity" && <>
+            {/* ── ANNOUNCEMENTS ──────────────────────────────────── */}
+            <>
             {/* ── Composer (owner/director only) ──────────────────────────────── */}
             {isOwnerOrDirector && (
               <div
@@ -3841,92 +3928,12 @@ export default function ClubDashboard() {
                 <p className="text-sm mt-1">Activity will appear here as members join and events are created.</p>
               </div>
             )}
-            </> }
+            </>
 
-            {/* ── BATTLES SUB-TAB: renders the battles tab content inline ────── */}
-            {feedSubTab === "battles" && (
-              <div className="space-y-6">
-                {/* Sub-nav: Leaderboard | Battles */}
-                <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
-                  {(["leaderboard", "battles"] as const).map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setBattleView(v)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        battleView === v ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-                      }`}
-                    >
-                      {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
-                      {v === "leaderboard" ? "Leaderboard" : "Battles"}
-                    </button>
-                  ))}
-                </div>
-                {/* Leaderboard view */}
-                {battleView === "leaderboard" && (() => {
-                  const sorted = [...members].sort((a, b) => {
-                    const winsA = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === a.userId) || (bt.result === "player_b" && bt.playerBId === a.userId))).length;
-                    const winsB = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === b.userId) || (bt.result === "player_b" && bt.playerBId === b.userId))).length;
-                    return winsB - winsA;
-                  });
-                  return (
-                    <div className="space-y-2">
-                      {sorted.slice(0, 10).map((m, idx) => {
-                        const wins = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_a" && bt.playerAId === m.userId) || (bt.result === "player_b" && bt.playerBId === m.userId))).length;
-                        const losses = battles.filter(bt => bt.status === "completed" && ((bt.result === "player_b" && bt.playerAId === m.userId) || (bt.result === "player_a" && bt.playerBId === m.userId))).length;
-                        const draws = battles.filter(bt => bt.status === "completed" && bt.result === "draw" && (bt.playerAId === m.userId || bt.playerBId === m.userId)).length;
-                        return (
-                          <div key={m.userId} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.16 0.05 145)" }}>
-                            <span className="text-white/30 text-xs font-bold w-5 text-center">{idx + 1}</span>
-                            <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={32} className="rounded-full" />
-                            <span className="flex-1 text-white text-sm font-semibold truncate">{m.displayName}</span>
-                            <div className="flex items-center gap-3 text-xs">
-                              <span className="text-green-400 font-bold">{wins}W</span>
-                              <span className="text-red-400">{losses}L</span>
-                              <span className="text-white/40">{draws}D</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {members.length === 0 && (
-                        <div className="text-center py-12 text-white/30">
-                          <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                          <p className="text-sm">No battle results yet</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-                {/* Recent battles view */}
-                {battleView === "battles" && (
-                  <div className="space-y-3">
-                    {[...battles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 20).map((bt) => (
-                      <div key={bt.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.16 0.05 145)" }}>
-                        <Swords className="w-4 h-4 text-white/30 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold truncate">{bt.playerAName} vs {bt.playerBName}</p>
-                          <p className="text-white/30 text-xs">{new Date(bt.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                        </div>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          bt.status === "completed" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
-                        }`}>
-                          {bt.status === "completed" ? (bt.result === "draw" ? "Draw" : bt.result === "player_a" ? `${bt.playerAName} won` : `${bt.playerBName} won`) : "In Progress"}
-                        </span>
-                      </div>
-                    ))}
-                    {battles.length === 0 && (
-                      <div className="text-center py-12 text-white/30">
-                        <Swords className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                        <p className="text-sm">No battles yet</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
-        {/* ── SETTINGS TAB (consolidated: Home + Payments) ──────────────────── */}
+        {/* ── SETTINGS TABents) ──────────────────── */}
         {tab === "settings" && (() => {
           // ── Derived analytics data (for owner Home sub-tab) ────────────────
           const completedBattles = battles.filter(b => b.status === "completed");

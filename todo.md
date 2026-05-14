@@ -6037,3 +6037,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Keep only Activity and Battles as the two Feed sub-tabs
 - [x] Simplified the composer to a single announcement input (no mode toggle)
 - [x] Poll and RSVP composer forms removed; scheduled polls queue preserved for existing data
+
+## Feed Sub-tab Rename + Battles to Members
+- [x] Renamed "Activity" sub-tab to "Announcements" in Feed tab
+- [x] Removed "Battles" sub-tab from Feed tab (Feed now shows only Announcements)
+- [x] Added "Battles" as a new sub-tab in the Members tab (MEMBERS | BATTLES pill toggle)
+- [x] Moved Battles content (Leaderboard + Battles views) into Members tab Battles sub-tab
+- [x] Fixed Challenge button to switch to Members > Battles sub-tab instead of old Battles tab
