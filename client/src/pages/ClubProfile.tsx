@@ -109,6 +109,7 @@ import {
   ArrowRightLeft,
   Camera,
   Pencil,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
@@ -733,10 +734,12 @@ export default function ClubProfile() {
   const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
-  const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "" });
+  const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", coverImageUrl: "" });
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingEditCover, setUploadingEditCover] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ClubEvent | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", editScope: "this" as "this" | "all" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", editScope: "this" as "this" | "all", coverImageUrl: "" });
   const [savingEdit, setSavingEdit] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingEvent, setDeletingEvent] = useState(false);
@@ -1681,7 +1684,15 @@ export default function ClubProfile() {
                           const rsvpCount = countRSVPs(ev.id);
                           const dateObj = new Date(ev.startAt);
                           return (
-                          <div key={ev.id} className={`px-5 py-4 transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+                          <div key={ev.id} className={`transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
+                            {/* Cover image */}
+                            {ev.coverImageUrl && (
+                              <div className="relative w-full overflow-hidden" style={{ height: 140 }}>
+                                <img src={ev.coverImageUrl} alt={ev.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
+                              </div>
+                            )}
+                            <div className="px-5 py-4">
                             <div className="flex items-start gap-3">
                               {/* Date badge */}
                               <div
@@ -1740,7 +1751,7 @@ export default function ClubProfile() {
                                       onClick={() => {
                                         setEditingEvent(ev);
                                         const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16);
-                                        setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this" });
+                                        setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this", coverImageUrl: ev.coverImageUrl ?? "" });
                                       }}
                                       title="Edit event"
                                       className={`p-1.5 rounded-lg transition-colors ${
@@ -1762,6 +1773,7 @@ export default function ClubProfile() {
                                 )}
                               </div>
                             </div>
+                            </div>{/* end px-5 py-4 */}
                           </div>
                           );
                         })() : (() => {
@@ -1859,6 +1871,52 @@ export default function ClubProfile() {
                     </button>
                   </div>
                   <div className="space-y-3">
+                    {/* Cover Image Upload */}
+                    <div>
+                      <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Cover Image</label>
+                      {eventForm.coverImageUrl ? (
+                        <div className="relative rounded-xl overflow-hidden" style={{ height: 120 }}>
+                          <img src={eventForm.coverImageUrl} alt="Event cover" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setEventForm(f => ({ ...f, coverImageUrl: "" }))}
+                            className="absolute top-2 right-2 p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={`flex flex-col items-center justify-center gap-2 w-full rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                          isDark ? "border-white/15 hover:border-white/30 bg-white/3 hover:bg-white/5" : "border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
+                        }`} style={{ height: 100 }}>
+                          {uploadingCover ? (
+                            <span className={`text-xs ${textMuted}`}>Uploading…</span>
+                          ) : (
+                            <>
+                              <ImageIcon className={`w-6 h-6 ${textMuted} opacity-50`} />
+                              <span className={`text-xs ${textMuted} opacity-70`}>Click to upload cover image</span>
+                              <span className={`text-[10px] ${textMuted} opacity-40`}>JPG, PNG, WebP · max 5 MB</span>
+                            </>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) { toast.error("Image too large (max 5 MB)"); return; }
+                            setUploadingCover(true);
+                            try {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                const dataUrl = ev.target?.result as string;
+                                setEventForm(f => ({ ...f, coverImageUrl: dataUrl }));
+                                setUploadingCover(false);
+                              };
+                              reader.onerror = () => { toast.error("Failed to read image"); setUploadingCover(false); };
+                              reader.readAsDataURL(file);
+                            } catch { toast.error("Upload failed"); setUploadingCover(false); }
+                          }} />
+                        </label>
+                      )}
+                    </div>
                     <div>
                       <label className={`text-xs font-semibold uppercase tracking-wider ${textMuted} block mb-1.5`}>Title *</label>
                       <input
@@ -1966,6 +2024,7 @@ export default function ClubProfile() {
                           creatorId: user.id,
                           creatorName: user.displayName,
                           isPublished: true,
+                          coverImageUrl: eventForm.coverImageUrl || undefined,
                           recurrence: eventForm.recurrence !== "none" ? eventForm.recurrence : undefined,
                           recurrenceEndDate: eventForm.recurrence !== "none" && eventForm.recurrenceEndDate ? eventForm.recurrenceEndDate : undefined,
                         });
@@ -1980,7 +2039,7 @@ export default function ClubProfile() {
                         }
                         setClubEvents(listClubEvents(club.id));
                         setShowCreateEvent(false);
-                        setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none", recurrenceEndDate: "" });
+                        setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none", recurrenceEndDate: "", coverImageUrl: "" });
                         const seriesNote = eventForm.recurrence !== "none" ? " (series created)" : "";
                         toast.success(`"${newEvent.title}" created${seriesNote}`);
                       } catch (err) {
@@ -2953,6 +3012,52 @@ export default function ClubProfile() {
               </button>
             </div>
             <div className="space-y-4">
+              {/* Cover Image Upload */}
+              <div>
+                <label className={`block text-xs font-semibold mb-1.5 ${textMuted}`}>Cover Image</label>
+                {editForm.coverImageUrl ? (
+                  <div className="relative rounded-xl overflow-hidden" style={{ height: 110 }}>
+                    <img src={editForm.coverImageUrl} alt="Event cover" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setEditForm(f => ({ ...f, coverImageUrl: "" }))}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className={`flex flex-col items-center justify-center gap-1.5 w-full rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                    isDark ? "border-white/15 hover:border-white/30 bg-white/3 hover:bg-white/5" : "border-gray-200 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
+                  }`} style={{ height: 90 }}>
+                    {uploadingEditCover ? (
+                      <span className={`text-xs ${textMuted}`}>Uploading…</span>
+                    ) : (
+                      <>
+                        <ImageIcon className={`w-5 h-5 ${textMuted} opacity-50`} />
+                        <span className={`text-xs ${textMuted} opacity-70`}>Click to upload cover image</span>
+                        <span className={`text-[10px] ${textMuted} opacity-40`}>JPG, PNG, WebP · max 5 MB</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) { toast.error("Image too large (max 5 MB)"); return; }
+                      setUploadingEditCover(true);
+                      try {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const dataUrl = ev.target?.result as string;
+                          setEditForm(f => ({ ...f, coverImageUrl: dataUrl }));
+                          setUploadingEditCover(false);
+                        };
+                        reader.onerror = () => { toast.error("Failed to read image"); setUploadingEditCover(false); };
+                        reader.readAsDataURL(file);
+                      } catch { toast.error("Upload failed"); setUploadingEditCover(false); }
+                    }} />
+                  </label>
+                )}
+              </div>
               <div>
                 <label className={`block text-xs font-semibold mb-1 ${textMuted}`}>Event Title *</label>
                 <input
@@ -3078,6 +3183,7 @@ export default function ClubProfile() {
                       startAt: new Date(editForm.startAt).toISOString(),
                       venue: editForm.venue.trim() || undefined,
                       admissionNote: editForm.admissionNote.trim() || undefined,
+                      coverImageUrl: editForm.coverImageUrl || undefined,
                       recurrence: editForm.recurrence !== "none" ? editForm.recurrence : undefined,
                       recurrenceEndDate: editForm.recurrence !== "none" && editForm.recurrenceEndDate ? editForm.recurrenceEndDate : undefined,
                     };

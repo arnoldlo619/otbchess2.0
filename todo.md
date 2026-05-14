@@ -6009,3 +6009,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add recurrence toggle and controls to Edit Event modal (edit this event only vs. all future events in series)
 - [x] Show recurring badge on event cards (WEEKLY / BI-WK / MONTHLY pill badge next to title)
 - [x] deleteRecurringSeries() function added for series deletion support
+
+## Event Cover Image Upload
+- [x] coverImageUrl field already present in ClubEvent type
+- [x] Add image upload UI to Create Event modal (click to upload, preview with remove button)
+- [x] Add image upload UI to Edit Event modal (replace or remove existing cover)
+- [x] Display cover image on event cards (full-width 140px banner above event details with gradient overlay)
+- [x] Cover image stored as base64 data URL in localStorage (consistent with avatar/banner pattern)
