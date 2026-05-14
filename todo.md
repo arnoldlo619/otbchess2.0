@@ -6031,3 +6031,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove "Battles" from main ClubDashboard navigation (nav now: Feed, Events, Members, Leagues, Settings)
 - [x] Set "Activity" as default Feed sub-tab
 - [x] Inline Leaderboard and Battles views in Feed Battles sub-tab with correct BattleResult types
+
+## Remove Announce/Poll/RSVP Composer Sub-tabs from Feed
+- [x] Remove the Announce, Poll, and RSVP mode selector from the Feed Activity composer
+- [x] Keep only Activity and Battles as the two Feed sub-tabs
+- [x] Simplified the composer to a single announcement input (no mode toggle)
+- [x] Poll and RSVP composer forms removed; scheduled polls queue preserved for existing data
