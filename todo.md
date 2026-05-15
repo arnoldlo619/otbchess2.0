@@ -6056,3 +6056,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Post battle result to club feed after recording
 - [x] Refresh leaderboard and battles list after save
 - [x] Show success toast with result label
+
+## Club Tournaments Tab
+- [x] Add "Tournaments" tab to club nav (Feed | Events | Tournaments | Members | Leagues | Settings)
+- [x] Compute tournamentEvents = events filtered by !!tournamentId
+- [x] Show tournament cards with accent top bar, Upcoming/Past badge, date, title, description, venue
+- [x] View Tournament button (accent) + Manage button (owner/director only) on each card
+- [x] "New Tournament" button (owner/director only) in tab header — opens TournamentWizard
+- [x] Empty state with GanttChart icon, "No tournaments yet" copy, and "Host First Tournament" CTA for owners
+- [x] After wizard completes, redirect to Tournaments tab (was: Events tab)
+- [x] TypeScript: 0 errors
