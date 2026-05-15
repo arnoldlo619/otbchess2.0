@@ -6073,3 +6073,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove ClubSettingsPanel from always-visible bottom of Settings tab
 - [x] Update hero avatar click shortcut to open Settings > Club Profile directly
 - [x] TypeScript: 0 errors
+
+## Events + Tournaments Tab Consolidation
+- [x] Remove "Tournaments" from Tab type and clubTabs array
+- [x] Rebuild Events tab with Tournaments section (top) + Other Events section (below)
+- [x] Owner action bar: "+ New Tournament" + "+ Create Event" buttons
+- [x] Tournament cards: "View Tournament" + "Manage" (owner) + "Join Tournament" (member, upcoming)
+- [x] Other Events section: existing EventCard with RSVP unchanged
+- [x] Events tab badge counts both upcoming events + upcoming tournaments
+- [x] TournamentWizard onClose redirects to "events" tab instead of "tournaments"
+- [x] tournamentEvents computed variable repurposed for unified Events tab

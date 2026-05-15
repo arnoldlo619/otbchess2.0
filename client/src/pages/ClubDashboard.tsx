@@ -2282,7 +2282,7 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "settings" | "tournaments"; // battles kept for internal use
+type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "settings"; // battles kept for internal use; tournaments merged into events
 type SettingsSubTab = "home" | "payments" | "profile";
 
 export default function ClubDashboard() {
@@ -2918,8 +2918,7 @@ export default function ClubDashboard() {
 
   const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
     { id: "feed", label: "Feed", icon: Megaphone },
-    { id: "events", label: "Events", icon: Calendar, badge: upcomingEvents.length > 0 ? upcomingEvents.length : undefined },
-    { id: "tournaments", label: "Tournaments", icon: GanttChart, badge: tournamentEvents.length > 0 ? tournamentEvents.length : undefined },
+    { id: "events", label: "Events", icon: Calendar, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
     { id: "members", label: "Members", icon: Users },
     // battles tab removed - now a sub-tab of Feed
     { id: "leagues", label: "Leagues", icon: Trophy },
@@ -3213,72 +3212,187 @@ export default function ClubDashboard() {
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
-            {/* Create event CTA */}
+            {/* ── Owner action bar ─────────────────────────────────────────── */}
             {isOwnerOrDirector && (
-              <button
-                onClick={() => setShowCreateEvent(true)}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold text-white/60 border border-dashed border-white/15 hover:border-white/30 hover:text-white/80 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                Create New Event
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowTournamentWizard(true)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-95"
+                  style={{ background: accent, color: "#0a1a0f" }}
+                >
+                  <GanttChart className="w-4 h-4" />
+                  New Tournament
+                </button>
+                <button
+                  onClick={() => setShowCreateEvent(true)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white/60 border border-dashed border-white/15 hover:border-white/30 hover:text-white/80 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Event
+                </button>
+              </div>
             )}
 
-            {/* Upcoming */}
-            {upcomingEvents.length > 0 && (
-              <div>
-                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">
-                  Upcoming · {upcomingEvents.length}
+            {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <GanttChart className="w-4 h-4" style={{ color: accent }} />
+                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
+                  Tournaments · {tournamentEvents.length}
                 </h2>
+              </div>
+              {tournamentEvents.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingEvents.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      userId={user?.id ?? "guest"}
-                      displayName={user?.displayName ?? "Guest"}
-                      avatarUrl={user?.avatarUrl}
-                      isOwner={!!isOwnerOrDirector}
-                      onDeleted={refreshEvents}
-                      onEdited={refreshEvents}
-                    />
-                  ))}
+                  {tournamentEvents.map((event) => {
+                    const isUpcomingTmt = isUpcoming(event);
+                    return (
+                      <div
+                        key={event.id}
+                        className="rounded-2xl border border-white/10 overflow-hidden"
+                        style={{ background: "oklch(0.16 0.05 145)" }}
+                      >
+                        {/* Accent top bar */}
+                        <div className="h-1" style={{ background: accent }} />
+                        <div className="p-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span
+                                  className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                  style={isUpcomingTmt
+                                    ? { background: accent + "22", color: accent }
+                                    : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
+                                  }
+                                >
+                                  {isUpcomingTmt ? "Upcoming" : "Past"}
+                                </span>
+                                <span className="text-white/30 text-xs">
+                                  {new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                </span>
+                              </div>
+                              <h3 className="text-white font-bold text-base truncate">{event.title}</h3>
+                              {event.description && (
+                                <p className="text-white/40 text-sm mt-1 line-clamp-2">{event.description}</p>
+                              )}
+                              {event.venue && (
+                                <div className="flex items-center gap-1.5 mt-2 text-white/30 text-xs">
+                                  <MapPin className="w-3 h-3" />
+                                  <span>{event.venue}</span>
+                                </div>
+                              )}
+                            </div>
+                            <GanttChart className="w-8 h-8 flex-shrink-0 opacity-20" />
+                          </div>
+                          {/* Action buttons */}
+                          <div className="flex flex-wrap items-center gap-2 mt-4">
+                            <a
+                              href={`/tournament/${event.tournamentId}/play`}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition hover:opacity-90 active:scale-95"
+                              style={{ background: accent, color: "#0a1a0f" }}
+                            >
+                              <Trophy className="w-3.5 h-3.5" />
+                              View Tournament
+                            </a>
+                            {isUpcomingTmt && !isOwnerOrDirector && (
+                              <a
+                                href={`/tournament/${event.tournamentId}/play`}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:opacity-90 active:scale-95"
+                                style={{ borderColor: accent + "44", color: accent, background: accent + "11" }}
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                Join Tournament
+                              </a>
+                            )}
+                            {isOwnerOrDirector && (
+                              <a
+                                href={`/tournament/${event.tournamentId}/manage`}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white/50 border border-white/10 hover:text-white/80 hover:border-white/20 transition"
+                              >
+                                <Settings2 className="w-3.5 h-3.5" />
+                                Manage
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            )}
-
-            {/* Past */}
-            {pastEvents.length > 0 && (
-              <div>
-                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">
-                  Past Events · {pastEvents.length}
-                </h2>
-                <div className="space-y-4 opacity-70">
-                  {pastEvents.map((event) => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      userId={user?.id ?? "guest"}
-                      displayName={user?.displayName ?? "Guest"}
-                      avatarUrl={user?.avatarUrl}
-                      isOwner={!!isOwnerOrDirector}
-                      onDeleted={refreshEvents}
-                      onEdited={refreshEvents}
-                    />
-                  ))}
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
+                  <GanttChart className="w-8 h-8 opacity-20 text-white" />
+                  <p className="text-white/30 text-sm">
+                    {isOwnerOrDirector
+                      ? "No tournaments yet — click \"New Tournament\" above to host one."
+                      : "No tournaments have been hosted by this club yet."}
+                  </p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {upcomingEvents.length === 0 && pastEvents.length === 0 && (
-              <div className="text-center py-16 text-white/30">
-                <Calendar className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p className="font-semibold">No events yet</p>
-                {isOwnerOrDirector && (
-                  <p className="text-sm mt-1">Create the first event for your club!</p>
-                )}
-              </div>
-            )}
+            {/* ── OTHER EVENTS SECTION ─────────────────────────────────────── */}
+            {(() => {
+              const nonTmtUpcoming = upcomingEvents.filter(e => !e.tournamentId);
+              const nonTmtPast = pastEvents.filter(e => !e.tournamentId);
+              return (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="w-4 h-4" style={{ color: accent }} />
+                    <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
+                      Other Events · {nonTmtUpcoming.length + nonTmtPast.length}
+                    </h2>
+                  </div>
+                  {nonTmtUpcoming.length > 0 && (
+                    <div className="mb-6">
+                      <p className="text-white/25 text-[11px] font-semibold uppercase tracking-widest mb-3">Upcoming · {nonTmtUpcoming.length}</p>
+                      <div className="space-y-4">
+                        {nonTmtUpcoming.map((event) => (
+                          <EventCard
+                            key={event.id}
+                            event={event}
+                            userId={user?.id ?? "guest"}
+                            displayName={user?.displayName ?? "Guest"}
+                            avatarUrl={user?.avatarUrl}
+                            isOwner={!!isOwnerOrDirector}
+                            onDeleted={refreshEvents}
+                            onEdited={refreshEvents}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {nonTmtPast.length > 0 && (
+                    <div className="opacity-70">
+                      <p className="text-white/25 text-[11px] font-semibold uppercase tracking-widest mb-3">Past · {nonTmtPast.length}</p>
+                      <div className="space-y-4">
+                        {nonTmtPast.map((event) => (
+                          <EventCard
+                            key={event.id}
+                            event={event}
+                            userId={user?.id ?? "guest"}
+                            displayName={user?.displayName ?? "Guest"}
+                            avatarUrl={user?.avatarUrl}
+                            isOwner={!!isOwnerOrDirector}
+                            onDeleted={refreshEvents}
+                            onEdited={refreshEvents}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {nonTmtUpcoming.length === 0 && nonTmtPast.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
+                      <Calendar className="w-8 h-8 opacity-20 text-white" />
+                      <p className="text-white/30 text-sm">
+                        {isOwnerOrDirector
+                          ? "No other events yet — click \"Create Event\" above to add one."
+                          : "No events have been scheduled by this club yet."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -5224,127 +5338,6 @@ export default function ClubDashboard() {
           </div>
         )}
 
-        {/* ── TOURNAMENTS TAB ─────────────────────────────────────────────── */}
-        {tab === "tournaments" && (
-          <div className="space-y-6">
-            {/* Header row */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <h2 className="text-white font-bold text-lg">Club Tournaments</h2>
-                <p className="text-white/40 text-sm mt-0.5">Swiss &amp; Quickstart tournaments hosted by this club</p>
-              </div>
-              {isOwnerOrDirector && (
-                <button
-                  onClick={() => setShowTournamentWizard(true)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
-                  style={{ background: accent, color: "#0a1a0f" }}
-                >
-                  <Plus className="w-4 h-4" />
-                  New Tournament
-                </button>
-              )}
-            </div>
-
-            {/* Tournament cards */}
-            {tournamentEvents.length > 0 ? (
-              <div className="space-y-4">
-                {tournamentEvents.map((event) => {
-                  const isUpcomingTmt = isUpcoming(event);
-                  return (
-                    <div
-                      key={event.id}
-                      className="rounded-2xl border border-white/10 overflow-hidden"
-                      style={{ background: "oklch(0.16 0.05 145)" }}
-                    >
-                      {/* Accent top bar */}
-                      <div className="h-1" style={{ background: accent }} />
-                      <div className="p-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span
-                                className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                style={isUpcomingTmt
-                                  ? { background: accent + "22", color: accent }
-                                  : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
-                                }
-                              >
-                                {isUpcomingTmt ? "Upcoming" : "Past"}
-                              </span>
-                              <span className="text-white/30 text-xs">
-                                {new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                              </span>
-                            </div>
-                            <h3 className="text-white font-bold text-base truncate">{event.title}</h3>
-                            {event.description && (
-                              <p className="text-white/40 text-sm mt-1 line-clamp-2">{event.description}</p>
-                            )}
-                            {event.venue && (
-                              <div className="flex items-center gap-1.5 mt-2 text-white/30 text-xs">
-                                <MapPin className="w-3 h-3" />
-                                <span>{event.venue}</span>
-                              </div>
-                            )}
-                          </div>
-                          <GanttChart className="w-8 h-8 flex-shrink-0 opacity-20" />
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-2 mt-4">
-                          <a
-                            href={`/tournament/${event.tournamentId}/play`}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition hover:opacity-90 active:scale-95"
-                            style={{ background: accent, color: "#0a1a0f" }}
-                          >
-                            <Trophy className="w-3.5 h-3.5" />
-                            View Tournament
-                          </a>
-                          {isOwnerOrDirector && (
-                            <a
-                              href={`/tournament/${event.tournamentId}/manage`}
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white/50 border border-white/10 hover:text-white/80 hover:border-white/20 transition"
-                            >
-                              <Settings2 className="w-3.5 h-3.5" />
-                              Manage
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              /* Empty state */
-              <div className="rounded-2xl border border-dashed border-white/10 py-16 flex flex-col items-center gap-4 text-center px-6">
-                <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                  style={{ background: accent + "15" }}
-                >
-                  <GanttChart className="w-8 h-8" style={{ color: accent }} />
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-base">No tournaments yet</p>
-                  <p className="text-white/40 text-sm mt-1">
-                    {isOwnerOrDirector
-                      ? "Host your first Swiss or Quickstart tournament for club members."
-                      : "No tournaments have been hosted by this club yet."}
-                  </p>
-                </div>
-                {isOwnerOrDirector && (
-                  <button
-                    onClick={() => setShowTournamentWizard(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition active:scale-95"
-                    style={{ background: accent, color: "#0a1a0f" }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Host First Tournament
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
               </div>{/* end max-w-4xl */}
             </div>{/* end px wrapper */}
@@ -5391,7 +5384,7 @@ export default function ClubDashboard() {
               );
               refreshEvents();
               refreshFeed();
-              setTab("tournaments");
+              setTab("events");
             }
           }}
         />
