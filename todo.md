@@ -6066,3 +6066,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Empty state with GanttChart icon, "No tournaments yet" copy, and "Host First Tournament" CTA for owners
 - [x] After wizard completes, redirect to Tournaments tab (was: Events tab)
 - [x] TypeScript: 0 errors
+
+## Settings > Club Profile Sub-tab
+- [x] Add "Club Profile" as a third sub-tab in Settings (owner/director only, after Analytics + Payments)
+- [x] Move ClubSettingsPanel (logo, banner, accent colour, club name, description, location, visibility) exclusively into the Club Profile sub-tab
+- [x] Remove ClubSettingsPanel from always-visible bottom of Settings tab
+- [x] Update hero avatar click shortcut to open Settings > Club Profile directly
+- [x] TypeScript: 0 errors

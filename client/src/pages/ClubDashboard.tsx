@@ -2283,7 +2283,7 @@ function ClubDashboardSkeleton() {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "settings" | "tournaments"; // battles kept for internal use
-type SettingsSubTab = "home" | "payments";
+type SettingsSubTab = "home" | "payments" | "profile";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -3086,8 +3086,8 @@ export default function ClubDashboard() {
                         <div
                           className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg${isOwnerOrDirector ? " cursor-pointer group/avatar" : ""}`}
                           style={{ background: accent, border: `2px solid ${accent}66` }}
-                          onClick={isOwnerOrDirector ? () => setTab("settings") : undefined}
-                          title={isOwnerOrDirector ? "Manage club settings" : undefined}
+                          onClick={isOwnerOrDirector ? () => { setTab("settings"); setSettingsSubTab("profile"); } : undefined}
+                          title={isOwnerOrDirector ? "Edit club profile" : undefined}
                         >
                           {club.avatarUrl ? (
                             <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
@@ -4002,7 +4002,11 @@ export default function ClubDashboard() {
           <div className="space-y-6">
             {/* Settings sub-tab navigation */}
             <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
-              {(["home", "payments"] as const).map((v) => (
+              {([
+                { id: "home" as const, icon: <BarChart2 className="w-3.5 h-3.5" />, label: isOwnerOrDirector ? "Analytics" : "Home" },
+                { id: "payments" as const, icon: <Wallet className="w-3.5 h-3.5" />, label: "Payments" },
+                ...(isOwnerOrDirector ? [{ id: "profile" as const, icon: <Settings2 className="w-3.5 h-3.5" />, label: "Club Profile" }] : []),
+              ]).map(({ id: v, icon, label }) => (
                 <button
                   key={v}
                   onClick={() => setSettingsSubTab(v)}
@@ -4012,8 +4016,8 @@ export default function ClubDashboard() {
                       : "text-white/40 hover:text-white/70"
                   }`}
                 >
-                  {v === "home" ? <BarChart2 className="w-3.5 h-3.5" /> : <Wallet className="w-3.5 h-3.5" />}
-                  {v === "home" ? (isOwnerOrDirector ? "Analytics" : "Home") : "Payments"}
+                  {icon}
+                  {label}
                 </button>
               ))}
             </div>
@@ -4360,8 +4364,8 @@ export default function ClubDashboard() {
               </div>
             )}
 
-            {/* ── CLUB SETTINGS (owner only, always at bottom of Settings tab) ── */}
-            {isOwnerOrDirector && (
+            {/* ── CLUB PROFILE SUB-TAB (owner/director only) ──────────────── */}
+            {settingsSubTab === "profile" && isOwnerOrDirector && (
               <ClubSettingsPanel
                 club={club}
                 accent={accent}
