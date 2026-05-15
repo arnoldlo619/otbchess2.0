@@ -6108,3 +6108,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Club Meetups section added to Events tab (above Tournaments)
 - [x] meetupEvents computed variable filters events by eventType === "meetup"
 - [x] event_created FeedEventType added to union and icon maps in ClubDashboard + ClubProfile
+
+## Attendance History View
+- [x] Add "Attendance" sub-tab to Members tab (owner/director only, alongside Members and Battles)
+- [x] Summary stats bar: Meetups Held, Avg Attendance, Top Attendee
+- [x] By Meetup view: list of past meetup events with check-in chip list per event
+- [x] By Member view: ranked table with attendance rate % progress bar (green/amber/red)
+- [x] Empty states for both views when no past meetups exist

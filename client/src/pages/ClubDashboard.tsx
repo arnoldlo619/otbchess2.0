@@ -2305,7 +2305,8 @@ export default function ClubDashboard() {
   const [tab, setTab] = useState<Tab>("feed");
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>("home");
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
-  const [membersSubTab, setMembersSubTab] = useState<"members" | "battles">("members");
+  const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
+  const [attendanceView, setAttendanceView] = useState<"by-meetup" | "by-member">("by-meetup");
   const [loading, setLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
@@ -3501,9 +3502,9 @@ export default function ClubDashboard() {
         {/* ── MEMBERS TAB ───────────────────────────────────────────────────── */}
         {tab === "members" && (
           <div className="space-y-5">
-            {/* Members sub-tab toggle: Members | Battles */}
+            {/* Members sub-tab toggle: Members | Battles | Attendance (owner only) */}
             <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "oklch(0.16 0.05 145)" }}>
-              {(["members", "battles"] as const).map((st) => (
+              {(["members", "battles", ...(isOwnerOrDirector ? ["attendance"] : [])] as ("members" | "battles" | "attendance")[]).map((st) => (
                 <button
                   key={st}
                   onClick={() => setMembersSubTab(st)}
@@ -3513,8 +3514,8 @@ export default function ClubDashboard() {
                     : { color: "oklch(0.55 0.08 145)" }
                   }
                 >
-                  {st === "members" ? <Users className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
-                  {st === "members" ? "Members" : "Battles"}
+                  {st === "members" ? <Users className="w-3.5 h-3.5" /> : st === "battles" ? <Swords className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
+                  {st === "members" ? "Members" : st === "battles" ? "Battles" : "Attendance"}
                 </button>
               ))}
             </div>
@@ -4054,6 +4055,198 @@ export default function ClubDashboard() {
             </div>
           </div>
         )}
+            {/* ── ATTENDANCE SUB-TAB ──────────────────────────────────────── */}
+            {membersSubTab === "attendance" && isOwnerOrDirector && (() => {
+              // Compute attendance data from all meetup events
+              const allMeetups = events.filter(e => e.eventType === "meetup");
+              const pastMeetups = allMeetups.filter(e => !isUpcoming(e)).sort(
+                (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
+              );
+              const totalMeetups = pastMeetups.length;
+
+              // Build member attendance map: userId -> { displayName, avatarUrl, checkIns, rsvps }
+              type MemberAttendance = {
+                userId: string;
+                displayName: string;
+                avatarUrl: string | null;
+                checkIns: number;
+                rsvpGoing: number;
+                meetupIds: string[];
+              };
+              const memberMap: Record<string, MemberAttendance> = {};
+              for (const m of members) {
+                memberMap[m.userId] = {
+                  userId: m.userId,
+                  displayName: m.displayName,
+                  avatarUrl: m.avatarUrl,
+                  checkIns: 0,
+                  rsvpGoing: 0,
+                  meetupIds: [],
+                };
+              }
+              for (const ev of pastMeetups) {
+                const checkedIn = ev.checkedInUserIds ?? [];
+                for (const uid of checkedIn) {
+                  if (memberMap[uid]) {
+                    memberMap[uid].checkIns += 1;
+                    memberMap[uid].meetupIds.push(ev.id);
+                  }
+                }
+              }
+              const memberStats = Object.values(memberMap).sort((a, b) => b.checkIns - a.checkIns);
+              const avgAttendance = totalMeetups > 0
+                ? (pastMeetups.reduce((sum, ev) => sum + (ev.checkedInUserIds?.length ?? 0), 0) / totalMeetups).toFixed(1)
+                : "—";
+              const topMember = memberStats[0]?.checkIns > 0 ? memberStats[0] : null;
+
+              return (
+                <div className="space-y-6">
+                  {/* Summary stats bar */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Meetups Held", value: totalMeetups.toString(), icon: <Calendar className="w-4 h-4" /> },
+                      { label: "Avg Attendance", value: avgAttendance.toString(), icon: <Users className="w-4 h-4" /> },
+                      { label: "Top Attendee", value: topMember?.displayName.split(" ")[0] ?? "—", icon: <Crown className="w-4 h-4" /> },
+                    ].map(({ label, value, icon }) => (
+                      <div key={label} className="rounded-2xl p-4 flex flex-col gap-1 border border-white/10" style={{ background: "oklch(0.16 0.05 145)" }}>
+                        <div className="flex items-center gap-1.5 text-white/40">
+                          {icon}
+                          <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
+                        </div>
+                        <span className="text-white font-bold text-xl truncate">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* View toggle: By Meetup | By Member */}
+                  <div className="flex gap-1 p-1 rounded-2xl" style={{ background: "oklch(0.16 0.05 145)" }}>
+                    {(["by-meetup", "by-member"] as const).map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setAttendanceView(v)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                        style={attendanceView === v
+                          ? { background: "oklch(0.22 0.08 145)", color: "#4CAF50" }
+                          : { color: "oklch(0.55 0.08 145)" }
+                        }
+                      >
+                        {v === "by-meetup" ? <Calendar className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
+                        {v === "by-meetup" ? "By Meetup" : "By Member"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* BY MEETUP VIEW */}
+                  {attendanceView === "by-meetup" && (
+                    <div className="space-y-4">
+                      {pastMeetups.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-white/10 py-12 flex flex-col items-center gap-3 text-center px-6">
+                          <ClipboardList className="w-8 h-8 opacity-20 text-white" />
+                          <p className="text-white/30 text-sm">No past meetups yet — attendance will appear here after your first meetup.</p>
+                        </div>
+                      ) : pastMeetups.map((ev) => {
+                        const checkedIn = ev.checkedInUserIds ?? [];
+                        const checkedInMembers = checkedIn
+                          .map(uid => members.find(m => m.userId === uid))
+                          .filter(Boolean) as typeof members;
+                        return (
+                          <div key={ev.id} className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: "oklch(0.16 0.05 145)" }}>
+                            <div className="h-1" style={{ background: accent }} />
+                            <div className="p-4">
+                              <div className="flex items-center justify-between gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-white font-bold text-sm truncate">{ev.title}</h3>
+                                  <p className="text-white/40 text-xs mt-0.5">
+                                    {new Date(ev.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                                    {ev.venue && ` · ${ev.venue}`}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold" style={{ background: accent + "22", color: accent }}>
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  {checkedIn.length} checked in
+                                </div>
+                              </div>
+                              {checkedInMembers.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {checkedInMembers.map(m => (
+                                    <div key={m.userId} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5">
+                                      <PlayerAvatar
+                                        username={m.chesscomUsername ?? m.userId}
+                                        name={m.displayName}
+                                        avatarUrl={m.avatarUrl ?? undefined}
+                                        size={20}
+                                      />
+                                      <span className="text-white/70 text-xs font-medium">{m.displayName}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-white/25 text-xs italic">No check-ins recorded for this meetup.</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* BY MEMBER VIEW */}
+                  {attendanceView === "by-member" && (
+                    <div className="space-y-3">
+                      {memberStats.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-white/10 py-12 flex flex-col items-center gap-3 text-center px-6">
+                          <Users className="w-8 h-8 opacity-20 text-white" />
+                          <p className="text-white/30 text-sm">No members yet.</p>
+                        </div>
+                      ) : memberStats.map((ms, idx) => {
+                        const rate = totalMeetups > 0 ? Math.round((ms.checkIns / totalMeetups) * 100) : 0;
+                        return (
+                          <div key={ms.userId} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/10" style={{ background: "oklch(0.16 0.05 145)" }}>
+                            {/* Rank */}
+                            <span className="text-white/25 text-xs font-bold w-5 text-center flex-shrink-0">
+                              {idx === 0 && ms.checkIns > 0 ? "🥇" : idx === 1 && ms.checkIns > 0 ? "🥈" : idx === 2 && ms.checkIns > 0 ? "🥉" : `${idx + 1}`}
+                            </span>
+                            {/* Avatar */}
+                            <PlayerAvatar
+                              username={ms.userId}
+                              name={ms.displayName}
+                              avatarUrl={ms.avatarUrl ?? undefined}
+                              size={32}
+                            />
+                            {/* Name + bar */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-white text-sm font-semibold truncate">{ms.displayName}</span>
+                                <span className="text-white/40 text-xs flex-shrink-0 ml-2">{ms.checkIns}/{totalMeetups}</span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{ width: `${rate}%`, background: rate >= 75 ? accent : rate >= 40 ? "#f59e0b" : "#ef4444" }}
+                                />
+                              </div>
+                            </div>
+                            {/* Rate badge */}
+                            <span
+                              className="text-xs font-bold px-2 py-1 rounded-xl flex-shrink-0"
+                              style={rate >= 75
+                                ? { background: accent + "22", color: accent }
+                                : rate >= 40
+                                ? { background: "#f59e0b22", color: "#f59e0b" }
+                                : { background: "#ef444422", color: "#ef4444" }
+                              }
+                            >
+                              {rate}%
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
         {/* ── FEED TAB ───────────────────────────────────────────────────── */}
         {tab === "feed" && (
           <div className="space-y-5">
