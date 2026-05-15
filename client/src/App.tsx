@@ -52,6 +52,8 @@ const OpeningDetailDemo = lazy(() => import("./pages/OpeningDetailDemo"));
 const AdminStaff = lazy(() => import("./pages/AdminStaff"));
 const RepertoireList = lazy(() => import("./pages/RepertoireList"));
 const RepertoireBuilder = lazy(() => import("./pages/RepertoireBuilder"));
+const MeetupEventPage = lazy(() => import("./pages/MeetupEventPage"));
+const CheckInPage = lazy(() => import("./pages/CheckInPage"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -86,6 +88,8 @@ function Router() {
         <Route path={"/clubs"} component={MyClubs} />
         <Route path={"/clubs/leaderboard"} component={ClubLeaderboard} />
         <Route path={"/clubs/:id/home"} component={ClubDashboard} />
+        <Route path={"/clubs/:clubId/meetup/:eventId"} component={MeetupEventPage} />
+        <Route path={"/checkin/:eventId"} component={CheckInPage} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/league-demo"} component={LeagueDemo} />

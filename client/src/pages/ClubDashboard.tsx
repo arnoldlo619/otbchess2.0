@@ -98,6 +98,7 @@ import {
   getPreviousMonthKey,
   getPreviousMonthLabel,
   recordTournamentCreated,
+  recordMeetupCreated,
   type FeedEvent,
   type PollOption as _PollOption,
   type FeedRSVPEntry,
@@ -170,6 +171,8 @@ import {
   Settings2,
   Minus,
   GanttChart,
+  Repeat,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -181,6 +184,7 @@ import { logger } from "@/lib/logger";
 import { ClubAvatarUpload } from "@/components/ClubAvatarUpload";
 import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/components/ClubBannerUpload";
 import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
+import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -717,6 +721,7 @@ function CreateEventModal({
   onCreated,
   onClose,
   onOpenTournamentWizard,
+  onOpenMeetupWizard,
 }: {
   clubId: string;
   clubName: string;
@@ -726,6 +731,7 @@ function CreateEventModal({
   onCreated: () => void;
   onClose: () => void;
   onOpenTournamentWizard: () => void;
+  onOpenMeetupWizard: () => void;
 }) {
   type Step = "pick" | "details";
   const [step, setStep] = useState<Step>("pick");
@@ -834,14 +840,13 @@ function CreateEventModal({
                   paddingBottom: "4px",
                 }}
               >
-                {/* Standard Night */}
+                {/* Club Meetup */}
                 <button
                   type="button"
-                  onClick={() => setStep("details")}
+                  onClick={() => { onClose(); onOpenMeetupWizard(); }}
                   className="group relative flex flex-col items-start gap-3 rounded-3xl text-left transition-all duration-200 overflow-hidden flex-shrink-0 sm:flex-shrink sm:w-auto"
                   style={{
                     padding: "22px 22px 20px",
-                    /* on mobile: 80vw wide so the second card peeks; on sm+ fill grid cell */
                     width: "min(80vw, 100%)",
                     minWidth: "260px",
                     background: "rgba(61,107,71,0.25)",
@@ -868,11 +873,11 @@ function CreateEventModal({
                     Recommended
                   </span>
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }}>
-                    <Calendar className="w-5 h-5 text-white" strokeWidth={1.8} />
+                    <Users className="w-5 h-5 text-white" strokeWidth={1.8} />
                   </div>
                   <div className="pr-6">
-                    <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Standard Night</h3>
-                    <p className="text-white/55 text-sm leading-relaxed">Casual club evening — RSVP, venue, and event details for your members.</p>
+                    <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "'Clash Display', sans-serif" }}>Club Meetup</h3>
+                    <p className="text-white/55 text-sm leading-relaxed">Open play session — recurring or one-time, with RSVP and QR check-in.</p>
                   </div>
                   <div className="flex items-center justify-between w-full mt-auto pt-1">
                     <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>
@@ -1883,6 +1888,7 @@ function FeedIcon({ type }: { type: FeedEvent["type"] }) {
     battle_result:         <Swords className="w-4 h-4 text-orange-400" />,
     leaderboard_snapshot:  <Trophy className="w-4 h-4 text-amber-400" />,
     potm_announcement:      <Crown className="w-4 h-4 text-amber-400" />,
+    event_created:           <Calendar className="w-4 h-4 text-green-400" />,
   };
   return (
     <div
@@ -2305,6 +2311,7 @@ export default function ClubDashboard() {
   const [bannerDragOver, setBannerDragOver] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showTournamentWizard, setShowTournamentWizard] = useState(false);
+  const [showMeetupWizard, setShowMeetupWizard] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
@@ -2770,6 +2777,8 @@ export default function ClubDashboard() {
   const pastEvents = events.filter((e) => !isUpcoming(e));
   // Tournament events: club events that are linked to a real tournament
   const tournamentEvents = events.filter((e) => !!e.tournamentId);
+  // Meetup events: club events created via the Club Meetup wizard
+  const meetupEvents = events.filter((e) => e.eventType === "meetup");
 
   const filteredMembers = members.filter(
     (m) =>
@@ -3232,6 +3241,99 @@ export default function ClubDashboard() {
                 </button>
               </div>
             )}
+
+            {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-4 h-4" style={{ color: accent }} />
+                <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
+                  Club Meetups · {meetupEvents.length}
+                </h2>
+              </div>
+              {meetupEvents.length > 0 ? (
+                <div className="space-y-4">
+                  {meetupEvents.map((ev) => {
+                    const isUpcomingMeetup = isUpcoming(ev);
+                    const recurrenceLabel = ev.recurrence === "weekly" ? "Weekly" : ev.recurrence === "biweekly" ? "Bi-weekly" : ev.recurrence === "monthly" ? "Monthly" : "One-time";
+                    return (
+                      <div
+                        key={ev.id}
+                        className="rounded-2xl border border-white/10 overflow-hidden"
+                        style={{ background: "oklch(0.16 0.05 145)" }}
+                      >
+                        <div className="h-1" style={{ background: accent }} />
+                        <div className="p-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span
+                                  className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                  style={isUpcomingMeetup
+                                    ? { background: accent + "22", color: accent }
+                                    : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
+                                  }
+                                >
+                                  {isUpcomingMeetup ? "Upcoming" : "Past"}
+                                </span>
+                                {ev.recurrence && ev.recurrence !== "none" && (
+                                  <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.40)" }}>
+                                    <Repeat className="w-2.5 h-2.5" />
+                                    {recurrenceLabel}
+                                  </span>
+                                )}
+                                <span className="text-white/30 text-xs">
+                                  {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                </span>
+                              </div>
+                              <h3 className="text-white font-bold text-base truncate">{ev.title}</h3>
+                              {ev.description && (
+                                <p className="text-white/40 text-sm mt-1 line-clamp-2">{ev.description}</p>
+                              )}
+                              {ev.venue && (
+                                <div className="flex items-center gap-1.5 mt-2 text-white/30 text-xs">
+                                  <MapPin className="w-3 h-3" />
+                                  <span>{ev.venue}</span>
+                                </div>
+                              )}
+                            </div>
+                            <Users className="w-8 h-8 flex-shrink-0 opacity-20" />
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 mt-4">
+                            <a
+                              href={`/clubs/${club.id}/meetup/${ev.id}`}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition hover:opacity-90 active:scale-95"
+                              style={{ background: accent, color: "#0a1a0f" }}
+                            >
+                              <Calendar className="w-3.5 h-3.5" />
+                              View Meetup
+                            </a>
+                            {isUpcomingMeetup && (
+                              <a
+                                href={`/clubs/${club.id}/meetup/${ev.id}`}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:opacity-90 active:scale-95"
+                                style={{ borderColor: accent + "44", color: accent, background: accent + "11" }}
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                RSVP
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
+                  <Users className="w-8 h-8 opacity-20 text-white" />
+                  <p className="text-white/30 text-sm">
+                    {isOwnerOrDirector
+                      ? "No meetups yet — click \"Create Event\" → Club Meetup to schedule one."
+                      : "No meetups have been scheduled by this club yet."}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
             <div>
@@ -5354,6 +5456,7 @@ export default function ClubDashboard() {
           onCreated={refreshEvents}
           onClose={() => setShowCreateEvent(false)}
           onOpenTournamentWizard={() => setShowTournamentWizard(true)}
+          onOpenMeetupWizard={() => setShowMeetupWizard(true)}
         />
       )}
       {showTournamentWizard && user && (
@@ -5387,6 +5490,24 @@ export default function ClubDashboard() {
               setTab("events");
             }
           }}
+        />
+      )}
+      {/* ── Club Meetup Wizard ──────────────────────────────────────────── */}
+      {showMeetupWizard && user && club && (
+        <ClubMeetupWizard
+          clubId={club.id}
+          clubName={club.name}
+          userId={user.id}
+          displayName={user.displayName}
+          clubAccent={club.accentColor}
+          onCreated={(event) => {
+            setShowMeetupWizard(false);
+            refreshEvents();
+            refreshFeed();
+            recordMeetupCreated(club.id, user.displayName, event.title, event.id, event.recurrence ?? "popup");
+            navigate(`/clubs/${club.id}/meetup/${event.id}`);
+          }}
+          onClose={() => setShowMeetupWizard(false)}
         />
       )}
       {/* ── Record Battle Modal ─────────────────────────────────────────── */}

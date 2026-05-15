@@ -371,6 +371,11 @@ const FEED_EVENT_CONFIG: Record<
     accent: "text-amber-600 bg-amber-50",
     darkAccent: "text-amber-400 bg-amber-500/15",
   },
+  event_created: {
+    icon: <Calendar className="w-4 h-4" />,
+    accent: "text-[#3D6B47] bg-[#3D6B47]/10",
+    darkAccent: "text-[#4CAF50] bg-[#4CAF50]/15",
+  },
 };
 
 function FeedEventCard({

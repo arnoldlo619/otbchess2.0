@@ -50,7 +50,7 @@ export interface ClubEvent {
    * Optional event type for special formats.
    * Omit for standard chess night / tournament.
    */
-  eventType?: "standard" | "speed_dating" | "trivia_night" | "puzzle_relay";
+  eventType?: "standard" | "speed_dating" | "trivia_night" | "puzzle_relay" | "meetup";
   /** Speed Dating: number of rounds */
   speedDatingRounds?: number;
   /** Speed Dating: minutes per round */
@@ -63,6 +63,8 @@ export interface ClubEvent {
   puzzleRelayTeams?: number;
   /** Puzzle Relay: puzzle difficulty */
   puzzleRelayDifficulty?: "beginner" | "intermediate" | "advanced";
+  /** Meetup: array of user IDs who have checked in on the day of the event */
+  checkedInUserIds?: string[];
   /** Recurrence pattern: "none" = one-off, "weekly", "biweekly", "monthly" */
   recurrence?: "none" | "weekly" | "biweekly" | "monthly";
   /** Shared ID for all events in the same recurring series */
@@ -575,4 +577,38 @@ export function seedClubEventsIfEmpty(): void {
     saveRSVPs(rsvps);
     localStorage.setItem(SEED_KEY, "1");
   } catch { /* ignore */ }
+}
+
+// ── MEETUP CHECK-IN API ───────────────────────────────────────────────────────
+
+/**
+ * Record a user checking in to a meetup event.
+ * Returns the updated event, or null if the event doesn't exist.
+ */
+export function checkInToEvent(
+  eventId: string,
+  userId: string
+): ClubEvent | null {
+  const events = loadEvents();
+  const idx = events.findIndex((e) => e.id === eventId);
+  if (idx === -1) return null;
+  const ev = events[idx];
+  const already = ev.checkedInUserIds ?? [];
+  if (already.includes(userId)) return ev; // idempotent
+  const updated: ClubEvent = {
+    ...ev,
+    checkedInUserIds: [...already, userId],
+    updatedAt: new Date().toISOString(),
+  };
+  events[idx] = updated;
+  saveEvents(events);
+  return updated;
+}
+
+/**
+ * Get all checked-in user IDs for a meetup event.
+ */
+export function getCheckedInUserIds(eventId: string): string[] {
+  const ev = loadEvents().find((e) => e.id === eventId);
+  return ev?.checkedInUserIds ?? [];
 }

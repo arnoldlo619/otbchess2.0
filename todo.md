@@ -6083,3 +6083,28 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Events tab badge counts both upcoming events + upcoming tournaments
 - [x] TournamentWizard onClose redirects to "events" tab instead of "tournaments"
 - [x] tournamentEvents computed variable repurposed for unified Events tab
+
+## Club Meetup Feature
+- [ ] Add "meetup" to ClubEvent eventType union; add checkedInUserIds field
+- [ ] Replace Standard Night button with Club Meetup button in CreateEventModal
+- [ ] Build ClubMeetupWizard: Title, Description, Date, Frequency, Location, Time
+- [ ] On submit: create seed event, generate recurring instances, post to feed, navigate to MeetupEventPage
+- [ ] Build MeetupEventPage (/clubs/:clubId/meetup/:eventId): details, RSVP list, invite members
+- [ ] Owner: "Show Check-in QR" button on event day (generates QR to /checkin/:eventId)
+- [ ] Build CheckInPage (/checkin/:eventId): public QR landing, check-in button, attendee list with chess.com ratings
+- [ ] Wire meetup events into Events tab Other Events section and club feed
+- [ ] Add route for /clubs/:id/meetup/:eventId and /checkin/:eventId in App.tsx
+
+## Club Meetup Feature
+- [x] Replace "Standard Night" button in CreateEventModal with "Club Meetup" button
+- [x] Build ClubMeetupWizard: title, description, date, frequency (popup/weekly/biweekly/monthly), location, time
+- [x] Recurring event generation via createRecurringEvents (up to 12 instances)
+- [x] Post event_created feed item on meetup creation
+- [x] Add /clubs/:clubId/meetup/:eventId route → MeetupEventPage
+- [x] MeetupEventPage: event details, RSVP (Going/Maybe/Can't go), attendee list, QR check-in button (event day only, owner)
+- [x] QR modal uses QRCodeSVG pointing to /checkin/:eventId
+- [x] Add /checkin/:eventId route → CheckInPage
+- [x] CheckInPage: event summary, Check In button (logged-in users), attendee list with chess.com rapid/blitz ratings
+- [x] Club Meetups section added to Events tab (above Tournaments)
+- [x] meetupEvents computed variable filters events by eventType === "meetup"
+- [x] event_created FeedEventType added to union and icon maps in ClubDashboard + ClubProfile

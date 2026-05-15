@@ -30,7 +30,8 @@ export type FeedEventType =
   | "poll_result"
   | "battle_result"
   | "leaderboard_snapshot"
-  | "potm_announcement";
+  | "potm_announcement"
+  | "event_created";
 
 /** A single option in a Poll */
 export interface PollOption {
@@ -1032,4 +1033,29 @@ export function seedFeedIfEmpty(
   }));
 
   saveFeed(clubId, withIds);
+}
+
+/** Record a club meetup being created. */
+export function recordMeetupCreated(
+  clubId: string,
+  creatorName: string,
+  meetupTitle: string,
+  eventId: string,
+  recurrence: string
+): FeedEvent {
+  const recurrenceLabel =
+    recurrence === "popup" ? "one-time" :
+    recurrence === "weekly" ? "weekly" :
+    recurrence === "biweekly" ? "bi-weekly" :
+    recurrence === "monthly" ? "monthly" : recurrence;
+  return addFeedEvent({
+    clubId,
+    type: "event_created",
+    createdAt: new Date().toISOString(),
+    actorName: creatorName,
+    description: `${creatorName} scheduled a ${recurrenceLabel} club meetup`,
+    detail: meetupTitle,
+    linkHref: `/clubs/${clubId}/meetup/${eventId}`,
+    linkLabel: "View Meetup",
+  });
 }
