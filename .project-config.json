@@ -1,0 +1,54 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [
+    "db",
+    "server",
+    "user"
+  ],
+  "dev_command": "pnpm run dev",
+  "env_vars": {
+    "DATABASE_URL": "mysql://D4MrfaGZHkmWBvH.0a8993041759:0uiHhKPL27FnYzU649iq@gateway02.us-east-1.prod.aws.tidbcloud.com:4000/J6FsDoRMH9x5xbUvpyzxyf?ssl={\"rejectUnauthorized\":true}"
+  },
+  "experiments": null,
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/117675823/J6FsDoRMH9x5xbUvpyzxyf",
+    "access_key_id": "ASIAZV3A2ECZJIUBUJKS",
+    "secret_access_key": "N7BAHPE0Km36m0ZBkZ3A8H0rlfEiIWxP0i2vceOo",
+    "session_token": "IQoJb3JpZ2luX2VjEKf//////////wEaCXVzLWVhc3QtMSJHMEUCIQC9aeKhjxICf18807KB5MBRKV5Y2dqeamCShmSxcBowgQIgYvavRJ80yfRMMJzANlzR8Mi5QsnyXOOod9dVkhkhqmEq5AMIcBAEGgw2NjUzODYwOTg4NjYiDPxkRIN9F1MVv3degCrBA4zFdTuYFUmgqTZZhkoLXc4vVmYLR0mputoM1EmTc9xjziAALSYMRFCLCWQ3lQES47LM5+bktnNl9GmFB37koJAIpw4UjvR3NmOXzcBRUiUXAK0bARZSiq7HqP0Pe1h718nFIGp0RKNcSLht0u3ETQxgLQyspDA7gdEvx1CQTpzop33xbDveamrXy1vDszxfb6SOf00aFk9HIAcTpWfXh1sAGENLDzjpZgg4KZjH67GuPzTsTww5bCH107LNk5vMCQU8tt6q7NNphtUGSjbqB3k7YAZ50825RABtzHKrDihncLtqmzvZRTcXf2EnQnbVne+VzTqwXeMnYivyc2Ik9uPs+Ilgda9HnWEssw6vRB3w6G2JCIapxCzHmHaxhRU6Q3rfx1eeT1moSa0attAAgovSFA1B7nsFnh7GXVO1IqeDpQdkxPKQ0zrJCsH+lr4l75gRepLju2YaNsl4X2P11FmfYNZVWA5m+ZQmcCXf9VUSxzjFOjjyLrJgZA1DAG2cka7HPty8O6XXHTT2eu8wazlSmspHK/Gd43RwnKBGQbbAMj8iwzNH4Nq+2JztcvpGhbELsUvCeVEVn483d5lhcgJSMKX/mtAGOp0BAjbtRiWsPU7eA2Xtmj/nEyA0/yH+i+8Dd9iI9xd8LkRkdMZ4Yc9j1ymtx+BbCntr09bO5BJwdDYcvGyTn9KrPXfghjiJ8fCiycmMcRGnF8WW0sy4e0YTA3wpRDefJKBCpLt4vvKxxh5SVFCxNKtanbLg+G2Wf6GbsC7JPu8kZxPpBnLp17Od72xc8pXXUjiCSxYLUmZInpK/cGDrHQ==",
+    "expiration": "2026-05-15T18:39:33.000Z"
+  },
+  "name": "otb-chess",
+  "path": "/home/ubuntu/otb-chess",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "ZR5efLkWiEcJFo7bQU3MNz",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "TXG8cLb7JvJiKpiNMmDbUr",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Arnold Lopez",
+    "OWNER_OPEN_ID": "eEJFbmM33Xn5aEQjWNit5N",
+    "PLATFORM_SMTP_FROM_NAME": "ChessOTB.club",
+    "PLATFORM_SMTP_HOST": "smtp.office365.com",
+    "PLATFORM_SMTP_PASS": "Movingon1!619220",
+    "PLATFORM_SMTP_PORT": "587",
+    "PLATFORM_SMTP_USER": "info@chessotb.club",
+    "STRIPE_PRICE_ANNUAL": "price_1TN3UtJVOxnvgGLcAkUTXKW1",
+    "STRIPE_PRICE_MONTHLY": "price_1TN3R9JVOxnvgGLczpxjrchm",
+    "STRIPE_SECRET_KEY": "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",
+    "STRIPE_WEBHOOK_SECRET": "whsec_aXcDqCjtAr0FtZasb3punDve6JO6dZzW",
+    "VAPID_PRIVATE_KEY": "bUVjaRtQ074Z2N-XDJwZiAGfm9JeJupcHnKknclL_1s",
+    "VAPID_PUBLIC_KEY": "BEUf0TSJ3uBrTybWfUjaO79RUqaDUGNH7cYfqiBm5cmEwLSUR2zQMitoyvbDgFsJ9hE_E1AmvdMT4RmConYlLvI",
+    "VAPID_SUBJECT": "mailto:hello@otbchess.app",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "94dea69c-de9d-4860-b530-82d77560118f",
+    "VITE_APP_ID": "J6FsDoRMH9x5xbUvpyzxyf",
+    "VITE_APP_LOGO": "https://files.manuscdn.com/user_upload_by_module/web_dev_logo/117675823/rjiwyoJFRStKlgyh.png",
+    "VITE_APP_TITLE": "PLAY CHESS OVER THE BOARD",
+    "VITE_ARCHIVE_ADMIN_PASSWORD": "619220!",
+    "VITE_FRONTEND_FORGE_API_KEY": "VkuzvtCULrRj9RH49LLRbQ",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-db-user",
+  "test_command": "pnpm test"
+}

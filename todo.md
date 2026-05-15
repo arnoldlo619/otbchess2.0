@@ -6044,3 +6044,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Added "Battles" as a new sub-tab in the Members tab (MEMBERS | BATTLES pill toggle)
 - [x] Moved Battles content (Leaderboard + Battles views) into Members tab Battles sub-tab
 - [x] Fixed Challenge button to switch to Members > Battles sub-tab instead of old Battles tab
+
+## Settings Tab Cleanup
+- [x] Remove "Feed Post Breakdown" section from Settings > Home (owner analytics view)
+- [x] Remove "Player of the Month" card from Settings > Home (already exists in Members tab)
