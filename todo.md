@@ -6048,3 +6048,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Settings Tab Cleanup
 - [x] Remove "Feed Post Breakdown" section from Settings > Home (owner analytics view)
 - [x] Remove "Player of the Month" card from Settings > Home (already exists in Members tab)
+
+## Members > Battles: Record Battle
+- [x] Add "Record" button (owner/director only) in Battles sub-tab header row
+- [x] Create Record Battle modal: White player (select from members), Black player (select from members), Result (White wins / Black wins / Draw), Date, Notes
+- [x] Wire to apiBattleCreate + apiBattleRecordResult with localStorage fallback
+- [x] Post battle result to club feed after recording
+- [x] Refresh leaderboard and battles list after save
+- [x] Show success toast with result label

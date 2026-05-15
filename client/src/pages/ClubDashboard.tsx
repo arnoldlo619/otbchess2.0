@@ -2335,6 +2335,14 @@ export default function ClubDashboard() {
   const [battleNotes, setBattleNotes] = useState("");
   const [_battleResultId, _setBattleResultId] = useState<string | null>(null);
   const [expandedLeaderboardId, setExpandedLeaderboardId] = useState<string | null>(null);
+  // Record Battle modal state
+  const [showRecordBattle, setShowRecordBattle] = useState(false);
+  const [rbWhite, setRbWhite] = useState("");
+  const [rbBlack, setRbBlack] = useState("");
+  const [rbResult, setRbResult] = useState<"white" | "black" | "draw">("white");
+  const [rbDate, setRbDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [rbNotes, setRbNotes] = useState("");
+  const [rbSaving, setRbSaving] = useState(false);
 
   // Transfer ownership state
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -3294,20 +3302,36 @@ export default function ClubDashboard() {
             {/* Members sub-tab content */}
             {membersSubTab === "battles" && (
               <div className="space-y-6">
-                {/* Sub-nav: Leaderboard | Battles */}
-                <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
-                  {(["leaderboard", "battles"] as const).map((v) => (
+                {/* Header row: sub-nav + Record Battle button */}
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-1 items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
+                    {(["leaderboard", "battles"] as const).map((v) => (
+                      <button
+                        key={v}
+                        onClick={() => setBattleView(v)}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                          battleView === v ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
+                        }`}
+                      >
+                        {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
+                        {v === "leaderboard" ? "Leaderboard" : "Battles"}
+                      </button>
+                    ))}
+                  </div>
+                  {isOwnerOrDirector && (
                     <button
-                      key={v}
-                      onClick={() => setBattleView(v)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        battleView === v ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-                      }`}
+                      onClick={() => {
+                        setRbWhite(""); setRbBlack(""); setRbResult("white");
+                        setRbDate(new Date().toISOString().slice(0, 10)); setRbNotes("");
+                        setShowRecordBattle(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition active:scale-95 flex-shrink-0"
+                      style={{ background: accent, color: "#0a1a0f" }}
                     >
-                      {v === "leaderboard" ? <Trophy className="w-3.5 h-3.5" /> : <Swords className="w-3.5 h-3.5" />}
-                      {v === "leaderboard" ? "Leaderboard" : "Battles"}
+                      <Plus className="w-4 h-4" />
+                      Record
                     </button>
-                  ))}
+                  )}
                 </div>
                 {/* Leaderboard view */}
                 {battleView === "leaderboard" && (() => {
@@ -5242,6 +5266,174 @@ export default function ClubDashboard() {
           }}
         />
       )}
+      {/* ── Record Battle Modal ─────────────────────────────────────────── */}
+      {showRecordBattle && club && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
+          <div className="w-full max-w-md rounded-2xl border border-white/10 p-6 space-y-5" style={{ background: "oklch(0.14 0.05 145)" }}>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Swords className="w-5 h-5" style={{ color: accent }} />
+                <h2 className="text-white font-bold text-base">Record Battle</h2>
+              </div>
+              <button onClick={() => setShowRecordBattle(false)} className="text-white/30 hover:text-white/70 transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* White player */}
+            <div>
+              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">White</label>
+              <select
+                value={rbWhite}
+                onChange={(e) => { setRbWhite(e.target.value); if (e.target.value === rbBlack) setRbBlack(""); }}
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
+                style={{ background: "oklch(0.18 0.05 145)" }}
+              >
+                <option value="">Select player…</option>
+                {members.map((m) => (
+                  <option key={m.userId} value={m.userId}>{m.displayName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Black player */}
+            <div>
+              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Black</label>
+              <select
+                value={rbBlack}
+                onChange={(e) => setRbBlack(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
+                style={{ background: "oklch(0.18 0.05 145)" }}
+              >
+                <option value="">Select player…</option>
+                {members.filter((m) => m.userId !== rbWhite).map((m) => (
+                  <option key={m.userId} value={m.userId}>{m.displayName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Result */}
+            <div>
+              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Result</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(["white", "draw", "black"] as const).map((r) => {
+                  const label = r === "white"
+                    ? (rbWhite ? (members.find(m => m.userId === rbWhite)?.displayName ?? "White") + " wins" : "White wins")
+                    : r === "black"
+                    ? (rbBlack ? (members.find(m => m.userId === rbBlack)?.displayName ?? "Black") + " wins" : "Black wins")
+                    : "Draw";
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => setRbResult(r)}
+                      className="py-2 rounded-xl text-xs font-semibold transition border"
+                      style={rbResult === r
+                        ? { background: accent, color: "#0a1a0f", borderColor: accent }
+                        : { background: "oklch(0.18 0.05 145)", color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.1)" }
+                      }
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Date</label>
+              <input
+                type="date"
+                value={rbDate}
+                onChange={(e) => setRbDate(e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-white/30 border border-white/10"
+                style={{ background: "oklch(0.18 0.05 145)", colorScheme: "dark" }}
+              />
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Notes <span className="normal-case font-normal">(optional)</span></label>
+              <input
+                type="text"
+                value={rbNotes}
+                onChange={(e) => setRbNotes(e.target.value)}
+                placeholder="e.g. Sicilian Defense, 32 moves"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 border border-white/10"
+                style={{ background: "oklch(0.18 0.05 145)" }}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setShowRecordBattle(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/50 border border-white/10 hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!rbWhite || !rbBlack || rbSaving}
+                onClick={async () => {
+                  if (!club || !rbWhite || !rbBlack) return;
+                  setRbSaving(true);
+                  const whiteName = members.find((m) => m.userId === rbWhite)?.displayName ?? rbWhite;
+                  const blackName = members.find((m) => m.userId === rbBlack)?.displayName ?? rbBlack;
+                  // Map white/black/draw → player_a/player_b/draw
+                  const apiResult: "player_a" | "player_b" | "draw" =
+                    rbResult === "white" ? "player_a" : rbResult === "black" ? "player_b" : "draw";
+                  // Use the selected date as the timestamp
+                  const dateIso = rbDate ? new Date(rbDate + "T12:00:00").toISOString() : new Date().toISOString();
+                  try {
+                    // Create battle and immediately record result in one flow
+                    let battle;
+                    try {
+                      battle = await apiBattleCreate(club.id, {
+                        playerAId: rbWhite, playerAName: whiteName,
+                        playerBId: rbBlack, playerBName: blackName,
+                        notes: rbNotes || undefined,
+                        createdAt: dateIso,
+                      });
+                      await apiBattleRecordResult(club.id, battle.id, apiResult);
+                    } catch {
+                      // Fallback to localStorage
+                      const local = createBattle(club.id, {
+                        playerAId: rbWhite, playerAName: whiteName,
+                        playerBId: rbBlack, playerBName: blackName,
+                        notes: rbNotes || undefined,
+                      });
+                      recordBattleResult(club.id, local.id, apiResult);
+                    }
+                    // Post to feed
+                    postBattleResult({
+                      clubId: club.id,
+                      battleId: "recorded",
+                      playerAName: whiteName,
+                      playerBName: blackName,
+                      outcome: apiResult,
+                      directorName: user?.displayName,
+                    });
+                    await refreshBattles();
+                    setShowRecordBattle(false);
+                    const resultLabel = rbResult === "white" ? `${whiteName} wins` : rbResult === "black" ? `${blackName} wins` : "Draw recorded";
+                    toast.success(`Battle recorded — ${resultLabel}!`);
+                  } catch (err) {
+                    toast.error("Failed to record battle. Please try again.");
+                  } finally {
+                    setRbSaving(false);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-30 active:scale-95"
+                style={{ background: accent, color: "#0a1a0f" }}
+              >
+                {rbSaving ? "Saving…" : "Save Battle"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
