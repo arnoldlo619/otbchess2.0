@@ -58,6 +58,7 @@ import {
 import {
   listClubEvents,
   countRSVPs,
+  getEventRSVPs,
   getUserRSVP,
   upsertRSVP,
   createClubEvent,
@@ -1687,98 +1688,140 @@ export default function ClubProfile() {
                           const ev = item.data as ClubEvent;
                           const myRsvp = (joined && user) ? getUserRSVP(ev.id, user.id) : null;
                           const rsvpCount = countRSVPs(ev.id);
+                          const goingRsvps = getEventRSVPs(ev.id).filter(r => r.status === "going");
                           const dateObj = new Date(ev.startAt);
+                          const endObj = ev.endAt ? new Date(ev.endAt) : null;
+                          const evAccent = ev.accentColor ?? accent;
+                          const dayName = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+                          const timeStr = dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+                          const endTimeStr = endObj ? endObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
                           return (
-                          <div key={ev.id} className={`transition-colors ${isDark ? "hover:bg-white/3" : "hover:bg-gray-50"}`}>
-                            {/* Cover image */}
-                            {ev.coverImageUrl && (
-                              <div className="relative w-full overflow-hidden" style={{ height: 140 }}>
+                          <div key={ev.id} className={`rounded-2xl overflow-hidden border transition-all ${
+                            isDark
+                              ? "bg-[#0d1f12] border-white/8 hover:border-white/15"
+                              : "bg-white border-gray-200 hover:border-gray-300 shadow-sm"
+                          }`}>
+                            {/* Cover image — full bleed */}
+                            {ev.coverImageUrl ? (
+                              <div className="relative w-full overflow-hidden" style={{ height: 180 }}>
                                 <img src={ev.coverImageUrl} alt={ev.title} className="w-full h-full object-cover" />
-                                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.55) 100%)" }} />
-                              </div>
-                            )}
-                            <div className="px-5 py-4">
-                            <div className="flex items-start gap-3">
-                              {/* Date badge */}
-                              <div
-                                className="w-11 h-11 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center text-center"
-                                style={{ background: (ev.accentColor ?? "#4CAF50") + "22" }}
-                              >
-                                <span className="text-[9px] font-bold uppercase leading-none" style={{ color: ev.accentColor ?? "#4CAF50" }}>
-                                  {dateObj.toLocaleDateString("en-US", { month: "short" })}
-                                </span>
-                                <span className="text-base font-black leading-tight" style={{ color: ev.accentColor ?? "#4CAF50" }}>
-                                  {dateObj.getDate()}
-                                </span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <p className={`text-sm font-semibold ${textMain} truncate`}>{ev.title}</p>
-                                  {ev.recurrence && ev.recurrence !== "none" && (
-                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                                      isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                                    }`}>
-                                      {ev.recurrence === "biweekly" ? "BI-WK" : ev.recurrence.toUpperCase()}
-                                    </span>
-                                  )}
+                                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.75) 100%)" }} />
+                                {/* Date pill over image */}
+                                <div className="absolute top-3 left-3">
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: evAccent + "33", color: evAccent, border: `1px solid ${evAccent}55` }}>
+                                    <Calendar className="w-3 h-3" />
+                                    {dayName}
+                                  </span>
                                 </div>
-                                <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs ${textMuted}`}>
-                                  <span>{dateObj.toLocaleDateString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</span>
-                                  {ev.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{ev.venue}</span>}
-                                  {ev.admissionNote && <span className="opacity-70">{ev.admissionNote}</span>}
-                                </div>
-                                {ev.description && (
-                                  <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${textMuted} opacity-80`}>{ev.description}</p>
+                                {/* Owner controls over image */}
+                                {(isOwner || isDirector) && (
+                                  <div className="absolute top-3 right-3 flex items-center gap-1">
+                                    <button onClick={() => { setEditingEvent(ev); const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16); setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this", coverImageUrl: ev.coverImageUrl ?? "" }); }} className="p-1.5 rounded-lg bg-black/40 text-white/70 hover:text-white hover:bg-black/60 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => setConfirmDeleteId(ev.id)} className="p-1.5 rounded-lg bg-black/40 text-white/70 hover:text-red-400 hover:bg-black/60 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                                  </div>
                                 )}
                               </div>
-                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                {joined && user && (
+                            ) : (
+                              /* No cover — accent gradient header */
+                              <div className="relative px-5 pt-5 pb-3" style={{ background: `linear-gradient(135deg, ${evAccent}18 0%, ${evAccent}08 100%)` }}>
+                                <div className="flex items-center justify-between">
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: evAccent + "22", color: evAccent, border: `1px solid ${evAccent}44` }}>
+                                    <Calendar className="w-3 h-3" />
+                                    {dayName}
+                                  </span>
+                                  {(isOwner || isDirector) && (
+                                    <div className="flex items-center gap-1">
+                                      <button onClick={() => { setEditingEvent(ev); const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16); setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this", coverImageUrl: ev.coverImageUrl ?? "" }); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"}`}><Pencil className="w-3 h-3" /></button>
+                                      <button onClick={() => setConfirmDeleteId(ev.id)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}><Trash2 className="w-3 h-3" /></button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {/* Card body */}
+                            <div className="px-5 py-4 space-y-3">
+                              {/* Title + recurrence badge */}
+                              <div className="flex items-start gap-2">
+                                <h3 className={`text-lg font-black leading-snug flex-1 ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>{ev.title}</h3>
+                                {ev.recurrence && ev.recurrence !== "none" && (
+                                  <span className={`mt-0.5 text-[9px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${
+                                    isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  }`}>{ev.recurrence === "biweekly" ? "BI-WEEKLY" : ev.recurrence.toUpperCase()}</span>
+                                )}
+                              </div>
+                              {/* Meta row: time, venue, admission */}
+                              <div className="space-y-1.5">
+                                <div className={`flex items-center gap-2 text-sm ${textMuted}`}>
+                                  <Clock className="w-4 h-4 flex-shrink-0" style={{ color: evAccent }} />
+                                  <span>{timeStr}{endTimeStr ? ` – ${endTimeStr}` : ""}</span>
+                                </div>
+                                {ev.venue && (
+                                  <div className={`flex items-center gap-2 text-sm font-medium ${textMain}`}>
+                                    <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: evAccent }} />
+                                    <span>{ev.venue}</span>
+                                  </div>
+                                )}
+                                {ev.admissionNote && (
+                                  <div className={`flex items-center gap-2 text-sm ${textMuted}`}>
+                                    <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-base">💳</span>
+                                    <span>{ev.admissionNote}</span>
+                                  </div>
+                                )}
+                              </div>
+                              {/* Description */}
+                              {ev.description && (
+                                <p className={`text-sm leading-relaxed ${textMuted}`}>{ev.description}</p>
+                              )}
+                              {/* Footer: attendee avatars + RSVP button */}
+                              <div className="flex items-center justify-between pt-1">
+                                <div className="flex items-center gap-2">
+                                  {goingRsvps.length > 0 && (
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="flex -space-x-2">
+                                        {goingRsvps.slice(0, 4).map((r) => (
+                                          <div key={r.userId} className={`w-7 h-7 rounded-full overflow-hidden ring-2 ${isDark ? "ring-[#0d1f12]" : "ring-white"}`}>
+                                            <PlayerAvatar username={r.displayName} name={r.displayName} avatarUrl={r.avatarUrl ?? undefined} size={28} className="w-full h-full object-cover" />
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <span className={`text-xs font-medium ${textMuted}`}>
+                                        {goingRsvps.length} going{goingRsvps.length > 4 ? ` (+${goingRsvps.length - 4})` : ""}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {goingRsvps.length === 0 && (
+                                    <span className={`text-xs ${textMuted} opacity-50`}>No RSVPs yet</span>
+                                  )}
+                                </div>
+                                {joined && user ? (
                                   <button
                                     onClick={() => {
                                       const next = myRsvp?.status === "going" ? "not_going" : "going";
                                       upsertRSVP(ev.id, ev.clubId, user.id, user.displayName, next, user.avatarUrl ?? null);
                                     }}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all active:scale-95 ${
                                       myRsvp?.status === "going"
-                                        ? isDark ? "bg-[#4CAF50] text-black" : "bg-[#3D6B47] text-white"
-                                        : isDark ? "bg-white/8 text-white/60 hover:bg-white/15" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                        ? isDark ? "text-black" : "text-white"
+                                        : isDark ? "bg-white/8 text-white/70 hover:bg-white/15" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                     }`}
+                                    style={myRsvp?.status === "going" ? { background: evAccent } : {}}
                                   >
-                                    {myRsvp?.status === "going" ? "✓ Going" : "RSVP"}
+                                    {myRsvp?.status === "going" ? <><CheckCircle2 className="w-4 h-4" /> Going</> : "RSVP"}
+                                    {myRsvp?.status === "going" && <ChevronRight className="w-3.5 h-3.5 opacity-60" />}
                                   </button>
-                                )}
-                                {rsvpCount.going > 0 && (
-                                  <span className={`text-[10px] ${textMuted}`}>{rsvpCount.going} going</span>
-                                )}
-                                {(isOwner || isDirector) && (
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <button
-                                      onClick={() => {
-                                        setEditingEvent(ev);
-                                        const localDT = new Date(ev.startAt).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T").slice(0, 16);
-                                        setEditForm({ title: ev.title, description: ev.description ?? "", startAt: localDT, venue: ev.venue ?? "", admissionNote: ev.admissionNote ?? "", recurrence: ev.recurrence ?? "none", recurrenceEndDate: ev.recurrenceEndDate ?? "", editScope: "this", coverImageUrl: ev.coverImageUrl ?? "" });
-                                      }}
-                                      title="Edit event"
-                                      className={`p-1.5 rounded-lg transition-colors ${
-                                        isDark ? "text-white/30 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                                      }`}
-                                    >
-                                      <Pencil className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => setConfirmDeleteId(ev.id)}
-                                      title="Delete event"
-                                      className={`p-1.5 rounded-lg transition-colors ${
-                                        isDark ? "text-white/30 hover:text-red-400 hover:bg-red-500/10" : "text-gray-400 hover:text-red-500 hover:bg-red-50"
-                                      }`}
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </button>
-                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => {}}
+                                    className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all ${
+                                      isDark ? "bg-white/5 text-white/30 cursor-not-allowed" : "bg-gray-50 text-gray-300 cursor-not-allowed"
+                                    }`}
+                                    disabled
+                                  >
+                                    Join club to RSVP
+                                  </button>
                                 )}
                               </div>
                             </div>
-                            </div>{/* end px-5 py-4 */}
                           </div>
                           );
                         })() : (() => {
