@@ -740,6 +740,7 @@ export default function ClubProfile() {
   const [clubEvents, setClubEvents] = useState<ClubEvent[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showAllPast, setShowAllPast] = useState(false);
   const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", coverImageUrl: "" });
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingEditCover, setUploadingEditCover] = useState(false);
@@ -1869,7 +1870,7 @@ export default function ClubProfile() {
                       <span className={`text-xs font-medium ${textMuted}`}>{past.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {past.map((item) => {
+                      {(showAllPast ? past : past.slice(0, 3)).map((item) => {
                         const isPastEvent = item.type === "event";
                         const title = isPastEvent ? (item.data as ClubEvent).title : (item.data as TournamentConfig).name;
                         const venue = isPastEvent ? (item.data as ClubEvent).venue : undefined;
@@ -1894,13 +1895,22 @@ export default function ClubProfile() {
                             }`}>{isPastEvent ? "Past" : "Ended"}</span>
                           </div>
                         );
-                      })}
+                                            })}
+                      {past.length > 3 && (
+                        <button
+                          onClick={() => setShowAllPast(v => !v)}
+                          className={`w-full py-3 text-xs font-semibold transition-colors ${
+                            isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {showAllPast ? `Show Less` : `See All ${past.length} Past Events`}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
               </>
             )}
-
             {/* Create Event Modal */}
             {showCreateEvent && (isOwner || isDirector) && (
               <div
