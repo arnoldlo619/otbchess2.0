@@ -186,6 +186,7 @@ import { ClubBannerUpload, cropBannerImage, validateBannerFile } from "@/compone
 import { ClubSettingsPanel } from "@/components/ClubSettingsPanel";
 import ClubMeetupWizard from "@/components/ClubMeetupWizard";
 import { authFetch, apiFetch } from "@/lib/apiFetch";
+import { SpinBorderButton } from "@/components/ui/spin-border-button";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
@@ -3228,14 +3229,15 @@ export default function ClubDashboard() {
             {/* ── Owner action bar ─────────────────────────────────────────── */}
             {isOwnerOrDirector && (
               <div className="flex flex-col sm:flex-row gap-3">
-                <button
+                <SpinBorderButton
+                  variant="solid"
                   onClick={() => setShowTournamentWizard(true)}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-95"
-                  style={{ background: accent, color: "#0a1a0f" }}
+                  className="flex-1 w-full"
                 >
                   <GanttChart className="w-4 h-4" />
                   New Tournament
-                </button>
+                  <ArrowRight className="w-4 h-4" />
+                </SpinBorderButton>
                 <button
                   onClick={() => setShowCreateEvent(true)}
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white/60 border border-dashed border-white/15 hover:border-white/30 hover:text-white/80 transition-all"
