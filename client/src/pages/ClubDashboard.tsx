@@ -2313,6 +2313,9 @@ export default function ClubDashboard() {
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showTournamentWizard, setShowTournamentWizard] = useState(false);
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
+  const [showPastMeetups, setShowPastMeetups] = useState(false);
+  const [showPastTournaments, setShowPastTournaments] = useState(false);
+  const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
@@ -3244,17 +3247,21 @@ export default function ClubDashboard() {
             )}
 
             {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
+            {(() => {
+              const upcomingMeetups = meetupEvents.filter(isUpcoming);
+              const pastMeetupsFiltered = meetupEvents.filter(e => !isUpcoming(e));
+              return (
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-4 h-4" style={{ color: accent }} />
                 <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
-                  Club Meetups · {meetupEvents.length}
+                  Club Meetups · {upcomingMeetups.length}{pastMeetupsFiltered.length > 0 ? ` (${pastMeetupsFiltered.length} past)` : ""}
                 </h2>
               </div>
-              {meetupEvents.length > 0 ? (
+              {upcomingMeetups.length > 0 ? (
                 <div className="space-y-4">
-                  {meetupEvents.map((ev) => {
-                    const isUpcomingMeetup = isUpcoming(ev);
+                  {upcomingMeetups.map((ev) => {
+                    const isUpcomingMeetup = true;
                     const recurrenceLabel = ev.recurrence === "weekly" ? "Weekly" : ev.recurrence === "biweekly" ? "Bi-weekly" : ev.recurrence === "monthly" ? "Monthly" : "One-time";
                     return (
                       <div
@@ -3324,30 +3331,93 @@ export default function ClubDashboard() {
                     );
                   })}
                 </div>
-              ) : (
+                            ) : (
                 <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
                   <Users className="w-8 h-8 opacity-20 text-white" />
                   <p className="text-white/30 text-sm">
                     {isOwnerOrDirector
-                      ? "No meetups yet — click \"Create Event\" → Club Meetup to schedule one."
-                      : "No meetups have been scheduled by this club yet."}
+                      ? "No upcoming meetups — click \"Create Event\" → Club Meetup to schedule one."
+                      : "No upcoming meetups scheduled by this club yet."}
                   </p>
                 </div>
               )}
+              {/* Past meetups — collapsed by default */}
+              {pastMeetupsFiltered.length > 0 && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowPastMeetups(v => !v)}
+                    className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
+                  >
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastMeetups ? "rotate-180" : ""}`} />
+                    {showPastMeetups ? "Hide" : "Show"} {pastMeetupsFiltered.length} Past Meetup{pastMeetupsFiltered.length !== 1 ? "s" : ""}
+                  </button>
+                  {showPastMeetups && (
+                    <div className="space-y-4 opacity-60">
+                      {pastMeetupsFiltered.map((ev) => {
+                        const isUpcomingMeetup = false;
+                        const recurrenceLabel = ev.recurrence === "weekly" ? "Weekly" : ev.recurrence === "biweekly" ? "Bi-weekly" : ev.recurrence === "monthly" ? "Monthly" : "One-time";
+                        return (
+                          <div
+                            key={ev.id}
+                            className="rounded-2xl border border-white/10 overflow-hidden"
+                            style={{ background: "oklch(0.16 0.05 145)" }}
+                          >
+                            <div className="h-1" style={{ background: "rgba(255,255,255,0.1)" }} />
+                            <div className="p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>Past</span>
+                                    {ev.recurrence && ev.recurrence !== "none" && (
+                                      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.40)" }}>
+                                        <Repeat className="w-2.5 h-2.5" />
+                                        {recurrenceLabel}
+                                      </span>
+                                    )}
+                                    <span className="text-white/30 text-xs">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                  </div>
+                                  <h3 className="text-white/60 font-bold text-base truncate">{ev.title}</h3>
+                                  {ev.venue && (
+                                    <div className="flex items-center gap-1.5 mt-1 text-white/25 text-xs">
+                                      <MapPin className="w-3 h-3" />
+                                      <span>{ev.venue}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 mt-3">
+                                <a href={`/clubs/${club.id}/meetup/${ev.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/40 border border-white/10 hover:text-white/60 transition">
+                                  <Calendar className="w-3 h-3" />
+                                  View
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-
+              );
+            })()}
             {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
+            {(() => {
+              const upcomingTmts = tournamentEvents.filter(isUpcoming);
+              const pastTmts = tournamentEvents.filter(e => !isUpcoming(e));
+              return (
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <GanttChart className="w-4 h-4" style={{ color: accent }} />
                 <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
-                  Tournaments · {tournamentEvents.length}
+                  Tournaments · {upcomingTmts.length}{pastTmts.length > 0 ? ` (${pastTmts.length} past)` : ""}
                 </h2>
               </div>
-              {tournamentEvents.length > 0 ? (
+              {upcomingTmts.length > 0 ? (
                 <div className="space-y-4">
-                  {tournamentEvents.map((event) => {
-                    const isUpcomingTmt = isUpcoming(event);
+                  {upcomingTmts.map((event) => {
+                    const isUpcomingTmt = true;
                     return (
                       <div
                         key={event.id}
@@ -3421,76 +3491,127 @@ export default function ClubDashboard() {
                     );
                   })}
                 </div>
-              ) : (
+                            ) : (
                 <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
                   <GanttChart className="w-8 h-8 opacity-20 text-white" />
                   <p className="text-white/30 text-sm">
                     {isOwnerOrDirector
-                      ? "No tournaments yet — click \"New Tournament\" above to host one."
-                      : "No tournaments have been hosted by this club yet."}
+                      ? "No upcoming tournaments — click \"New Tournament\" above to host one."
+                      : "No upcoming tournaments hosted by this club yet."}
                   </p>
                 </div>
               )}
+              {/* Past tournaments — collapsed by default */}
+              {pastTmts.length > 0 && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowPastTournaments(v => !v)}
+                    className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
+                  >
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastTournaments ? "rotate-180" : ""}`} />
+                    {showPastTournaments ? "Hide" : "Show"} {pastTmts.length} Past Tournament{pastTmts.length !== 1 ? "s" : ""}
+                  </button>
+                  {showPastTournaments && (
+                    <div className="space-y-4 opacity-60">
+                      {pastTmts.map((event) => (
+                        <div key={event.id} className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: "oklch(0.16 0.05 145)" }}>
+                          <div className="h-1" style={{ background: "rgba(255,255,255,0.1)" }} />
+                          <div className="p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>Past</span>
+                                  <span className="text-white/30 text-xs">{new Date(event.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                </div>
+                                <h3 className="text-white/60 font-bold text-base truncate">{event.title}</h3>
+                                {event.venue && (
+                                  <div className="flex items-center gap-1.5 mt-1 text-white/25 text-xs">
+                                    <MapPin className="w-3 h-3" />
+                                    <span>{event.venue}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <GanttChart className="w-6 h-6 flex-shrink-0 opacity-15" />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                              <a href={`/tournament/${event.tournamentId}/play`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white/40 border border-white/10 hover:text-white/60 transition">
+                                <Trophy className="w-3 h-3" />
+                                View Results
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-
+              );
+            })()}
             {/* ── OTHER EVENTS SECTION ─────────────────────────────────────── */}
             {(() => {
-              const nonTmtUpcoming = upcomingEvents.filter(e => !e.tournamentId);
-              const nonTmtPast = pastEvents.filter(e => !e.tournamentId);
+              const nonTmtUpcoming = upcomingEvents.filter(e => !e.tournamentId && e.eventType !== "meetup");
+              const nonTmtPast = pastEvents.filter(e => !e.tournamentId && e.eventType !== "meetup");
               return (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <Calendar className="w-4 h-4" style={{ color: accent }} />
                     <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
-                      Other Events · {nonTmtUpcoming.length + nonTmtPast.length}
+                      Other Events · {nonTmtUpcoming.length}{nonTmtPast.length > 0 ? ` (${nonTmtPast.length} past)` : ""}
                     </h2>
                   </div>
-                  {nonTmtUpcoming.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-white/25 text-[11px] font-semibold uppercase tracking-widest mb-3">Upcoming · {nonTmtUpcoming.length}</p>
-                      <div className="space-y-4">
-                        {nonTmtUpcoming.map((event) => (
-                          <EventCard
-                            key={event.id}
-                            event={event}
-                            userId={user?.id ?? "guest"}
-                            displayName={user?.displayName ?? "Guest"}
-                            avatarUrl={user?.avatarUrl}
-                            isOwner={!!isOwnerOrDirector}
-                            onDeleted={refreshEvents}
-                            onEdited={refreshEvents}
-                          />
-                        ))}
-                      </div>
+                  {nonTmtUpcoming.length > 0 ? (
+                    <div className="space-y-4 mb-4">
+                      {nonTmtUpcoming.map((event) => (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          userId={user?.id ?? "guest"}
+                          displayName={user?.displayName ?? "Guest"}
+                          avatarUrl={user?.avatarUrl}
+                          isOwner={!!isOwnerOrDirector}
+                          onDeleted={refreshEvents}
+                          onEdited={refreshEvents}
+                        />
+                      ))}
                     </div>
-                  )}
-                  {nonTmtPast.length > 0 && (
-                    <div className="opacity-70">
-                      <p className="text-white/25 text-[11px] font-semibold uppercase tracking-widest mb-3">Past · {nonTmtPast.length}</p>
-                      <div className="space-y-4">
-                        {nonTmtPast.map((event) => (
-                          <EventCard
-                            key={event.id}
-                            event={event}
-                            userId={user?.id ?? "guest"}
-                            displayName={user?.displayName ?? "Guest"}
-                            avatarUrl={user?.avatarUrl}
-                            isOwner={!!isOwnerOrDirector}
-                            onDeleted={refreshEvents}
-                            onEdited={refreshEvents}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {nonTmtUpcoming.length === 0 && nonTmtPast.length === 0 && (
-                    <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6 mb-4">
                       <Calendar className="w-8 h-8 opacity-20 text-white" />
                       <p className="text-white/30 text-sm">
                         {isOwnerOrDirector
-                          ? "No other events yet — click \"Create Event\" above to add one."
-                          : "No events have been scheduled by this club yet."}
+                          ? "No upcoming events — click \"Create Event\" above to add one."
+                          : "No upcoming events scheduled by this club yet."}
                       </p>
+                    </div>
+                  )}
+                  {/* Past events — collapsed by default */}
+                  {nonTmtPast.length > 0 && (
+                    <div>
+                      <button
+                        onClick={() => setShowPastEvents(v => !v)}
+                        className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastEvents ? "rotate-180" : ""}`} />
+                        {showPastEvents ? "Hide" : "Show"} {nonTmtPast.length} Past Event{nonTmtPast.length !== 1 ? "s" : ""}
+                      </button>
+                      {showPastEvents && (
+                        <div className="space-y-4 opacity-60">
+                          {nonTmtPast.map((event) => (
+                            <EventCard
+                              key={event.id}
+                              event={event}
+                              userId={user?.id ?? "guest"}
+                              displayName={user?.displayName ?? "Guest"}
+                              avatarUrl={user?.avatarUrl}
+                              isOwner={!!isOwnerOrDirector}
+                              onDeleted={refreshEvents}
+                              onEdited={refreshEvents}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
