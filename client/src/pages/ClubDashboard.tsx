@@ -2316,6 +2316,7 @@ export default function ClubDashboard() {
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
   const [showPastMeetups, setShowPastMeetups] = useState(false);
   const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
+  const [editMeetupId, setEditMeetupId] = useState<string | null>(null);
   const [showPastTournaments, setShowPastTournaments] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
@@ -3384,7 +3385,15 @@ export default function ClubDashboard() {
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </div>
-                              {isOwnerOrDirector && !card.isVirtual && (
+                              {isOwnerOrDirector && !card.isVirtual && (<>
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditMeetupId(ev.id); }}
+                                  className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/15 active:scale-90"
+                                  style={{ color: "rgba(255,255,255,0.55)" }}
+                                  title="Edit meetup"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
                                 <button
                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteMeetupId(ev.id); }}
                                   className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 active:scale-90"
@@ -3393,7 +3402,7 @@ export default function ClubDashboard() {
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
-                              )}
+                              </>)}
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -3540,6 +3549,24 @@ export default function ClubDashboard() {
                     </div>
                   </div>
                 </div>
+              );
+            })()}
+
+            {/* ── EDIT MEETUP MODAL ──────────────────────────────────────── */}
+            {editMeetupId && (() => {
+              const meetupToEdit = events.find(e => e.id === editMeetupId);
+              if (!meetupToEdit) return null;
+              return (
+                <EditEventModal
+                  event={meetupToEdit}
+                  clubAccent={accent}
+                  onSaved={(updated) => {
+                    setEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
+                    setEditMeetupId(null);
+                    toast.success("Meetup updated");
+                  }}
+                  onClose={() => setEditMeetupId(null)}
+                />
               );
             })()}
 
