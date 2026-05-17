@@ -439,7 +439,7 @@ export default function CheckInPage() {
                           onClick={handleCheckIn}
                           disabled={checkingIn}
                           className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                          style={{ background: accentColor, color: "#0a1a0f" }}
+                          style={{ background: accentColor, color: '#ffffff' }}
                         >
                           {checkingIn ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
