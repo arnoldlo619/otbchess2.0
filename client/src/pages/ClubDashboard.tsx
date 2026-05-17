@@ -3250,25 +3250,90 @@ export default function ClubDashboard() {
 
             {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
             {(() => {
-              const upcomingMeetups = meetupEvents.filter(isUpcoming);
-              const pastMeetupsFiltered = meetupEvents.filter(e => !isUpcoming(e));
+              // ── Recurring series consolidation ──────────────────────────────
+              // For recurring meetups (weekly/biweekly/monthly), show ONE card per
+              // series. If the latest instance is past, compute the next occurrence
+              // date and display it as upcoming so the card stays on the board.
+              function getNextOccurrence(baseDate: Date, recurrence: string): Date {
+                const next = new Date(baseDate);
+                const now = new Date();
+                const msDay = 86400000;
+                const step = recurrence === "weekly" ? 7 * msDay
+                  : recurrence === "biweekly" ? 14 * msDay
+                  : recurrence === "monthly" ? 30 * msDay
+                  : 0;
+                if (step === 0) return next;
+                while (next <= now) next.setTime(next.getTime() + step);
+                return next;
+              }
+
+              // Group by recurrenceSeriesId (or id for one-offs)
+              const seriesMap = new Map<string, ClubEvent[]>();
+              for (const ev of meetupEvents) {
+                const key = ev.recurrenceSeriesId ?? ev.id;
+                if (!seriesMap.has(key)) seriesMap.set(key, []);
+                seriesMap.get(key)!.push(ev);
+              }
+
+              // Build display cards: one per series
+              interface MeetupCard {
+                representative: ClubEvent; // the event to link to
+                displayDate: Date;         // the date shown on the card
+                isVirtual: boolean;        // true = next occurrence is computed, no real event yet
+                seriesId: string;
+                pastInstances: ClubEvent[];
+              }
+              const cards: MeetupCard[] = [];
+              for (const [seriesId, instances] of Array.from(seriesMap)) {
+                const sorted = [...instances].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+                const latest = sorted[sorted.length - 1];
+                const recurrence = latest.recurrence ?? "none";
+                const latestDate = new Date(latest.startAt);
+                const now = new Date();
+
+                if (latestDate > now) {
+                  // Latest instance is still upcoming — show it directly
+                  cards.push({ representative: latest, displayDate: latestDate, isVirtual: false, seriesId, pastInstances: sorted.slice(0, -1) });
+                } else if (recurrence !== "none") {
+                  // All instances are past but series recurs — compute next occurrence
+                  const nextDate = getNextOccurrence(latestDate, recurrence);
+                  cards.push({ representative: latest, displayDate: nextDate, isVirtual: true, seriesId, pastInstances: sorted });
+                } else {
+                  // One-off past event — goes to past section only
+                  cards.push({ representative: latest, displayDate: latestDate, isVirtual: false, seriesId, pastInstances: sorted.slice(0, -1) });
+                }
+              }
+
+              const upcomingCards = cards.filter(c => c.displayDate > new Date());
+              const pastOnlyCards = cards.filter(c => c.displayDate <= new Date());
+              // All past instances across all series for the collapsed section
+              const allPastInstances = meetupEvents.filter(e => !isUpcoming(e));
+
+              const recurrenceLabel = (rec?: string) =>
+                rec === "weekly" ? "Weekly" : rec === "biweekly" ? "Bi-weekly" : rec === "monthly" ? "Monthly" : "One-time";
+
               return (
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-4 h-4" style={{ color: accent }} />
                 <h2 className="text-white/40 text-xs font-bold uppercase tracking-widest">
-                  Club Meetups · {upcomingMeetups.length}{pastMeetupsFiltered.length > 0 ? ` (${pastMeetupsFiltered.length} past)` : ""}
+                  Club Meetups · {upcomingCards.length}{allPastInstances.length > 0 ? ` (${allPastInstances.length} past)` : ""}
                 </h2>
               </div>
-              {upcomingMeetups.length > 0 ? (
+              {upcomingCards.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingMeetups.map((ev) => {
-                    const isUpcomingMeetup = true;
-                    const recurrenceLabel = ev.recurrence === "weekly" ? "Weekly" : ev.recurrence === "biweekly" ? "Bi-weekly" : ev.recurrence === "monthly" ? "Monthly" : "One-time";
+                  {upcomingCards.map((card) => {
+                    const ev = card.representative;
+                    const rec = ev.recurrence;
+                    const rLabel = recurrenceLabel(rec);
+                    const isRecurring = rec && rec !== "none";
+                    // For virtual cards, link to the most recent real instance
+                    const href = `/clubs/${club.id}/meetup/${ev.id}`;
+                    const displayDateStr = card.displayDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                     return (
                       <a
-                        key={ev.id}
-                        href={`/clubs/${club.id}/meetup/${ev.id}`}
+                        key={card.seriesId}
+                        href={href}
                         className="block rounded-2xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/25 hover:scale-[1.01] hover:shadow-xl active:scale-[0.99] group"
                         style={{ background: "oklch(0.16 0.05 145)", textDecoration: "none" }}
                       >
@@ -3277,24 +3342,27 @@ export default function ClubDashboard() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                {/* Upcoming badge */}
                                 <span
                                   className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                  style={isUpcomingMeetup
-                                    ? { background: accent + "22", color: accent }
-                                    : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
-                                  }
+                                  style={{ background: accent + "22", color: accent }}
                                 >
-                                  {isUpcomingMeetup ? "Upcoming" : "Past"}
+                                  Upcoming
                                 </span>
-                                {ev.recurrence && ev.recurrence !== "none" && (
-                                  <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.40)" }}>
+                                {/* Recurrence badge — prominent for recurring series */}
+                                {isRecurring && (
+                                  <span
+                                    className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
+                                    style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)" }}
+                                  >
                                     <Repeat className="w-2.5 h-2.5" />
-                                    {recurrenceLabel}
+                                    {rLabel}
                                   </span>
                                 )}
-                                <span className="text-white/30 text-xs">
-                                  {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                </span>
+                                <span className="text-white/30 text-xs">{displayDateStr}</span>
+                                {card.isVirtual && (
+                                  <span className="text-white/20 text-xs italic">Next occurrence</span>
+                                )}
                               </div>
                               <h3 className="text-white font-bold text-base truncate group-hover:text-white transition-colors">{ev.title}</h3>
                               {ev.description && (
@@ -3316,7 +3384,6 @@ export default function ClubDashboard() {
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mt-4">
-                            {/* Primary CTA — bold accent fill */}
                             <span
                               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all group-hover:shadow-md group-hover:brightness-110"
                               style={{ background: accent, color: "#0a1a0f" }}
@@ -3324,7 +3391,7 @@ export default function ClubDashboard() {
                               <Calendar className="w-3.5 h-3.5" />
                               View Meetup
                             </span>
-                            {isUpcomingMeetup && (
+                            {!card.isVirtual && (
                               <span
                                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition"
                                 style={{ borderColor: accent + "66", color: accent, background: accent + "18" }}
@@ -3339,7 +3406,7 @@ export default function ClubDashboard() {
                     );
                   })}
                 </div>
-                            ) : (
+              ) : (
                 <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
                   <Users className="w-8 h-8 opacity-20 text-white" />
                   <p className="text-white/30 text-sm">
@@ -3350,20 +3417,19 @@ export default function ClubDashboard() {
                 </div>
               )}
               {/* Past meetups — collapsed by default */}
-              {pastMeetupsFiltered.length > 0 && (
+              {allPastInstances.length > 0 && (
                 <div className="mt-4">
                   <button
                     onClick={() => setShowPastMeetups(v => !v)}
                     className="flex items-center gap-2 text-white/30 hover:text-white/50 text-xs font-semibold uppercase tracking-widest transition mb-3"
                   >
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPastMeetups ? "rotate-180" : ""}`} />
-                    {showPastMeetups ? "Hide" : "Show"} {pastMeetupsFiltered.length} Past Meetup{pastMeetupsFiltered.length !== 1 ? "s" : ""}
+                    {showPastMeetups ? "Hide" : "Show"} {allPastInstances.length} Past Meetup{allPastInstances.length !== 1 ? "s" : ""}
                   </button>
                   {showPastMeetups && (
                     <div className="space-y-4 opacity-60">
-                      {pastMeetupsFiltered.map((ev) => {
-                        const isUpcomingMeetup = false;
-                        const recurrenceLabel = ev.recurrence === "weekly" ? "Weekly" : ev.recurrence === "biweekly" ? "Bi-weekly" : ev.recurrence === "monthly" ? "Monthly" : "One-time";
+                      {allPastInstances.map((ev) => {
+                        const rLabel2 = recurrenceLabel(ev.recurrence);
                         return (
                           <div
                             key={ev.id}
@@ -3379,7 +3445,7 @@ export default function ClubDashboard() {
                                     {ev.recurrence && ev.recurrence !== "none" && (
                                       <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.40)" }}>
                                         <Repeat className="w-2.5 h-2.5" />
-                                        {recurrenceLabel}
+                                        {rLabel2}
                                       </span>
                                     )}
                                     <span className="text-white/30 text-xs">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
