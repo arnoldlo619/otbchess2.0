@@ -2,9 +2,10 @@
  * ClubMeetupWizard
  * A streamlined wizard for creating club meetup events (open play sessions).
  * Supports one-off (popup) and recurring (weekly / biweekly / monthly) meetups.
+ * Includes optional cover image upload with live preview.
  */
-import { useState } from "react";
-import { X, ChevronLeft, Users, MapPin, Clock, Calendar, Repeat } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { X, Users, MapPin, Clock, Calendar, Repeat, ImagePlus, Trash2 } from "lucide-react";
 import {
   createClubEvent,
   createRecurringEvents,
@@ -31,6 +32,33 @@ const FREQ_LABELS: Record<Frequency, string> = {
   monthly: "Monthly",
 };
 
+/** Resize an image file to max 1200px wide and return a JPEG data URL */
+function resizeImage(file: File, maxWidth = 1200, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("canvas ctx"));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+        // If still > 800 KB, compress more
+        if (dataUrl.length > 800_000) dataUrl = canvas.toDataURL("image/jpeg", 0.65);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ClubMeetupWizard({
   clubId,
   clubName,
@@ -50,12 +78,31 @@ export default function ClubMeetupWizard({
   const [location, setLocation] = useState("");
   const [address, setAddress] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("weekly");
+  const [coverImageUrl, setCoverImageUrl] = useState<string | undefined>();
+  const [dragging, setDragging] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const inputCls =
-    "w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition-colors border border-white/10"
-    + " " + "bg-white/07";
+    "w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition-colors border border-white/10 bg-white/[0.07]";
   const labelCls = "block text-white/50 text-xs font-semibold uppercase tracking-wider mb-1.5";
+
+  const handleImageFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    try {
+      const dataUrl = await resizeImage(file);
+      setCoverImageUrl(dataUrl);
+    } catch {
+      // silently ignore
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageFile(file);
+  }, [handleImageFile]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,6 +126,7 @@ export default function ClubMeetupWizard({
       isPublished: true,
       eventType: "meetup",
       recurrence: frequency === "popup" ? "none" : frequency,
+      coverImageUrl: coverImageUrl,
     });
 
     // Generate recurring instances (up to 12 weeks / 6 months ahead)
@@ -111,7 +159,7 @@ export default function ClubMeetupWizard({
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/08"
+          className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-white/[0.08]"
           style={{ background: "oklch(0.16 0.05 145)" }}
         >
           <div className="flex items-center gap-3">
@@ -135,7 +183,81 @@ export default function ClubMeetupWizard({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[72vh] overflow-y-auto">
+
+          {/* Cover Image Upload */}
+          <div>
+            <label className={labelCls}>
+              <ImagePlus className="w-3 h-3 inline mr-1" />Cover Photo
+              <span className="text-white/25 normal-case font-normal ml-1">(optional)</span>
+            </label>
+
+            {coverImageUrl ? (
+              /* Preview */
+              <div className="relative rounded-2xl overflow-hidden group">
+                <img
+                  src={coverImageUrl}
+                  alt="Cover preview"
+                  className="w-full h-36 object-cover"
+                />
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/20 hover:bg-white/30 text-white transition"
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCoverImageUrl(undefined)}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-red-500/80 hover:bg-red-500 text-white transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Drop zone */
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className="relative rounded-2xl border-2 border-dashed cursor-pointer transition-all flex flex-col items-center justify-center gap-2 py-7"
+                style={{
+                  borderColor: dragging ? clubAccent : "rgba(255,255,255,0.15)",
+                  background: dragging ? clubAccent + "12" : "rgba(255,255,255,0.04)",
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition"
+                  style={{ background: dragging ? clubAccent + "30" : "rgba(255,255,255,0.08)" }}
+                >
+                  <ImagePlus className="w-5 h-5" style={{ color: dragging ? clubAccent : "rgba(255,255,255,0.4)" }} />
+                </div>
+                <p className="text-white/40 text-xs text-center leading-relaxed">
+                  Drag & drop or <span className="text-white/60 font-semibold">click to upload</span><br />
+                  JPG, PNG, WebP · max 5 MB
+                </p>
+              </div>
+            )}
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageFile(file);
+                e.target.value = "";
+              }}
+            />
+          </div>
+
           {/* Title */}
           <div>
             <label className={labelCls}>Event Title *</label>
@@ -207,7 +329,7 @@ export default function ClubMeetupWizard({
                   key={f}
                   type="button"
                   onClick={() => setFrequency(f)}
-                  className="py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  className="py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={
                     frequency === f
                       ? { background: clubAccent, color: "#0a1a0f" }
@@ -253,7 +375,7 @@ export default function ClubMeetupWizard({
           <button
             type="submit"
             disabled={submitting || !title.trim() || !date}
-            className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all active:scale-98 disabled:opacity-50"
+            className="w-full py-3.5 rounded-2xl text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50"
             style={{ background: clubAccent, color: "#0a1a0f" }}
           >
             {submitting
