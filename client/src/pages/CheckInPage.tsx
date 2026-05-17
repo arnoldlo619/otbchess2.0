@@ -165,6 +165,12 @@ export default function CheckInPage() {
     refresh();
   }, [refresh]);
 
+  // Poll every 30 seconds so the attendee list stays live (owner QR screen)
+  useEffect(() => {
+    const id = setInterval(() => { refresh(); }, 30_000);
+    return () => clearInterval(id);
+  }, [refresh]);
+
   // Auto-fire check-in after sign-in if the user arrived via QR scan
   useEffect(() => {
     if (user && pendingCheckIn && event && !hasCheckedIn) {
