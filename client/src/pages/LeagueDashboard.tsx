@@ -727,7 +727,9 @@ export default function LeagueDashboard() {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result }),
+      // When the commissioner explicitly uses the "Submit Report" button (isCommissionerReport),
+      // send the override flag so the server auto-finalizes even if they are a player in the match.
+      body: JSON.stringify({ result, ...(isCommissionerReport ? { commissionerOverride: true } : {}) }),
     });
     if (res.ok) {
       const d = await res.json().catch(() => ({ message: "Result recorded!" }));

@@ -662,8 +662,8 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", requireAuth, async (req
   const userId = getUser(req, res);
   if (!userId) return;
 
-  const { result } = req.body as { result: "white_win" | "black_win" | "draw" };
-  if (!["white_win", "black_win", "draw"].includes(result)) {
+  const { result, commissionerOverride } = req.body as { result: "white_win" | "black_win" | "draw"; commissionerOverride?: boolean };
+  if (![ "white_win", "black_win", "draw"].includes(result)) {
     return res.status(400).json({ error: "Invalid result. Must be white_win, black_win, or draw" });
   }
 
@@ -698,8 +698,11 @@ leaguesRouter.post("/:leagueId/matches/:matchId/result", requireAuth, async (req
       return res.status(403).json({ error: "Only match participants or admins can report results" });
     }
 
-    // Commissioner/admin: auto-finalize immediately
-    if ((isCommissioner || isAdmin) && !isWhite && !isBlack) {
+    // Commissioner/admin: auto-finalize immediately.
+    // This also applies when the commissioner IS a player in the match and explicitly
+    // sends commissionerOverride=true (e.g. via the "Submit Report" button in the UI).
+    const actingAsCommissioner = (isCommissioner || isAdmin) && (!isWhite && !isBlack || commissionerOverride);
+    if (actingAsCommissioner) {
       await db.update(leagueMatches).set({
         result, resultStatus: "completed", reportedByUserId: userId,
         whiteReport: result, blackReport: result,
@@ -842,12 +845,19 @@ leaguesRouter.post("/:leagueId/advance-week", requireAuth, async (req: Request, 
       .from(leagues)
       .where(eq(leagues.id, req.params.leagueId))
       .limit(1);
-    if (!league.length) return res.status(404).json({ error: "League not found" });
-
+        if (!league.length) return res.status(404).json({ error: "League not found" });
     if (league[0].commissionerId !== userId) {
-      return res.status(403).json({ error: "Only the commissioner can advance the week" });
+      // Also allow club owner/admin/director to advance the week
+      const advMembership = await db
+        .select()
+        .from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, league[0].clubId), eq(dbClubMembers.userId, userId)))
+        .limit(1);
+      const isClubAdmin = advMembership.length > 0 && ["owner", "admin", "director"].includes(advMembership[0].role);
+      if (!isClubAdmin) {
+        return res.status(403).json({ error: "Only the commissioner can advance the week" });
+      }
     }
-
     if (league[0].status !== "active") {
       return res.status(400).json({ error: "League is not active" });
     }
