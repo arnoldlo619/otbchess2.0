@@ -427,15 +427,26 @@ export default function MeetupEventPage() {
                       </div>
                     )}
 
-                    {/* Open check-in page link */}
-                    <Link
-                      href={`/checkin/${event.id}`}
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/50 hover:text-white/90 transition-all duration-200 hover:bg-white/08 hover:border-white/15 hover:scale-[1.01] active:scale-[0.99]"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                    >
-                      <QrCode className="w-4 h-4 transition-transform duration-200 group-hover:rotate-6" />
-                      Open Check-in Page
-                    </Link>
+                    {/* Check-in action: QR for owners, direct link for members */}
+                    {isOwnerOrDirector ? (
+                      <button
+                        onClick={() => setShowQr(true)}
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
+                        style={{ background: accentColor, color: '#ffffff' }}
+                      >
+                        <QrCode className="w-4 h-4" />
+                        Check-in QR Code
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/checkin/${event.id}`}
+                        className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/50 hover:text-white/90 transition-all duration-200 hover:bg-white/08 hover:border-white/15 hover:scale-[1.01] active:scale-[0.99]"
+                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                      >
+                        <QrCode className="w-4 h-4" />
+                        Check In
+                      </Link>
+                    )}
                   </div>
 
                   {/* ── RIGHT COLUMN: RSVP + Attendees ───────────────── */}
