@@ -97,13 +97,39 @@ export default function CheckInPage() {
     const c = getClub(ev.clubId);
     setClub(c ?? null);
 
-    const ids = getCheckedInUserIds(eventId);
+    // ── Fetch check-ins from DB (falls back to localStorage if API unavailable) ──
+    let ids: string[] = [];
+    try {
+      const res = await authFetch(`/api/clubs/${ev.clubId}/events/${eventId}/checkins`);
+      if (res.ok) {
+        const rows = await res.json() as Array<{ userId: string; displayName: string; avatarUrl: string | null; chesscomUsername: string | null }>;
+        ids = rows.map((r) => r.userId);
+        setCheckedIn(ids);
+        if (user) setHasCheckedIn(ids.includes(user.id));
+        // Build attendees directly from DB rows (no need for member lookup)
+        setLoadingRatings(true);
+        const list: AttendeeWithRating[] = await Promise.all(
+          rows.map(async (row) => {
+            let rapid: number | null = null;
+            let blitz: number | null = null;
+            if (row.chesscomUsername) {
+              const ratings = await fetchChessComRating(row.chesscomUsername);
+              rapid = ratings.rapid;
+              blitz = ratings.blitz;
+            }
+            return { userId: row.userId, displayName: row.displayName, avatarUrl: row.avatarUrl, chesscomUsername: row.chesscomUsername, rapid, blitz };
+          })
+        );
+        setAttendees(list);
+        setLoadingRatings(false);
+        return;
+      }
+    } catch { /* fall through to localStorage */ }
+
+    // Fallback: localStorage
+    ids = getCheckedInUserIds(eventId);
     setCheckedIn(ids);
-
-    if (user) {
-      setHasCheckedIn(ids.includes(user.id));
-    }
-
+    if (user) setHasCheckedIn(ids.includes(user.id));
     const members = getClubMembers(ev.clubId);
     setLoadingRatings(true);
     const list: AttendeeWithRating[] = await Promise.all(
@@ -137,6 +163,20 @@ export default function CheckInPage() {
   async function handleCheckIn() {
     if (!user || !event) return;
     setCheckingIn(true);
+    try {
+      // Persist to DB
+      await authFetch(`/api/clubs/${event.clubId}/events/${event.id}/checkin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clubId: event.clubId,
+          displayName: user.displayName ?? user.email ?? user.id,
+          avatarUrl: user.avatarUrl ?? null,
+          chesscomUsername: user.chesscomUsername ?? null,
+        }),
+      });
+    } catch { /* ignore — localStorage fallback below */ }
+    // Also update localStorage for offline resilience
     checkInToEvent(event.id, user.id);
     await refresh();
     setCheckingIn(false);

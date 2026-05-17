@@ -1079,3 +1079,60 @@ clubsRouter.delete("/:id/events/:eventId/rsvps", authMiddleware, async (req: Req
     res.status(500).json({ error: "Failed to remove RSVP" });
   }
 });
+
+// ─── Meetup Check-in Endpoints ───────────────────────────────────────────────
+
+/** POST /api/clubs/:id/events/:eventId/checkin — record a check-in for the caller */
+clubsRouter.post("/:id/events/:eventId/checkin", authMiddleware, async (req: Request, res: Response) => {
+  const { eventId } = req.params;
+  const userId = (req as any).userId as string;
+  const { displayName, avatarUrl, chesscomUsername, clubId } = req.body as {
+    displayName?: string;
+    avatarUrl?: string | null;
+    chesscomUsername?: string | null;
+    clubId?: string;
+  };
+  try {
+    const db = await getDb();
+    const { meetupCheckins } = await import("../shared/schema.js");
+    const existing = await db.select().from(meetupCheckins)
+      .where(and(eq(meetupCheckins.eventId, eventId), eq(meetupCheckins.userId, userId)));
+    if (existing.length > 0) {
+      return res.json(existing[0]);
+    }
+    const id = nanoid(16);
+    await db.insert(meetupCheckins).values({
+      id,
+      eventId,
+      clubId: clubId ?? req.params.id,
+      userId,
+      displayName: displayName ?? userId,
+      avatarUrl: avatarUrl ?? null,
+      chesscomUsername: chesscomUsername ?? null,
+    });
+    const [created] = await db.select().from(meetupCheckins)
+      .where(and(eq(meetupCheckins.eventId, eventId), eq(meetupCheckins.userId, userId)));
+    return res.status(201).json(created);
+  } catch (err) {
+    logger.error("[clubs] POST /:id/events/:eventId/checkin error:", err);
+    return res.status(500).json({ error: "Failed to record check-in" });
+  }
+});
+
+/** GET /api/clubs/:id/events/:eventId/checkins — list all check-ins for an event */
+clubsRouter.get("/:id/events/:eventId/checkins", async (req: Request, res: Response) => {
+  const { eventId } = req.params;
+  try {
+    const db = await getDb();
+    const { meetupCheckins } = await import("../shared/schema.js");
+    const rows = await db.select().from(meetupCheckins)
+      .where(eq(meetupCheckins.eventId, eventId));
+    return res.json(rows.map((r: typeof meetupCheckins.$inferSelect) => ({
+      ...r,
+      checkedInAt: r.checkedInAt instanceof Date ? r.checkedInAt.toISOString() : String(r.checkedInAt),
+    })));
+  } catch (err) {
+    logger.error("[clubs] GET /:id/events/:eventId/checkins error:", err);
+    return res.status(500).json({ error: "Failed to fetch check-ins" });
+  }
+});

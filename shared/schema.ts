@@ -1690,3 +1690,29 @@ export const chessPlayerCache = mysqlTable(
   }
 );
 
+
+// ─── meetup_checkins ──────────────────────────────────────────────────────────
+// Persists QR check-in records for club meetup events.
+// Each row represents one member checking in to one event.
+// Unique constraint on (event_id, user_id) prevents duplicate check-ins.
+export const meetupCheckins = mysqlTable(
+  "meetup_checkins",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    eventId: varchar("event_id", { length: 36 }).notNull(),
+    clubId: varchar("club_id", { length: 36 }).notNull(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    displayName: varchar("display_name", { length: 120 }).notNull(),
+    avatarUrl: varchar("avatar_url", { length: 500 }),
+    chesscomUsername: varchar("chesscom_username", { length: 100 }),
+    checkedInAt: timestamp("checked_in_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    eventIdx: index("mc_event_id_idx").on(table.eventId),
+    clubIdx: index("mc_club_id_idx").on(table.clubId),
+    userIdx: index("mc_user_id_idx").on(table.userId),
+    uniqueCheckin: uniqueIndex("mc_unique_checkin").on(table.eventId, table.userId),
+  })
+);
+export type MeetupCheckinRow = typeof meetupCheckins.$inferSelect;
+export type NewMeetupCheckinRow = typeof meetupCheckins.$inferInsert;

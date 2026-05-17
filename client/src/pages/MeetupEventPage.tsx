@@ -40,6 +40,7 @@ import {
 } from "@/lib/clubEventRegistry";
 import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { QRCodeSVG } from "qrcode.react";
+import { authFetch } from "@/lib/apiFetch";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   none: "One-time",
@@ -72,6 +73,7 @@ export default function MeetupEventPage() {
   const [event, setEvent] = useState<ClubEvent | null>(null);
   const [club, setClub] = useState<Club | null>(null);
   const [rsvps, setRsvps] = useState<ClubEventRSVP[]>([]);
+  const [dbCheckinIds, setDbCheckinIds] = useState<string[]>([]);
   const [showQr, setShowQr] = useState(false);
   const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
 
@@ -86,11 +88,21 @@ export default function MeetupEventPage() {
   const myRsvp = user && event ? getUserRSVP(event.id, user.id) : null;
   const counts = event ? countRSVPs(event.id) : { going: 0, maybe: 0, not_going: 0 };
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (!eventId) return;
     const ev = getClubEvent(eventId);
     setEvent(ev);
-    if (ev) setRsvps(getEventRSVPs(ev.id));
+    if (ev) {
+      setRsvps(getEventRSVPs(ev.id));
+      // Fetch DB check-ins for attendee display
+      try {
+        const res = await authFetch(`/api/clubs/${ev.clubId}/events/${eventId}/checkins`);
+        if (res.ok) {
+          const rows = await res.json() as Array<{ userId: string }>;
+          setDbCheckinIds(rows.map((r) => r.userId));
+        }
+      } catch { /* ignore */ }
+    }
   }, [eventId]);
 
   useEffect(() => {
@@ -133,7 +145,9 @@ export default function MeetupEventPage() {
   const recurrenceLabel = RECURRENCE_LABELS[event.recurrence ?? "none"] ?? "One-time";
   const onEventDay = isEventDay(event);
   const goingRsvps = rsvps.filter((r) => r.status === "going");
-  const checkedInMembers = (event.checkedInUserIds ?? [])
+  // Merge DB check-ins with localStorage check-ins for resilience
+  const allCheckinIds = Array.from(new Set([...(event.checkedInUserIds ?? []), ...dbCheckinIds]));
+  const checkedInMembers = allCheckinIds
     .map((uid) => members.find((m) => m.userId === uid))
     .filter(Boolean);
 
