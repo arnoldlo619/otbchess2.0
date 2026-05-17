@@ -113,6 +113,29 @@ export default function MeetupEventPage() {
     }
   }, [refresh, clubId]);
 
+  // Auto-check-in club owners/directors when they open the event page
+  useEffect(() => {
+    if (!user || !event || !isOwnerOrDirector) return;
+    const alreadyIn = [
+      ...(event.checkedInUserIds ?? []),
+      ...dbCheckinIds,
+    ].includes(user.id);
+    if (alreadyIn) return;
+    authFetch(`/api/clubs/${event.clubId}/events/${event.id}/checkin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clubId: event.clubId,
+        displayName: user.displayName ?? user.email ?? user.id,
+        avatarUrl: user.avatarUrl ?? null,
+        chesscomUsername: user.chesscomUsername ?? null,
+      }),
+    })
+      .then(() => refresh())
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, event?.id, isOwnerOrDirector]);
+
   async function handleRsvp(status: "going" | "maybe" | "not_going") {
     if (!user || !event) return;
     setRsvpSubmitting(true);
@@ -235,40 +258,46 @@ export default function MeetupEventPage() {
               borderBottom: "1px solid oklch(0.22 0.06 145)",
             }}
           >
-            {/* Mobile back */}
-            <button
-              onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="lg:hidden p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-90"
-              style={{ color: "oklch(0.65 0.12 145)" }}
-            >
-              <ChevronLeft size={15} />
-            </button>
-            {/* Desktop breadcrumb */}
-            <button
-              onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="hidden lg:flex items-center gap-1.5 text-white/40 hover:text-white/80 text-sm font-medium transition-colors duration-200 group"
-            >
-              <ChevronLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
-              {club?.name ?? "Club"}
-            </button>
-            <span className="hidden lg:block text-white/20 text-sm">/</span>
-            <span className="hidden lg:block text-white/70 text-sm font-semibold truncate max-w-xs">{event.title}</span>
-            {/* Mobile title */}
-            <div className="lg:hidden flex-1 min-w-0">
-              <span className="text-sm font-bold truncate text-white">{event.title}</span>
+            {/* Left: back button */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => navigate(`/clubs/${clubId}/home`)}
+                className="lg:hidden p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-90"
+                style={{ color: "oklch(0.65 0.12 145)" }}
+              >
+                <ChevronLeft size={15} />
+              </button>
+              <button
+                onClick={() => navigate(`/clubs/${clubId}/home`)}
+                className="hidden lg:flex items-center gap-1.5 text-white/40 hover:text-white/80 text-sm font-medium transition-colors duration-200 group"
+              >
+                <ChevronLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                {club?.name ?? "Club"}
+              </button>
             </div>
-            {/* Right: QR button (owner, event day) + avatar */}
-            <div className="flex items-center gap-2 ml-auto">
-              {isOwnerOrDirector && (
+
+            {/* Center: QR button for owners, event title for members */}
+            <div className="flex-1 flex items-center justify-center">
+              {isOwnerOrDirector ? (
                 <button
                   onClick={() => setShowQr(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95"
-                  style={{ background: onEventDay ? accentColor : "oklch(0.22 0.06 145)", color: onEventDay ? "#0a1a0f" : "rgba(255,255,255,0.7)", border: onEventDay ? "none" : "1px solid rgba(255,255,255,0.12)" }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95"
+                  style={{
+                    background: onEventDay ? accentColor : "oklch(0.22 0.06 145)",
+                    color: onEventDay ? "#ffffff" : "rgba(255,255,255,0.75)",
+                    border: onEventDay ? "none" : "1px solid rgba(255,255,255,0.14)",
+                  }}
                 >
-                  <QrCode className="w-3.5 h-3.5" />
-                  Check-in QR
+                  <QrCode className="w-4 h-4" />
+                  <span>Check-in QR Code</span>
                 </button>
+              ) : (
+                <span className="text-sm font-semibold text-white/80 truncate max-w-xs">{event.title}</span>
               )}
+            </div>
+
+            {/* Right: avatar */}
+            <div className="flex items-center flex-shrink-0">
               <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>
@@ -427,24 +456,15 @@ export default function MeetupEventPage() {
                       </div>
                     )}
 
-                    {/* Check-in action: QR for owners, direct link for members */}
-                    {isOwnerOrDirector ? (
-                      <button
-                        onClick={() => setShowQr(true)}
-                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
+                    {/* Check-in action */}
+                    {!isOwnerOrDirector && (
+                      <Link
+                        href={`/checkin/${event.id}`}
+                        className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
                         style={{ background: accentColor, color: '#ffffff' }}
                       >
                         <QrCode className="w-4 h-4" />
-                        Check-in QR Code
-                      </button>
-                    ) : (
-                      <Link
-                        href={`/checkin/${event.id}`}
-                        className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/50 hover:text-white/90 transition-all duration-200 hover:bg-white/08 hover:border-white/15 hover:scale-[1.01] active:scale-[0.99]"
-                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-                      >
-                        <QrCode className="w-4 h-4" />
-                        Check In
+                        Check In to Meetup
                       </Link>
                     )}
                   </div>
