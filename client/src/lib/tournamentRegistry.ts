@@ -38,6 +38,8 @@ export interface TournamentConfig {
    *  When set, the join URL becomes /join/<customSlug> in addition to /join/<inviteCode>.
    */
   customSlug?: string | null;
+  /** Optional cover image (data URL or remote URL) shown in the tournament hero banner. */
+  coverImageUrl?: string | null;
 }
 
 const REGISTRY_KEY = "otb-tournament-registry-v1";

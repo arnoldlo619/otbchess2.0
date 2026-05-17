@@ -93,6 +93,8 @@ interface WizardData {
   clubName: string | null;
   /** Optional custom short URL slug chosen by the host, e.g. "ThursdayOTBNight" */
   customSlug: string;
+  /** Optional cover image data URL for the tournament hero banner. */
+  coverImageUrl: string;
 }
 
 function todayIso(): string {
@@ -121,6 +123,7 @@ const DEFAULT_DATA: WizardData = {
   clubId: null,
   clubName: null,
   customSlug: "",
+  coverImageUrl: "",
 };
 
 // ─── Schedule steps metadata ──────────────────────────────────────────────────
@@ -1483,6 +1486,32 @@ function StepDetails({
   onChange: (p: Partial<WizardData>) => void;
   isDark: boolean;
 }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverFile = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      // Resize to max 1200px wide
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 1200;
+        const scale = img.width > maxW ? maxW / img.width : 1;
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL("image/jpeg", 0.82);
+        onChange({ coverImageUrl: compressed });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const ratingOptions: { value: WizardData["ratingSystem"]; label: string; sub: string }[] = [
     { value: "chess.com", label: "chess.com", sub: "Rapid / Blitz ELO" },
     { value: "lichess", label: "Lichess", sub: "Lichess rating" },
@@ -1492,6 +1521,59 @@ function StepDetails({
 
   return (
     <div className="space-y-8">
+      {/* Cover Image Upload */}
+      <div>
+        <Label isDark={isDark} hint="optional">Cover Photo</Label>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCoverFile(f); }}
+        />
+        {data.coverImageUrl ? (
+          <div className="relative rounded-2xl overflow-hidden" style={{ height: 160 }}>
+            <img src={data.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "rgba(255,255,255,0.20)", backdropFilter: "blur(8px)" }}
+              >Change</button>
+              <button
+                type="button"
+                onClick={() => onChange({ coverImageUrl: "" })}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "rgba(220,38,38,0.60)", backdropFilter: "blur(8px)" }}
+              >Remove</button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => coverInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files?.[0]; if (f) handleCoverFile(f); }}
+            className="w-full rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all duration-200"
+            style={{
+              height: 120,
+              borderColor: isDragging ? T.green : isDark ? "rgba(255,255,255,0.18)" : "#D1D5DB",
+              background: isDragging ? T.greenBg : isDark ? "rgba(255,255,255,0.04)" : "#F9FAFB",
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: T.greenBg }}>
+              <svg className="w-5 h-5" style={{ color: T.green }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium" style={{ color: isDark ? "rgba(255,255,255,0.55)" : "#6B7280" }}>Drop an image or click to upload</p>
+            <p className="text-xs" style={{ color: isDark ? "rgba(255,255,255,0.30)" : "#9CA3AF" }}>JPG, PNG, WebP — shown in the tournament banner</p>
+          </button>
+        )}
+      </div>
+
       {/* Tournament name — hero input */}
       <div>
         <Label isDark={isDark} hint="required">Tournament Name</Label>
@@ -2453,6 +2535,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
       clubId: data.clubId ?? null,
       clubName: data.clubName ?? null,
       customSlug: data.customSlug.trim() || null,
+      coverImageUrl: data.coverImageUrl || null,
     });
     grantDirectorSession(slug);
     // If signed in, persist to server so My Tournaments history is cross-device
