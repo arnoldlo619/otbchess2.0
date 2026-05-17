@@ -6,6 +6,7 @@
  * - Branded top bar with NavLogo + AvatarNavDropdown
  * - Wide two-column content: hero/details (left) + RSVP/attendees (right)
  * - Mobile bottom nav consistent with ClubDashboard
+ * - Premium hover animations throughout
  */
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLocation, Link } from "wouter";
@@ -94,7 +95,6 @@ export default function MeetupEventPage() {
     setEvent(ev);
     if (ev) {
       setRsvps(getEventRSVPs(ev.id));
-      // Fetch DB check-ins for attendee display
       try {
         const res = await authFetch(`/api/clubs/${ev.clubId}/events/${eventId}/checkins`);
         if (res.ok) {
@@ -122,7 +122,6 @@ export default function MeetupEventPage() {
   }
 
   const accent = club?.accentColor ?? event?.accentColor ?? "#4CAF50";
-  const isDark = true;
 
   // Sidebar nav tabs (mirrors ClubDashboard)
   const sidebarTabs = [
@@ -145,7 +144,6 @@ export default function MeetupEventPage() {
   const recurrenceLabel = RECURRENCE_LABELS[event.recurrence ?? "none"] ?? "One-time";
   const onEventDay = isEventDay(event);
   const goingRsvps = rsvps.filter((r) => r.status === "going");
-  // Merge DB check-ins with localStorage check-ins for resilience
   const allCheckinIds = Array.from(new Set([...(event.checkedInUserIds ?? []), ...dbCheckinIds]));
   const checkedInMembers = allCheckinIds
     .map((uid) => members.find((m) => m.userId === uid))
@@ -168,7 +166,7 @@ export default function MeetupEventPage() {
             {/* Club avatar / back button */}
             <button
               onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95 flex-shrink-0 overflow-hidden"
               style={{ background: accentColor }}
               title="Back to Club"
             >
@@ -183,7 +181,7 @@ export default function MeetupEventPage() {
               )}
             </button>
             <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
-            {/* Nav icons — clicking navigates back to club with that tab */}
+            {/* Nav icons */}
             <nav className="flex flex-col items-center gap-1 flex-1">
               {sidebarTabs.map((ct) => {
                 const Icon = ct.icon;
@@ -192,16 +190,28 @@ export default function MeetupEventPage() {
                   <button
                     key={ct.id}
                     onClick={() => navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
-                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group hover:scale-105 active:scale-95"
                     style={{
                       background: isActive ? accentColor : "transparent",
                       color: isActive ? "oklch(0.12 0.04 145)" : "oklch(0.55 0.08 145)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLButtonElement).style.background = "oklch(0.22 0.06 145)";
+                        (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.75)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                        (e.currentTarget as HTMLButtonElement).style.color = "oklch(0.55 0.08 145)";
+                      }
                     }}
                     title={ct.label}
                   >
                     <Icon size={17} />
                     <span
-                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50"
                       style={{ background: "oklch(0.25 0.06 145)", color: "#fff" }}
                     >
                       {ct.label}
@@ -228,7 +238,7 @@ export default function MeetupEventPage() {
             {/* Mobile back */}
             <button
               onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
+              className="lg:hidden p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10 active:scale-90"
               style={{ color: "oklch(0.65 0.12 145)" }}
             >
               <ChevronLeft size={15} />
@@ -236,9 +246,9 @@ export default function MeetupEventPage() {
             {/* Desktop breadcrumb */}
             <button
               onClick={() => navigate(`/clubs/${clubId}/home`)}
-              className="hidden lg:flex items-center gap-1.5 text-white/40 hover:text-white/70 text-sm font-medium transition-colors"
+              className="hidden lg:flex items-center gap-1.5 text-white/40 hover:text-white/80 text-sm font-medium transition-colors duration-200 group"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
               {club?.name ?? "Club"}
             </button>
             <span className="hidden lg:block text-white/20 text-sm">/</span>
@@ -252,7 +262,7 @@ export default function MeetupEventPage() {
               {isOwnerOrDirector && onEventDay && (
                 <button
                   onClick={() => setShowQr(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95"
                   style={{ background: accentColor, color: "#0a1a0f" }}
                 >
                   <QrCode className="w-3.5 h-3.5" />
@@ -270,7 +280,7 @@ export default function MeetupEventPage() {
 
                 {/* ── HERO BANNER ───────────────────────────────────────── */}
                 <div
-                  className="relative rounded-3xl overflow-hidden mb-6"
+                  className="relative rounded-3xl overflow-hidden mb-6 transition-transform duration-300 hover:scale-[1.005]"
                   style={{
                     background: event.coverImageUrl
                       ? `url(${event.coverImageUrl}) center/cover no-repeat`
@@ -296,7 +306,7 @@ export default function MeetupEventPage() {
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       {event.recurrence && event.recurrence !== "none" && (
                         <span
-                          className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                          className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase transition-all duration-200 hover:scale-105"
                           style={{ background: accentColor + "22", color: accentColor, border: `1px solid ${accentColor}44` }}
                         >
                           <Repeat className="w-2.5 h-2.5" />
@@ -304,12 +314,12 @@ export default function MeetupEventPage() {
                         </span>
                       )}
                       {onEventDay && (
-                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase bg-green-500/20 text-green-400 border border-green-500/30">
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase bg-green-500/20 text-green-400 border border-green-500/30 transition-all duration-200 hover:scale-105">
                           Today
                         </span>
                       )}
                       <span
-                        className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                        className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase transition-all duration-200 hover:scale-105"
                         style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.50)" }}
                       >
                         Club Meetup
@@ -332,19 +342,19 @@ export default function MeetupEventPage() {
 
                     {/* Event details card */}
                     <div
-                      className="rounded-2xl overflow-hidden"
+                      className="rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-lg hover:shadow-black/20"
                       style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
                     >
                       <div className="px-5 py-4 border-b border-white/08">
                         <h2 className="text-white/60 text-xs font-bold uppercase tracking-wider">Event Details</h2>
                       </div>
-                      <div className="px-5 py-4 space-y-3.5">
-                        <div className="flex items-start gap-3 text-sm text-white/75">
-                          <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: accentColor }} />
+                      <div className="px-5 py-4 space-y-3">
+                        <div className="flex items-start gap-3 text-sm text-white/75 transition-colors duration-200 hover:text-white/90">
+                          <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5 transition-transform duration-200 group-hover:scale-110" style={{ color: accentColor }} />
                           <span>{formatEventDate(event.startAt)}</span>
                         </div>
                         {event.startAt && (
-                          <div className="flex items-start gap-3 text-sm text-white/75">
+                          <div className="flex items-start gap-3 text-sm text-white/75 transition-colors duration-200 hover:text-white/90">
                             <Clock className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: accentColor }} />
                             <span>
                               {formatEventTime(event.startAt)}
@@ -353,7 +363,7 @@ export default function MeetupEventPage() {
                           </div>
                         )}
                         {event.venue && (
-                          <div className="flex items-start gap-3 text-sm text-white/75">
+                          <div className="flex items-start gap-3 text-sm text-white/75 transition-colors duration-200 hover:text-white/90">
                             <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: accentColor }} />
                             <div>
                               <div className="font-semibold text-white">{event.venue}</div>
@@ -362,7 +372,7 @@ export default function MeetupEventPage() {
                           </div>
                         )}
                         {event.recurrence && event.recurrence !== "none" && (
-                          <div className="flex items-start gap-3 text-sm text-white/75">
+                          <div className="flex items-start gap-3 text-sm text-white/75 transition-colors duration-200 hover:text-white/90">
                             <Repeat className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: accentColor }} />
                             <span>Repeats {recurrenceLabel}</span>
                           </div>
@@ -379,7 +389,7 @@ export default function MeetupEventPage() {
                     {/* Checked-in attendees (event day only) */}
                     {onEventDay && checkedInMembers.length > 0 && (
                       <div
-                        className="rounded-2xl overflow-hidden"
+                        className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
                         style={{ background: "oklch(0.15 0.05 145)", border: `1px solid ${accentColor}33` }}
                       >
                         <div className="px-5 py-4 border-b border-white/08 flex items-center gap-2">
@@ -392,13 +402,16 @@ export default function MeetupEventPage() {
                           {checkedInMembers.map((member) => {
                             if (!member) return null;
                             return (
-                              <div key={member.userId} className="flex items-center gap-3 px-5 py-3">
+                              <div
+                                key={member.userId}
+                                className="flex items-center gap-3 px-5 py-3 transition-colors duration-200 hover:bg-white/04"
+                              >
                                 <PlayerAvatar
                                   username={member.chesscomUsername ?? member.displayName}
                                   name={member.displayName}
                                   avatarUrl={member.avatarUrl ?? undefined}
                                   size={36}
-                                  className="w-9 h-9 rounded-full flex-shrink-0"
+                                  className="w-9 h-9 rounded-full flex-shrink-0 transition-transform duration-200 hover:scale-110"
                                 />
                                 <div className="flex-1 min-w-0">
                                   <div className="text-white text-sm font-semibold truncate">{member.displayName}</div>
@@ -417,10 +430,10 @@ export default function MeetupEventPage() {
                     {/* Open check-in page link */}
                     <Link
                       href={`/checkin/${event.id}`}
-                      className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/50 hover:text-white/80 transition-colors"
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/50 hover:text-white/90 transition-all duration-200 hover:bg-white/08 hover:border-white/15 hover:scale-[1.01] active:scale-[0.99]"
                       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
                     >
-                      <QrCode className="w-4 h-4" />
+                      <QrCode className="w-4 h-4 transition-transform duration-200 group-hover:rotate-6" />
                       Open Check-in Page
                     </Link>
                   </div>
@@ -430,7 +443,7 @@ export default function MeetupEventPage() {
 
                     {/* RSVP stats */}
                     <div
-                      className="rounded-2xl overflow-hidden"
+                      className="rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-lg hover:shadow-black/20"
                       style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
                     >
                       <div className="px-5 py-4 border-b border-white/08">
@@ -442,8 +455,8 @@ export default function MeetupEventPage() {
                           { label: "Maybe", count: counts.maybe, color: "#FFC107" },
                           { label: "Can't go", count: counts.not_going, color: "#ef4444" },
                         ].map(({ label, count, color }) => (
-                          <div key={label} className="px-3 py-4 text-center">
-                            <div className="text-2xl font-black" style={{ color }}>{count}</div>
+                          <div key={label} className="px-3 py-4 text-center transition-colors duration-200 hover:bg-white/03">
+                            <div className="text-2xl font-black transition-transform duration-200 hover:scale-110" style={{ color }}>{count}</div>
                             <div className="text-white/40 text-[11px] mt-0.5">{label}</div>
                           </div>
                         ))}
@@ -453,7 +466,7 @@ export default function MeetupEventPage() {
                     {/* RSVP buttons */}
                     {user && (
                       <div
-                        className="rounded-2xl px-5 py-4"
+                        className="rounded-2xl px-5 py-4 transition-all duration-300 hover:border-white/15"
                         style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
                       >
                         <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">Are you going?</p>
@@ -471,11 +484,11 @@ export default function MeetupEventPage() {
                                 key={status}
                                 onClick={() => handleRsvp(status)}
                                 disabled={rsvpSubmitting}
-                                className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+                                className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] hover:brightness-110"
                                 style={
                                   isActive
                                     ? { background: accentColor, color: "#0a1a0f" }
-                                    : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.50)", border: "1px solid rgba(255,255,255,0.10)" }
+                                    : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.60)", border: "1px solid rgba(255,255,255,0.12)" }
                                 }
                               >
                                 {icons[status]}
@@ -490,7 +503,7 @@ export default function MeetupEventPage() {
                     {/* Going attendees list */}
                     {goingRsvps.length > 0 && (
                       <div
-                        className="rounded-2xl overflow-hidden"
+                        className="rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/15 hover:shadow-lg hover:shadow-black/20"
                         style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
                       >
                         <div className="px-5 py-4 border-b border-white/08 flex items-center gap-2">
@@ -503,11 +516,18 @@ export default function MeetupEventPage() {
                           {goingRsvps.map((rsvp) => {
                             const member = members.find((m) => m.userId === rsvp.userId);
                             return (
-                              <div key={rsvp.id} className="flex items-center gap-3 px-5 py-3">
+                              <div
+                                key={rsvp.id}
+                                className="flex items-center gap-3 px-5 py-3 transition-colors duration-200 hover:bg-white/04"
+                              >
                                 {rsvp.avatarUrl ? (
-                                  <img src={rsvp.avatarUrl} alt={rsvp.displayName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                                  <img
+                                    src={rsvp.avatarUrl}
+                                    alt={rsvp.displayName}
+                                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 transition-transform duration-200 hover:scale-110"
+                                  />
                                 ) : (
-                                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 text-white/60 text-xs font-bold flex-shrink-0">
+                                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 text-white/60 text-xs font-bold flex-shrink-0 transition-transform duration-200 hover:scale-110">
                                     {rsvp.displayName.charAt(0).toUpperCase()}
                                   </div>
                                 )}
@@ -518,7 +538,7 @@ export default function MeetupEventPage() {
                                       href={`https://chess.com/member/${member.chesscomUsername}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-1 text-white/40 text-xs hover:text-white/70 transition-colors"
+                                      className="flex items-center gap-1 text-white/40 text-xs hover:text-white/80 transition-colors duration-200"
                                     >
                                       <ExternalLink className="w-2.5 h-2.5" />
                                       {member.chesscomUsername}
@@ -551,7 +571,7 @@ export default function MeetupEventPage() {
             <button
               key={ct.id}
               onClick={() => navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all"
+              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
               style={{ color: isActive ? accentColor : "oklch(0.50 0.06 145)" }}
             >
               <Icon size={18} />
@@ -569,13 +589,13 @@ export default function MeetupEventPage() {
           onClick={() => setShowQr(false)}
         >
           <div
-            className="relative rounded-3xl overflow-hidden p-8 flex flex-col items-center gap-4 max-w-xs w-full"
+            className="relative rounded-3xl overflow-hidden p-8 flex flex-col items-center gap-4 max-w-xs w-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/40"
             style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.12)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowQr(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/10 transition"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white/80 hover:bg-white/12 transition-all duration-200 hover:scale-110 active:scale-90"
             >
               <X className="w-4 h-4" />
             </button>
@@ -583,7 +603,7 @@ export default function MeetupEventPage() {
               <h3 className="text-white font-bold text-lg">Check-in QR Code</h3>
               <p className="text-white/40 text-xs mt-1">Members scan this to check in</p>
             </div>
-            <div className="p-3 rounded-2xl" style={{ background: "#f0faf2" }}>
+            <div className="p-3 rounded-2xl transition-transform duration-300 hover:scale-105" style={{ background: "#f0faf2" }}>
               <QRCodeSVG
                 value={`${window.location.origin}/checkin/${event.id}`}
                 size={220}
