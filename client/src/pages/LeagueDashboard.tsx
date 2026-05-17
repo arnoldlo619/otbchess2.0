@@ -1079,21 +1079,7 @@ export default function LeagueDashboard() {
               <ArrowLeft size={15} />
             </button>
 
-            {/* Club logo + name (desktop) */}
-            <div className="hidden lg:flex items-center gap-2.5">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: accent }}
-              >
-                <Trophy size={14} style={{ color: "#fff" }} />
-              </div>
-              <div className="leading-tight">
-                <span className="text-sm font-black tracking-tight" style={{ color: "#ffffff" }}>
-                  {league.clubName ?? league.name}
-                </span>
-                <span className="text-xs font-medium ml-1" style={{ color: "oklch(0.65 0.12 145)" }}>League</span>
-              </div>
-            </div>
+
 
             {/* Mobile title */}
             <div className="lg:hidden flex-1 min-w-0">
@@ -1134,6 +1120,36 @@ export default function LeagueDashboard() {
 
             {/* Right actions */}
             <div className="flex items-center gap-1.5">
+              {/* Commissioner quick-action buttons — replace Share+Avatar when active */}
+              {isCommissioner && league.status === "active" && (
+                <>
+                  <button
+                    onClick={() => setActiveTab("matchups")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
+                    style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                    title="Report Results"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <span className="hidden sm:inline">Report</span>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await authFetch(`/api/leagues/${league.id}/advance-week`, { method: "POST", credentials: "include" });
+                        if (res.ok) { showToast("Advanced to next week", "success"); fetchAll(); }
+                        else { const d = await res.json().catch(() => ({})); showToast(d.error ?? "Failed", "error"); }
+                      } catch { showToast("Network error", "error"); }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
+                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
+                    title="Advance Week"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+                    <span className="hidden sm:inline">Advance</span>
+                  </button>
+                </>
+              )}
+              {/* Push notifications bell — draft phase only */}
               {isCommissioner && league.status === "draft" && pushStatus !== "unsupported" && (
                 <button
                   onClick={pushStatus === "subscribed" ? handleUnsubscribePush : handleSubscribePush}
@@ -1152,28 +1168,16 @@ export default function LeagueDashboard() {
                   )}
                 </button>
               )}
-              <button
-                onClick={() => setShowShare(true)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: "oklch(0.22 0.06 145)", color: accent }}
-                title="Share League"
-              >
-                <Share2 size={14} />
-              </button>
-              {/* User avatar */}
-              {user && !user.isGuest && (
-                <div
-                  className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0"
-                  style={{ border: `1.5px solid ${accent}44` }}
+              {/* Share — shown for non-active leagues or non-commissioners */}
+              {(!isCommissioner || league.status !== "active") && (
+                <button
+                  onClick={() => setShowShare(true)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+                  style={{ background: "oklch(0.22 0.06 145)", color: accent }}
+                  title="Share League"
                 >
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.displayName} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ background: `${accent}22`, color: accent }}>
-                      {user.displayName?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
+                  <Share2 size={14} />
+                </button>
               )}
             </div>
           </div>
@@ -1730,26 +1734,7 @@ export default function LeagueDashboard() {
               </div>
             )}
 
-            {/* Season progress */}
-            <div className="rounded-2xl p-5" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Trophy size={15} style={{ color: accent }} />
-                  <span className="font-semibold text-sm" style={{ color: textMain }}>Season Progress</span>
-                </div>
-                <span className="text-xs font-medium" style={{ color: accent }}>{progressPct}%</span>
-              </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#e5e7eb" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${progressPct}%`, background: accent }}
-                />
-              </div>
-              <div className="flex justify-between mt-2 text-xs" style={{ color: textMuted }}>
-                <span>{completedMatchCount} of {totalMatches} matches complete</span>
-                <span>Week {league.currentWeek}/{league.totalWeeks}</span>
-              </div>
-            </div>
+
 
             {/* Recent results */}
             {recentResults.length > 0 && (
@@ -3558,28 +3543,7 @@ export default function LeagueDashboard() {
               });
             })()}
 
-            {/* Commissioner quick actions */}
-            {isCommissioner && league.status === "active" && (
-              <div className="rounded-2xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBorder}` }}>
-                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
-                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: textMuted }}>Commissioner</span>
-                </div>
-                <div className="p-3 space-y-2">
-                  <button onClick={() => setActiveTab("matchups")} className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all" style={{ background: `${accent}18`, color: accent }}>Report Results</button>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const res = await authFetch(`/api/leagues/${league.id}/advance-week`, { method: "POST", credentials: "include" });
-                        if (res.ok) { showToast("Advanced to next week", "success"); fetchAll(); }
-                        else { const d = await res.json().catch(() => ({})); showToast(d.error ?? "Failed", "error"); }
-                      } catch { showToast("Network error", "error"); }
-                    }}
-                    className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all"
-                    style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMain }}
-                  >Advance Week →</button>
-                </div>
-              </div>
-            )}
+
           </div>{/* end right panel */}
               </div>{/* end flex row */}
             </div>{/* end px wrapper */}
