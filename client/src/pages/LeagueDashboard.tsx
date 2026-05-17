@@ -1123,6 +1123,18 @@ export default function LeagueDashboard() {
               {/* Commissioner quick-action buttons — replace Share+Avatar when active */}
               {isCommissioner && league.status === "active" && (
                 <>
+                  {/* Crown + role label — desktop only */}
+                  <span
+                    className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold tracking-wide select-none"
+                    style={{
+                      background: "oklch(0.32 0.10 80 / 0.25)",
+                      color: "oklch(0.88 0.15 80)",
+                      border: "1px solid oklch(0.65 0.14 80 / 0.35)",
+                    }}
+                  >
+                    <Crown size={10} />
+                    Commissioner
+                  </span>
                   <button
                     onClick={() => setActiveTab("matchups")}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
