@@ -1,13 +1,15 @@
 /**
  * CheckInPage — /checkin/:eventId
  *
- * Public QR-code landing page for club meetup check-ins.
- * - Logged-in members tap "Check In" to mark attendance
- * - After check-in, shows all checked-in attendees with chess.com ratings
- * - Guests are prompted to sign in first
+ * Full-screen check-in landing page matching the ClubDashboard shell:
+ * - Left icon rail (desktop) with club avatar + nav icons
+ * - Branded top bar with breadcrumb + AvatarNavDropdown
+ * - Micro-grid hero banner with event title
+ * - Two-column layout: check-in action (left) + attendees with ratings (right)
+ * - Mobile bottom nav consistent with ClubDashboard
  */
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import {
   CheckCircle,
   Users,
@@ -17,15 +19,20 @@ import {
   ExternalLink,
   LogIn,
   Loader2,
+  ChevronLeft,
+  Megaphone,
+  Trophy,
+  Settings2,
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import {
   getClubEvent,
   checkInToEvent,
   getCheckedInUserIds,
   type ClubEvent,
 } from "@/lib/clubEventRegistry";
-import { getClubMembers } from "@/lib/clubRegistry";
+import { getClubMembers, getClub, type Club } from "@/lib/clubRegistry";
 import { authFetch } from "@/lib/apiFetch";
 
 interface AttendeeWithRating {
@@ -60,11 +67,21 @@ async function fetchChessComRating(username: string): Promise<{ rapid: number | 
   }
 }
 
+const sidebarTabs = [
+  { id: "feed", label: "Feed", icon: Megaphone },
+  { id: "events", label: "Events", icon: Calendar },
+  { id: "members", label: "Members", icon: Users },
+  { id: "leagues", label: "Leagues", icon: Trophy },
+  { id: "settings", label: "Settings", icon: Settings2 },
+];
+
 export default function CheckInPage() {
   const { eventId } = useParams<{ eventId: string }>();
+  const [, navigate] = useLocation();
   const { user } = useAuthContext();
 
   const [event, setEvent] = useState<ClubEvent | null>(null);
+  const [club, setClub] = useState<Club | null>(null);
   const [checkedIn, setCheckedIn] = useState<string[]>([]);
   const [attendees, setAttendees] = useState<AttendeeWithRating[]>([]);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
@@ -77,6 +94,9 @@ export default function CheckInPage() {
     setEvent(ev);
     if (!ev) return;
 
+    const c = getClub(ev.clubId);
+    setClub(c ?? null);
+
     const ids = getCheckedInUserIds(eventId);
     setCheckedIn(ids);
 
@@ -84,7 +104,6 @@ export default function CheckInPage() {
       setHasCheckedIn(ids.includes(user.id));
     }
 
-    // Build attendee list with ratings
     const members = getClubMembers(ev.clubId);
     setLoadingRatings(true);
     const list: AttendeeWithRating[] = await Promise.all(
@@ -123,7 +142,8 @@ export default function CheckInPage() {
     setCheckingIn(false);
   }
 
-  const accentColor = event?.accentColor ?? "#4CAF50";
+  const accentColor = event?.accentColor ?? club?.accentColor ?? "#4CAF50";
+  const clubId = event?.clubId;
 
   if (!event) {
     return (
@@ -134,171 +154,391 @@ export default function CheckInPage() {
   }
 
   return (
-    <div className="min-h-screen pb-16" style={{ background: "oklch(0.10 0.04 145)" }}>
-      {/* Header */}
-      <div
-        className="sticky top-0 z-50 px-4 py-3 border-b border-white/08 flex items-center justify-between"
-        style={{ background: "oklch(0.12 0.04 145)" }}
-      >
-        <Link
-          href={`/clubs/${event.clubId}/meetup/${event.id}`}
-          className="text-white/50 hover:text-white text-sm font-semibold transition-colors"
-        >
-          ← Event Page
-        </Link>
-        <span className="text-white/30 text-xs">Club Meetup Check-in</span>
-      </div>
+    <div className="min-h-screen" style={{ background: "oklch(0.20 0.06 145)" }}>
+      <div className="flex h-screen overflow-hidden">
 
-      <div className="max-w-md mx-auto px-4 pt-8 space-y-6">
-        {/* Event summary */}
-        <div
-          className="rounded-3xl px-6 py-6 text-center"
-          style={{
-            background: `linear-gradient(135deg, ${accentColor}22 0%, oklch(0.14 0.05 145) 100%)`,
-            border: `1px solid ${accentColor}33`,
-          }}
+        {/* ── LEFT ICON RAIL (desktop) ─────────────────────────────────────── */}
+        <aside
+          className="hidden lg:flex flex-col items-center w-[60px] flex-shrink-0 h-full py-4 gap-1 relative chess-board-bg"
+          style={{ borderRight: "1px solid oklch(0.22 0.06 145)" }}
         >
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: accentColor + "22" }}
-          >
-            <Users className="w-7 h-7" style={{ color: accentColor }} />
-          </div>
-          <h1
-            className="text-2xl font-black text-white mb-2"
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            {event.title}
-          </h1>
-          <div className="flex flex-col items-center gap-1.5 text-sm text-white/60">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" style={{ color: accentColor }} />
-              {formatEventDate(event.startAt)}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" style={{ color: accentColor }} />
-              {formatEventTime(event.startAt)}
-              {event.endAt && ` – ${formatEventTime(event.endAt)}`}
-            </div>
-            {event.venue && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" style={{ color: accentColor }} />
-                {event.venue}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Check-in action */}
-        {!user ? (
-          <div
-            className="rounded-2xl px-6 py-6 text-center"
-            style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <LogIn className="w-8 h-8 text-white/30 mx-auto mb-3" />
-            <p className="text-white/60 text-sm mb-4">Sign in to check in to this meetup</p>
-            <Link
-              href={`/`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
-              style={{ background: accentColor, color: "#0a1a0f" }}
+            className="absolute inset-0 pointer-events-none z-0"
+            style={{ background: "oklch(0.15 0.04 145 / 0.80)" }}
+          />
+          <div className="relative z-10 flex flex-col items-center w-full gap-1 flex-1 py-0">
+            {/* Club avatar / back to club */}
+            <button
+              onClick={() => clubId && navigate(`/clubs/${clubId}/home`)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-opacity hover:opacity-80 flex-shrink-0 overflow-hidden"
+              style={{ background: accentColor }}
+              title="Back to Club"
             >
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </Link>
+              {club?.avatarUrl ? (
+                <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+              ) : (
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-exclamation_0b3fa613.png"
+                  alt="OTB!!"
+                  className="w-8 h-8 object-contain"
+                />
+              )}
+            </button>
+            <div className="w-8 h-px mb-2" style={{ background: "oklch(0.30 0.06 145)" }} />
+            <nav className="flex flex-col items-center gap-1 flex-1">
+              {sidebarTabs.map((ct) => {
+                const Icon = ct.icon;
+                const isActive = ct.id === "events";
+                return (
+                  <button
+                    key={ct.id}
+                    onClick={() => clubId && navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
+                    className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                    style={{
+                      background: isActive ? accentColor : "transparent",
+                      color: isActive ? "oklch(0.12 0.04 145)" : "oklch(0.55 0.08 145)",
+                    }}
+                    title={ct.label}
+                  >
+                    <Icon size={17} />
+                    <span
+                      className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                      style={{ background: "oklch(0.25 0.06 145)", color: "#fff" }}
+                    >
+                      {ct.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-        ) : hasCheckedIn ? (
+        </aside>
+
+        {/* ── MAIN CONTENT AREA ────────────────────────────────────────────── */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+          {/* ── BRANDED TOP BAR ──────────────────────────────────────────── */}
           <div
-            className="rounded-2xl px-6 py-5 flex items-center gap-4"
-            style={{ background: "rgba(76,175,80,0.12)", border: "1px solid rgba(76,175,80,0.30)" }}
+            className="flex-shrink-0 flex items-center gap-3 px-4 lg:px-5 py-2.5"
+            style={{
+              background: "oklch(0.15 0.04 145 / 0.97)",
+              backdropFilter: "blur(12px)",
+              borderBottom: "1px solid oklch(0.22 0.06 145)",
+            }}
           >
-            <CheckCircle className="w-8 h-8 flex-shrink-0" style={{ color: accentColor }} />
-            <div>
-              <div className="text-white font-bold">You're checked in!</div>
-              <div className="text-white/50 text-xs mt-0.5">Your attendance has been recorded.</div>
+            {/* Mobile back */}
+            <button
+              onClick={() => clubId && navigate(`/clubs/${clubId}/meetup/${event.id}`)}
+              className="lg:hidden p-1.5 rounded-lg transition-opacity hover:opacity-70"
+              style={{ color: "oklch(0.65 0.12 145)" }}
+            >
+              <ChevronLeft size={15} />
+            </button>
+            {/* Desktop breadcrumb */}
+            <button
+              onClick={() => clubId && navigate(`/clubs/${clubId}/home`)}
+              className="hidden lg:flex items-center gap-1.5 text-white/40 hover:text-white/70 text-sm font-medium transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {club?.name ?? "Club"}
+            </button>
+            <span className="hidden lg:block text-white/20 text-sm">/</span>
+            <Link
+              href={`/clubs/${clubId}/meetup/${event.id}`}
+              className="hidden lg:block text-white/40 hover:text-white/70 text-sm font-medium transition-colors truncate max-w-[160px]"
+            >
+              {event.title}
+            </Link>
+            <span className="hidden lg:block text-white/20 text-sm">/</span>
+            <span className="hidden lg:block text-white/70 text-sm font-semibold">Check-in</span>
+            {/* Mobile title */}
+            <div className="lg:hidden flex-1 min-w-0">
+              <span className="text-sm font-bold text-white">Check-in</span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <AvatarNavDropdown currentPage="Clubs" />
             </div>
           </div>
-        ) : (
-          <button
-            onClick={handleCheckIn}
-            disabled={checkingIn}
-            className="w-full py-4 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-60"
-            style={{ background: accentColor, color: "#0a1a0f" }}
-          >
-            {checkingIn ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <CheckCircle className="w-5 h-5" />
-            )}
-            {checkingIn ? "Checking in…" : "Check In to Meetup"}
-          </button>
-        )}
 
-        {/* Attendees */}
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
-        >
-          <div className="px-5 py-3 border-b border-white/08 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-white/40" />
-              <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">
-                Checked In ({checkedIn.length})
-              </span>
-            </div>
-            {loadingRatings && <Loader2 className="w-3.5 h-3.5 text-white/30 animate-spin" />}
-          </div>
+          {/* ── SCROLLABLE CONTENT ────────────────────────────────────────── */}
+          <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+            <div className="px-4 lg:px-8 py-6">
+              <div className="max-w-5xl mx-auto">
 
-          {attendees.length === 0 ? (
-            <div className="px-5 py-8 text-center text-white/30 text-sm">
-              No one has checked in yet. Be the first!
-            </div>
-          ) : (
-            <div className="divide-y divide-white/05">
-              {attendees.map((a) => (
-                <div key={a.userId} className="flex items-center gap-3 px-5 py-3">
-                  {a.avatarUrl ? (
-                    <img src={a.avatarUrl} alt={a.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 text-white/60 text-sm font-bold flex-shrink-0">
-                      {a.displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-sm font-semibold truncate">{a.displayName}</div>
-                    {a.chesscomUsername && (
-                      <a
-                        href={`https://chess.com/member/${a.chesscomUsername}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-white/40 text-xs hover:text-white/70 transition-colors"
+                {/* ── HERO BANNER ───────────────────────────────────────── */}
+                <div
+                  className="relative rounded-3xl overflow-hidden mb-6"
+                  style={{
+                    background: event.coverImageUrl
+                      ? `url(${event.coverImageUrl}) center/cover no-repeat`
+                      : `linear-gradient(135deg, ${accentColor}33 0%, ${accentColor}11 40%, oklch(0.12 0.06 240) 100%)`,
+                    minHeight: "180px",
+                  }}
+                >
+                  {/* Micro-grid overlay */}
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+                      backgroundSize: "24px 24px",
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: "linear-gradient(to top, oklch(0.12 0.05 145) 0%, transparent 55%)" }}
+                  />
+                  <div className="relative z-10 flex flex-col justify-end h-full p-6 pt-12">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span
+                        className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase"
+                        style={{ background: accentColor + "22", color: accentColor, border: `1px solid ${accentColor}44` }}
                       >
-                        <ExternalLink className="w-2.5 h-2.5" />
-                        {a.chesscomUsername}
-                      </a>
-                    )}
-                  </div>
-                  {/* Ratings */}
-                  <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                    {a.rapid && (
-                      <span className="text-xs font-bold" style={{ color: accentColor }}>
-                        {a.rapid} <span className="text-white/30 font-normal">rapid</span>
+                        Check-in
                       </span>
-                    )}
-                    {a.blitz && (
-                      <span className="text-xs font-semibold text-amber-400">
-                        {a.blitz} <span className="text-white/30 font-normal">blitz</span>
+                      {hasCheckedIn && (
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase bg-green-500/20 text-green-400 border border-green-500/30">
+                          Checked In ✓
+                        </span>
+                      )}
+                    </div>
+                    <h1
+                      className="text-2xl lg:text-3xl font-black text-white leading-tight"
+                      style={{ fontFamily: "'Clash Display', sans-serif" }}
+                    >
+                      {event.title}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-white/55">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                        {formatEventDate(event.startAt)}
                       </span>
-                    )}
-                    {!a.rapid && !a.blitz && a.chesscomUsername && (
-                      <span className="text-white/20 text-xs">—</span>
-                    )}
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                        {formatEventTime(event.startAt)}
+                        {event.endAt && ` – ${formatEventTime(event.endAt)}`}
+                      </span>
+                      {event.venue && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                          {event.venue}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
+
+                {/* ── TWO-COLUMN LAYOUT ─────────────────────────────────── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                  {/* ── LEFT: Check-in action ─────────────────────────── */}
+                  <div className="lg:col-span-1 space-y-4">
+
+                    {/* Check-in card */}
+                    {!user ? (
+                      <div
+                        className="rounded-2xl px-6 py-8 text-center"
+                        style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
+                      >
+                        <div
+                          className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                          style={{ background: "rgba(255,255,255,0.06)" }}
+                        >
+                          <LogIn className="w-7 h-7 text-white/30" />
+                        </div>
+                        <p className="text-white/60 text-sm mb-5 leading-relaxed">
+                          Sign in to check in to this meetup and see who's here.
+                        </p>
+                        <Link
+                          href="/"
+                          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all active:scale-95"
+                          style={{ background: accentColor, color: "#0a1a0f" }}
+                        >
+                          <LogIn className="w-4 h-4" />
+                          Sign In
+                        </Link>
+                      </div>
+                    ) : hasCheckedIn ? (
+                      <div
+                        className="rounded-2xl px-6 py-6 flex flex-col items-center text-center gap-3"
+                        style={{ background: "rgba(76,175,80,0.10)", border: "1px solid rgba(76,175,80,0.30)" }}
+                      >
+                        <div
+                          className="w-14 h-14 rounded-full flex items-center justify-center"
+                          style={{ background: "rgba(76,175,80,0.20)" }}
+                        >
+                          <CheckCircle className="w-8 h-8" style={{ color: accentColor }} />
+                        </div>
+                        <div>
+                          <div className="text-white font-bold text-lg">You're checked in!</div>
+                          <div className="text-white/50 text-sm mt-1">Your attendance has been recorded.</div>
+                        </div>
+                        <Link
+                          href={`/clubs/${clubId}/meetup/${event.id}`}
+                          className="flex items-center gap-1.5 text-xs font-semibold mt-1 transition-colors"
+                          style={{ color: accentColor }}
+                        >
+                          View Event Page →
+                        </Link>
+                      </div>
+                    ) : (
+                      <div
+                        className="rounded-2xl px-6 py-6 flex flex-col items-center text-center gap-4"
+                        style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
+                      >
+                        <div
+                          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                          style={{ background: accentColor + "22" }}
+                        >
+                          <Users className="w-7 h-7" style={{ color: accentColor }} />
+                        </div>
+                        <div>
+                          <div className="text-white font-bold">Ready to check in?</div>
+                          <div className="text-white/40 text-sm mt-1">Tap below to mark your attendance.</div>
+                        </div>
+                        <button
+                          onClick={handleCheckIn}
+                          disabled={checkingIn}
+                          className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                          style={{ background: accentColor, color: "#0a1a0f" }}
+                        >
+                          {checkingIn ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                          {checkingIn ? "Checking in…" : "Check In to Meetup"}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Back to event page */}
+                    <Link
+                      href={`/clubs/${clubId}/meetup/${event.id}`}
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white/40 hover:text-white/70 transition-colors"
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back to Event Page
+                    </Link>
+                  </div>
+
+                  {/* ── RIGHT: Attendees with ratings ────────────────── */}
+                  <div className="lg:col-span-2">
+                    <div
+                      className="rounded-2xl overflow-hidden"
+                      style={{ background: "oklch(0.15 0.05 145)", border: "1px solid rgba(255,255,255,0.08)" }}
+                    >
+                      <div className="px-5 py-4 border-b border-white/08 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-white/40" />
+                          <span className="text-white/60 text-xs font-bold uppercase tracking-wider">
+                            Checked In · {checkedIn.length}
+                          </span>
+                        </div>
+                        {loadingRatings && <Loader2 className="w-3.5 h-3.5 text-white/30 animate-spin" />}
+                      </div>
+
+                      {attendees.length === 0 ? (
+                        <div className="px-5 py-12 text-center">
+                          <div
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                            style={{ background: "rgba(255,255,255,0.05)" }}
+                          >
+                            <Users className="w-6 h-6 text-white/20" />
+                          </div>
+                          <p className="text-white/30 text-sm">No one has checked in yet.</p>
+                          <p className="text-white/20 text-xs mt-1">Be the first!</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-white/05">
+                          {attendees.map((a, idx) => (
+                            <div key={a.userId} className="flex items-center gap-3 px-5 py-3.5">
+                              {/* Rank */}
+                              <span className="text-white/20 text-xs font-bold w-5 text-right flex-shrink-0">
+                                {idx + 1}
+                              </span>
+                              {/* Avatar */}
+                              {a.avatarUrl ? (
+                                <img src={a.avatarUrl} alt={a.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                              ) : (
+                                <div
+                                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                                  style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.60)" }}
+                                >
+                                  {a.displayName.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              {/* Name + chess.com */}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-white text-sm font-semibold truncate">{a.displayName}</div>
+                                {a.chesscomUsername && (
+                                  <a
+                                    href={`https://chess.com/member/${a.chesscomUsername}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-white/40 text-xs hover:text-white/70 transition-colors"
+                                  >
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                    {a.chesscomUsername}
+                                  </a>
+                                )}
+                              </div>
+                              {/* Ratings */}
+                              <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                                {a.rapid !== null && (
+                                  <span className="text-xs font-bold" style={{ color: accentColor }}>
+                                    {a.rapid} <span className="text-white/30 font-normal">rapid</span>
+                                  </span>
+                                )}
+                                {a.blitz !== null && (
+                                  <span className="text-xs font-semibold text-amber-400">
+                                    {a.blitz} <span className="text-white/30 font-normal">blitz</span>
+                                  </span>
+                                )}
+                                {a.rapid === null && a.blitz === null && a.chesscomUsername && (
+                                  <span className="text-white/20 text-xs">—</span>
+                                )}
+                              </div>
+                              {/* Checked-in badge */}
+                              <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: accentColor }} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* ── MOBILE BOTTOM NAV ──────────────────────────────────────────────── */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"
+        style={{
+          background: "oklch(0.13 0.04 145 / 0.97)",
+          borderTop: "1px solid oklch(0.22 0.06 145)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        {sidebarTabs.map((ct) => {
+          const Icon = ct.icon;
+          const isActive = ct.id === "events";
+          return (
+            <button
+              key={ct.id}
+              onClick={() => clubId && navigate(`/clubs/${clubId}/home?tab=${ct.id}`)}
+              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all"
+              style={{ color: isActive ? accentColor : "oklch(0.50 0.06 145)" }}
+            >
+              <Icon size={18} />
+              <span className="text-[9px] font-semibold">{ct.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }
