@@ -259,11 +259,11 @@ export default function MeetupEventPage() {
             </div>
             {/* Right: QR button (owner, event day) + avatar */}
             <div className="flex items-center gap-2 ml-auto">
-              {isOwnerOrDirector && onEventDay && (
+              {isOwnerOrDirector && (
                 <button
                   onClick={() => setShowQr(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 hover:brightness-110 hover:scale-105 active:scale-95"
-                  style={{ background: accentColor, color: "#0a1a0f" }}
+                  style={{ background: onEventDay ? accentColor : "oklch(0.22 0.06 145)", color: onEventDay ? "#0a1a0f" : "rgba(255,255,255,0.7)", border: onEventDay ? "none" : "1px solid rgba(255,255,255,0.12)" }}
                 >
                   <QrCode className="w-3.5 h-3.5" />
                   Check-in QR
@@ -582,42 +582,88 @@ export default function MeetupEventPage() {
       </nav>
 
       {/* ── QR MODAL ─────────────────────────────────────────────────────────── */}
-      {showQr && (
-        <div
-          className="fixed inset-0 z-[300] flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
-          onClick={() => setShowQr(false)}
-        >
+      {showQr && (() => {
+        const checkinUrl = `${window.location.origin}/checkin/${event.id}`;
+        return (
           <div
-            className="relative rounded-3xl overflow-hidden p-8 flex flex-col items-center gap-4 max-w-xs w-full transition-all duration-300 hover:shadow-2xl hover:shadow-black/40"
-            style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.12)" }}
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(10px)" }}
+            onClick={() => setShowQr(false)}
           >
-            <button
-              onClick={() => setShowQr(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white/80 hover:bg-white/12 transition-all duration-200 hover:scale-110 active:scale-90"
+            <div
+              className="relative rounded-3xl overflow-hidden flex flex-col items-center gap-5 max-w-sm w-full"
+              style={{ background: "oklch(0.14 0.05 145)", border: "1px solid rgba(255,255,255,0.12)", padding: "2rem" }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="text-center">
-              <h3 className="text-white font-bold text-lg">Check-in QR Code</h3>
-              <p className="text-white/40 text-xs mt-1">Members scan this to check in</p>
+              {/* Header */}
+              <button
+                onClick={() => setShowQr(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white/80 hover:bg-white/12 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="text-center">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: accentColor + "22" }}>
+                  <QrCode className="w-5 h-5" style={{ color: accentColor }} />
+                </div>
+                <h3 className="text-white font-bold text-lg">Check-in QR Code</h3>
+                <p className="text-white/40 text-xs mt-1">{event.title} · {formatEventDate(event.startAt)}</p>
+              </div>
+              {/* QR Code */}
+              <div className="p-4 rounded-2xl" style={{ background: "#ffffff" }}>
+                <QRCodeSVG
+                  id="meetup-checkin-qr"
+                  value={checkinUrl}
+                  size={210}
+                  bgColor="#ffffff"
+                  fgColor="#0a1a0f"
+                  level="H"
+                />
+              </div>
+              {/* Instructions */}
+              <div className="w-full rounded-xl px-4 py-3 flex items-start gap-3" style={{ background: accentColor + "15", border: `1px solid ${accentColor}30` }}>
+                <QrCode className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
+                <p className="text-xs leading-relaxed text-white/60">
+                  Show this screen to members as they arrive. They scan with their phone camera, sign in if needed, and confirm check-in. Attendees and their chess.com ELOs appear instantly.
+                </p>
+              </div>
+              {/* Actions */}
+              <div className="w-full grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(checkinUrl).catch(() => {});
+                  }}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all"
+                  style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.10)" }}
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Link
+                </button>
+                <button
+                  onClick={() => {
+                    const svg = document.getElementById("meetup-checkin-qr");
+                    if (!svg) return;
+                    const serializer = new XMLSerializer();
+                    const svgStr = serializer.serializeToString(svg);
+                    const blob = new Blob([svgStr], { type: "image/svg+xml" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `checkin-qr-${event.id}.svg`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all hover:brightness-110"
+                  style={{ background: accentColor, color: "#0a1a0f" }}
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Save QR
+                </button>
+              </div>
             </div>
-            <div className="p-3 rounded-2xl transition-transform duration-300 hover:scale-105" style={{ background: "#f0faf2" }}>
-              <QRCodeSVG
-                value={`${window.location.origin}/checkin/${event.id}`}
-                size={220}
-                bgColor="#f0faf2"
-                fgColor="#0a1a0f"
-                level="M"
-              />
-            </div>
-            <p className="text-white/30 text-xs text-center">
-              {event.title} · {formatEventDate(event.startAt)}
-            </p>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

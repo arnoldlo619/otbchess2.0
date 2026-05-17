@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import AuthModal from "@/components/AuthModal";
 import {
   getClubEvent,
   checkInToEvent,
@@ -87,6 +88,10 @@ export default function CheckInPage() {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [loadingRatings, setLoadingRatings] = useState(false);
+  // Auth modal — shown when unauthenticated user lands via QR scan
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  // Pending check-in flag — auto-fires after sign-in
+  const [pendingCheckIn, setPendingCheckIn] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!eventId) return;
@@ -159,6 +164,15 @@ export default function CheckInPage() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Auto-fire check-in after sign-in if the user arrived via QR scan
+  useEffect(() => {
+    if (user && pendingCheckIn && event && !hasCheckedIn) {
+      setPendingCheckIn(false);
+      handleCheckIn();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pendingCheckIn, event, hasCheckedIn]);
 
   async function handleCheckIn() {
     if (!user || !event) return;
@@ -381,21 +395,22 @@ export default function CheckInPage() {
                       >
                         <div
                           className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                          style={{ background: "rgba(255,255,255,0.06)" }}
+                          style={{ background: accentColor + "22" }}
                         >
-                          <LogIn className="w-7 h-7 text-white/30" />
+                          <LogIn className="w-7 h-7" style={{ color: accentColor }} />
                         </div>
-                        <p className="text-white/60 text-sm mb-5 leading-relaxed">
-                          Sign in to check in to this meetup and see who's here.
+                        <p className="text-white font-bold mb-1">Sign in to check in</p>
+                        <p className="text-white/50 text-sm mb-5 leading-relaxed">
+                          Sign in with your OTB account to confirm your attendance at this meetup.
                         </p>
-                        <Link
-                          href="/"
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all active:scale-95"
-                          style={{ background: accentColor, color: "#0a1a0f" }}
+                        <button
+                          onClick={() => { setPendingCheckIn(true); setShowAuthModal(true); }}
+                          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95 hover:brightness-110"
+                          style={{ background: accentColor, color: '#ffffff' }}
                         >
                           <LogIn className="w-4 h-4" />
-                          Sign In
-                        </Link>
+                          Sign In &amp; Check In
+                        </button>
                       </div>
                     ) : hasCheckedIn ? (
                       <div
@@ -579,6 +594,16 @@ export default function CheckInPage() {
           );
         })}
       </nav>
+
+      {/* ── AUTH MODAL — shown when unauthenticated user scans QR code ─────── */}
+      {showAuthModal && (
+        <AuthModal
+          isOpen
+          isDark
+          onClose={() => { setShowAuthModal(false); setPendingCheckIn(false); }}
+          onSuccess={() => setShowAuthModal(false)}
+        />
+      )}
     </div>
   );
 }

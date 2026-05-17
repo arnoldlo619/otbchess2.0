@@ -6115,3 +6115,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] By Meetup view: list of past meetup events with check-in chip list per event
 - [x] By Member view: ranked table with attendance rate % progress bar (green/amber/red)
 - [x] Empty states for both views when no past meetups exist
+
+## Meetup Check-in QR Flow
+
+- [x] MeetupEventPage QR modal — enhanced with Copy Link, Save QR (SVG download), and instructions panel
+- [x] MeetupEventPage QR button — visible to owners at all times (not just on event day); muted style pre-event, accent style on event day
+- [x] CheckInPage — unauthenticated scan shows inline AuthModal (not redirect to /); pendingCheckIn flag auto-fires check-in after sign-in
+- [x] CheckInPage — attendee list with chess.com ELOs visible to all users (authenticated and unauthenticated)
