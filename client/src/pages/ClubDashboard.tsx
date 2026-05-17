@@ -128,7 +128,7 @@ import {
   Send,
   Plus,
   Trash2,
-  ExternalLink as _ExternalLink,
+  ExternalLink,
   Share2 as _Share2,
   ChevronDown,
   ChevronUp,
@@ -3266,12 +3266,13 @@ export default function ClubDashboard() {
                     const isUpcomingMeetup = true;
                     const recurrenceLabel = ev.recurrence === "weekly" ? "Weekly" : ev.recurrence === "biweekly" ? "Bi-weekly" : ev.recurrence === "monthly" ? "Monthly" : "One-time";
                     return (
-                      <div
+                      <a
                         key={ev.id}
-                        className="rounded-2xl border border-white/10 overflow-hidden"
-                        style={{ background: "oklch(0.16 0.05 145)" }}
+                        href={`/clubs/${club.id}/meetup/${ev.id}`}
+                        className="block rounded-2xl border border-white/10 overflow-hidden cursor-pointer transition-all hover:border-white/25 hover:scale-[1.01] hover:shadow-xl active:scale-[0.99] group"
+                        style={{ background: "oklch(0.16 0.05 145)", textDecoration: "none" }}
                       >
-                        <div className="h-1" style={{ background: accent }} />
+                        <div className="h-1 transition-all group-hover:h-[3px]" style={{ background: accent }} />
                         <div className="p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
@@ -3295,7 +3296,7 @@ export default function ClubDashboard() {
                                   {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                 </span>
                               </div>
-                              <h3 className="text-white font-bold text-base truncate">{ev.title}</h3>
+                              <h3 className="text-white font-bold text-base truncate group-hover:text-white transition-colors">{ev.title}</h3>
                               {ev.description && (
                                 <p className="text-white/40 text-sm mt-1 line-clamp-2">{ev.description}</p>
                               )}
@@ -3306,30 +3307,35 @@ export default function ClubDashboard() {
                                 </div>
                               )}
                             </div>
-                            <Users className="w-8 h-8 flex-shrink-0 opacity-20" />
+                            {/* Arrow indicator — appears on hover */}
+                            <div
+                              className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0"
+                              style={{ background: accent + "22", color: accent }}
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mt-4">
-                            <a
-                              href={`/clubs/${club.id}/meetup/${ev.id}`}
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition hover:opacity-90 active:scale-95"
+                            {/* Primary CTA — bold accent fill */}
+                            <span
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all group-hover:shadow-md group-hover:brightness-110"
                               style={{ background: accent, color: "#0a1a0f" }}
                             >
                               <Calendar className="w-3.5 h-3.5" />
                               View Meetup
-                            </a>
+                            </span>
                             {isUpcomingMeetup && (
-                              <a
-                                href={`/clubs/${club.id}/meetup/${ev.id}`}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition hover:opacity-90 active:scale-95"
-                                style={{ borderColor: accent + "44", color: accent, background: accent + "11" }}
+                              <span
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition"
+                                style={{ borderColor: accent + "66", color: accent, background: accent + "18" }}
                               >
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 RSVP
-                              </a>
+                              </span>
                             )}
                           </div>
                         </div>
-                      </div>
+                      </a>
                     );
                   })}
                 </div>
