@@ -2317,6 +2317,7 @@ export default function ClubDashboard() {
   const [showPastMeetups, setShowPastMeetups] = useState(false);
   const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
   const [editMeetupId, setEditMeetupId] = useState<string | null>(null);
+  const [eventsFilter, setEventsFilter] = useState<"all" | "meetups" | "tournaments">("all");
   const [showPastTournaments, setShowPastTournaments] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
@@ -3250,8 +3251,35 @@ export default function ClubDashboard() {
               </div>
             )}
 
-            {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
+            {/* ── Events filter tabs ────────────────────────────────────── */}
             {(() => {
+              // eventsFilter is declared in component scope below; rendered here
+              const filters: { key: typeof eventsFilter; label: string }[] = [
+                { key: "all", label: "All" },
+                { key: "meetups", label: "Meetups" },
+                { key: "tournaments", label: "Tournaments" },
+              ];
+              return (
+                <div className="flex items-center gap-2">
+                  {filters.map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setEventsFilter(f.key)}
+                      className="px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95"
+                      style={eventsFilter === f.key
+                        ? { background: accent, color: "#0a1a0f" }
+                        : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }
+                      }
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* ── CLUB MEETUPS SECTION ──────────────────────────────────────── */}
+            {eventsFilter !== "tournaments" && (() => {
               // ── Recurring series consolidation ──────────────────────────────
               // For recurring meetups (weekly/biweekly/monthly), show ONE card per
               // series. If the latest instance is past, compute the next occurrence
@@ -3571,7 +3599,7 @@ export default function ClubDashboard() {
             })()}
 
             {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
-            {(() => {
+            {eventsFilter !== "meetups" && (() => {
               const upcomingTmts = tournamentEvents.filter(isUpcoming);
               const pastTmts = tournamentEvents.filter(e => !isUpcoming(e));
               return (
