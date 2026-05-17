@@ -3239,11 +3239,11 @@ export default function ClubDashboard() {
                   <ArrowRight className="w-4 h-4" />
                 </SpinBorderButton>
                 <button
-                  onClick={() => setShowCreateEvent(true)}
+                  onClick={() => setShowMeetupWizard(true)}
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white/60 border border-dashed border-white/15 hover:border-white/30 hover:text-white/80 transition-all"
                 >
                   <Plus className="w-4 h-4" />
-                  Create Event
+                  Club Meetup
                 </button>
               </div>
             )}
@@ -3338,7 +3338,7 @@ export default function ClubDashboard() {
                   <Users className="w-8 h-8 opacity-20 text-white" />
                   <p className="text-white/30 text-sm">
                     {isOwnerOrDirector
-                      ? "No upcoming meetups — click \"Create Event\" → Club Meetup to schedule one."
+                      ? "No upcoming meetups — click \"Club Meetup\" above to schedule one."
                       : "No upcoming meetups scheduled by this club yet."}
                   </p>
                 </div>
@@ -3583,7 +3583,7 @@ export default function ClubDashboard() {
                       <Calendar className="w-8 h-8 opacity-20 text-white" />
                       <p className="text-white/30 text-sm">
                         {isOwnerOrDirector
-                          ? "No upcoming events — click \"Create Event\" above to add one."
+                          ? "No upcoming events — click \"Club Meetup\" or \"New Tournament\" above to add one."
                           : "No upcoming events scheduled by this club yet."}
                       </p>
                     </div>
