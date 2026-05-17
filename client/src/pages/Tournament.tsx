@@ -211,6 +211,7 @@ function TournamentHeader({
   format,
   totalRounds,
   currentRound,
+  coverImageUrl,
 }: {
   name: string;
   date: string;
@@ -220,22 +221,54 @@ function TournamentHeader({
   format: string;
   totalRounds: number;
   currentRound: number;
+  coverImageUrl?: string | null;
 }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   return (
-    <div className={`border-b transition-colors duration-300 ${isDark ? "border-white/10 bg-[oklch(0.22_0.06_145)]" : "border-[#EEEED2] bg-[#F0F5EE]"}`}>
-      <div className="container py-6 sm:py-8">
+    <div
+      className="relative border-b overflow-hidden transition-colors duration-300"
+      style={{
+        borderColor: isDark ? "rgba(255,255,255,0.10)" : "#EEEED2",
+        minHeight: coverImageUrl ? 220 : undefined,
+      }}
+    >
+      {/* Cover image or fallback background */}
+      {coverImageUrl ? (
+        <>
+          <img
+            src={coverImageUrl}
+            alt="Tournament cover"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "center 30%" }}
+          />
+          {/* Dark gradient overlay for legibility */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.72) 100%)",
+            }}
+          />
+        </>
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isDark ? "oklch(0.22 0.06 145)" : "#F0F5EE",
+          }}
+        />
+      )}
+      <div className="container relative z-10 py-6 sm:py-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="min-w-0">
             <h1
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3 tracking-tight"
+              className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 tracking-tight ${coverImageUrl ? "text-white" : "text-foreground"}`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               {name}
             </h1>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-muted-foreground">
+            <div className={`flex flex-wrap items-center gap-2 sm:gap-3 text-sm ${coverImageUrl ? "text-white/80" : "text-muted-foreground"}`}>
               {date && (
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
@@ -1726,6 +1759,7 @@ export default function TournamentPage() {
         format={displayFormat}
         totalRounds={displayState.totalRounds}
         currentRound={displayState.currentRound}
+        coverImageUrl={config?.coverImageUrl}
       />
 
       {/* Registration waiting state */}
