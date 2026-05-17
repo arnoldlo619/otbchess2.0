@@ -2315,6 +2315,7 @@ export default function ClubDashboard() {
   const [showTournamentWizard, setShowTournamentWizard] = useState(false);
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
   const [showPastMeetups, setShowPastMeetups] = useState(false);
+  const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
   const [showPastTournaments, setShowPastTournaments] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
@@ -3375,12 +3376,24 @@ export default function ClubDashboard() {
                                 </div>
                               )}
                             </div>
-                            {/* Arrow indicator — appears on hover */}
-                            <div
-                              className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0"
-                              style={{ background: accent + "22", color: accent }}
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
+                            {/* Right actions: arrow + trash (owner) */}
+                            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0"
+                                style={{ background: accent + "22", color: accent }}
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </div>
+                              {isOwnerOrDirector && !card.isVirtual && (
+                                <button
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteMeetupId(ev.id); }}
+                                  className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 active:scale-90"
+                                  style={{ color: "rgba(255,100,100,0.7)" }}
+                                  title="Delete meetup"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -3476,6 +3489,60 @@ export default function ClubDashboard() {
             </div>
               );
             })()}
+
+            {/* ── DELETE MEETUP CONFIRMATION DIALOG ──────────────────────── */}
+            {deleteMeetupId && (() => {
+              const meetupToDelete = events.find(e => e.id === deleteMeetupId);
+              return (
+                <div className="modal-overlay z-[200]">
+                  <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setDeleteMeetupId(null)} />
+                  <div
+                    className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 space-y-4"
+                    style={{ background: "oklch(0.16 0.05 145)", border: "1px solid rgba(255,255,255,0.10)" }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-red-500/15">
+                        <AlertTriangle className="w-5 h-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold text-base">Delete Meetup</h3>
+                        <p className="text-white/40 text-xs mt-0.5">This cannot be undone</p>
+                      </div>
+                    </div>
+                    <p className="text-white/60 text-sm">
+                      Are you sure you want to delete{" "}
+                      <span className="text-white font-semibold">"{meetupToDelete?.title ?? "this meetup"}"</span>?{" "}
+                      All RSVPs and check-ins will be permanently removed.
+                    </p>
+                    <div className="flex gap-3 pt-1">
+                      <button
+                        onClick={() => setDeleteMeetupId(null)}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/60 hover:text-white transition-colors"
+                        style={{ background: "rgba(255,255,255,0.07)" }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const id = deleteMeetupId;
+                          setDeleteMeetupId(null);
+                          try {
+                            await authFetch(`/api/clubs/${club.id}/events/${id}`, { method: "DELETE" });
+                          } catch { /* ignore — also delete locally */ }
+                          deleteClubEvent(id);
+                          setEvents(listClubEvents(club.id));
+                          toast.success("Meetup deleted");
+                        }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors active:scale-95"
+                      >
+                        Delete Meetup
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* ── TOURNAMENTS SECTION ──────────────────────────────────────── */}
             {(() => {
               const upcomingTmts = tournamentEvents.filter(isUpcoming);
