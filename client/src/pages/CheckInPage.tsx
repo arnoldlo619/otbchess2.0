@@ -88,6 +88,8 @@ export default function CheckInPage() {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [loadingRatings, setLoadingRatings] = useState(false);
+  // True while the initial event fetch is in-flight (prevents "Event not found" flash)
+  const [loadingEvent, setLoadingEvent] = useState(true);
   // Auth modal — shown when unauthenticated user lands via QR scan
   const [showAuthModal, setShowAuthModal] = useState(false);
   // Pending check-in flag — auto-fires after sign-in
@@ -109,6 +111,8 @@ export default function CheckInPage() {
     } else {
       setEvent(ev);
     }
+    // Mark event loading as done (success or not-found)
+    setLoadingEvent(false);
     if (!ev) return;
 
     // Fetch club info — try server if not in localStorage
@@ -224,10 +228,27 @@ export default function CheckInPage() {
   const accentColor = event?.accentColor ?? club?.accentColor ?? "#4CAF50";
   const clubId = event?.clubId;
 
-  if (!event) {
+  if (loadingEvent || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "oklch(0.10 0.04 145)" }}>
-        <div className="text-white/40 text-sm">Event not found.</div>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "oklch(0.10 0.04 145)" }}>
+        {loadingEvent ? (
+          <>
+            {/* Spinner */}
+            <div
+              className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+              style={{ borderColor: "oklch(0.55 0.18 145)", borderTopColor: "transparent" }}
+            />
+            {/* Skeleton cards */}
+            <div className="w-72 flex flex-col gap-3 mt-4">
+              <div className="h-5 rounded-lg animate-pulse" style={{ background: "oklch(0.20 0.04 145)" }} />
+              <div className="h-4 w-3/4 rounded-lg animate-pulse" style={{ background: "oklch(0.18 0.04 145)" }} />
+              <div className="h-4 w-1/2 rounded-lg animate-pulse" style={{ background: "oklch(0.16 0.04 145)" }} />
+            </div>
+            <p className="text-white/30 text-xs mt-2">Loading event…</p>
+          </>
+        ) : (
+          <div className="text-white/40 text-sm">Event not found.</div>
+        )}
       </div>
     );
   }
