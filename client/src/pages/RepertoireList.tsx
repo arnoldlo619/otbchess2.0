@@ -251,7 +251,7 @@ export default function RepertoireList() {
   );
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
+    <div className={`min-h-screen chess-board-bg ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
       {/* Header */}
       <div className={`border-b ${isDark ? "border-white/10 bg-gray-950/80" : "border-gray-200 bg-white/80"} backdrop-blur-sm sticky top-0 z-30`}>
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
