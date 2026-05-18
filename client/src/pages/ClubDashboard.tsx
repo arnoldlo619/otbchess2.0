@@ -3375,7 +3375,7 @@ export default function ClubDashboard() {
                                 {/* Upcoming badge */}
                                 <span
                                   className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                  style={{ background: accent + "22", color: accent }}
+                                  style={{ background: "rgba(134,239,172,0.15)", color: "#86efac" }}
                                 >
                                   Upcoming
                                 </span>
@@ -3629,7 +3629,7 @@ export default function ClubDashboard() {
                                 <span
                                   className="text-xs font-bold px-2 py-0.5 rounded-full"
                                   style={isUpcomingTmt
-                                    ? { background: accent + "22", color: accent }
+                                    ? { background: "rgba(134,239,172,0.15)", color: "#86efac" }
                                     : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }
                                   }
                                 >
