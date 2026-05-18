@@ -95,11 +95,30 @@ export default function CheckInPage() {
 
   const refresh = useCallback(async () => {
     if (!eventId) return;
-    const ev = getClubEvent(eventId);
-    setEvent(ev);
+    // Try localStorage first; if empty (e.g. fresh QR scan on new device), fetch from server
+    let ev = getClubEvent(eventId);
+    if (!ev) {
+      try {
+        const evRes = await authFetch(`/api/clubs/event/${eventId}`);
+        if (evRes.ok) {
+          const evData = await evRes.json() as import("@/lib/clubEventRegistry").ClubEvent;
+          ev = evData;
+          setEvent(ev);
+        }
+      } catch { /* ignore */ }
+    } else {
+      setEvent(ev);
+    }
     if (!ev) return;
 
-    const c = getClub(ev.clubId);
+    // Fetch club info — try server if not in localStorage
+    let c = getClub(ev.clubId);
+    if (!c) {
+      try {
+        const cRes = await authFetch(`/api/clubs/${ev.clubId}`);
+        if (cRes.ok) c = await cRes.json();
+      } catch { /* ignore */ }
+    }
     setClub(c ?? null);
 
     // ── Fetch check-ins from DB (falls back to localStorage if API unavailable) ──

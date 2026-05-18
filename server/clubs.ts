@@ -850,6 +850,26 @@ clubsRouter.get("/:id/events", async (req: Request, res: Response) => {
   }
 });
 
+/** GET /api/clubs/event/:eventId — fetch a single event by ID (no clubId required, used by QR check-in flow) */
+clubsRouter.get("/event/:eventId", async (req: Request, res: Response) => {
+  const { eventId } = req.params;
+  try {
+    const db = await getDb();
+    const [row] = await db.select().from(clubEvents).where(eq(clubEvents.id, eventId));
+    if (!row) { res.status(404).json({ error: "Event not found" }); return; }
+    res.json({
+      ...row,
+      startAt: row.startAt instanceof Date ? row.startAt.toISOString() : String(row.startAt),
+      endAt: row.endAt instanceof Date ? row.endAt.toISOString() : row.endAt ? String(row.endAt) : null,
+      createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+      updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+    });
+  } catch (err) {
+    logger.error("[clubs] GET /event/:eventId error:", err);
+    res.status(500).json({ error: "Failed to fetch event" });
+  }
+});
+
 /** POST /api/clubs/:id/events — create a club event */
 clubsRouter.post("/:id/events", authMiddleware, async (req: Request, res: Response) => {
   const { id } = req.params;
