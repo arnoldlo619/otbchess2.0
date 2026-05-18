@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
+import confetti from "canvas-confetti";
 import { useChessAvatars } from "@/hooks/useChessAvatar";
 import { logger } from "@/lib/logger";
 
@@ -443,6 +444,7 @@ export default function LeagueDashboard() {
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [isCommissionerReport, setIsCommissionerReport] = useState(false);
   const [editingMatch, setEditingMatch] = useState<LeagueMatch | null>(null);
+  const [confettiFired, setConfettiFired] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [advancingWeek, setAdvancingWeek] = useState(false);
   const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false);
@@ -653,6 +655,20 @@ export default function LeagueDashboard() {
       .then((d) => { if (d?.subscribed) setPushStatus("subscribed"); })
       .catch(() => {});
   }, [leagueId]);
+
+  // Fire confetti once when a completed league's podium is first shown
+  useEffect(() => {
+    if (!league || league.status !== "completed" || standings.length === 0 || confettiFired) return;
+    setConfettiFired(true);
+    const end = Date.now() + 2200;
+    const colors = ["#fbbf24", "#86efac", "#60a5fa", "#f472b6", "#a78bfa"];
+    const frame = () => {
+      confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 }, colors });
+      confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 }, colors });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, [league?.status, standings.length, confettiFired]);
 
   async function getVapidKey(): Promise<string> {
     const r = await authFetch("/api/push/vapid-public-key");
