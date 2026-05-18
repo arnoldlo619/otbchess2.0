@@ -741,6 +741,7 @@ export default function ClubProfile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showAllPast, setShowAllPast] = useState(false);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [eventForm, setEventForm] = useState({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none" as "none" | "weekly" | "biweekly" | "monthly", recurrenceEndDate: "", coverImageUrl: "" });
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingEditCover, setUploadingEditCover] = useState(false);
@@ -1684,7 +1685,7 @@ export default function ClubProfile() {
                       }`}>{upcoming.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {upcoming.map((item) => (
+                      {(showAllUpcoming ? upcoming : upcoming.slice(0, 4)).map((item) => (
                         item.type === "event" ? (() => {
                           const ev = item.data as ClubEvent;
                           const myRsvp = (joined && user) ? getUserRSVP(ev.id, user.id) : null;
@@ -1858,6 +1859,16 @@ export default function ClubProfile() {
                           );
                         })()
                       ))}
+                      {upcoming.length > 4 && (
+                        <button
+                          onClick={() => setShowAllUpcoming(v => !v)}
+                          className={`w-full py-3 text-xs font-semibold transition-colors ${
+                            isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {showAllUpcoming ? "Show Less" : `View All ${upcoming.length} Upcoming Events`}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
