@@ -1709,7 +1709,7 @@ export default function ClubProfile() {
                                 <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.75) 100%)" }} />
                                 {/* Date pill over image */}
                                 <div className="absolute top-3 left-3">
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: evAccent + "33", color: evAccent, border: `1px solid ${evAccent}55` }}>
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: "rgba(134,239,172,0.22)", color: "#86efac", border: "1px solid rgba(134,239,172,0.4)" }}>
                                     <Calendar className="w-3 h-3" />
                                     {dayName}
                                   </span>
@@ -1726,7 +1726,7 @@ export default function ClubProfile() {
                               /* No cover — accent gradient header */
                               <div className="relative px-5 pt-5 pb-3" style={{ background: `linear-gradient(135deg, ${evAccent}18 0%, ${evAccent}08 100%)` }}>
                                 <div className="flex items-center justify-between">
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: evAccent + "22", color: evAccent, border: `1px solid ${evAccent}44` }}>
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={isDark ? { background: "rgba(134,239,172,0.15)", color: "#86efac", border: "1px solid rgba(134,239,172,0.3)" } : { background: evAccent + "22", color: evAccent, border: `1px solid ${evAccent}44` }}>
                                     <Calendar className="w-3 h-3" />
                                     {dayName}
                                   </span>
