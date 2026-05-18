@@ -1501,20 +1501,119 @@ export default function LeagueDashboard() {
               );
             })()}
 
-            {/* Week-complete transition banner */}
+            {/* Week Results Summary Card */}
             {league.status === "active" && league.currentWeek > 1 && (() => {
-              const prevWeek = weeks.find((w) => w.weekNumber === league.currentWeek - 1);
-              return prevWeek?.isComplete ? (
+              const prevWeekNum = league.currentWeek - 1;
+              const prevWeek = weeks.find((w) => w.weekNumber === prevWeekNum);
+              if (!prevWeek?.isComplete) return null;
+              const prevMatches = prevWeek.matches.filter(m => m.resultStatus === "completed");
+              if (!prevMatches.length) return null;
+              return (
                 <div
-                  className="rounded-2xl px-4 py-3 flex items-center gap-3"
-                  style={{ background: `${accent}18`, border: `1px solid ${accent}44` }}
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: cardBg, border: `1.5px solid ${accent}44` }}
                 >
-                  <CheckCircle2 size={16} style={{ color: accent }} />
-                  <span className="text-sm font-medium" style={{ color: accent }}>
-                    Week {league.currentWeek - 1} complete — Week {league.currentWeek} is now active
-                  </span>
+                  {/* Header */}
+                  <div
+                    className="px-4 py-2.5 flex items-center gap-2"
+                    style={{ background: `${accent}18`, borderBottom: `1px solid ${accent}33` }}
+                  >
+                    <CheckCircle2 size={13} style={{ color: accent }} />
+                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
+                      Week {prevWeekNum} Results
+                    </span>
+                    <span className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: `${accent}22`, color: accent }}>
+                      {prevMatches.length} match{prevMatches.length !== 1 ? "es" : ""}
+                    </span>
+                  </div>
+                  {/* Match rows */}
+                  <div className="divide-y" style={{ borderColor: `${cardBorder}` }}>
+                    {prevMatches.map((m) => {
+                      const isMyMatch = user && (m.playerWhiteId === user.id || m.playerBlackId === user.id);
+                      const iWon = user && (
+                        (m.result === "white_win" && m.playerWhiteId === user.id) ||
+                        (m.result === "black_win" && m.playerBlackId === user.id)
+                      );
+                      const isDraw = m.result === "draw";
+                      const iLost = isMyMatch && !iWon && !isDraw;
+                      const outcomeColor = iWon ? accent : isDraw ? "oklch(0.65 0.15 60)" : iLost ? "oklch(0.55 0.18 25)" : textMuted;
+                      const whiteScore = m.result === "white_win" ? "1" : m.result === "draw" ? "½" : "0";
+                      const blackScore = m.result === "black_win" ? "1" : m.result === "draw" ? "½" : "0";
+                      return (
+                        <div
+                          key={m.id}
+                          className="px-4 py-2.5 flex items-center gap-2"
+                          style={isMyMatch ? { background: `${accent}08` } : undefined}
+                        >
+                          {/* White player */}
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <Avatar
+                              url={league.players.find(p => p.playerId === m.playerWhiteId)?.avatarUrl}
+                              name={m.playerWhiteName}
+                              size={6}
+                            />
+                            <span
+                              className="text-xs truncate"
+                              style={{
+                                color: m.result === "white_win" ? textMain : textMuted,
+                                fontWeight: m.result === "white_win" ? 700 : 400,
+                              }}
+                            >
+                              {m.playerWhiteName}
+                            </span>
+                          </div>
+                          {/* Score */}
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <span className="text-sm font-black w-4 text-center" style={{ color: m.result === "white_win" ? accent : textMuted }}>{whiteScore}</span>
+                            <span className="text-[10px] font-medium" style={{ color: textMuted }}>–</span>
+                            <span className="text-sm font-black w-4 text-center" style={{ color: m.result === "black_win" ? accent : textMuted }}>{blackScore}</span>
+                          </div>
+                          {/* Black player */}
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
+                            <span
+                              className="text-xs truncate text-right"
+                              style={{
+                                color: m.result === "black_win" ? textMain : textMuted,
+                                fontWeight: m.result === "black_win" ? 700 : 400,
+                              }}
+                            >
+                              {m.playerBlackName}
+                            </span>
+                            <Avatar
+                              url={league.players.find(p => p.playerId === m.playerBlackId)?.avatarUrl}
+                              name={m.playerBlackName}
+                              size={6}
+                            />
+                          </div>
+                          {/* My outcome pill */}
+                          {isMyMatch && (
+                            <span
+                              className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                              style={{ background: `${outcomeColor}22`, color: outcomeColor }}
+                            >
+                              {iWon ? "W" : isDraw ? "D" : "L"}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Footer */}
+                  <div
+                    className="px-4 py-2 flex items-center justify-between"
+                    style={{ background: `${accent}08`, borderTop: `1px solid ${accent}22` }}
+                  >
+                    <span className="text-[10px]" style={{ color: textMuted }}>Week {league.currentWeek} is now active</span>
+                    <button
+                      onClick={() => { setActiveTab("matchups"); setSelectedWeek(prevWeekNum); }}
+                      className="text-[10px] font-semibold flex items-center gap-1"
+                      style={{ color: accent }}
+                    >
+                      Full details <ChevronRight size={11} />
+                    </button>
+                  </div>
                 </div>
-              ) : null;
+              );
             })()}
 
             {/* Your Match This Week */}
