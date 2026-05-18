@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { authFetch } from "@/lib/apiFetch";
 import { useLocation } from "wouter";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import {
   Plus,
   BookOpen,
@@ -251,83 +252,69 @@ export default function RepertoireList() {
   );
 
   return (
-    <div className={`min-h-screen chess-board-bg ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
-      {/* Header */}
-      <div className={`border-b ${isDark ? "border-white/10 bg-gray-950/80" : "border-gray-200 bg-white/80"} backdrop-blur-sm sticky top-0 z-30`}>
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/training")}
-              className={`flex items-center gap-1.5 text-sm ${isDark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}
-            >
-              <ArrowLeft size={16} />
-            </button>
-            <div>
-              <h1 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                Opening Repertoire Builder
-              </h1>
-              <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                Build and study your opening lines with Stockfish analysis
-              </p>
-            </div>
+    <div className={`min-h-screen ${isDark ? "text-white" : "text-gray-900"}`} style={{ background: isDark ? "oklch(0.15 0.04 145)" : "oklch(0.96 0.02 145)" }}>
+      {/* Subtle checkered overlay */}
+      <div className="fixed inset-0 chess-board-bg opacity-[0.18] pointer-events-none z-0" />
+      {/* Header — platform standard */}
+      <div
+        className="sticky top-0 z-40 flex items-center gap-3 px-4 lg:px-5 py-2.5"
+        style={{
+          background: isDark ? "oklch(0.15 0.04 145 / 0.97)" : "oklch(0.15 0.04 145 / 0.97)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid oklch(0.22 0.06 145)",
+        }}
+      >
+        <div className="flex items-center gap-3 w-full">
+          {/* Left: back + title */}
+          <button
+            onClick={() => navigate("/training")}
+            className="p-1.5 rounded-lg transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.65 0.12 145)" }}
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-white truncate">
+              Opening Repertoire Builder
+            </h1>
+            <p className="text-xs text-white/50">Build and study your opening lines</p>
           </div>
 
-          {/* New repertoire button */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                if (!user) {
-                  navigate("/");
-                  return;
-                }
-                if (!canCreateMore) {
-                  setShowProModal(true);
-                  return;
-                }
-                setShowColorPicker(!showColorPicker);
-              }}
-              disabled={creating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition ${
-                isDark
-                  ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                  : "bg-emerald-600 text-white hover:bg-emerald-700"
-              }`}
-            >
-              {creating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              New Repertoire
-            </button>
-
-            {/* Color picker dropdown */}
-            {showColorPicker && (
-              <div className={`absolute right-0 top-full mt-2 rounded-xl border shadow-xl z-40 overflow-hidden ${
-                isDark ? "bg-gray-900 border-white/10" : "bg-white border-gray-200"
-              }`}>
-                <button
-                  onClick={() => createRepertoire("white")}
-                  className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition ${
-                    isDark ? "hover:bg-white/5" : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-white border border-gray-300" />
-                  <span>Play as White</span>
-                </button>
-                <button
-                  onClick={() => createRepertoire("black")}
-                  className={`flex items-center gap-3 w-full px-4 py-3 text-sm transition ${
-                    isDark ? "hover:bg-white/5" : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="w-6 h-6 rounded-full bg-gray-800 border border-gray-600" />
-                  <span>Play as Black</span>
-                </button>
-              </div>
-            )}
+          {/* Right side: New Repertoire + avatar */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <button
+                onClick={() => {
+                  if (!user) { navigate("/"); return; }
+                  if (!canCreateMore) { setShowProModal(true); return; }
+                  setShowColorPicker(!showColorPicker);
+                }}
+                disabled={creating}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm transition bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+              >
+                {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                New
+              </button>
+              {showColorPicker && (
+                <div className="absolute right-0 top-full mt-2 rounded-xl border shadow-xl z-50 overflow-hidden bg-gray-900 border-white/10">
+                  <button onClick={() => createRepertoire("white")} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-white/5 transition">
+                    <div className="w-5 h-5 rounded-full bg-white border border-gray-300" />
+                    <span>Play as White</span>
+                  </button>
+                  <button onClick={() => createRepertoire("black")} className="flex items-center gap-3 w-full px-4 py-3 text-sm text-white hover:bg-white/5 transition">
+                    <div className="w-5 h-5 rounded-full bg-gray-800 border border-gray-600" />
+                    <span>Play as Black</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            <AvatarNavDropdown currentPage="Training" />
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
         {/* Free user limit banner */}
         {!isPro && repertoires.length >= FREE_LIMIT && (
           <div className={`mb-6 rounded-xl border px-4 py-3 flex items-center gap-3 ${
