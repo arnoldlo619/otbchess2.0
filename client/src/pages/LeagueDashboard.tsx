@@ -847,21 +847,10 @@ export default function LeagueDashboard() {
     return "Draw";
   }
   function canReport(match: LeagueMatch) {
+    // Only the commissioner can report results — matches are played in person
     if (match.resultStatus === "completed") return false;
     if (!user) return false;
-    const isWhite = match.playerWhiteId === user.id;
-    const isBlack = match.playerBlackId === user.id;
-    const isComm = league?.commissionerId === user.id;
-    // If awaiting_confirmation, only the player who hasn't reported yet can confirm
-    if (match.resultStatus === "awaiting_confirmation") {
-      if (isWhite && !match.whiteReport) return true;
-      if (isBlack && !match.blackReport) return true;
-      if (isComm) return true;
-      return false;
-    }
-    // Disputed — only commissioner can resolve (via PATCH, not this button)
-    if (match.resultStatus === "disputed") return false;
-    return isWhite || isBlack || isComm;
+    return league?.commissionerId === user.id;
   }
   function isMyMatch(match: LeagueMatch) {
     return !!(user && (match.playerWhiteId === user.id || match.playerBlackId === user.id));
@@ -1580,8 +1569,20 @@ export default function LeagueDashboard() {
                   <div className="flex flex-col items-center gap-1 flex-shrink-0">
                     {myMatchThisWeek.resultStatus === "completed" ? (
                       <>
-                        <CheckCircle2 size={20} style={{ color: accent }} />
-                        <span className="text-xs font-medium" style={{ color: accent }}>{resultLabel(myMatchThisWeek)}</span>
+                        {(() => {
+                          const iWon = (myMatchThisWeek.result === "white_win" && myMatchThisWeek.playerWhiteId === user?.id) ||
+                                       (myMatchThisWeek.result === "black_win" && myMatchThisWeek.playerBlackId === user?.id);
+                          const isDraw = myMatchThisWeek.result === "draw";
+                          const iLost = !iWon && !isDraw;
+                          const outcomeColor = iWon ? accent : isDraw ? "oklch(0.65 0.15 60)" : "oklch(0.55 0.18 25)";
+                          const outcomeLabel = iWon ? "You Won!" : isDraw ? "Draw" : "You Lost";
+                          return (
+                            <>
+                              <span className="text-[11px] font-black px-3 py-1 rounded-full" style={{ background: `${outcomeColor}22`, color: outcomeColor }}>{outcomeLabel}</span>
+                              <span className="text-[9px] mt-0.5 text-center" style={{ color: textMuted }}>{resultLabel(myMatchThisWeek)}</span>
+                            </>
+                          );
+                        })()}
                       </>
                     ) : myMatchThisWeek.resultStatus === "disputed" ? (
                       <>
@@ -1590,18 +1591,8 @@ export default function LeagueDashboard() {
                       </>
                     ) : myMatchThisWeek.resultStatus === "awaiting_confirmation" ? (
                       <>
-                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.55 0.15 60)", color: "#fff" }}>Awaiting</span>
-                        {canReport(myMatchThisWeek) ? (
-                          <button
-                            onClick={() => setReportingMatch(myMatchThisWeek)}
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
-                            style={{ background: accent, color: "#fff" }}
-                          >
-                            Confirm
-                          </button>
-                        ) : (
-                          <span className="text-[9px] mt-0.5" style={{ color: textMuted }}>Waiting for opponent</span>
-                        )}
+                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "oklch(0.55 0.15 60)", color: "#fff" }}>Pending</span>
+                        <span className="text-[9px] mt-0.5" style={{ color: textMuted }}>Commissioner will report</span>
                       </>
                     ) : (
                       <>
@@ -1611,7 +1602,7 @@ export default function LeagueDashboard() {
                         >
                           VS
                         </div>
-                        {canReport(myMatchThisWeek) && (
+                        {canReport(myMatchThisWeek) ? (
                           <button
                             onClick={() => setReportingMatch(myMatchThisWeek)}
                             className="text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1"
@@ -1619,6 +1610,8 @@ export default function LeagueDashboard() {
                           >
                             Report
                           </button>
+                        ) : (
+                          <span className="text-[9px] mt-0.5 text-center" style={{ color: textMuted }}>Play your match &amp; tell the commissioner the result</span>
                         )}
                       </>
                     )}
@@ -2013,7 +2006,7 @@ export default function LeagueDashboard() {
                     ) : (
                       <>
                         <span className="text-3xl font-black" style={{ color: textMuted }}>VS</span>
-                        {canReport(myMatchThisWeek) && (
+                        {canReport(myMatchThisWeek) ? (
                           <button
                             onClick={() => setReportingMatch(myMatchThisWeek)}
                             className="mt-2 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95"
@@ -2021,6 +2014,10 @@ export default function LeagueDashboard() {
                           >
                             Report Result
                           </button>
+                        ) : (
+                          <div className="mt-2 px-4 py-2 rounded-xl text-xs text-center" style={{ background: `${accent}15`, color: textMuted }}>
+                            Play your match, then tell the commissioner the result
+                          </div>
                         )}
                       </>
                     )}
@@ -2359,17 +2356,8 @@ export default function LeagueDashboard() {
                           ) : match.resultStatus === "awaiting_confirmation" ? (
                             <>
                               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.55 0.15 60)", color: "#fff" }}>
-                                Awaiting
+                                Pending
                               </span>
-                              {canReport(match) && (
-                                <button
-                                  onClick={() => setReportingMatch(match)}
-                                  className="mt-1 text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                                  style={{ background: accent, color: "#fff" }}
-                                >
-                                  Confirm
-                                </button>
-                              )}
                             </>
                           ) : (
                             <>

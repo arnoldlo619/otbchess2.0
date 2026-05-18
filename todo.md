@@ -6122,3 +6122,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] MeetupEventPage QR button — visible to owners at all times (not just on event day); muted style pre-event, accent style on event day
 - [x] CheckInPage — unauthenticated scan shows inline AuthModal (not redirect to /); pendingCheckIn flag auto-fires check-in after sign-in
 - [x] CheckInPage — attendee list with chess.com ELOs visible to all users (authenticated and unauthenticated)
+
+## Commissioner-Only League Result Reporting
+
+- [x] Remove "Report Result" button from player match cards (non-commissioners see read-only view)
+- [x] Update server POST /api/leagues/:id/results to reject non-commissioner submissions
+- [x] Remove dual-confirmation / awaiting_confirmation flow (commissioner reports are final)
+- [x] Player match view: show result clearly when reported by commissioner
+- [x] Player match view: show next matchup info after commissioner advances the week
