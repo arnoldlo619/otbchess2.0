@@ -77,8 +77,12 @@ export default function MeetupEventPage() {
   const [dbCheckinIds, setDbCheckinIds] = useState<string[]>([]);
   const [showQr, setShowQr] = useState(false);
   const [rsvpSubmitting, setRsvpSubmitting] = useState(false);
+  // Server-fetched members so isOwnerOrDirector works even when localStorage is empty
+  // (e.g. when navigating directly via QR scan without visiting ClubDashboard first)
+  const [serverMembers, setServerMembers] = useState<{ userId: string; role: string; displayName?: string; chesscomUsername?: string | null; avatarUrl?: string | null }[]>([]);
 
-  const members = clubId ? getClubMembers(clubId) : [];
+  const localMembers = clubId ? getClubMembers(clubId) : [];
+  const members = serverMembers.length > 0 ? serverMembers : localMembers;
 
   const isOwnerOrDirector =
     user &&
@@ -110,6 +114,15 @@ export default function MeetupEventPage() {
     if (clubId) {
       const c = getClub(clubId);
       setClub(c ?? null);
+      // Fetch members from server so isOwnerOrDirector is accurate even without localStorage
+      authFetch(`/api/clubs/${clubId}/members`)
+        .then(async (res) => {
+          if (res.ok) {
+            const rows = await res.json() as Array<{ userId: string; role: string }>;
+            setServerMembers(rows);
+          }
+        })
+        .catch(() => {});
     }
   }, [refresh, clubId]);
 
@@ -436,8 +449,8 @@ export default function MeetupEventPage() {
                                 className="flex items-center gap-3 px-5 py-3 transition-colors duration-200 hover:bg-white/04"
                               >
                                 <PlayerAvatar
-                                  username={member.chesscomUsername ?? member.displayName}
-                                  name={member.displayName}
+                                  username={member.chesscomUsername ?? member.displayName ?? member.userId}
+                                  name={member.displayName ?? member.userId}
                                   avatarUrl={member.avatarUrl ?? undefined}
                                   size={36}
                                   className="w-9 h-9 rounded-full flex-shrink-0 transition-transform duration-200 hover:scale-110"
