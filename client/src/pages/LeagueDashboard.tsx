@@ -444,6 +444,7 @@ export default function LeagueDashboard() {
   const [isCommissionerReport, setIsCommissionerReport] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [advancingWeek, setAdvancingWeek] = useState(false);
+  const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
   // Join requests (commissioner-only, for Draft leagues)
   const [joinRequests, setJoinRequests] = useState<Array<{ id: number; playerId: string; displayName: string; avatarUrl?: string | null; chesscomUsername?: string | null; createdAt: string }>>([]);
@@ -1147,13 +1148,7 @@ export default function LeagueDashboard() {
                     <span className="hidden sm:inline">Report</span>
                   </button>
                   <button
-                    onClick={async () => {
-                      try {
-                        const res = await authFetch(`/api/leagues/${league.id}/advance-week`, { method: "POST", credentials: "include" });
-                        if (res.ok) { showToast("Advanced to next week", "success"); fetchAll(); }
-                        else { const d = await res.json().catch(() => ({})); showToast(d.error ?? "Failed", "error"); }
-                      } catch { showToast("Network error", "error"); }
-                    }}
+                    onClick={() => setShowAdvanceConfirm(true)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:brightness-110 active:scale-95"
                     style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6", color: textMain, border: `1px solid ${cardBorder}` }}
                     title="Advance Week"
@@ -2466,7 +2461,7 @@ export default function LeagueDashboard() {
                   </span>
                 </div>
                 <button
-                  onClick={handleAdvanceWeek}
+                  onClick={() => setShowAdvanceConfirm(true)}
                   disabled={advancingWeek}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 flex-shrink-0"
                   style={{ background: accent, color: "#fff" }}
@@ -3618,6 +3613,79 @@ export default function LeagueDashboard() {
           isDark={isDark}
           onClose={() => setShowShare(false)}
         />
+      )}
+
+      {/* Advance Week confirmation modal */}
+      {showAdvanceConfirm && league && (
+        <div
+          className="modal-overlay z-50"
+          style={{ background: "rgba(0,0,0,0.65)" }}
+          onClick={() => setShowAdvanceConfirm(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+            style={{ background: isDark ? "oklch(0.18 0.05 145)" : "#ffffff", border: `1px solid ${isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb"}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "oklch(0.32 0.10 30 / 0.25)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="oklch(0.72 0.18 30)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
+                  </svg>
+                </span>
+                <div>
+                  <p className="font-bold text-base" style={{ color: isDark ? "#f0f5ee" : "#111827" }}>Advance to Week {league.currentWeek + 1}?</p>
+                  <p className="text-xs mt-0.5" style={{ color: isDark ? "oklch(0.65 0.04 145)" : "#6b7280" }}>This action is irreversible.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAdvanceConfirm(false)}
+                className="p-1.5 rounded-xl flex-shrink-0"
+                style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#f3f4f6" }}
+              >
+                <X size={14} style={{ color: isDark ? "oklch(0.65 0.04 145)" : "#6b7280" }} />
+              </button>
+            </div>
+
+            {/* Warning if not all matches reported */}
+            {!weeks.find(w => w.weekNumber === league.currentWeek)?.matches.every(m => m.resultStatus === "completed") && (
+              <div
+                className="mx-5 mb-3 px-4 py-3 rounded-2xl text-xs"
+                style={{ background: "oklch(0.32 0.10 80 / 0.20)", border: "1px solid oklch(0.65 0.14 80 / 0.35)", color: "oklch(0.80 0.12 80)" }}
+              >
+                <strong>⚠ Not all Week {league.currentWeek} matches have been reported.</strong>
+                <br />Unreported matches will remain as pending.
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="px-5 pb-5 flex gap-3">
+              <button
+                onClick={() => setShowAdvanceConfirm(false)}
+                className="flex-1 py-3 rounded-2xl text-sm font-semibold transition-all"
+                style={{ background: isDark ? "oklch(0.22 0.06 145)" : "#f3f4f6", color: isDark ? "oklch(0.65 0.04 145)" : "#374151" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => { setShowAdvanceConfirm(false); await handleAdvanceWeek(); }}
+                disabled={advancingWeek}
+                className="flex-1 py-3 rounded-2xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: accent, color: "#fff" }}
+              >
+                {advancingWeek ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                ) : null}
+                Yes, Advance
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
