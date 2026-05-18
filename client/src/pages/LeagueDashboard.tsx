@@ -1451,72 +1451,104 @@ export default function LeagueDashboard() {
             )}
 
             {/* Champion announcement banner */}
-            {league.status === "completed" && (() => {
-              const champion = standings[0];
+            {league.status === "completed" && standings.length > 0 && (() => {
+              const gold   = standings[0];
+              const silver = standings[1];
+              const bronze = standings[2];
+              const goldColor   = "oklch(0.82 0.18 85)";
+              const silverColor = "oklch(0.78 0.04 220)";
+              const bronzeColor = "oklch(0.68 0.12 55)";
+
+              const PodiumPlayer = ({ player, rank, height, medalColor, medal }: {
+                player: LeagueStanding; rank: number; height: string; medalColor: string; medal: string;
+              }) => (
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="relative">
+                    <Avatar url={player.avatarUrl} name={player.displayName} size={rank === 1 ? 14 : 11} ring />
+                    <span
+                      className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] shadow-lg font-bold"
+                      style={{ background: medalColor, color: "#fff", fontSize: "9px" }}
+                    >{medal}</span>
+                  </div>
+                  <p className="text-xs font-bold text-center leading-tight" style={{ color: medalColor, maxWidth: "72px" }}>
+                    {player.displayName}
+                  </p>
+                  <p className="text-[10px] text-center" style={{ color: isDark ? "#aaa" : "#666" }}>
+                    {player.points}pt · {player.wins}W{player.draws > 0 ? ` ${player.draws}D` : ""}
+                  </p>
+                  {/* Podium block */}
+                  <div
+                    className="w-16 rounded-t-lg flex items-center justify-center font-black text-lg"
+                    style={{ height, background: `${medalColor}22`, border: `1.5px solid ${medalColor}55`, color: medalColor }}
+                  >
+                    #{rank}
+                  </div>
+                </div>
+              );
+
               return (
                 <div
                   className="rounded-2xl overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, oklch(0.22 0.09 85), oklch(0.18 0.06 145))`, border: `1.5px solid oklch(0.7 0.18 85 / 0.5)` }}
+                  style={{ background: `linear-gradient(160deg, oklch(0.20 0.08 85), oklch(0.16 0.05 145))`, border: `1.5px solid oklch(0.7 0.18 85 / 0.45)` }}
                 >
-                  <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
-                    <Trophy size={14} style={{ color: "oklch(0.82 0.18 85)" }} />
-                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "oklch(0.82 0.18 85)" }}>
-                      Season Complete
-                    </span>
+                  {/* Header */}
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
+                    <div className="flex items-center gap-2">
+                      <Trophy size={14} style={{ color: goldColor }} />
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: goldColor }}>Season Final Standings</span>
+                    </div>
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: "oklch(0.82 0.18 85 / 0.18)", color: goldColor }}>Complete</span>
                   </div>
-                  <div className="px-4 py-5 flex flex-col items-center gap-3 text-center">
-                    {champion && (
-                      <>
-                        {/* Clickable champion card — links to club profile members tab */}
-                        <button
-                          className="flex flex-col items-center gap-3 group cursor-pointer"
-                          onClick={() => navigate(`/clubs/${league.clubId}?tab=members`)}
-                          title={`View ${champion.displayName}'s club profile`}
-                        >
-                          <div className="relative">
-                            <Avatar url={champion.avatarUrl} name={champion.displayName} size={16} ring />
-                            {/* Trophy badge overlay */}
-                            <span
-                              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-lg"
-                              style={{ background: "oklch(0.82 0.18 85)", color: "oklch(0.18 0.06 85)" }}
-                            >
-                              🏆
-                            </span>
-                          </div>
-                          <div>
-                            <p
-                              className="text-lg font-bold group-hover:underline transition-all"
-                              style={{ color: "oklch(0.82 0.18 85)" }}
-                            >
-                              {champion.displayName}
-                            </p>
-                            <p className="text-xs mt-0.5" style={{ color: "oklch(0.82 0.18 85 / 0.7)" }}>
-                              {champion.points} pts · {champion.wins}W {champion.draws}D {champion.losses}L
-                            </p>
-                          </div>
-                        </button>
-                        {/* League Champion badge pill */}
+
+                  {/* Podium */}
+                  <div className="px-4 pt-5 pb-2">
+                    <div className="flex items-end justify-center gap-3">
+                      {/* Silver — 2nd */}
+                      {silver ? (
+                        <PodiumPlayer player={silver} rank={2} height="48px" medalColor={silverColor} medal="2" />
+                      ) : <div className="w-16" />}
+                      {/* Gold — 1st (tallest) */}
+                      <PodiumPlayer player={gold} rank={1} height="64px" medalColor={goldColor} medal="1" />
+                      {/* Bronze — 3rd */}
+                      {bronze ? (
+                        <PodiumPlayer player={bronze} rank={3} height="36px" medalColor={bronzeColor} medal="3" />
+                      ) : <div className="w-16" />}
+                    </div>
+                  </div>
+
+                  {/* Full standings table */}
+                  {standings.length > 1 && (
+                    <div className="px-4 pb-4 mt-3">
+                      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid oklch(0.7 0.18 85 / 0.2)` }}>
                         <div
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
-                          style={{ background: "oklch(0.82 0.18 85 / 0.18)", color: "oklch(0.82 0.18 85)", border: "1px solid oklch(0.82 0.18 85 / 0.35)" }}
+                          className="grid text-[10px] font-semibold uppercase tracking-wide px-3 py-1.5"
+                          style={{ gridTemplateColumns: "1.5rem 1fr 2.5rem 2.5rem 2.5rem 2.5rem", background: "oklch(0.7 0.18 85 / 0.12)", color: goldColor }}
                         >
-                          <Trophy size={11} />
-                          League Champion
+                          <span>#</span><span>Player</span><span className="text-center">Pts</span><span className="text-center">W</span><span className="text-center">D</span><span className="text-center">L</span>
                         </div>
-                        {/* View profile link */}
-                        <button
-                          className="text-[11px] underline underline-offset-2 opacity-60 hover:opacity-100 transition-opacity"
-                          style={{ color: "oklch(0.82 0.18 85)" }}
-                          onClick={() => navigate(`/clubs/${league.clubId}?tab=members`)}
-                        >
-                          View on club profile →
-                        </button>
-                      </>
-                    )}
-                    {!champion && (
-                      <p className="text-sm font-medium" style={{ color: "oklch(0.82 0.18 85)" }}>Season has concluded</p>
-                    )}
-                  </div>
+                        {standings.map((s, i) => (
+                          <div
+                            key={s.playerId}
+                            className="grid items-center px-3 py-2 text-xs"
+                            style={{
+                              gridTemplateColumns: "1.5rem 1fr 2.5rem 2.5rem 2.5rem 2.5rem",
+                              background: s.playerId === user?.id ? `${accent}18` : i % 2 === 0 ? "transparent" : "oklch(0.7 0.18 85 / 0.04)",
+                              borderTop: `1px solid oklch(0.7 0.18 85 / 0.1)`,
+                              color: s.playerId === user?.id ? accent : isDark ? "#d1d5db" : "#374151",
+                              fontWeight: s.playerId === user?.id ? 600 : 400,
+                            }}
+                          >
+                            <span style={{ color: i === 0 ? goldColor : i === 1 ? silverColor : i === 2 ? bronzeColor : isDark ? "#888" : "#9ca3af", fontWeight: 700 }}>{i + 1}</span>
+                            <span className="truncate">{s.displayName}{s.playerId === user?.id ? " (you)" : ""}</span>
+                            <span className="text-center font-bold">{s.points}</span>
+                            <span className="text-center">{s.wins}</span>
+                            <span className="text-center">{s.draws}</span>
+                            <span className="text-center">{s.losses}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })()}
