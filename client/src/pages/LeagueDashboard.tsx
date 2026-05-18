@@ -11,7 +11,7 @@ import {
   Trophy, Users, Calendar, ChevronRight, ArrowLeft,
   Crown, Swords, BarChart3, ListOrdered, CheckCircle2,
   Clock, Circle, Shield, ChevronUp, ChevronDown, Minus, Zap, Target,
-  Share2, Copy, Check, QrCode, X, History, Settings
+  Share2, Copy, Check, QrCode, X, History, Settings, Pencil
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
@@ -442,6 +442,7 @@ export default function LeagueDashboard() {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [reportingMatch, setReportingMatch] = useState<LeagueMatch | null>(null);
   const [isCommissionerReport, setIsCommissionerReport] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<LeagueMatch | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [advancingWeek, setAdvancingWeek] = useState(false);
   const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false);
@@ -758,6 +759,25 @@ export default function LeagueDashboard() {
     } else {
       const d = await res.json().catch(() => ({}));
       showToast(d.error ?? "Failed to resolve", "error");
+    }
+  }
+
+  // Commissioner edits an already-completed match result
+  async function handleEditResult(result: "white_win" | "black_win" | "draw") {
+    if (!editingMatch || !leagueId) return;
+    const res = await authFetch(`/api/leagues/${leagueId}/matches/${editingMatch.id}/result`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ result }),
+    });
+    if (res.ok) {
+      showToast("Result updated!");
+      setEditingMatch(null);
+      await fetchAll();
+    } else {
+      const d = await res.json().catch(() => ({}));
+      showToast(d.error ?? "Failed to update result", "error");
     }
   }
 
@@ -2430,6 +2450,16 @@ export default function LeagueDashboard() {
                                 {match.result === "white_win" ? "1 – 0" : match.result === "black_win" ? "0 – 1" : "½ – ½"}
                               </span>
                               <span className="text-[10px]" style={{ color: textMuted }}>{label}</span>
+                              {isCommissioner && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setEditingMatch(match); }}
+                                  className="mt-1 p-1 rounded-full opacity-50 hover:opacity-100 transition-opacity"
+                                  style={{ background: `${accent}20`, color: accent }}
+                                  title="Edit result"
+                                >
+                                  <Pencil size={10} />
+                                </button>
+                              )}
                             </>
                           ) : match.resultStatus === "disputed" ? (
                             <>
@@ -3691,6 +3721,51 @@ export default function LeagueDashboard() {
           onClose={() => { setReportingMatch(null); setIsCommissionerReport(false); }}
           onSubmit={handleReportResult}
         />
+      )}
+
+      {/* Edit result modal (commissioner only) */}
+      {editingMatch && (
+        <div
+          className="modal-overlay z-50"
+          style={{ background: "rgba(0,0,0,0.65)" }}
+          onClick={() => setEditingMatch(null)}
+        >
+          <div
+            className="w-full max-w-xs rounded-3xl overflow-hidden shadow-2xl"
+            style={{ background: isDark ? "oklch(0.18 0.05 145)" : "#ffffff", border: `1px solid ${isDark ? "oklch(0.30 0.07 145)" : "#e5e7eb"}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Pencil size={15} style={{ color: accent }} />
+                <span className="text-sm font-bold" style={{ color: isDark ? "#fff" : "#111" }}>Edit Result</span>
+              </div>
+              <button onClick={() => setEditingMatch(null)} className="p-1 rounded-full" style={{ color: isDark ? "#aaa" : "#666" }}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="px-5 pb-2 text-xs" style={{ color: isDark ? "#aaa" : "#666" }}>
+              {editingMatch.playerWhiteName} vs {editingMatch.playerBlackName}
+            </div>
+            <div className="px-5 pb-5 flex flex-col gap-2">
+              {(["white_win", "black_win", "draw"] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => handleEditResult(r)}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-between px-4 transition-all hover:opacity-90 active:scale-95"
+                  style={{
+                    background: editingMatch.result === r ? accent : `${accent}18`,
+                    color: editingMatch.result === r ? "#fff" : accent,
+                    border: `1px solid ${accent}44`,
+                  }}
+                >
+                  <span>{r === "white_win" ? `${editingMatch.playerWhiteName} wins` : r === "black_win" ? `${editingMatch.playerBlackName} wins` : "Draw"}</span>
+                  <span className="font-black">{r === "white_win" ? "1 – 0" : r === "black_win" ? "0 – 1" : "½ – ½"}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Share modal */}
