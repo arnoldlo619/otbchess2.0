@@ -2315,10 +2315,12 @@ export default function ClubDashboard() {
   const [showTournamentWizard, setShowTournamentWizard] = useState(false);
   const [showMeetupWizard, setShowMeetupWizard] = useState(false);
   const [showPastMeetups, setShowPastMeetups] = useState(false);
+  const [showAllUpcomingMeetups, setShowAllUpcomingMeetups] = useState(false);
   const [deleteMeetupId, setDeleteMeetupId] = useState<string | null>(null);
   const [editMeetupId, setEditMeetupId] = useState<string | null>(null);
   const [eventsFilter, setEventsFilter] = useState<"all" | "meetups" | "tournaments">("all");
   const [showPastTournaments, setShowPastTournaments] = useState(false);
+  const [showAllUpcomingTmts, setShowAllUpcomingTmts] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
@@ -3352,7 +3354,7 @@ export default function ClubDashboard() {
               </div>
               {upcomingCards.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingCards.map((card) => {
+                  {(showAllUpcomingMeetups ? upcomingCards : upcomingCards.slice(0, 4)).map((card) => {
                     const ev = card.representative;
                     const rec = ev.recurrence;
                     const rLabel = recurrenceLabel(rec);
@@ -3455,6 +3457,14 @@ export default function ClubDashboard() {
                       </a>
                     );
                   })}
+                  {upcomingCards.length > 4 && (
+                    <button
+                      onClick={() => setShowAllUpcomingMeetups(v => !v)}
+                      className="w-full py-3 text-xs font-semibold text-white/30 hover:text-white/60 transition-colors"
+                    >
+                      {showAllUpcomingMeetups ? "Show Less" : `View All ${upcomingCards.length} Upcoming Meetups`}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
@@ -3612,7 +3622,7 @@ export default function ClubDashboard() {
               </div>
               {upcomingTmts.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingTmts.map((event) => {
+                  {(showAllUpcomingTmts ? upcomingTmts : upcomingTmts.slice(0, 4)).map((event) => {
                     const isUpcomingTmt = true;
                     return (
                       <div
@@ -3686,6 +3696,14 @@ export default function ClubDashboard() {
                       </div>
                     );
                   })}
+                  {upcomingTmts.length > 4 && (
+                    <button
+                      onClick={() => setShowAllUpcomingTmts(v => !v)}
+                      className="w-full py-3 text-xs font-semibold text-white/30 hover:text-white/60 transition-colors"
+                    >
+                      {showAllUpcomingTmts ? "Show Less" : `View All ${upcomingTmts.length} Upcoming Tournaments`}
+                    </button>
+                  )}
                 </div>
                             ) : (
                 <div className="rounded-2xl border border-dashed border-white/10 py-10 flex flex-col items-center gap-3 text-center px-6">
