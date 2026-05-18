@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStockfish, type StockfishEval } from "@/hooks/useStockfish";
 import { authFetch } from "@/lib/apiFetch";
 import { useRoute, useLocation } from "wouter";
+import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -1438,14 +1439,21 @@ export default function RepertoireBuilder() {
   return (
     <div className={`h-screen flex flex-col overflow-hidden ${isDark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"}`}>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className={`border-b ${isDark ? "border-white/10 bg-gray-950/80" : "border-gray-200 bg-white/80"} backdrop-blur-sm sticky top-0 z-30`}>
-        <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center gap-4">
+      <div
+        className="sticky top-0 z-40 flex items-center gap-3 px-4 lg:px-5 py-2.5"
+        style={{
+          background: "oklch(0.15 0.04 145 / 0.97)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid oklch(0.22 0.06 145)",
+        }}
+      >
+        <div className="flex items-center gap-3 w-full">
           <button
             onClick={() => navigate("/repertoire")}
-            className={`flex items-center gap-1.5 text-sm ${isDark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}
+            className="p-1.5 rounded-lg transition-opacity hover:opacity-70"
+            style={{ color: "oklch(0.65 0.12 145)" }}
           >
             <ArrowLeft size={16} />
-            <span>My Repertoires</span>
           </button>
 
           <div className="flex-1 flex items-center gap-2">
@@ -1456,9 +1464,7 @@ export default function RepertoireBuilder() {
                 onChange={(e) => setRepertoireName(e.target.value)}
                 onBlur={saveName}
                 onKeyDown={(e) => e.key === "Enter" && saveName()}
-                className={`text-lg font-bold bg-transparent border-b-2 outline-none px-1 ${
-                  isDark ? "border-emerald-500 text-white" : "border-emerald-600 text-gray-900"
-                }`}
+                className="text-lg font-bold bg-transparent border-b-2 outline-none px-1 border-emerald-500 text-white"
                 autoFocus
               />
             ) : (
@@ -1467,38 +1473,32 @@ export default function RepertoireBuilder() {
                   setEditingName(true);
                   setTimeout(() => nameInputRef.current?.focus(), 50);
                 }}
-                className={`text-lg font-bold hover:underline ${isDark ? "text-white" : "text-gray-900"}`}
+                className="text-lg font-bold hover:underline text-white"
               >
                 {repertoireName}
               </button>
             )}
 
             {openingEco && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${
-                isDark ? "bg-white/10 text-white/50" : "bg-gray-100 text-gray-500"
-              }`}>
+              <span className="text-xs px-2 py-0.5 rounded-full font-mono bg-white/10 text-white/50">
                 {openingEco}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
+            <span className="text-xs text-white/40">
               {totalMoves} move{totalMoves !== 1 ? "s" : ""}
             </span>
             {saving && (
-              <span className={`text-xs flex items-center gap-1 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+              <span className="text-xs flex items-center gap-1 text-emerald-400">
                 <Loader2 size={12} className="animate-spin" /> Saving…
               </span>
             )}
             {/* PGN Import / Export buttons */}
             <button
               onClick={() => setShowPgnImport(true)}
-              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-                isDark
-                  ? "border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5"
-                  : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50"
-              }`}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5"
               title="Import PGN"
             >
               <Upload size={13} />
@@ -1506,11 +1506,7 @@ export default function RepertoireBuilder() {
             </button>
             <button
               onClick={handleExportPgn}
-              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-                isDark
-                  ? "border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5"
-                  : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50"
-              }`}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5"
               title="Export PGN"
             >
               <Download size={13} />
@@ -1520,11 +1516,7 @@ export default function RepertoireBuilder() {
             {quizStatus === "idle" && totalMoves > 0 && (
               <button
                 onClick={startQuiz}
-                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-                  isDark
-                    ? "border-purple-500/50 text-purple-400 hover:text-purple-300 hover:border-purple-400 hover:bg-purple-500/10"
-                    : "border-purple-400 text-purple-600 hover:text-purple-700 hover:border-purple-500 hover:bg-purple-50"
-                }`}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors border-purple-500/50 text-purple-400 hover:text-purple-300 hover:border-purple-400 hover:bg-purple-500/10"
                 title="Test yourself on this repertoire"
               >
                 <Brain size={13} />
@@ -1535,11 +1527,7 @@ export default function RepertoireBuilder() {
             {quizStatus !== "idle" && quizStatus !== "complete" && (
               <button
                 onClick={exitQuiz}
-                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-                  isDark
-                    ? "border-red-500/50 text-red-400 hover:text-red-300 hover:border-red-400 hover:bg-red-500/10"
-                    : "border-red-400 text-red-600 hover:text-red-700 hover:border-red-500 hover:bg-red-50"
-                }`}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors border-red-500/50 text-red-400 hover:text-red-300 hover:border-red-400 hover:bg-red-500/10"
                 title="Exit quiz mode"
               >
                 <X size={13} />
@@ -1553,6 +1541,7 @@ export default function RepertoireBuilder() {
             }`}>
               {color === "white" ? "♜ White" : "♚ Black"}
             </span>
+            <AvatarNavDropdown currentPage="Training" />
           </div>
         </div>
       </div>
