@@ -570,6 +570,74 @@ function StatsBar() {
 }
 
 // ─── How It Works ────────────────────────────────────────────────────────────
+// ─── MacBook Mockup Frame ───────────────────────────────────────────────────
+function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
+  return (
+    <div className="relative mx-auto select-none" style={{ width: 520, maxWidth: '100%' }}>
+      {/* Lid / Screen */}
+      <div
+        className="relative"
+        style={{
+          borderRadius: '12px 12px 0 0',
+          background: isDark ? '#1c1c1e' : '#2a2a2a',
+          padding: '10px 10px 0 10px',
+          boxShadow: isDark
+            ? '0 0 0 1px #3a3a3a, 0 -2px 8px rgba(0,0,0,0.6)'
+            : '0 0 0 1px #555, 0 -2px 8px rgba(0,0,0,0.4)',
+        }}
+      >
+        {/* Camera dot */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2"
+          style={{ top: 5, width: 6, height: 6, borderRadius: '50%', background: '#3a3a3a', zIndex: 10 }}
+        />
+        {/* Screen bezel */}
+        <div
+          style={{
+            borderRadius: '6px 6px 0 0',
+            overflow: 'hidden',
+            aspectRatio: '16/10',
+            background: '#000',
+          }}
+        >
+          <img
+            src={src}
+            alt={alt}
+            className="w-full h-full object-cover object-center"
+            loading="lazy"
+          />
+        </div>
+      </div>
+      {/* Base / Hinge */}
+      <div
+        style={{
+          height: 14,
+          background: isDark
+            ? 'linear-gradient(to bottom, #2a2a2a 0%, #1a1a1a 100%)'
+            : 'linear-gradient(to bottom, #3a3a3a 0%, #2a2a2a 100%)',
+          borderRadius: '0 0 4px 4px',
+          boxShadow: isDark
+            ? '0 4px 20px rgba(0,0,0,0.7), 0 0 0 1px #3a3a3a'
+            : '0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px #555',
+        }}
+      />
+      {/* Foot / Bottom bar */}
+      <div
+        className="mx-auto"
+        style={{
+          height: 5,
+          width: '80%',
+          background: isDark ? '#222' : '#333',
+          borderRadius: '0 0 8px 8px',
+          boxShadow: isDark
+            ? '0 6px 24px rgba(0,0,0,0.6)'
+            : '0 6px 24px rgba(0,0,0,0.4)',
+        }}
+      />
+    </div>
+  );
+}
+
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
 function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
   return (
@@ -665,6 +733,7 @@ function ParallaxStep({
   imageAlt,
   phoneLeft,
   isDark,
+  mockupType,
 }: {
   number: string;
   icon: React.ReactNode;
@@ -674,6 +743,7 @@ function ParallaxStep({
   imageAlt: string;
   phoneLeft: boolean;
   isDark: boolean;
+  mockupType?: 'phone' | 'macbook';
 }) {
   const { ref, inView } = useInView(0.2);
   const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
@@ -706,7 +776,11 @@ function ParallaxStep({
             transitionDelay: "60ms",
           }}
         >
-          <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+          {mockupType === 'macbook' ? (
+            <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+          ) : (
+            <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+          )}
         </div>
       </div>
 
@@ -764,9 +838,10 @@ function HowItWorks() {
       icon: <Trophy className="w-3 h-3" />,
       title: "Create Your Tournament, Share QR Code",
       description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code — players scan and register on the spot.",
-      imageSrc: "/manus-storage/qr-screen-portrait_626820a6.webp",
+      imageSrc: "/manus-storage/qr-screen_b1e19e90.webp",
       imageAlt: "Tournament QR Code screen",
       phoneLeft: true,
+      mockupType: 'macbook' as const,
     },
     {
       number: "02",
@@ -832,6 +907,7 @@ function HowItWorks() {
             imageAlt={step.imageAlt}
             phoneLeft={step.phoneLeft}
             isDark={isDark}
+            mockupType={step.mockupType}
           />
         ))}
       </div>
