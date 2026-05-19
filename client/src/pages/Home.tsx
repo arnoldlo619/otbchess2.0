@@ -749,26 +749,35 @@ function ParallaxStep({
   const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
   const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#3D6B47]/10";
 
-  // MacBook step uses a full-width stacked layout for maximum visual impact
+  // MacBook step: side-by-side layout, mockup capped at 480px
   if (mockupType === 'macbook') {
     return (
       <div
         ref={ref}
-        className="flex flex-col items-center gap-10 py-20 lg:py-28"
+        className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 py-20 lg:py-28"
       >
-        {/* MacBook mockup — full container width */}
+        {/* MacBook mockup — left, capped width */}
         <div
-          className={`w-full transition-all duration-700 ease-out ${
+          className={`flex-1 flex justify-center lg:justify-end transition-all duration-700 ease-out ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
           }`}
           style={{ transitionDelay: "0ms" }}
         >
-          <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+          <div
+            className="w-full transition-all duration-700 ease-out"
+            style={{
+              maxWidth: 480,
+              transform: inView ? "none" : "translateX(-40px)",
+              transitionDelay: "60ms",
+            }}
+          >
+            <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+          </div>
         </div>
 
-        {/* Text content — centered below */}
+        {/* Text content — right */}
         <div
-          className={`w-full max-w-2xl text-center transition-all duration-700 ease-out ${
+          className={`flex-1 max-w-md transition-all duration-700 ease-out ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
           style={{ transitionDelay: "150ms" }}
@@ -781,7 +790,7 @@ function ParallaxStep({
           </div>
           <div className="relative">
             <span
-              className={`absolute -top-8 left-1/2 -translate-x-1/2 text-[120px] font-black leading-none select-none pointer-events-none ${
+              className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none ${
                 isDark ? "text-white/[0.04]" : "text-black/[0.04]"
               }`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
@@ -796,7 +805,7 @@ function ParallaxStep({
             </h3>
           </div>
           <p className="text-muted-foreground text-lg leading-relaxed mb-8">{description}</p>
-          <div className={`w-12 h-1 rounded-full mx-auto ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} />
+          <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} />
         </div>
       </div>
     );
