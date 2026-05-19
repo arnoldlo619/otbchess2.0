@@ -573,7 +573,7 @@ function StatsBar() {
 // ─── MacBook Mockup Frame ───────────────────────────────────────────────────
 function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
   return (
-    <div className="relative mx-auto select-none" style={{ width: 520, maxWidth: '100%' }}>
+    <div className="relative mx-auto select-none w-full" style={{ maxWidth: 520 }}>
       {/* Lid / Screen */}
       <div
         className="relative"
@@ -756,9 +756,9 @@ function ParallaxStep({
         phoneLeft ? "lg:flex-row" : "lg:flex-row-reverse"
       } items-center gap-12 lg:gap-20 py-20 lg:py-28`}
     >
-      {/* Phone mockup */}
+      {/* Phone/MacBook mockup */}
       <div
-        className={`flex-1 flex ${
+        className={`${mockupType === 'macbook' ? 'w-full' : 'flex-1'} flex ${
           phoneLeft ? "justify-center lg:justify-end" : "justify-center lg:justify-start"
         } transition-all duration-700 ease-out ${
           inView
@@ -770,7 +770,7 @@ function ParallaxStep({
         style={{ transitionDelay: "0ms" }}
       >
         <div
-          className="transition-all duration-700 ease-out"
+          className={`transition-all duration-700 ease-out${mockupType === 'macbook' ? ' w-full px-4 sm:px-0' : ''}`}
           style={{
             transform: inView ? "none" : `translateX(${phoneLeft ? "-40px" : "40px"})`,
             transitionDelay: "60ms",
