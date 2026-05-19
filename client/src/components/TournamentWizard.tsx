@@ -2230,7 +2230,7 @@ function StepShare({ data, isDark, tournamentId }: { data: WizardData; isDark: b
     // Persist to server if we have a tournament ID (user is signed in)
     if (tournamentId) {
       try {
-        await authFetch(`/api/user/tournaments/${encodeURIComponent(tournamentId)}/custom-slug`, {
+        await authFetch(`/api/auth/user/tournaments/${encodeURIComponent(tournamentId)}/custom-slug`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -2540,7 +2540,7 @@ export function TournamentWizard({ open, onClose, initialClubId, initialClubName
     grantDirectorSession(slug);
     // If signed in, persist to server so My Tournaments history is cross-device
     if (user?.id) {
-      authFetch(`/api/user/tournaments`, {
+      authFetch(`/api/auth/user/tournaments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

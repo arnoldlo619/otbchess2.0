@@ -1646,7 +1646,7 @@ export default function Director() {
   // ── Sync tournament status to server (for My Tournaments status pills) ──
   const syncStatusToServer = useCallback((newStatus: string) => {
     if (!user?.id || tournamentId === "otb-demo-2026") return;
-    fetch("/api/user/tournaments", {
+    fetch("/api/auth/user/tournaments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
