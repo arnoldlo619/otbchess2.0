@@ -570,125 +570,270 @@ function StatsBar() {
 }
 
 // ─── How It Works ────────────────────────────────────────────────────────────
+// ─── iPhone Mockup Frame ────────────────────────────────────────────────────
+function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
+  return (
+    <div
+      className="relative mx-auto select-none"
+      style={{ width: 280, height: 570 }}
+    >
+      {/* Side buttons — left */}
+      <div className="absolute left-[-3px] top-[120px] w-[3px] h-[36px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute left-[-3px] top-[170px] w-[3px] h-[56px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute left-[-3px] top-[240px] w-[3px] h-[56px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      {/* Side button — right */}
+      <div className="absolute right-[-3px] top-[180px] w-[3px] h-[80px] rounded-r-sm z-20" style={{ background: "#2a2a2a" }} />
+
+      {/* Phone outer shell — border only, transparent center */}
+      <div
+        className="absolute inset-0 z-10 pointer-events-none"
+        style={{
+          borderRadius: 44,
+          border: "8px solid #1c1c1e",
+          boxShadow: isDark
+            ? "0 0 0 1px #3a3a3a, 0 40px 100px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)"
+            : "0 0 0 1px #444, 0 40px 100px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+          background: "transparent",
+        }}
+      />
+
+      {/* Screen area — fills the interior */}
+      <div
+        className="absolute overflow-hidden"
+        style={{
+          top: 8,
+          left: 8,
+          right: 8,
+          bottom: 8,
+          borderRadius: 38,
+          background: "#0a0a0a",
+          zIndex: 1,
+        }}
+      >
+        {/* Screenshot image */}
+        <img
+          src={src}
+          alt={alt}
+          className="absolute inset-0 w-full h-full object-cover object-top"
+          loading="lazy"
+        />
+
+        {/* Dynamic island notch — overlaid on top of screenshot */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2"
+          style={{ top: 10, width: 108, height: 28, background: "#000", borderRadius: 20, zIndex: 10 }}
+        />
+
+        {/* Status bar overlay */}
+        <div
+          className="absolute top-0 left-0 right-0 flex items-start justify-between px-5"
+          style={{ paddingTop: 10, zIndex: 11, background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%)" }}
+        >
+          <span className="text-white text-[10px] font-semibold" style={{ paddingTop: 2 }}>9:41</span>
+          <div className="flex items-center gap-1" style={{ paddingTop: 2 }}>
+            {/* Signal bars */}
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="white">
+              <rect x="0" y="3" width="2" height="7" rx="0.5" opacity="0.9"/>
+              <rect x="3" y="2" width="2" height="8" rx="0.5" opacity="0.9"/>
+              <rect x="6" y="1" width="2" height="9" rx="0.5" opacity="0.9"/>
+              <rect x="9" y="0" width="2" height="10" rx="0.5" opacity="0.9"/>
+            </svg>
+            {/* WiFi */}
+            <svg width="12" height="9" viewBox="0 0 12 9" fill="white" opacity="0.9">
+              <path d="M6 7.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-2.5c1.1 0 2.1.4 2.8 1.1l1-1A5.5 5.5 0 0 0 6 3.5a5.5 5.5 0 0 0-3.8 1.6l1 1A3.5 3.5 0 0 1 6 5zm0-3C7.9 2 9.6 2.8 10.8 4l1-1A7.5 7.5 0 0 0 6 1 7.5 7.5 0 0 0 1.2 3l1 1A5.5 5.5 0 0 1 6 2z"/>
+            </svg>
+            {/* Battery */}
+            <svg width="20" height="10" viewBox="0 0 20 10" fill="none">
+              <rect x="0.5" y="0.5" width="16" height="9" rx="2.5" stroke="white" strokeOpacity="0.4"/>
+              <rect x="1.5" y="1.5" width="12" height="7" rx="1.5" fill="white"/>
+              <path d="M18 3.5V6.5C18.8 6.2 19.5 5.7 19.5 5C19.5 4.3 18.8 3.8 18 3.5Z" fill="white" fillOpacity="0.4"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Parallax Step Block ─────────────────────────────────────────────────────
+function ParallaxStep({
+  number,
+  icon,
+  title,
+  description,
+  imageSrc,
+  imageAlt,
+  phoneLeft,
+  isDark,
+}: {
+  number: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  imageSrc: string;
+  imageAlt: string;
+  phoneLeft: boolean;
+  isDark: boolean;
+}) {
+  const { ref, inView } = useInView(0.2);
+  const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
+  const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#3D6B47]/10";
+
+  return (
+    <div
+      ref={ref}
+      className={`flex flex-col ${
+        phoneLeft ? "lg:flex-row" : "lg:flex-row-reverse"
+      } items-center gap-12 lg:gap-20 py-20 lg:py-28`}
+    >
+      {/* Phone mockup */}
+      <div
+        className={`flex-1 flex ${
+          phoneLeft ? "justify-center lg:justify-end" : "justify-center lg:justify-start"
+        } transition-all duration-700 ease-out ${
+          inView
+            ? "opacity-100 translate-y-0"
+            : phoneLeft
+            ? "opacity-0 translate-y-12"
+            : "opacity-0 translate-y-12"
+        }`}
+        style={{ transitionDelay: "0ms" }}
+      >
+        <div
+          className="transition-all duration-700 ease-out"
+          style={{
+            transform: inView ? "none" : `translateX(${phoneLeft ? "-40px" : "40px"})`,
+            transitionDelay: "60ms",
+          }}
+        >
+          <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+        </div>
+      </div>
+
+      {/* Text content */}
+      <div
+        className={`flex-1 max-w-md transition-all duration-700 ease-out ${
+          inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+        style={{ transitionDelay: "150ms" }}
+      >
+        {/* Step badge */}
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}>
+          <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
+            {icon}
+          </span>
+          Step {number}
+        </div>
+
+        {/* Step number watermark */}
+        <div className="relative">
+          <span
+            className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none ${
+              isDark ? "text-white/[0.04]" : "text-black/[0.04]"
+            }`}
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            {number}
+          </span>
+          <h3
+            className="relative text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            {title}
+          </h3>
+        </div>
+
+        <p className="text-muted-foreground text-lg leading-relaxed mb-8">
+          {description}
+        </p>
+
+        {/* Divider accent */}
+        <div className={`w-12 h-1 rounded-full ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} />
+      </div>
+    </div>
+  );
+}
+
 function HowItWorks() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // Per-element refs for scroll-reveal
-  const labelRef = useRef<HTMLParagraphElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  const cardRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) {
-      // Skip animation — ensure elements are visible
-      [labelRef, headingRef, ...cardRefs].forEach(r => {
-        if (r.current) {
-          r.current.style.opacity = "1";
-          r.current.style.transform = "none";
-        }
-      });
-      return;
-    }
-
-    const targets: Array<{ el: HTMLElement; delay: number; cls: string }> = [
-      { el: labelRef.current!, delay: 0,   cls: "scroll-reveal-init" },
-      { el: headingRef.current!, delay: 80, cls: "scroll-reveal-heading" },
-      ...cardRefs.map((r, i) => ({ el: r.current!, delay: 160 + i * 110, cls: "scroll-reveal-init" })),
-    ].filter(t => t.el);
-
-    const observers: IntersectionObserver[] = [];
-
-    targets.forEach(({ el, delay, cls }) => {
-      el.classList.add(cls);
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setTimeout(() => el.classList.add("scroll-revealed"), delay);
-            obs.disconnect();
-          }
-        },
-        { threshold: 0.15 }
-      );
-      obs.observe(el);
-      observers.push(obs);
-    });
-
-    return () => observers.forEach(o => o.disconnect());
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const steps = [
     {
       number: "01",
-      icon: <Trophy className="w-6 h-6" />,
+      icon: <Trophy className="w-3 h-3" />,
       title: "Create Your Tournament, Share QR Code",
       description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code — players scan and register on the spot.",
+      imageSrc: "/manus-storage/otb-qr-screen_15de999f.webp",
+      imageAlt: "Tournament QR Code screen",
+      phoneLeft: true,
     },
     {
       number: "02",
-      icon: <Users className="w-6 h-6" />,
+      icon: <Users className="w-3 h-3" />,
       title: "Players Sign Up with chess.com",
       description: "Share a link. Players enter their chess.com username — we automatically pull their verified ELO rating in real time.",
+      imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
+      imageAlt: "Player join form with chess.com username lookup",
+      phoneLeft: false,
     },
     {
       number: "03",
-      icon: <Swords className="w-6 h-6" />,
+      icon: <Swords className="w-3 h-3" />,
       title: "Optimal Pairings Generated",
       description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
+      imageSrc: "/manus-storage/otb-board-pairings_41832e9e.webp",
+      imageAlt: "Board pairings screen showing matchups",
+      phoneLeft: true,
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-24 transition-colors duration-500 bg-background">
-      <div className="container">
-        <div>
-          {/* Steps column */}
-          <div>
-            <div className="mb-12">
-              <p
-                ref={labelRef}
-                className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}
-              >
-                Simple Process
-              </p>
-              <h2
-                ref={headingRef}
-                className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground"
-                style={{ fontFamily: "'Clash Display', sans-serif" }}
-              >
-                3 Simple Steps to Launch
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6 relative">
-              <div className={`hidden md:block absolute top-12 left-1/3 right-1/3 h-px ${isDark ? "bg-white/10" : "bg-[#EEEED2]"}`} />
-              {steps.map((step, i) => (
-                <div
-                  key={step.number}
-                  ref={cardRefs[i]}
-                  className="relative"
-                >
-                  <div className="card-chess step-card p-6">
-                    <div className="flex items-start justify-between mb-5">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
-                        {step.icon}
-                      </div>
-                      <span
-                        className={`step-number text-4xl font-bold ${isDark ? "text-white/10" : "text-[#EEEED2]"}`}
-                        style={{ fontFamily: "'Clash Display', sans-serif" }}
-                      >
-                        {step.number}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-semibold text-foreground mb-2">{step.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed text-sm">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <section id="how-it-works" className={`transition-colors duration-500 ${
+      isDark ? "bg-background" : "bg-background"
+    }`}>
+      {/* Section header */}
+      <div className="container pt-24 pb-4">
+        <div className="text-center">
+          <p className={`text-xs font-semibold tracking-widest uppercase mb-4 ${
+            isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"
+          }`}>
+            Simple Process
+          </p>
+          <h2
+            className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: "'Clash Display', sans-serif" }}
+          >
+            3 Simple Steps to Launch
+          </h2>
+          <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
+            From setup to live pairings in minutes — no spreadsheets, no manual work.
+          </p>
         </div>
+      </div>
+
+      {/* Divider */}
+      <div className="container">
+        <div className={`h-px w-full mt-12 ${
+          isDark ? "bg-white/[0.06]" : "bg-gray-100"
+        }`} />
+      </div>
+
+      {/* Parallax step blocks */}
+      <div className="container">
+        {steps.map((step) => (
+          <ParallaxStep
+            key={step.number}
+            number={step.number}
+            icon={step.icon}
+            title={step.title}
+            description={step.description}
+            imageSrc={step.imageSrc}
+            imageAlt={step.imageAlt}
+            phoneLeft={step.phoneLeft}
+            isDark={isDark}
+          />
+        ))}
       </div>
     </section>
   );

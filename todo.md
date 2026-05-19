@@ -6130,3 +6130,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Remove dual-confirmation / awaiting_confirmation flow (commissioner reports are final)
 - [x] Player match view: show result clearly when reported by commissioner
 - [x] Player match view: show next matchup info after commissioner advances the week
+
+## Landing Page — Scrolling Parallax How It Works Section
+
+- [x] Replace 3-step card grid with Cal AI-style scrolling parallax iPhone mockup section
+- [x] Upload and optimize 3 real ChessOTB.club screenshots (QR code, join form, board pairings)
+- [x] IPhoneMockup component with transparent-center border frame, dynamic island, status bar overlay
+- [x] Alternating left/right phone + text layout (step 1 left, step 2 right, step 3 left)
+- [x] IntersectionObserver scroll-triggered fade-up animations per step
+- [x] Fix Stockfish WASM loading error (serve from public/stockfish/ instead of manus-storage)
+- [x] Fix Vite /manus-storage middleware ordering so storage proxy intercepts before HTML fallback
