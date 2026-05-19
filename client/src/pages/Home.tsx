@@ -976,7 +976,7 @@ function Features() {
     { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs" },
     { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — built for OTB club players.", tag: "Training" },
     { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered" },
-    { icon: <Zap className="w-5 h-5" />, title: "Smart Pairings Engine", description: "Swiss pairings optimized by ELO, color balance, and prior opponents. Tiebreaks handled automatically, every round.", tag: "Algorithm-Powered" },
+    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature" },
     { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time" },
     { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready" },
   ];
