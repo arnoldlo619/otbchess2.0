@@ -25,6 +25,7 @@ import { useActiveTournament } from "@/hooks/useActiveTournament";
 import { useEffect, useState } from "react";
 import { DashboardDropdown } from "@/components/DashboardDropdown";
 import { TrainingDropdown } from "@/components/TrainingDropdown";
+import { LeagueDropdown } from "@/components/LeagueDropdown";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { GuestMobileMenu } from "@/components/GuestMobileMenu";
 
@@ -121,6 +122,7 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
       tooltip: myLeagues.length
         ? (myLeagues.find((l) => l.status === "active")?.name ?? myLeagues[0]?.name)
         : "View League Demo",
+      dropdown: <LeagueDropdown />,
       onClick: (e: React.MouseEvent) => {
         e.preventDefault();
         window.location.href = leagueNavUrl;

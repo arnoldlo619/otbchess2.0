@@ -4,12 +4,11 @@
  * Layout:
  *   1. Active Tournament card (prominent, with live status badge) — only if one exists
  *   2. Recent Tournaments list (past / other tournaments, up to 4)
- *   3. My Leagues section
- *   4. Footer: New Tournament / Browse Clubs
+ *   3. Footer: New Tournament
  */
 
-import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Trophy, Swords, Pause, Clock } from "lucide-react";
+import { useState } from "react";
+import { Shield, User, Plus, ChevronRight, Trophy, Pause, Clock } from "lucide-react";
 import { listTournaments, hasDirectorSession, resolveTournament } from "@/lib/tournamentRegistry";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { useActiveTournament } from "@/hooks/useActiveTournament";
@@ -21,17 +20,6 @@ interface TournamentEntry {
   role: "director" | "player";
   url: string;
   sortKey: string;
-}
-
-interface MyLeague {
-  id: string;
-  name: string;
-  status: string;
-  currentWeek: number;
-  totalWeeks: number;
-  maxPlayers: number;
-  playerCount: number;
-  myStanding: { rank: number; points: number; wins: number; draws: number; losses: number } | null;
 }
 
 function buildAllEntries(): TournamentEntry[] {
@@ -86,27 +74,9 @@ function formatDate(dateStr: string): string {
   }
 }
 
-function leagueStatusLabel(s: string): { text: string; cls: string } {
-  switch (s) {
-    case "draft":     return { text: "Draft",     cls: "bg-amber-500/20 text-amber-400" };
-    case "active":    return { text: "Active",    cls: "bg-emerald-500/20 text-emerald-400" };
-    case "completed": return { text: "Completed", cls: "bg-white/10 text-white/50" };
-    default:          return { text: s,           cls: "bg-white/10 text-white/50" };
-  }
-}
-
 export function DashboardDropdown() {
   const activeTournament = useActiveTournament();
   const allEntries = buildAllEntries();
-  const [myLeagues, setMyLeagues] = useState<MyLeague[]>([]);
-
-  useEffect(() => {
-    fetch("/api/leagues/mine", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setMyLeagues(data))
-      .catch(() => {});
-  }, []);
-
   // Entries that are NOT the active tournament (shown in "Recent" section)
   const recentEntries = allEntries
     .filter((e) => !activeTournament || e.id !== activeTournament.id)
@@ -242,62 +212,6 @@ export function DashboardDropdown() {
           New Tournament
         </button>
       </div>
-
-      {/* ── My Leagues Section ── */}
-      {myLeagues.length > 0 && (
-        <>
-          <div className="px-4 py-2.5 border-t border-white/08 flex items-center gap-2">
-            <Swords className="w-3.5 h-3.5 text-[#4CAF50]" />
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-              My Leagues
-            </span>
-          </div>
-          <ul>
-            {myLeagues.map((lg) => {
-              const st = leagueStatusLabel(lg.status);
-              return (
-                <li key={lg.id}>
-                  <a
-                    href={`/leagues/${lg.id}`}
-                    onClick={(e) => { e.preventDefault(); window.location.href = `/leagues/${lg.id}`; }}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/06 transition-colors group"
-                  >
-                    <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-[#3D6B47]/30 text-[#4CAF50]">
-                      <Swords className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white/80 truncate leading-tight font-medium">{lg.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${st.cls}`}>
-                          {st.text}
-                        </span>
-                        {lg.status === "active" && (
-                          <span className="text-[10px] text-white/30">Week {lg.currentWeek}/{lg.totalWeeks}</span>
-                        )}
-                        {lg.myStanding && lg.status === "active" && (
-                          <span className="text-[10px] text-white/40">#{lg.myStanding.rank} · {lg.myStanding.points}pts</span>
-                        )}
-                      </div>
-                    </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors flex-shrink-0" />
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="border-t border-white/08">
-            <a
-              href="/clubs"
-              onClick={(e) => { e.preventDefault(); window.location.href = "/clubs"; }}
-              className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#4CAF50] hover:bg-[#3D6B47]/15 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Browse Clubs &amp; Leagues
-            </a>
-          </div>
-        </>
-      )}
     </div>
   );
 }
