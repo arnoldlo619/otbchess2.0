@@ -575,21 +575,21 @@ function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: 
   return (
     <div
       className="relative mx-auto select-none"
-      style={{ width: 280, height: 570 }}
+      style={{ width: 320, height: 650 }}
     >
       {/* Side buttons — left */}
-      <div className="absolute left-[-3px] top-[120px] w-[3px] h-[36px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
-      <div className="absolute left-[-3px] top-[170px] w-[3px] h-[56px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
-      <div className="absolute left-[-3px] top-[240px] w-[3px] h-[56px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute left-[-3px] top-[140px] w-[3px] h-[40px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute left-[-3px] top-[195px] w-[3px] h-[64px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute left-[-3px] top-[275px] w-[3px] h-[64px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
       {/* Side button — right */}
-      <div className="absolute right-[-3px] top-[180px] w-[3px] h-[80px] rounded-r-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute right-[-3px] top-[205px] w-[3px] h-[90px] rounded-r-sm z-20" style={{ background: "#2a2a2a" }} />
 
       {/* Phone outer shell — border only, transparent center */}
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          borderRadius: 44,
-          border: "8px solid #1c1c1e",
+          borderRadius: 50,
+          border: "10px solid #1c1c1e",
           boxShadow: isDark
             ? "0 0 0 1px #3a3a3a, 0 40px 100px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)"
             : "0 0 0 1px #444, 0 40px 100px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
@@ -601,11 +601,11 @@ function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: 
       <div
         className="absolute overflow-hidden"
         style={{
-          top: 8,
-          left: 8,
-          right: 8,
-          bottom: 8,
-          borderRadius: 38,
+          top: 10,
+          left: 10,
+          right: 10,
+          bottom: 10,
+          borderRadius: 42,
           background: "#0a0a0a",
           zIndex: 1,
         }}
@@ -621,7 +621,7 @@ function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: 
         {/* Dynamic island notch — overlaid on top of screenshot */}
         <div
           className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: 10, width: 108, height: 28, background: "#000", borderRadius: 20, zIndex: 10 }}
+          style={{ top: 12, width: 120, height: 32, background: "#000", borderRadius: 20, zIndex: 10 }}
         />
 
         {/* Status bar overlay */}
@@ -764,7 +764,7 @@ function HowItWorks() {
       icon: <Trophy className="w-3 h-3" />,
       title: "Create Your Tournament, Share QR Code",
       description: "Set your format, rounds, and venue in under 3 minutes. Instantly get a shareable QR code — players scan and register on the spot.",
-      imageSrc: "/manus-storage/otb-qr-screen_15de999f.webp",
+      imageSrc: "/manus-storage/qr-screen-portrait_626820a6.webp",
       imageAlt: "Tournament QR Code screen",
       phoneLeft: true,
     },
