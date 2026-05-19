@@ -15,7 +15,7 @@ export interface StockfishEval {
   depth: number;
 }
 
-const SF_JS_URL = "/manus-storage/stockfish-18-lite-single_35b34eda.js";
+const SF_JS_URL = "/stockfish/stockfish-18-lite-single.js";
 
 export function useStockfish() {
   const workerRef = useRef<Worker | null>(null);

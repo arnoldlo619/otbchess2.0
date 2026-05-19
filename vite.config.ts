@@ -278,6 +278,18 @@ function vitePluginExpressApi(): Plugin {
           next(err);
         }
       });
+      // Also proxy /manus-storage/* through Express so the storage proxy
+      // can serve Stockfish WASM/JS files before Vite's HTML fallback intercepts.
+      server.middlewares.use("/manus-storage", async (req, res, next) => {
+        try {
+          const apiApp = await getApiApp();
+          req.url = "/manus-storage" + (req.url ?? "");
+          apiApp(req as import("http").IncomingMessage, res as import("http").ServerResponse, next);
+        } catch (err) {
+          console.error("[express-api] manus-storage Error:", err);
+          next(err);
+        }
+      });
       console.log("[express-api] API middleware registered on Vite dev server");
     },
   };
