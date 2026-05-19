@@ -573,7 +573,7 @@ function StatsBar() {
 // ─── MacBook Mockup Frame ───────────────────────────────────────────────────
 function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
   return (
-    <div className="relative mx-auto select-none w-full" style={{ maxWidth: 520 }}>
+    <div className="relative mx-auto select-none w-full">
       {/* Lid / Screen */}
       <div
         className="relative"
@@ -749,6 +749,59 @@ function ParallaxStep({
   const accentColor = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
   const accentBg = isDark ? "bg-[oklch(0.65_0.14_145)]/15" : "bg-[#3D6B47]/10";
 
+  // MacBook step uses a full-width stacked layout for maximum visual impact
+  if (mockupType === 'macbook') {
+    return (
+      <div
+        ref={ref}
+        className="flex flex-col items-center gap-10 py-20 lg:py-28"
+      >
+        {/* MacBook mockup — full container width */}
+        <div
+          className={`w-full transition-all duration-700 ease-out ${
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+          }`}
+          style={{ transitionDelay: "0ms" }}
+        >
+          <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+        </div>
+
+        {/* Text content — centered below */}
+        <div
+          className={`w-full max-w-2xl text-center transition-all duration-700 ease-out ${
+            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+          style={{ transitionDelay: "150ms" }}
+        >
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6 ${accentBg} ${accentColor}`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accentColor} border border-current`}>
+              {icon}
+            </span>
+            Step {number}
+          </div>
+          <div className="relative">
+            <span
+              className={`absolute -top-8 left-1/2 -translate-x-1/2 text-[120px] font-black leading-none select-none pointer-events-none ${
+                isDark ? "text-white/[0.04]" : "text-black/[0.04]"
+              }`}
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              {number}
+            </span>
+            <h3
+              className="relative text-3xl lg:text-4xl font-bold text-foreground mb-4 leading-tight"
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              {title}
+            </h3>
+          </div>
+          <p className="text-muted-foreground text-lg leading-relaxed mb-8">{description}</p>
+          <div className={`w-12 h-1 rounded-full mx-auto ${isDark ? "bg-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]"}`} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={ref}
@@ -756,31 +809,20 @@ function ParallaxStep({
         phoneLeft ? "lg:flex-row" : "lg:flex-row-reverse"
       } items-center gap-12 lg:gap-20 py-20 lg:py-28`}
     >
-      {/* Phone/MacBook mockup */}
+      {/* Phone mockup */}
       <div
-        className={`${mockupType === 'macbook' ? 'w-full' : 'flex-1'} flex ${
-          phoneLeft ? "justify-center lg:justify-end" : "justify-center lg:justify-start"
-        } transition-all duration-700 ease-out ${
-          inView
-            ? "opacity-100 translate-y-0"
-            : phoneLeft
-            ? "opacity-0 translate-y-12"
-            : "opacity-0 translate-y-12"
-        }`}
+        className="flex-1 flex justify-center lg:justify-end transition-all duration-700 ease-out"
         style={{ transitionDelay: "0ms" }}
       >
         <div
-          className={`transition-all duration-700 ease-out${mockupType === 'macbook' ? ' w-full px-4 sm:px-0' : ''}`}
+          className="transition-all duration-700 ease-out"
           style={{
             transform: inView ? "none" : `translateX(${phoneLeft ? "-40px" : "40px"})`,
             transitionDelay: "60ms",
+            opacity: inView ? 1 : 0,
           }}
         >
-          {mockupType === 'macbook' ? (
-            <MacBookMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
-          ) : (
-            <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
-          )}
+          <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
         </div>
       </div>
 
