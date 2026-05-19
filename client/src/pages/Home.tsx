@@ -756,9 +756,9 @@ function ParallaxStep({
         ref={ref}
         className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 py-20 lg:py-28"
       >
-        {/* MacBook mockup — left, capped width */}
+        {/* MacBook mockup — left, bigger and wider */}
         <div
-          className={`flex-1 flex justify-center lg:justify-end transition-all duration-700 ease-out ${
+          className={`flex-[1.6] flex justify-center lg:justify-end transition-all duration-700 ease-out ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
           }`}
           style={{ transitionDelay: "0ms" }}
@@ -766,7 +766,7 @@ function ParallaxStep({
           <div
             className="w-full transition-all duration-700 ease-out"
             style={{
-              maxWidth: 480,
+              maxWidth: 640,
               transform: inView ? "none" : "translateX(-40px)",
               transitionDelay: "60ms",
             }}
