@@ -582,8 +582,8 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
           background: isDark ? '#1c1c1e' : '#2a2a2a',
           padding: '10px 10px 0 10px',
           boxShadow: isDark
-            ? '0 0 0 1px #3a3a3a, 0 -2px 8px rgba(0,0,0,0.6)'
-            : '0 0 0 1px #555, 0 -2px 8px rgba(0,0,0,0.4)',
+            ? '0 0 0 1px #3a3a3a, 0 -2px 8px rgba(0,0,0,0.6), 0 0 40px 4px oklch(0.65 0.14 145 / 0.22), 0 0 80px 12px oklch(0.65 0.14 145 / 0.10)'
+            : '0 0 0 1px #555, 0 -2px 8px rgba(0,0,0,0.4), 0 0 40px 4px oklch(0.65 0.14 145 / 0.18), 0 0 80px 12px oklch(0.65 0.14 145 / 0.08)',
         }}
       >
         {/* Camera dot */}
