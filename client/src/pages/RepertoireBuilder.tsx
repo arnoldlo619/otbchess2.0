@@ -59,6 +59,8 @@ interface MoveNode {
   openingName?: string;
   /** User comment / annotation */
   comment?: string;
+  /** Move annotation glyph: "!" "?" "!!" "??" "!?" "?!" */
+  annotation?: "!" | "?" | "!!" | "??" | "!?" | "?!";
   /** Stockfish eval in centipawns (from White's POV) */
   eval?: number;
   /** Child variations */
@@ -185,6 +187,11 @@ function treeToMoveText(node: MoveNode, depth: number, isFirst: boolean): string
 
   text += node.san;
 
+  // Annotation glyph appended directly after SAN (standard PGN NAG-style)
+  if (node.annotation) {
+    text += node.annotation;
+  }
+
   // Inline comment
   if (node.comment) {
     text += ` { ${node.comment.replace(/[{}]/g, "")} }`;
@@ -267,6 +274,7 @@ function importFromPgn(pgn: string): MoveNode {
   const stack: { node: MoveNode; chess: Chess }[] = [{ node: root, chess: new Chess() }];
 
   let pendingComment: string | undefined;
+  let pendingAnnotation: MoveNode["annotation"] | undefined;
 
   for (const token of tokens) {
     if (token === "(" ) {
@@ -296,6 +304,11 @@ function importFromPgn(pgn: string): MoveNode {
       pendingComment = token.slice(1, -1).trim();
       continue;
     }
+    // Annotation glyph (!, ?, !!, ??, !?, ?!)
+    if (/^[!?]{1,2}$/.test(token)) {
+      pendingAnnotation = token as MoveNode["annotation"];
+      continue;
+    }
 
     // It's a SAN move
     const top = stack[stack.length - 1];
@@ -313,13 +326,16 @@ function importFromPgn(pgn: string): MoveNode {
           move: uci,
           san: result.san,
           comment: pendingComment,
+          annotation: pendingAnnotation,
           children: [],
         };
         top.node.children.push(child);
-      } else if (pendingComment && !child.comment) {
-        child.comment = pendingComment;
+      } else {
+        if (pendingComment && !child.comment) child.comment = pendingComment;
+        if (pendingAnnotation && !child.annotation) child.annotation = pendingAnnotation;
       }
       pendingComment = undefined;
+      pendingAnnotation = undefined;
 
       // Advance stack top to this child
       stack[stack.length - 1] = { node: child, chess: top.chess };
@@ -2035,8 +2051,21 @@ export default function RepertoireBuilder() {
                     }`}
                   >
                     <BookOpen size={14} className={isDark ? "text-emerald-400" : "text-emerald-600"} />
-                    <span className="font-bold font-mono text-sm">{child.san || "?"}</span>
-                    {/* Opening annotation */}
+                    {/* SAN + annotation badge */}
+                    <span className="font-bold font-mono text-sm flex items-center gap-0.5">
+                      {child.san || "?"}
+                      {child.annotation && (
+                        <span className={`text-xs font-bold ${
+                          child.annotation === "!!" ? "text-emerald-400" :
+                          child.annotation === "!" ? "text-emerald-500" :
+                          child.annotation === "!?" ? "text-blue-400" :
+                          child.annotation === "?!" ? "text-amber-400" :
+                          child.annotation === "?" ? "text-orange-400" :
+                          "text-red-500"
+                        }`}>{child.annotation}</span>
+                      )}
+                    </span>
+                    {/* Opening info */}
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
                       {child.openingEco && (
                         <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono ${
@@ -2056,10 +2085,53 @@ export default function RepertoireBuilder() {
                         </span>
                       )}
                     </div>
+                    {/* Annotation buttons — visible on hover */}
+                    <div
+                      className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {(["!!", "!", "!?", "?!", "?", "??"] as const).map((glyph) => (
+                        <button
+                          key={glyph}
+                          title={{
+                            "!!": "Brilliant",
+                            "!": "Good move",
+                            "!?": "Interesting",
+                            "?!": "Dubious",
+                            "?": "Mistake",
+                            "??": "Blunder",
+                          }[glyph]}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMoveTree((prev) => {
+                              const clone = JSON.parse(JSON.stringify(prev)) as MoveNode;
+                              const target = findNode(clone, child.fen);
+                              if (target) target.annotation = target.annotation === glyph ? undefined : glyph;
+                              return clone;
+                            });
+                            setMoveTree((latest) => { autoSave(latest); return latest; });
+                          }}
+                          className={`text-[11px] font-bold w-5 h-5 flex items-center justify-center rounded transition ${
+                            child.annotation === glyph
+                              ? glyph === "!!" ? "bg-emerald-500/30 text-emerald-400"
+                                : glyph === "!" ? "bg-emerald-600/30 text-emerald-500"
+                                : glyph === "!?" ? "bg-blue-500/30 text-blue-400"
+                                : glyph === "?!" ? "bg-amber-500/30 text-amber-400"
+                                : glyph === "?" ? "bg-orange-500/30 text-orange-400"
+                                : "bg-red-500/30 text-red-400"
+                              : isDark
+                              ? "text-white/30 hover:text-white/70 hover:bg-white/10"
+                              : "text-gray-300 hover:text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {glyph}
+                        </button>
+                      ))}
+                    </div>
                     {/* Pencil badge if this node has a note */}
                     {child.comment && (
                       <span
-                        className={`shrink-0 ml-1 ${
+                        className={`shrink-0 ${
                           isDark ? "text-amber-400/70" : "text-amber-500/80"
                         }`}
                         title={child.comment}
@@ -2074,7 +2146,7 @@ export default function RepertoireBuilder() {
                         setMoveTree(updated);
                         autoSave(updated);
                       }}
-                      className="ml-auto shrink-0 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100"
+                      className="shrink-0 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100"
                       title="Remove"
                     >
                       <Trash2 size={14} />

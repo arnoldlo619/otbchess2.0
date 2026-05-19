@@ -5951,7 +5951,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write tests for fallback explorer lookup (23 tests passing)
 
 ## Repertoire Builder Buildout — Phase C: UX Enhancements
-- [ ] Add move annotations (!, !!, ?, ??, !?, ?!) with Stockfish evaluation display
+- [x] Add move annotations (!, !!, ?, ??, !?, ?!) with Stockfish evaluation display
 - [ ] Add "Import from Lichess Study" feature
 - [ ] Add "Suggested Repertoire" based on user's chess.com game history
 
