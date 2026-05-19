@@ -512,6 +512,8 @@ function ExplorerMoveRow({
   onAdd,
   onRemove,
   onPlay,
+  onHoverEnter,
+  onHoverLeave,
   isDark,
   openingName,
   openingEco,
@@ -522,6 +524,8 @@ function ExplorerMoveRow({
   onAdd: () => void;
   onRemove: () => void;
   onPlay: () => void;
+  onHoverEnter?: () => void;
+  onHoverLeave?: () => void;
   isDark: boolean;
   openingName?: string;
   openingEco?: string;
@@ -534,6 +538,8 @@ function ExplorerMoveRow({
 
   return (
     <div
+      onMouseEnter={onHoverEnter}
+      onMouseLeave={onHoverLeave}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all group ${
         isInRepertoire
           ? isDark
@@ -641,6 +647,7 @@ export default function RepertoireBuilder() {
   const [sfEval, setSfEval] = useState<StockfishEval | null>(null);
   const [showEngine, setShowEngine] = useState(true);
   const [lastMove, setLastMove] = useState<[string, string] | null>(null);
+  const [hoverPreview, setHoverPreview] = useState<{ fen: string; from: string; to: string } | null>(null);
   const [editingName, setEditingName] = useState(false);
   // PGN import/export state
   const [showPgnExport, setShowPgnExport] = useState(false);
@@ -1423,8 +1430,13 @@ export default function RepertoireBuilder() {
         void hintChess;
       } catch { /* skip */ }
     }
+    // Hover preview highlight: semi-transparent blue overlay on from/to squares
+    if (hoverPreview) {
+      styles[hoverPreview.from] = { backgroundColor: "rgba(96, 165, 250, 0.30)" };
+      styles[hoverPreview.to] = { backgroundColor: "rgba(96, 165, 250, 0.50)" };
+    }
     return styles;
-  }, [lastMove, quizStatus, quizHintFen, currentFen, moveTree]);
+  }, [lastMove, quizStatus, quizHintFen, currentFen, moveTree, hoverPreview]);
 
 
 
@@ -1604,7 +1616,7 @@ export default function RepertoireBuilder() {
               }`}>
                 <Chessboard
                   options={{
-                    position: currentFen,
+                    position: hoverPreview?.fen ?? currentFen,
                     onPieceDrop: handlePieceDrop,
                     boardOrientation: boardOrientation,
                     squareStyles: customSquareStyles,
@@ -2003,11 +2015,22 @@ export default function RepertoireBuilder() {
                     role="button"
                     tabIndex={0}
                     onClick={() => {
+                      setHoverPreview(null);
                       navigateTo(child.fen);
                       if (child.move) setLastMove([child.move.slice(0, 2), child.move.slice(2, 4)]);
                     }}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { navigateTo(child.fen); if (child.move) setLastMove([child.move.slice(0, 2), child.move.slice(2, 4)]); } }}
-                    className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition cursor-pointer ${
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setHoverPreview(null); navigateTo(child.fen); if (child.move) setLastMove([child.move.slice(0, 2), child.move.slice(2, 4)]); } }}
+                    onMouseEnter={() => {
+                      if (child.move) {
+                        setHoverPreview({
+                          fen: child.fen,
+                          from: child.move.slice(0, 2),
+                          to: child.move.slice(2, 4),
+                        });
+                      }
+                    }}
+                    onMouseLeave={() => setHoverPreview(null)}
+                    className={`group flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition cursor-pointer ${
                       isDark ? "hover:bg-emerald-500/10" : "hover:bg-emerald-50"
                     }`}
                   >
@@ -2092,7 +2115,18 @@ export default function RepertoireBuilder() {
                     isInRepertoire={isExplorerMoveInRepertoire(move)}
                     onAdd={() => addExplorerMove(move, currentFen)}
                     onRemove={() => removeExplorerMove(move, currentFen)}
-                    onPlay={() => playExplorerMove(move)}
+                    onPlay={() => { setHoverPreview(null); playExplorerMove(move); }}
+                    onHoverEnter={() => {
+                      try {
+                        const uci = move.uci;
+                        const from = uci.slice(0, 2);
+                        const to = uci.slice(2, 4);
+                        const tempChess = new Chess(currentFen);
+                        tempChess.move(move.san);
+                        setHoverPreview({ fen: tempChess.fen(), from, to });
+                      } catch { /* skip */ }
+                    }}
+                    onHoverLeave={() => setHoverPreview(null)}
                     isDark={isDark}
                     openingName={move.openingName}
                     openingEco={move.openingEco}
