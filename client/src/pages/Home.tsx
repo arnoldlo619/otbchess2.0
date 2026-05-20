@@ -976,7 +976,7 @@ function Features() {
     { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs" },
     { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — built for OTB club players.", tag: "Training" },
     { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered" },
-    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature" },
+    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature", href: "/league-demo" },
     { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time" },
     { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready" },
   ];
@@ -1001,22 +1001,45 @@ function Features() {
 
         {/* Feature cards — full width 3-column grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((feature, i) => (
-            <div
-              key={feature.title}
-              className={`card-chess p-6 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-              style={{ transitionDelay: `${(i + 1) * 80}ms` }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
-                  {feature.icon}
+          {features.map((feature, i) => {
+            const cardContent = (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? "bg-white/10 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/08 text-[#3D6B47]"}`}>
+                    {feature.icon}
+                  </div>
+                  <span className="tag-elo">{feature.tag}</span>
                 </div>
-                <span className="tag-elo">{feature.tag}</span>
+                <h3 className="text-base font-semibold text-foreground mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                {(feature as { href?: string }).href && (
+                  <p className={`text-xs font-semibold mt-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>View feature →</p>
+                )}
+              </>
+            );
+            const cls = `card-chess p-6 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${
+              (feature as { href?: string }).href ? "cursor-pointer hover:scale-[1.02] hover:shadow-lg" : ""
+            }`;
+            const style = { transitionDelay: `${(i + 1) * 80}ms` };
+            return (feature as { href?: string }).href ? (
+              <a
+                key={feature.title}
+                href={(feature as { href?: string }).href}
+                className={cls}
+                style={style}
+              >
+                {cardContent}
+              </a>
+            ) : (
+              <div
+                key={feature.title}
+                className={cls}
+                style={style}
+              >
+                {cardContent}
               </div>
-              <h3 className="text-base font-semibold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
