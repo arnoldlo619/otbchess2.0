@@ -973,12 +973,12 @@ function Features() {
   const isDark = theme === "dark";
 
   const features = [
-    { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs", href: "/clubs" },
-    { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — built for OTB club players.", tag: "Training", href: "/repertoire" },
-    { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered", href: "/prep" },
-    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature", href: "/league-demo" },
-    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time", href: "/tournaments" },
-    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready" },
+    { icon: <Shield className="w-5 h-5" />, title: "Club Management", description: "Build your club community. Manage rosters, post events, run polls, and track member ELO history — all in one place.", tag: "For Clubs", href: "/clubs", tooltip: "Manage your club roster, events & ELO history" },
+    { icon: <BookOpen className="w-5 h-5" />, title: "Openings & Repertoire", description: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — built for OTB club players.", tag: "Training", href: "/repertoire", tooltip: "Study openings with interactive boards & drills" },
+    { icon: <Brain className="w-5 h-5" />, title: "Scout Report & Matchup Prep", description: "AI-powered opponent scouting. Analyze your next round opponent's openings, problem lines, and exact blunder patterns before you sit down.", tag: "AI-Powered", href: "/prep", tooltip: "Enter a username to generate a full scout report" },
+    { icon: <Trophy className="w-5 h-5" />, title: "Chess Club League", description: "Incentivize club members to show up weekly for Club League Matchup Games.", tag: "Club Feature", href: "/league-demo", tooltip: "See a live demo of weekly club league matchups" },
+    { icon: <BarChart3 className="w-5 h-5" />, title: "Live Standings & Results", description: "Real-time leaderboard updates as results come in. Shareable public link for spectators, players, and club members.", tag: "Real-Time", href: "/tournaments", tooltip: "Browse live and past tournament standings" },
+    { icon: <Globe className="w-5 h-5" />, title: "Automated Shareable Content", description: "Auto-generate tournament recap posts, player cards, and standings graphics ready to share on Instagram or WhatsApp.", tag: "Share-Ready", tooltip: "Coming soon — auto-generated recap graphics" },
   ];
 
   return (
@@ -1017,17 +1017,28 @@ function Features() {
                 )}
               </>
             );
-            const cls = `card-chess p-6 transition-all duration-500 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${
-              (feature as { href?: string }).href ? "cursor-pointer hover:scale-[1.02] hover:shadow-lg" : ""
+            const f = feature as { href?: string; tooltip?: string };
+            const cls = `card-chess p-6 transition-all duration-500 relative group ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${
+              f.href ? "cursor-pointer hover:scale-[1.02] hover:shadow-lg" : ""
             }`;
             const style = { transitionDelay: `${(i + 1) * 80}ms` };
-            return (feature as { href?: string }).href ? (
+            const tooltipEl = f.tooltip ? (
+              <span
+                className={`pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium shadow-lg
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20
+                  ${isDark ? "bg-[oklch(0.18_0.06_145)] text-[oklch(0.85_0.10_145)] border border-white/10" : "bg-[#1a2e1a] text-white"}`}
+              >
+                {f.tooltip}
+              </span>
+            ) : null;
+            return f.href ? (
               <a
                 key={feature.title}
-                href={(feature as { href?: string }).href}
+                href={f.href}
                 className={cls}
                 style={style}
               >
+                {tooltipEl}
                 {cardContent}
               </a>
             ) : (
@@ -1036,6 +1047,7 @@ function Features() {
                 className={cls}
                 style={style}
               >
+                {tooltipEl}
                 {cardContent}
               </div>
             );
