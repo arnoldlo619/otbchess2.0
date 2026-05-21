@@ -3438,7 +3438,7 @@ export default function ClubDashboard() {
                           <div className="flex flex-wrap items-center gap-2 mt-4">
                             <span
                               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all group-hover:shadow-md group-hover:brightness-110"
-                              style={{ background: accent, color: "#0a1a0f" }}
+                              style={{ background: accent + "33", color: accent, border: `1px solid ${accent}66` }}
                             >
                               <Calendar className="w-3.5 h-3.5" />
                               View Meetup
