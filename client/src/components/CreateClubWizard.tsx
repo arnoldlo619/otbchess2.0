@@ -83,16 +83,40 @@ const DEFAULT_DATA: WizardData = {
 const _TOTAL_STEPS = 5;
 
 const ACCENT_COLORS = [
-  { hex: "#3D6B47", label: "Forest Green" },
-  { hex: "#1a3a5c", label: "Navy Blue" },
-  { hex: "#8B1A1A", label: "Deep Red" },
-  { hex: "#5C3317", label: "Warm Brown" },
-  { hex: "#8B2252", label: "Plum" },
-  { hex: "#2D4A22", label: "Dark Green" },
-  { hex: "#1a4a4a", label: "Teal" },
-  { hex: "#4a2d6b", label: "Purple" },
-  { hex: "#6b4a1a", label: "Gold" },
-  { hex: "#2a2a2a", label: "Slate" },
+  // Greens
+  { hex: "#4CAF50", label: "Forest Green" },
+  { hex: "#22c55e", label: "Emerald" },
+  { hex: "#16a34a", label: "Deep Green" },
+  { hex: "#86efac", label: "Mint" },
+  { hex: "#a3e635", label: "Lime" },
+  { hex: "#14b8a6", label: "Teal" },
+  // Blues
+  { hex: "#3b82f6", label: "Royal Blue" },
+  { hex: "#0ea5e9", label: "Sky Blue" },
+  { hex: "#06b6d4", label: "Cyan" },
+  { hex: "#6366f1", label: "Indigo" },
+  { hex: "#8b5cf6", label: "Violet" },
+  { hex: "#1d4ed8", label: "Deep Blue" },
+  // Warm
+  { hex: "#f59e0b", label: "Amber" },
+  { hex: "#f97316", label: "Orange" },
+  { hex: "#ef4444", label: "Red" },
+  { hex: "#dc2626", label: "Crimson" },
+  { hex: "#e11d48", label: "Rose" },
+  { hex: "#ec4899", label: "Pink" },
+  { hex: "#d946ef", label: "Fuchsia" },
+  { hex: "#c026d3", label: "Purple" },
+  // Chess-themed
+  { hex: "#b45309", label: "Chestnut" },
+  { hex: "#92400e", label: "Mahogany" },
+  { hex: "#78350f", label: "Walnut" },
+  // Neutrals & Metallics
+  { hex: "#fbbf24", label: "Gold" },
+  { hex: "#d4af37", label: "Classic Gold" },
+  { hex: "#c0c0c0", label: "Platinum" },
+  { hex: "#94a3b8", label: "Slate" },
+  { hex: "#e2e8f0", label: "Silver" },
+  { hex: "#ffffff", label: "White" },
 ];
 
 const CATEGORIES: Array<{

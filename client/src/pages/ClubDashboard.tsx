@@ -708,7 +708,16 @@ const COUNTRY_FLAGS: Record<string, string> = {
 };
 
 const ACCENT_PRESETS = [
-  "#4CAF50", "#2196F3", "#9C27B0", "#FF5722", "#FF9800", "#E91E63", "#00BCD4", "#795548",
+  // Greens
+  "#4CAF50", "#22c55e", "#16a34a", "#86efac", "#a3e635", "#14b8a6",
+  // Blues
+  "#3b82f6", "#0ea5e9", "#06b6d4", "#6366f1", "#8b5cf6", "#1d4ed8",
+  // Warm
+  "#f59e0b", "#f97316", "#ef4444", "#dc2626", "#e11d48", "#ec4899", "#d946ef", "#c026d3",
+  // Chess-themed
+  "#b45309", "#92400e", "#78350f",
+  // Neutrals & Metallics
+  "#fbbf24", "#d4af37", "#c0c0c0", "#94a3b8", "#e2e8f0", "#ffffff",
 ];
 
 const OTB_LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png";
