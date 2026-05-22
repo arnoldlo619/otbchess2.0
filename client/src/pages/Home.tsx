@@ -791,7 +791,7 @@ function ParallaxStep({
           <div className="relative">
             <span
               className={`absolute -top-8 -left-2 text-[120px] font-black leading-none select-none pointer-events-none ${
-                isDark ? "text-white/[0.04]" : "text-black/[0.04]"
+                isDark ? "text-white/[0.09]" : "text-black/[0.07]"
               }`}
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
