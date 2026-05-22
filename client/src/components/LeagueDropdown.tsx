@@ -2,12 +2,13 @@
  * LeagueDropdown — shown below the League nav tab on hover/click.
  *
  * Layout:
- *   1. My Leagues list (user's active/draft/completed leagues)
- *   2. Footer: Browse All Leagues / Create League
+ *   1. Create a League — prominent top CTA (always visible)
+ *   2. My Leagues list (user's active/draft/completed leagues)
+ *   3. Footer: Browse All Leagues
  */
 
 import { useState, useEffect } from "react";
-import { Swords, Plus, ChevronRight, Trophy } from "lucide-react";
+import { Swords, Plus, ChevronRight, Trophy, Sparkles } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
 
 interface MyLeague {
@@ -54,6 +55,42 @@ export function LeagueDropdown() {
         overflowY: "auto",
       }}
     >
+      {/* ── Create a League — prominent top CTA ── */}
+      <div className="p-3">
+        <a
+          href="/clubs"
+          onClick={(e) => { e.preventDefault(); window.location.href = "/clubs"; }}
+          className="group flex items-center gap-3 w-full rounded-xl px-4 py-3 transition-all duration-200"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.28 0.10 145 / 0.9) 0%, oklch(0.22 0.08 145 / 0.9) 100%)",
+            border: "1px solid oklch(0.65 0.14 145 / 0.35)",
+            boxShadow: "0 2px 12px oklch(0.55 0.18 145 / 0.18)",
+          }}
+        >
+          <div
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+            style={{ background: "oklch(0.65 0.14 145 / 0.25)" }}
+          >
+            <Plus className="w-4 h-4 text-[oklch(0.75_0.18_145)]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p
+              className="text-sm font-semibold leading-tight"
+              style={{ color: "oklch(0.82 0.16 145)" }}
+            >
+              Create a League
+            </p>
+            <p className="text-[11px] text-white/45 mt-0.5 leading-tight">
+              Weekly matchups for your club members
+            </p>
+          </div>
+          <Sparkles className="w-3.5 h-3.5 flex-shrink-0 opacity-50 group-hover:opacity-80 transition-opacity" style={{ color: "oklch(0.75 0.18 145)" }} />
+        </a>
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="h-px mx-3 bg-white/[0.07]" />
+
       {/* ── My Leagues Section ── */}
       {myLeagues.length > 0 ? (
         <>
@@ -71,7 +108,7 @@ export function LeagueDropdown() {
                   <a
                     href={`/league/${lg.id}`}
                     onClick={(e) => { e.preventDefault(); window.location.href = `/league/${lg.id}`; }}
-                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/06 transition-colors group"
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors group"
                   >
                     <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-[#3D6B47]/30 text-[#4CAF50]">
                       <Swords className="w-3.5 h-3.5" />
@@ -98,23 +135,25 @@ export function LeagueDropdown() {
           </ul>
         </>
       ) : (
-        /* Empty state */
-        <div className="px-4 py-6 text-center">
-          <Trophy className="w-8 h-8 text-white/15 mx-auto mb-2" />
-          <p className="text-sm text-white/40">No leagues yet</p>
-          <p className="text-xs text-white/25 mt-1">Join or create a league to get started</p>
-        </div>
+        /* Empty state — only shown when logged in but no leagues */
+        !isGuest && (
+          <div className="px-4 py-5 text-center">
+            <Trophy className="w-7 h-7 text-white/15 mx-auto mb-2" />
+            <p className="text-sm text-white/40">No leagues yet</p>
+            <p className="text-xs text-white/25 mt-1">Create one above to get started</p>
+          </div>
+        )
       )}
 
       {/* Footer */}
-      <div className="border-t border-white/08">
+      <div className="border-t border-white/[0.08]">
         <a
           href="/league-demo"
           onClick={(e) => { e.preventDefault(); window.location.href = "/league-demo"; }}
-          className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-[#4CAF50] hover:bg-[#3D6B47]/15 transition-colors"
+          className="flex items-center justify-between px-4 py-2.5 text-xs font-medium text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-colors"
         >
-          <Plus className="w-3.5 h-3.5" />
-          Browse Leagues
+          <span>Browse Leagues</span>
+          <ChevronRight className="w-3 h-3" />
         </a>
       </div>
     </div>
