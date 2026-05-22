@@ -1160,6 +1160,8 @@ const CAROUSEL_SLIDES = [
     ctaSecondary: null,
     screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/league-tight_ca26e3fd.png",
     screenshotAlt: "Chess Club League Dashboard",
+    screenshotAspectRatio: "2318/1165",
+    screenshotObjectFit: "contain" as const,
   },
   {
     id: "openings",
@@ -1286,16 +1288,17 @@ function Showcase() {
                   ? "ring-1 ring-inset ring-[oklch(0.65_0.14_145)]/20"
                   : "ring-1 ring-inset ring-[#3D6B47]/15"
               }`} />
-              {/* Screenshot — zoomed in to fill frame; scales up on hover; click to expand */}
+              {/* Screenshot — fills frame; per-slide objectFit override for wide images; click to expand */}
               <div
                 className="relative rounded-xl overflow-hidden shadow-xl cursor-zoom-in group/img"
-                style={{ aspectRatio: "16/10" }}
+                style={{ aspectRatio: slide.screenshotAspectRatio ?? "16/10" }}
                 onClick={() => { setLightboxSrc(slide.screenshot!); setLightboxAlt(slide.screenshotAlt); }}
               >
                 <img
                   src={slide.screenshot!}
                   alt={slide.screenshotAlt}
-                  className={`w-full h-full object-cover object-top transition-transform duration-700 ease-out ${isHovered ? "scale-[1.06]" : "scale-100"}`}
+                  className={`w-full h-full transition-transform duration-700 ease-out ${isHovered && !slide.screenshotObjectFit ? "scale-[1.06]" : "scale-100"}`}
+                  style={{ objectFit: slide.screenshotObjectFit ?? "cover", objectPosition: "top" }}
                 />
                 {/* Subtle bottom fade */}
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
