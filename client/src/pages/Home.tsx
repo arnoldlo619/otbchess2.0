@@ -1057,6 +1057,76 @@ function Features() {
     </section>
   );
 }
+// ─── Features CTA Banner ─────────────────────────────────────────────────────
+function FeaturesCTA({ onCreateTournament }: { onCreateTournament: () => void }) {
+  const { ref, inView } = useInView();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <section
+      ref={ref}
+      className={`py-16 transition-colors duration-500 ${
+        isDark ? "bg-[oklch(0.18_0.06_145)]" : "bg-[#1e3a28]"
+      } relative overflow-hidden`}
+    >
+      {/* Subtle chess-board texture overlay */}
+      <div className="absolute inset-0 chess-board-bg opacity-[0.06] pointer-events-none" />
+      {/* Radial green glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 120%, oklch(0.55 0.18 145 / 0.22) 0%, transparent 60%)",
+        }}
+      />
+
+      <div className="container relative z-10">
+        <div
+          className={`flex flex-col md:flex-row items-center justify-between gap-8 ${
+            inView ? "animate-fade-up-soft" : "opacity-0"
+          }`}
+          style={{ animationFillMode: "forwards" }}
+        >
+          {/* Left: headline + sub */}
+          <div className="text-center md:text-left">
+            <p className="text-xs font-semibold tracking-widest uppercase text-[oklch(0.65_0.14_145)] mb-2">
+              Get Started Free
+            </p>
+            <h2
+              className="text-3xl lg:text-4xl font-semibold text-white tracking-tight"
+              style={{ fontFamily: "'Clash Display', sans-serif" }}
+            >
+              Host Your First Tournament
+            </h2>
+            <p className="text-white/60 mt-2 text-base max-w-md">
+              Set up Swiss pairings, live standings, and a QR join link in under 2 minutes — free for chess clubs.
+            </p>
+          </div>
+
+          {/* Right: CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+            <button
+              onClick={onCreateTournament}
+              className="inline-flex items-center gap-2 bg-[oklch(0.65_0.14_145)] hover:bg-[oklch(0.70_0.16_145)] text-[oklch(0.12_0.04_145)] font-semibold text-sm px-7 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_oklch(0.55_0.18_145/0.4)]"
+            >
+              <Trophy className="w-4 h-4" />
+              Host a Tournament
+            </button>
+            <a
+              href="/join"
+              className="inline-flex items-center gap-2 border border-white/20 hover:border-white/40 text-white/80 hover:text-white font-medium text-sm px-7 py-3 rounded-lg transition-all duration-200 hover:-translate-y-0.5 backdrop-blur-sm"
+            >
+              Join a Tournament
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Features Carousel — Chess Club League + Matchup Prep ───────────────────
 const CAROUSEL_SLIDES = [
   {
@@ -2027,6 +2097,7 @@ export default function Home() {
       <StatsBar />
       <HowItWorks />
       <Features />
+      <FeaturesCTA onCreateTournament={() => setWizardOpen(true)} />
       <Showcase />
       <PlayerDemo />
       <Testimonials />
