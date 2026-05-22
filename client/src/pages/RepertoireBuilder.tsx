@@ -1222,6 +1222,11 @@ export default function RepertoireBuilder() {
   // ── Keyboard navigation ────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Don't intercept when user is typing in an input, textarea, or contenteditable
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditable = (e.target as HTMLElement)?.isContentEditable;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || isEditable) return;
+
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         if (currentPath.length > 1) {
@@ -1237,11 +1242,27 @@ export default function RepertoireBuilder() {
             setLastMove([next.move.slice(0, 2), next.move.slice(2, 4)]);
           }
         }
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        // Cycle between sibling variations at the current position
+        if (currentPath.length < 2) return;
+        const parentNode = currentPath[currentPath.length - 2];
+        const siblings = parentNode.children;
+        if (siblings.length < 2) return;
+        e.preventDefault();
+        const currentIdx = siblings.findIndex((s) => s.fen === currentFen);
+        if (currentIdx === -1) return;
+        const delta = e.key === "ArrowUp" ? -1 : 1;
+        const nextIdx = (currentIdx + delta + siblings.length) % siblings.length;
+        const sibling = siblings[nextIdx];
+        navigateTo(sibling.fen);
+        if (sibling.move) {
+          setLastMove([sibling.move.slice(0, 2), sibling.move.slice(2, 4)]);
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [currentPath, currentNode, navigateTo]);
+  }, [currentPath, currentNode, currentFen, navigateTo]);
 
   // ── Cleanup flash timer on unmount ───────────────────────────────────────────────
   useEffect(() => {
