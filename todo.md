@@ -6140,3 +6140,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] IntersectionObserver scroll-triggered fade-up animations per step
 - [x] Fix Stockfish WASM loading error (serve from public/stockfish/ instead of manus-storage)
 - [x] Fix Vite /manus-storage middleware ordering so storage proxy intercepts before HTML fallback
+
+## Create League Wizard
+- [x] Update POST /api/leagues to accept formatType field
+- [x] Add GET /api/leagues/mine-as-commissioner endpoint
+- [x] Build CreateLeagueWizard component (4 steps: club, name/desc, format/size, review)
+- [x] Add /league/new route in App.tsx
+- [x] Wire LeagueDropdown "Create a League" CTA to /league/new
+- [x] Write vitest tests for CreateLeagueWizard

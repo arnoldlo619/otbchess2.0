@@ -58,8 +58,8 @@ export function LeagueDropdown() {
       {/* ── Create a League — prominent top CTA ── */}
       <div className="p-3">
         <a
-          href="/clubs"
-          onClick={(e) => { e.preventDefault(); window.location.href = "/clubs"; }}
+          href="/league/new"
+          onClick={(e) => { e.preventDefault(); window.location.href = "/league/new"; }}
           className="group flex items-center gap-3 w-full rounded-xl px-4 py-3 transition-all duration-200"
           style={{
             background: "linear-gradient(135deg, oklch(0.28 0.10 145 / 0.9) 0%, oklch(0.22 0.08 145 / 0.9) 100%)",

@@ -311,17 +311,57 @@ leaguesRouter.get("/club/:clubId", async (req: Request, res: Response) => {
   }
 });
 
+// ── GET /mine-as-commissioner — clubs where the user is owner/admin/director ──
+leaguesRouter.get("/mine-as-commissioner", requireAuth, async (req: Request, res: Response) => {
+  const userId = getUser(req, res);
+  if (!userId) return;
+  try {
+    const db = await getDb();
+    const memberRows = await db
+      .select()
+      .from(dbClubMembers)
+      .where(
+        and(
+          eq(dbClubMembers.userId, userId),
+          // role IN ('owner','admin','director')
+          sql`${dbClubMembers.role} IN ('owner','admin','director')`
+        )
+      );
+    if (!memberRows.length) return res.json([]);
+    const clubIds = Array.from(new Set(memberRows.map((m) => m.clubId)));
+    const clubRows = await db
+      .select()
+      .from(dbClubs)
+      .where(
+        clubIds.length === 1
+          ? eq(dbClubs.id, clubIds[0])
+          : sql`${dbClubs.id} IN (${sql.raw(clubIds.map(() => '?').join(','))})`.mapWith(String)
+      );
+    // Drizzle doesn't support dynamic IN easily, so use a loop
+    const result = [];
+    for (const cid of clubIds) {
+      const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, cid)).limit(1);
+      if (club) result.push({ id: club.id, name: club.name, avatarUrl: club.avatarUrl, accentColor: club.accentColor, memberCount: club.memberCount });
+    }
+    res.json(result);
+  } catch (err) {
+    logger.error("[leagues] GET /mine-as-commissioner error:", err);
+    res.status(500).json({ error: "Failed to fetch commissioner clubs" });
+  }
+});
+
 // ── POST / — create a league (Draft mode — schedule generated on Start) ──────
 leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
   const userId = getUser(req, res);
   if (!userId) return;
 
-  const { clubId, name, description, maxPlayers, playerIds } = req.body as {
+  const { clubId, name, description, maxPlayers, playerIds, formatType } = req.body as {
     clubId: string;
     name: string;
     description?: string;
     maxPlayers: number;
     playerIds?: string[]; // optional — commissioner can add players later
+    formatType?: string;
   };
 
   // Validate
@@ -331,6 +371,8 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
   if (![4, 6, 8, 10].includes(maxPlayers)) {
     return res.status(400).json({ error: "League size must be 4, 6, 8, or 10" });
   }
+  const allowedFormats = ["round_robin", "swiss", "double_round_robin"];
+  const resolvedFormat = formatType && allowedFormats.includes(formatType) ? formatType : "round_robin";
   const ids = playerIds ?? [];
   if (ids.length > maxPlayers) {
     return res.status(400).json({ error: `Cannot exceed ${maxPlayers} players` });
@@ -369,6 +411,7 @@ leaguesRouter.post("/", requireAuth, async (req: Request, res: Response) => {
       description: description?.trim() || null,
       commissionerId: userId,
       commissionerName: memberMap.get(userId)?.displayName ?? "Commissioner",
+      formatType: resolvedFormat,
       maxPlayers,
       totalWeeks,
       status: "draft",
