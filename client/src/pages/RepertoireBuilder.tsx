@@ -12,7 +12,7 @@
  */
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { toast } from "sonner";
-import { Chessboard, type PieceDropHandlerArgs } from "react-chessboard";
+import { Chessboard, type PieceDropHandlerArgs, type SquareHandlerArgs, type PieceHandlerArgs } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -706,6 +706,10 @@ export default function RepertoireBuilder() {
   const boardContainerRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState(480);
 
+  // ── Click-to-move: selected piece + legal move highlights ────────────────────
+  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
+  const [legalMoveSquares, setLegalMoveSquares] = useState<string[]>([]);
+
   useEffect(() => {
     // CONTROLS_HEIGHT: board controls bar (44px) + notes header (32px) + notes textarea (72px) + border/gaps (32px)
     const CONTROLS_HEIGHT = 180;
@@ -1065,6 +1069,59 @@ export default function RepertoireBuilder() {
   );
 
   // ── Navigate to a position ──────────────────────────────────────────────────
+  // ── Click-to-move handlers ──────────────────────────────────────────────────
+
+  /** Selects a piece and computes its legal move destinations. */
+  const handlePieceClick = useCallback(
+    ({ square }: PieceHandlerArgs) => {
+      if (!square) return;
+      const activeFen = hoverPreview?.fen ?? currentFen;
+      const tempChess = new Chess(activeFen);
+      const moves = tempChess.moves({ square: square as Square, verbose: true });
+      if (moves.length === 0) {
+        setSelectedSquare(null);
+        setLegalMoveSquares([]);
+        return;
+      }
+      setSelectedSquare(square);
+      setLegalMoveSquares(moves.map((m) => m.to));
+    },
+    [currentFen, hoverPreview]
+  );
+
+  /** Handles square clicks: execute a pending click-to-move, or select a new piece. */
+  const handleSquareClick = useCallback(
+    ({ square }: SquareHandlerArgs) => {
+      // If a piece is selected and this is a legal destination → execute the move
+      if (selectedSquare && legalMoveSquares.includes(square)) {
+        const success =
+          quizStatus === "playing" || quizStatus === "wrong"
+            ? handleQuizMove(selectedSquare, square)
+            : makeMove(selectedSquare, square);
+        setSelectedSquare(null);
+        setLegalMoveSquares([]);
+        void success;
+        return;
+      }
+      // Try to select the piece on the clicked square
+      const activeFen = hoverPreview?.fen ?? currentFen;
+      const tempChess = new Chess(activeFen);
+      const piece = tempChess.get(square as Square);
+      if (piece) {
+        const moves = tempChess.moves({ square: square as Square, verbose: true });
+        if (moves.length > 0) {
+          setSelectedSquare(square);
+          setLegalMoveSquares(moves.map((m) => m.to));
+          return;
+        }
+      }
+      // Deselect
+      setSelectedSquare(null);
+      setLegalMoveSquares([]);
+    },
+    [selectedSquare, legalMoveSquares, currentFen, hoverPreview, quizStatus, handleQuizMove, makeMove]
+  );
+
   const navigateTo = useCallback((fen: string) => {
     setCurrentFen(fen);
     // Find the move that led to this FEN for last-move highlight
@@ -1472,8 +1529,37 @@ export default function RepertoireBuilder() {
       styles[hoverPreview.from] = { backgroundColor: "rgba(96, 165, 250, 0.30)" };
       styles[hoverPreview.to] = { backgroundColor: "rgba(96, 165, 250, 0.50)" };
     }
+    // Click-to-move: selected piece highlight + legal move destination dots
+    if (selectedSquare) {
+      styles[selectedSquare] = {
+        backgroundColor: "rgba(251, 191, 36, 0.50)",
+        boxShadow: "inset 0 0 0 3px rgba(251, 191, 36, 0.85)",
+      };
+    }
+    if (legalMoveSquares.length > 0) {
+      // Determine which squares have pieces (ring style) vs empty (dot style)
+      const activeFen = hoverPreview?.fen ?? currentFen;
+      let tempChess: InstanceType<typeof Chess> | null = null;
+      try { tempChess = new Chess(activeFen); } catch { /* skip */ }
+      for (const sq of legalMoveSquares) {
+        const hasPiece = tempChess ? !!tempChess.get(sq as Square) : false;
+        if (hasPiece) {
+          // Capture: ring/border overlay
+          styles[sq] = {
+            background: "radial-gradient(circle, transparent 55%, rgba(16,185,129,0.55) 55%, rgba(16,185,129,0.55) 70%, transparent 70%)",
+            cursor: "pointer",
+          };
+        } else {
+          // Empty square: small dot
+          styles[sq] = {
+            background: "radial-gradient(circle, rgba(16,185,129,0.65) 28%, transparent 28%)",
+            cursor: "pointer",
+          };
+        }
+      }
+    }
     return styles;
-  }, [lastMove, quizStatus, quizHintFen, currentFen, moveTree, hoverPreview]);
+  }, [lastMove, quizStatus, quizHintFen, currentFen, moveTree, hoverPreview, selectedSquare, legalMoveSquares]);
 
 
 
@@ -1655,6 +1741,8 @@ export default function RepertoireBuilder() {
                   options={{
                     position: hoverPreview?.fen ?? currentFen,
                     onPieceDrop: handlePieceDrop,
+                    onPieceClick: handlePieceClick,
+                    onSquareClick: handleSquareClick,
                     boardOrientation: boardOrientation,
                     squareStyles: customSquareStyles,
                     boardStyle: {
