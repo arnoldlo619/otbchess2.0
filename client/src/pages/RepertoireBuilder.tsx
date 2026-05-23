@@ -20,6 +20,7 @@ import { useStockfish, type StockfishEval } from "@/hooks/useStockfish";
 import { authFetch } from "@/lib/apiFetch";
 import { useRoute, useLocation } from "wouter";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
+import { MoveTreePanel } from "@/components/MoveTreePanel";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -42,6 +43,7 @@ import {
   SkipForward,
   MessageSquare,
   Pencil,
+  GitBranch,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -699,6 +701,11 @@ export default function RepertoireBuilder() {
   const [noteText, setNoteText] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
   const noteSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Right panel tab ────────────────────────────────────────────────────────
+  // "explorer" = Lichess explorer + coverage + repertoire moves
+  // "tree"     = Full variation tree panel
+  const [rightTab, setRightTab] = useState<"explorer" | "tree">("explorer");
 
   // ── Dynamic board sizing ────────────────────────────────────────────────────
   // Measures the left column height and computes the optimal board pixel size
@@ -1998,20 +2005,62 @@ export default function RepertoireBuilder() {
           <div className={`w-full lg:w-[45%] lg:sticky lg:top-20 rounded-2xl border ${
             isDark ? "bg-gray-900/50 border-white/10" : "bg-white border-gray-200"
           } overflow-hidden`}>
-            {/* Panel header */}
-            <div className={`px-4 py-3 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+            {/* Panel header with tab switcher */}
+            <div className={`px-4 pt-3 pb-0 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
               <MoveTreeBreadcrumb path={currentPath} onNavigate={navigateTo} isDark={isDark} />
 
-              <div className="flex items-center justify-between">
-                <h3 className={`text-base font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
-                  Choose a move to prepare for
-                </h3>
-                <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                  {turnLabel} to move · Move {moveNumber}
-                </span>
+              {/* Tab bar */}
+              <div className="flex items-center gap-1 mb-0">
+                <button
+                  onClick={() => setRightTab("explorer")}
+                  className={[
+                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors duration-150",
+                    rightTab === "explorer"
+                      ? isDark
+                        ? "border-emerald-400 text-emerald-300"
+                        : "border-emerald-600 text-emerald-700"
+                      : isDark
+                      ? "border-transparent text-white/40 hover:text-white/70"
+                      : "border-transparent text-gray-400 hover:text-gray-600",
+                  ].join(" ")}
+                >
+                  <BookOpen size={14} />
+                  Explorer
+                </button>
+                <button
+                  onClick={() => setRightTab("tree")}
+                  className={[
+                    "flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors duration-150",
+                    rightTab === "tree"
+                      ? isDark
+                        ? "border-emerald-400 text-emerald-300"
+                        : "border-emerald-600 text-emerald-700"
+                      : isDark
+                      ? "border-transparent text-white/40 hover:text-white/70"
+                      : "border-transparent text-gray-400 hover:text-gray-600",
+                  ].join(" ")}
+                >
+                  <GitBranch size={14} />
+                  Tree
+                  {countMoves(moveTree) > 0 && (
+                    <span className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                    }`}>
+                      {countMoves(moveTree)}
+                    </span>
+                  )}
+                </button>
+                {/* Turn info — pushed right */}
+                {rightTab === "explorer" && (
+                  <span className={`ml-auto text-xs pb-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                    {turnLabel} · Move {moveNumber}
+                  </span>
+                )}
               </div>
-            </div>{/* ── Coverage Tracker ──────────────────────────────────────────────────────────────────────── */}
-            {coverage && (
+            </div>{/* end tab bar header */}
+
+            {/* ── Coverage Tracker (Explorer tab only) ── */}
+            {rightTab === "explorer" && coverage && (
               <div className={`px-4 py-3 border-b ${
                 isDark ? "border-white/10" : "border-gray-100"
               }`}>
@@ -2102,7 +2151,7 @@ export default function RepertoireBuilder() {
             )}
 
             {/* Ghost chip: shown for 800ms after a coverage chip is clicked to confirm navigation */}
-            {flashedChipSan && !coverage && (
+            {rightTab === "explorer" && flashedChipSan && !coverage && (
               <div className={`px-4 py-2 border-b ${
                 isDark ? "border-white/10" : "border-gray-100"
               }`}>
@@ -2128,8 +2177,8 @@ export default function RepertoireBuilder() {
               </div>
             )}
 
-            {/* Repertoire children (moves already in tree) */}
-            {currentNode && currentNode.children.length > 0 && (
+            {/* Repertoire children (moves already in tree) — Explorer tab only */}
+            {rightTab === "explorer" && currentNode && currentNode.children.length > 0 && (
               <div className={`px-4 py-2 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
                 <div className={`text-xs font-medium mb-2 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
                   Your repertoire moves
@@ -2265,6 +2314,19 @@ export default function RepertoireBuilder() {
               </div>
             )}
 
+            {/* ── Tree Tab ── */}
+            {rightTab === "tree" && (
+              <MoveTreePanel
+                root={moveTree}
+                currentFen={currentFen}
+                onNavigate={(fen) => { navigateTo(fen); }}
+                isDark={isDark}
+              />
+            )}
+
+            {/* ── Explorer Tab content ── */}
+            {rightTab === "explorer" && (
+            <>
             {/* Explorer moves table header */}
             <div className={`px-4 py-2 flex items-center gap-3 text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
               <div className="w-16 shrink-0">Move</div>
@@ -2315,8 +2377,10 @@ export default function RepertoireBuilder() {
                 ))
               )}
             </div>
+            </>
+            )}{/* end rightTab === explorer */}
           </div>
-          )}
+          )}{/* end quizStatus idle/complete */}
         </div>
       </div>
       </div>

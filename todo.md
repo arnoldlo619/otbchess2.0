@@ -6148,3 +6148,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add /league/new route in App.tsx
 - [x] Wire LeagueDropdown "Create a League" CTA to /league/new
 - [x] Write vitest tests for CreateLeagueWizard
+
+## Move-Tree Panel (Repertoire Builder)
+- [x] Add MoveTreePanel component with full variation tree rendering
+- [x] Add tab switcher (Explorer | Tree) to right panel header
+- [x] Add rightTab state and wire tab switching
+- [x] Auto-scroll to current node in tree panel
+- [x] Write vitest tests for MoveTreePanel
