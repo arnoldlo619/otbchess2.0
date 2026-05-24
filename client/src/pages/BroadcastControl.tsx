@@ -17,7 +17,7 @@ import {
   Radio, Settings, ChevronLeft, Zap, AlertTriangle,
   CheckCircle2, Clock, Monitor, QrCode, SkipBack, SkipForward,
   Upload, Trash2, RefreshCw, Eye, EyeOff, FlipVertical,
-  Square, FileText, Wifi, WifiOff, Shield
+  Square, FileText, Wifi, WifiOff, Shield, Cpu
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { QRCodeSVG } from "qrcode.react";
@@ -657,6 +657,23 @@ export default function BroadcastControl() {
             {demoMode && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">DEMO</span>}
           </div>
           <div className="flex items-center gap-3">
+            {/* Bridge Token — always visible for easy CLI copy */}
+            {broadcast.bridgeToken && (
+              <div className="flex items-center gap-1.5 bg-white/05 border border-white/10 rounded-lg px-2.5 py-1.5 group">
+                <Cpu className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-[10px] text-white/40 font-medium hidden sm:inline">Bridge Token</span>
+                <code className="text-[10px] font-mono text-emerald-300/80 max-w-[120px] truncate">
+                  {broadcast.bridgeToken}
+                </code>
+                <button
+                  onClick={() => copyToClipboard(broadcast.bridgeToken!, "Bridge Token")}
+                  title="Copy bridge token"
+                  className="p-0.5 rounded hover:bg-white/10 text-white/30 hover:text-emerald-400 transition-colors"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
+            )}
             <StatusBadge status={broadcast.status} syncState={syncState} />
           </div>
         </div>
