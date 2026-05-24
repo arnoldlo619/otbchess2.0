@@ -15,7 +15,6 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
-import { NavLogo } from "@/components/NavLogo";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Trophy,
@@ -389,11 +388,10 @@ function WaitingRoundScreen({
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
       <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
-        <div className="flex items-center justify-between mb-1">
-          <NavLogo linked={false} />
+        <div className="flex items-center justify-between">
+          <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
-        <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
       </div>
       <div className={`mx-4 mt-4 rounded-2xl ${accentBg} px-5 py-4 flex items-center gap-4`}>
         <div className={`w-10 h-10 rounded-full ${isDark ? "bg-[#4CAF50]/20" : "bg-[#3D6B47]/12"} flex items-center justify-center flex-shrink-0`}>
@@ -640,17 +638,12 @@ function MyBoardScreen({
     <div className={`min-h-screen ${bg} flex flex-col overflow-hidden`}>
       {/* Header */}
       <div className={`px-5 otb-header-safe pb-4 border-b ${divider}`}>
-        {/* Top row: Logo + Connection Badge */}
-        <div className="flex items-center justify-between mb-3">
-          <NavLogo linked={false} />
-          <ConnectionBadge connected={connected} isDark={isDark} />
-        </div>
-        {/* Bottom row: Tournament name + Round */}
-        <div className="flex items-end justify-between gap-3">
-          <h1 className={`text-lg font-bold ${textMain} flex-1 leading-tight`}>{tournamentName}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className={`text-lg font-bold ${textMain} flex-1 leading-tight truncate`}>{tournamentName}</h1>
           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${accentBg} ${accent} flex-shrink-0 whitespace-nowrap`}>
             R{round}/{totalRounds}
           </span>
+          <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
       </div>
       {/* Tab bar */}
