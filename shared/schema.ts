@@ -22,6 +22,7 @@ import {
   float,
   tinyint,
   boolean,
+  json,
 } from "drizzle-orm/mysql-core";
 
 // ─── users ────────────────────────────────────────────────────────────────────
@@ -1742,6 +1743,10 @@ export const liveBroadcasts = mysqlTable(
     moveNumber: int("move_number").notNull().default(0),
     sideToMove: varchar("side_to_move", { length: 1 }).notNull().default("w"),
     result: varchar("result", { length: 10 }),
+    displayMode: varchar("display_mode", { length: 20 }).notNull().default("standard"),
+    displaySettings: json("display_settings").$type<Record<string, unknown>>(),
+    tournamentName: varchar("tournament_name", { length: 200 }),
+    bridgeToken: varchar("bridge_token", { length: 64 }),
     publicSlug: varchar("public_slug", { length: 20 }).notNull(),
     createdBy: varchar("created_by", { length: 36 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1768,6 +1773,7 @@ export const liveMoves = mysqlTable(
     fenBefore: text("fen_before").notNull(),
     fenAfter: text("fen_after").notNull(),
     source: varchar("source", { length: 30 }).notNull().default("manual"),
+    correctionNote: text("correction_note"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({

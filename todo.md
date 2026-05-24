@@ -6155,3 +6155,25 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add rightTab state and wire tab switching
 - [x] Auto-scroll to current node in tree panel
 - [x] Write vitest tests for MoveTreePanel
+
+## Board 1 Live Broadcast — Phase 2 (Event-Ready)
+- [x] Add displayMode, displaySettings, tournamentName, bridgeToken columns to live_broadcasts
+- [x] Add correctionNote column to live_moves
+- [x] Add PATCH /display-settings endpoint
+- [x] Add POST /bridge-move endpoint (token-secured)
+- [x] Add PATCH /correction endpoint
+- [x] Rebuild BroadcastControl as 3-column operator panel
+- [x] Add Demo Mode with auto-play
+- [x] Add PGN Import tool
+- [x] Add FEN Correction tool with correction note
+- [x] Add safety confirmations for destructive actions
+- [x] Add move submission guard (prevent duplicate writes)
+- [x] Add visible sync status badge
+- [x] Add input source selector (Manual / Chessnut Pro / PGN Import)
+- [x] Add Chessnut Pro bridge token display and scaffold
+- [x] Upgrade VenueDisplay with 3 display modes (Standard / Minimal / Overlay)
+- [x] Add realtime resilience with auto-reconnect and connection indicator
+- [x] Add display settings panel in operator control
+- [x] Add QR code on venue display
+- [x] Add ChessOTB branding to venue display
+- [x] Write vitest tests for broadcast feature

@@ -373,6 +373,148 @@ router.get("/:id/moves", async (req, res) => {
   }
 });
 
+// ─── PATCH /api/broadcasts/:id/display-settings ─────────────────────────────
+router.patch("/:id/display-settings", async (req, res) => {
+  try {
+    const db = await getDb();
+    const { displayMode, displaySettings } = req.body as { displayMode?: string; displaySettings?: Record<string, unknown> };
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (displayMode) updates.displayMode = displayMode;
+    if (displaySettings !== undefined) updates.displaySettings = displaySettings;
+    await db.update(liveBroadcasts).set(updates).where(eq(liveBroadcasts.id, req.params.id));
+    const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
+    if (!updated) return res.status(404).json({ error: "Not found" });
+    fanOut(req.params.id, "display_settings_changed", { displayMode: updated.displayMode, displaySettings: updated.displaySettings, broadcast: updated });
+    res.json(updated);
+  } catch (err) {
+    console.error("[broadcasts] PATCH /:id/display-settings", err);
+    res.status(500).json({ error: "Failed to update display settings" });
+  }
+});
+
+// ─── POST /api/broadcasts/:id/bridge-move ────────────────────────────────────
+// Secure endpoint for Chessnut Pro bridge to submit moves using a token.
+router.post("/:id/bridge-move", async (req, res) => {
+  try {
+    const db = await getDb();
+    const { token, san, uci, fenBefore, fenAfter } = req.body as Record<string, string>;
+    if (!token || !san || !uci || !fenBefore || !fenAfter) {
+      return res.status(400).json({ error: "token, san, uci, fenBefore, fenAfter are required" });
+    }
+    const [broadcast] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
+    if (!broadcast) return res.status(404).json({ error: "Broadcast not found" });
+    if (broadcast.bridgeToken !== token) return res.status(403).json({ error: "Invalid bridge token" });
+    if (broadcast.status !== "live") return res.status(400).json({ error: "Broadcast is not live" });
+
+    const ply = broadcast.moveNumber + 1;
+    const moveId = nanoid(36).slice(0, 36);
+    await db.insert(liveMoves).values({
+      id: moveId,
+      broadcastId: req.params.id,
+      ply,
+      san,
+      uci,
+      fenBefore,
+      fenAfter,
+      source: "chessnut_pro_beta",
+      createdAt: new Date(),
+    });
+    const newSide = fenAfter.split(" ")[1] ?? "w";
+    // Rebuild PGN
+    const allMoves = await db.select().from(liveMoves).where(eq(liveMoves.broadcastId, req.params.id)).orderBy(liveMoves.ply);
+    let pgn = "";
+    for (let i = 0; i < allMoves.length; i++) {
+      const m = allMoves[i];
+      const moveNum = Math.ceil((i + 1) / 2);
+      if (i % 2 === 0) pgn += `${moveNum}. `;
+      pgn += `${m.san} `;
+    }
+    pgn = pgn.trim();
+    await db.update(liveBroadcasts).set({
+      currentFen: fenAfter,
+      pgn,
+      lastMoveSan: san,
+      lastMoveUci: uci,
+      moveNumber: ply,
+      sideToMove: newSide,
+      updatedAt: new Date(),
+    }).where(eq(liveBroadcasts.id, req.params.id));
+    const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
+    fanOut(req.params.id, "move_played", { san, uci, fenAfter, pgn, moveNumber: ply, sideToMove: newSide, source: "chessnut_pro_beta", broadcast: updated });
+    res.json({ ok: true, broadcast: updated });
+  } catch (err) {
+    console.error("[broadcasts] POST /:id/bridge-move", err);
+    res.status(500).json({ error: "Failed to submit bridge move" });
+  }
+});
+
+// ─── PATCH /api/broadcasts/:id/correction ────────────────────────────────────
+// Correction: set FEN + note, insert correction move record.
+router.patch("/:id/correction", async (req, res) => {
+  try {
+    const db = await getDb();
+    const { fen, pgn, note } = req.body as { fen: string; pgn?: string; note?: string };
+    if (!fen) return res.status(400).json({ error: "fen is required" });
+    const [broadcast] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
+    if (!broadcast) return res.status(404).json({ error: "Broadcast not found" });
+    const sideToMove = fen.split(" ")[1] ?? "w";
+    // Insert correction move record
+    const moveId = nanoid(36).slice(0, 36);
+    await db.insert(liveMoves).values({
+      id: moveId,
+      broadcastId: req.params.id,
+      ply: broadcast.moveNumber + 1,
+      san: "--",
+      uci: "0000",
+      fenBefore: broadcast.currentFen,
+      fenAfter: fen,
+      source: "correction",
+      correctionNote: note ?? "Position corrected by operator",
+      createdAt: new Date(),
+    });
+    await db.update(liveBroadcasts).set({
+      currentFen: fen,
+      pgn: pgn ?? broadcast.pgn,
+      sideToMove,
+      moveNumber: broadcast.moveNumber + 1,
+      updatedAt: new Date(),
+    }).where(eq(liveBroadcasts.id, req.params.id));
+    const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
+    fanOut(req.params.id, "position_corrected", { fen, note, broadcast: updated });
+    res.json(updated);
+  } catch (err) {
+    console.error("[broadcasts] PATCH /:id/correction", err);
+    res.status(500).json({ error: "Failed to apply correction" });
+  }
+});
+
+// ─── POST /api/broadcasts/:id/reset ──────────────────────────────────────────
+router.post("/:id/reset", async (req, res) => {
+  try {
+    const db = await getDb();
+    // Delete all moves
+    await db.delete(liveMoves).where(eq(liveMoves.broadcastId, req.params.id));
+    // Reset broadcast state
+    await db.update(liveBroadcasts).set({
+      currentFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      pgn: "",
+      lastMoveSan: null,
+      lastMoveUci: null,
+      moveNumber: 0,
+      sideToMove: "w",
+      status: "ready",
+      result: null,
+      updatedAt: new Date(),
+    }).where(eq(liveBroadcasts.id, req.params.id));
+    const [updated] = await db.select().from(liveBroadcasts).where(eq(liveBroadcasts.id, req.params.id)).limit(1);
+    fanOut(req.params.id, "broadcast_reset", { broadcast: updated });
+    res.json(updated);
+  } catch (err) {
+    console.error("[broadcasts] POST /:id/reset", err);
+    res.status(500).json({ error: "Failed to reset broadcast" });
+  }
+});
+
 // ─── GET /api/broadcasts/:id/events (SSE) ────────────────────────────────────
 router.get("/:id/events", async (req, res) => {
   const { id } = req.params;
