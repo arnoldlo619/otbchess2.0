@@ -1,0 +1,24 @@
+{
+  "name": "chessnut-bridge",
+  "version": "1.0.0",
+  "description": "Chessnut Pro → ChessOTB Live Broadcast bridge CLI",
+  "type": "module",
+  "bin": {
+    "chessnut-bridge": "./bridge.mjs"
+  },
+  "scripts": {
+    "start": "node bridge.mjs",
+    "dry-run": "node bridge.mjs --dry-run --verbose"
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-15",
+    "chess.js": "^1.3.0",
+    "minimist": "^1.2.8",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["chess", "chessnut", "ble", "bluetooth", "otb", "broadcast"],
+  "license": "MIT"
+}

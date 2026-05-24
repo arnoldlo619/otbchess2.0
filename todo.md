@@ -6177,3 +6177,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add QR code on venue display
 - [x] Add ChessOTB branding to venue display
 - [x] Write vitest tests for broadcast feature
+
+## Chessnut Pro Bridge CLI
+- [x] Build chessnut-bridge/bridge.mjs CLI with BLE connection and move detection
+- [x] Write chessnut-bridge/package.json with @abandonware/noble, chess.js, node-fetch
+- [x] Write chessnut-bridge/README.md with setup, platform notes, and systemd service guide
+- [x] Add dry-run interactive REPL for testing without physical board
+- [x] Wire to /api/broadcasts/:id/bridge-move endpoint with secure token
