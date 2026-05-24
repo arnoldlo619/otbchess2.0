@@ -1716,3 +1716,64 @@ export const meetupCheckins = mysqlTable(
 );
 export type MeetupCheckinRow = typeof meetupCheckins.$inferSelect;
 export type NewMeetupCheckinRow = typeof meetupCheckins.$inferInsert;
+
+// ─── live_broadcasts ──────────────────────────────────────────────────────────
+// One row per Board 1 Live Broadcast session.
+export const liveBroadcasts = mysqlTable(
+  "live_broadcasts",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tournamentId: varchar("tournament_id", { length: 36 }).notNull(),
+    roundNumber: int("round_number").notNull().default(1),
+    boardNumber: int("board_number").notNull().default(1),
+    pairingId: varchar("pairing_id", { length: 36 }),
+    whitePlayerName: varchar("white_player_name", { length: 120 }).notNull().default("White"),
+    blackPlayerName: varchar("black_player_name", { length: 120 }).notNull().default("Black"),
+    whitePlayerElo: int("white_player_elo"),
+    blackPlayerElo: int("black_player_elo"),
+    whiteAvatarUrl: varchar("white_avatar_url", { length: 500 }),
+    blackAvatarUrl: varchar("black_avatar_url", { length: 500 }),
+    status: varchar("status", { length: 20 }).notNull().default("ready"),
+    inputSource: varchar("input_source", { length: 30 }).notNull().default("manual"),
+    currentFen: text("current_fen").notNull().default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
+    pgn: mediumtext("pgn").notNull().default(""),
+    lastMoveSan: varchar("last_move_san", { length: 10 }),
+    lastMoveUci: varchar("last_move_uci", { length: 10 }),
+    moveNumber: int("move_number").notNull().default(0),
+    sideToMove: varchar("side_to_move", { length: 1 }).notNull().default("w"),
+    result: varchar("result", { length: 10 }),
+    publicSlug: varchar("public_slug", { length: 20 }).notNull(),
+    createdBy: varchar("created_by", { length: 36 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    lbTournamentIdx: index("lb_tournament_id_idx").on(table.tournamentId),
+    lbSlugIdx: uniqueIndex("lb_public_slug_idx").on(table.publicSlug),
+  })
+);
+export type LiveBroadcastRow = typeof liveBroadcasts.$inferSelect;
+export type NewLiveBroadcastRow = typeof liveBroadcasts.$inferInsert;
+
+// ─── live_moves ───────────────────────────────────────────────────────────────
+// Append-only move log for a broadcast session.
+export const liveMoves = mysqlTable(
+  "live_moves",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    broadcastId: varchar("broadcast_id", { length: 36 }).notNull(),
+    ply: int("ply").notNull(),
+    san: varchar("san", { length: 10 }).notNull(),
+    uci: varchar("uci", { length: 10 }).notNull(),
+    fenBefore: text("fen_before").notNull(),
+    fenAfter: text("fen_after").notNull(),
+    source: varchar("source", { length: 30 }).notNull().default("manual"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    lmBroadcastIdx: index("lm_broadcast_id_idx").on(table.broadcastId),
+    lmPlyIdx: index("lm_ply_idx").on(table.broadcastId, table.ply),
+  })
+);
+export type LiveMoveRow = typeof liveMoves.$inferSelect;
+export type NewLiveMoveRow = typeof liveMoves.$inferInsert;

@@ -26,6 +26,7 @@ import { registerOpeningsPublicRoutes } from "./openingsPublic.js";
 import { createBillingRouter } from "./billing.js";
 import { createAdminStaffRouter } from "./adminStaff.js";
 import { createRepertoireBuilderRouter } from "./repertoireBuilder.js";
+import broadcastsRouter from "./broadcasts.js";
 import { registerStorageProxy } from "./storageProxy.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -973,6 +974,7 @@ export function createApp() {
   app.use("/api/billing", createBillingRouter());
   app.use("/api/admin/staff", createAdminStaffRouter());
   app.use("/api/repertoire-builder", createRepertoireBuilderRouter());
+  app.use("/api/broadcasts", broadcastsRouter);
   registerStorageProxy(app);
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.

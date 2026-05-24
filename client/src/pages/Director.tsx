@@ -99,6 +99,7 @@ import {
   Globe,
   Target,
   Swords,
+  Radio,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -251,6 +252,7 @@ function BoardCard({
   editMode = false,
   onSwapRequest,
   isSwapSource = false,
+  tournamentId,
 }: {
   game: import("@/lib/tournamentData").Game;
   players: import("@/lib/tournamentData").Player[];
@@ -263,6 +265,8 @@ function BoardCard({
   onSwapRequest?: (gameId: string) => void;
   /** Highlight this card as the selected swap source */
   isSwapSource?: boolean;
+  /** Tournament ID for broadcast link */
+  tournamentId?: string;
 }) {
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
@@ -332,6 +336,24 @@ function BoardCard({
             </span>
           )}
         </div>
+        {/* Broadcast button — opens broadcast control for this board */}
+        {!editMode && tournamentId && (
+          <a
+            href={`/tournament/${tournamentId}/broadcast/${game.board}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 mr-1 ${
+              isDark
+                ? "bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/20"
+                : "bg-red-50 border-red-200 text-red-500 hover:bg-red-100"
+            }`}
+            title="Open Broadcast Control for this board"
+          >
+            <Radio className="w-3 h-3" />
+            Broadcast
+          </a>
+        )}
         {/* Prep button — opens dropdown with both player prep links */}
         {!editMode && (
           <div className="relative">
@@ -3612,6 +3634,7 @@ export default function Director() {
                                 players={state.players}
                                 editMode={editBoardsMode}
                                 isSwapSource={swapSourceId === game.id}
+                                tournamentId={tournamentId}
                                 onSwapRequest={(clickedId) => {
                                   if (!swapSourceId) {
                                     // First tap: select this board as source

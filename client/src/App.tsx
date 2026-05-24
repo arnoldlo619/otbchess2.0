@@ -55,6 +55,9 @@ const RepertoireBuilder = lazy(() => import("./pages/RepertoireBuilder"));
 const MeetupEventPage = lazy(() => import("./pages/MeetupEventPage"));
 const CheckInPage = lazy(() => import("./pages/CheckInPage"));
 const CreateLeague = lazy(() => import("./pages/CreateLeague"));
+const BroadcastControl = lazy(() => import("./pages/BroadcastControl"));
+const LiveBoard = lazy(() => import("./pages/LiveBoard"));
+const VenueDisplay = lazy(() => import("./pages/VenueDisplay"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -93,6 +96,9 @@ function Router() {
         <Route path={"/checkin/:eventId"} component={CheckInPage} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
+        <Route path={"/tournament/:id/broadcast/:boardNumber"} component={BroadcastControl} />
+        <Route path={"/live/board/:slug/display"} component={VenueDisplay} />
+        <Route path={"/live/board/:slug"} component={LiveBoard} />
         <Route path={"/league/new"} component={CreateLeague} />
         <Route path={"/league-demo"} component={LeagueDemo} />
         <Route path={"/leagues/:leagueId/history"} component={LeagueHistory} />
