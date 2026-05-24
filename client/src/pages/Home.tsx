@@ -2100,9 +2100,8 @@ export default function Home() {
       <StatsBar />
       <HowItWorks />
       <Features />
-      <FeaturesCTA onCreateTournament={() => setWizardOpen(true)} />
-      <Showcase />
       <PlayerDemo />
+      <Showcase />
       <Testimonials />
       <CTASection onCreateTournament={() => setWizardOpen(true)} />
       <Footer />
