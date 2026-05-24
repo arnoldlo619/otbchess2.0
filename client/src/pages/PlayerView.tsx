@@ -307,11 +307,10 @@ function LobbyScreen({
   return (
     <div className={`min-h-screen ${bg} flex flex-col`}>
       <div className={`px-5 otb-header-safe pb-4 border-b ${isDark ? "border-white/08" : "border-gray-100"}`}>
-        <div className="flex items-center justify-between mb-1">
-          <NavLogo linked={false} />
+        <div className="flex items-center justify-between">
+          <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
           <ConnectionBadge connected={connected} isDark={isDark} />
         </div>
-        <h1 className={`text-lg font-bold leading-tight ${textMain} truncate`}>{tournamentName}</h1>
       </div>
       <PushPromptCard tournamentId={tournamentId} isDark={isDark} chessUsername={username} />
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 gap-8">
@@ -335,7 +334,7 @@ function LobbyScreen({
           </motion.div>
         </div>
         <div className="text-center space-y-2">
-          <h2 className={`text-2xl font-bold ${textMain}`}>Welcome! Tournament begins shortly{dots}</h2>
+          <h2 className={`text-2xl font-bold ${textMain}`}>Tournament will begin soon{dots}</h2>
           <p className={`text-base ${textMuted}`}>
             Hi <span className={`font-bold ${accent}`}>{username}</span> — you're registered!
           </p>
@@ -351,7 +350,7 @@ function LobbyScreen({
           {[
             { icon: CheckCircle2, text: "Director will start the tournament shortly" },
             { icon: Swords, text: "You'll be assigned a board and opponent" },
-            { icon: Trophy, text: "Play your game, then report the result" },
+            { icon: Trophy, text: "Winner reports result to arbiter at front desk" },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <Icon className={`w-4 h-4 flex-shrink-0 ${accent}`} />
