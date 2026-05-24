@@ -115,6 +115,19 @@ export default function BroadcastControl() {
   const isDark = theme === "dark";
   const boardNumber = parseInt(boardNumberParam ?? "1", 10);
 
+  // ─── Pre-fill data from Director query params ──────────────────────────────
+  const prefill = useMemo(() => {
+    const sp = new URLSearchParams(window.location.search);
+    return {
+      whiteName: sp.get("whiteName") ?? undefined,
+      blackName: sp.get("blackName") ?? undefined,
+      whiteElo: sp.get("whiteElo") ? Number(sp.get("whiteElo")) : undefined,
+      blackElo: sp.get("blackElo") ? Number(sp.get("blackElo")) : undefined,
+      round: sp.get("round") ? Number(sp.get("round")) : 1,
+      tournamentName: sp.get("tournamentName") ?? undefined,
+    };
+  }, []);
+
   // Core state
   const [broadcast, setBroadcast] = useState<Broadcast | null>(null);
   const [loading, setLoading] = useState(true);
@@ -171,11 +184,20 @@ export default function BroadcastControl() {
           return;
         }
       }
-      // Auto-create if none exists
+      // Auto-create if none exists — pre-fill from Director query params
       const createRes = await fetch("/api/broadcasts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tournamentId, boardNumber, roundNumber: 1 }),
+        body: JSON.stringify({
+          tournamentId,
+          boardNumber,
+          roundNumber: prefill.round,
+          whitePlayerName: prefill.whiteName ?? "White",
+          blackPlayerName: prefill.blackName ?? "Black",
+          whitePlayerElo: prefill.whiteElo ?? null,
+          blackPlayerElo: prefill.blackElo ?? null,
+          tournamentName: prefill.tournamentName ?? null,
+        }),
       });
       if (createRes.ok) {
         const created = await createRes.json();
@@ -189,7 +211,7 @@ export default function BroadcastControl() {
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, boardNumber, chess]);
+  }, [tournamentId, boardNumber, chess, prefill]);
 
   useEffect(() => { fetchBroadcast(); }, [fetchBroadcast]);
 

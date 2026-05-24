@@ -56,6 +56,7 @@ router.post("/", async (req, res) => {
       blackPlayerElo,
       whiteAvatarUrl,
       blackAvatarUrl,
+      tournamentName,
     } = req.body as Record<string, unknown>;
 
     if (!tournamentId) {
@@ -78,6 +79,7 @@ router.post("/", async (req, res) => {
       blackPlayerElo: blackPlayerElo ? Number(blackPlayerElo) : null,
       whiteAvatarUrl: whiteAvatarUrl ? String(whiteAvatarUrl) : null,
       blackAvatarUrl: blackAvatarUrl ? String(blackAvatarUrl) : null,
+      tournamentName: tournamentName ? String(tournamentName) : null,
       status: "ready",
       inputSource: "manual",
       currentFen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",

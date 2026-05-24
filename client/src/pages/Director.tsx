@@ -253,6 +253,8 @@ function BoardCard({
   onSwapRequest,
   isSwapSource = false,
   tournamentId,
+  roundNumber,
+  tournamentName,
 }: {
   game: import("@/lib/tournamentData").Game;
   players: import("@/lib/tournamentData").Player[];
@@ -267,6 +269,10 @@ function BoardCard({
   isSwapSource?: boolean;
   /** Tournament ID for broadcast link */
   tournamentId?: string;
+  /** Current round number for broadcast pre-fill */
+  roundNumber?: number;
+  /** Tournament name for broadcast pre-fill */
+  tournamentName?: string;
 }) {
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
@@ -339,7 +345,17 @@ function BoardCard({
         {/* Broadcast button — opens broadcast control for this board */}
         {!editMode && tournamentId && (
           <a
-            href={`/tournament/${tournamentId}/broadcast/${game.board}`}
+            href={(() => {
+              const params = new URLSearchParams();
+              if (white?.name) params.set("whiteName", white.name);
+              if (black?.name) params.set("blackName", black.name);
+              if (white?.elo) params.set("whiteElo", String(white.elo));
+              if (black?.elo) params.set("blackElo", String(black.elo));
+              if (roundNumber) params.set("round", String(roundNumber));
+              if (tournamentName) params.set("tournamentName", tournamentName);
+              const qs = params.toString();
+              return `/tournament/${tournamentId}/broadcast/${game.board}${qs ? `?${qs}` : ``}`;
+            })()}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -3635,6 +3651,8 @@ export default function Director() {
                                 editMode={editBoardsMode}
                                 isSwapSource={swapSourceId === game.id}
                                 tournamentId={tournamentId}
+                                roundNumber={state.currentRound}
+                                tournamentName={state.tournamentName ?? undefined}
                                 onSwapRequest={(clickedId) => {
                                   if (!swapSourceId) {
                                     // First tap: select this board as source
