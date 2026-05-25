@@ -101,6 +101,39 @@ export default function ConnectBoard() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const adapterRef = useRef<ChessnutWebBluetoothAdapter | null>(null);
 
+  // ── On mount: check if board is already connected → skip wizard ──────────────
+  useEffect(() => {
+    if (!tournamentId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/broadcasts/tournament/${tournamentId}`, { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const broadcasts: Array<{ id: string; boardNumber: number; bridgeStatus: string; bridgeLastSeenAt: string | null }> = await res.json();
+        const bc = broadcasts.find((b) => b.boardNumber === boardNumber);
+        if (!bc || cancelled) return;
+        const recentlySeen = bc.bridgeLastSeenAt
+          ? Date.now() - new Date(bc.bridgeLastSeenAt).getTime() < 2 * 60 * 1000
+          : false;
+        if (bc.bridgeStatus === "connected" && recentlySeen) {
+          // Already connected — skip wizard and go straight to console
+          const qs = new URLSearchParams();
+          if (whitePlayer !== "White") qs.set("white", whitePlayer);
+          if (blackPlayer !== "Black") qs.set("black", blackPlayer);
+          if (tournamentName !== "Tournament") qs.set("name", tournamentName);
+          qs.set("broadcastId", bc.id);
+          if (boardNumber === 1) {
+            navigate(`/tournament/${tournamentId}/broadcast-console?${qs.toString()}`);
+          } else {
+            navigate(`/tournament/${tournamentId}/broadcast/${boardNumber}?${qs.toString()}`);
+          }
+        }
+      } catch { /* ignore — proceed with wizard */ }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => { adapterRef.current?.disconnect(); };

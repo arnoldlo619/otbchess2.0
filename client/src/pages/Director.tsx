@@ -373,22 +373,48 @@ function BoardCard({
             Broadcast
           </a>
         )}
-        {/* Connect Board button — opens Broadcast Console to sync Chessnut Pro */}
+        {/* Connect Board button — smart-routes: console if already connected, wizard otherwise */}
         {!editMode && tournamentId && (
-          <a
-            href={(() => {
-              const params = new URLSearchParams();
-              // All boards go through the guided Connect Board wizard
-              if (white?.name) params.set("white", white.name);
-              if (black?.name) params.set("black", black.name);
-              params.set("board", String(game.board));
-              if (tournamentName) params.set("name", tournamentName);
-              const qs = params.toString();
-              return `/tournament/${tournamentId}/connect-board${qs ? `?${qs}` : ``}`;
-            })()}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              // Build wizard URL as fallback
+              const wizardParams = new URLSearchParams();
+              if (white?.name) wizardParams.set("white", white.name);
+              if (black?.name) wizardParams.set("black", black.name);
+              wizardParams.set("board", String(game.board));
+              if (tournamentName) wizardParams.set("name", tournamentName);
+              const wizardUrl = `/tournament/${tournamentId}/connect-board?${wizardParams.toString()}`;
+              // Check if this board already has an active bridge connection
+              try {
+                const res = await fetch(`/api/broadcasts/tournament/${tournamentId}`, { credentials: "include" });
+                if (res.ok) {
+                  const broadcasts: Array<{ id: string; boardNumber: number; bridgeStatus: string; bridgeLastSeenAt: string | null; whitePlayerName: string; blackPlayerName: string }> = await res.json();
+                  const bc = broadcasts.find((b) => b.boardNumber === game.board);
+                  if (bc) {
+                    const recentlySeen = bc.bridgeLastSeenAt
+                      ? Date.now() - new Date(bc.bridgeLastSeenAt).getTime() < 2 * 60 * 1000
+                      : false;
+                    if (bc.bridgeStatus === "connected" && recentlySeen) {
+                      // Already connected — go straight to Broadcast Console
+                      const consoleParams = new URLSearchParams();
+                      if (white?.name) consoleParams.set("white", white.name);
+                      if (black?.name) consoleParams.set("black", black.name);
+                      if (tournamentName) consoleParams.set("name", tournamentName);
+                      consoleParams.set("broadcastId", bc.id);
+                      if (game.board === 1) {
+                        window.open(`/tournament/${tournamentId}/broadcast-console?${consoleParams.toString()}`, "_blank");
+                      } else {
+                        window.open(`/tournament/${tournamentId}/broadcast/${game.board}?${consoleParams.toString()}`, "_blank");
+                      }
+                      return;
+                    }
+                  }
+                }
+              } catch { /* fall through to wizard */ }
+              // Not connected — open wizard
+              window.open(wizardUrl, "_blank");
+            }}
             className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 ${
               isDark
                 ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
@@ -398,7 +424,7 @@ function BoardCard({
           >
             <Plug className="w-3 h-3" />
             Connect Board
-          </a>
+          </button>
         )}
         {!editMode && isComplete && (
           <span
@@ -786,21 +812,42 @@ function DoubleSwissBoardCard({
             </span>
           )}
         </div>
-        {/* Connect Board button — opens Broadcast Console to sync Chessnut Pro */}
+        {/* Connect Board button — smart-routes: console if already connected, wizard otherwise */}
         {tournamentId && (
-          <a
-            href={(() => {
-              const params = new URLSearchParams();
-              // All boards go through the guided Connect Board wizard
-              if (p1?.name) params.set("white", p1.name);
-              if (p2?.name) params.set("black", p2.name);
-              params.set("board", String(gameA.board));
-              const qs = params.toString();
-              return `/tournament/${tournamentId}/connect-board${qs ? `?${qs}` : ``}`;
-            })()}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              const wizardParams = new URLSearchParams();
+              if (p1?.name) wizardParams.set("white", p1.name);
+              if (p2?.name) wizardParams.set("black", p2.name);
+              wizardParams.set("board", String(gameA.board));
+              const wizardUrl = `/tournament/${tournamentId}/connect-board?${wizardParams.toString()}`;
+              try {
+                const res = await fetch(`/api/broadcasts/tournament/${tournamentId}`, { credentials: "include" });
+                if (res.ok) {
+                  const broadcasts: Array<{ id: string; boardNumber: number; bridgeStatus: string; bridgeLastSeenAt: string | null }> = await res.json();
+                  const bc = broadcasts.find((b) => b.boardNumber === gameA.board);
+                  if (bc) {
+                    const recentlySeen = bc.bridgeLastSeenAt
+                      ? Date.now() - new Date(bc.bridgeLastSeenAt).getTime() < 2 * 60 * 1000
+                      : false;
+                    if (bc.bridgeStatus === "connected" && recentlySeen) {
+                      const consoleParams = new URLSearchParams();
+                      if (p1?.name) consoleParams.set("white", p1.name);
+                      if (p2?.name) consoleParams.set("black", p2.name);
+                      consoleParams.set("broadcastId", bc.id);
+                      if (gameA.board === 1) {
+                        window.open(`/tournament/${tournamentId}/broadcast-console?${consoleParams.toString()}`, "_blank");
+                      } else {
+                        window.open(`/tournament/${tournamentId}/broadcast/${gameA.board}?${consoleParams.toString()}`, "_blank");
+                      }
+                      return;
+                    }
+                  }
+                }
+              } catch { /* fall through to wizard */ }
+              window.open(wizardUrl, "_blank");
+            }}
             className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 ${
               isDark
                 ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
@@ -810,7 +857,7 @@ function DoubleSwissBoardCard({
           >
             <Plug className="w-3 h-3" />
             Connect Board
-          </a>
+          </button>
         )}
         {/* Running match score tally — visible once any game has a result */}
         {anyDone && (() => {
