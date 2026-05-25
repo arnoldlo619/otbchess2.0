@@ -1747,7 +1747,23 @@ export const liveBroadcasts = mysqlTable(
     displaySettings: json("display_settings").$type<Record<string, unknown>>(),
     tournamentName: varchar("tournament_name", { length: 200 }),
     bridgeToken: varchar("bridge_token", { length: 64 }),
+    bridgeTokenHash: varchar("bridge_token_hash", { length: 64 }),
+    bridgeTokenRevoked: tinyint("bridge_token_revoked").notNull().default(0),
+    bridgeStatus: varchar("bridge_status", { length: 30 }).notNull().default("not_configured"),
+    bridgeDeviceName: varchar("bridge_device_name", { length: 100 }),
+    bridgeConnectionType: varchar("bridge_connection_type", { length: 30 }),
+    bridgeLastSeenAt: timestamp("bridge_last_seen_at"),
+    bridgeErrorMessage: text("bridge_error_message"),
     publicSlug: varchar("public_slug", { length: 20 }).notNull(),
+    // ── Chess Clock ──────────────────────────────────────────────────────────
+    // whiteTimeMs / blackTimeMs: remaining time in milliseconds (null = no clock)
+    // clockRunning: 1 = ticking, 0 = stopped
+    // clockLastUpdatedAt: server timestamp when clock state was last written
+    //   Used by clients to compute elapsed time since last server update.
+    whiteTimeMs: int("white_time_ms"),
+    blackTimeMs: int("black_time_ms"),
+    clockRunning: tinyint("clock_running").notNull().default(0),
+    clockLastUpdatedAt: timestamp("clock_last_updated_at"),
     createdBy: varchar("created_by", { length: 36 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1783,3 +1799,26 @@ export const liveMoves = mysqlTable(
 );
 export type LiveMoveRow = typeof liveMoves.$inferSelect;
 export type NewLiveMoveRow = typeof liveMoves.$inferInsert;
+
+// ─── live_bridge_sessions ────────────────────────────────────────────────────
+// One row per bridge session heartbeat record.
+export const liveBridgeSessions = mysqlTable(
+  "live_bridge_sessions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    broadcastId: varchar("broadcast_id", { length: 36 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("waiting"),
+    deviceName: varchar("device_name", { length: 100 }),
+    connectionType: varchar("connection_type", { length: 30 }),
+    bridgeVersion: varchar("bridge_version", { length: 20 }),
+    lastSeenAt: timestamp("last_seen_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    lbsBroadcastIdx: index("lbs_broadcast_idx").on(table.broadcastId),
+  })
+);
+export type LiveBridgeSessionRow = typeof liveBridgeSessions.$inferSelect;
+export type NewLiveBridgeSessionRow = typeof liveBridgeSessions.$inferInsert;

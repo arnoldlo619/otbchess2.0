@@ -6184,3 +6184,77 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Write chessnut-bridge/README.md with setup, platform notes, and systemd service guide
 - [x] Add dry-run interactive REPL for testing without physical board
 - [x] Wire to /api/broadcasts/:id/bridge-move endpoint with secure token
+
+## Phase 4: Tournament Day Broadcast Console (Production Hardening)
+
+- [x] BroadcastConsole page with top status bar and 6 main sections
+- [x] Live Operator Mode (compact focused UI with keyboard shortcuts)
+- [x] Venue Display polish pass (4 modes, big-screen text size, 16:9 layout)
+- [x] Mobile LiveBoard polish pass (fit-to-width, share button, reconnect, branding)
+- [x] Post-Game Export/Archive workflow (result → PGN lock → archive)
+- [x] Round-to-Round broadcast flow (Start Next Round button)
+- [x] Board 1 Pairing Confirmation dialog
+- [x] Pre-Event Readiness Checklist (16 items, localStorage persist)
+- [x] One-Click Broadcast Rehearsal Flow (8-step simulation)
+- [x] Venue Display Health Monitor (heartbeat tracking)
+- [x] Failover/Recovery Tools (6 problem scenarios)
+- [x] Event-Day Test Panel (10 QA tests)
+- [x] Broadcast Log Improvements (structured logs, 5 filter tabs)
+- [x] Access Control hardening (finished broadcasts reject moves, director-only console)
+- [x] Performance/Reliability pass (duplicate prevention, loading states, empty states)
+
+## Chess Clock Integration
+
+- [x] Add clock columns to live_broadcasts schema (whiteTimeMs, blackTimeMs, clockRunning, clockLastUpdatedAt)
+- [x] PATCH /api/broadcasts/:id/clock endpoint (set/start/pause/switch/reset actions)
+- [x] SSE clock_update event broadcast to all subscribers
+- [x] BroadcastConsole clock controls panel (preset selector, set/start/pause/switch/reset buttons)
+- [x] VenueDisplay standard mode clock faces (black top, white bottom, color-coded urgency)
+- [x] VenueDisplay minimal mode clock faces
+- [x] Mobile LiveBoard clock display (both players, color-coded urgency)
+- [x] Client-side local tick (100ms interval) for smooth countdown
+- [x] Clock urgency colors: red <10s, amber <60s, green active, dim inactive
+- [x] TypeScript clean build (0 errors)
+- [x] 39 tests passing (26 clock + 13 console)
+
+## Chessnut Pro Bridge Fix
+
+- [x] PATCH /api/broadcasts/:id/input-source endpoint
+- [x] Fix input source button onClick in BroadcastControl.tsx
+- [x] Create bridge.mjs operator script
+- [x] bridge.mjs README / usage instructions
+
+## Phase 5: Chrome Web Bluetooth for Chessnut Pro
+
+- [x] ChessnutWebBluetoothAdapter class (all 13 required methods)
+- [x] BLE UUIDs from official Chessnut API (FEN service + ops service)
+- [x] Board-state parser: 36-byte packet → 64-square array
+- [x] Move inference engine (chess.js legal move matching)
+- [x] ChessnutChromeBTPanel operator UI (all 13 statuses)
+- [x] BLE Diagnostics panel (services, characteristics, raw hex payloads)
+- [x] Test Without Board mode (mocked payloads)
+- [x] Record Raw Payloads developer option (last 20, copy/export JSON)
+- [x] chessnut_chrome_bluetooth input source in BroadcastControl
+- [x] Advanced discovery mode toggle (acceptAllDevices)
+- [x] Promotion confirmation dialog
+- [x] Board state mismatch operator alert
+- [x] Manual Mode fallback remains instant
+
+## Chessnut Pro Bluetooth Test Lab (Phase 6)
+
+- [x] Test Lab page at /dashboard/tools/chessnut-bluetooth-test-lab (admin only)
+- [x] Section 1: Browser Compatibility (navigator.bluetooth, HTTPS, browser name)
+- [x] Section 2: Device Connection (connect, disconnect, reconnect, GATT status)
+- [x] Section 3: BLE Services & Characteristics scanner (UUIDs, properties, read/notify)
+- [x] Section 4: Raw Payload Monitor (hex, decimal, UTF-8, last 50, export JSON)
+- [x] Section 5: Board-State Debugger (64-square grid, changed squares, FEN display)
+- [x] Section 6: Move Inference Tester (legal move matching, confidence levels, send to demo)
+- [x] Section 7: Production Readiness Status (9 checks, 6-tier final status)
+- [x] Board Mapping Calibration flow (10-step rook placement, save profile)
+- [x] Real-Device Test Checklist (20 items, persist status)
+- [x] Readiness Report generator (copy to clipboard)
+- [x] Demo broadcast integration (create demo, send moves, undo)
+- [x] ChessnutChromeBTPanel readiness gate in BroadcastControl
+- [ ] Manual fallback lock-in and recommended mode copy
+- [x] Route added to App.tsx (admin-protected)
+- [ ] Link in dashboard navigation

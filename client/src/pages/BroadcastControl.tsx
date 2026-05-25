@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { QRCodeSVG } from "qrcode.react";
+import { ChessnutProPanel } from "@/components/ChessnutProPanel";
+import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Broadcast {
@@ -33,11 +35,15 @@ interface Broadcast {
   whitePlayerElo?: number | null;
   blackPlayerElo?: number | null;
   status: "ready" | "live" | "paused" | "finished" | "error";
-  inputSource: "manual" | "chessnut_pro_beta" | "pgn_import";
+  inputSource: "manual" | "chessnut_pro_beta" | "chessnut_chrome_bluetooth" | "pgn_import";
   displayMode: "standard" | "minimal" | "overlay";
   displaySettings?: Record<string, unknown> | null;
   tournamentName?: string | null;
   bridgeToken?: string | null;
+  bridgeStatus?: string | null;
+  bridgeDeviceName?: string | null;
+  bridgeLastSeenAt?: string | null;
+  bridgeErrorMessage?: string | null;
   currentFen: string;
   pgn: string;
   lastMoveSan?: string | null;
@@ -774,10 +780,44 @@ export default function BroadcastControl() {
           <div className="rounded-xl border border-white/08 bg-[oklch(0.14_0.04_145)] p-4 space-y-3">
             <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider">Input Source</h3>
             <div className="space-y-1.5">
-              {(["manual", "chessnut_pro_beta", "pgn_import"] as const).map(src => (
-                <button key={src} className={`w-full text-left px-3 py-2 rounded-lg text-xs border ${broadcast.inputSource === src ? "bg-[#4CAF50]/10 border-[#4CAF50]/30 text-[#4CAF50]" : "border-white/05 text-white/40 hover:bg-white/05"}`}>
+              {(["manual", "chessnut_pro_beta", "chessnut_chrome_bluetooth", "pgn_import"] as const).map(src => (
+                <button
+                  key={src}
+                  disabled={broadcast.inputSource === src}
+                  onClick={async () => {
+                    if (!broadcast || broadcast.inputSource === src) return;
+                    try {
+                      const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ source: src }),
+                      });
+                      if (!res.ok) throw new Error(await res.text());
+                      const data = await res.json();
+                      setBroadcast(prev => prev ? {
+                        ...prev,
+                        inputSource: data.inputSource,
+                        bridgeToken: data.bridgeToken ?? prev.bridgeToken,
+                      } : prev);
+                      toast.success(
+                        src === "chessnut_pro_beta" ? "Switched to Chessnut Pro — bridge token ready" :
+                        src === "chessnut_chrome_bluetooth" ? "Switched to Chrome Bluetooth — connect your board" :
+                        src === "pgn_import" ? "Switched to PGN Import mode" :
+                        "Switched to Manual Input"
+                      );
+                    } catch (err) {
+                      toast.error("Failed to switch input source");
+                    }
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-xs border transition-all duration-150 active:scale-[0.98] ${
+                    broadcast.inputSource === src
+                      ? "bg-[#4CAF50]/10 border-[#4CAF50]/30 text-[#4CAF50] cursor-default"
+                      : "border-white/05 text-white/40 hover:bg-white/08 hover:border-white/15 hover:text-white/60 cursor-pointer"
+                  }`}
+                >
                   {src === "manual" && "⌨️ Manual Input"}
                   {src === "chessnut_pro_beta" && "♟ Chessnut Pro (Beta)"}
+                  {src === "chessnut_chrome_bluetooth" && "🔵 Chrome Bluetooth (Direct)"}
                   {src === "pgn_import" && "📄 PGN Import"}
                 </button>
               ))}
@@ -924,6 +964,54 @@ export default function BroadcastControl() {
               </div>
             )}
           </div>
+
+          {/* Chessnut Pro Bridge Panel */}
+          {broadcast.inputSource === "chessnut_pro_beta" && (
+            <ChessnutProPanel
+              broadcastId={broadcast.id}
+              bridgeToken={broadcast.bridgeToken}
+              bridgeStatus={broadcast.bridgeStatus ?? "not_configured"}
+              bridgeDeviceName={broadcast.bridgeDeviceName ?? null}
+              bridgeLastSeenAt={broadcast.bridgeLastSeenAt ?? null}
+              bridgeErrorMessage={broadcast.bridgeErrorMessage ?? null}
+              onTokenRegenerated={(newToken) => {
+                setBroadcast(prev => prev ? { ...prev, bridgeToken: newToken } : prev);
+                toast.success("Bridge token regenerated");
+              }}
+            />
+          )}
+
+          {/* Chessnut Pro — Chrome Web Bluetooth (Direct) Panel */}
+          {broadcast.inputSource === "chessnut_chrome_bluetooth" && (
+            <ChessnutChromeBTPanel
+              broadcastId={broadcast.id}
+              currentFen={chess.fen()}
+              onMoveAccepted={(san, uci, fenBefore, fenAfter) => {
+                // Apply move to local chess state and sync with server
+                try {
+                  chess.load(fenBefore);
+                  chess.move(san);
+                  setFen(chess.fen());
+                } catch { /* ignore local apply error */ }
+                submitMove(san, uci, fenBefore, fenAfter);
+              }}
+              onSwitchToManual={async () => {
+                try {
+                  const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ source: "manual" }),
+                  });
+                  if (!res.ok) throw new Error(await res.text());
+                  const data = await res.json();
+                  setBroadcast(prev => prev ? { ...prev, inputSource: data.inputSource } : prev);
+                  toast.success("Switched to Manual Input");
+                } catch {
+                  toast.error("Failed to switch input source");
+                }
+              }}
+            />
+          )}
 
           {/* Display Links */}
           <div className="rounded-xl border border-white/08 bg-[oklch(0.14_0.04_145)] p-4 space-y-2">

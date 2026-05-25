@@ -1,4 +1,4 @@
-# Chessnut Pro → ChessOTB Bridge CLI
+# Chessnut Pro → ChessOTB Bridge CLI v2.0
 
 A standalone Node.js CLI that connects to a **Chessnut Air / Pro** e-board via Bluetooth Low Energy (BLE), detects moves in real time by diffing the physical board state, and automatically POSTs each move to the ChessOTB live broadcast system.
 
@@ -32,30 +32,65 @@ node bridge.mjs \
 | `--broadcast-id` | `BROADCAST_ID` | Broadcast session ID (required) | — |
 | `--token` | `BRIDGE_TOKEN` | Bridge token from Broadcast Control (required) | — |
 | `--server` | `SERVER_URL` | ChessOTB server URL | `https://chessotb.club` |
+| `--config <file>` | — | Load all options from a JSON config file | — |
+| `--simulate`, `-s` | — | Simulation REPL — type SAN moves, no BLE needed | `false` |
+| `--dry-run`, `-d` | — | Alias for `--simulate` | `false` |
+| `--flip` | — | Flip board orientation (use when playing as Black) | `false` |
+| `--device-name <name>` | — | BLE device name to scan for | `Chessnut` |
+| `--log-file <path>` | — | Write structured JSON logs to file | — |
 | `--color` | `BOARD_COLOR` | Side you are playing (`w`, `b`, `auto`) | `auto` |
-| `--dry-run`, `-d` | — | Parse moves but do NOT post to server | `false` |
 | `--verbose`, `-v` | — | Show detailed BLE and move logs | `false` |
 | `--help`, `-h` | — | Show help | — |
 
 ---
 
+## Config File
+
+Create `bridge.config.json` to avoid typing flags every time:
+
+```json
+{
+  "broadcastId": "your-broadcast-id",
+  "token": "your-bridge-token",
+  "server": "https://chessotb.club",
+  "simulate": false,
+  "flip": false,
+  "deviceName": "Chessnut",
+  "logFile": "bridge.log",
+  "verbose": false
+}
+```
+
+Then run:
+
+```bash
+node bridge.mjs --config bridge.config.json
+```
+
+---
+
 ## Testing Without a Physical Board
 
-Use `--dry-run` to enter interactive mode and type SAN moves manually:
+Use `--simulate` (or `--dry-run`) to enter an interactive REPL:
 
 ```bash
 node bridge.mjs \
   --broadcast-id <BROADCAST_ID> \
   --token <BRIDGE_TOKEN> \
-  --dry-run --verbose
+  --simulate
 
 # Then type moves at the prompt:
-Move> e4
-Move> e5
-Move> Nf3
+[White] Move: e4
+[OK   ] [SIMULATE] Move: e4 (e2e4)
+[Black] Move: e5
+[White] Move: undo
+[White] Move: pgn
+[White] Move: quit
 ```
 
-This lets you verify the server integration before connecting the physical board.
+**REPL commands:** `undo`, `fen`, `pgn`, `quit`
+
+This lets you verify the full HTTP pipeline before connecting the physical board.
 
 ---
 

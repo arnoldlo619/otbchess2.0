@@ -33,6 +33,8 @@ import {
   Camera,
   Shield,
   Trophy,
+  Wrench,
+  FlaskConical,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuthContext } from "@/context/AuthContext";
@@ -891,21 +893,56 @@ export function AvatarNavDropdown({
                 </button>
               )}
               {user?.isStaff && (
-                <Link
-                  href="/admin/staff"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-400 hover:bg-amber-500/10 transition-colors"
-                  style={{ border: "1px solid transparent" }}
-                  onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLElement).style.background = "rgba(245,158,11,0.08)")
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLElement).style.background = "transparent")
-                  }
-                >
-                  <Shield className="w-4 h-4 flex-shrink-0" />
-                  <span>Staff Admin</span>
-                </Link>
+                <>
+                  {/* Staff Admin link */}
+                  <Link
+                    href="/admin/staff"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-400 hover:bg-amber-500/10 transition-colors"
+                    style={{ border: "1px solid transparent" }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background = "rgba(245,158,11,0.08)")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLElement).style.background = "transparent")
+                    }
+                  >
+                    <Shield className="w-4 h-4 flex-shrink-0" />
+                    <span>Staff Admin</span>
+                  </Link>
+
+                  {/* Tools section divider */}
+                  <div className={`px-3 pt-2 pb-1`}>
+                    <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${
+                      isDark ? "text-white/25" : "text-gray-400"
+                    }`}>
+                      <Wrench className="w-3 h-3" />
+                      <span>Tools</span>
+                    </div>
+                  </div>
+
+                  {/* Chessnut Bluetooth Test Lab */}
+                  <Link
+                    href="/dashboard/tools/chessnut-bluetooth-test-lab"
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      isDark
+                        ? "text-blue-300 hover:bg-blue-500/10"
+                        : "text-blue-600 hover:bg-blue-50"
+                    }`}
+                  >
+                    <FlaskConical className="w-4 h-4 flex-shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                      <span>Chessnut BT Test Lab</span>
+                      <span className={`text-[10px] font-normal truncate ${
+                        isDark ? "text-white/35" : "text-gray-400"
+                      }`}>BLE diagnostics &amp; validation</span>
+                    </div>
+                    <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600"
+                    }`}>BETA</span>
+                  </Link>
+                </>
               )}
               {user && !user.isPro && !user.isGuest && !user.isStaff && (
                 <button
@@ -1077,6 +1114,39 @@ export function AvatarNavDropdown({
 
               {/* Divider */}
               <div className="mx-4 my-2 h-px" style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }} />
+
+              {/* Staff Tools section — only visible to staff */}
+              {user?.isStaff && (
+                <div className="px-3 pb-1">
+                  <p className={`px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-1.5 ${
+                    isDark ? "text-white/30" : "text-gray-400"
+                  }`}>
+                    <Wrench className="w-3 h-3" />
+                    Tools
+                  </p>
+                  <Link
+                    href="/dashboard/tools/chessnut-bluetooth-test-lab"
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${
+                      isDark ? "text-blue-300 hover:bg-blue-500/10" : "text-blue-600 hover:bg-blue-50"
+                    }`}
+                    style={{ border: "1px solid transparent" }}
+                  >
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? "rgba(59,130,246,0.1)" : "rgba(59,130,246,0.08)" }}>
+                      <FlaskConical className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span>Chessnut BT Test Lab</span>
+                      <span className={`text-[10px] font-normal ${
+                        isDark ? "text-white/35" : "text-gray-400"
+                      }`}>BLE diagnostics &amp; validation</span>
+                    </div>
+                    <span className={`ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                      isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-100 text-amber-600"
+                    }`}>BETA</span>
+                  </Link>
+                </div>
+              )}
 
               {/* Appearance toggle */}
               <div className="px-3 pb-1">

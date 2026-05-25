@@ -97,9 +97,9 @@ import {
   EyeOff,
   ExternalLink,
   Globe,
-  Target,
   Swords,
   Radio,
+  Plug,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { logger } from "@/lib/logger";
@@ -277,7 +277,6 @@ function BoardCard({
   const white = players.find((p) => p.id === game.whiteId)!;
   const black = players.find((p) => p.id === game.blackId)!;
   const isComplete = game.result !== "*";
-  const [prepOpen, setPrepOpen] = useState(false);
 
   return (
     <div
@@ -354,6 +353,10 @@ function BoardCard({
               if (roundNumber) params.set("round", String(roundNumber));
               if (tournamentName) params.set("tournamentName", tournamentName);
               const qs = params.toString();
+              // Board 1 goes to the new BroadcastConsole; other boards use legacy BroadcastControl
+              if (game.board === 1) {
+                return `/tournament/${tournamentId}/broadcast-console${qs ? `?${qs}` : ``}`;
+              }
               return `/tournament/${tournamentId}/broadcast/${game.board}${qs ? `?${qs}` : ``}`;
             })()}
             target="_blank"
@@ -370,62 +373,37 @@ function BoardCard({
             Broadcast
           </a>
         )}
-        {/* Prep button — opens dropdown with both player prep links */}
-        {!editMode && (
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setPrepOpen((o) => !o); }}
-              className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 ${
-                isDark
-                  ? "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-[#5B9A6A] hover:bg-[#3D6B47]/25"
-                  : "bg-[#3D6B47]/06 border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/12"
-              }`}
-              title="Open Matchup Prep for a player"
-            >
-              <Target className="w-3 h-3" />
-              Prep
-            </button>
-            {prepOpen && (
-              <>
-                {/* Backdrop */}
-                <div className="fixed inset-0 z-40" onClick={() => setPrepOpen(false)} />
-                {/* Dropdown */}
-                <div className={`absolute right-0 top-full mt-1.5 z-50 rounded-xl border shadow-xl overflow-hidden min-w-[180px] ${
-                  isDark ? "bg-[#111f13] border-[#2a4030]/60" : "bg-white border-gray-200"
-                }`}>
-                  <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${
-                    isDark ? "text-white/30 border-b border-white/06" : "text-gray-400 border-b border-gray-100"
-                  }`}>Prep vs.</div>
-                  {[white, black].map((player) => (
-                    <a
-                      key={player.id}
-                      href={`/prep/${encodeURIComponent(player.username)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setPrepOpen(false)}
-                      className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors ${
-                        isDark ? "hover:bg-white/05 text-white" : "hover:bg-gray-50 text-gray-900"
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                        isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"
-                      }`}>
-                        <Target className="w-3 h-3 text-[#5B9A6A]" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className={`text-sm font-semibold truncate ${
-                          isDark ? "text-white" : "text-gray-900"
-                        }`}>{player.name}</div>
-                        <div className={`text-[10px] truncate ${
-                          isDark ? "text-white/35" : "text-gray-400"
-                        }`}>{player.username}</div>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+        {/* Connect Board button — opens Broadcast Console to sync Chessnut Pro */}
+        {!editMode && tournamentId && (
+          <a
+            href={(() => {
+              const params = new URLSearchParams();
+              if (white?.name) params.set("whiteName", white.name);
+              if (black?.name) params.set("blackName", black.name);
+              if (white?.elo) params.set("whiteElo", String(white.elo));
+              if (black?.elo) params.set("blackElo", String(black.elo));
+              if (roundNumber) params.set("round", String(roundNumber));
+              if (tournamentName) params.set("tournamentName", tournamentName);
+              params.set("tab", "bridge");
+              const qs = params.toString();
+              if (game.board === 1) {
+                return `/tournament/${tournamentId}/broadcast-console${qs ? `?${qs}` : ``}`;
+              }
+              return `/tournament/${tournamentId}/broadcast/${game.board}${qs ? `?${qs}` : ``}`;
+            })()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 ${
+              isDark
+                ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
+                : "bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
+            }`}
+            title="Connect Chessnut Pro board for live broadcast"
+          >
+            <Plug className="w-3 h-3" />
+            Connect Board
+          </a>
         )}
         {!editMode && isComplete && (
           <span
@@ -665,12 +643,14 @@ function DoubleSwissBoardCard({
   players,
   onResult,
   isDark,
+  tournamentId,
 }: {
   gameA: import("@/lib/tournamentData").Game;
   gameB: import("@/lib/tournamentData").Game;
   players: import("@/lib/tournamentData").Player[];
   onResult: (gameId: string, result: Result) => void;
   isDark: boolean;
+  tournamentId?: string;
 }) {
   const p1 = players.find((p) => p.id === gameA.whiteId)!;
   const p2 = players.find((p) => p.id === gameA.blackId)!;
@@ -678,7 +658,6 @@ function DoubleSwissBoardCard({
   const gameADone = gameA.result !== "*";
   const gameBDone = gameB.result !== "*";
   const anyDone = gameADone || gameBDone;
-  const [prepOpen, setPrepOpen] = useState(false);
 
   // Running score: p1 is gameA.white (so p1 scores from white wins in A, black wins in B)
   function scoreFor(game: import("@/lib/tournamentData").Game, forWhite: boolean): number {
@@ -812,59 +791,36 @@ function DoubleSwissBoardCard({
             </span>
           )}
         </div>
-        {/* Prep button */}
-        <div className="relative">
-          <button
-            onClick={(e) => { e.stopPropagation(); setPrepOpen((o) => !o); }}
+        {/* Connect Board button — opens Broadcast Console to sync Chessnut Pro */}
+        {tournamentId && (
+          <a
+            href={(() => {
+              const params = new URLSearchParams();
+              if (p1?.name) params.set("whiteName", p1.name);
+              if (p2?.name) params.set("blackName", p2.name);
+              if (p1?.elo) params.set("whiteElo", String(p1.elo));
+              if (p2?.elo) params.set("blackElo", String(p2.elo));
+              params.set("tab", "bridge");
+              const qs = params.toString();
+              if (gameA.board === 1) {
+                return `/tournament/${tournamentId}/broadcast-console${qs ? `?${qs}` : ``}`;
+              }
+              return `/tournament/${tournamentId}/broadcast/${gameA.board}${qs ? `?${qs}` : ``}`;
+            })()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border transition-all duration-150 active:scale-95 ${
               isDark
-                ? "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-[#5B9A6A] hover:bg-[#3D6B47]/25"
-                : "bg-[#3D6B47]/06 border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/12"
+                ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
+                : "bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
             }`}
-            title="Open Matchup Prep for a player"
+            title="Connect Chessnut Pro board for live broadcast"
           >
-            <Target className="w-3 h-3" />
-            Prep
-          </button>
-          {prepOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setPrepOpen(false)} />
-              <div className={`absolute right-0 top-full mt-1.5 z-50 rounded-xl border shadow-xl overflow-hidden min-w-[180px] ${
-                isDark ? "bg-[#111f13] border-[#2a4030]/60" : "bg-white border-gray-200"
-              }`}>
-                <div className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${
-                  isDark ? "text-white/30 border-b border-white/06" : "text-gray-400 border-b border-gray-100"
-                }`}>Prep vs.</div>
-                {[p1, p2].map((player) => (
-                  <a
-                    key={player.id}
-                    href={`/prep/${encodeURIComponent(player.username)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setPrepOpen(false)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 transition-colors ${
-                      isDark ? "hover:bg-white/05 text-white" : "hover:bg-gray-50 text-gray-900"
-                    }`}
-                  >
-                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                      isDark ? "bg-[#3D6B47]/20" : "bg-[#3D6B47]/08"
-                    }`}>
-                      <Target className="w-3 h-3 text-[#5B9A6A]" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className={`text-sm font-semibold truncate ${
-                        isDark ? "text-white" : "text-gray-900"
-                      }`}>{player.name}</div>
-                      <div className={`text-[10px] truncate ${
-                        isDark ? "text-white/35" : "text-gray-400"
-                      }`}>{player.username}</div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+            <Plug className="w-3 h-3" />
+            Connect Board
+          </a>
+        )}
         {/* Running match score tally — visible once any game has a result */}
         {anyDone && (() => {
           // Determine winner when both games are done
@@ -3596,6 +3552,7 @@ export default function Director() {
                                         pushStandingsNow();
                                       }}
                                       isDark={isDark}
+                                      tournamentId={tournamentId}
                                     />
                                   </div>
                                 );

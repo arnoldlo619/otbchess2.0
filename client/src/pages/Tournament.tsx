@@ -68,6 +68,7 @@ import { SpectatorTimerBanner } from "@/components/SpectatorTimerBanner";
 import { PublicBracketView } from "@/components/PublicBracketView";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
 import { SwissStandingsPanel } from "@/components/SwissStandingsPanel";
+import { LiveBoardsSection } from "@/components/LiveBoardsSection";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function ELOBadge({ elo, size = "sm" }: { elo: number; size?: "sm" | "md" }) {
@@ -1905,6 +1906,9 @@ export default function TournamentPage() {
 
           {/* Main content */}
           <div className="container py-4 sm:py-8 animate-page-in">
+
+            {/* ── Live Boards section ───────────────────────────── */}
+            <LiveBoardsSection tournamentId={tournamentId} isDark={isDark} />
 
             {/* ── Mobile tab bar (hidden on lg+) ─────────────────── */}
             <div className="flex lg:hidden mb-4 rounded-2xl overflow-hidden border p-1 gap-1"

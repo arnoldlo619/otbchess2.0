@@ -56,8 +56,10 @@ const MeetupEventPage = lazy(() => import("./pages/MeetupEventPage"));
 const CheckInPage = lazy(() => import("./pages/CheckInPage"));
 const CreateLeague = lazy(() => import("./pages/CreateLeague"));
 const BroadcastControl = lazy(() => import("./pages/BroadcastControl"));
+const BroadcastConsole = lazy(() => import("./pages/BroadcastConsole"));
 const LiveBoard = lazy(() => import("./pages/LiveBoard"));
 const VenueDisplay = lazy(() => import("./pages/VenueDisplay"));
+const ChessnutTestLab = lazy(() => import("./pages/ChessnutTestLab"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -96,6 +98,7 @@ function Router() {
         <Route path={"/checkin/:eventId"} component={CheckInPage} />
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
+        <Route path={"/tournament/:id/broadcast-console"} component={BroadcastConsole} />
         <Route path={"/tournament/:id/broadcast/:boardNumber"} component={BroadcastControl} />
         <Route path={"/live/board/:slug/display"} component={VenueDisplay} />
         <Route path={"/live/board/:slug"} component={LiveBoard} />
@@ -124,6 +127,7 @@ function Router() {
         <Route path={"/pro/success"} component={ProSuccess} />
         <Route path={"/admin/staff"} component={AdminStaff} />
         <Route path={"/admin/openings"} component={OpeningsAdmin} />
+        <Route path={"/dashboard/tools/chessnut-bluetooth-test-lab"} component={ChessnutTestLab} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
