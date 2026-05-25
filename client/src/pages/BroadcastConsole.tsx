@@ -19,7 +19,8 @@ import {
   Square, Wifi, WifiOff, Shield, Eye, Settings,
   ChevronDown, ChevronUp, Activity, FileText, Share2,
   LifeBuoy, ListChecks, Maximize2, Minimize2, Send,
-  RotateCw, AlertCircle, Info, XCircle, Check, ArrowLeftRight
+  RotateCw, AlertCircle, Info, XCircle, Check, ArrowLeftRight,
+  Cpu, Plug, Keyboard
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { QRCodeSVG } from "qrcode.react";
@@ -1278,6 +1279,70 @@ export default function BroadcastConsole() {
                 )}
               </div>
 
+              {/* Input Source Panel */}
+              <div className="rounded-xl border border-white/8 bg-[oklch(0.14_0.04_145)] p-4 space-y-2">
+                <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Cpu className="w-3 h-3" /> Input Source
+                </h3>
+                {/* Manual Mode */}
+                <button
+                  onClick={async () => {
+                    if (!broadcast || broadcast.inputSource === "manual") return;
+                    try {
+                      const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ inputSource: "manual" }),
+                      });
+                      if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Manual Mode"); addLog("system", "info", "Input source: Manual"); }
+                    } catch { toast.error("Failed to switch input source"); }
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                    broadcast?.inputSource === "manual"
+                      ? "bg-[#4CAF50]/15 border-[#4CAF50]/40 text-[#4CAF50]"
+                      : "border-white/10 text-white/50 hover:bg-white/5 hover:text-white/70"
+                  }`}
+                >
+                  <Keyboard className="w-3.5 h-3.5 shrink-0" />
+                  <span>Manual Input</span>
+                  {broadcast?.inputSource === "manual" && <span className="ml-auto text-[9px] bg-[#4CAF50]/20 text-[#4CAF50] px-1.5 py-0.5 rounded-full">ACTIVE</span>}
+                </button>
+                {/* Chessnut Pro Beta */}
+                <button
+                  onClick={async () => {
+                    if (!broadcast || broadcast.inputSource === "chessnut_pro_beta") return;
+                    try {
+                      const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ inputSource: "chessnut_pro_beta" }),
+                      });
+                      if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Chessnut Pro (Beta)"); addLog("bridge", "info", "Input source: Chessnut Pro Beta"); }
+                    } catch { toast.error("Failed to switch input source"); }
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                    broadcast?.inputSource === "chessnut_pro_beta"
+                      ? "bg-blue-500/15 border-blue-500/40 text-blue-400"
+                      : "border-white/10 text-white/50 hover:bg-white/5 hover:text-white/70"
+                  }`}
+                >
+                  <Plug className="w-3.5 h-3.5 shrink-0" />
+                  <span>Chessnut Pro (Beta)</span>
+                  {broadcast?.inputSource === "chessnut_pro_beta" && <span className="ml-auto text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">ACTIVE</span>}
+                  {broadcast?.inputSource !== "chessnut_pro_beta" && <span className="ml-auto text-[9px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded-full">BLE</span>}
+                </button>
+                {/* Show bridge status if Chessnut Pro is active */}
+                {broadcast?.inputSource === "chessnut_pro_beta" && (
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] ${
+                    broadcast.bridgeStatus === "connected" ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400" : "bg-amber-500/8 border-amber-500/20 text-amber-400"
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      broadcast.bridgeStatus === "connected" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+                    }`} />
+                    {broadcast.bridgeStatus === "connected" ? `Bridge connected — ${broadcast.bridgeDeviceName ?? "Chessnut Pro"}` : "Bridge not connected — run bridge.mjs"}
+                  </div>
+                )}
+              </div>
               {/* Display Links */}
               <div className="rounded-xl border border-white/8 bg-[oklch(0.14_0.04_145)] p-4 space-y-2">
                 <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">Display</h3>
