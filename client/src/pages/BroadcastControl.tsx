@@ -794,11 +794,8 @@ export default function BroadcastControl() {
                       });
                       if (!res.ok) throw new Error(await res.text());
                       const data = await res.json();
-                      setBroadcast(prev => prev ? {
-                        ...prev,
-                        inputSource: data.inputSource,
-                        bridgeToken: data.bridgeToken ?? prev.bridgeToken,
-                      } : prev);
+                      // Server returns the full updated broadcast object
+                      setBroadcast(data);
                       toast.success(
                         src === "chessnut_pro_beta" ? "Switched to Chessnut Pro — bridge token ready" :
                         src === "chessnut_chrome_bluetooth" ? "Switched to Chrome Bluetooth — connect your board" :
@@ -1004,7 +1001,8 @@ export default function BroadcastControl() {
                   });
                   if (!res.ok) throw new Error(await res.text());
                   const data = await res.json();
-                  setBroadcast(prev => prev ? { ...prev, inputSource: data.inputSource } : prev);
+                  // Server returns the full updated broadcast object
+                  setBroadcast(data);
                   toast.success("Switched to Manual Input");
                 } catch {
                   toast.error("Failed to switch input source");

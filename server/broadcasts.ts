@@ -849,7 +849,7 @@ router.patch("/:id/clock", async (req, res) => {
 router.patch("/:id/input-source", async (req, res) => {
   try {
     const { source } = req.body as { source: string };
-    const validSources = ["manual", "chessnut_pro_beta", "pgn_import"];
+    const validSources = ["manual", "chessnut_pro_beta", "pgn_import", "chessnut_chrome_bluetooth"];
     if (!validSources.includes(source)) {
       return res.status(400).json({ error: "Invalid input source" });
     }
@@ -878,7 +878,13 @@ router.patch("/:id/input-source", async (req, res) => {
 
     fanOut(req.params.id, "input_source_changed", { source, bridgeToken });
 
-    res.json({ ok: true, inputSource: source, bridgeToken });
+    // Return the full updated broadcast so the client can replace its local state
+    const [updated] = await db
+      .select()
+      .from(liveBroadcasts)
+      .where(eq(liveBroadcasts.id, req.params.id))
+      .limit(1);
+    res.json(updated);
   } catch (err) {
     console.error("[broadcasts] PATCH /:id/input-source", err);
     res.status(500).json({ error: "Failed to update input source" });

@@ -1293,7 +1293,7 @@ export default function BroadcastConsole() {
                       const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ inputSource: "manual" }),
+                        body: JSON.stringify({ source: "manual" }),
                       });
                       if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Manual Mode"); addLog("system", "info", "Input source: Manual"); }
                     } catch { toast.error("Failed to switch input source"); }
@@ -1316,7 +1316,7 @@ export default function BroadcastConsole() {
                       const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ inputSource: "chessnut_pro_beta" }),
+                        body: JSON.stringify({ source: "chessnut_pro_beta" }),
                       });
                       if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Chessnut Pro (Beta)"); addLog("bridge", "info", "Input source: Chessnut Pro Beta"); }
                     } catch { toast.error("Failed to switch input source"); }
@@ -1340,7 +1340,7 @@ export default function BroadcastConsole() {
                       const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ inputSource: "chessnut_chrome_bluetooth" }),
+                        body: JSON.stringify({ source: "chessnut_chrome_bluetooth" }),
                       });
                       if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Chrome Bluetooth (Direct)"); addLog("bridge", "info", "Input source: Chrome Web Bluetooth"); }
                     } catch { toast.error("Failed to switch input source"); }
@@ -1368,7 +1368,7 @@ export default function BroadcastConsole() {
                           const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ inputSource: "manual" }),
+                            body: JSON.stringify({ source: "manual" }),
                           });
                           if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Manual Mode"); }
                         } catch { toast.error("Failed to switch"); }
