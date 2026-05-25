@@ -378,18 +378,13 @@ function BoardCard({
           <a
             href={(() => {
               const params = new URLSearchParams();
-              if (white?.name) params.set("whiteName", white.name);
-              if (black?.name) params.set("blackName", black.name);
-              if (white?.elo) params.set("whiteElo", String(white.elo));
-              if (black?.elo) params.set("blackElo", String(black.elo));
-              if (roundNumber) params.set("round", String(roundNumber));
-              if (tournamentName) params.set("tournamentName", tournamentName);
-              params.set("tab", "bridge");
+              // All boards go through the guided Connect Board wizard
+              if (white?.name) params.set("white", white.name);
+              if (black?.name) params.set("black", black.name);
+              params.set("board", String(game.board));
+              if (tournamentName) params.set("name", tournamentName);
               const qs = params.toString();
-              if (game.board === 1) {
-                return `/tournament/${tournamentId}/broadcast-console${qs ? `?${qs}` : ``}`;
-              }
-              return `/tournament/${tournamentId}/broadcast/${game.board}${qs ? `?${qs}` : ``}`;
+              return `/tournament/${tournamentId}/connect-board${qs ? `?${qs}` : ``}`;
             })()}
             target="_blank"
             rel="noopener noreferrer"
@@ -796,16 +791,12 @@ function DoubleSwissBoardCard({
           <a
             href={(() => {
               const params = new URLSearchParams();
-              if (p1?.name) params.set("whiteName", p1.name);
-              if (p2?.name) params.set("blackName", p2.name);
-              if (p1?.elo) params.set("whiteElo", String(p1.elo));
-              if (p2?.elo) params.set("blackElo", String(p2.elo));
-              params.set("tab", "bridge");
+              // All boards go through the guided Connect Board wizard
+              if (p1?.name) params.set("white", p1.name);
+              if (p2?.name) params.set("black", p2.name);
+              params.set("board", String(gameA.board));
               const qs = params.toString();
-              if (gameA.board === 1) {
-                return `/tournament/${tournamentId}/broadcast-console${qs ? `?${qs}` : ``}`;
-              }
-              return `/tournament/${tournamentId}/broadcast/${gameA.board}${qs ? `?${qs}` : ``}`;
+              return `/tournament/${tournamentId}/connect-board${qs ? `?${qs}` : ``}`;
             })()}
             target="_blank"
             rel="noopener noreferrer"

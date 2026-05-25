@@ -60,6 +60,7 @@ const BroadcastConsole = lazy(() => import("./pages/BroadcastConsole"));
 const LiveBoard = lazy(() => import("./pages/LiveBoard"));
 const VenueDisplay = lazy(() => import("./pages/VenueDisplay"));
 const ChessnutTestLab = lazy(() => import("./pages/ChessnutTestLab"));
+const ConnectBoard = lazy(() => import("./pages/ConnectBoard"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -99,6 +100,7 @@ function Router() {
         <Route path={"/clubs/:id/messages"} component={ClubMessages} />
         <Route path={"/clubs/:id"} component={ClubProfile} />
         <Route path={"/tournament/:id/broadcast-console"} component={BroadcastConsole} />
+        <Route path={"/tournament/:id/connect-board"} component={ConnectBoard} />
         <Route path={"/tournament/:id/broadcast/:boardNumber"} component={BroadcastControl} />
         <Route path={"/live/board/:slug/display"} component={VenueDisplay} />
         <Route path={"/live/board/:slug"} component={LiveBoard} />
