@@ -20,9 +20,10 @@ import {
   ChevronDown, ChevronUp, Activity, FileText, Share2,
   LifeBuoy, ListChecks, Maximize2, Minimize2, Send,
   RotateCw, AlertCircle, Info, XCircle, Check, ArrowLeftRight,
-  Cpu, Plug, Keyboard
+  Cpu, Plug, Keyboard, Bluetooth
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
 import { QRCodeSVG } from "qrcode.react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ interface Broadcast {
   whitePlayerElo?: number | null;
   blackPlayerElo?: number | null;
   status: "ready" | "live" | "paused" | "finished" | "error";
-  inputSource: "manual" | "chessnut_pro_beta" | "pgn_import";
+  inputSource: "manual" | "chessnut_pro_beta" | "chessnut_chrome_bluetooth" | "pgn_import";
   displayMode: "standard" | "minimal" | "overlay" | "board_only";
   displaySettings?: Record<string, unknown> | null;
   tournamentName?: string | null;
@@ -1021,7 +1022,7 @@ export default function BroadcastConsole() {
           {/* Row 2: Quick info chips */}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50">
-              Input: {broadcast.inputSource === "manual" ? "Manual" : broadcast.inputSource === "chessnut_pro_beta" ? "Chessnut Pro" : "PGN"}
+              Input: {broadcast.inputSource === "manual" ? "Manual" : broadcast.inputSource === "chessnut_pro_beta" ? "Chessnut Pro" : broadcast.inputSource === "chessnut_chrome_bluetooth" ? "Chrome BT" : "PGN"}
             </span>
             <span className={`text-[10px] px-2 py-0.5 rounded-full border ${displayConnected && !displayStale ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"}`}>
               {displayConnected && !displayStale ? "Display connected" : "Display not detected"}
@@ -1331,6 +1332,51 @@ export default function BroadcastConsole() {
                   {broadcast?.inputSource === "chessnut_pro_beta" && <span className="ml-auto text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">ACTIVE</span>}
                   {broadcast?.inputSource !== "chessnut_pro_beta" && <span className="ml-auto text-[9px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded-full">BLE</span>}
                 </button>
+                {/* Chrome Web Bluetooth (Direct) */}
+                <button
+                  onClick={async () => {
+                    if (!broadcast || broadcast.inputSource === "chessnut_chrome_bluetooth") return;
+                    try {
+                      const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ inputSource: "chessnut_chrome_bluetooth" }),
+                      });
+                      if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Chrome Bluetooth (Direct)"); addLog("bridge", "info", "Input source: Chrome Web Bluetooth"); }
+                    } catch { toast.error("Failed to switch input source"); }
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                    broadcast?.inputSource === "chessnut_chrome_bluetooth"
+                      ? "bg-purple-500/15 border-purple-500/40 text-purple-300"
+                      : "border-white/10 text-white/50 hover:bg-white/5 hover:text-white/70"
+                  }`}
+                >
+                  <Bluetooth className="w-3.5 h-3.5 shrink-0" />
+                  <span>Chrome Bluetooth (Direct)</span>
+                  {broadcast?.inputSource === "chessnut_chrome_bluetooth" && <span className="ml-auto text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-full">ACTIVE</span>}
+                  {broadcast?.inputSource !== "chessnut_chrome_bluetooth" && <span className="ml-auto text-[9px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded-full">WEB BT</span>}
+                </button>
+                {/* Chrome BT Panel — inline when active */}
+                {broadcast?.inputSource === "chessnut_chrome_bluetooth" && (
+                  <div className="mt-2 rounded-xl border border-purple-500/20 overflow-hidden">
+                    <ChessnutChromeBTPanel
+                      broadcastId={broadcast.id}
+                      currentFen={fen}
+                      onMoveAccepted={submitMove}
+                      onSwitchToManual={async () => {
+                        try {
+                          const res = await fetch(`/api/broadcasts/${broadcast.id}/input-source`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ inputSource: "manual" }),
+                          });
+                          if (res.ok) { const d = await res.json(); setBroadcast(d); toast.success("Switched to Manual Mode"); }
+                        } catch { toast.error("Failed to switch"); }
+                      }}
+                      isDark={isDark}
+                    />
+                  </div>
+                )}
                 {/* Show bridge status if Chessnut Pro is active */}
                 {broadcast?.inputSource === "chessnut_pro_beta" && (
                   <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] ${
