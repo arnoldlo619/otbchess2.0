@@ -14,6 +14,7 @@
 import { useState, useCallback } from "react";
 import { Trophy, X, CheckCircle2, AlertTriangle, Loader2, Handshake } from "lucide-react";
 import { useAuthContext } from "@/context/AuthContext";
+import { fetchWithRetry } from "@/lib/fetchWithRetry";
 
 interface GameResultModalProps {
   isOpen: boolean;
@@ -45,12 +46,11 @@ export function GameResultModal({
     setError("");
 
     try {
-      const res = await fetch(`/api/otb-games/${sessionId}/result`, {
+      const res = await fetchWithRetry(`/api/otb-games/${sessionId}/result`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ result }),
-      });
+      }, { maxRetries: 2, baseDelay: 800 });
 
       const data = await res.json();
 

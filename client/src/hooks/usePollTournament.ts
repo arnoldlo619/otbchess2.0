@@ -20,7 +20,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import type { Player } from "@/lib/tournamentData";
 import type { Round } from "@/lib/tournamentData";
 
-import { authFetch } from "@/lib/apiFetch";
+import { fetchWithRetry } from "@/lib/fetchWithRetry";
 export interface PollPayload {
   players?: Player[];
   status?: string;
@@ -75,7 +75,10 @@ export function usePollTournament({
 
     fetchingRef.current = true;
     try {
-      const res = await authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`
+      const res = await fetchWithRetry(
+        `/api/tournament/${encodeURIComponent(tournamentId)}/live-state`,
+        undefined,
+        { maxRetries: 1, baseDelay: 1000 }
       );
       if (!res.ok) return;
       const data: PollPayload = await res.json();
