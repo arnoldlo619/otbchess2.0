@@ -6347,3 +6347,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Client: OtbLeaderboard page at /otb/leaderboard
 - [x] Anti-abuse: self-play prevention, session expiry, valid status transitions
 - [x] Tests: 29 new tests (rating calc, K-factor, time control, anti-abuse) — 170 total passing
+- [x] Server: rate-limit SSE connections per IP (max 3 per IP, shared across /stream and /players/stream, 429 on excess, 6 passing tests)

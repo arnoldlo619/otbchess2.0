@@ -51,6 +51,28 @@ type PushSub = webpush.PushSubscription;
 // director tabs watching that tournament.
 const sseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
 
+// ─── SSE IP Rate-Limit Registry ───────────────────────────────────────────────
+// Tracks how many active SSE connections each IP address currently holds.
+// Prevents a single device from accidentally opening dozens of tabs and
+// exhausting server file-descriptor / memory budgets.
+// Limit: MAX_SSE_PER_IP concurrent connections per IP (across all tournaments).
+const MAX_SSE_PER_IP = 3;
+const sseIpCount = new Map<string, number>();
+
+function sseIpIncrement(ip: string): boolean {
+  const current = sseIpCount.get(ip) ?? 0;
+  if (current >= MAX_SSE_PER_IP) return false; // reject
+  sseIpCount.set(ip, current + 1);
+  return true;
+}
+
+function sseIpDecrement(ip: string): void {
+  const current = sseIpCount.get(ip) ?? 0;
+  const next = Math.max(0, current - 1);
+  if (next === 0) sseIpCount.delete(ip);
+  else sseIpCount.set(ip, next);
+}
+
 // ─── In-Memory Timer Store ────────────────────────────────────────────────────
 // Holds the latest timer snapshot per tournament so players who reconnect
 // can catch up without waiting for the next broadcast.
@@ -1629,6 +1651,16 @@ export function createApp() {
     const { id } = req.params;
     if (!id) { res.status(400).end(); return; }
 
+    // IP rate-limit: max MAX_SSE_PER_IP concurrent SSE connections per IP
+    const clientIp = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0].trim()
+      ?? req.socket.remoteAddress
+      ?? "unknown";
+    if (!sseIpIncrement(clientIp)) {
+      res.status(429).setHeader("Content-Type", "text/plain");
+      res.end(`Too many live connections from this device (max ${MAX_SSE_PER_IP}). Close other tabs and try again.`);
+      return;
+    }
+
     // SSE headers
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -1649,11 +1681,12 @@ export function createApp() {
       try { res.write(`: keepalive\n\n`); } catch { clearInterval(keepalive); }
     }, 25_000);
 
-    // Clean up on disconnect
+    // Clean up on disconnect — always release the IP slot
     req.on("close", () => {
       clearInterval(keepalive);
       subs.delete(res);
       if (subs.size === 0) sseSubscribers.delete(id);
+      sseIpDecrement(clientIp);
     });
   });
 
@@ -1667,6 +1700,16 @@ export function createApp() {
   app.get("/api/tournament/:id/players/stream", (req, res) => {
     const { id } = req.params;
     if (!id) { res.status(400).end(); return; }
+
+    // IP rate-limit: shared counter with /stream — max MAX_SSE_PER_IP total per IP
+    const clientIp = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0].trim()
+      ?? req.socket.remoteAddress
+      ?? "unknown";
+    if (!sseIpIncrement(clientIp)) {
+      res.status(429).setHeader("Content-Type", "text/plain");
+      res.end(`Too many live connections from this device (max ${MAX_SSE_PER_IP}). Close other tabs and try again.`);
+      return;
+    }
 
     // SSE headers
     res.setHeader("Content-Type", "text/event-stream");
@@ -1688,11 +1731,12 @@ export function createApp() {
       try { res.write(`: keepalive\n\n`); } catch { clearInterval(keepalive); }
     }, 25_000);
 
-    // Clean up on disconnect
+    // Clean up on disconnect — always release the IP slot
     req.on("close", () => {
       clearInterval(keepalive);
       subs.delete(res);
       if (subs.size === 0) sseSubscribers.delete(id);
+      sseIpDecrement(clientIp);
     });
   });
 
