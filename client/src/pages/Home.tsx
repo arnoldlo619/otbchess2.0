@@ -1178,7 +1178,7 @@ const CAROUSEL_SLIDES = [
     ],
     cta: { label: "Play a Rated Game", href: "/clock?register=true" },
     ctaSecondary: null,
-    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-rated-game-screenshot-YixCiv4w3F9hZ7y7Fzy6zt.webp",
+    screenshot: "/manus-storage/otb-rated-game-carousel_ed800e01.webp",
     screenshotAlt: "OTB Rated Game — Register modal with QR code on chess clock",
   },
   {
