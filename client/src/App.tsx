@@ -61,6 +61,8 @@ const LiveBoard = lazy(() => import("./pages/LiveBoard"));
 const VenueDisplay = lazy(() => import("./pages/VenueDisplay"));
 const ChessnutTestLab = lazy(() => import("./pages/ChessnutTestLab"));
 const ConnectBoard = lazy(() => import("./pages/ConnectBoard"));
+const GameJoin = lazy(() => import("./pages/GameJoin"));
+const OtbLeaderboard = lazy(() => import("./pages/OtbLeaderboard"));
 
 // ── Minimal full-screen loading fallback ─────────────────────────────────────
 function PageLoader() {
@@ -113,6 +115,8 @@ function Router() {
         <Route path={"/games"} component={GamesHistory} />
         <Route path={"/record"} component={GameRecorder} />
         <Route path={"/record/camera"} component={VideoRecorder} />
+        <Route path={"/game/join/:token"} component={GameJoin} />
+        <Route path={"/otb/leaderboard"} component={OtbLeaderboard} />
         <Route path={"/game/:gameId/analysis"} component={GameAnalysis} />
         <Route path={"/training"} component={Training} />
         <Route path={"/invite/:token"} component={InviteAccept} />

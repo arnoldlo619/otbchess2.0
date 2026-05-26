@@ -43,6 +43,13 @@
       "when": 1776310563169,
       "tag": "0005_smiling_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1779770871079,
+      "tag": "0006_fearless_argent",
+      "breakpoints": true
     }
   ]
 }

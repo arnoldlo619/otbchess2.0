@@ -78,6 +78,7 @@ export type AdapterStatus =
   | "mismatch"
   | "needs_review"
   | "disconnected"
+  | "reconnecting"
   | "error"
   | "diagnostic";
 
@@ -130,6 +131,10 @@ export interface AdapterState {
   errorMessage: string | null;
   diagnosticServices: DiagnosticService[];
   rawPayloads: RawPayloadRecord[];
+  /** Auto-reconnect state */
+  reconnectAttempt: number;
+  reconnectMaxAttempts: number;
+  reconnectNextRetryMs: number | null;
 }
 
 // ─── Adapter class ────────────────────────────────────────────────────────────
@@ -158,10 +163,20 @@ export class ChessnutWebBluetoothAdapter {
   private _boardStateCallback: ((state: BoardState) => void) | null = null;
   private _errorCallback: ((err: string) => void) | null = null;
   private _statusCallback: ((state: AdapterState) => void) | null = null;
+  /** Fired with the raw DataView on every BLE notification, before any parsing. */
+  private _rawBoardDataCallback: ((dv: DataView) => void) | null = null;
 
   private broadcastId: string;
   private serverUrl: string;
   private advancedDiscovery: boolean;
+
+  // Auto-reconnect state
+  private _reconnectAttempt = 0;
+  private _reconnectMaxAttempts = 3;
+  private _reconnectNextRetryMs: number | null = null;
+  private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private _autoReconnectEnabled = true;
+  private _intentionalDisconnect = false;
 
   constructor(broadcastId: string, serverUrl = "", advancedDiscovery = false) {
     this.broadcastId = broadcastId;
@@ -241,12 +256,18 @@ export class ChessnutWebBluetoothAdapter {
     try {
       this.server = await this.device!.gatt!.connect();
       this._gattConnected = true;
+      this._intentionalDisconnect = false;
+      this._reconnectAttempt = 0;
+      this._reconnectNextRetryMs = null;
 
-      // Listen for disconnect
+      // Listen for unexpected disconnect → auto-reconnect
       this.device!.addEventListener("gattserverdisconnected", () => {
         this._gattConnected = false;
-        this._setStatus("disconnected");
-        this._emitError("Board disconnected unexpectedly. Last valid position preserved.");
+        if (this._intentionalDisconnect) {
+          this._setStatus("disconnected");
+          return;
+        }
+        this._attemptReconnect();
       });
 
       this._setStatus("connected");
@@ -264,6 +285,8 @@ export class ChessnutWebBluetoothAdapter {
 
   // ─── 4. disconnect ──────────────────────────────────────────────────────────
   disconnect(): void {
+    this._intentionalDisconnect = true;
+    this._cancelReconnect();
     if (this.fenChar) {
       try { this.fenChar.stopNotifications(); } catch { /* ignore */ }
       this.fenChar = null;
@@ -290,6 +313,9 @@ export class ChessnutWebBluetoothAdapter {
       errorMessage: this._errorMessage,
       diagnosticServices: this._diagnosticServices,
       rawPayloads: this._rawPayloads,
+      reconnectAttempt: this._reconnectAttempt,
+      reconnectMaxAttempts: this._reconnectMaxAttempts,
+      reconnectNextRetryMs: this._reconnectNextRetryMs,
     };
   }
 
@@ -569,6 +595,15 @@ export class ChessnutWebBluetoothAdapter {
     this._statusCallback = cb;
   }
 
+  /**
+   * Register a callback that receives the raw BLE DataView on every board
+   * notification.  Use this to pipe data into ChessnutBoardEngine for
+   * nibble-level piece recognition without going through the legacy PIECE_MAP.
+   */
+  onRawBoardData(cb: (dv: DataView) => void): void {
+    this._rawBoardDataCallback = cb;
+  }
+
   // ─── BLE notification handler ────────────────────────────────────────────────
   private _onFenNotification(event: Event): void {
     const char = event.target as BluetoothRemoteGATTCharacteristic;
@@ -595,6 +630,11 @@ export class ChessnutWebBluetoothAdapter {
       }
     }
 
+    // Emit raw DataView to any engine listener (must happen before parsing)
+    if (this._rawBoardDataCallback) {
+      this._rawBoardDataCallback(value);
+    }
+
     // Parse board state
     const newState = this.parseBoardState(value);
     if (!newState) {
@@ -615,6 +655,76 @@ export class ChessnutWebBluetoothAdapter {
     }
 
     this._emitStatusUpdate();
+  }
+
+  // ─── Auto-reconnect logic ──────────────────────────────────────────────────────
+  private _attemptReconnect(): void {
+    if (!this._autoReconnectEnabled || !this.device) {
+      this._setStatus("disconnected");
+      this._emitError("Board disconnected. Auto-reconnect disabled.");
+      return;
+    }
+
+    if (this._reconnectAttempt >= this._reconnectMaxAttempts) {
+      this._setStatus("disconnected");
+      this._emitError(
+        `Board disconnected. Auto-reconnect failed after ${this._reconnectMaxAttempts} attempts. Please reconnect manually.`
+      );
+      this._reconnectAttempt = 0;
+      this._reconnectNextRetryMs = null;
+      return;
+    }
+
+    // Exponential backoff: 1s, 2s, 4s
+    const delayMs = 1000 * Math.pow(2, this._reconnectAttempt);
+    this._reconnectAttempt++;
+    this._reconnectNextRetryMs = delayMs;
+    this._setStatus("reconnecting");
+
+    this._reconnectTimer = setTimeout(() => {
+      this._reconnectNextRetryMs = null;
+      this._reconnectGatt();
+    }, delayMs);
+  }
+
+  private async _reconnectGatt(): Promise<void> {
+    if (!this.device?.gatt) {
+      this._setStatus("disconnected");
+      this._emitError("Board device lost. Please reconnect manually.");
+      return;
+    }
+
+    this._setStatus("connecting");
+
+    try {
+      this.server = await this.device.gatt.connect();
+      this._gattConnected = true;
+      this._reconnectAttempt = 0;
+      this._reconnectNextRetryMs = null;
+      this._setStatus("connected");
+
+      // Re-subscribe to board state notifications
+      await this.discoverServices();
+      await this.subscribeToBoardState();
+    } catch {
+      // Retry again
+      this._attemptReconnect();
+    }
+  }
+
+  private _cancelReconnect(): void {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
+    this._reconnectAttempt = 0;
+    this._reconnectNextRetryMs = null;
+  }
+
+  /** Allow external code to disable auto-reconnect (e.g., when switching to manual mode). */
+  setAutoReconnect(enabled: boolean): void {
+    this._autoReconnectEnabled = enabled;
+    if (!enabled) this._cancelReconnect();
   }
 
   // ─── Internal helpers ─────────────────────────────────────────────────────────

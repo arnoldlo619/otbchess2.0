@@ -13,10 +13,12 @@
  */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearch, useLocation } from "wouter";
-import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, VolumeX } from "lucide-react";
+import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, VolumeX, Trophy } from "lucide-react";
 import { NavLogo } from "@/components/NavLogo";
 import { resolveTournament } from "@/lib/tournamentRegistry";
 import { useClockSounds } from "@/hooks/useClockSounds";
+import { RegisterGameModal } from "@/components/RegisterGameModal";
+import { GameResultModal } from "@/components/GameResultModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ClockState = "idle" | "p1_running" | "p2_running" | "paused" | "p1_flagged" | "p2_flagged";
@@ -285,6 +287,7 @@ function CenterControls({
   onSettings,
   onBack,
   onToggleMute,
+  onRegisterGame,
   showReset,
 }: {
   clockState: ClockState;
@@ -295,6 +298,7 @@ function CenterControls({
   onSettings: () => void;
   onBack: () => void;
   onToggleMute: () => void;
+  onRegisterGame: () => void;
   showReset: boolean;
 }) {
   const isRunning = clockState === "p1_running" || clockState === "p2_running";
@@ -374,6 +378,17 @@ function CenterControls({
           : <Volume2 className="w-4 h-4 text-white/80" />
         }
       </button>
+      {/* Register Game — only when idle */}
+      {isIdle && (
+        <button
+          onClick={onRegisterGame}
+          className="w-10 h-10 rounded-full bg-[#5a9e5f]/80 flex items-center justify-center backdrop-blur-sm"
+          aria-label="Register rated game"
+          title="Register Rated Game"
+        >
+          <Trophy className="w-4 h-4 text-white" />
+        </button>
+      )}
     </div>
   );
 }
@@ -403,6 +418,12 @@ export default function ChessClock() {
   const [clockState, setClockState] = useState<ClockState>("idle");
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  // Auto-open Register Game modal when ?register=true is in the URL
+  const [showRegisterGame, setShowRegisterGame] = useState(() => {
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    return params.get('register') === 'true';
+  });
+  const [activeGameSessionId, setActiveGameSessionId] = useState<string | null>(null);
 
   // Sound engine
   const sounds = useClockSounds();
@@ -524,6 +545,31 @@ export default function ChessClock() {
       }
     };
   }, [clockState, tick]);
+
+  // ── OTB Game Session Status Sync ────────────────────────────────────────────
+  const prevClockStateRef = useRef<ClockState>("idle");
+  const [showGameResult, setShowGameResult] = useState(false);
+
+  useEffect(() => {
+    if (!activeGameSessionId) return;
+    const prev = prevClockStateRef.current;
+    prevClockStateRef.current = clockState;
+
+    // Game started: transition from idle to running
+    if (prev === "idle" && (clockState === "p1_running" || clockState === "p2_running")) {
+      fetch(`/api/otb-games/${activeGameSessionId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: "clock_started" }),
+      }).catch(() => {});
+    }
+
+    // Game ended: player flagged
+    if (clockState === "p1_flagged" || clockState === "p2_flagged") {
+      setShowGameResult(true);
+    }
+  }, [clockState, activeGameSessionId]);
 
   // ── Tap handlers ─────────────────────────────────────────────────────────────
 
@@ -672,7 +718,20 @@ export default function ChessClock() {
         onSettings={() => setShowSettings(true)}
         onBack={handleBack}
         onToggleMute={sounds.toggleMute}
+        onRegisterGame={() => setShowRegisterGame(true)}
         showReset={clockState !== "idle"}
+      />
+
+      {/* Register Game modal */}
+      <RegisterGameModal
+        isOpen={showRegisterGame}
+        onClose={() => setShowRegisterGame(false)}
+        baseMinutes={Math.round(clockConfig.baseMs / 60000)}
+        incrementSeconds={Math.round(clockConfig.incrementMs / 1000)}
+        onGameReady={(sessionId) => {
+          setActiveGameSessionId(sessionId);
+          setShowRegisterGame(false);
+        }}
       />
 
       {/* Settings panel */}
@@ -681,6 +740,19 @@ export default function ChessClock() {
           config={clockConfig}
           onApply={handleApplySettings}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Game Result modal */}
+      {showGameResult && activeGameSessionId && (
+        <GameResultModal
+          isOpen={showGameResult}
+          onClose={() => {
+            setShowGameResult(false);
+            setActiveGameSessionId(null);
+          }}
+          sessionId={activeGameSessionId}
+          flaggedPlayer={clockState === "p1_flagged" ? "p1" : clockState === "p2_flagged" ? "p2" : null}
         />
       )}
 

@@ -6258,3 +6258,92 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Manual fallback lock-in and recommended mode copy
 - [x] Route added to App.tsx (admin-protected)
 - [ ] Link in dashboard navigation
+
+## Phase 7: Chessnut Board Engine (Piece Recognition + Calibration)
+- [x] chessnutPieceMap.ts — configurable nibble→piece mapping, calibration profiles, localStorage persistence
+- [x] chessnutBoardDecoder.ts — 32-byte payload decoder, FEN builder, orientation detection, starting position validator
+- [x] ChessnutBoardEngine.ts — debounced move detection, stabilization, duplicate protection, legal move inference, auto-calibration
+- [x] ChessnutBoardPanel.tsx — 5-section operator UI (Connection, Calibration, Piece Recognition, Move Tracking, Readiness)
+- [x] BroadcastConsole.tsx — Chrome Bluetooth mode now uses ChessnutBoardPanel instead of ChessnutChromeBTPanel
+- [x] 36 new tests for decoder/piece-map (127 total, all passing)
+- [x] TypeScript: 0 errors across entire codebase
+
+## Phase 7b: Raw BLE → Engine Wiring
+- [x] ChessnutWebBluetoothAdapter: add _rawBoardDataCallback field and onRawBoardData(cb) public method
+- [x] _onFenNotification: emit raw DataView to callback before legacy PIECE_MAP parsing
+- [x] ChessnutBoardPanel: replace processBoardUpdate override with adapter.onRawBoardData → engine.processBlePayload(dv)
+- [x] 6 new tests for onRawBoardData (registration, ordering, no-throw, integration via _onFenNotification)
+- [x] TypeScript: 0 errors. Tests: 133/133 passing.
+
+## Phase 7c: Auto-Tracking UX — Zero Manual Steps
+- [x] ChessnutBoardEngine: auto-enable tracking immediately after calibration completes
+- [x] ChessnutBoardEngine: auto-enable tracking on connect if a saved calibration profile already exists
+- [x] ChessnutBoardPanel: collapse advanced sections (Calibration, Piece Recognition, Move Tracking, Readiness) by default — show only Connection section
+- [x] ChessnutBoardPanel: replace multi-section layout with a single inline progress flow (Connecting → Calibrating → Ready → Tracking)
+- [x] ChessnutBoardPanel: show a clear "Tracking Active" green banner when moves are being registered
+- [x] ChessnutBoardPanel: keep advanced sections accessible via an "Advanced" toggle for power users
+
+## Phase 7d: Auto-Reconnect with Exponential Backoff
+- [x] ChessnutWebBluetoothAdapter: listen for gattserverdisconnected event
+- [x] ChessnutWebBluetoothAdapter: auto-reconnect up to 3 times with exponential backoff (1s, 2s, 4s)
+- [x] ChessnutWebBluetoothAdapter: expose reconnecting status and attempt count in AdapterState
+- [x] ChessnutBoardPanel: add "reconnecting" step to progress strip between Connect and Calibrate
+- [x] ChessnutBoardPanel: show attempt count and countdown timer during reconnect
+- [x] Tests: 8 new tests for reconnect logic (141 total, all passing)
+
+## Phase 7e: Live 8×8 Board Grid in Advanced Panel
+- [x] LiveBoardGrid component: 8×8 grid with rank/file labels and Unicode chess symbols
+- [x] Colour coding: green = physical matches digital, amber = unknown nibble, red = mismatch, neutral = empty
+- [x] Hover tooltip on each square showing physical piece, digital piece, and status
+- [x] Inline legend (OK / Unknown / Mismatch) in grid header
+- [x] Inserted into Piece Recognition section of Advanced panel
+- [x] TypeScript: 0 errors. Tests: 141/141 passing.
+
+## OTB ELO System — Full Feature Build
+
+### Phase 1: Data Model + Rating Service
+- [x] Schema: playerRatings table (user_id, category, rating, status, games_played, W/L/D)
+- [x] Schema: gameSessions table (host/opponent, time control, QR token, status, is_rated)
+- [x] Schema: gameResultSubmissions table (game_session_id, submitted_by, result)
+- [x] Schema: ratedGames table (official game record with rating changes)
+- [x] Schema: otbRatingHistory table (per-game rating snapshots)
+- [x] Rating service: Elo calculation (expected score, K-factor, new rating)
+- [x] Rating service: getOrCreatePlayerRating, determineRatingCategory
+- [x] Rating service: processConfirmedGameRating with duplicate prevention
+- [x] Run pnpm db:push to migrate
+
+### Phase 2: Game Registration Flow
+- [x] Server: POST /api/otb-games (create session, generate QR token)
+- [x] Server: GET /api/otb-games/:id (get session status)
+- [x] Client: "Register Game" button on clock page
+- [x] Client: Registration modal (rated toggle, time control, QR display)
+
+### Phase 3: Opponent Join Flow
+- [x] Server: POST /api/otb-games/join/:qrToken (attach opponent)
+- [x] Client: /game/join/:token route
+- [x] Client: Join page (host info, time control, username input)
+- [x] Anti-abuse: self-play prevention, QR expiry
+
+### Phase 4: Clock Session Integration
+- [x] Connect registered session to clock state
+- [x] Update session status on clock start/end (PATCH /:id/status)
+- [x] Route to results on game completion (GameResultModal auto-shows on flag)
+
+### Phase 5: Result Confirmation Flow
+- [x] Server: POST /api/otb-games/:id/result (submit result)
+- [x] Server: result matching logic + dispute detection
+- [x] Server: trigger rating processing on confirmed match
+- [x] Client: GameResultModal (White Wins / Black Wins / Draw)
+- [x] Client: waiting state, confirmation display, dispute UI
+
+### Phase 6: User Profile Integration
+- [x] Server: GET /api/otb-games/ratings/:userId
+- [x] Client: OtbRatingCard on profile page
+- [x] Display: provisional / rated / established tier badges
+- [x] Display: rating number, W/L/D record
+
+### Phase 7: Leaderboard + Anti-Abuse + Tests
+- [x] Server: GET /api/otb-games/leaderboard/:category (blitz/rapid)
+- [x] Client: OtbLeaderboard page at /otb/leaderboard
+- [x] Anti-abuse: self-play prevention, session expiry, valid status transitions
+- [x] Tests: 29 new tests (rating calc, K-factor, time control, anti-abuse) — 170 total passing

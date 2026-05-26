@@ -1822,3 +1822,165 @@ export const liveBridgeSessions = mysqlTable(
 );
 export type LiveBridgeSessionRow = typeof liveBridgeSessions.$inferSelect;
 export type NewLiveBridgeSessionRow = typeof liveBridgeSessions.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OTB ELO SYSTEM — Tables for the proprietary ChessOTB rating engine
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── player_ratings ───────────────────────────────────────────────────────────
+// One row per (user, category). Stores the user's current OTB rating state.
+// Categories: "otb_blitz" | "otb_rapid"
+// Status progression: unrated → provisional → rated → established
+export const playerRatings = mysqlTable(
+  "player_ratings",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    // "otb_blitz" | "otb_rapid"
+    category: varchar("category", { length: 20 }).notNull(),
+    // Current calculated rating (updates even during provisional phase)
+    rating: int("rating").notNull().default(1000),
+    // "unrated" | "provisional" | "rated" | "established"
+    status: varchar("status", { length: 20 }).notNull().default("unrated"),
+    gamesPlayed: int("games_played").notNull().default(0),
+    wins: int("wins").notNull().default(0),
+    losses: int("losses").notNull().default(0),
+    draws: int("draws").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userCategoryIdx: uniqueIndex("pr_user_category_idx").on(table.userId, table.category),
+    categoryStatusIdx: index("pr_category_status_idx").on(table.category, table.status),
+    categoryRatingIdx: index("pr_category_rating_idx").on(table.category, table.rating),
+  })
+);
+export type PlayerRatingRow = typeof playerRatings.$inferSelect;
+export type NewPlayerRatingRow = typeof playerRatings.$inferInsert;
+
+// ─── game_sessions ────────────────────────────────────────────────────────────
+// One row per registered OTB game. Tracks the full lifecycle from creation
+// through QR join, clock play, result submission, and final confirmation.
+export const gameSessions = mysqlTable(
+  "game_sessions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    hostUserId: varchar("host_user_id", { length: 36 }).notNull(),
+    opponentUserId: varchar("opponent_user_id", { length: 36 }),
+    hostDisplayName: varchar("host_display_name", { length: 100 }).notNull(),
+    opponentDisplayName: varchar("opponent_display_name", { length: 100 }),
+    hostChesscomUsername: varchar("host_chesscom_username", { length: 100 }),
+    opponentChesscomUsername: varchar("opponent_chesscom_username", { length: 100 }),
+    // "blitz" | "rapid" | "casual"
+    timeControlCategory: varchar("time_control_category", { length: 20 }).notNull(),
+    baseMinutes: int("base_minutes").notNull(),
+    incrementSeconds: int("increment_seconds").notNull().default(0),
+    // Session lifecycle status
+    // "pending_opponent" | "opponent_joined" | "clock_started" | "game_completed" |
+    // "awaiting_results" | "result_confirmed" | "result_disputed" | "cancelled"
+    status: varchar("status", { length: 30 }).notNull().default("pending_opponent"),
+    // QR/join link token
+    qrToken: varchar("qr_token", { length: 64 }).notNull(),
+    qrExpiresAt: timestamp("qr_expires_at").notNull(),
+    isRated: boolean("is_rated").notNull().default(true),
+    ratingProcessed: boolean("rating_processed").notNull().default(false),
+    // Which device is the active clock (nullable — chosen after opponent joins)
+    activeClockDeviceId: varchar("active_clock_device_id", { length: 64 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    qrTokenIdx: uniqueIndex("gs_qr_token_idx").on(table.qrToken),
+    hostIdx: index("gs_host_idx").on(table.hostUserId),
+    opponentIdx: index("gs_opponent_idx").on(table.opponentUserId),
+    statusIdx: index("gs_status_idx").on(table.status),
+  })
+);
+export type GameSessionRow = typeof gameSessions.$inferSelect;
+export type NewGameSessionRow = typeof gameSessions.$inferInsert;
+
+// ─── game_result_submissions ──────────────────────────────────────────────────
+// Each player submits their perspective on the game result.
+// Two matching submissions trigger rating processing.
+export const gameResultSubmissions = mysqlTable(
+  "game_result_submissions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    gameSessionId: varchar("game_session_id", { length: 36 }).notNull(),
+    submittedByUserId: varchar("submitted_by_user_id", { length: 36 }).notNull(),
+    // Canonical result from host's perspective: "host_win" | "opponent_win" | "draw" | "cancelled"
+    submittedResult: varchar("submitted_result", { length: 20 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    gameUserIdx: uniqueIndex("grs_game_user_idx").on(table.gameSessionId, table.submittedByUserId),
+    gameIdx: index("grs_game_idx").on(table.gameSessionId),
+  })
+);
+export type GameResultSubmissionRow = typeof gameResultSubmissions.$inferSelect;
+export type NewGameResultSubmissionRow = typeof gameResultSubmissions.$inferInsert;
+
+// ─── rated_games ──────────────────────────────────────────────────────────────
+// Official game record created after both players confirm a compatible result.
+// Stores the rating snapshot before/after for both players.
+export const ratedGames = mysqlTable(
+  "rated_games",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    gameSessionId: varchar("game_session_id", { length: 36 }).notNull(),
+    hostUserId: varchar("host_user_id", { length: 36 }).notNull(),
+    opponentUserId: varchar("opponent_user_id", { length: 36 }).notNull(),
+    // null for draws
+    winnerUserId: varchar("winner_user_id", { length: 36 }),
+    // "host_win" | "opponent_win" | "draw"
+    result: varchar("result", { length: 20 }).notNull(),
+    // "otb_blitz" | "otb_rapid"
+    ratingCategory: varchar("rating_category", { length: 20 }).notNull(),
+    hostRatingBefore: int("host_rating_before").notNull(),
+    hostRatingAfter: int("host_rating_after").notNull(),
+    opponentRatingBefore: int("opponent_rating_before").notNull(),
+    opponentRatingAfter: int("opponent_rating_after").notNull(),
+    hostRatingChange: int("host_rating_change").notNull(),
+    opponentRatingChange: int("opponent_rating_change").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    gameSessionIdx: uniqueIndex("rg_game_session_idx").on(table.gameSessionId),
+    hostIdx: index("rg_host_idx").on(table.hostUserId),
+    opponentIdx: index("rg_opponent_idx").on(table.opponentUserId),
+    categoryIdx: index("rg_category_idx").on(table.ratingCategory),
+  })
+);
+export type RatedGameRow = typeof ratedGames.$inferSelect;
+export type NewRatedGameRow = typeof ratedGames.$inferInsert;
+
+// ─── otb_rating_history ───────────────────────────────────────────────────────
+// Per-game rating change log. One row per player per confirmed rated game.
+// Used for rating charts and game history on profiles.
+export const otbRatingHistory = mysqlTable(
+  "otb_rating_history",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    gameSessionId: varchar("game_session_id", { length: 36 }).notNull(),
+    // "otb_blitz" | "otb_rapid"
+    ratingCategory: varchar("rating_category", { length: 20 }).notNull(),
+    ratingBefore: int("rating_before").notNull(),
+    ratingAfter: int("rating_after").notNull(),
+    ratingChange: int("rating_change").notNull(),
+    opponentUserId: varchar("opponent_user_id", { length: 36 }).notNull(),
+    opponentRatingBefore: int("opponent_rating_before").notNull(),
+    // "win" | "loss" | "draw"
+    result: varchar("result", { length: 10 }).notNull(),
+    kFactor: int("k_factor").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userCategoryIdx: index("orh_user_category_idx").on(table.userId, table.ratingCategory),
+    gameIdx: index("orh_game_idx").on(table.gameSessionId),
+  })
+);
+export type OtbRatingHistoryRow = typeof otbRatingHistory.$inferSelect;
+export type NewOtbRatingHistoryRow = typeof otbRatingHistory.$inferInsert;

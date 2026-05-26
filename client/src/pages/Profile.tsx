@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { RatingProgressChart } from "@/components/RatingProgressChart";
+import { OtbRatingCard } from "@/components/OtbRatingCard";
 import { AvatarNavDropdown } from "../components/AvatarNavDropdown";
 import { listTournaments, TournamentConfig } from "../lib/tournamentRegistry";
 import { loadTournamentState } from "../lib/directorState";
@@ -694,6 +695,9 @@ export default function ProfilePage() {
         {user.chesscomUsername && (
           <RatingProgressChart isDark={isDark} />
         )}
+
+        {/* OTB Rating card */}
+        <OtbRatingCard isDark={isDark} />
 
         {/* Tournaments card */}
         <div className={`rounded-3xl border p-6 ${card}`}>

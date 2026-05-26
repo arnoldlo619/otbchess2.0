@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { ChessnutChromeBTPanel } from "@/components/ChessnutChromeBTPanel";
+import { ChessnutBoardPanel } from "@/components/ChessnutBoardPanel";
 import { QRCodeSVG } from "qrcode.react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1358,8 +1359,8 @@ export default function BroadcastConsole() {
                 </button>
                 {/* Chrome BT Panel — inline when active */}
                 {broadcast?.inputSource === "chessnut_chrome_bluetooth" && (
-                  <div className="mt-2 rounded-xl border border-purple-500/20 overflow-hidden">
-                    <ChessnutChromeBTPanel
+                  <div className="mt-2">
+                    <ChessnutBoardPanel
                       broadcastId={broadcast.id}
                       currentFen={fen}
                       onMoveAccepted={submitMove}

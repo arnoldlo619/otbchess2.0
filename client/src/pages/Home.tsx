@@ -61,6 +61,8 @@ import {
   Maximize2,
   Link2,
   GraduationCap,
+  Timer,
+  Star as StarIcon,
 } from "lucide-react";
 import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
@@ -1164,20 +1166,20 @@ const CAROUSEL_SLIDES = [
     screenshotObjectFit: "contain" as const,
   },
   {
-    id: "openings",
-    badge: "Openings & Repertoire",
-    badgeIcon: <BookOpen className="w-3.5 h-3.5" />,
-    headline: "Build your opening\nrepertoire.",
-    sub: "Study 18+ openings with interactive chessboards, expert coaching notes, and spaced-repetition drills — purpose-built for OTB club players who want to arrive prepared.",
+    id: "rated-game",
+    badge: "OTB Rated Games",
+    badgeIcon: <Trophy className="w-3.5 h-3.5" />,
+    headline: "Play rated.\nEarn your OTB ELO.",
+    sub: "Register a rated game on the chess clock, share a QR code with your opponent, and your OTB Elo updates automatically when the game ends — no arbiter required.",
     bullets: [
-      { icon: <BookOpen className="w-4 h-4" />, text: "18+ openings with ECO codes, themes, and coaching notes" },
-      { icon: <GraduationCap className="w-4 h-4" />, text: "Interactive board study with move-by-move explanations" },
-      { icon: <Brain className="w-4 h-4" />, text: "Spaced-repetition drills — Chessable-style, for OTB" },
+      { icon: <Timer className="w-4 h-4" />, text: "Built into the clock — register a rated game in seconds" },
+      { icon: <StarIcon className="w-4 h-4" />, text: "Earn a real OTB Blitz and Rapid Elo, tracked over time" },
+      { icon: <TrendingUp className="w-4 h-4" />, text: "Leaderboard, W/L/D record, and rating history on your profile" },
     ],
-    cta: { label: "Explore Openings", href: "/openings" },
+    cta: { label: "Play a Rated Game", href: "/clock?register=true" },
     ctaSecondary: null,
-    screenshot: "https://files.manuscdn.com/user_upload_by_module/session_file/117675823/GQIyLOLccvTIgVEV.webp",
-    screenshotAlt: "Openings Library — Featured openings with chessboard previews",
+    screenshot: "https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-rated-game-screenshot-YixCiv4w3F9hZ7y7Fzy6zt.webp",
+    screenshotAlt: "OTB Rated Game — Register modal with QR code on chess clock",
   },
   {
     id: "prep",

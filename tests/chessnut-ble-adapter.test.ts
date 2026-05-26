@@ -140,4 +140,85 @@ describe("ChessnutWebBluetoothAdapter — pure logic", () => {
   it("getDiagnosticServices returns empty array initially", () => {
     expect(adapter.getDiagnosticServices()).toEqual([]);
   });
+
+  // ─── onRawBoardData ──────────────────────────────────────────────────────────
+  it("onRawBoardData callback is registered without error", () => {
+    const cb = (_dv: DataView) => {};
+    expect(() => adapter.onRawBoardData(cb)).not.toThrow();
+  });
+
+  it("onRawBoardData can be overwritten with a new callback", () => {
+    const calls: number[] = [];
+    adapter.onRawBoardData((_dv) => calls.push(1));
+    adapter.onRawBoardData((_dv) => calls.push(2));
+    // Verify the second registration replaced the first (no throw)
+    expect(calls).toHaveLength(0); // no notification fired yet
+  });
+
+  it("onRawBoardData can be cleared by registering a no-op", () => {
+    expect(() => adapter.onRawBoardData(() => {})).not.toThrow();
+  });
+});
+
+// ─── onRawBoardData integration: simulate a BLE notification via _onFenNotification ───
+describe("ChessnutWebBluetoothAdapter — onRawBoardData wiring", () => {
+  it("fires callback with the exact DataView from a simulated BLE notification", () => {
+    const adapter2 = new ChessnutWebBluetoothAdapter("test-id-2");
+    const dv = buildMockPayloadFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    const received: DataView[] = [];
+    adapter2.onRawBoardData((d) => received.push(d));
+
+    // Simulate the BLE notification by calling the private handler via a
+    // synthetic Event object (same pattern used in existing adapter tests).
+    const event = {
+      target: {
+        uuid: "1b7e8262-2877-41c3-b46e-cf057c562023",
+        value: dv,
+      },
+    } as unknown as Event;
+
+    // Access private method via type cast
+    (adapter2 as unknown as { _onFenNotification: (e: Event) => void })
+      ._onFenNotification(event);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]).toBe(dv); // same reference — no copy
+    expect(received[0].byteLength).toBe(36);
+  });
+
+  it("fires callback before parseBoardState is called (raw-first ordering)", () => {
+    const adapter3 = new ChessnutWebBluetoothAdapter("test-id-3");
+    const dv = buildMockPayloadFromFen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+
+    const order: string[] = [];
+    adapter3.onRawBoardData(() => order.push("raw"));
+    adapter3.onBoardState(() => order.push("parsed"));
+
+    const event = {
+      target: { uuid: "1b7e8262-2877-41c3-b46e-cf057c562023", value: dv },
+    } as unknown as Event;
+
+    (adapter3 as unknown as { _onFenNotification: (e: Event) => void })
+      ._onFenNotification(event);
+
+    // raw callback must fire before the parsed boardState callback
+    expect(order[0]).toBe("raw");
+    expect(order[1]).toBe("parsed");
+  });
+
+  it("does not fire if no callback is registered", () => {
+    const adapter4 = new ChessnutWebBluetoothAdapter("test-id-4");
+    const dv = buildMockPayloadFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    const event = {
+      target: { uuid: "1b7e8262-2877-41c3-b46e-cf057c562023", value: dv },
+    } as unknown as Event;
+
+    // Should not throw even with no callback registered
+    expect(() =>
+      (adapter4 as unknown as { _onFenNotification: (e: Event) => void })
+        ._onFenNotification(event)
+    ).not.toThrow();
+  });
 });

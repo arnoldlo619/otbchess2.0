@@ -125,6 +125,12 @@ const STATUS_CONFIG: Record<AdapterStatus, {
     icon: <BluetoothOff className="w-3.5 h-3.5" />,
     pulse: false,
   },
+  reconnecting: {
+    label: "Reconnecting",
+    color: "text-amber-400 border-amber-400/30 bg-amber-400/10",
+    icon: <RefreshCw className="w-3.5 h-3.5 animate-spin" />,
+    pulse: true,
+  },
   error: {
     label: "Error",
     color: "text-red-400 border-red-400/30 bg-red-400/10",

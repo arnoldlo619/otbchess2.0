@@ -27,6 +27,7 @@ import { createBillingRouter } from "./billing.js";
 import { createAdminStaffRouter } from "./adminStaff.js";
 import { createRepertoireBuilderRouter } from "./repertoireBuilder.js";
 import broadcastsRouter from "./broadcasts.js";
+import otbGamesRouter from "./otbGames.js";
 import { registerStorageProxy } from "./storageProxy.js";
 export { _startCvJobQueue as startCvJobQueue };
 
@@ -975,6 +976,7 @@ export function createApp() {
   app.use("/api/admin/staff", createAdminStaffRouter());
   app.use("/api/repertoire-builder", createRepertoireBuilderRouter());
   app.use("/api/broadcasts", broadcastsRouter);
+  app.use("/api/otb-games", otbGamesRouter);
   registerStorageProxy(app);
   // ── Push: GET /api/push/vapid-public-key ───────────────────────────────────
   // Returns the VAPID public key so the client can subscribe.
