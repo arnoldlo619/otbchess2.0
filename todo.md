@@ -6348,3 +6348,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Anti-abuse: self-play prevention, session expiry, valid status transitions
 - [x] Tests: 29 new tests (rating calc, K-factor, time control, anti-abuse) — 170 total passing
 - [x] Server: rate-limit SSE connections per IP (max 3 per IP, shared across /stream and /players/stream, 429 on excess, 6 passing tests)
+
+## Chess Clock UI Redesign
+- [x] Dark forest green background (#0d1f12) matching landing page hero
+- [x] Subtle green grid texture overlay on each clock half
+- [x] Head-to-head Check-in panel on both halves (idle state): enter chess.com username, fetch avatar via existing proxy hook, show avatar/initials with Change button
+- [x] Check-in panel stops propagating tap events so typing does not start the clock
+- [x] Clock half shrinks time font when check-in panel is visible to avoid overflow
+- [x] Settings panel and Reset confirmation modal updated to forest green theme
