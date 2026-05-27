@@ -2793,6 +2793,29 @@ export default function Director() {
 
                     {/* Player roster with check-in chips */}
                     <div className="px-4 sm:px-6 py-3">
+                      {/* Column headers */}
+                      {state.players.length > 0 && (
+                        <div className={`flex items-center gap-2.5 px-3 pb-1.5 mb-1 border-b ${
+                          isDark ? "border-white/06" : "border-gray-100"
+                        }`}>
+                          {/* spacer: checkbox + rank + avatar + name */}
+                          <div className="w-5 flex-shrink-0" />
+                          <div className="w-4 flex-shrink-0" />
+                          <div className="w-[30px] flex-shrink-0" />
+                          <div className="flex-1 min-w-0" />
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider w-[62px] text-center flex-shrink-0 ${
+                            isDark ? "text-white/25" : "text-gray-400"
+                          }`}>Status</span>
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider w-[52px] text-right flex-shrink-0 ${
+                            isDark ? "text-white/25" : "text-gray-400"
+                          }`}>ELO</span>
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider w-[52px] text-right flex-shrink-0 ${
+                            isDark ? "text-white/25" : "text-gray-400"
+                          }`}>Payment</span>
+                          {/* spacer for remove button */}
+                          <div className="w-5 flex-shrink-0" />
+                        </div>
+                      )}
                       {state.players.length === 0 ? (
                         <div className={`flex flex-col items-center justify-center py-10 gap-3 ${
                           isDark ? "text-white/20" : "text-gray-300"
