@@ -2961,6 +2961,45 @@ export default function Director() {
                       )}
                     </div>
 
+                    {/* Payment summary footer */}
+                    {state.players.length > 0 && (() => {
+                      const paidCash = state.players.filter((p) => p.paymentStatus === "cash").length;
+                      const paidCard = state.players.filter((p) => p.paymentStatus === "card").length;
+                      const totalPaid = paidCash + paidCard;
+                      const unpaid = state.players.length - totalPaid;
+                      return (
+                        <div className={`mx-4 sm:mx-6 mb-2 px-4 py-2.5 rounded-xl flex items-center justify-between gap-3 ${
+                          isDark ? "bg-white/04 border border-white/06" : "bg-gray-50 border border-gray-100"
+                        }`}>
+                          <span className={`text-[11px] font-semibold uppercase tracking-widest ${
+                            isDark ? "text-white/35" : "text-gray-400"
+                          }`}>Payments</span>
+                          <div className="flex items-center gap-3">
+                            {paidCash > 0 && (
+                              <span className={`text-[11px] font-bold ${
+                                isDark ? "text-emerald-400" : "text-emerald-600"
+                              }`}>💵 {paidCash} cash</span>
+                            )}
+                            {paidCard > 0 && (
+                              <span className={`text-[11px] font-bold ${
+                                isDark ? "text-blue-400" : "text-blue-600"
+                              }`}>💳 {paidCard} card</span>
+                            )}
+                            {unpaid > 0 && (
+                              <span className={`text-[11px] font-bold ${
+                                isDark ? "text-white/30" : "text-gray-400"
+                              }`}>{unpaid} unpaid</span>
+                            )}
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                              totalPaid === state.players.length
+                                ? isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-100 text-emerald-700"
+                                : isDark ? "bg-white/08 text-white/50" : "bg-gray-200 text-gray-500"
+                            }`}>{totalPaid}/{state.players.length} paid</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Walk-in quick-add + Actions footer */}
                     <div className={`px-4 sm:px-6 py-4 border-t space-y-3 ${
                       isDark ? "border-white/06" : "border-gray-100"
