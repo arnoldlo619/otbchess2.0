@@ -2796,24 +2796,27 @@ export default function Director() {
                       {/* Column headers */}
                       {state.players.length > 0 && (
                         <div className={`flex items-center gap-2.5 px-3 pb-1.5 mb-1 border-b ${
-                          isDark ? "border-white/06" : "border-gray-100"
+                          isDark ? "border-white/08" : "border-gray-200"
                         }`}>
-                          {/* spacer: checkbox + rank + avatar + name */}
+                          {/* Match row layout: checkbox(w-5) + rank(w-4) + avatar(w-[30px]) + name(flex-1) */}
                           <div className="w-5 flex-shrink-0" />
                           <div className="w-4 flex-shrink-0" />
                           <div className="w-[30px] flex-shrink-0" />
                           <div className="flex-1 min-w-0" />
-                          <span className={`text-[10px] font-semibold uppercase tracking-wider w-[62px] text-center flex-shrink-0 ${
-                            isDark ? "text-white/25" : "text-gray-400"
+                          {/* Status: chip is ~62px wide, center-align header over it */}
+                          <span className={`text-[10px] font-semibold uppercase tracking-widest flex-shrink-0 w-[62px] text-center ${
+                            isDark ? "text-white/50" : "text-gray-500"
                           }`}>Status</span>
-                          <span className={`text-[10px] font-semibold uppercase tracking-wider w-[52px] text-right flex-shrink-0 ${
-                            isDark ? "text-white/25" : "text-gray-400"
+                          {/* ELO: column is ~52px, right-aligned */}
+                          <span className={`text-[10px] font-semibold uppercase tracking-widest flex-shrink-0 w-[52px] text-right ${
+                            isDark ? "text-white/50" : "text-gray-500"
                           }`}>ELO</span>
-                          <span className={`text-[10px] font-semibold uppercase tracking-wider w-[52px] text-right flex-shrink-0 ${
-                            isDark ? "text-white/25" : "text-gray-400"
+                          {/* Payment: two stacked buttons ~52px wide */}
+                          <span className={`text-[10px] font-semibold uppercase tracking-widest flex-shrink-0 w-[52px] text-right ${
+                            isDark ? "text-white/50" : "text-gray-500"
                           }`}>Payment</span>
-                          {/* spacer for remove button */}
-                          <div className="w-5 flex-shrink-0" />
+                          {/* edit + remove buttons (hidden until hover, but reserve space) */}
+                          <div className="w-[52px] flex-shrink-0" />
                         </div>
                       )}
                       {state.players.length === 0 ? (
