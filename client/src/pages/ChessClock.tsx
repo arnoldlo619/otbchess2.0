@@ -29,6 +29,8 @@ const FOREST_BG = "#0d1f12";        // landing page hero dark green
 const GREEN_ACTIVE = "#22c55e";     // chess.com green (active clock)
 const GREEN_DIM = "#1a3d22";        // dimmed green (inactive half, idle)
 const RED_FLAG = "#c0392b";         // flagged
+const AMBER_WARN = "#d97706";       // sub-60s warning amber
+const AMBER_DIM  = "#3d2800";       // dimmed amber (inactive half, sub-60s)
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ClockState = "idle" | "p1_running" | "p2_running" | "paused" | "p1_flagged" | "p2_flagged";
@@ -304,6 +306,9 @@ function ClockHalf({
   let bgColor: string;
   let textColor: string;
 
+  // Sub-60s warning threshold
+  const isLowTime = !isFlagged && timeMs > 0 && timeMs < 60_000;
+
   if (isFlagged) {
     bgColor = RED_FLAG;
     textColor = "#ffffff";
@@ -311,14 +316,15 @@ function ClockHalf({
     bgColor = isActive ? GREEN_ACTIVE : GREEN_DIM;
     textColor = "#ffffff";
   } else if (isActive) {
-    bgColor = GREEN_ACTIVE;
+    bgColor = isLowTime ? AMBER_WARN : GREEN_ACTIVE;
     textColor = "#ffffff";
   } else {
-    bgColor = GREEN_DIM;
+    bgColor = isLowTime ? AMBER_DIM : GREEN_DIM;
     textColor = "rgba(255,255,255,0.55)";
   }
 
   const displayTime = formatClockMs(timeMs);
+  // Urgent pulse only in final 10 s
   const isUrgent = isActive && !isFlagged && timeMs < 10_000 && timeMs > 0;
 
   // When idle, show the check-in panel overlaid on the half
@@ -351,6 +357,14 @@ function ClockHalf({
           transition: "opacity 0.3s",
         }}
       />
+
+      {/* Sub-60s slow amber pulse overlay — visible on the active half only */}
+      {isLowTime && isActive && (
+        <div
+          className="absolute inset-0 pointer-events-none animate-[lowTimePulse_1.4s_ease-in-out_infinite]"
+          style={{ background: "rgba(217,119,6,0.18)", zIndex: 0 }}
+        />
+      )}
 
       {/* ── Central content (always timer-dominant) ── */}
       <div
