@@ -302,14 +302,22 @@ function ClockHalf({
   const showCheckIn = isIdle;
 
   return (
-    <button
-      onClick={onTap}
+    <div
       className={`flex-1 w-full flex flex-col items-center justify-center select-none touch-none relative transition-colors duration-150 ${
         isUrgent ? "animate-pulse" : ""
       }`}
       style={{ backgroundColor: bgColor }}
       aria-label={flipped ? "Player 2 clock" : "Player 1 clock"}
     >
+      {/* Full-area tap target — sits behind the check-in panel when idle */}
+      <div
+        onClick={onTap}
+        className="absolute inset-0 z-0"
+        role="button"
+        aria-label={flipped ? "Player 2 clock" : "Player 1 clock"}
+        tabIndex={0}
+        onKeyDown={(e) => e.key === " " || e.key === "Enter" ? onTap() : undefined}
+      />
       {/* Subtle grid texture overlay matching landing page */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -333,11 +341,11 @@ function ClockHalf({
           width: "100%",
         }}
       >
-        {/* Check-in panel — shown when idle */}
+        {/* Check-in panel — shown when idle, z-index above tap overlay */}
         {showCheckIn && (
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ width: "100%" }}
+            style={{ width: "100%", position: "relative", zIndex: 2 }}
           >
             <CheckInPanel
               flipped={false}
@@ -385,7 +393,7 @@ function ClockHalf({
           </div>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
