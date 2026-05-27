@@ -119,7 +119,7 @@ async function exportCardAsPng(
 ): Promise<void> {
   const { toPng } = await import("html-to-image");
   const dataUrl = await toPng(element, {
-    pixelRatio: 2,
+    pixelRatio: 3,
     fetchRequestInit: { mode: "cors" },
     // Ensure the hidden off-screen element is fully captured
     width: element.offsetWidth || (element as HTMLElement).scrollWidth,
@@ -135,7 +135,7 @@ async function exportCardAsPng(
 async function renderCardToBlob(element: HTMLElement): Promise<Blob> {
   const { toBlob } = await import("html-to-image");
   const blob = await toBlob(element, {
-    pixelRatio: 2,
+    pixelRatio: 3,
     fetchRequestInit: { mode: "cors" },
     width: element.offsetWidth || (element as HTMLElement).scrollWidth,
     height: element.offsetHeight || (element as HTMLElement).scrollHeight,

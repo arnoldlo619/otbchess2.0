@@ -6356,3 +6356,8 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Check-in panel stops propagating tap events so typing does not start the clock
 - [x] Clock half shrinks time font when check-in panel is visible to avoid overflow
 - [x] Settings panel and Reset confirmation modal updated to forest green theme
+
+## Player Performance Card — Instagram Sizing
+- [x] Resize forExport card from 900x1200 to 1080x1350 (Instagram 4:5 portrait ratio)
+- [x] Scale all forExport font sizes, padding, and spacing proportionally for 1080px width
+- [x] Raise pixelRatio from 2 to 3 in exportCardAsPng and renderCardToBlob for crisp output
