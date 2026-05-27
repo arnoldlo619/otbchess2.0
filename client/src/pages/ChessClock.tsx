@@ -22,6 +22,7 @@ import { useClockSounds } from "@/hooks/useClockSounds";
 import { RegisterGameModal } from "@/components/RegisterGameModal";
 import { GameResultModal } from "@/components/GameResultModal";
 import { useChessAvatar, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
+import { fetchFromChessCom } from "@/hooks/useChessComProfile";
 
 // ─── Brand colors ─────────────────────────────────────────────────────────────
 const FOREST_BG = "#0d1f12";        // landing page hero dark green
@@ -166,16 +167,26 @@ function CheckInPanel({
   const [submitted, setSubmitted] = useState(!!username);
   const { url: avatarUrl, status } = useChessAvatar(submitted ? input.trim() : null);
   const proxied = toProxiedAvatarUrl(avatarUrl);
+  const [ratings, setRatings] = useState<{ blitz: number; rapid: number } | null>(null);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
 
   const handleSubmit = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
     setSubmitted(true);
     onConfirm(trimmed);
+    // Fetch Blitz + Rapid ratings
+    setRatingsLoading(true);
+    setRatings(null);
+    fetchFromChessCom(trimmed)
+      .then((p) => setRatings({ blitz: p.blitz, rapid: p.rapid }))
+      .catch(() => setRatings(null))
+      .finally(() => setRatingsLoading(false));
   };
 
   const handleEdit = () => {
     setSubmitted(false);
+    setRatings(null);
     onConfirm("");
   };
 
@@ -239,6 +250,33 @@ function CheckInPanel({
             )}
           </div>
           <p className="text-white font-bold text-sm truncate max-w-[160px]">{input.trim()}</p>
+          {/* Blitz / Rapid ELO badges */}
+          {ratingsLoading && (
+            <div className="flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" style={{ color: GREEN_ACTIVE }} />
+              <span className="text-white/30 text-[11px]">Loading ratings…</span>
+            </div>
+          )}
+          {!ratingsLoading && ratings && (
+            <div className="flex items-center gap-2">
+              {ratings.rapid > 0 && (
+                <span
+                  className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(34,197,94,0.18)", color: GREEN_ACTIVE }}
+                >
+                  ⚡ {ratings.rapid}
+                </span>
+              )}
+              {ratings.blitz > 0 && (
+                <span
+                  className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(59,130,246,0.18)", color: "#60a5fa" }}
+                >
+                  🔥 {ratings.blitz}
+                </span>
+              )}
+            </div>
+          )}
           <button
             onClick={handleEdit}
             className="text-[11px] font-semibold px-3 py-1 rounded-full"
