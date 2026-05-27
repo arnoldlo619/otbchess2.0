@@ -151,8 +151,8 @@ function SettingsPanel({
 
 // ─── Check-in Input Panel ─────────────────────────────────────────────────────
 /**
- * Shown on each half when the clock is idle.
- * Lets the player type their chess.com username and confirms with their avatar.
+ * Compact bottom-anchored strip shown when the clock is idle.
+ * Timer stays dominant; check-in lives in a slim bar at the edge of each half.
  */
 function CheckInPanel({
   flipped,
@@ -175,7 +175,6 @@ function CheckInPanel({
     if (!trimmed) return;
     setSubmitted(true);
     onConfirm(trimmed);
-    // Fetch Blitz + Rapid ratings
     setRatingsLoading(true);
     setRatings(null);
     fetchFromChessCom(trimmed)
@@ -190,106 +189,92 @@ function CheckInPanel({
     onConfirm("");
   };
 
-  const content = (
+  return (
     <div
-      className="flex flex-col items-center justify-center gap-3 px-6 py-4 w-full"
-      style={{ transform: flipped ? "rotate(180deg)" : "none" }}
+      className="flex items-center gap-2 px-4 py-2"
+      style={{
+        transform: flipped ? "rotate(180deg)" : "none",
+        background: "rgba(0,0,0,0.28)",
+        borderRadius: "0.75rem",
+        backdropFilter: "blur(8px)",
+        maxWidth: 280,
+        width: "100%",
+      }}
     >
+      {/* Avatar / icon */}
+      <div
+        className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
+        style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)" }}
+      >
+        {submitted && status === "loading" ? (
+          <Loader2 className="w-4 h-4 animate-spin" style={{ color: GREEN_ACTIVE }} />
+        ) : submitted && proxied ? (
+          <img src={proxied} alt={input} className="w-full h-full object-cover" />
+        ) : submitted ? (
+          <span className="text-white/70 text-sm font-bold uppercase">{input.trim().charAt(0)}</span>
+        ) : (
+          <UserCircle2 className="w-4 h-4" style={{ color: "rgba(34,197,94,0.55)" }} />
+        )}
+      </div>
+
       {!submitted ? (
+        /* Input row */
         <>
-          {/* Icon placeholder */}
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center mb-1"
-            style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.25)" }}
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            placeholder="chess.com username"
+            className="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs text-white placeholder-white/25 font-medium outline-none"
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          <button
+            onClick={handleSubmit}
+            disabled={!input.trim()}
+            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
+            style={{ background: GREEN_ACTIVE }}
+            aria-label="Confirm username"
           >
-            <UserCircle2 className="w-7 h-7" style={{ color: "rgba(34,197,94,0.6)" }} />
-          </div>
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-widest">Check In</p>
-          <div className="flex items-center gap-2 w-full max-w-[200px]">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="chess.com username"
-              className="flex-1 min-w-0 px-3 py-2 rounded-xl text-sm text-white placeholder-white/25 font-medium outline-none"
-              style={{
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(34,197,94,0.2)",
-              }}
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!input.trim()}
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
-              style={{ background: GREEN_ACTIVE }}
-              aria-label="Confirm username"
-            >
-              <CheckCircle2 className="w-4 h-4 text-white" />
-            </button>
-          </div>
+            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+          </button>
         </>
       ) : (
+        /* Confirmed row */
         <>
-          {/* Avatar */}
-          <div
-            className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(34,197,94,0.12)", border: "2px solid rgba(34,197,94,0.35)" }}
-          >
-            {status === "loading" ? (
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: GREEN_ACTIVE }} />
-            ) : proxied ? (
-              <img src={proxied} alt={input} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-white/70 text-xl font-bold uppercase">
-                {input.trim().charAt(0)}
-              </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-bold truncate leading-tight">{input.trim()}</p>
+            {ratingsLoading && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <Loader2 className="w-2.5 h-2.5 animate-spin" style={{ color: GREEN_ACTIVE }} />
+                <span className="text-white/30 text-[10px]">loading…</span>
+              </div>
+            )}
+            {!ratingsLoading && ratings && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {ratings.rapid > 0 && (
+                  <span className="text-[10px] font-bold" style={{ color: GREEN_ACTIVE }}>⚡{ratings.rapid}</span>
+                )}
+                {ratings.blitz > 0 && (
+                  <span className="text-[10px] font-bold" style={{ color: "#60a5fa" }}>🔥{ratings.blitz}</span>
+                )}
+              </div>
             )}
           </div>
-          <p className="text-white font-bold text-sm truncate max-w-[160px]">{input.trim()}</p>
-          {/* Blitz / Rapid ELO badges */}
-          {ratingsLoading && (
-            <div className="flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" style={{ color: GREEN_ACTIVE }} />
-              <span className="text-white/30 text-[11px]">Loading ratings…</span>
-            </div>
-          )}
-          {!ratingsLoading && ratings && (
-            <div className="flex items-center gap-2">
-              {ratings.rapid > 0 && (
-                <span
-                  className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(34,197,94,0.18)", color: GREEN_ACTIVE }}
-                >
-                  ⚡ {ratings.rapid}
-                </span>
-              )}
-              {ratings.blitz > 0 && (
-                <span
-                  className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(59,130,246,0.18)", color: "#60a5fa" }}
-                >
-                  🔥 {ratings.blitz}
-                </span>
-              )}
-            </div>
-          )}
           <button
             onClick={handleEdit}
-            className="text-[11px] font-semibold px-3 py-1 rounded-full"
-            style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }}
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }}
           >
-            Change
+            ✕
           </button>
         </>
       )}
     </div>
   );
-
-  return content;
 }
 
 // ─── Clock Half ───────────────────────────────────────────────────────────────
@@ -353,7 +338,7 @@ function ClockHalf({
         className="absolute inset-0 z-0"
         role="button"
         aria-label={flipped ? "Player 2 clock" : "Player 1 clock"}
-        tabIndex={0}
+        tabIndex={-1}
         onKeyDown={(e) => e.key === " " || e.key === "Enter" ? onTap() : undefined}
       />
       {/* Subtle grid texture overlay matching landing page */}
@@ -367,43 +352,33 @@ function ClockHalf({
         }}
       />
 
+      {/* ── Central content (always timer-dominant) ── */}
       <div
         style={{
           transform: flipped ? "rotate(180deg)" : "none",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "0.5rem",
+          justifyContent: "center",
+          gap: "0.4rem",
           position: "relative",
           zIndex: 1,
           width: "100%",
+          height: "100%",
+          padding: showCheckIn ? "0 1rem 3.5rem" : "0 1rem",
         }}
       >
-        {/* Check-in panel — shown when idle, z-index above tap overlay */}
-        {showCheckIn && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ width: "100%", position: "relative", zIndex: 2 }}
-          >
-            <CheckInPanel
-              flipped={false}
-              username={checkedInUsername}
-              onConfirm={onCheckIn}
-            />
-          </div>
-        )}
-
-        {/* Time display */}
+        {/* Time display — always the dominant element */}
         <span
           style={{
             color: textColor,
             fontFamily: "'Clash Display', 'Inter', system-ui, sans-serif",
             fontWeight: 800,
-            fontSize: showCheckIn ? "clamp(2.5rem, 12vw, 5rem)" : "clamp(3.5rem, 18vw, 7rem)",
+            fontSize: "clamp(4rem, 22vw, 9rem)",
             lineHeight: 1,
-            letterSpacing: "-0.02em",
+            letterSpacing: "-0.03em",
             fontVariantNumeric: "tabular-nums",
-            transition: "color 0.15s, font-size 0.2s",
+            transition: "color 0.15s",
           }}
         >
           {displayTime}
@@ -412,10 +387,11 @@ function ClockHalf({
         {moveCount > 0 && (
           <span
             style={{
-              color: isActive ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.35)",
-              fontSize: "0.85rem",
+              color: isActive ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)",
+              fontSize: "0.8rem",
               fontWeight: 600,
-              letterSpacing: "0.05em",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
             }}
           >
             {moveCount} {moveCount === 1 ? "move" : "moves"}
@@ -424,13 +400,35 @@ function ClockHalf({
 
         {isFlagged && (
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.25rem" }}>
-            <Flag style={{ width: "1.25rem", height: "1.25rem", color: "rgba(255,255,255,0.9)" }} />
-            <span style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700, fontSize: "1rem" }}>
+            <Flag style={{ width: "1.1rem", height: "1.1rem", color: "rgba(255,255,255,0.9)" }} />
+            <span style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700, fontSize: "0.95rem", letterSpacing: "0.04em" }}>
               Time&apos;s up
             </span>
           </div>
         )}
       </div>
+
+      {/* ── Check-in strip — bottom-anchored, doesn't shrink the timer ── */}
+      {showCheckIn && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            bottom: "1rem",
+            left: "50%",
+            transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
+            zIndex: 2,
+            width: "calc(100% - 2rem)",
+            maxWidth: 300,
+          }}
+        >
+          <CheckInPanel
+            flipped={false}
+            username={checkedInUsername}
+            onConfirm={onCheckIn}
+          />
+        </div>
+      )}
     </div>
   );
 }
