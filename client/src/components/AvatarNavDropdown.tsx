@@ -516,7 +516,27 @@ export function AvatarNavDropdown({
                   boxShadow: isDark ? `0 8px 32px rgba(0,0,0,0.55)` : "0 8px 32px rgba(0,0,0,0.12)",
                 }}
               >
-                <div className="px-2 py-2">
+                {/* Header row: Sign In label + theme toggle */}
+                <div className="flex items-center justify-between px-3 pt-2 pb-1">
+                  <span className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-white/25" : "text-gray-400"}`}>Account</span>
+                  <button
+                    onClick={() => toggleTheme?.()}
+                    title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/08" : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"}`}
+                  >
+                    {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                    <div
+                      className="w-7 h-3.5 rounded-full flex items-center transition-colors flex-shrink-0"
+                      style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}
+                    >
+                      <div
+                        className="w-2.5 h-2.5 rounded-full bg-white shadow transition-transform mx-0.5"
+                        style={{ transform: isDark ? "translateX(0)" : "translateX(14px)" }}
+                      />
+                    </div>
+                  </button>
+                </div>
+                <div className="px-2 pb-1">
                   <button
                     onClick={handleSignIn}
                     className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
@@ -530,27 +550,16 @@ export function AvatarNavDropdown({
                   className="mx-3 my-1 h-px"
                   style={{ background: isDark ? `${OTB_GREEN_GLOW}0.15)` : "rgba(0,0,0,0.08)" }}
                 />
-                {/* Appearance toggle */}
+                {/* Chess Clock shortcut */}
                 <div className="px-2 pb-2">
-                  <button
-                    onClick={() => toggleTheme?.()}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white" : "text-gray-700 hover:text-gray-900"}`}
-                    style={{ border: "1px solid transparent" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                  <Link
+                    href="/clock"
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isDark ? "text-white/65 hover:text-white hover:bg-white/07" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}
                   >
-                    {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
-                    <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
-                    <div
-                      className="ml-auto w-8 h-4 rounded-full flex items-center transition-colors flex-shrink-0"
-                      style={{ background: isDark ? "rgba(255,255,255,0.12)" : OTB_GREEN }}
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full bg-white shadow transition-transform mx-0.5"
-                        style={{ transform: isDark ? "translateX(0)" : "translateX(16px)" }}
-                      />
-                    </div>
-                  </button>
+                    <Timer className="w-4 h-4 flex-shrink-0" />
+                    <span>Chess Clock</span>
+                  </Link>
                 </div>
               </motion.div>
             )}
