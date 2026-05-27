@@ -144,14 +144,40 @@ describe("Fix: hidden export card has real dimensions", () => {
     expect(src).toContain('const { toBlob } = await import("html-to-image")');
   });
 
-  it("Report.tsx export uses pixelRatio: 2 for high-res output", () => {
+  it("Report.tsx export uses pixelRatio: 3 for Instagram-quality output", () => {
     const src = readSrc("pages/Report.tsx");
-    expect(src).toContain("pixelRatio: 2");
+    expect(src).toContain("pixelRatio: 3");
   });
 
   it("Report.tsx export passes fetchRequestInit cors mode for avatar proxy", () => {
     const src = readSrc("pages/Report.tsx");
     expect(src).toContain('fetchRequestInit: { mode: "cors" }');
+  });
+});
+
+// ── 4b. Instagram Carousel export quality ───────────────────────────────────
+describe("Instagram Carousel export quality", () => {
+  it("InstagramCarouselModal uses exportRefs (separate from slideRefs) for export", () => {
+    const src = readSrc("components/InstagramCarouselModal.tsx");
+    expect(src).toContain("exportRefs");
+    expect(src).toContain("slideRefs");
+  });
+
+  it("InstagramCarouselModal export uses pixelRatio: 3 for crisp output", () => {
+    const src = readSrc("components/InstagramCarouselModal.tsx");
+    expect(src).toContain("pixelRatio: 3");
+  });
+
+  it("InstagramCarouselModal has off-screen export container at left: -9999px", () => {
+    const src = readSrc("components/InstagramCarouselModal.tsx");
+    expect(src).toContain("-9999px");
+  });
+
+  it("InstagramCarouselModal off-screen container has exact SLIDE_W and slideH dimensions", () => {
+    const src = readSrc("components/InstagramCarouselModal.tsx");
+    // exportRefs container uses SLIDE_W and slideH
+    expect(src).toContain("width: SLIDE_W");
+    expect(src).toContain("height: slideH");
   });
 });
 

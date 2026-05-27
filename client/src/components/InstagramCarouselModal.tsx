@@ -1852,6 +1852,7 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
   const [shareSuccess, setShareSuccess] = useState(false);
   const [slideFormat, setSlideFormat] = useState<SlideFormat>("square");
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const exportRefs = useRef<(HTMLDivElement | null)[]>([]);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const slideProps: SlideProps = {
@@ -1893,14 +1894,15 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
 
   // ── Export single slide as Blob ──────────────────────────────────────────────
   const exportSlide = useCallback(async (idx: number): Promise<Blob | null> => {
-    const el = slideRefs.current[idx];
+    const el = exportRefs.current[idx];
     if (!el) return null;
     try {
       const { toBlob: htiToBlob } = await import("html-to-image");
       const blob = await htiToBlob(el, {
-        pixelRatio: 1,
+        pixelRatio: 3,
         width: SLIDE_W,
         height: slideH,
+        style: { transform: "none" },
         fetchRequestInit: { mode: "cors" },
       });
       return blob ?? null;
@@ -2308,6 +2310,38 @@ export function InstagramCarouselModal({ open, onClose, rows, config, tournament
             Download All (ZIP)
           </button>
         </div>
+      </div>
+
+      {/* ── Off-screen export renders (no scale transform, exact 1080px) ── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: "-9999px",
+          width: SLIDE_W,
+          height: slideH,
+          overflow: "hidden",
+          pointerEvents: "none",
+          zIndex: -1,
+        }}
+      >
+        {SLIDES.map(({ Component }, idx) => (
+          <div
+            key={idx}
+            ref={(el) => { exportRefs.current[idx] = el; }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: SLIDE_W,
+              height: slideH,
+              overflow: "hidden",
+            }}
+          >
+            <Component {...slideProps} scale={1} />
+          </div>
+        ))}
       </div>
     </div>
   );
