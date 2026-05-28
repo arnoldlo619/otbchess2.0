@@ -338,21 +338,16 @@ function ClockHalf({
 
   return (
     <div
-      className={`flex-1 w-full flex flex-col items-center justify-center select-none touch-none relative transition-colors duration-150 ${
+      className={`flex-1 w-full flex flex-col items-center justify-center select-none touch-none relative transition-colors duration-150 cursor-pointer ${
         isUrgent ? "animate-pulse" : ""
       }`}
       style={{ backgroundColor: bgColor }}
       aria-label={flipped ? "Player 2 clock" : "Player 1 clock"}
+      role="button"
+      tabIndex={0}
+      onClick={onTap}
+      onKeyDown={(e) => e.key === " " || e.key === "Enter" ? onTap() : undefined}
     >
-      {/* Full-area tap target — sits behind the check-in panel when idle */}
-      <div
-        onClick={onTap}
-        className="absolute inset-0 z-0"
-        role="button"
-        aria-label={flipped ? "Player 2 clock" : "Player 1 clock"}
-        tabIndex={-1}
-        onKeyDown={(e) => e.key === " " || e.key === "Enter" ? onTap() : undefined}
-      />
       {/* Subtle grid texture overlay matching landing page */}
       <div
         className="absolute inset-0 pointer-events-none"
