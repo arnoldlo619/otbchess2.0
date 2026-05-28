@@ -335,8 +335,9 @@ function ClockHalf({
   // Urgent pulse only in final 10 s
   const isUrgent = isActive && !isFlagged && timeMs < 10_000 && timeMs > 0;
 
-  // When idle, show the check-in panel overlaid on the half
-  const showCheckIn = isIdle;
+  // Show identity strip always when playerInfo is pre-populated (tournament mode)
+  // Show check-in input only when idle in standalone mode
+  const showCheckIn = isIdle || !!playerInfo;
 
   return (
     <div
@@ -451,6 +452,8 @@ function ClockHalf({
                 borderRadius: "0.85rem",
                 backdropFilter: "blur(10px)",
                 border: "1px solid rgba(34,197,94,0.18)",
+                opacity: isIdle || isPaused ? 1 : 0.72,
+                transition: "opacity 0.3s",
               }}
             >
               {/* Avatar */}
