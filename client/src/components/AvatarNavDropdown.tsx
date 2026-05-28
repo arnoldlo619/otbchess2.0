@@ -50,10 +50,6 @@ const OTB_GREEN      = "#4CAF50";
 const OTB_GREEN_GLOW = "rgba(61,107,71,";
 
 const NAV_ITEMS = [
-  { name: "League",       href: "/league-demo", icon: Trophy },
-  { name: "Tournaments",  href: "/join",        icon: LayoutDashboard },
-  { name: "Clubs",        href: "/clubs",       icon: Building2 },
-  { name: "Training",     href: "/training",    icon: GraduationCap },
   { name: "Chess Clock",  href: "/clock",       icon: Timer },
 ];
 
