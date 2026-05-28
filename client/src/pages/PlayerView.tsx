@@ -576,7 +576,7 @@ function MyBoardScreen({
   opponent: Player | undefined; players: Player[]; isDark: boolean;
   rejoinUrl: string; connected: boolean; timerSnapshot: TimerSnap;
 }) {
-  const TABS = ["board", "standings", "tools"] as const;
+  const TABS = ["board", "standings", "clock"] as const;
   type Tab = typeof TABS[number];
 
   const [activeTab, setActiveTab] = useState<Tab>("board");
@@ -658,7 +658,7 @@ function MyBoardScreen({
                 : textMuted
             }`}
           >
-            {tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` (#${rank})` : ""}` : "Tools"}
+            {tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` (#${rank})` : ""}` : "Clock"}
           </button>
         ))}
       </div>
@@ -776,7 +776,7 @@ function MyBoardScreen({
             />
           </div>
 
-          {/* ── Tools panel ── */}
+          {/* ── Clock panel ── */}
           <div className="overflow-y-auto px-4 py-4 pb-safe space-y-3" style={{ width: `${100 / TABS.length}%` }}>
             <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
             {/* Chess Clock */}
@@ -799,28 +799,32 @@ function MyBoardScreen({
               </div>
               <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </a>
-            {/* Record Game */}
-            <a
-              href={`/record/camera?tournamentId=${tournamentId}&boardNumber=${game.board ?? ""}&white=${encodeURIComponent(username)}&black=${encodeURIComponent(opponent?.username ?? opponent?.name ?? "")}`}
-              className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
+            {/* Record Game — Coming Soon (Pro / OTB Staff only) */}
+            <div
+              className={`flex items-center justify-between rounded-2xl px-5 py-4 opacity-60 cursor-not-allowed select-none ${
                 isDark
-                  ? "bg-[#1a1a2e] hover:bg-[#22223a] border border-[#4CAF50]/20"
-                  : "bg-indigo-50 hover:bg-indigo-100 border border-indigo-200"
-              } transition-colors`}
+                  ? "bg-[#1a1a2e] border border-[#4CAF50]/15"
+                  : "bg-indigo-50 border border-indigo-200"
+              }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/15" : "bg-indigo-100"
+                  isDark ? "bg-[#4CAF50]/10" : "bg-indigo-100"
                 }`}>
-                  <Video className={`w-5 h-5 ${isDark ? accent : "text-indigo-600"}`} />
+                  <Video className={`w-5 h-5 ${isDark ? accent : "text-indigo-400"}`} />
                 </div>
                 <div>
-                  <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
-                  <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish</p>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                      isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600"
+                    }`}>Coming Soon</span>
+                  </div>
+                  <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish · Pro &amp; Staff only</p>
                 </div>
               </div>
-              <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </a>
+              <svg className={`w-4 h-4 ${textMuted} opacity-40`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
           </div>
         </div>
       </div>
