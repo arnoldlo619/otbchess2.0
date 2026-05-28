@@ -211,6 +211,8 @@ interface AuthModalProps {
   onSuccess?: () => void;
   isDark?: boolean;
   initialTab?: Tab;
+  /** Pre-fill the sign-up name field (e.g. from a guest QR join). */
+  initialName?: string;
 }
 
 export default function AuthModal({
@@ -219,6 +221,7 @@ export default function AuthModal({
   onSuccess,
   isDark = false,
   initialTab = "signin",
+  initialName = "",
 }: AuthModalProps) {
   const { login, register, loginAsGuest, user } = useAuthContext();
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -265,7 +268,10 @@ export default function AuthModal({
       const guestUpgrade = user?.isGuest;
       setTab(guestUpgrade ? "signup" : initialTab);
       resetAll();
-      // Pre-populate display name from guest session after reset
+      // Pre-populate name from initialName prop (e.g. guest QR join) or guest session
+      if (initialName) {
+        setSuName(initialName);
+      }
       if (guestUpgrade && user?.displayName) {
         setSuName(user.displayName);
       }

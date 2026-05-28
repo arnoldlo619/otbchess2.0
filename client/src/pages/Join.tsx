@@ -807,7 +807,7 @@ export default function JoinPage() {
         });
         setConfirming(false);
         haptic([50, 60, 80]); // double-pulse — QR join success
-        navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(prof.username)}`);
+        navigate(`/tournament/${config.id}/play?username=${encodeURIComponent(prof.username)}&name=${encodeURIComponent(playerName.trim() || prof.name || prof.username)}`);
       } else if (embeddedMeta) {
         // embeddedMeta was registered in the bootstrap useEffect above;
         // re-resolve now that the registry is populated.
@@ -847,7 +847,7 @@ export default function JoinPage() {
           });
           setConfirming(false);
           haptic([50, 60, 80]); // double-pulse — QR join success (embedded)
-          navigate(`/tournament/${bootstrapped.id}/play?username=${encodeURIComponent(prof.username)}`);
+          navigate(`/tournament/${bootstrapped.id}/play?username=${encodeURIComponent(prof.username)}&name=${encodeURIComponent(playerName.trim() || prof.name || prof.username)}`);
         } else {
           setConfirming(false);
           setError("Tournament not found. Ask the director to share the QR code again.");
@@ -931,7 +931,7 @@ export default function JoinPage() {
         ?? (embeddedMeta ? resolveTournament(embeddedMeta.inviteCode)?.id : undefined)
         ?? embeddedMeta?.id
         ?? tournamentCode;
-      navigate(`/tournament/${resolvedId}/play?username=${encodeURIComponent(profile.username)}`);
+      navigate(`/tournament/${resolvedId}/play?username=${encodeURIComponent(profile.username)}&name=${encodeURIComponent(playerName.trim() || profile.name || profile.username)}`);
       return;
     }
     advanceStep("success");

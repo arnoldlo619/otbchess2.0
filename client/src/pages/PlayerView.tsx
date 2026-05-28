@@ -834,6 +834,7 @@ export default function PlayerView() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const username = params.get("username") ?? "";
+  const playerDisplayName = params.get("name") ?? "";
   const [, navigate] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -987,6 +988,7 @@ export default function PlayerView() {
         tournamentId={tournamentId}
         tournamentName={endedPayload.tournamentName || tournamentName}
         username={username}
+        playerDisplayName={playerDisplayName}
         players={endedPayload.players}
         isDark={isDark}
         clubId={resolveTournament(tournamentId ?? "")?.clubId}
