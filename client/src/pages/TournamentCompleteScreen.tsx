@@ -4,9 +4,64 @@
  * public tournament page. The current player's row is highlighted in the table.
  */
 import { Link } from "wouter";
-import { Trophy, ChevronRight, Users } from "lucide-react";
+import { Trophy, ChevronRight, Users, UserPlus, Star } from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { useAuth } from "@/hooks/useAuth";
 import type { Player } from "@/lib/tournamentData";
+
+/** Shown only to unauthenticated (guest) players after the tournament ends. */
+function GuestAccountPrompt({
+  isDark,
+  tournamentId,
+}: {
+  isDark: boolean;
+  tournamentId: string;
+}) {
+  const { user } = useAuth();
+  if (user) return null; // already signed in
+
+  const accent = isDark ? "text-[#4CAF50]" : "text-[#3D6B47]";
+  const border = isDark ? "border-[#4CAF50]/25" : "border-[#3D6B47]/20";
+  const cardBg = isDark ? "bg-[#1a2e1e]" : "bg-[#f0f7f2]";
+  const textMain = isDark ? "text-white" : "text-gray-900";
+  const textMuted = isDark ? "text-white/55" : "text-gray-500";
+  const redirect = encodeURIComponent(`/tournament/${tournamentId}`);
+
+  return (
+    <div className="mx-4 mt-5">
+      <div className={`rounded-2xl border ${border} ${cardBg} p-5`}>
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-[#3D6B47] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-[#3D6B47]/25">
+            <Star className="w-5 h-5 text-white" strokeWidth={1.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`font-bold text-sm ${textMain}`}
+              style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              Save your results &amp; join the club
+            </p>
+            <p className={`text-xs mt-1 leading-relaxed ${textMuted}`}>
+              Create a free account to view your performance card, track your rating history, and get notified about future tournaments.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2.5 mt-4">
+          <Link
+            href={`/signup?redirect=${redirect}`}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#3D6B47] text-white text-sm font-bold"
+          >
+            <UserPlus className="w-4 h-4" /> Create Account
+          </Link>
+          <Link
+            href={`/signin?redirect=${redirect}`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border ${border} text-sm font-semibold ${accent}`}
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface TournamentCompleteProps {
   tournamentId: string;
@@ -265,6 +320,9 @@ export function TournamentCompleteScreen({
           </Link>
         </div>
       )}
+
+      {/* ── Guest account creation prompt ────────────────────────────────────────── */}
+      <GuestAccountPrompt isDark={isDark} tournamentId={tournamentId} />
 
       {/* ── Footer CTA ───────────────────────────────────────────────────────────────── */}
       <div className="px-4 pb-safe-bottom pb-8 pt-5 mt-auto">

@@ -500,8 +500,9 @@ export default function JoinPage() {
   const [authError, setAuthError] = useState("");
   // Track whether the user completed auth during this session (to skip the gate)
   const [authCompleted, setAuthCompleted] = useState(false);
-  // Show the auth gate when: QR mode + not logged in + hasn't just completed auth
-  const needsAuth = isQrMode && !authUser && !authCompleted;
+  // Auth gate removed from QR join flow — players join with name + chess.com username only.
+  // Account creation is prompted post-tournament on the TournamentCompleteScreen.
+  const needsAuth = false;
 
   const nameRef = useRef<HTMLInputElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
