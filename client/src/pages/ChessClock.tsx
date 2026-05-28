@@ -163,7 +163,7 @@ function CheckInPanel({
 }: {
   flipped: boolean;
   username: string | null;
-  onConfirm: (u: string) => void;
+    onConfirm: (u: string, ratings?: { blitz: number; rapid: number } | null) => void;
 }) {
   const [input, setInput] = useState(username ?? "");
   const [submitted, setSubmitted] = useState(!!username);
@@ -176,12 +176,18 @@ function CheckInPanel({
     const trimmed = input.trim();
     if (!trimmed) return;
     setSubmitted(true);
-    onConfirm(trimmed);
     setRatingsLoading(true);
     setRatings(null);
     fetchFromChessCom(trimmed)
-      .then((p) => setRatings({ blitz: p.blitz, rapid: p.rapid }))
-      .catch(() => setRatings(null))
+      .then((p) => {
+        const r = { blitz: p.blitz, rapid: p.rapid };
+        setRatings(r);
+        onConfirm(trimmed, r);
+      })
+      .catch(() => {
+        onConfirm(trimmed, null);
+        setRatings(null);
+      })
       .finally(() => setRatingsLoading(false));
   };
 
@@ -301,7 +307,7 @@ function ClockHalf({
   moveCount: number;
   onTap: () => void;
   checkedInUsername: string | null;
-  onCheckIn: (u: string) => void;
+  onCheckIn: (u: string, ratings?: { blitz: number; rapid: number } | null) => void;
 }) {
   let bgColor: string;
   let textColor: string;
@@ -588,9 +594,21 @@ export default function ChessClock() {
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Check-in usernames
+  // Check-in usernames + ratings (for pre-populating RegisterGameModal)
   const [p1Username, setP1Username] = useState<string | null>(null);
   const [p2Username, setP2Username] = useState<string | null>(null);
+  const [p1Ratings, setP1Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
+  const [p2Ratings, setP2Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
+
+  // Auto-open RegisterGameModal when both players have checked in (idle state only)
+  const prevBothCheckedIn = useRef(false);
+  useEffect(() => {
+    const bothNow = !!(p1Username && p2Username) && clockState === "idle";
+    if (bothNow && !prevBothCheckedIn.current) {
+      setShowRegisterGame(true);
+    }
+    prevBothCheckedIn.current = bothNow;
+  }, [p1Username, p2Username, clockState]);
 
   const [showRegisterGame, setShowRegisterGame] = useState(() => {
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
@@ -809,7 +827,7 @@ export default function ChessClock() {
         moveCount={p2Moves}
         onTap={handleP2Tap}
         checkedInUsername={p2Username}
-        onCheckIn={(u) => setP2Username(u || null)}
+        onCheckIn={(u, r) => { setP2Username(u || null); if (r) setP2Ratings(r); else setP2Ratings(null); }}
       />
 
       {/* Center divider */}
@@ -829,7 +847,7 @@ export default function ChessClock() {
         moveCount={p1Moves}
         onTap={handleP1Tap}
         checkedInUsername={p1Username}
-        onCheckIn={(u) => setP1Username(u || null)}
+        onCheckIn={(u, r) => { setP1Username(u || null); if (r) setP1Ratings(r); else setP1Ratings(null); }}
       />
 
       {/* Center controls overlay */}
@@ -852,6 +870,8 @@ export default function ChessClock() {
         onClose={() => setShowRegisterGame(false)}
         baseMinutes={Math.round(clockConfig.baseMs / 60000)}
         incrementSeconds={Math.round(clockConfig.incrementMs / 1000)}
+        player1={p1Username ? { username: p1Username, rapid: p1Ratings?.rapid, blitz: p1Ratings?.blitz } : null}
+        player2={p2Username ? { username: p2Username, rapid: p2Ratings?.rapid, blitz: p2Ratings?.blitz } : null}
         onGameReady={(sessionId) => {
           setActiveGameSessionId(sessionId);
           setShowRegisterGame(false);
