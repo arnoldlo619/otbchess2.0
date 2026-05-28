@@ -484,26 +484,26 @@ function CenterControls({
 
   return (
     <div
-      className="absolute left-0 right-0 flex items-center justify-center gap-3 z-10"
+      className="absolute left-0 right-0 flex items-center justify-center gap-3 z-10 pointer-events-none"
       style={{ top: "50%", transform: "translateY(-50%)" }}
     >
       <button
         onClick={onBack}
-        className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm"
+        className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm pointer-events-auto"
         style={{ background: "rgba(0,0,0,0.55)" }}
         aria-label="Back"
       >
         <ChevronLeft className="w-5 h-5 text-white/80" />
       </button>
 
-      <div className="px-1 opacity-90">
+      <div className="px-1 opacity-90 pointer-events-auto">
         <NavLogo linked={false} className="h-6" />
       </div>
 
       {isRunning && (
         <button
           onClick={onPause}
-          className="w-14 h-14 rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg"
+          className="w-14 h-14 rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg pointer-events-auto"
           style={{ background: "rgba(0,0,0,0.6)" }}
           aria-label="Pause"
         >
@@ -513,7 +513,7 @@ function CenterControls({
       {isPaused && (
         <button
           onClick={onResume}
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg pointer-events-auto"
           style={{ background: GREEN_ACTIVE }}
           aria-label="Resume"
         >
@@ -524,7 +524,7 @@ function CenterControls({
       {(isFlagged || (showReset && (isPaused || isIdle))) && (
         <button
           onClick={onReset}
-          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm"
+          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm pointer-events-auto"
           style={{ background: "rgba(0,0,0,0.55)" }}
           aria-label="Reset"
         >
@@ -535,7 +535,7 @@ function CenterControls({
       {(isIdle || isPaused) && (
         <button
           onClick={onSettings}
-          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm"
+          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm pointer-events-auto"
           style={{ background: "rgba(0,0,0,0.55)" }}
           aria-label="Settings"
         >
@@ -545,7 +545,7 @@ function CenterControls({
 
       <button
         onClick={onToggleMute}
-        className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm"
+        className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm pointer-events-auto"
         style={{ background: "rgba(0,0,0,0.55)" }}
         aria-label={muted ? "Unmute sounds" : "Mute sounds"}
       >
@@ -558,7 +558,7 @@ function CenterControls({
       {isIdle && (
         <button
           onClick={onRegisterGame}
-          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm"
+          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm pointer-events-auto"
           style={{ background: "rgba(34,197,94,0.7)" }}
           aria-label="Register rated game"
           title="Register Rated Game"
