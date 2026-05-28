@@ -297,6 +297,7 @@ function ClockHalf({
   onTap,
   checkedInUsername,
   onCheckIn,
+  playerInfo,
 }: {
   timeMs: number;
   isActive: boolean;
@@ -308,6 +309,7 @@ function ClockHalf({
   onTap: () => void;
   checkedInUsername: string | null;
   onCheckIn: (u: string, ratings?: { blitz: number; rapid: number } | null) => void;
+  playerInfo?: { username: string; avatarUrl?: string | null; rapid?: number; blitz?: number; colorLabel: "White" | "Black" };
 }) {
   let bgColor: string;
   let textColor: string;
@@ -423,7 +425,7 @@ function ClockHalf({
         )}
       </div>
 
-      {/* ── Check-in strip — bottom-anchored, doesn't shrink the timer ── */}
+      {/* ── Bottom identity strip — tournament pre-populated OR manual check-in ── */}
       {showCheckIn && (
         <div
           onClick={(e) => e.stopPropagation()}
@@ -434,14 +436,87 @@ function ClockHalf({
             transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
             zIndex: 2,
             width: "calc(100% - 2rem)",
-            maxWidth: 300,
+            maxWidth: 320,
           }}
         >
-          <CheckInPanel
-            flipped={false}
-            username={checkedInUsername}
-            onConfirm={onCheckIn}
-          />
+          {playerInfo ? (
+            /* Tournament-mode: show pre-populated identity card */
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.65rem",
+                padding: "0.55rem 0.85rem",
+                background: "rgba(0,0,0,0.32)",
+                borderRadius: "0.85rem",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(34,197,94,0.18)",
+              }}
+            >
+              {/* Avatar */}
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  background: "rgba(34,197,94,0.12)",
+                  border: "2px solid rgba(34,197,94,0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {playerInfo.avatarUrl ? (
+                  <img src={playerInfo.avatarUrl} alt={playerInfo.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: "1rem", textTransform: "uppercase" }}>
+                    {playerInfo.username.charAt(0)}
+                  </span>
+                )}
+              </div>
+              {/* Name + ratings */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                  <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>
+                    {playerInfo.username}
+                  </span>
+                  {/* Color badge */}
+                  <span style={{
+                    fontSize: "0.62rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    padding: "0.1rem 0.45rem",
+                    borderRadius: "999px",
+                    background: playerInfo.colorLabel === "White" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.45)",
+                    color: playerInfo.colorLabel === "White" ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.65)",
+                    border: playerInfo.colorLabel === "White" ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(255,255,255,0.15)",
+                    flexShrink: 0,
+                  }}>
+                    {playerInfo.colorLabel === "White" ? "♔ White" : "♚ Black"}
+                  </span>
+                </div>
+                {/* ELO ratings row */}
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.15rem" }}>
+                  {(playerInfo.rapid ?? 0) > 0 && (
+                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: GREEN_ACTIVE }}>⚡ {playerInfo.rapid}</span>
+                  )}
+                  {(playerInfo.blitz ?? 0) > 0 && (
+                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#60a5fa" }}>🔥 {playerInfo.blitz}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Standalone mode: manual check-in input */
+            <CheckInPanel
+              flipped={false}
+              username={checkedInUsername}
+              onConfirm={onCheckIn}
+            />
+          )}
         </div>
       )}
     </div>
@@ -590,10 +665,34 @@ export default function ChessClock() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Check-in usernames + ratings (for pre-populating RegisterGameModal)
-  const [p1Username, setP1Username] = useState<string | null>(null);
-  const [p2Username, setP2Username] = useState<string | null>(null);
+  // Also pre-populated from URL params when launched from PlayerView
+  const urlParams = new URLSearchParams(search);
+  const urlP1 = urlParams.get("p1") ?? null;  // White player username
+  const urlP2 = urlParams.get("p2") ?? null;  // Black player username
+  const urlMyColor = urlParams.get("myColor") as "white" | "black" | null;
+
+  const [p1Username, setP1Username] = useState<string | null>(urlP1);
+  const [p2Username, setP2Username] = useState<string | null>(urlP2);
   const [p1Ratings, setP1Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
   const [p2Ratings, setP2Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
+  const [p1AvatarUrl, setP1AvatarUrl] = useState<string | null>(null);
+  const [p2AvatarUrl, setP2AvatarUrl] = useState<string | null>(null);
+
+  // Fetch ratings + avatars for pre-populated players on mount
+  useEffect(() => {
+    if (!urlP1 && !urlP2) return;
+    const fetchPlayer = (username: string, setRatings: typeof setP1Ratings, setAvatar: typeof setP1AvatarUrl) => {
+      fetchFromChessCom(username)
+        .then((p) => {
+          setRatings({ blitz: p.blitz, rapid: p.rapid });
+          if (p.avatar) setAvatar(toProxiedAvatarUrl(p.avatar) ?? p.avatar);
+        })
+        .catch(() => {});
+    };
+    if (urlP1) fetchPlayer(urlP1, setP1Ratings, setP1AvatarUrl);
+    if (urlP2) fetchPlayer(urlP2, setP2Ratings, setP2AvatarUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-open RegisterGameModal when both players have checked in (idle state only)
   const prevBothCheckedIn = useRef(false);
@@ -823,6 +922,13 @@ export default function ChessClock() {
         onTap={handleP2Tap}
         checkedInUsername={p2Username}
         onCheckIn={(u, r) => { setP2Username(u || null); if (r) setP2Ratings(r); else setP2Ratings(null); }}
+        playerInfo={urlP2 ? {
+          username: urlP2,
+          avatarUrl: p2AvatarUrl,
+          rapid: p2Ratings?.rapid,
+          blitz: p2Ratings?.blitz,
+          colorLabel: "Black",
+        } : undefined}
       />
 
       {/* Center divider */}
@@ -843,6 +949,13 @@ export default function ChessClock() {
         onTap={handleP1Tap}
         checkedInUsername={p1Username}
         onCheckIn={(u, r) => { setP1Username(u || null); if (r) setP1Ratings(r); else setP1Ratings(null); }}
+        playerInfo={urlP1 ? {
+          username: urlP1,
+          avatarUrl: p1AvatarUrl,
+          rapid: p1Ratings?.rapid,
+          blitz: p1Ratings?.blitz,
+          colorLabel: "White",
+        } : undefined}
       />
 
       {/* Center controls overlay */}

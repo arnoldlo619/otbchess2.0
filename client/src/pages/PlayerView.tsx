@@ -781,7 +781,13 @@ function MyBoardScreen({
             <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
             {/* Chess Clock */}
             <a
-              href={`/tournament/${tournamentId}/clock?from=player`}
+              href={(() => {
+                const p1 = myColor === "white" ? username : (opponent?.username ?? "");
+                const p2 = myColor === "black" ? username : (opponent?.username ?? "");
+                const base = `/tournament/${tournamentId}/clock?from=player`;
+                if (!p1 || !p2) return base;
+                return `${base}&p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}&myColor=${myColor}`;
+              })()}
               className={`flex items-center justify-between rounded-2xl px-5 py-4 ${
                 isDark ? "bg-white/05 hover:bg-white/08" : "bg-gray-50 hover:bg-gray-100"
               } transition-colors`}
