@@ -784,7 +784,7 @@ function MyBoardScreen({
               href={(() => {
                 const p1 = myColor === "white" ? username : (opponent?.username ?? "");
                 const p2 = myColor === "black" ? username : (opponent?.username ?? "");
-                const base = `/tournament/${tournamentId}/clock?from=player`;
+                const base = `/tournament/${tournamentId}/clock?from=player&username=${encodeURIComponent(username)}`;
                 if (!p1 || !p2) return base;
                 return `${base}&p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}&myColor=${myColor}`;
               })()}

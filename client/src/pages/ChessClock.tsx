@@ -335,9 +335,11 @@ function ClockHalf({
   // Urgent pulse only in final 10 s
   const isUrgent = isActive && !isFlagged && timeMs < 10_000 && timeMs > 0;
 
-  // Show identity strip always when playerInfo is pre-populated (tournament mode)
-  // Show check-in input only when idle in standalone mode
-  const showCheckIn = isIdle || !!playerInfo;
+  // Tournament mode (playerInfo provided): always show identity card, never the check-in input
+  // Standalone mode (no playerInfo): show check-in input strip only when idle
+  const isTournamentMode = !!playerInfo;
+  const showCheckIn = isTournamentMode ? false : isIdle;  // input strip only in standalone
+  const showIdentityCard = isTournamentMode;               // identity card only in tournament
 
   return (
     <div
@@ -426,8 +428,8 @@ function ClockHalf({
         )}
       </div>
 
-      {/* ── Bottom identity strip — tournament pre-populated OR manual check-in ── */}
-      {showCheckIn && (
+      {/* ── Tournament identity card (always visible in tournament mode) ── */}
+      {showIdentityCard && (
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
@@ -440,7 +442,7 @@ function ClockHalf({
             maxWidth: 320,
           }}
         >
-          {playerInfo ? (
+          {playerInfo && (
             /* Tournament-mode: show pre-populated identity card */
             <div
               style={{
@@ -512,14 +514,29 @@ function ClockHalf({
                 </div>
               </div>
             </div>
-          ) : (
-            /* Standalone mode: manual check-in input */
-            <CheckInPanel
-              flipped={false}
-              username={checkedInUsername}
-              onConfirm={onCheckIn}
-            />
           )}
+        </div>
+      )}
+
+      {/* ── Standalone check-in input (only when idle, no tournament context) ── */}
+      {showCheckIn && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: "absolute",
+            bottom: "1rem",
+            left: "50%",
+            transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
+            zIndex: 2,
+            width: "calc(100% - 2rem)",
+            maxWidth: 320,
+          }}
+        >
+          <CheckInPanel
+            flipped={false}
+            username={checkedInUsername}
+            onConfirm={onCheckIn}
+          />
         </div>
       )}
     </div>
@@ -895,10 +912,12 @@ export default function ChessClock() {
     if (tournamentId) {
       const params = new URLSearchParams(search);
       const from = params.get("from");
+      const backUsername = params.get("username") ?? "";
+      const usernameQuery = backUsername ? `?username=${encodeURIComponent(backUsername)}` : "";
       if (from === "director") navigate(`/tournament/${tournamentId}/manage`);
-      else if (from === "player") navigate(`/tournament/${tournamentId}/play`);
+      else if (from === "player") navigate(`/tournament/${tournamentId}/play${usernameQuery}`);
       else if (window.history.length > 1) window.history.back();
-      else navigate(`/tournament/${tournamentId}/play`);
+      else navigate(`/tournament/${tournamentId}/play${usernameQuery}`);
     } else {
       navigate("/");
     }
