@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import {
   Search, X, Star, StarOff as _StarOff, Trophy, Users, MapPin, Calendar,
   ChevronRight, ChevronDown, Crown, Swords, Hash, UserPlus,
@@ -1445,6 +1445,27 @@ export default function PublicTournament() {
     const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
   }, [fetchData, error, slug]);
+
+  // ── SSE: listen for tournament_ended so spectators are immediately redirected ──
+  // Opens the same /players/stream endpoint used by PlayerView. When the director
+  // finalises the tournament (manually or via auto-end), the server broadcasts a
+  // tournament_ended event and we navigate straight to the Final Standings page.
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    const tournamentId = data?.tournamentId;
+    if (!tournamentId) return;
+    // Skip if already completed — no need to listen
+    if (data?.status === "completed") return;
+    const es = new EventSource(`/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`);
+    es.addEventListener("tournament_ended", () => {
+      // Refresh data first so the results page has fresh standings
+      fetchData();
+      // Navigate to the shared Final Standings page after a brief delay
+      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 1500);
+    });
+    return () => es.close();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.tournamentId, data?.status]);
 
   // Refresh on visibility change (phone unlock)
   useEffect(() => {
