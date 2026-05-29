@@ -178,3 +178,86 @@ describe("Round-based deduplication key", () => {
     expect(shouldTriggerCompletion(true, true, firedRef, newTournamentRounds)).toBe(true);
   });
 });
+
+// ── Auto-end trigger logic for Swiss / Round-Robin / Double-Swiss formats ─────
+function isSwissLikeFormat(format: string): boolean {
+  return format === "swiss" || format === "roundrobin" || format === "doubleswiss";
+}
+
+function shouldAutoEndSwiss(
+  format: string,
+  currentRound: number,
+  totalRounds: number,
+  allResultsIn: boolean,
+  status: string,
+  alreadyFired: boolean
+): boolean {
+  return (
+    isSwissLikeFormat(format) &&
+    currentRound >= totalRounds &&
+    totalRounds > 0 &&
+    allResultsIn &&
+    status !== "completed" &&
+    status !== "registration" &&
+    !alreadyFired
+  );
+}
+
+describe("Auto-end tournament — Swiss / Round-Robin / Double-Swiss", () => {
+  it("triggers for swiss format when final round results are all in", () => {
+    expect(shouldAutoEndSwiss("swiss", 3, 3, true, "in_progress", false)).toBe(true);
+  });
+
+  it("triggers for roundrobin format on final round", () => {
+    expect(shouldAutoEndSwiss("roundrobin", 5, 5, true, "in_progress", false)).toBe(true);
+  });
+
+  it("triggers for doubleswiss format on final round", () => {
+    expect(shouldAutoEndSwiss("doubleswiss", 4, 4, true, "in_progress", false)).toBe(true);
+  });
+
+  it("does NOT trigger for elimination format (handled by isElimBracketComplete)", () => {
+    expect(shouldAutoEndSwiss("elimination", 3, 3, true, "in_progress", false)).toBe(false);
+  });
+
+  it("does NOT trigger for swiss_elim format (handled by isElimBracketComplete)", () => {
+    expect(shouldAutoEndSwiss("swiss_elim", 5, 5, true, "in_progress", false)).toBe(false);
+  });
+
+  it("does NOT trigger when not all results are in", () => {
+    expect(shouldAutoEndSwiss("swiss", 3, 3, false, "in_progress", false)).toBe(false);
+  });
+
+  it("does NOT trigger when not the final round", () => {
+    expect(shouldAutoEndSwiss("swiss", 2, 3, true, "in_progress", false)).toBe(false);
+  });
+
+  it("does NOT trigger when tournament is already completed", () => {
+    expect(shouldAutoEndSwiss("swiss", 3, 3, true, "completed", false)).toBe(false);
+  });
+
+  it("does NOT trigger during registration phase", () => {
+    expect(shouldAutoEndSwiss("swiss", 0, 3, false, "registration", false)).toBe(false);
+  });
+
+  it("does NOT trigger twice (alreadyFired guard)", () => {
+    expect(shouldAutoEndSwiss("swiss", 3, 3, true, "in_progress", true)).toBe(false);
+  });
+
+  it("does NOT trigger when totalRounds is 0 (unconfigured)", () => {
+    expect(shouldAutoEndSwiss("swiss", 0, 0, true, "in_progress", false)).toBe(false);
+  });
+
+  it("triggers when currentRound exceeds totalRounds (edge case)", () => {
+    expect(shouldAutoEndSwiss("swiss", 4, 3, true, "in_progress", false)).toBe(true);
+  });
+});
+
+describe("isSwissLikeFormat helper", () => {
+  it("returns true for swiss", () => expect(isSwissLikeFormat("swiss")).toBe(true));
+  it("returns true for roundrobin", () => expect(isSwissLikeFormat("roundrobin")).toBe(true));
+  it("returns true for doubleswiss", () => expect(isSwissLikeFormat("doubleswiss")).toBe(true));
+  it("returns false for elimination", () => expect(isSwissLikeFormat("elimination")).toBe(false));
+  it("returns false for swiss_elim", () => expect(isSwissLikeFormat("swiss_elim")).toBe(false));
+  it("returns false for unknown format", () => expect(isSwissLikeFormat("unknown")).toBe(false));
+});

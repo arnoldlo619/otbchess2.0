@@ -2205,6 +2205,69 @@ export default function Director() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isElimBracketComplete, allResultsIn, state.status]);
 
+  // ── Auto-end tournament for Swiss / Round-Robin / Double-Swiss formats ─────────────────
+  // When the final round's last result is entered, automatically finalize the tournament,
+  // broadcast tournament_ended SSE to all participant screens, and navigate the director
+  // to the Final Standings page — no manual "End Tournament" button click required.
+  // This mirrors the existing isElimBracketComplete auto-complete for elimination formats.
+  const autoCompletedSwissRef = useRef(false);
+  useEffect(() => {
+    const isSwissLike = state.format === "swiss" || state.format === "roundrobin" || state.format === "doubleswiss";
+    const isFinalRound = state.currentRound >= state.totalRounds && state.totalRounds > 0;
+    if (
+      isSwissLike &&
+      isFinalRound &&
+      allResultsIn &&
+      state.status !== "completed" &&
+      state.status !== "registration" &&
+      tournamentId !== "otb-demo-2026" &&
+      !autoCompletedSwissRef.current
+    ) {
+      autoCompletedSwissRef.current = true;
+      completeTournament();
+      syncStatusToServer("completed");
+      const winner = liveStandings[0];
+      const winnerName = winner?.player.name ?? "Unknown";
+      // Push notification to all subscribers
+      broadcastTournamentComplete(winnerName);
+      // Auto-post feed card to club if applicable
+      if (tournamentConfig?.clubId) {
+        const podium = liveStandings.slice(0, 3).map((s, i) => ({
+          rank: i + 1,
+          playerName: s.player.name,
+          score: s.points,
+          totalRounds: state.totalRounds,
+        }));
+        const fmtLabel = state.format === "swiss" ? `Swiss · ${state.totalRounds}R`
+          : state.format === "roundrobin" ? "Round Robin"
+          : `Double Swiss · ${state.totalRounds}R`;
+        recordTournamentCompleted(
+          tournamentConfig.clubId,
+          state.tournamentName,
+          winnerName,
+          tournamentId,
+          winner?.points,
+          state.totalRounds,
+          podium,
+          state.players.length,
+          fmtLabel
+        );
+      }
+      // Broadcast tournament_ended SSE — triggers auto-redirect on all participant screens
+      const players = state.players;
+      const tournamentName = state.tournamentName;
+      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ players, tournamentName }),
+      }).catch(() => { /* fire-and-forget */ });
+      toast.success("🏆 Tournament complete! Redirecting to results…", { duration: 4000 });
+      // Navigate director to results page after a short delay
+      setTimeout(() => navigate(`/tournament/${tournamentId}/results`), 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allResultsIn, state.currentRound, state.totalRounds, state.format, state.status]);
+
   // Auto-navigate to bracket tab when swiss_elim transitions to elimination phase
   const prevElimPhaseRef = useRef<string | undefined>(undefined);
   useEffect(() => {

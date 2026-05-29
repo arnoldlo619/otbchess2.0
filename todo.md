@@ -6361,3 +6361,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Resize forExport card from 900x1200 to 1080x1350 (Instagram 4:5 portrait ratio)
 - [x] Scale all forExport font sizes, padding, and spacing proportionally for 1080px width
 - [x] Raise pixelRatio from 2 to 3 in exportCardAsPng and renderCardToBlob for crisp output
+
+## Auto-End Tournament
+
+- [x] Auto-end Swiss/Round-Robin/Double-Swiss tournaments when all final round results are entered
+- [x] Broadcast tournament_ended SSE to all participant screens on auto-end
+- [x] Director auto-navigates to /tournament/:id/results on auto-end
+- [x] PlayerView auto-navigates to results page on tournament_ended SSE event (already in place)
+- [x] 18 new unit tests for shouldAutoEndSwiss and isSwissLikeFormat helpers
