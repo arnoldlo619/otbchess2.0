@@ -68,6 +68,7 @@ import { AnimeNavBar } from "@/components/ui/anime-navbar";
 import {AvatarNavDropdown} from "@/components/AvatarNavDropdown";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { SpinBorderButton } from "@/components/ui/spin-border-button";
+import { GlassButton } from "@/components/ui/apple-tahoe-liquid-glass-button";
 
 // ─── CDN Assets ─────────────────────────────────────────────────────────────
 // (mascot illustrations removed — sections use clean text-only layouts)
@@ -1340,13 +1341,14 @@ function Showcase() {
               ))}
             </div>
 
-            <Link
-              href={slide.cta.href}
-              className="btn-chess-primary flex items-center gap-2 inline-flex"
+            <GlassButton
+              size="default"
+              onClick={() => window.location.href = slide.cta.href}
+              className="text-white"
             >
               {slide.cta.label}
               <ChevronRight className="w-4 h-4" />
-            </Link>
+            </GlassButton>
           </div>
         </div>
 

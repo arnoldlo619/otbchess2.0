@@ -1694,3 +1694,58 @@ select {
   transform: translateY(0) scale(0.99);
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12);
 }
+
+/* ── Liquid Glass Button (Apple Tahoe style) ── */
+.btn-liquid {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: oklch(from var(--foreground) l c h / 95%);
+}
+
+.btn-liquid-lens {
+  background-color: oklch(from var(--foreground) l c h / 6%);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, white 10%, transparent),
+    inset 1.8px 3px 0px -2px color-mix(in srgb, white 90%, transparent),
+    inset -2px -2px 0px -2px color-mix(in srgb, white 80%, transparent),
+    inset -3px -8px 1px -6px color-mix(in srgb, white 60%, transparent),
+    inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+    inset -1.5px 2.5px 0px -2px color-mix(in srgb, black 20%, transparent),
+    inset 0px 3px 4px -2px color-mix(in srgb, black 20%, transparent),
+    inset 2px -6.5px 1px -4px color-mix(in srgb, black 10%, transparent),
+    0px 1px 5px 0px color-mix(in srgb, black 10%, transparent),
+    0px 6px 16px 0px color-mix(in srgb, black 8%, transparent);
+  transition: background-color 400ms cubic-bezier(1, 0.0, 0.4, 1), box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+}
+
+.btn-liquid-text {
+  text-shadow: 0 1px 2px oklch(from var(--background) l c h / 30%);
+  transition: color 400ms cubic-bezier(1, 0.0, 0.4, 1);
+}
+
+@media (hover: hover) {
+  .btn-liquid:not(:disabled):hover {
+    transform: scale(1.03);
+  }
+  .btn-liquid:not(:disabled):hover .btn-liquid-lens {
+    background-color: oklch(from var(--foreground) l c h / 10%);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 14%, transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white 95%, transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, white 85%, transparent),
+      inset -3px -8px 1px -6px color-mix(in srgb, white 65%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 14%, transparent),
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black 22%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 22%, transparent),
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black 12%, transparent),
+      0px 2px 8px 0px color-mix(in srgb, black 14%, transparent),
+      0px 8px 24px 0px color-mix(in srgb, black 12%, transparent);
+  }
+}
+
+.btn-liquid:not(:disabled):active {
+  transform: scale(0.96);
+}
