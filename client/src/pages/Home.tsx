@@ -1131,6 +1131,14 @@ function FeaturesCTA({ onCreateTournament }: { onCreateTournament: () => void })
 }
 
 // ─── Features Carousel — Chess Club League + Matchup Prep ───────────────────
+// Per-slide accent colors: [light mode hex, dark mode oklch]
+const SLIDE_COLORS: Array<{ light: string; dark: string }> = [
+  { light: "rgba(61,107,71,0.18)",  dark: "rgba(34,197,94,0.18)"  }, // tournaments — forest green
+  { light: "rgba(37,99,235,0.16)",  dark: "rgba(96,165,250,0.18)" }, // league — blue
+  { light: "rgba(217,119,6,0.16)",  dark: "rgba(251,191,36,0.18)" }, // rated game — amber
+  { light: "rgba(124,58,237,0.16)", dark: "rgba(167,139,250,0.18)" }, // prep — violet
+];
+
 const CAROUSEL_SLIDES = [
   {
     id: "tournaments",
@@ -1237,6 +1245,9 @@ function Showcase() {
 
   const accentText = isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]";
   const _accentBg   = isDark ? "bg-[oklch(0.65_0.14_145)]/15 text-[oklch(0.65_0.14_145)]" : "bg-[#3D6B47]/10 text-[#3D6B47]";
+  const slideGlassColor = isDark
+    ? SLIDE_COLORS[activeSlide]?.dark
+    : SLIDE_COLORS[activeSlide]?.light;
 
   return (
     <section id="for-clubs" className="py-24 overflow-hidden transition-colors duration-500 bg-background" ref={ref}>
@@ -1345,6 +1356,8 @@ function Showcase() {
               size="default"
               onClick={() => window.location.href = slide.cta.href}
               className="text-white"
+              glassColor={slideGlassColor}
+              style={{ transition: "all 0.4s ease" }}
             >
               {slide.cta.label}
               <ChevronRight className="w-4 h-4" />
