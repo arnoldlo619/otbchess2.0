@@ -6369,3 +6369,13 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Director auto-navigates to /tournament/:id/results on auto-end
 - [x] PlayerView auto-navigates to results page on tournament_ended SSE event (already in place)
 - [x] 18 new unit tests for shouldAutoEndSwiss and isSwissLikeFormat helpers
+
+## Board Broadcast MVP
+
+- [x] Add broadcast fields to DB schema (broadcast_enabled, broadcast_url, broadcast_provider, featured_board_number, broadcast_title, broadcast_status, broadcast_updated_at)
+- [x] Create broadcastUtils.ts (URL validation, YouTube/Twitch embed conversion, provider detection)
+- [x] Create BoardBroadcastPlayer component (responsive 16:9 iframe, LIVE badge, board metadata)
+- [x] Create BroadcastSettingsPanel in Director dashboard (toggle, URL input, board select, status, preview)
+- [x] Wire broadcast data into public tournament page (above pairings, with board metadata)
+- [x] Add server API endpoints for broadcast CRUD (save/load broadcast settings)
+- [x] Unit tests for broadcastUtils (URL parsing, validation, embed conversion)

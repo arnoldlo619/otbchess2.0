@@ -1984,3 +1984,19 @@ export const otbRatingHistory = mysqlTable(
 );
 export type OtbRatingHistoryRow = typeof otbRatingHistory.$inferSelect;
 export type NewOtbRatingHistoryRow = typeof otbRatingHistory.$inferInsert;
+
+// ─── tournament_broadcast_settings ───────────────────────────────────────────
+// Stores video broadcast embed settings per tournament (Board Broadcast MVP).
+// One row per tournament — tournamentId is the PK.
+export const tournamentBroadcastSettings = mysqlTable("tournament_broadcast_settings", {
+  tournamentId: varchar("tournament_id", { length: 255 }).primaryKey(),
+  broadcastEnabled: tinyint("broadcast_enabled").notNull().default(0),
+  broadcastUrl: text("broadcast_url"),
+  broadcastProvider: varchar("broadcast_provider", { length: 20 }), // youtube | twitch | custom
+  featuredBoardNumber: int("featured_board_number").notNull().default(1),
+  broadcastTitle: varchar("broadcast_title", { length: 200 }),
+  broadcastStatus: varchar("broadcast_status", { length: 20 }).notNull().default("inactive"), // inactive | live | ended
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export type TournamentBroadcastSettingsRow = typeof tournamentBroadcastSettings.$inferSelect;
+export type NewTournamentBroadcastSettingsRow = typeof tournamentBroadcastSettings.$inferInsert;

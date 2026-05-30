@@ -9,7 +9,7 @@ import { eq, and, or, inArray, desc, lt, isNull } from "drizzle-orm";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { getDb } from "./db.js";
 import { createAuthRouter, requireAuth, requireFullAuth } from "./auth.js";
-import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache } from "../shared/schema.js";
+import { pushSubscriptions, tournamentPlayers, tournamentState, prepCache, userTournaments, tournamentAnalytics, savedPrepReports, chessPlayerCache, tournamentBroadcastSettings } from "../shared/schema.js";
 import { createRecordingsRouter } from "./recordings.js";
 import { getSnapshotCache, setSnapshotCache, invalidateSnapshotCache, buildSnapshot } from "./publicSnapshot.js";
 import clubMessagingRouter from "./clubMessaging.js";
@@ -2633,6 +2633,87 @@ export function createApp() {
       }
     }
     res.json({ ok: true });
+  });
+
+  // ─── Board Broadcast Settings ────────────────────────────────────────────────
+  // GET /api/tournament/:id/broadcast — load broadcast settings
+  app.get("/api/tournament/:id/broadcast", async (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    try {
+      const db = await getDb();
+      const rows = await db
+        .select()
+        .from(tournamentBroadcastSettings)
+        .where(eq(tournamentBroadcastSettings.tournamentId, id))
+        .limit(1);
+      if (rows.length === 0) {
+        return res.json({
+          broadcastEnabled: false,
+          broadcastUrl: null,
+          broadcastProvider: null,
+          featuredBoardNumber: 1,
+          broadcastTitle: null,
+          broadcastStatus: "inactive",
+        });
+      }
+      const r = rows[0];
+      res.json({
+        broadcastEnabled: !!r.broadcastEnabled,
+        broadcastUrl: r.broadcastUrl,
+        broadcastProvider: r.broadcastProvider,
+        featuredBoardNumber: r.featuredBoardNumber,
+        broadcastTitle: r.broadcastTitle,
+        broadcastStatus: r.broadcastStatus,
+      });
+    } catch (err) {
+      logger.error("[broadcast] GET error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // PUT /api/tournament/:id/broadcast — save broadcast settings (host only)
+  app.put("/api/tournament/:id/broadcast", requireAuth, async (req: any, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing tournament id" });
+    const { broadcastEnabled, broadcastUrl, broadcastProvider, featuredBoardNumber, broadcastTitle, broadcastStatus } = req.body;
+    try {
+      const db = await getDb();
+      // Verify ownership
+      const utRows = await db
+        .select()
+        .from(userTournaments)
+        .where(and(eq(userTournaments.tournamentId, id), eq(userTournaments.userId, req.user.id)))
+        .limit(1);
+      if (utRows.length === 0) return res.status(403).json({ error: "Not authorized" });
+
+      // Upsert
+      const existing = await db
+        .select({ tournamentId: tournamentBroadcastSettings.tournamentId })
+        .from(tournamentBroadcastSettings)
+        .where(eq(tournamentBroadcastSettings.tournamentId, id));
+      const values = {
+        tournamentId: id,
+        broadcastEnabled: broadcastEnabled ? 1 : 0,
+        broadcastUrl: broadcastUrl || null,
+        broadcastProvider: broadcastProvider || null,
+        featuredBoardNumber: featuredBoardNumber ?? 1,
+        broadcastTitle: broadcastTitle || null,
+        broadcastStatus: broadcastStatus || "inactive",
+        updatedAt: new Date(),
+      };
+      if (existing.length > 0) {
+        await db.update(tournamentBroadcastSettings).set(values).where(eq(tournamentBroadcastSettings.tournamentId, id));
+      } else {
+        await db.insert(tournamentBroadcastSettings).values(values as any);
+      }
+      // Invalidate public snapshot so viewers see broadcast immediately
+      invalidateSnapshotCache(id);
+      res.json({ ok: true });
+    } catch (err) {
+      logger.error("[broadcast] PUT error:", err);
+      res.status(500).json({ error: "Database error" });
+    }
   });
 
   // ─── Notation Race State Store ───────────────────────────────────────────────────────

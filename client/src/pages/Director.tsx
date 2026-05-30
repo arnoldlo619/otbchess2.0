@@ -39,6 +39,7 @@ import { useClubAvatar } from "@/hooks/useClubAvatar";
 import { recordTournamentCompleted } from "@/lib/clubFeedRegistry";
 import { InstagramCarouselModal } from "@/components/InstagramCarouselModal";
 import { SmtpSettingsCard } from "@/components/SmtpSettingsCard";
+import { BroadcastSettingsPanel } from "@/components/BroadcastSettingsPanel";
 import {EliminationBracketView} from "@/components/EliminationBracketView";
 import { CutoffOverrideModal } from "@/components/CutoffOverrideModal";
 import { TiebreakTooltip } from "@/components/TiebreakTooltip";
@@ -5231,6 +5232,13 @@ export default function Director() {
               {/* ── Public Tournament Mode ─────────────────────────────────────── */}
               <PublicTournamentCard
                 tournamentId={tournamentId}
+                isDark={isDark}
+              />
+
+              {/* ── Board Broadcast ─────────────────────────────────────────── */}
+              <BroadcastSettingsPanel
+                tournamentId={tournamentId}
+                totalBoards={Math.ceil((state.players?.length ?? 0) / 2)}
                 isDark={isDark}
               />
 

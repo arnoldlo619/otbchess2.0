@@ -28,6 +28,8 @@ import type {Player, Round, Result} from "@/lib/tournamentData";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 import { authFetch } from "@/lib/apiFetch";
+import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
+import type { BroadcastStatus } from "@/lib/broadcastUtils";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /** Server-precomputed standing row — no client-side computeStandings needed. */
@@ -1373,6 +1375,16 @@ export default function PublicTournament() {
   const [followedPlayerId, setFollowedPlayerId] = useState<string | null>(null);
   const etagRef = useRef<string | null>(null);
 
+  // Board Broadcast state
+  const [broadcast, setBroadcast] = useState<{
+    broadcastEnabled: boolean;
+    broadcastUrl: string | null;
+    broadcastProvider: string | null;
+    featuredBoardNumber: number;
+    broadcastTitle: string | null;
+    broadcastStatus: BroadcastStatus;
+  } | null>(null);
+
   // Analytics — tournamentId becomes available after first successful fetch
   const { track } = useAnalytics(data?.tournamentId ?? null);
 
@@ -1398,6 +1410,15 @@ export default function PublicTournament() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.tournamentId]); // Only fire once per tournament load
+
+  // Fetch broadcast settings when tournamentId is available
+  useEffect(() => {
+    if (!data?.tournamentId) return;
+    authFetch(`/api/tournament/${encodeURIComponent(data.tournamentId)}/broadcast`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setBroadcast(d); })
+      .catch(() => {});
+  }, [data?.tournamentId]);
 
   // Fetch tournament data with ETag conditional request
   const fetchData = useCallback(async () => {
@@ -1565,6 +1586,35 @@ export default function PublicTournament() {
             <RoundDots currentRound={data.currentRound} totalRounds={data.totalRounds} isDark={isDark} />
           </section>
         )}
+        {/* Board Broadcast */}
+        {broadcast?.broadcastEnabled && broadcast.broadcastUrl && (() => {
+          const boardNum = broadcast.featuredBoardNumber ?? 1;
+          const currentRoundData = data.rounds.find((r) => r.number === data.currentRound);
+          const boardGame = currentRoundData?.games.find((g) => g.board === boardNum);
+          const whitePlayer = boardGame ? data.players.find((p) => p.id === boardGame.whiteId) : null;
+          const blackPlayer = boardGame ? data.players.find((p) => p.id === boardGame.blackId) : null;
+          return (
+            <section>
+              <BoardBroadcastPlayer
+                url={broadcast.broadcastUrl}
+                title={broadcast.broadcastTitle}
+                status={broadcast.broadcastStatus}
+                tournamentName={data.tournamentName}
+                isDark={isDark}
+                metadata={{
+                  boardNumber: boardNum,
+                  roundNumber: data.currentRound || undefined,
+                  whiteName: whitePlayer?.name || whitePlayer?.username,
+                  blackName: blackPlayer?.name || blackPlayer?.username,
+                  whiteRating: whitePlayer?.elo,
+                  blackRating: blackPlayer?.elo,
+                  result: boardGame?.result,
+                }}
+              />
+            </section>
+          );
+        })()}
+
         {/* Spotlight Search */}        <section>
           <SpotlightSearch
             players={data.players}
