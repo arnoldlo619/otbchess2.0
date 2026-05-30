@@ -6379,3 +6379,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Wire broadcast data into public tournament page (above pairings, with board metadata)
 - [x] Add server API endpoints for broadcast CRUD (save/load broadcast settings)
 - [x] Unit tests for broadcastUtils (URL parsing, validation, embed conversion)
+
+## Board Broadcast Production Hardening
+
+- [x] Harden URL validation: block ftp:/ftps:/file:/vbscript: protocols
+- [x] Add Twitch VOD support (twitch.tv/videos/ID, player.twitch.tv/?video=ID)
+- [x] Handle YouTube URLs with extra query params (?si=, &ab_channel=, &t=)
+- [x] Custom URLs restricted to https only (reject http for custom embeds)
+- [x] Remove iframe sandbox attribute (breaks YouTube/Twitch playback, documented in comment)
+- [x] Add proper iframe allow attributes (accelerometer, autoplay, clipboard-write, encrypted-media, gyroscope, picture-in-picture, web-share)
+- [x] Add Clear/Remove broadcast button to BroadcastSettingsPanel
+- [x] Guard: prevent saving "live" status without valid URL
+- [x] Improved validation messages (unsafe URL, invalid format, missing URL for live)
+- [x] BoardBroadcastPlayer: header row with LIVE/Ended badge above video
+- [x] BoardBroadcastPlayer: graceful fallback when metadata unavailable
+- [x] BoardBroadcastPlayer: mobile-first responsive (no horizontal overflow)
+- [x] Expanded test coverage: 35 tests (Twitch VODs, extra params, ftp, unsupported)

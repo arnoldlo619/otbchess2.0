@@ -1,10 +1,16 @@
 /**
  * BoardBroadcastPlayer — Responsive video embed with LIVE badge and board metadata.
  * Used on the public tournament page when broadcast is enabled.
+ *
+ * Production-hardened:
+ * - Graceful fallback when metadata is unavailable
+ * - Mobile-first responsive design (no horizontal overflow)
+ * - Proper iframe security attributes
+ * - sandbox attribute intentionally omitted (breaks YouTube/Twitch playback)
  */
 import { useMemo } from "react";
-import { getEmbedUrl, type BroadcastStatus } from "@/lib/broadcastUtils";
-import { Radio } from "lucide-react";
+import { getEmbedUrl, isValidBroadcastUrl, type BroadcastStatus } from "@/lib/broadcastUtils";
+import { Radio, MonitorOff } from "lucide-react";
 
 interface BoardMetadata {
   boardNumber: number;
@@ -28,80 +34,89 @@ interface Props {
 export function BoardBroadcastPlayer({ url, title, status, tournamentName, metadata, isDark = true }: Props) {
   const embedUrl = useMemo(() => getEmbedUrl(url), [url]);
 
-  if (!embedUrl) return null;
+  // Don't render if URL is invalid or embed can't be generated
+  if (!url || !isValidBroadcastUrl(url) || !embedUrl) return null;
+
+  const boardLabel = title || `Board ${metadata?.boardNumber ?? 1} Live`;
+  const hasPairing = !!(metadata?.whiteName && metadata?.blackName);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-gray-200"}`}>
-      {/* Video embed — 16:9 responsive */}
-      <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-        <iframe
-          src={embedUrl}
-          className="absolute inset-0 w-full h-full"
-          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="strict-origin-when-cross-origin"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
-          title={title || "Board Broadcast"}
-        />
-        {/* LIVE badge */}
+    <div className={`rounded-2xl border overflow-hidden ${isDark ? "bg-[oklch(0.20_0.06_145)] border-white/10" : "bg-white border-gray-200 shadow-sm"}`}>
+      {/* Header row: LIVE badge + title + board/round info */}
+      <div className={`px-4 py-2.5 flex items-center gap-2 flex-wrap ${isDark ? "border-b border-white/06" : "border-b border-gray-100"}`}>
         {status === "live" && (
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 shadow-lg">
-            <Radio className="w-3 h-3 text-white animate-pulse" />
-            <span className="text-[11px] font-bold text-white uppercase tracking-wider">Live</span>
-          </div>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 shadow-sm">
+            <Radio className="w-2.5 h-2.5 text-white animate-pulse" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Live</span>
+          </span>
         )}
         {status === "ended" && (
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-700/80 backdrop-blur-sm">
-            <span className="text-[11px] font-bold text-white/80 uppercase tracking-wider">Broadcast Ended</span>
-          </div>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-600/80">
+            <MonitorOff className="w-2.5 h-2.5 text-white/70" />
+            <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Ended</span>
+          </span>
+        )}
+        <h3 className={`text-sm font-bold truncate flex-1 min-w-0 ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+          {boardLabel}
+        </h3>
+        {metadata?.roundNumber && (
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"}`}>
+            Rd {metadata.roundNumber}
+          </span>
         )}
       </div>
 
-      {/* Metadata bar */}
-      <div className={`px-4 py-3 space-y-1 ${isDark ? "border-t border-white/06" : "border-t border-gray-100"}`}>
-        {/* Title row */}
-        <div className="flex items-center justify-between gap-2">
-          <h3 className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            {title || `Board ${metadata?.boardNumber ?? 1} Live`}
-          </h3>
-          {metadata?.roundNumber && (
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-500"}`}>
-              Round {metadata.roundNumber}
-            </span>
-          )}
-        </div>
+      {/* Video embed — 16:9 responsive, no horizontal overflow */}
+      <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+        {/* Note: sandbox attribute intentionally omitted — YouTube and Twitch
+            embeds require unrestricted same-origin access for their player SDKs.
+            Security is enforced at the URL validation/conversion layer instead. */}
+        <iframe
+          src={embedUrl}
+          className="absolute inset-0 w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          title={boardLabel}
+        />
+      </div>
 
+      {/* Metadata bar */}
+      <div className={`px-4 py-3 space-y-1.5 ${isDark ? "border-t border-white/06" : "border-t border-gray-100"}`}>
         {/* Tournament name */}
         {tournamentName && (
           <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>{tournamentName}</p>
         )}
 
-        {/* Board pairing */}
-        {metadata?.whiteName && metadata?.blackName && (
-          <div className={`flex items-center gap-2 mt-2 pt-2 ${isDark ? "border-t border-white/06" : "border-t border-gray-100"}`}>
+        {/* Board pairing — when available */}
+        {hasPairing && (
+          <div className={`flex items-center gap-2 pt-1.5 ${isDark ? "border-t border-white/06" : "border-t border-gray-50"}`}>
+            {/* White */}
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <span className="w-3 h-3 rounded-full bg-white border border-gray-300 flex-shrink-0" />
               <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-gray-800"}`}>
-                {metadata.whiteName}
+                {metadata!.whiteName}
               </span>
-              {metadata.whiteRating && (
+              {metadata!.whiteRating != null && (
                 <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-                  ({metadata.whiteRating})
+                  ({metadata!.whiteRating})
                 </span>
               )}
             </div>
+            {/* Result */}
             <span className={`text-xs font-bold flex-shrink-0 ${isDark ? "text-white/50" : "text-gray-500"}`}>
-              {metadata.result && metadata.result !== "*" ? metadata.result : "vs"}
+              {metadata!.result && metadata!.result !== "*" ? metadata!.result : "vs"}
             </span>
+            {/* Black */}
             <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-              {metadata.blackRating && (
+              {metadata!.blackRating != null && (
                 <span className={`text-[10px] flex-shrink-0 ${isDark ? "text-white/35" : "text-gray-400"}`}>
-                  ({metadata.blackRating})
+                  ({metadata!.blackRating})
                 </span>
               )}
               <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-gray-800"}`}>
-                {metadata.blackName}
+                {metadata!.blackName}
               </span>
               <span className="w-3 h-3 rounded-full bg-gray-800 border border-gray-600 flex-shrink-0" />
             </div>
@@ -109,9 +124,11 @@ export function BoardBroadcastPlayer({ url, title, status, tournamentName, metad
         )}
 
         {/* Fallback when no pairing data */}
-        {(!metadata?.whiteName || !metadata?.blackName) && metadata?.boardNumber && (
+        {!hasPairing && (
           <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-400"}`}>
-            Featured Board: Board {metadata.boardNumber}
+            {metadata?.boardNumber
+              ? `Featured Board: Board ${metadata.boardNumber}`
+              : "Player details will appear when pairings are available."}
           </p>
         )}
       </div>
