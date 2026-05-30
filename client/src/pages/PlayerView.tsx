@@ -20,6 +20,7 @@ import {
   Trophy,
   Swords,
   Clock,
+  MonitorPlay,
   CheckCircle2,
   Users,
   RotateCcw,
@@ -36,6 +37,10 @@ import {
   Timer,
   Video,
 } from "lucide-react";
+import { authFetch } from "@/lib/apiFetch";
+import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
+import type { BroadcastStatus } from "@/lib/broadcastUtils";
+import { isValidBroadcastUrl } from "@/lib/broadcastUtils";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -576,6 +581,26 @@ function MyBoardScreen({
   opponent: Player | undefined; players: Player[]; isDark: boolean;
   rejoinUrl: string; connected: boolean; timerSnapshot: TimerSnap;
 }) {
+  // ── Broadcast state ──────────────────────────────────────────────────────
+  const [broadcast, setBroadcast] = useState<{
+    broadcastEnabled: boolean;
+    broadcastUrl: string | null;
+    broadcastProvider: string | null;
+    featuredBoardNumber: number;
+    broadcastTitle: string | null;
+    broadcastStatus: BroadcastStatus;
+  } | null>(null);
+  const [showStreamSheet, setShowStreamSheet] = useState(false);
+
+  useEffect(() => {
+    if (!tournamentId || tournamentId === "otb-demo-2026") return;
+    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/broadcast`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setBroadcast(d); })
+      .catch(() => {});
+  }, [tournamentId]);
+
+  const hasBroadcast = !!(broadcast?.broadcastEnabled && broadcast.broadcastUrl && isValidBroadcastUrl(broadcast.broadcastUrl));
   const TABS = ["board", "standings", "clock"] as const;
   type Tab = typeof TABS[number];
 
@@ -805,6 +830,36 @@ function MyBoardScreen({
               </div>
               <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </a>
+            {/* Watch Stream — visible only when broadcast is active */}
+            {hasBroadcast && (
+              <button
+                onClick={() => setShowStreamSheet(true)}
+                className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-colors ${
+                  isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-gray-50 hover:bg-gray-100 active:bg-gray-150"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"}`}>
+                    <MonitorPlay className={`w-5 h-5 ${accent}`} />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm font-bold ${textMain}`}>Watch Stream</p>
+                      {broadcast?.broadcastStatus === "live" && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          <span className="text-[9px] font-bold text-white uppercase tracking-wider">Live</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs ${textMuted}`}>
+                      {broadcast?.broadcastTitle || `Board ${broadcast?.featuredBoardNumber ?? 1} broadcast`}
+                    </p>
+                  </div>
+                </div>
+                <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            )}
             {/* Record Game — Coming Soon (Pro / OTB Staff only) */}
             <div
               className={`flex items-center justify-between rounded-2xl px-5 py-4 opacity-60 cursor-not-allowed select-none ${
@@ -834,6 +889,64 @@ function MyBoardScreen({
           </div>
         </div>
       </div>
+
+      {/* ── Watch Stream bottom sheet ── */}
+      {showStreamSheet && hasBroadcast && (
+        <div
+          className="fixed inset-0 z-50 flex items-end"
+          onClick={() => setShowStreamSheet(false)}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className={`relative w-full rounded-t-3xl border-t overflow-hidden ${
+              isDark ? "bg-[oklch(0.18_0.06_145)] border-white/10" : "bg-white border-gray-200"
+            } animate-slide-up-fade safe-bottom`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className={`w-10 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-gray-300"}`} />
+            </div>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-5 py-3 border-b ${
+              isDark ? "border-white/06" : "border-gray-100"
+            }`}>
+              <div className="flex items-center gap-2">
+                <MonitorPlay className={`w-4 h-4 ${accent}`} />
+                <span className={`text-sm font-bold ${textMain}`}>
+                  {broadcast!.broadcastTitle || `Board ${broadcast!.featuredBoardNumber ?? 1} Broadcast`}
+                </span>
+                {broadcast!.broadcastStatus === "live" && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span className="text-[9px] font-bold text-white uppercase tracking-wider">Live</span>
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowStreamSheet(false)}
+                className={`p-2 rounded-xl ${isDark ? "hover:bg-white/08" : "hover:bg-gray-100"}`}
+              >
+                <X className={`w-4 h-4 ${textMuted}`} />
+              </button>
+            </div>
+            {/* Embed */}
+            <div className="px-4 py-4">
+              <BoardBroadcastPlayer
+                url={broadcast!.broadcastUrl!}
+                title={broadcast!.broadcastTitle}
+                status={broadcast!.broadcastStatus}
+                tournamentName={tournamentName}
+                isDark={isDark}
+                metadata={{
+                  boardNumber: broadcast!.featuredBoardNumber ?? 1,
+                  roundNumber: round || undefined,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

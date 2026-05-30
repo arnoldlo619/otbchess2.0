@@ -6395,3 +6395,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] BoardBroadcastPlayer: graceful fallback when metadata unavailable
 - [x] BoardBroadcastPlayer: mobile-first responsive (no horizontal overflow)
 - [x] Expanded test coverage: 35 tests (Twitch VODs, extra params, ftp, unsupported)
+
+## Watch Stream in Tools Tab
+
+- [x] Add Watch Stream entry to PlayerView Clock/Tools tab between Chess Clock and Record Game
+- [x] Fetch broadcast settings in MyBoardScreen when tournamentId is available
+- [x] Show Watch Stream button only when broadcast is enabled and has a valid URL
+- [x] Open broadcast embed in a bottom sheet overlay (slide-up) with close button
+- [x] Show LIVE badge on the entry row when broadcastStatus is "live"
