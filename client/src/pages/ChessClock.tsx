@@ -434,7 +434,7 @@ function ClockHalf({
           onClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            top: "1rem",
+            bottom: "1rem",
             left: "50%",
             transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
             zIndex: 2,
@@ -524,7 +524,7 @@ function ClockHalf({
           onClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            top: "1rem",
+            bottom: "1rem",
             left: "50%",
             transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
             zIndex: 2,
