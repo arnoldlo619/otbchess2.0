@@ -445,6 +445,7 @@ function ClockHalf({
           {playerInfo && (
             /* Tournament-mode: show pre-populated identity card */
             <div
+              className="clock-identity-card"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -455,7 +456,8 @@ function ClockHalf({
                 backdropFilter: "blur(10px)",
                 border: "1px solid rgba(34,197,94,0.18)",
                 opacity: isIdle || isPaused ? 1 : 0.72,
-                transition: "opacity 0.3s",
+                transition: "opacity 0.3s, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
+                cursor: "default",
               }}
             >
               {/* Avatar */}
