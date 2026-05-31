@@ -6,6 +6,7 @@
  * - Live camera preview (rear camera by default, front camera toggle)
  * - Board-framing guide overlay (rule-of-thirds crosshair)
  * - Clock overlay toggle: composites player names + live chess clock onto the stream via canvas
+ * - Watermark customization: custom text OR uploaded logo image, with position picker
  * - Record button with elapsed timer (records the composited canvas stream when overlay is on)
  * - Stop & share flow (Web Share API → clipboard fallback)
  * - Graceful fallback when camera permission is denied
@@ -23,7 +24,36 @@ import {
   AlertTriangle,
   Loader2,
   Layers,
+  ImagePlus,
+  Type,
+  Trash2,
 } from "lucide-react";
+
+type WatermarkPosition = "top-right" | "top-left" | "bottom-right" | "bottom-left";
+
+/** Resize an uploaded image to a max-width data URL for use in canvas */
+function resizeLogoImage(file: File, maxW = 320): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas not supported")); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
 
 interface TimerSnapProp {
   status: "idle" | "running" | "paused" | "expired";
@@ -74,6 +104,9 @@ function drawOverlay(
     activeColor: "white" | "black" | null;
     recordState: RecordState;
     elapsed: number;
+    watermarkText: string;
+    watermarkLogoImg: HTMLImageElement | null;
+    watermarkPosition: WatermarkPosition;
   }
 ) {
   const { width: w, height: h } = ctx.canvas;
@@ -157,11 +190,31 @@ function drawOverlay(
     ctx.fillText(formatElapsed(elapsed), dotX + dotR + 6, dotY);
   }
 
-  // ── OTB!! watermark (top-right) ─────────────────────────────────────────────
-  ctx.font = `bold ${smallFont}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-  ctx.fillStyle = "rgba(76,175,80,0.7)";
-  ctx.textAlign = "right";
-  ctx.fillText("ChessOTB.club", w - pad, Math.round(h * 0.045));
+  // ── Watermark (position-aware) ─────────────────────────────────────────────
+  const { watermarkText, watermarkLogoImg, watermarkPosition } = opts;
+  const wmPad = Math.round(w * 0.025);
+  const wmY = Math.round(h * 0.045);
+  const wmBottomY = barY - Math.round(h * 0.02);
+  const isTop = watermarkPosition.startsWith("top");
+  const isRight = watermarkPosition.endsWith("right");
+  const wmAnchorY = isTop ? wmY : wmBottomY;
+
+  if (watermarkLogoImg) {
+    // Draw logo image — scale to ~8% of canvas height
+    const logoH = Math.round(h * 0.08);
+    const logoW = Math.round(watermarkLogoImg.width * (logoH / watermarkLogoImg.height));
+    const logoX = isRight ? w - wmPad - logoW : wmPad;
+    const logoY = isTop ? wmAnchorY - logoH / 2 : wmAnchorY - logoH / 2;
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(watermarkLogoImg, logoX, logoY, logoW, logoH);
+    ctx.globalAlpha = 1;
+  } else if (watermarkText) {
+    ctx.font = `bold ${smallFont}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+    ctx.fillStyle = "rgba(76,175,80,0.75)";
+    ctx.textAlign = isRight ? "right" : "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(watermarkText, isRight ? w - wmPad : wmPad, wmAnchorY);
+  }
 }
 
 function useTimerRemaining(snap: TimerSnapProp | null | undefined): number {
@@ -209,11 +262,57 @@ export function FilmGameSheet({
   const [showGuide, setShowGuide] = useState(true);
   const [showOverlay, setShowOverlay] = useState(true);
 
-  // Keep a ref to the latest overlay state so the rAF loop always reads fresh values
-  const overlayStateRef = useRef({ playerWhite, playerBlack, whiteTimeSec: sharedTimeSec, blackTimeSec: sharedTimeSec, activeColor: null as "white" | "black" | null, recordState: "idle" as RecordState, elapsed: 0 });
+  // ── Watermark state ─────────────────────────────────────────────────────────
+  const [watermarkText, setWatermarkText] = useState("ChessOTB.club");
+  const [watermarkLogoDataUrl, setWatermarkLogoDataUrl] = useState<string | null>(null);
+  const [watermarkPosition, setWatermarkPosition] = useState<WatermarkPosition>("top-right");
+  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  // Pre-loaded HTMLImageElement for canvas drawing (avoids async in rAF)
+  const watermarkLogoImgRef = useRef<HTMLImageElement | null>(null);
   useEffect(() => {
-    overlayStateRef.current = { playerWhite, playerBlack, whiteTimeSec: sharedTimeSec, blackTimeSec: sharedTimeSec, activeColor: null, recordState, elapsed };
-  }, [playerWhite, playerBlack, sharedTimeSec, recordState, elapsed]);
+    if (!watermarkLogoDataUrl) { watermarkLogoImgRef.current = null; return; }
+    const img = new Image();
+    img.onload = () => { watermarkLogoImgRef.current = img; };
+    img.src = watermarkLogoDataUrl;
+  }, [watermarkLogoDataUrl]);
+
+  // Keep a ref to the latest overlay state so the rAF loop always reads fresh values
+  const overlayStateRef = useRef({
+    playerWhite, playerBlack,
+    whiteTimeSec: sharedTimeSec, blackTimeSec: sharedTimeSec,
+    activeColor: null as "white" | "black" | null,
+    recordState: "idle" as RecordState, elapsed: 0,
+    watermarkText: "ChessOTB.club",
+    watermarkLogoImg: null as HTMLImageElement | null,
+    watermarkPosition: "top-right" as WatermarkPosition,
+  });
+  useEffect(() => {
+    overlayStateRef.current = {
+      playerWhite, playerBlack,
+      whiteTimeSec: sharedTimeSec, blackTimeSec: sharedTimeSec,
+      activeColor: null, recordState, elapsed,
+      watermarkText,
+      watermarkLogoImg: watermarkLogoImgRef.current,
+      watermarkPosition,
+    };
+  }, [playerWhite, playerBlack, sharedTimeSec, recordState, elapsed, watermarkText, watermarkPosition]);
+
+  const handleLogoUpload = useCallback(async (file: File) => {
+    setLogoUploadError(null);
+    if (!file.type.startsWith("image/")) { setLogoUploadError("Please upload an image file (JPEG, PNG, WebP, SVG)."); return; }
+    if (file.size > 5 * 1024 * 1024) { setLogoUploadError("Image must be 5 MB or smaller."); return; }
+    setLogoUploading(true);
+    try {
+      const dataUrl = await resizeLogoImage(file);
+      setWatermarkLogoDataUrl(dataUrl);
+    } catch {
+      setLogoUploadError("Failed to process image. Try another file.");
+    } finally {
+      setLogoUploading(false);
+    }
+  }, []);
 
   // rAF loop: composite video + overlay onto canvas
   const startRaf = useCallback(() => {
@@ -567,6 +666,102 @@ export function FilmGameSheet({
                     <p className={`text-[10px] ${textMuted} mt-1.5`}>
                       {canvasStreamRef.current ? "✓ Overlay will be baked into the recording" : "⚠ Canvas capture not supported — overlay visible in preview only"}
                     </p>
+                  </div>
+                )}
+
+                {/* Watermark customization panel */}
+                {showOverlay && recordState === "idle" && (
+                  <div className={`rounded-xl overflow-hidden ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                    {/* Panel header */}
+                    <div className={`px-3 py-2.5 flex items-center justify-between border-b ${isDark ? "border-white/06" : "border-gray-100"}`}>
+                      <span className={`text-xs font-bold ${textMain}`}>Watermark</span>
+                      <span className={`text-[10px] ${textMuted}`}>Baked into recording</span>
+                    </div>
+
+                    <div className="px-3 py-3 space-y-3">
+                      {/* Text vs Logo toggle */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setWatermarkLogoDataUrl(null)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                            !watermarkLogoDataUrl
+                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                              : isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          <Type className="w-3 h-3" /> Text
+                        </button>
+                        <button
+                          onClick={() => logoInputRef.current?.click()}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                            watermarkLogoDataUrl
+                              ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                              : isDark ? "bg-white/08 text-white/40" : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {logoUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImagePlus className="w-3 h-3" />}
+                          Logo
+                        </button>
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = ""; }}
+                        />
+                      </div>
+
+                      {/* Text input */}
+                      {!watermarkLogoDataUrl && (
+                        <input
+                          type="text"
+                          value={watermarkText}
+                          onChange={(e) => setWatermarkText(e.target.value.slice(0, 40))}
+                          placeholder="Your watermark text…"
+                          maxLength={40}
+                          className={`w-full px-3 py-2 rounded-lg text-xs font-semibold outline-none border ${
+                            isDark
+                              ? "bg-white/08 border-white/10 text-white placeholder:text-white/30 focus:border-[#4CAF50]/50"
+                              : "bg-white border-gray-200 text-gray-800 placeholder:text-gray-300 focus:border-[#3D6B47]/40"
+                          } transition-colors`}
+                        />
+                      )}
+
+                      {/* Logo preview + remove */}
+                      {watermarkLogoDataUrl && (
+                        <div className="flex items-center gap-2">
+                          <img src={watermarkLogoDataUrl} alt="Logo" className="h-8 rounded object-contain" style={{ maxWidth: 80 }} />
+                          <button
+                            onClick={() => setWatermarkLogoDataUrl(null)}
+                            className={`flex items-center gap-1 text-xs ${isDark ? "text-white/40 hover:text-red-400" : "text-gray-400 hover:text-red-500"} transition-colors`}
+                          >
+                            <Trash2 className="w-3 h-3" /> Remove
+                          </button>
+                        </div>
+                      )}
+
+                      {logoUploadError && <p className="text-[10px] text-red-400">{logoUploadError}</p>}
+
+                      {/* Position picker */}
+                      <div>
+                        <p className={`text-[10px] font-semibold ${textMuted} uppercase tracking-wider mb-1.5`}>Position</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {(["top-left", "top-right", "bottom-left", "bottom-right"] as WatermarkPosition[]).map((pos) => (
+                            <button
+                              key={pos}
+                              onClick={() => setWatermarkPosition(pos)}
+                              className={`py-1.5 rounded-lg text-[10px] font-semibold capitalize transition-colors ${
+                                watermarkPosition === pos
+                                  ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                                  : isDark ? "bg-white/06 text-white/40" : "bg-gray-100 text-gray-400"
+                              }`}
+                            >
+                              {pos.replace("-", " ")}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
