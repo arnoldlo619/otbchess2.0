@@ -15,6 +15,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, RefreshCw, Check, AlertCircle, ChevronDown } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Player } from "@/lib/tournamentData";
+import { resolvePairingRating } from "@/lib/swiss";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ export function EditPlayerModal({
   const [eloStr, setEloStr] = useState("");
   const [rapidEloStr, setRapidEloStr] = useState("");
   const [blitzEloStr, setBlitzEloStr] = useState("");
+  const [manualPairingRatingStr, setManualPairingRatingStr] = useState("");
 
   // ── Fetch state ─────────────────────────────────────────────────────────────
   const [fetching, setFetching] = useState(false);
@@ -78,6 +80,7 @@ export function EditPlayerModal({
     setEloStr(player.elo != null ? String(player.elo) : "");
     setRapidEloStr(player.rapidElo != null ? String(player.rapidElo) : "");
     setBlitzEloStr(player.blitzElo != null ? String(player.blitzElo) : "");
+    setManualPairingRatingStr(player.manualPairingRating != null ? String(player.manualPairingRating) : "");
     setFetchError(null);
     setFetchSuccess(false);
     setShowAllRatings(false);
@@ -151,12 +154,20 @@ export function EditPlayerModal({
     if (nameError || eloError || !player) return;
     const p = player;
     const activeElo = eloStr.trim() !== "" ? parseElo(eloStr) : p.elo;
+    const newRapidElo = rapidEloStr.trim() !== "" ? (parseElo(rapidEloStr) ?? p.rapidElo) : p.rapidElo;
+    const newBlitzElo = blitzEloStr.trim() !== "" ? (parseElo(blitzEloStr) ?? p.blitzElo) : p.blitzElo;
+    const newManualPairingRating = manualPairingRatingStr.trim() !== "" ? (parseElo(manualPairingRatingStr) ?? p.manualPairingRating) : undefined;
+    const partialPlayer = { ...p, rapidElo: newRapidElo, blitzElo: newBlitzElo, bulletElo: p.bulletElo, manualPairingRating: newManualPairingRating };
+    const { pairingRating, ratingSource } = resolvePairingRating(partialPlayer, tournamentRatingType);
     const updated: Player = {
       ...p,
       name: name.trim(),
       elo: activeElo ?? p.elo,
-      rapidElo: rapidEloStr.trim() !== "" ? (parseElo(rapidEloStr) ?? p.rapidElo) : p.rapidElo,
-      blitzElo: blitzEloStr.trim() !== "" ? (parseElo(blitzEloStr) ?? p.blitzElo) : p.blitzElo,
+      rapidElo: newRapidElo,
+      blitzElo: newBlitzElo,
+      manualPairingRating: newManualPairingRating,
+      pairingRating,
+      ratingSource,
     };
     onSave(updated);
     onClose();
@@ -286,6 +297,28 @@ export function EditPlayerModal({
               )}
             </div>
           )}
+
+          {/* Manual Pairing Rating Override */}
+          <div>
+            <label className={labelBase}>
+              Manual Pairing Rating
+              <span className={`ml-1.5 text-[10px] font-normal px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-300" : "bg-amber-50 text-amber-700"}`}>
+                overrides auto-detected rating
+              </span>
+            </label>
+            <input
+              type="number"
+              value={manualPairingRatingStr}
+              onChange={(e) => setManualPairingRatingStr(e.target.value)}
+              className={inputBase}
+              placeholder="Leave blank to use auto-detected rating"
+              min={0}
+              max={4000}
+            />
+            <p className={`text-[11px] mt-1 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+              Use this to set a rating for unrated players or correct an inaccurate chess.com rating.
+            </p>
+          </div>
 
           {/* Expandable: individual rapid/blitz fields */}
           <div>

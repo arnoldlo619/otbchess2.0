@@ -1019,8 +1019,14 @@ function _StandingsPanel({
                 }`}>{p.title}</span>
               )}
             </div>
-            <span className={`text-[11px] tabular-nums ${isDark ? "text-white/30" : "text-gray-400"}`}>
-              {p.elo}
+            <span className={`text-[11px] tabular-nums flex items-center gap-1 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+              {p.pairingRating ?? p.elo}
+              {p.ratingSource === "manual" && (
+                <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${isDark ? "bg-amber-500/20 text-amber-300" : "bg-amber-50 text-amber-700"}`}>M</span>
+              )}
+              {p.ratingSource === "default" && (
+                <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${isDark ? "bg-white/10 text-white/30" : "bg-gray-100 text-gray-400"}`}>?</span>
+              )}
             </span>
           </div>
           <span

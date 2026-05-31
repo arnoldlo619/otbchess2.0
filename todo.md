@@ -6403,3 +6403,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show Watch Stream button only when broadcast is enabled and has a valid URL
 - [x] Open broadcast embed in a bottom sheet overlay (slide-up) with close button
 - [x] Show LIVE badge on the entry row when broadcastStatus is "live"
+
+## Swiss Pairing Engine Upgrade
+
+- [ ] Round 1: top-half vs bottom-half pairing (Seed 1 vs Seed N/2+1, etc.)
+- [ ] Rounds 2+: score-group-based pairing (verify correctness)
+- [ ] Bye: award 1 full point (not ½) for tournament byes
+- [ ] Add pairingRating and ratingSource fields to Player type
+- [ ] Add bulletElo field to Player type for full fallback chain
+- [ ] Rating fallback chain: Rapid → Blitz → Bullet → manual → 1200
+- [ ] Manual pairing rating override in EditPlayerModal
+- [ ] Pairing validation layer (validatePairings function)
+- [ ] UX: ratingSource badge in roster
+- [ ] Comprehensive unit tests (2, 8, 10, 20, 40, odd players, fallback, bye, no-repeat)

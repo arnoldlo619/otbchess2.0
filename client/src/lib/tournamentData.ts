@@ -16,6 +16,21 @@ export interface Player {
   rapidElo?: number;
   /** chess.com Blitz rating (stored separately so directors can switch rating type) */
   blitzElo?: number;
+  /** chess.com Bullet rating */
+  bulletElo?: number;
+  /**
+   * Resolved pairing rating used by the Swiss engine.
+   * Fallback chain: rapidElo → blitzElo → bulletElo → manualPairingRating → 1200.
+   * Set at registration time and updated when director changes ratingType.
+   */
+  pairingRating?: number;
+  /**
+   * Source of the pairingRating — for UX display in the Director roster.
+   * "rapid" | "blitz" | "bullet" | "manual" | "default"
+   */
+  ratingSource?: "rapid" | "blitz" | "bullet" | "manual" | "default";
+  /** Director-entered manual override for pairing rating (persists across ratingType changes) */
+  manualPairingRating?: number;
   title?: "GM" | "IM" | "WGM" | "WIM" | "FM" | "WFM" | "CM" | "NM";
   country: string;
   points: number;

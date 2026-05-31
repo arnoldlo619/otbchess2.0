@@ -147,7 +147,7 @@ describe("computeStandings — FinalStandings tiebreak logic", () => {
     expect(standings.map((r) => r.rank)).toEqual([1, 2, 3]);
   });
 
-  it("handles bye (whiteId === BYE) correctly — bye player gets 0.5pts", () => {
+  it("handles bye (whiteId === BYE) correctly — bye player gets 1 full point", () => {
     const p1 = makePlayer("p1", 1800);
     const p2 = makePlayer("p2", 1600);
     const p3 = makePlayer("p3", 1400);
@@ -155,13 +155,13 @@ describe("computeStandings — FinalStandings tiebreak logic", () => {
     const rounds: Round[] = [
       makeRound(1, [
         makeGame("g1", 1, 1, "p1", "p2", "1-0"),
-        makeGame("bye1", 1, 2, "BYE", "p3", "½-½"), // p3 gets bye
+        makeGame("bye1", 1, 2, "BYE", "p3", "1-0"), // p3 gets bye = 1 full point
       ]),
     ];
 
     const standings = computeStandings([p1, p2, p3], rounds);
     const p3Row = standings.find((r) => r.player.id === "p3")!;
-    expect(p3Row.points).toBe(0.5);
+    expect(p3Row.points).toBe(1);
   });
 
   it("returns empty array for empty player list", () => {

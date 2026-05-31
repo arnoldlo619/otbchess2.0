@@ -2,12 +2,16 @@
  * OTB Chess — Swiss Pairing Engine
  *
  * Implements FIDE-compliant Swiss system pairing:
- *   1. Score groups: players sorted by points, then ELO
- *   2. Within each score group, top half paired against bottom half
- *   3. Repeat-opponent prevention (fall back to repeat only if unavoidable)
+ *   1. Round 1: top-half vs bottom-half (Seed 1 vs Seed N/2+1, Seed 2 vs Seed N/2+2, …)
+ *   2. Rounds 2+: score groups sorted by points desc, ELO desc; within each group,
+ *      top half paired against bottom half (Dutch system)
+ *   3. Repeat-opponent prevention (backtracking, greedy fallback)
  *   4. Color balancing: track W/B history, prefer alternation, never 3 same in a row
- *   5. Bye assignment: lowest-ranked player without a previous bye gets the bye (½ pt)
- *   6. Tiebreaks: Buchholz, Buchholz Cut-1 (drop weakest opponent), Sonneborn-Berger
+ *   5. Bye assignment: lowest-ranked player without a previous bye gets the bye (1 full pt)
+ *   6. Tiebreaks: Buchholz, Buchholz Cut-1, Sonneborn-Berger
+ *
+ * Rating used for sorting: player.pairingRating ?? player.elo (fallback chain applied at
+ * registration time by resolvePairingRating()).
  */
 
 import type { Player, Game, Round, Result } from "./tournamentData";
@@ -32,6 +36,59 @@ export interface StandingRow {
   matchL: number;
 }
 
+export interface PairingValidation {
+  valid: boolean;
+  warnings: string[];
+  errors: string[];
+}
+
+// ─── Rating Resolution ────────────────────────────────────────────────────────
+
+/**
+ * Resolve the pairing rating for a player using the fallback chain:
+ *   manualPairingRating → rapidElo → blitzElo → bulletElo → elo → 1200
+ *
+ * Also returns the ratingSource for display in the Director roster.
+ */
+export function resolvePairingRating(
+  player: Pick<Player, "elo" | "rapidElo" | "blitzElo" | "bulletElo" | "manualPairingRating">,
+  ratingType: "rapid" | "blitz" = "rapid"
+): { pairingRating: number; ratingSource: Player["ratingSource"] } {
+  // Manual override always wins
+  if (player.manualPairingRating != null && player.manualPairingRating > 0) {
+    return { pairingRating: player.manualPairingRating, ratingSource: "manual" };
+  }
+
+  // Preferred type first
+  if (ratingType === "rapid" && player.rapidElo && player.rapidElo > 0) {
+    return { pairingRating: player.rapidElo, ratingSource: "rapid" };
+  }
+  if (ratingType === "blitz" && player.blitzElo && player.blitzElo > 0) {
+    return { pairingRating: player.blitzElo, ratingSource: "blitz" };
+  }
+
+  // Fallback chain
+  if (player.rapidElo && player.rapidElo > 0) {
+    return { pairingRating: player.rapidElo, ratingSource: "rapid" };
+  }
+  if (player.blitzElo && player.blitzElo > 0) {
+    return { pairingRating: player.blitzElo, ratingSource: "blitz" };
+  }
+  if (player.bulletElo && player.bulletElo > 0) {
+    return { pairingRating: player.bulletElo, ratingSource: "bullet" };
+  }
+  if (player.elo && player.elo > 0 && player.elo !== 1200) {
+    return { pairingRating: player.elo, ratingSource: "rapid" };
+  }
+
+  return { pairingRating: 1200, ratingSource: "default" };
+}
+
+/** Get the effective pairing rating for sorting/pairing purposes. */
+function effectiveRating(p: Player): number {
+  return p.pairingRating ?? p.elo ?? 1200;
+}
+
 // ─── Tiebreak Computation ─────────────────────────────────────────────────────
 
 /**
@@ -39,7 +96,6 @@ export interface StandingRow {
  * Uses the actual game results from all completed rounds.
  */
 export function computeStandings(players: Player[], rounds: Round[]): StandingRow[] {
-  // Build a map of player id → live points from game results
   const pointsMap = new Map<string, number>();
   const winsMap = new Map<string, number>();
   const drawsMap = new Map<string, number>();
@@ -61,6 +117,15 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
   for (const round of rounds) {
     for (const game of round.games) {
       if (game.result === "*") continue;
+
+      // Bye: whiteId === "BYE" → blackId gets 1 full point (tournament bye standard).
+      // Handle BEFORE the ½-½ branch so the bye game is not double-counted.
+      if (game.whiteId === "BYE") {
+        pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 1);
+        winsMap.set(game.blackId, (winsMap.get(game.blackId) ?? 0) + 1);
+        continue;
+      }
+
       if (game.result === "1-0") {
         pointsMap.set(game.whiteId, (pointsMap.get(game.whiteId) ?? 0) + 1);
         winsMap.set(game.whiteId, (winsMap.get(game.whiteId) ?? 0) + 1);
@@ -69,15 +134,7 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
         pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 1);
         winsMap.set(game.blackId, (winsMap.get(game.blackId) ?? 0) + 1);
         lossesMap.set(game.whiteId, (lossesMap.get(game.whiteId) ?? 0) + 1);
-      }
-      // Bye: whiteId === "BYE" means the blackId player gets ½ point (FIDE standard).
-      // Handle BEFORE the ½-½ branch so the bye game is not double-counted.
-      if (game.whiteId === "BYE") {
-        pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
-        drawsMap.set(game.blackId, (drawsMap.get(game.blackId) ?? 0) + 1);
-        continue;
-      }
-      if (game.result === "½-½") {
+      } else if (game.result === "½-½") {
         pointsMap.set(game.whiteId, (pointsMap.get(game.whiteId) ?? 0) + 0.5);
         pointsMap.set(game.blackId, (pointsMap.get(game.blackId) ?? 0) + 0.5);
         drawsMap.set(game.whiteId, (drawsMap.get(game.whiteId) ?? 0) + 1);
@@ -87,7 +144,6 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
   }
 
   // ── Double Swiss: compute mini-match W/D/L per round ──────────────────────
-  // Games with gameIndex 0 and 1 sharing the same board number in a round form a mini-match.
   const miniGameScore = (g: Game, forId: string): number => {
     if (g.result === "½-½") return 0.5;
     if (g.result === "1-0") return g.whiteId === forId ? 1 : 0;
@@ -95,10 +151,9 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
     return 0;
   };
   for (const round of rounds) {
-    // Group games by board number (game.board)
     const byBoard = new Map<number, { gameA?: Game; gameB?: Game }>();
     for (const game of round.games) {
-      if (game.gameIndex === undefined) continue; // not a Double Swiss round
+      if (game.gameIndex === undefined) continue;
       const slot = byBoard.get(game.board) ?? {};
       if (game.gameIndex === 0) slot.gameA = game;
       else if (game.gameIndex === 1) slot.gameB = game;
@@ -149,7 +204,6 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
       ? oppScores.slice(1).reduce((sum, s) => sum + s, 0)
       : buchholz;
 
-    // Sonneborn-Berger: sum of defeated opponents' scores + half of drawn opponents' scores
     let sb = 0;
     for (const round of rounds) {
       for (const game of round.games) {
@@ -167,7 +221,7 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
 
     return {
       player: p,
-      rank: 0, // filled below
+      rank: 0,
       points: pts,
       buchholz,
       buchholzCut1,
@@ -181,13 +235,12 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
     };
   });
 
-  // Sort: points → buchholz → bc1 → sonneborn-berger → ELO
   rows.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
     if (b.buchholzCut1 !== a.buchholzCut1) return b.buchholzCut1 - a.buchholzCut1;
     if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
-    return b.player.elo - a.player.elo;
+    return effectiveRating(b.player) - effectiveRating(a.player);
   });
 
   rows.forEach((r, i) => { r.rank = i + 1; });
@@ -196,17 +249,7 @@ export function computeStandings(players: Player[], rounds: Round[]): StandingRo
 
 // ─── Color Assignment ─────────────────────────────────────────────────────────
 
-/**
- * Determine which player should get White.
- * Rules (in priority order):
- *   1. Never give the same color 3 times in a row
- *   2. Give the color owed (fewer of that color so far)
- *   3. Higher-rated player gets White as tiebreak
- */
-function assignColors(
-  p1: Player,
-  p2: Player
-): { whiteId: string; blackId: string } {
+function assignColors(p1: Player, p2: Player): { whiteId: string; blackId: string } {
   const p1w = p1.colorHistory.filter((c) => c === "W").length;
   const p1b = p1.colorHistory.filter((c) => c === "B").length;
   const p2w = p2.colorHistory.filter((c) => c === "W").length;
@@ -217,21 +260,18 @@ function assignColors(
   const p1ThreeInRow = p1Last3.length === 3 && p1Last3.every((c) => c === p1Last3[0]);
   const p2ThreeInRow = p2Last3.length === 3 && p2Last3.every((c) => c === p2Last3[0]);
 
-  // If p1 would get 3 in a row with White, give them Black
   if (p1ThreeInRow && p1Last3[0] === "W") return { whiteId: p2.id, blackId: p1.id };
   if (p2ThreeInRow && p2Last3[0] === "W") return { whiteId: p1.id, blackId: p2.id };
   if (p1ThreeInRow && p1Last3[0] === "B") return { whiteId: p1.id, blackId: p2.id };
   if (p2ThreeInRow && p2Last3[0] === "B") return { whiteId: p2.id, blackId: p1.id };
 
-  // Give color owed (fewer of that color)
-  const p1Diff = p1w - p1b; // positive = owes Black
+  const p1Diff = p1w - p1b;
   const p2Diff = p2w - p2b;
 
-  if (p1Diff > p2Diff) return { whiteId: p2.id, blackId: p1.id }; // p1 owes Black
-  if (p2Diff > p1Diff) return { whiteId: p1.id, blackId: p2.id }; // p2 owes Black
+  if (p1Diff > p2Diff) return { whiteId: p2.id, blackId: p1.id };
+  if (p2Diff > p1Diff) return { whiteId: p1.id, blackId: p2.id };
 
-  // Equal — higher ELO gets White
-  return p1.elo >= p2.elo
+  return effectiveRating(p1) >= effectiveRating(p2)
     ? { whiteId: p1.id, blackId: p2.id }
     : { whiteId: p2.id, blackId: p1.id };
 }
@@ -249,18 +289,108 @@ function getByeRecipients(rounds: Round[]): Set<string> {
   return byeSet;
 }
 
+// ─── Pairing Validation ───────────────────────────────────────────────────────
+
+/**
+ * Validate a set of generated pairings against the player list and previous rounds.
+ * Returns a PairingValidation object with errors and warnings.
+ */
+export function validatePairings(
+  games: Game[],
+  players: Player[],
+  rounds: Round[],
+  nextRound: number
+): PairingValidation {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const playerIds = new Set(players.map((p) => p.id));
+
+  // Build played pairs from previous rounds
+  const played = new Set<string>();
+  for (const round of rounds) {
+    for (const game of round.games) {
+      if (game.whiteId !== "BYE" && game.blackId !== "BYE") {
+        played.add([game.whiteId, game.blackId].sort().join("|"));
+      }
+    }
+  }
+
+  const pairedInThisRound = new Set<string>();
+  let byeCount = 0;
+
+  for (const game of games) {
+    // Check round number
+    if (game.round !== nextRound) {
+      errors.push(`Game ${game.id} has wrong round number: ${game.round} (expected ${nextRound})`);
+    }
+
+    // Bye game checks
+    if (game.whiteId === "BYE") {
+      byeCount++;
+      if (byeCount > 1) errors.push("More than one bye assigned in a single round");
+      if (!playerIds.has(game.blackId)) {
+        errors.push(`Bye recipient ${game.blackId} is not in the player list`);
+      }
+      continue;
+    }
+
+    // Both players must exist
+    if (!playerIds.has(game.whiteId)) {
+      errors.push(`White player ${game.whiteId} is not in the player list`);
+    }
+    if (!playerIds.has(game.blackId)) {
+      errors.push(`Black player ${game.blackId} is not in the player list`);
+    }
+
+    // No player paired twice
+    if (pairedInThisRound.has(game.whiteId)) {
+      errors.push(`Player ${game.whiteId} is paired more than once in round ${nextRound}`);
+    }
+    if (pairedInThisRound.has(game.blackId)) {
+      errors.push(`Player ${game.blackId} is paired more than once in round ${nextRound}`);
+    }
+    pairedInThisRound.add(game.whiteId);
+    pairedInThisRound.add(game.blackId);
+
+    // Repeat opponent warning
+    const key = [game.whiteId, game.blackId].sort().join("|");
+    if (played.has(key)) {
+      warnings.push(`Repeat pairing: ${game.whiteId} vs ${game.blackId} (already played)`);
+    }
+
+    // Same player as white and black
+    if (game.whiteId === game.blackId) {
+      errors.push(`Player ${game.whiteId} is paired against themselves`);
+    }
+  }
+
+  // Check all non-bye players are paired
+  const expectedPaired = players.length % 2 === 0 ? players.length : players.length - 1;
+  if (pairedInThisRound.size < expectedPaired) {
+    warnings.push(`Only ${pairedInThisRound.size} of ${expectedPaired} expected players are paired`);
+  }
+
+  return { valid: errors.length === 0, warnings, errors };
+}
+
 // ─── Main Pairing Function ────────────────────────────────────────────────────
 
 /**
  * Generate Swiss pairings for the next round.
  *
- * Algorithm:
- *   1. Sort players by points desc, ELO desc
+ * Round 1 algorithm (all players at 0 points):
+ *   Sort by pairingRating (or elo) desc → split at midpoint →
+ *   pair top[0] vs bottom[0], top[1] vs bottom[1], …
+ *   (FIDE top-half vs bottom-half seeding)
+ *
+ * Rounds 2+ algorithm (Dutch system):
+ *   1. Sort players by points desc, pairingRating desc
  *   2. Handle bye if odd number of players
  *   3. Group by score bracket
- *   4. Within each bracket, pair top half vs bottom half (Dutch system)
- *   5. If a pairing would be a repeat, float one player down to the next bracket
- *   6. Assign colors per assignColors()
+ *   4. Within each bracket, pair top half vs bottom half
+ *   5. Backtracking to avoid repeat opponents (capped at 50k iterations)
+ *   6. Greedy O(n²) fallback if backtracking is exhausted
+ *   7. Assign colors per assignColors()
  */
 export function generateSwissPairings(
   players: Player[],
@@ -278,9 +408,11 @@ export function generateSwissPairings(
     }
   }
 
-  // Sort by points desc, ELO desc
+  // Sort by points desc, pairingRating desc
   const sorted = [...players].sort((a, b) =>
-    b.points !== a.points ? b.points - a.points : b.elo - a.elo
+    b.points !== a.points
+      ? b.points - a.points
+      : effectiveRating(b) - effectiveRating(a)
   );
 
   // Handle bye for odd number of players
@@ -289,7 +421,6 @@ export function generateSwissPairings(
 
   if (sorted.length % 2 !== 0) {
     const previousByeRecipients = getByeRecipients(rounds);
-    // Give bye to lowest-ranked player who hasn't had one yet
     for (let i = pairingPool.length - 1; i >= 0; i--) {
       if (!previousByeRecipients.has(pairingPool[i].id)) {
         byePlayerId = pairingPool[i].id;
@@ -297,142 +428,134 @@ export function generateSwissPairings(
         break;
       }
     }
-    // If everyone has had a bye, give it to the lowest-ranked player
     if (!byePlayerId) {
       byePlayerId = pairingPool[pairingPool.length - 1].id;
       pairingPool.pop();
     }
   }
 
-  // Group into score brackets
-  const brackets = new Map<number, Player[]>();
-  for (const p of pairingPool) {
-    const pts = p.points;
-    if (!brackets.has(pts)) brackets.set(pts, []);
-    brackets.get(pts)!.push(p);
-  }
-
-  // Sort brackets by score descending
-  const sortedBrackets = Array.from(brackets.entries()).sort((a, b) => b[0] - a[0]);
-
-  const _paired = new Set<string>();
   const games: Game[] = [];
   let board = 1;
-
-  // Flatten brackets into a working list for Dutch pairing
-  const workingList: Player[] = [];
-  for (const [, bracketPlayers] of sortedBrackets) {
-    workingList.push(...bracketPlayers);
-  }
-
-  // Dutch pairing: try to pair i with i + half, falling back as needed
-  const _n = workingList.length;
-  const _tempPaired = new Set<string>();
   const tempGames: { p1: Player; p2: Player }[] = [];
 
-  // ── Backtracking pairing with iteration limit ─────────────────────────────
-  // The recursive tryPair is O(n!) in the worst case. For large tournaments
-  // (50+ pairs), later rounds where many players have already faced each other
-  // can cause the backtracking to explore millions of branches.
-  // We cap iterations at 50,000 — enough for optimal pairing in most cases,
-  // but prevents browser freezes. If the limit is hit, we fall back to a
-  // greedy O(n²) algorithm that simply pairs top-down, allowing repeats.
-  const BACKTRACK_LIMIT = 50_000;
-  let backtrackIterations = 0;
-  let backtrackExhausted = false;
+  // ── Round 1: top-half vs bottom-half seeding ──────────────────────────────
+  if (nextRound === 1) {
+    const n = pairingPool.length; // always even after bye removal
+    const half = Math.floor(n / 2);
+    const topHalf = pairingPool.slice(0, half);
+    const bottomHalf = pairingPool.slice(half);
 
-  function tryPair(pool: Player[]): boolean {
-    if (pool.length === 0) return true;
-    if (pool.length === 1) return false; // shouldn't happen (bye already handled)
-    if (backtrackExhausted) return false; // bail out early
+    for (let i = 0; i < half; i++) {
+      tempGames.push({ p1: topHalf[i], p2: bottomHalf[i] });
+    }
+  } else {
+    // ── Rounds 2+: score-group Dutch pairing ─────────────────────────────────
 
-    const p1 = pool[0];
-    const rest = pool.slice(1);
-
-    // Try each candidate for p1, preferring those in the same score group
-    for (let i = 0; i < rest.length; i++) {
-      backtrackIterations++;
-      if (backtrackIterations > BACKTRACK_LIMIT) {
-        backtrackExhausted = true;
-        return false;
-      }
-      const p2 = rest[i];
-      const key = [p1.id, p2.id].sort().join("|");
-      if (played.has(key)) continue; // avoid repeat if possible
-
-      const remaining = rest.filter((_, idx) => idx !== i);
-      if (tryPair(remaining)) {
-        tempGames.push({ p1, p2 });
-        return true;
-      }
+    // Group into score brackets
+    const brackets = new Map<number, Player[]>();
+    for (const p of pairingPool) {
+      const pts = p.points;
+      if (!brackets.has(pts)) brackets.set(pts, []);
+      brackets.get(pts)!.push(p);
     }
 
-    // If no non-repeat pairing found, allow repeats
-    for (let i = 0; i < rest.length; i++) {
-      backtrackIterations++;
-      if (backtrackIterations > BACKTRACK_LIMIT) {
-        backtrackExhausted = true;
-        return false;
-      }
-      const p2 = rest[i];
-      const remaining = rest.filter((_, idx) => idx !== i);
-      if (tryPair(remaining)) {
-        tempGames.push({ p1, p2 });
-        return true;
-      }
+    const sortedBrackets = Array.from(brackets.entries()).sort((a, b) => b[0] - a[0]);
+
+    // Flatten brackets into a working list for Dutch pairing
+    const workingList: Player[] = [];
+    for (const [, bracketPlayers] of sortedBrackets) {
+      workingList.push(...bracketPlayers);
     }
 
-    return false;
-  }
+    const BACKTRACK_LIMIT = 50_000;
+    let backtrackIterations = 0;
+    let backtrackExhausted = false;
 
-  const backtrackSuccess = tryPair(workingList);
+    const tryPair = (pool: Player[]): boolean => {
+      if (pool.length === 0) return true;
+      if (pool.length === 1) return false;
+      if (backtrackExhausted) return false;
 
-  // ── Greedy fallback when backtracking is exhausted ────────────────────────
-  // Pairs players top-down from the sorted list, preferring non-repeat
-  // opponents but allowing repeats when necessary. O(n²) worst case.
-  if (!backtrackSuccess || backtrackExhausted) {
-    tempGames.length = 0; // clear any partial backtracking results
-    const greedyPool = [...workingList];
-    const greedyPaired = new Set<string>();
+      const p1 = pool[0];
+      const rest = pool.slice(1);
 
-    while (greedyPool.length >= 2) {
-      const p1 = greedyPool[0];
-      greedyPool.splice(0, 1);
+      for (let i = 0; i < rest.length; i++) {
+        backtrackIterations++;
+        if (backtrackIterations > BACKTRACK_LIMIT) {
+          backtrackExhausted = true;
+          return false;
+        }
+        const p2 = rest[i];
+        const key = [p1.id, p2.id].sort().join("|");
+        if (played.has(key)) continue;
 
-      // First pass: find best non-repeat opponent
-      let bestIdx = -1;
-      for (let i = 0; i < greedyPool.length; i++) {
-        const key = [p1.id, greedyPool[i].id].sort().join("|");
-        if (!played.has(key) && !greedyPaired.has(greedyPool[i].id)) {
-          bestIdx = i;
-          break;
+        const remaining = rest.filter((_, idx) => idx !== i);
+        if (tryPair(remaining)) {
+          tempGames.push({ p1, p2 });
+          return true;
         }
       }
-      // Second pass: allow repeats if no non-repeat found
-      if (bestIdx === -1) {
+
+      // Allow repeats as last resort
+      for (let i = 0; i < rest.length; i++) {
+        backtrackIterations++;
+        if (backtrackIterations > BACKTRACK_LIMIT) {
+          backtrackExhausted = true;
+          return false;
+        }
+        const p2 = rest[i];
+        const remaining = rest.filter((_, idx) => idx !== i);
+        if (tryPair(remaining)) {
+          tempGames.push({ p1, p2 });
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    const backtrackSuccess = tryPair(workingList);
+
+    if (!backtrackSuccess || backtrackExhausted) {
+      tempGames.length = 0;
+      const greedyPool = [...workingList];
+      const greedyPaired = new Set<string>();
+
+      while (greedyPool.length >= 2) {
+        const p1 = greedyPool[0];
+        greedyPool.splice(0, 1);
+
+        let bestIdx = -1;
         for (let i = 0; i < greedyPool.length; i++) {
-          if (!greedyPaired.has(greedyPool[i].id)) {
+          const key = [p1.id, greedyPool[i].id].sort().join("|");
+          if (!played.has(key) && !greedyPaired.has(greedyPool[i].id)) {
             bestIdx = i;
             break;
           }
         }
-      }
-      // Last resort: just take the first available
-      if (bestIdx === -1 && greedyPool.length > 0) bestIdx = 0;
+        if (bestIdx === -1) {
+          for (let i = 0; i < greedyPool.length; i++) {
+            if (!greedyPaired.has(greedyPool[i].id)) {
+              bestIdx = i;
+              break;
+            }
+          }
+        }
+        if (bestIdx === -1 && greedyPool.length > 0) bestIdx = 0;
 
-      if (bestIdx >= 0) {
-        const p2 = greedyPool[bestIdx];
-        greedyPool.splice(bestIdx, 1);
-        greedyPaired.add(p1.id);
-        greedyPaired.add(p2.id);
-        tempGames.push({ p1, p2 });
+        if (bestIdx >= 0) {
+          const p2 = greedyPool[bestIdx];
+          greedyPool.splice(bestIdx, 1);
+          greedyPaired.add(p1.id);
+          greedyPaired.add(p2.id);
+          tempGames.push({ p1, p2 });
+        }
       }
     }
-  }
 
-  // Reverse so that the highest-rated pair (added last by the recursive tryPair)
-  // receives Board 1, with board numbers ascending as ratings/scores decrease.
-  tempGames.reverse();
+    // Reverse so highest-rated pair gets Board 1
+    tempGames.reverse();
+  }
 
   // Convert tempGames to Game objects with color assignment
   for (const { p1, p2 } of tempGames) {
@@ -448,7 +571,7 @@ export function generateSwissPairings(
     board++;
   }
 
-  // Add bye game if needed
+  // Add bye game if needed — 1 full point (tournament standard)
   if (byePlayerId) {
     games.push({
       id: `r${nextRound}b${board}`,
@@ -456,7 +579,7 @@ export function generateSwissPairings(
       board,
       whiteId: "BYE",
       blackId: byePlayerId,
-      result: "½-½", // bye = ½ point (FIDE standard)
+      result: "1-0" as Result, // bye = 1 full point
     });
   }
 
@@ -533,43 +656,21 @@ export function applyResultToPlayers(
 
 // ─── Double Swiss ─────────────────────────────────────────────────────────────
 
-/**
- * Generate Double Swiss pairings for the next round.
- *
- * Calls the standard Swiss engine to produce pairings, then doubles every
- * game: Game A keeps the assigned colors; Game B swaps them. Both games
- * share the same board number so the Director can display them as a pair.
- *
- * IDs:
- *   Game A: r{round}b{board}a  (gameIndex = 0)
- *   Game B: r{round}b{board}b  (gameIndex = 1)
- *
- * Bye games are NOT doubled — the bye player still receives ½ point once.
- */
 export function generateDoubleSwissPairings(
   players: Player[],
   rounds: Round[],
   nextRound: number
 ): Game[] {
-  // Get standard Swiss pairings (includes bye if needed)
   const baseGames = generateSwissPairings(players, rounds, nextRound);
 
   const doubled: Game[] = [];
   for (const game of baseGames) {
-    // Bye games are not doubled
     if (game.whiteId === "BYE" || game.blackId === "BYE") {
       doubled.push({ ...game, gameIndex: 0 });
       continue;
     }
 
-    // Game A — normal colors (gameIndex 0)
-    doubled.push({
-      ...game,
-      id: `${game.id}a`,
-      gameIndex: 0,
-    });
-
-    // Game B — colors swapped (gameIndex 1)
+    doubled.push({ ...game, id: `${game.id}a`, gameIndex: 0 });
     doubled.push({
       id: `${game.id}b`,
       round: game.round,
@@ -584,27 +685,17 @@ export function generateDoubleSwissPairings(
   return doubled;
 }
 
-/**
- * Check whether a round is complete in Double Swiss mode.
- * Both Game A and Game B for every board must have a result.
- */
 export function isDoubleSwissRoundComplete(games: Game[]): boolean {
   return games.every((g) => g.result !== "*");
 }
 
 // ─── Elimination Bracket Engine ───────────────────────────────────────────────
 
-/**
- * Find the smallest power of 2 that is >= n.
- */
 function nextPowerOf2(n: number): number {
   if (n <= 1) return 1;
   return Math.pow(2, Math.ceil(Math.log2(n)));
 }
 
-/**
- * Find the largest power of 2 that is <= n.
- */
 function nearestPowerOf2(n: number): number {
   if (n <= 1) return 1;
   let p = 1;
@@ -612,18 +703,10 @@ function nearestPowerOf2(n: number): number {
   return p;
 }
 
-/**
- * Compute the number of elimination rounds needed for a given bracket size.
- * e.g. 64 → 6, 32 → 5, 16 → 4, 8 → 3
- */
 export function elimRoundsNeeded(bracketSize: number): number {
   return Math.ceil(Math.log2(bracketSize));
 }
 
-/**
- * Get the label for an elimination round based on remaining players.
- * e.g. 2 remaining → "Final", 4 → "Semifinals", 8 → "Quarterfinals"
- */
 export function elimRoundLabel(playersRemaining: number): string {
   if (playersRemaining <= 2) return "Final";
   if (playersRemaining <= 4) return "Semi-Finals";
@@ -634,17 +717,6 @@ export function elimRoundLabel(playersRemaining: number): string {
   return `Round of ${playersRemaining}`;
 }
 
-/**
- * Generate the first-round elimination bracket pairings from a seeded list.
- *
- * Seeding follows standard tournament bracket convention:
- *   - Seed 1 vs Seed N, Seed 2 vs Seed N-1, etc.
- *   - For non-power-of-2 fields, the top seeds receive first-round byes.
- *
- * @param seededPlayers - Players sorted by seed (index 0 = seed 1 = best)
- * @param roundNumber - The round number to assign to the generated games
- * @returns Array of Game objects for the first elimination round
- */
 export function generateEliminationFirstRound(
   seededPlayers: Player[],
   roundNumber: number
@@ -653,18 +725,14 @@ export function generateEliminationFirstRound(
   if (n < 2) return [];
 
   const fullBracketSize = nextPowerOf2(n);
-  const _byeCount = fullBracketSize - n;
-
   const games: Game[] = [];
   let board = 1;
 
-  // Create the full bracket slots: seed 1 vs seed S, seed 2 vs S-1, etc.
   const halfBracket = fullBracketSize / 2;
   for (let i = 0; i < halfBracket; i++) {
     const topSeedIdx = i;
     const bottomSeedIdx = fullBracketSize - 1 - i;
 
-    // If the bottom seed doesn't exist (bye), the top seed advances automatically
     if (bottomSeedIdx >= n) {
       games.push({
         id: `r${roundNumber}b${board}`,
@@ -672,7 +740,7 @@ export function generateEliminationFirstRound(
         board,
         whiteId: "BYE",
         blackId: seededPlayers[topSeedIdx].id,
-        result: "½-½" as Result, // bye = auto-advance
+        result: "1-0" as Result, // bye = auto-advance (1 full point)
       });
       board++;
       continue;
@@ -681,7 +749,6 @@ export function generateEliminationFirstRound(
     const topPlayer = seededPlayers[topSeedIdx];
     const bottomPlayer = seededPlayers[bottomSeedIdx];
 
-    // Higher seed gets White
     games.push({
       id: `r${roundNumber}b${board}`,
       round: roundNumber,
@@ -696,22 +763,6 @@ export function generateEliminationFirstRound(
   return games;
 }
 
-/**
- * Generate the next elimination round by advancing winners from the previous round.
- *
- * Winners are determined by game results:
- *   - "1-0" → White wins
- *   - "0-1" → Black wins
- *   - Bye games → the non-BYE player advances
- *   - Draws are not valid in elimination (director must pick a winner)
- *
- * Winners are paired in order: winner of board 1 vs winner of board 2, etc.
- *
- * @param previousRoundGames - Games from the previous elimination round (must all have results)
- * @param allPlayers - Full player list for looking up Player objects
- * @param roundNumber - The round number to assign
- * @returns Array of Game objects for the next elimination round
- */
 export function generateEliminationNextRound(
   previousRoundGames: Game[],
   allPlayers: Player[],
@@ -719,7 +770,6 @@ export function generateEliminationNextRound(
 ): Game[] {
   const playerMap = new Map(allPlayers.map((p) => [p.id, p]));
 
-  // Determine winners from previous round, preserving board order
   const sortedGames = [...previousRoundGames].sort((a, b) => a.board - b.board);
   const winners: Player[] = [];
 
@@ -735,7 +785,6 @@ export function generateEliminationNextRound(
     } else if (game.result === "0-1") {
       winnerId = game.blackId;
     } else {
-      // Draw in elimination — shouldn't happen, but treat as unresolved
       continue;
     }
 
@@ -743,22 +792,20 @@ export function generateEliminationNextRound(
     if (winner) winners.push(winner);
   }
 
-  if (winners.length < 2) return []; // Tournament is over
+  if (winners.length < 2) return [];
 
-  // Pair winners in bracket order: winner 1 vs winner 2, winner 3 vs winner 4, etc.
   const games: Game[] = [];
   let board = 1;
 
   for (let i = 0; i < winners.length; i += 2) {
     if (i + 1 >= winners.length) {
-      // Odd number of winners — bye for the last one
       games.push({
         id: `r${roundNumber}b${board}`,
         round: roundNumber,
         board,
         whiteId: "BYE",
         blackId: winners[i].id,
-        result: "½-½" as Result,
+        result: "1-0" as Result,
       });
       board++;
       continue;
@@ -781,14 +828,6 @@ export function generateEliminationNextRound(
   return games;
 }
 
-/**
- * Get the list of players who should advance from Swiss to Elimination.
- * Takes the top N players from the Swiss standings.
- *
- * @param standings - Computed Swiss standings (already sorted by rank)
- * @param cutoff - Number of players to advance (should be a power of 2 for clean brackets)
- * @returns Array of Players in seed order (rank 1 = seed 1)
- */
 export function getSwissCutoffPlayers(
   standings: StandingRow[],
   cutoff: number
@@ -796,13 +835,6 @@ export function getSwissCutoffPlayers(
   return standings.slice(0, cutoff).map((row) => row.player);
 }
 
-/**
- * Suggest the best cutoff size for a Swiss-to-Elimination transition.
- * Returns the largest power of 2 that is ≤ playerCount, capped at 64.
- *
- * @param playerCount - Total number of players in the tournament
- * @returns Suggested cutoff (always a power of 2)
- */
 export function suggestElimCutoff(playerCount: number): number {
   if (playerCount <= 2) return 2;
   if (playerCount <= 4) return 4;
@@ -810,18 +842,6 @@ export function suggestElimCutoff(playerCount: number): number {
   return Math.min(maxCutoff, 64);
 }
 
-/**
- * Generate the 3rd-place consolation game from a semi-finals round.
- *
- * The two losers of the semi-finals play each other.
- * The game is tagged with `isThirdPlace: true` so the bracket view can
- * render it distinctly from the main bracket tree.
- *
- * @param semiFinalGames - Games from the semi-finals round (exactly 2 games)
- * @param allPlayers - Full player list for looking up Player objects
- * @param roundNumber - The round number to assign (same as the Final round)
- * @returns A single Game for the 3rd-place match, or null if inputs are invalid
- */
 export function generateThirdPlaceGame(
   semiFinalGames: Game[],
   allPlayers: Player[],
@@ -845,9 +865,9 @@ export function generateThirdPlaceGame(
   if (losers.length < 2) return null;
 
   return {
-    id: `r${roundNumber}b3p`,
+    id: `r${roundNumber}b99`,
     round: roundNumber,
-    board: 99, // sentinel board number to keep it separate from main bracket
+    board: 99,
     whiteId: losers[0].id,
     blackId: losers[1].id,
     result: "*" as Result,

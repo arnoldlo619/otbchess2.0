@@ -374,10 +374,10 @@ describe("6-player bracket with byes", () => {
     expect(byeRecipients).toContain("p2");
   });
 
-  it("bye games have result ½-½ (auto-advance)", () => {
+  it("bye games have result 1-0 (auto-advance, full point)", () => {
     const games = generateEliminationFirstRound(players, 1);
     const byeGames = games.filter((g) => g.whiteId === "BYE");
-    expect(byeGames.every((g) => g.result === "½-½")).toBe(true);
+    expect(byeGames.every((g) => g.result === "1-0")).toBe(true);
   });
 
   it("non-bye games start as pending (*)", () => {
