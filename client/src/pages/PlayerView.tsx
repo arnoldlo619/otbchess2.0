@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
+import { FilmGameSheet } from "@/components/FilmGameSheet";
 import type { BroadcastStatus } from "@/lib/broadcastUtils";
 import { isValidBroadcastUrl } from "@/lib/broadcastUtils";
 import { usePushSubscription } from "@/hooks/usePushSubscription";
@@ -591,6 +592,7 @@ function MyBoardScreen({
     broadcastStatus: BroadcastStatus;
   } | null>(null);
   const [showStreamSheet, setShowStreamSheet] = useState(false);
+  const [showFilmSheet, setShowFilmSheet] = useState(false);
 
   useEffect(() => {
     if (!tournamentId || tournamentId === "otb-demo-2026") return;
@@ -683,7 +685,7 @@ function MyBoardScreen({
                 : textMuted
             }`}
           >
-            {tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` (#${rank})` : ""}` : "Clock"}
+            {tab === "board" ? "My Board" : tab === "standings" ? `Standings${rank > 0 ? ` (#${rank})` : ""}` : "Tools"}
           </button>
         ))}
       </div>
@@ -801,7 +803,7 @@ function MyBoardScreen({
             />
           </div>
 
-          {/* ── Clock panel ── */}
+          {/* ── Tools panel ── */}
           <div className="overflow-y-auto px-4 py-4 pb-safe space-y-3" style={{ width: `${100 / TABS.length}%` }}>
             <p className={`text-xs font-bold uppercase tracking-wider ${accent} px-1 mb-1`}>Game Tools</p>
             {/* Chess Clock */}
@@ -860,35 +862,40 @@ function MyBoardScreen({
                 <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
               </button>
             )}
-            {/* Record Game — Coming Soon (Pro / OTB Staff only) */}
-            <div
-              className={`flex items-center justify-between rounded-2xl px-5 py-4 opacity-60 cursor-not-allowed select-none ${
-                isDark
-                  ? "bg-[#1a1a2e] border border-[#4CAF50]/15"
-                  : "bg-indigo-50 border border-indigo-200"
+            {/* Film / Stream Game */}
+            <button
+              onClick={() => setShowFilmSheet(true)}
+              className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 transition-colors ${
+                isDark ? "bg-white/05 hover:bg-white/08 active:bg-white/10" : "bg-gray-50 hover:bg-gray-100 active:bg-gray-150"
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  isDark ? "bg-[#4CAF50]/10" : "bg-indigo-100"
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"
                 }`}>
-                  <Video className={`w-5 h-5 ${isDark ? accent : "text-indigo-400"}`} />
+                  <Video className={`w-5 h-5 ${accent}`} />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className={`text-sm font-bold ${textMain}`}>Record Game</p>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                      isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600"
-                    }`}>Coming Soon</span>
-                  </div>
-                  <p className={`text-xs ${textMuted}`}>Film &amp; analyse with Stockfish · Pro &amp; Staff only</p>
+                <div className="text-left">
+                  <p className={`text-sm font-bold ${textMain}`}>Film / Stream</p>
+                  <p className={`text-xs ${textMuted}`}>Record your board for streaming or content</p>
                 </div>
               </div>
-              <svg className={`w-4 h-4 ${textMuted} opacity-40`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-            </div>
+              <svg className={`w-4 h-4 ${textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* ── Film / Stream bottom sheet ── */}
+      {showFilmSheet && (
+        <FilmGameSheet
+          onClose={() => setShowFilmSheet(false)}
+          isDark={isDark}
+          accent={accent}
+          textMain={textMain}
+          textMuted={textMuted}
+        />
+      )}
 
       {/* ── Watch Stream bottom sheet ── */}
       {showStreamSheet && hasBroadcast && (
