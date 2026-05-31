@@ -5519,7 +5519,7 @@ export default function Director() {
             } else if ('paired' in outcome) {
               toast.success(`${player.name} paired with ${outcome.opponentName} on Board ${outcome.board}`);
             } else {
-              toast.success(`${player.name} added — assigned a bye this round (+½pt)`);
+              toast.success(`${player.name} added — pairings regenerated with bye (+1pt)`);
             }
           } else {
             addPlayer(player);

@@ -291,8 +291,10 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     });
   }, []);
 
-  // Add a late-arriving player during Round 1
-  // Returns a descriptor of what happened: { paired: true, opponent: Player } | { bye: true } | { duplicate: true } | { locked: true }
+  // Add a late-arriving player during Round 1.
+  // Strategy: lock any games that have already started (result !== "*"), then regenerate
+  // pairings for all unstarted players + the new arrival, preserving locked games.
+  // Returns a descriptor: { paired: true, opponentName, board } | { bye: true } | { duplicate: true } | { locked: true }
   const addLatePlayer = useCallback((player: Player): { paired: true; opponentName: string; board: number } | { bye: true } | { duplicate: true } | { locked: true } => {
     let result: { paired: true; opponentName: string; board: number } | { bye: true } | { duplicate: true } | { locked: true } = { locked: true };
     setState((prev) => {
@@ -309,70 +311,59 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       const round1 = prev.rounds.find((r) => r.number === 1);
       if (!round1) { result = { locked: true }; return prev; }
 
-      // Find any existing late player who has a bye (whiteId === "BYE") in Round 1
-      // and whose bye game id starts with "late-bye-" (meaning they're waiting for a partner)
-      const waitingByeGame = round1.games.find(
-        (g) => g.whiteId === "BYE" && g.id.startsWith("late-bye-")
-      );
+      // Separate locked games (already have a result) from open games
+      const lockedGames = round1.games.filter((g) => g.result !== "*");
+      const openGames = round1.games.filter((g) => g.result === "*");
 
-      const maxBoard = Math.max(0, ...round1.games.map((g) => g.board));
-
-      if (waitingByeGame) {
-        // Pair the new player with the waiting player — remove the bye, add a real game
-        const waitingPlayerId = waitingByeGame.blackId;
-        const waitingPlayer = prev.players.find((p) => p.id === waitingPlayerId);
-        const newBoard = waitingByeGame.board; // reuse the same board slot
-        // Assign colors: waiting player gets white (arrived first), new player gets black
-        const newGame: Game = {
-          id: `late-pair-${waitingPlayerId}-${player.id}-r1`,
-          round: 1,
-          board: newBoard,
-          whiteId: waitingPlayerId,
-          blackId: player.id,
-          result: "*",
-        };
-        const updatedRound: Round = {
-          ...round1,
-          games: round1.games
-            .filter((g) => g.id !== waitingByeGame.id)
-            .concat(newGame),
-        };
-        // Reverse the ½ point that was awarded when the bye was created
-        const updatedPlayers = prev.players
-          .map((p) =>
-            p.id === waitingPlayerId
-              ? { ...p, points: Math.max(0, p.points - 0.5), draws: Math.max(0, p.draws - 1) }
-              : p
-          )
-          .concat(player);
-        result = { paired: true, opponentName: waitingPlayer?.name ?? "Unknown", board: newBoard };
-        return {
-          ...prev,
-          players: updatedPlayers,
-          rounds: prev.rounds.map((r) => r.number === 1 ? updatedRound : r),
-        };
-      } else {
-        // No waiting partner — assign a bye to the new player and mark it as a "late bye"
-        const byeGame: Game = {
-          id: `late-bye-${player.id}-r1`,
-          round: 1,
-          board: maxBoard + 1,
-          whiteId: "BYE",
-          blackId: player.id,
-          result: "½-½",
-        };
-        const updatedRound: Round = {
-          ...round1,
-          games: [...round1.games, byeGame],
-        };
-        const updatedPlayers = [...prev.players, { ...player, points: player.points + 0.5, draws: player.draws + 1 }];
-        result = { bye: true };
-        return {
-          ...prev,
-          players: updatedPlayers,
-          rounds: prev.rounds.map((r) => r.number === 1 ? updatedRound : r),
-        };
+      // Collect IDs of players already locked into completed games — they keep their pairing
+      const lockedPlayerIds = new Set<string>();
+      for (const g of lockedGames) {
+        if (g.whiteId !== "BYE") lockedPlayerIds.add(g.whiteId);
+        if (g.blackId !== "BYE") lockedPlayerIds.add(g.blackId);
       }
+
+      // Players whose games are still open (result === "*") + the new arrival
+      const openPlayerIds = new Set<string>();
+      for (const g of openGames) {
+        if (g.whiteId !== "BYE") openPlayerIds.add(g.whiteId);
+        if (g.blackId !== "BYE") openPlayerIds.add(g.blackId);
+      }
+      // Also include any player who had a bye in open games
+      for (const g of openGames) {
+        if (g.whiteId === "BYE") openPlayerIds.add(g.blackId);
+      }
+
+      const updatedPlayers = [...prev.players, player];
+      const openPlayers = updatedPlayers.filter((p) => openPlayerIds.has(p.id) || p.id === player.id);
+
+      // Re-pair open players + new arrival using the standard Round 1 algorithm
+      // Pass empty prior rounds so it uses the top-half/bottom-half path
+      const freshOpenGames = generateSwissPairings(openPlayers, [], 1);
+
+      // Renumber boards: locked games keep their boards, fresh games get boards after locked max
+      const lockedMaxBoard = lockedGames.length > 0 ? Math.max(...lockedGames.map((g) => g.board)) : 0;
+      const numberedFreshGames = freshOpenGames.map((g, i) => ({ ...g, board: lockedMaxBoard + i + 1 }));
+
+      const newRound: Round = {
+        ...round1,
+        games: [...lockedGames, ...numberedFreshGames],
+      };
+
+      // Determine outcome for toast message
+      const newPlayerGame = numberedFreshGames.find((g) => g.whiteId === player.id || g.blackId === player.id);
+      if (!newPlayerGame || newPlayerGame.whiteId === "BYE" || newPlayerGame.blackId === "BYE") {
+        result = { bye: true };
+      } else {
+        const opponentId = newPlayerGame.whiteId === player.id ? newPlayerGame.blackId : newPlayerGame.whiteId;
+        const opponent = updatedPlayers.find((p) => p.id === opponentId);
+        result = { paired: true, opponentName: opponent?.name ?? "Unknown", board: newPlayerGame.board };
+      }
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        rounds: prev.rounds.map((r) => r.number === 1 ? newRound : r),
+      };
     });
     return result;
   }, []);
