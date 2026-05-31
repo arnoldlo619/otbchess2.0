@@ -5,7 +5,8 @@
  * - Camera permission request with clear explanation
  * - Live camera preview (rear camera by default, front camera toggle)
  * - Board-framing guide overlay (rule-of-thirds crosshair)
- * - Record button with elapsed timer
+ * - Clock overlay toggle: composites player names + live chess clock onto the stream via canvas
+ * - Record button with elapsed timer (records the composited canvas stream when overlay is on)
  * - Stop & share flow (Web Share API → clipboard fallback)
  * - Graceful fallback when camera permission is denied
  */
@@ -21,7 +22,16 @@ import {
   Download,
   AlertTriangle,
   Loader2,
+  Layers,
 } from "lucide-react";
+
+interface TimerSnapProp {
+  status: "idle" | "running" | "paused" | "expired";
+  durationSec: number;
+  startWallMs: number;
+  elapsedAtPauseMs: number;
+  savedAt?: number;
+}
 
 interface FilmGameSheetProps {
   onClose: () => void;
@@ -29,10 +39,22 @@ interface FilmGameSheetProps {
   accent: string;
   textMain: string;
   textMuted: string;
+  /** Player names to display in the overlay */
+  playerWhite?: string;
+  playerBlack?: string;
+  /** Tournament round timer snapshot (shared clock) */
+  timerSnap?: TimerSnapProp | null;
 }
 
 type CameraState = "idle" | "requesting" | "denied" | "active";
 type RecordState = "idle" | "recording" | "stopped";
+
+function formatTime(seconds: number): string {
+  if (seconds < 0) seconds = 0;
+  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
 
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -40,12 +62,143 @@ function formatElapsed(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: FilmGameSheetProps) {
+/** Draw the HUD overlay onto the canvas each animation frame */
+function drawOverlay(
+  ctx: CanvasRenderingContext2D,
+  video: HTMLVideoElement,
+  opts: {
+    playerWhite: string;
+    playerBlack: string;
+    whiteTimeSec: number;
+    blackTimeSec: number;
+    activeColor: "white" | "black" | null;
+    recordState: RecordState;
+    elapsed: number;
+  }
+) {
+  const { width: w, height: h } = ctx.canvas;
+
+  // Draw camera frame
+  ctx.drawImage(video, 0, 0, w, h);
+
+  const { playerWhite, playerBlack, whiteTimeSec, blackTimeSec, activeColor, recordState, elapsed } = opts;
+
+  // ── Bottom HUD bar ──────────────────────────────────────────────────────────
+  const barH = Math.round(h * 0.12);
+  const barY = h - barH;
+
+  // Semi-transparent bar background
+  ctx.fillStyle = "rgba(0,0,0,0.65)";
+  ctx.fillRect(0, barY, w, barH);
+
+  // Thin green accent line at top of bar
+  ctx.fillStyle = "#4CAF50";
+  ctx.fillRect(0, barY, w, 2);
+
+  const pad = Math.round(w * 0.025);
+  const fontSize = Math.round(barH * 0.38);
+  const smallFont = Math.round(barH * 0.26);
+  const centerX = w / 2;
+
+  // ── White player (left) ─────────────────────────────────────────────────────
+  const whiteActive = activeColor === "white";
+  ctx.fillStyle = whiteActive ? "#ffffff" : "rgba(255,255,255,0.55)";
+  ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(playerWhite || "White", pad, barY + barH * 0.38);
+
+  // White clock
+  const whiteTimeStr = formatTime(whiteTimeSec);
+  ctx.font = `bold ${Math.round(fontSize * 1.15)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+  ctx.fillStyle = whiteActive ? "#4CAF50" : "rgba(255,255,255,0.55)";
+  ctx.fillText(whiteTimeStr, pad, barY + barH * 0.72);
+
+  // White piece icon (♔)
+  ctx.font = `${Math.round(fontSize * 0.9)}px serif`;
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.fillText("♔", pad + ctx.measureText(whiteTimeStr).width + 6, barY + barH * 0.72);
+
+  // ── Black player (right) ────────────────────────────────────────────────────
+  const blackActive = activeColor === "black";
+  ctx.fillStyle = blackActive ? "#ffffff" : "rgba(255,255,255,0.55)";
+  ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+  ctx.textAlign = "right";
+  ctx.fillText(playerBlack || "Black", w - pad, barY + barH * 0.38);
+
+  const blackTimeStr = formatTime(blackTimeSec);
+  ctx.font = `bold ${Math.round(fontSize * 1.15)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+  ctx.fillStyle = blackActive ? "#4CAF50" : "rgba(255,255,255,0.55)";
+  ctx.fillText(blackTimeStr, w - pad, barY + barH * 0.72);
+
+  ctx.font = `${Math.round(fontSize * 0.9)}px serif`;
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.textAlign = "right";
+  ctx.fillText("♚", w - pad - ctx.measureText(blackTimeStr).width - 6, barY + barH * 0.72);
+
+  // ── VS divider (center) ─────────────────────────────────────────────────────
+  ctx.font = `bold ${smallFont}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.textAlign = "center";
+  ctx.fillText("VS", centerX, barY + barH * 0.55);
+
+  // ── Recording indicator (top-left) ─────────────────────────────────────────
+  if (recordState === "recording") {
+    const dotR = Math.round(h * 0.012);
+    const dotX = pad + dotR;
+    const dotY = Math.round(h * 0.045);
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = `bold ${Math.round(smallFont * 0.95)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "left";
+    ctx.fillText(formatElapsed(elapsed), dotX + dotR + 6, dotY);
+  }
+
+  // ── OTB!! watermark (top-right) ─────────────────────────────────────────────
+  ctx.font = `bold ${smallFont}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+  ctx.fillStyle = "rgba(76,175,80,0.7)";
+  ctx.textAlign = "right";
+  ctx.fillText("ChessOTB.club", w - pad, Math.round(h * 0.045));
+}
+
+function useTimerRemaining(snap: TimerSnapProp | null | undefined): number {
+  const [remaining, setRemaining] = useState(0);
+  useEffect(() => {
+    if (!snap || snap.status === "idle") { setRemaining(0); return; }
+    if (snap.status === "paused") { setRemaining(Math.max(0, snap.durationSec - Math.round(snap.elapsedAtPauseMs / 1000))); return; }
+    if (snap.status === "expired") { setRemaining(0); return; }
+    const calc = () => { const e = Math.round((Date.now() - snap.startWallMs + snap.elapsedAtPauseMs) / 1000); setRemaining(Math.max(0, snap.durationSec - e)); };
+    calc();
+    const t = setInterval(calc, 1000);
+    return () => clearInterval(t);
+  }, [snap]);
+  return remaining;
+}
+
+export function FilmGameSheet({
+  onClose,
+  isDark,
+  accent,
+  textMain,
+  textMuted,
+  playerWhite = "White",
+  playerBlack = "Black",
+  timerSnap,
+}: FilmGameSheetProps) {
+  const timerRemaining = useTimerRemaining(timerSnap);
+  // For the overlay: both players share the round timer; show it as the clock value
+  const sharedTimeSec = timerRemaining;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const canvasStreamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const rafRef = useRef<number>(0);
 
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [recordState, setRecordState] = useState<RecordState>("idle");
@@ -54,14 +207,49 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(true);
+
+  // Keep a ref to the latest overlay state so the rAF loop always reads fresh values
+  const overlayStateRef = useRef({ playerWhite, playerBlack, whiteTimeSec: sharedTimeSec, blackTimeSec: sharedTimeSec, activeColor: null as "white" | "black" | null, recordState: "idle" as RecordState, elapsed: 0 });
+  useEffect(() => {
+    overlayStateRef.current = { playerWhite, playerBlack, whiteTimeSec: sharedTimeSec, blackTimeSec: sharedTimeSec, activeColor: null, recordState, elapsed };
+  }, [playerWhite, playerBlack, sharedTimeSec, recordState, elapsed]);
+
+  // rAF loop: composite video + overlay onto canvas
+  const startRaf = useCallback(() => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const loop = () => {
+      if (video.readyState >= 2) {
+        // Match canvas to video dimensions
+        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+          canvas.width = video.videoWidth || 1280;
+          canvas.height = video.videoHeight || 720;
+        }
+        if (overlayStateRef.current.recordState !== "stopped") {
+          drawOverlay(ctx, video, overlayStateRef.current);
+        }
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+  }, []);
+
+  const stopRaf = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
 
   // Start camera stream
   const startCamera = useCallback(async (facing: "environment" | "user") => {
     setCameraState("requesting");
     setBlobUrl(null);
     setShareError(null);
+    stopRaf();
     try {
-      // Stop any existing stream
       streamRef.current?.getTracks().forEach(t => t.stop());
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -70,13 +258,22 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
+        await videoRef.current.play().catch(() => {});
       }
       setCameraState("active");
+      // Start canvas compositing loop
+      startRaf();
+      // Build canvas stream for recording (30fps)
+      if (canvasRef.current) {
+        const audioTrack = stream.getAudioTracks()[0];
+        const canvasStream = (canvasRef.current as HTMLCanvasElement & { captureStream?: (fps: number) => MediaStream }).captureStream?.(30);
+        if (canvasStream && audioTrack) canvasStream.addTrack(audioTrack);
+        canvasStreamRef.current = canvasStream ?? null;
+      }
     } catch {
       setCameraState("denied");
     }
-  }, []);
+  }, [startRaf, stopRaf]);
 
   // Flip camera
   const flipCamera = useCallback(async () => {
@@ -86,28 +283,28 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
     await startCamera(next);
   }, [facingMode, recordState, startCamera]);
 
-  // Start recording
+  // Start recording — use canvas stream when overlay is on, raw stream otherwise
   const startRecording = useCallback(() => {
-    if (!streamRef.current) return;
+    const recordSource = showOverlay && canvasStreamRef.current ? canvasStreamRef.current : streamRef.current;
+    if (!recordSource) return;
     chunksRef.current = [];
     const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
       ? "video/webm;codecs=vp9"
       : MediaRecorder.isTypeSupported("video/webm")
       ? "video/webm"
       : "video/mp4";
-    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    const recorder = new MediaRecorder(recordSource, { mimeType });
     recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     recorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      setBlobUrl(url);
+      setBlobUrl(URL.createObjectURL(blob));
     };
     recorder.start(500);
     recorderRef.current = recorder;
     setElapsed(0);
     setRecordState("recording");
     timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
-  }, []);
+  }, [showOverlay]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
@@ -116,7 +313,7 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
     setRecordState("stopped");
   }, []);
 
-  // Share / download recorded video
+  // Share / download
   const shareVideo = useCallback(async () => {
     if (!blobUrl) return;
     setShareError(null);
@@ -127,7 +324,6 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: "My Chess Game" });
       } else {
-        // Fallback: trigger download
         const a = document.createElement("a");
         a.href = blobUrl;
         a.download = file.name;
@@ -148,23 +344,23 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
     a.click();
   }, [blobUrl]);
 
-  // Cleanup on unmount
+  // Cleanup
   useEffect(() => {
     return () => {
+      stopRaf();
       streamRef.current?.getTracks().forEach(t => t.stop());
       if (timerRef.current) clearInterval(timerRef.current);
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-  }, [blobUrl]);
+  }, [blobUrl, stopRaf]);
 
   const cardBg = isDark ? "bg-[oklch(0.18_0.06_145)]" : "bg-white";
-  const divider = isDark ? "border-white/08" : "border-gray-100";
 
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className={`relative w-full rounded-t-3xl border-t overflow-hidden ${cardBg} border-${divider} animate-slide-up-fade safe-bottom`}
+        className={`relative w-full rounded-t-3xl border-t overflow-hidden ${cardBg} ${isDark ? "border-white/08" : "border-gray-100"} animate-slide-up-fade safe-bottom`}
         style={{ maxHeight: "92dvh" }}
         onClick={e => e.stopPropagation()}
       >
@@ -188,7 +384,7 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
         </div>
 
         <div className="overflow-y-auto" style={{ maxHeight: "calc(92dvh - 80px)" }}>
-          {/* ── Idle: prompt to start camera ── */}
+          {/* ── Idle ── */}
           {cameraState === "idle" && (
             <div className="px-5 py-8 flex flex-col items-center text-center gap-5">
               <div className={`w-20 h-20 rounded-3xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/08"}`}>
@@ -211,9 +407,7 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
               </div>
               <button
                 onClick={() => startCamera(facingMode)}
-                className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${
-                  isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"
-                }`}
+                className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"}`}
               >
                 <Camera className="w-4 h-4" />
                 Start Camera
@@ -221,7 +415,7 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
             </div>
           )}
 
-          {/* ── Requesting permission ── */}
+          {/* ── Requesting ── */}
           {cameraState === "requesting" && (
             <div className="px-5 py-12 flex flex-col items-center text-center gap-4">
               <Loader2 className={`w-10 h-10 ${accent} animate-spin`} />
@@ -262,32 +456,37 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
           {/* ── Active camera ── */}
           {cameraState === "active" && (
             <div className="flex flex-col">
-              {/* Camera preview */}
+              {/* Preview: show canvas (composited) or raw video */}
               <div className="relative bg-black" style={{ aspectRatio: "16/9" }}>
+                {/* Hidden raw video — source for canvas compositing */}
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ opacity: showOverlay ? 0 : 1 }}
+                />
+                {/* Canvas preview (always rendered, hidden when overlay off) */}
+                <canvas
+                  ref={canvasRef}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ opacity: showOverlay ? 1 : 0 }}
                 />
 
-                {/* Board framing guide overlay */}
+                {/* Board framing guide overlay (DOM layer, not composited) */}
                 {showGuide && recordState === "idle" && (
                   <div className="absolute inset-0 pointer-events-none">
-                    {/* Rule-of-thirds grid */}
                     <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
                       {Array.from({ length: 9 }).map((_, i) => (
                         <div key={i} className="border border-white/20" />
                       ))}
                     </div>
-                    {/* Center target */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-24 h-24 border-2 border-white/60 rounded-lg flex items-center justify-center">
                         <div className="w-2 h-2 rounded-full bg-white/80" />
                       </div>
                     </div>
-                    {/* Guide label */}
                     <div className="absolute bottom-2 left-0 right-0 flex justify-center">
                       <span className="text-[10px] text-white/70 bg-black/50 px-2 py-0.5 rounded-full">
                         Frame the board within the guide
@@ -296,15 +495,15 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
                   </div>
                 )}
 
-                {/* Recording indicator */}
-                {recordState === "recording" && (
+                {/* REC indicator (DOM layer — shown when raw video is displayed) */}
+                {!showOverlay && recordState === "recording" && (
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 px-2.5 py-1 rounded-full">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                     <span className="text-white text-xs font-bold">{formatElapsed(elapsed)}</span>
                   </div>
                 )}
 
-                {/* Flip camera button */}
+                {/* Flip camera */}
                 {recordState !== "recording" && (
                   <button
                     onClick={flipCamera}
@@ -316,18 +515,62 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
               </div>
 
               {/* Controls */}
-              <div className="px-5 py-5 space-y-4">
-                {/* Guide toggle */}
-                {recordState === "idle" && (
-                  <button
-                    onClick={() => setShowGuide(g => !g)}
-                    className={`text-xs font-semibold ${accent} flex items-center gap-1`}
-                  >
-                    {showGuide ? "Hide" : "Show"} framing guide
-                  </button>
+              <div className="px-5 py-5 space-y-3">
+                {/* Toggle row */}
+                {recordState !== "stopped" && (
+                  <div className="flex items-center gap-3">
+                    {/* Clock overlay toggle */}
+                    <button
+                      onClick={() => setShowOverlay(o => !o)}
+                      disabled={recordState === "recording"}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                        showOverlay
+                          ? isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                          : isDark ? "bg-white/08 text-white/50" : "bg-gray-100 text-gray-400"
+                      } disabled:opacity-40 disabled:cursor-not-allowed`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      Clock Overlay {showOverlay ? "On" : "Off"}
+                    </button>
+
+                    {/* Framing guide toggle */}
+                    {recordState === "idle" && (
+                      <button
+                        onClick={() => setShowGuide(g => !g)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                          showGuide
+                            ? isDark ? "bg-white/10 text-white/70" : "bg-gray-200 text-gray-600"
+                            : isDark ? "bg-white/05 text-white/30" : "bg-gray-50 text-gray-300"
+                        }`}
+                      >
+                        Guide {showGuide ? "On" : "Off"}
+                      </button>
+                    )}
+                  </div>
                 )}
 
-                {/* Record / Stop button */}
+                {/* Overlay preview info */}
+                {showOverlay && recordState === "idle" && (
+                  <div className={`rounded-xl px-3 py-2.5 ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
+                    <p className={`text-xs font-semibold ${accent} mb-1`}>Clock overlay preview</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-xs font-bold ${textMain}`}>{playerWhite}</p>
+                        <p className={`text-sm font-black ${accent}`}>{formatTime(sharedTimeSec)}</p>
+                      </div>
+                      <span className={`text-xs ${textMuted}`}>VS</span>
+                      <div className="text-right">
+                        <p className={`text-xs font-bold ${textMain}`}>{playerBlack}</p>
+                        <p className={`text-sm font-black ${accent}`}>{formatTime(sharedTimeSec)}</p>
+                      </div>
+                    </div>
+                    <p className={`text-[10px] ${textMuted} mt-1.5`}>
+                      {canvasStreamRef.current ? "✓ Overlay will be baked into the recording" : "⚠ Canvas capture not supported — overlay visible in preview only"}
+                    </p>
+                  </div>
+                )}
+
+                {/* Record / Stop */}
                 {recordState !== "stopped" && (
                   <button
                     onClick={recordState === "idle" ? startRecording : stopRecording}
@@ -351,30 +594,24 @@ export function FilmGameSheet({ onClose, isDark, accent, textMain, textMuted }: 
                   </button>
                 )}
 
-                {/* Post-recording: share / download */}
+                {/* Post-recording */}
                 {recordState === "stopped" && blobUrl && (
                   <div className="space-y-3">
                     <div className={`rounded-2xl px-4 py-3 text-center ${isDark ? "bg-white/05" : "bg-gray-50"}`}>
                       <p className={`text-sm font-bold ${textMain} mb-0.5`}>Recording saved!</p>
-                      <p className={`text-xs ${textMuted}`}>{formatElapsed(elapsed)} recorded</p>
+                      <p className={`text-xs ${textMuted}`}>{formatElapsed(elapsed)} recorded{showOverlay ? " · with clock overlay" : ""}</p>
                     </div>
-                    {shareError && (
-                      <p className="text-xs text-red-400 text-center">{shareError}</p>
-                    )}
+                    {shareError && <p className="text-xs text-red-400 text-center">{shareError}</p>}
                     <button
                       onClick={shareVideo}
-                      className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${
-                        isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"
-                      }`}
+                      className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-[#4CAF50] text-white" : "bg-[#3D6B47] text-white"}`}
                     >
                       <Share2 className="w-4 h-4" />
                       Share / Post
                     </button>
                     <button
                       onClick={downloadVideo}
-                      className={`w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 ${
-                        isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"
-                      }`}
+                      className={`w-full py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 ${isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"}`}
                     >
                       <Download className="w-4 h-4" />
                       Save to Device

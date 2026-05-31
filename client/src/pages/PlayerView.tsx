@@ -894,6 +894,9 @@ function MyBoardScreen({
           accent={accent}
           textMain={textMain}
           textMuted={textMuted}
+          playerWhite={myColor === "white" ? (username || "White") : (opponent?.name || opponent?.username || "Black")}
+          playerBlack={myColor === "black" ? (username || "Black") : (opponent?.name || opponent?.username || "White")}
+          timerSnap={timerSnapshot}
         />
       )}
 
