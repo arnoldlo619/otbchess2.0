@@ -1638,6 +1638,7 @@ export default function Director() {
     addLatePlayer,
     updatePlayer,
     removePlayer,
+    removePlayerRound1,
     swapBoards,
     replaceRoundGames,
     assignBye,
@@ -3495,6 +3496,24 @@ export default function Director() {
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
+                                {/* Remove player button (Round 1 only) */}
+                                {state.currentRound === 1 && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (confirm(`Remove ${player.name} and regenerate Round 1 pairings?`)) {
+                                        removePlayerRound1(player.id);
+                                        toast.success(`${player.name} removed — pairings regenerated`);
+                                      }
+                                    }}
+                                    className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                                      isDark ? "hover:bg-red-500/15 text-red-400" : "hover:bg-red-50 text-red-400"
+                                    }`}
+                                    title="Remove player & regenerate pairings"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                                 {/* Score */}
                                 <div className="flex-shrink-0 text-right">
                                   <span className={`${scoreSize} font-black tabular-nums ${ isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`}
