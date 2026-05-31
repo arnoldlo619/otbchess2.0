@@ -30,6 +30,8 @@ interface RegisterGameModalProps {
   /** When both players are pre-known (auto-trigger from check-in), show head-to-head confirm step */
   player1?: PlayerInfo | null;
   player2?: PlayerInfo | null;
+  /** When true (tournament mode), hide the Rated Game toggle and sign-in banner — game is always rated */
+  isTournamentMode?: boolean;
 }
 
 type ModalStep = "headtohead" | "configure" | "waiting" | "ready";
@@ -42,6 +44,7 @@ export function RegisterGameModal({
   onGameReady,
   player1,
   player2,
+  isTournamentMode = false,
 }: RegisterGameModalProps) {
   const { user } = useAuthContext();
   const bothKnown = !!(player1?.username && player2?.username);
@@ -337,8 +340,8 @@ export function RegisterGameModal({
               Tap ↺ to swap colors
             </p>
 
-            {/* Rated toggle */}
-            {!isCasual && (
+            {/* Rated toggle — hidden in tournament mode (always rated) */}
+            {!isTournamentMode && !isCasual && (
               <div className="flex items-center justify-between bg-white/5 rounded-2xl p-3 mb-4">
                 <div>
                   <p className="text-white text-sm font-semibold">Rated Game</p>
@@ -353,7 +356,8 @@ export function RegisterGameModal({
               </div>
             )}
 
-            {!user && (
+            {/* Sign-in banner — hidden in tournament mode */}
+            {!isTournamentMode && !user && (
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 mb-4">
                 <p className="text-amber-400 text-sm">Sign in to register a rated game.</p>
               </div>
@@ -396,8 +400,8 @@ export function RegisterGameModal({
               <p className="text-[#5a9e5f] text-sm font-medium mt-1">{categoryLabel}</p>
             </div>
 
-            {/* Rated toggle */}
-            {!isCasual && (
+            {/* Rated toggle — hidden in tournament mode (always rated) */}
+            {!isTournamentMode && !isCasual && (
               <div className="flex items-center justify-between bg-white/5 rounded-2xl p-4 mb-4">
                 <div>
                   <p className="text-white font-semibold">Rated Game</p>

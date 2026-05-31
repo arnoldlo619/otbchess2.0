@@ -1004,6 +1004,7 @@ export default function ChessClock() {
         incrementSeconds={Math.round(clockConfig.incrementMs / 1000)}
         player1={p1Username ? { username: p1Username, rapid: p1Ratings?.rapid, blitz: p1Ratings?.blitz } : null}
         player2={p2Username ? { username: p2Username, rapid: p2Ratings?.rapid, blitz: p2Ratings?.blitz } : null}
+        isTournamentMode={!!tournamentId}
         onGameReady={(sessionId) => {
           setActiveGameSessionId(sessionId);
           setShowRegisterGame(false);
