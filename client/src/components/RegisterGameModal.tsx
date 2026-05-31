@@ -303,7 +303,7 @@ export function RegisterGameModal({
         {step === "headtohead" && player1 && player2 && (
           <div>
             {/* Time control */}
-            <div className="bg-white/5 rounded-2xl p-3 mb-4 flex items-center justify-between">
+            <div className="bg-white/5 rounded-2xl p-3 mb-5 flex items-center justify-between">
               <div>
                 <p className="text-white/50 text-[10px] font-semibold uppercase tracking-wider">Time Control</p>
                 <p className="text-white text-xl font-bold leading-tight">{baseMinutes}+{incrementSeconds}</p>
@@ -312,7 +312,7 @@ export function RegisterGameModal({
             </div>
 
             {/* Head-to-head player cards */}
-            <div className="flex gap-3 mb-3">
+            <div className="flex gap-3 mb-2">
               <PlayerCard
                 info={player1}
                 side="left"
@@ -336,7 +336,7 @@ export function RegisterGameModal({
               />
             </div>
 
-            <p className="text-white/35 text-[10px] text-center mb-4">
+            <p className="text-white/35 text-[10px] text-center mb-6">
               Tap ↺ to swap colors
             </p>
 
@@ -372,7 +372,7 @@ export function RegisterGameModal({
             <button
               onClick={user ? handleHeadToHeadConfirm : onClose}
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-[#5a9e5f] text-white text-base font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-[#5a9e5f] text-white text-base font-bold disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
