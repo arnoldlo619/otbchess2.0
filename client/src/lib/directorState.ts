@@ -695,7 +695,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
 
   // Update an existing player's mutable fields (name, elo, title) in the roster
   const updatePlayer = useCallback(
-    (playerId: string, patch: Partial<Pick<Player, "name" | "elo" | "title" | "rapidElo" | "blitzElo" | "paymentStatus">>) => {
+    (playerId: string, patch: Partial<Pick<Player, "name" | "elo" | "title" | "rapidElo" | "blitzElo" | "paymentStatus" | "manualPairingRating" | "pairingRating" | "ratingSource">>) => {
       setState((prev) => ({
         ...prev,
         players: prev.players.map((p) =>

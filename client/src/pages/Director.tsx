@@ -5651,6 +5651,9 @@ export default function Director() {
             elo: updated.elo,
             rapidElo: updated.rapidElo,
             blitzElo: updated.blitzElo,
+            manualPairingRating: updated.manualPairingRating,
+            pairingRating: updated.pairingRating,
+            ratingSource: updated.ratingSource,
           });
           toast.success(`${updated.name} updated`);
         }}
