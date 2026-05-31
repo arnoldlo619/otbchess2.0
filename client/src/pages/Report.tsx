@@ -602,17 +602,35 @@ export default function ReportPage() {
   // Fetch club avatar for PDF branding
   const { avatarUrl: clubAvatarUrl } = useClubAvatar(config?.clubId ?? null);
 
-  // Pre-fetch all player avatars in parallel
-  const usernames = performances.map((p) => p.player.username);
-  const { avatars, allLoaded: avatarsLoaded } = useChessAvatars(usernames);
+  // Pre-fetch avatars for players who don't already have a stored avatarUrl.
+  // Using player.avatarUrl directly avoids username-collision bugs where two
+  // players with the same username (or a stale memCache entry) end up sharing
+  // the same profile picture across multiple performance cards.
+  const allUsernames = performances.map((p) => p.player.username);
+  const usernamesNeedingFetch = performances
+    .filter((p) => !p.player.avatarUrl && p.player.platform === "chesscom" && p.player.username)
+    .map((p) => p.player.username);
+  const { avatars: fetchedAvatars, allLoaded: fetchedLoaded } = useChessAvatars(usernamesNeedingFetch);
+
+  // Build a unified id → url map: stored avatarUrl takes priority over fetched
+  const avatarById = new Map<string, string | null>();
+  for (const perf of performances) {
+    const p = perf.player;
+    if (p.avatarUrl) {
+      avatarById.set(p.id, p.avatarUrl);
+    } else {
+      avatarById.set(p.id, fetchedAvatars.get(p.username.toLowerCase()) ?? null);
+    }
+  }
+  const avatarsLoaded = performances.every((p) => p.player.avatarUrl) || fetchedLoaded;
 
   // chess.com recent form — keyed by lowercase username
   type ChesscomForm = { wins: number; draws: number; losses: number };
   const [chesscomForm, setChesscomForm] = useState<Map<string, ChesscomForm>>(new Map());
   useEffect(() => {
-    if (usernames.length === 0) return;
+    if (allUsernames.length === 0) return;
     // Fetch analysis for each player in parallel, non-blocking
-    usernames.forEach((username) => {
+    allUsernames.forEach((username) => {
       const key = username.toLowerCase();
       fetch(`/api/chess/player/${encodeURIComponent(key)}/analysis`)
         .then((r) => r.ok ? r.json() : null)
@@ -627,7 +645,7 @@ export default function ReportPage() {
         .catch(() => { /* silently ignore */ });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usernames.join(",")]);
+  }, [allUsernames.join(",")]);
 
   // Per-player accent color state — keyed by player id
   const [accentColors, setAccentColors] = useState<Map<string, string>>(() => {
@@ -1005,7 +1023,7 @@ export default function ReportPage() {
                         perf={perf}
                         tournamentName={tournamentName}
                         tournamentDate={tournamentDate}
-                        avatarUrl={toProxiedAvatarUrl(avatars.get(perf.player.username.toLowerCase()))}
+                        avatarUrl={toProxiedAvatarUrl(avatarById.get(perf.player.id))}
                         avatarStatus="loaded"
                         forExport
                         accentColor={accent}
@@ -1020,7 +1038,7 @@ export default function ReportPage() {
                       tournamentName={tournamentName}
                       tournamentDate={tournamentDate}
                       isDark={isDark}
-                      avatarUrl={toProxiedAvatarUrl(avatars.get(perf.player.username.toLowerCase()))}
+                      avatarUrl={toProxiedAvatarUrl(avatarById.get(perf.player.id))}
                       avatarStatus={avatarsLoaded ? "loaded" : "loading"}
                       onShareSingle={shareModal.openSingle}
                       exportRef={exportRef}
