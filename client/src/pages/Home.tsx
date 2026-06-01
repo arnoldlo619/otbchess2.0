@@ -1461,6 +1461,39 @@ function PlayerDemo() {
       className={`py-24 transition-colors duration-500 relative overflow-hidden ${isDark ? "bg-[oklch(0.23_0.07_145)]" : "bg-[#F0F5EE]"}`}
       ref={ref}
     >
+      {/* YouTube video background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+        <iframe
+          src="https://www.youtube.com/embed/KEi0wr1vRG8?autoplay=1&mute=1&loop=1&playlist=KEi0wr1vRG8&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=0"
+          allow="autoplay; encrypted-media"
+          allowFullScreen={false}
+          title=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "177.78vh",
+            minWidth: "100%",
+            height: "56.25vw",
+            minHeight: "100%",
+            transform: "translate(-50%, -50%)",
+            border: "none",
+            opacity: 0.18,
+            pointerEvents: "none",
+          }}
+        />
+        {/* Dark overlay to ensure text readability */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: isDark
+              ? "oklch(0.23 0.07 145 / 0.72)"
+              : "oklch(0.93 0.04 145 / 0.78)",
+          }}
+        />
+      </div>
       {/* Micro-checkered background — matches hero section */}
       <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
       <div className="container relative z-10">
