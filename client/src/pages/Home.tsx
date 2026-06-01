@@ -1494,8 +1494,6 @@ function PlayerDemo() {
           }}
         />
       </div>
-      {/* Micro-checkered background — matches hero section */}
-      <div className="absolute inset-0 chess-board-bg opacity-40 pointer-events-none" />
       <div className="container relative z-10">
         <div className="max-w-2xl mx-auto text-center mb-12">
           <p className={`text-xs font-semibold tracking-widest uppercase mb-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>
