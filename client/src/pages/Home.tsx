@@ -495,10 +495,9 @@ function Hero({ onCreateTournament }: { onCreateTournament: () => void }) {
             style={{ animationDelay: "0.65s", animationFillMode: "forwards" }}
           >
             {[
-              { icon: <Swords className="w-3.5 h-3.5" />, label: "Swiss + Elim format" },
-              { icon: <Link2 className="w-3.5 h-3.5" />, label: "chess.com integration" },
-              { icon: <BarChart3 className="w-3.5 h-3.5" />, label: "Live standings & brackets" },
-              { icon: <Globe className="w-3.5 h-3.5" />, label: "80+ clubs worldwide" },
+              { icon: <Link2 className="w-3.5 h-3.5" />, label: "Chess.com" },
+              { icon: <Globe className="w-3.5 h-3.5" />, label: "Lichess" },
+              { icon: <Swords className="w-3.5 h-3.5" />, label: "TakeTakeTake" },
             ].map(({ icon, label }) => (
               <span
                 key={label}
