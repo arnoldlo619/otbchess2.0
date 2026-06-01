@@ -1478,7 +1478,7 @@ function PlayerDemo() {
             minHeight: "100%",
             transform: "translate(-50%, -50%)",
             border: "none",
-            opacity: 0.18,
+            opacity: 0.35,
             pointerEvents: "none",
           }}
         />
@@ -1488,8 +1488,8 @@ function PlayerDemo() {
             position: "absolute",
             inset: 0,
             background: isDark
-              ? "oklch(0.23 0.07 145 / 0.72)"
-              : "oklch(0.93 0.04 145 / 0.78)",
+              ? "oklch(0.23 0.07 145 / 0.58)"
+              : "oklch(0.93 0.04 145 / 0.65)",
           }}
         />
       </div>
