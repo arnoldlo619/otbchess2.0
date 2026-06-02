@@ -50,6 +50,16 @@ export interface EnrichedPrepLine {
   isTrainFirst?: boolean;
   /** Whether this is a main line or a surprise weapon */
   lineType?: "main" | "surprise";
+  /** Which side the user should play this line as */
+  useAs?: "white" | "black";
+  /** Number of opponent games this recommendation is based on */
+  sampleSize?: number;
+  /** The main strategic idea in beginner-friendly language */
+  mainIdea?: string;
+  /** What to watch for / key plan after the opening */
+  keyPlan?: string;
+  /** The specific weakness this line exploits */
+  exploits?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -290,7 +300,7 @@ export function rankLinesByCollision(lines: EnrichedPrepLine[]): EnrichedPrepLin
  * Marks the top line as "train first".
  */
 export function enrichPrepLines(
-  lines: Array<{ name: string; eco: string; moves: string; rationale: string; confidence: "high" | "medium" | "low" }>,
+  lines: Array<{ name: string; eco: string; moves: string; rationale: string; confidence: "high" | "medium" | "low"; useAs?: "white" | "black"; sampleSize?: number; mainIdea?: string; keyPlan?: string; exploits?: string; lineType?: "main" | "surprise" }>,
   repertoire: UserRepertoire,
   opponentProfile: {
     firstMoveAsWhite: { move: string; count: number; pct: number }[];
@@ -303,9 +313,15 @@ export function enrichPrepLines(
     ...line,
     collisionScore: computeCollisionScore(line, repertoire, opponentProfile),
     repertoireFit: computeRepertoireFit(line, repertoire),
-    colorContext: getColorContext(line),
+    colorContext: line.useAs || getColorContext(line),
     structureLabel: getStructureLabel(line),
     isTrainFirst: false,
+    useAs: line.useAs,
+    sampleSize: line.sampleSize,
+    mainIdea: line.mainIdea,
+    keyPlan: line.keyPlan,
+    exploits: line.exploits,
+    lineType: line.lineType,
   }));
 
   const ranked = rankLinesByCollision(enriched);

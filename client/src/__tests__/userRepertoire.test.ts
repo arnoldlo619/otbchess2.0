@@ -415,7 +415,7 @@ describe("generateMatchupSummary", () => {
   });
 
   it("colorAdvice is null when color win rates are similar", () => {
-    const balancedProfile = { ...fullProfile, asWhite: { winRate: 52, games: 20 }, asBlack: { winRate: 48, games: 20 } };
+    const balancedProfile = { ...fullProfile, asWhite: { winRate: 0.52, games: 20 }, asBlack: { winRate: 0.48, games: 20 } };
     const summary = generateMatchupSummary(e4Repertoire, balancedProfile, enrichedLines);
     expect(summary.colorAdvice).toBeNull();
   });

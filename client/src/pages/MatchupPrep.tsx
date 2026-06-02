@@ -85,6 +85,11 @@ interface PrepLine {
   rationale: string;
   confidence: "high" | "medium" | "low";
   lineType?: "main" | "surprise";
+  exploits?: string;
+  useAs?: "white" | "black";
+  sampleSize?: number;
+  mainIdea?: string;
+  keyPlan?: string;
 }
 
 interface ProblemLine {
@@ -125,12 +130,24 @@ interface OpeningTreeNode {
   children: OpeningTreeNode[];
 }
 
+interface PrepRecommendation {
+  useAs: "white" | "black";
+  target: string;
+  evidence: string;
+  confidence: "high" | "moderate" | "low";
+  plan: string;
+  category: "opening" | "middlegame" | "endgame";
+  sampleSize: number;
+  winRate: number;
+}
+
 interface PrepReport {
   opponent: PlayStyleProfile;
   prepLines: PrepLine[];
   insights: string[];
   problemLines?: ProblemLine[];
   victoryPlan?: VictoryPlanItem[];
+  prepRecommendations?: PrepRecommendation[];
   behavior?: BehaviorProfile;
   openingTree?: { asWhite: OpeningTreeNode[]; asBlack: OpeningTreeNode[] };
   generatedAt: string;
@@ -1124,14 +1141,76 @@ function ScoutReportTab({
         </div>
       </div>
 
-      {/* ── Victory Plan — "How to Beat This Player" ── */}
-      {report.victoryPlan && report.victoryPlan.length > 0 && (
+      {/* ── Prep Recommendations (replaces "How to Beat This Player") ── */}
+      {report.prepRecommendations && report.prepRecommendations.length > 0 && (
+        <div className={`${t.card} p-4 sm:p-5 border-2 ${
+          isDark ? "border-[#3D6B47]/40 bg-gradient-to-br from-[#0f1c11] to-[#162018]" : "border-[#3D6B47]/20 bg-gradient-to-br from-[#f0fdf4] to-white"
+        }`}>
+          <div className="flex items-center gap-2 mb-4">
+            <Target className={`w-5 h-5 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
+            <h3 className={`font-bold text-lg ${t.textPrimary}`}>Prep Recommendations</h3>
+          </div>
+          <div className="space-y-3">
+            {report.prepRecommendations.map((rec, i) => {
+              const confColors = {
+                high: isDark ? "bg-emerald-500/12 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200",
+                moderate: isDark ? "bg-amber-500/12 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-700 border-amber-200",
+                low: isDark ? "bg-red-500/12 text-red-400 border-red-500/20" : "bg-red-50 text-red-600 border-red-200",
+              };
+              const sideColors = rec.useAs === "white"
+                ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
+                : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700";
+              return (
+                <div key={i} className={`p-3 rounded-xl border ${
+                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                }`}>
+                  {/* Side + Target + Confidence badges */}
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${sideColors}`}>
+                      Use as {rec.useAs}
+                    </span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${confColors[rec.confidence]}`}>
+                      {rec.confidence === "high" ? "High confidence" : rec.confidence === "moderate" ? "Moderate confidence" : "Low confidence"}
+                    </span>
+                    <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border ${
+                      rec.category === "opening" ? (isDark ? "bg-emerald-500/08 text-emerald-400/70 border-emerald-500/15" : "bg-emerald-50/60 text-emerald-600 border-emerald-200/60")
+                      : rec.category === "middlegame" ? (isDark ? "bg-blue-500/08 text-blue-400/70 border-blue-500/15" : "bg-blue-50/60 text-blue-600 border-blue-200/60")
+                      : (isDark ? "bg-purple-500/08 text-purple-400/70 border-purple-500/15" : "bg-purple-50/60 text-purple-600 border-purple-200/60")
+                    }`}>
+                      {rec.category}
+                    </span>
+                  </div>
+                  {/* Target name */}
+                  <p className={`text-sm font-bold mb-1 ${t.textPrimary}`}>{rec.target}</p>
+                  {/* Evidence */}
+                  <p className={`text-xs mb-2 ${t.textTertiary}`}>{rec.evidence}</p>
+                  {/* Plan */}
+                  <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{rec.plan}</p>
+                  {/* CTA */}
+                  <button
+                    onClick={onViewLines}
+                    className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${
+                      isDark ? "text-[#5B9A6A] hover:text-emerald-400" : "text-[#3D6B47] hover:text-emerald-600"
+                    } transition-colors`}
+                  >
+                    <BookOpen className="w-3 h-3" />
+                    Study this line
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Legacy Victory Plan fallback (if no prepRecommendations) ── */}
+      {(!report.prepRecommendations || report.prepRecommendations.length === 0) && report.victoryPlan && report.victoryPlan.length > 0 && (
         <div className={`${t.card} p-4 sm:p-5 border-2 ${
           isDark ? "border-[#3D6B47]/40 bg-gradient-to-br from-[#0f1c11] to-[#162018]" : "border-[#3D6B47]/20 bg-gradient-to-br from-[#f0fdf4] to-white"
         }`}>
           <div className="flex items-center gap-2 mb-4">
             <Zap className={`w-5 h-5 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
-            <h3 className={`font-bold text-lg ${t.textPrimary}`}>How to Beat This Player</h3>
+            <h3 className={`font-bold text-lg ${t.textPrimary}`}>Prep Recommendations</h3>
           </div>
           <div className="space-y-3">
             {report.victoryPlan.map((item, i) => {
@@ -1504,65 +1583,141 @@ function StudyLinesTab({
       {/* Lines list — each with inline ChessLineViewer */}
       {enrichedLines.map((line, i) => {
         const priority = line.confidence === "high" ? "must-know" : line.confidence === "medium" ? "likely" : "useful";
+        const confLabel = line.confidence === "high" ? "High confidence" : line.confidence === "medium" ? "Moderate confidence" : "Low confidence";
+        const sampleNote = (line as any).sampleSize ? `Based on ${(line as any).sampleSize} games` : undefined;
+        const useAs: "white" | "black" | undefined = (line as any).useAs;
+        const mainIdea: string | undefined = (line as any).mainIdea;
+        const keyPlan: string | undefined = (line as any).keyPlan;
+        const exploits: string | undefined = (line as any).exploits;
         return (
-          <div key={i} className="space-y-2">
-            {/* Priority + metadata row */}
-            <div className="flex items-center gap-2 px-1 flex-wrap">
-              <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
-                isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"
-              }`}>{i + 1}</span>
-              {line.isTrainFirst && (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                  isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
+          <div key={i} className={`rounded-2xl border overflow-hidden ${
+            isDark ? "border-[#1e2e22]/60 bg-[#0a1409]" : "border-gray-200/70 bg-white"
+          }`}>
+            {/* Header card with metadata */}
+            <div className="p-4 space-y-2">
+              {/* Priority + metadata row */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                  isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/06 text-[#3D6B47]"
+                }`}>{i + 1}</span>
+                {/* Side badge */}
+                {useAs && (
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                    useAs === "white"
+                      ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
+                      : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+                  }`}>
+                    Use as {useAs}
+                  </span>
+                )}
+                {line.isTrainFirst && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                    isDark ? "bg-amber-500/15 text-amber-400 border border-amber-500/20" : "bg-amber-50 text-amber-700 border border-amber-200"
+                  }`}>
+                    <Flame className="w-2.5 h-2.5" /> Study First
+                  </span>
+                )}
+                <PriorityBadge priority={priority} isDark={isDark} />
+                {line.lineType === "surprise" && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    isDark ? "bg-violet-500/15 text-violet-300 border border-violet-500/25" : "bg-violet-50 text-violet-700 border border-violet-200"
+                  }`}>Surprise</span>
+                )}
+                {line.collisionScore > 0 && (
+                  <span className={`text-[10px] font-medium flex items-center gap-1 ml-auto ${
+                    line.collisionScore >= 70 ? (isDark ? "text-emerald-400" : "text-emerald-600")
+                    : line.collisionScore >= 40 ? (isDark ? "text-amber-400" : "text-amber-600")
+                    : t.textTertiary
+                  }`}>
+                    <Crosshair className="w-2.5 h-2.5" />
+                    {line.collisionScore}% match
+                  </span>
+                )}
+              </div>
+
+              {/* Targets / Exploits */}
+              {exploits && (
+                <div className={`flex items-start gap-2 text-xs ${
+                  isDark ? "text-amber-300/70" : "text-amber-700/80"
                 }`}>
-                  <Flame className="w-2.5 h-2.5" /> Study First
-                </span>
+                  <Crosshair className="w-3 h-3 shrink-0 mt-0.5" />
+                  <span>Targets: {exploits}</span>
+                </div>
               )}
-              <PriorityBadge priority={priority} isDark={isDark} />
-              {line.lineType === "surprise" && (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  isDark ? "bg-violet-500/15 text-violet-300 border border-violet-500/25" : "bg-violet-50 text-violet-700 border border-violet-200"
-                }`}>Surprise</span>
-              )}
-              {line.collisionScore > 0 && (
-                <span className={`text-[10px] font-medium flex items-center gap-1 ml-auto ${
-                  line.collisionScore >= 70 ? (isDark ? "text-emerald-400" : "text-emerald-600")
-                  : line.collisionScore >= 40 ? (isDark ? "text-amber-400" : "text-amber-600")
-                  : t.textTertiary
+
+              {/* Main Idea */}
+              {mainIdea && (
+                <div className={`p-2.5 rounded-lg ${
+                  isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"
                 }`}>
-                  <Crosshair className="w-2.5 h-2.5" />
-                  {line.collisionScore}% match
-                </span>
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                    isDark ? "text-[#5B9A6A]/70" : "text-[#3D6B47]/60"
+                  }`}>Main Idea</p>
+                  <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{mainIdea}</p>
+                </div>
               )}
+
+              {/* Key Plan */}
+              {keyPlan && (
+                <div className={`p-2.5 rounded-lg ${
+                  isDark ? "bg-blue-500/05 border border-blue-500/10" : "bg-blue-50/50 border border-blue-200/40"
+                }`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                    isDark ? "text-blue-400/70" : "text-blue-600/60"
+                  }`}>What to Watch For</p>
+                  <p className={`text-xs leading-relaxed ${t.textSecondary}`}>{keyPlan}</p>
+                </div>
+              )}
+
+              {/* Confidence + sample size */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                  line.confidence === "high" ? (isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200")
+                  : line.confidence === "medium" ? (isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-700 border-amber-200")
+                  : (isDark ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-red-50 text-red-600 border-red-200")
+                }`}>{confLabel}</span>
+                {sampleNote && (
+                  <span className={`text-[10px] ${t.textTertiary}`}>{sampleNote}</span>
+                )}
+                {line.confidence === "low" && (
+                  <span className={`text-[10px] italic ${isDark ? "text-red-400/60" : "text-red-500/60"}`}>
+                    Use cautiously — limited data
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Interactive board */}
-            <ChessLineViewer
-              moves={line.moves}
-              lineName={line.name}
-              rationale={line.rationale}
-              eco={line.eco}
-              isDark={isDark}
-            />
+            <div className="px-4 pb-2">
+              <ChessLineViewer
+                moves={line.moves}
+                lineName={line.name}
+                rationale={line.rationale}
+                eco={line.eco}
+                isDark={isDark}
+              />
+            </div>
 
             {/* Practice this line button */}
-            <button
-              data-testid={`practice-line-btn-${i}`}
-              onClick={() => {
-                const fullIndex = enrichedLines.findIndex(
-                  (el) => el.name === line.name && el.moves === line.moves
-                );
-                onPracticeLine(fullIndex >= 0 ? fullIndex : i);
-              }}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                isDark
-                  ? "text-[#5B9A6A] hover:bg-[#5B9A6A]/10 border border-[#5B9A6A]/20 hover:border-[#5B9A6A]/40"
-                  : "text-[#3D6B47] hover:bg-[#3D6B47]/08 border border-[#3D6B47]/15 hover:border-[#3D6B47]/30"
-              }`}
-            >
-              <Dumbbell className="w-3 h-3" />
-              Practice this line
-            </button>
+            <div className="px-4 pb-4">
+              <button
+                data-testid={`practice-line-btn-${i}`}
+                onClick={() => {
+                  const fullIndex = enrichedLines.findIndex(
+                    (el) => el.name === line.name && el.moves === line.moves
+                  );
+                  onPracticeLine(fullIndex >= 0 ? fullIndex : i);
+                }}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                  isDark
+                    ? "text-[#5B9A6A] hover:bg-[#5B9A6A]/10 border border-[#5B9A6A]/20 hover:border-[#5B9A6A]/40"
+                    : "text-[#3D6B47] hover:bg-[#3D6B47]/08 border border-[#3D6B47]/15 hover:border-[#3D6B47]/30"
+                }`}
+              >
+                <Dumbbell className="w-3 h-3" />
+                Practice this line
+              </button>
+            </div>
           </div>
         );
       })}
@@ -1657,12 +1812,39 @@ function PracticeBoardTab({
     );
   }
 
+  const currentLine = enrichedLines[practiceLineIndex ?? 0];
+  const useAs: "white" | "black" | undefined = currentLine ? (currentLine as any).useAs : undefined;
+  const exploits: string | undefined = currentLine ? (currentLine as any).exploits : undefined;
+
   return (
     <div className="space-y-4">
-      <div className={`flex items-center gap-3 px-1`}>
-        <span className={`text-xs ${t.textSecondary}`}>
+      {/* Practice context card */}
+      <div className={`p-3 rounded-xl border ${
+        isDark ? "bg-[#0f1c11] border-[#1e2e22]/60" : "bg-gray-50 border-gray-200/60"
+      }`}>
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <Dumbbell className={`w-3.5 h-3.5 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+          <span className={`text-xs font-semibold ${t.textPrimary}`}>Practice Mode</span>
+          {useAs && (
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+              useAs === "white"
+                ? isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
+                : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+            }`}>
+              You play as {useAs}
+            </span>
+          )}
+        </div>
+        <p className={`text-xs leading-relaxed ${t.textSecondary}`}>
           Find the correct move for each position. The computer plays the opponent's moves automatically.
-        </span>
+          {useAs && ` You are practicing as ${useAs.charAt(0).toUpperCase() + useAs.slice(1)}.`}
+          {exploits && ` Goal: reach the ${currentLine?.name} setup because this opponent has struggled against it.`}
+        </p>
+        {currentLine && (
+          <p className={`text-[10px] mt-1.5 italic ${t.textTertiary}`}>
+            Hint style: hints explain the idea behind the move, not just the notation.
+          </p>
+        )}
       </div>
       <ChessPracticeBoard
         lines={enrichedLines.map((l, i) => ({

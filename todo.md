@@ -6416,3 +6416,17 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Pairing validation layer (validatePairings function)
 - [ ] UX: ratingSource badge in roster
 - [ ] Comprehensive unit tests (2, 8, 10, 20, 40, odd players, fallback, bye, no-repeat)
+
+## Match Prep Feature Overhaul — Terminology & UX
+
+- [x] Fix Victory Plan terminology: never say player "plays" a defense as White or call White opening a Black defense
+- [x] Add side-orientation logic: distinguish "plays" vs "faces" correctly
+- [x] Rename "How to Beat This Player" to "Prep Recommendations"
+- [x] Add confidence labels (Low/Moderate/High) based on sample size to all insights
+- [x] Add data quality guardrails (don't overstate weak-data claims)
+- [x] Restructure Scout Report into: Repertoire Snapshot, Best Performing Lines, Targetable Weaknesses, Prep Recommendations, Practical Notes
+- [x] Improve insight templates with beginner-friendly wording
+- [x] Upgrade Study Lines tab: add side labels, target weakness, main idea, plan, confidence
+- [x] Upgrade Practice tab: show side, goal, idea-based hints, mistake explanations
+- [x] Fix userRepertoire.ts color context detection
+- [x] Update filtering behavior for Color selection (White/Black/Both)
