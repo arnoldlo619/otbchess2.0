@@ -1,8 +1,12 @@
 /**
  * useStockfish — Browser-side Stockfish WASM engine hook.
  *
- * Loads stockfish-18-lite-single via a Web Worker and provides a simple
- * `evaluate(fen)` function that returns the best move and centipawn eval.
+ * Loads stockfish-18-lite (multi-threaded) via a Web Worker and provides a
+ * simple `evaluate(fen)` function that returns the best move and centipawn eval.
+ *
+ * Multi-threaded build requires Cross-Origin Isolation (COOP/COEP headers) for
+ * SharedArrayBuffer support. Falls back to the single-threaded build automatically
+ * when SharedArrayBuffer is not available.
  */
 import { useRef, useCallback, useEffect, useState } from "react";
 
@@ -13,13 +17,33 @@ export interface StockfishEval {
   /** Mate in N (positive = White mates, negative = Black mates). null if no forced mate. */
   mate: number | null;
   depth: number;
+  /** Number of threads used for this evaluation */
+  threads?: number;
 }
 
-const SF_JS_URL = "/stockfish/stockfish-18-lite-single.js";
+/** Detect if SharedArrayBuffer is available (required for multi-threaded WASM) */
+function isSharedArrayBufferAvailable(): boolean {
+  try {
+    return typeof SharedArrayBuffer !== "undefined";
+  } catch {
+    return false;
+  }
+}
+
+const SF_MULTI_URL = "/stockfish/stockfish-18-lite.js";
+const SF_SINGLE_URL = "/stockfish/stockfish-18-lite-single.js";
+
+/** Number of threads to use — cap at 4 to avoid overwhelming mobile devices */
+function getThreadCount(): number {
+  const cores = navigator.hardwareConcurrency ?? 2;
+  return Math.min(Math.max(cores - 1, 1), 4);
+}
 
 export function useStockfish() {
   const workerRef = useRef<Worker | null>(null);
   const [ready, setReady] = useState(false);
+  const [isMultiThreaded, setIsMultiThreaded] = useState(false);
+  const [threadCount, setThreadCount] = useState(1);
   const pendingRef = useRef<{
     resolve: (val: StockfishEval) => void;
     reject: (err: Error) => void;
@@ -29,19 +53,39 @@ export function useStockfish() {
   // Initialize worker
   useEffect(() => {
     let cancelled = false;
-    const worker = new Worker(SF_JS_URL);
+    const multiThread = isSharedArrayBufferAvailable();
+    const sfUrl = multiThread ? SF_MULTI_URL : SF_SINGLE_URL;
+    const threads = multiThread ? getThreadCount() : 1;
+
+    const worker = new Worker(sfUrl);
     workerRef.current = worker;
 
     let bestMove = "";
     let cp = 0;
     let mate: number | null = null;
     let depth = 0;
+    let initialized = false;
 
     worker.onmessage = (e: MessageEvent) => {
       const line = typeof e.data === "string" ? e.data : "";
 
-      if (line === "uciok" || line.includes("readyok")) {
-        if (!cancelled) setReady(true);
+      if (line === "uciok") {
+        // Configure threads and hash size after UCI handshake
+        if (multiThread && threads > 1) {
+          worker.postMessage(`setoption name Threads value ${threads}`);
+        }
+        // Set hash table size: 64 MB for multi-thread, 16 MB for single
+        worker.postMessage(`setoption name Hash value ${multiThread ? 64 : 16}`);
+        worker.postMessage("isready");
+      }
+
+      if (line.includes("readyok") && !initialized) {
+        initialized = true;
+        if (!cancelled) {
+          setReady(true);
+          setIsMultiThreaded(multiThread);
+          setThreadCount(threads);
+        }
       }
 
       // Parse "info depth N ... score cp X" or "info depth N ... score mate X"
@@ -64,7 +108,7 @@ export function useStockfish() {
       if (line.startsWith("bestmove")) {
         const parts = line.split(" ");
         bestMove = parts[1] || "";
-        const result: StockfishEval = { bestMove, cp, mate, depth };
+        const result: StockfishEval = { bestMove, cp, mate, depth, threads };
         if (pendingRef.current) {
           pendingRef.current.resolve(result);
           pendingRef.current = null;
@@ -72,7 +116,8 @@ export function useStockfish() {
       }
     };
 
-    worker.onerror = () => {
+    worker.onerror = (err) => {
+      console.warn("Stockfish worker error:", err);
       if (pendingRef.current) {
         pendingRef.current.reject(new Error("Stockfish worker error"));
         pendingRef.current = null;
@@ -90,7 +135,7 @@ export function useStockfish() {
   }, []);
 
   const evaluate = useCallback(
-    (fen: string, depthLimit = 16): Promise<StockfishEval> => {
+    (fen: string, depthLimit = 18): Promise<StockfishEval> => {
       // Check cache
       const cached = evalCacheRef.current.get(fen);
       if (cached && cached.depth >= depthLimit) return Promise.resolve(cached);
@@ -129,5 +174,5 @@ export function useStockfish() {
     workerRef.current?.postMessage("stop");
   }, []);
 
-  return { ready, evaluate, stop };
+  return { ready, evaluate, stop, isMultiThreaded, threadCount };
 }

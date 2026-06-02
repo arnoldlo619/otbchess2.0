@@ -6430,3 +6430,11 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Upgrade Practice tab: show side, goal, idea-based hints, mistake explanations
 - [x] Fix userRepertoire.ts color context detection
 - [x] Update filtering behavior for Color selection (White/Black/Both)
+
+## Stockfish Engine Upgrade
+- [x] Add stockfish-18-lite (multi-threaded) WASM build to public/stockfish/
+- [x] Update useStockfish hook to use multi-threaded build with SharedArrayBuffer detection and fallback
+- [x] Configure Threads and Hash size options after UCI handshake
+- [x] Increase default analysis depth from 16 to 18
+- [x] Add COOP/COEP headers scoped to /repertoire route for SharedArrayBuffer support
+- [x] Show thread count in engine label in RepertoireBuilder (e.g. "Stockfish 18 Lite · 3T · depth 18")

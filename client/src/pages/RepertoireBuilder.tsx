@@ -751,7 +751,7 @@ export default function RepertoireBuilder() {
     };
   }, [loading]);
 
-  const { ready: sfReady, evaluate, stop: sfStop } = useStockfish();
+  const { ready: sfReady, evaluate, stop: sfStop, isMultiThreaded, threadCount } = useStockfish();
 
   const chess = useMemo(() => new Chess(currentFen), [currentFen]);
   const currentPath = useMemo(() => buildPath(moveTree, currentFen), [moveTree, currentFen]);
@@ -1834,7 +1834,7 @@ export default function RepertoireBuilder() {
               {showEngine && sfEval && (
                 <div className={`mt-2 text-xs flex items-center gap-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
                   <Zap size={12} />
-                  <span>Stockfish 18 Lite · depth {sfEval.depth}</span>
+                  <span>Stockfish 18 Lite{isMultiThreaded ? ` · ${threadCount}T` : ""} · depth {sfEval.depth}</span>
                   {sfEval.bestMove && (
                     <span className={`font-mono ${isDark ? "text-white/60" : "text-gray-500"}`}>
                       Best: {sfEval.bestMove}

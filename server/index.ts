@@ -404,6 +404,15 @@ export function createApp() {
     next();
   });
 
+  // ── Cross-Origin Isolation for /repertoire ─────────────────────────────────────
+  // Required for SharedArrayBuffer (multi-threaded Stockfish WASM).
+  // Scoped to /repertoire only to avoid breaking YouTube iframes on other pages.
+  app.use(["/repertoire", "/stockfish"], (_req, res, next) => {
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+    next();
+  });
+
   // ── Global rate limiter ─────────────────────────────────────────────────────────
   // Applied to all /api routes — 200 req/min per IP in production.
   // Static assets and Vite HMR are excluded (they don't match /api).
