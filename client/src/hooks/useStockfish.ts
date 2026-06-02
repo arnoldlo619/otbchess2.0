@@ -1,8 +1,9 @@
 /**
  * useStockfish — Browser-side Stockfish WASM engine hook.
  *
- * Loads stockfish-18-lite (multi-threaded) via a Web Worker and provides a
- * simple `evaluate(fen)` function that returns the best move and centipawn eval.
+ * Loads stockfish-18-lite (multi-threaded) via a Web Worker and provides:
+ *  - `evaluate(fen)` — returns the best move + centipawn eval (single PV)
+ *  - `evaluateMultiPV(fen, pvCount)` — returns top N moves with scores for arrow overlays
  *
  * Multi-threaded build requires Cross-Origin Isolation (COOP/COEP headers) for
  * SharedArrayBuffer support. Falls back to the single-threaded build automatically
@@ -19,6 +20,19 @@ export interface StockfishEval {
   depth: number;
   /** Number of threads used for this evaluation */
   threads?: number;
+}
+
+export interface PVLine {
+  /** Move in UCI notation e.g. "e2e4" */
+  move: string;
+  /** Centipawns from White's perspective */
+  cp: number;
+  /** Mate in N, null if no forced mate */
+  mate: number | null;
+  /** Search depth reached */
+  depth: number;
+  /** Rank: 1 = best, 2 = second best, etc. */
+  rank: number;
 }
 
 /** Detect if SharedArrayBuffer is available (required for multi-threaded WASM) */
@@ -44,11 +58,23 @@ export function useStockfish() {
   const [ready, setReady] = useState(false);
   const [isMultiThreaded, setIsMultiThreaded] = useState(false);
   const [threadCount, setThreadCount] = useState(1);
+
+  // Single-PV pending callback
   const pendingRef = useRef<{
     resolve: (val: StockfishEval) => void;
     reject: (err: Error) => void;
   } | null>(null);
+
+  // Multi-PV pending callback
+  const multiPVPendingRef = useRef<{
+    resolve: (val: PVLine[]) => void;
+    reject: (err: Error) => void;
+    pvCount: number;
+    lines: Map<number, PVLine>;
+  } | null>(null);
+
   const evalCacheRef = useRef<Map<string, StockfishEval>>(new Map());
+  const multiPVCacheRef = useRef<Map<string, PVLine[]>>(new Map());
 
   // Initialize worker
   useEffect(() => {
@@ -88,28 +114,62 @@ export function useStockfish() {
         }
       }
 
-      // Parse "info depth N ... score cp X" or "info depth N ... score mate X"
-      if (line.startsWith("info") && line.includes("score")) {
+      // ── Multi-PV parsing ────────────────────────────────────────────────────
+      if (multiPVPendingRef.current && line.startsWith("info") && line.includes("multipv")) {
+        const pvMatch = line.match(/multipv (\d+)/);
+        const depthMatch = line.match(/depth (\d+)/);
+        const cpMatch = line.match(/score cp (-?\d+)/);
+        const mateMatch = line.match(/score mate (-?\d+)/);
+        const pvMatch2 = line.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);
+
+        if (pvMatch && pvMatch2) {
+          const rank = parseInt(pvMatch[1], 10);
+          const pvDepth = depthMatch ? parseInt(depthMatch[1], 10) : 0;
+          const pvCp = cpMatch ? parseInt(cpMatch[1], 10) : 0;
+          const pvMate = mateMatch ? parseInt(mateMatch[1], 10) : null;
+          const pvMove = pvMatch2[1];
+
+          multiPVPendingRef.current.lines.set(rank, {
+            move: pvMove,
+            cp: pvMate !== null ? (pvMate > 0 ? 10000 : -10000) : pvCp,
+            mate: pvMate,
+            depth: pvDepth,
+            rank,
+          });
+        }
+      }
+
+      // ── Single-PV parsing ───────────────────────────────────────────────────
+      if (!multiPVPendingRef.current && line.startsWith("info") && line.includes("score")) {
         const depthMatch = line.match(/depth (\d+)/);
         const cpMatch = line.match(/score cp (-?\d+)/);
         const mateMatch = line.match(/score mate (-?\d+)/);
         if (depthMatch) depth = parseInt(depthMatch[1], 10);
-        if (cpMatch) {
-          cp = parseInt(cpMatch[1], 10);
-          mate = null;
-        }
-        if (mateMatch) {
-          mate = parseInt(mateMatch[1], 10);
-          cp = mate > 0 ? 10000 : -10000;
-        }
+        if (cpMatch) { cp = parseInt(cpMatch[1], 10); mate = null; }
+        if (mateMatch) { mate = parseInt(mateMatch[1], 10); cp = mate > 0 ? 10000 : -10000; }
       }
 
-      // Parse "bestmove e2e4 ..."
+      // ── bestmove signal ─────────────────────────────────────────────────────
       if (line.startsWith("bestmove")) {
         const parts = line.split(" ");
         bestMove = parts[1] || "";
-        const result: StockfishEval = { bestMove, cp, mate, depth, threads };
+
+        // Resolve Multi-PV
+        if (multiPVPendingRef.current) {
+          const { resolve, lines, pvCount } = multiPVPendingRef.current;
+          multiPVPendingRef.current = null;
+          const result: PVLine[] = [];
+          for (let i = 1; i <= pvCount; i++) {
+            const pvLine = lines.get(i);
+            if (pvLine) result.push(pvLine);
+          }
+          resolve(result);
+          return;
+        }
+
+        // Resolve Single-PV
         if (pendingRef.current) {
+          const result: StockfishEval = { bestMove, cp, mate, depth, threads };
           pendingRef.current.resolve(result);
           pendingRef.current = null;
         }
@@ -121,6 +181,10 @@ export function useStockfish() {
       if (pendingRef.current) {
         pendingRef.current.reject(new Error("Stockfish worker error"));
         pendingRef.current = null;
+      }
+      if (multiPVPendingRef.current) {
+        multiPVPendingRef.current.reject(new Error("Stockfish worker error"));
+        multiPVPendingRef.current = null;
       }
     };
 
@@ -134,18 +198,15 @@ export function useStockfish() {
     };
   }, []);
 
+  /** Evaluate a position and return the single best move + score */
   const evaluate = useCallback(
     (fen: string, depthLimit = 18): Promise<StockfishEval> => {
-      // Check cache
       const cached = evalCacheRef.current.get(fen);
       if (cached && cached.depth >= depthLimit) return Promise.resolve(cached);
 
       return new Promise((resolve, reject) => {
         const worker = workerRef.current;
-        if (!worker) {
-          reject(new Error("Stockfish not initialized"));
-          return;
-        }
+        if (!worker) { reject(new Error("Stockfish not initialized")); return; }
 
         // Cancel any pending eval
         if (pendingRef.current) {
@@ -153,15 +214,62 @@ export function useStockfish() {
           pendingRef.current.reject(new Error("Cancelled"));
           pendingRef.current = null;
         }
+        if (multiPVPendingRef.current) {
+          worker.postMessage("stop");
+          multiPVPendingRef.current.reject(new Error("Cancelled"));
+          multiPVPendingRef.current = null;
+          // Reset MultiPV to 1 for single-PV mode
+          worker.postMessage("setoption name MultiPV value 1");
+        }
 
         pendingRef.current = {
-          resolve: (val) => {
-            evalCacheRef.current.set(fen, val);
-            resolve(val);
-          },
+          resolve: (val) => { evalCacheRef.current.set(fen, val); resolve(val); },
           reject,
         };
 
+        worker.postMessage("setoption name MultiPV value 1");
+        worker.postMessage("ucinewgame");
+        worker.postMessage(`position fen ${fen}`);
+        worker.postMessage(`go depth ${depthLimit}`);
+      });
+    },
+    []
+  );
+
+  /**
+   * Evaluate a position and return the top N moves with scores.
+   * Used to generate arrow overlays on the board.
+   */
+  const evaluateMultiPV = useCallback(
+    (fen: string, pvCount = 3, depthLimit = 16): Promise<PVLine[]> => {
+      const cacheKey = `${fen}:${pvCount}`;
+      const cached = multiPVCacheRef.current.get(cacheKey);
+      if (cached && cached[0]?.depth >= depthLimit) return Promise.resolve(cached);
+
+      return new Promise((resolve, reject) => {
+        const worker = workerRef.current;
+        if (!worker) { reject(new Error("Stockfish not initialized")); return; }
+
+        // Cancel any pending eval
+        if (pendingRef.current) {
+          worker.postMessage("stop");
+          pendingRef.current.reject(new Error("Cancelled"));
+          pendingRef.current = null;
+        }
+        if (multiPVPendingRef.current) {
+          worker.postMessage("stop");
+          multiPVPendingRef.current.reject(new Error("Cancelled"));
+          multiPVPendingRef.current = null;
+        }
+
+        multiPVPendingRef.current = {
+          resolve: (val) => { multiPVCacheRef.current.set(cacheKey, val); resolve(val); },
+          reject,
+          pvCount,
+          lines: new Map(),
+        };
+
+        worker.postMessage(`setoption name MultiPV value ${pvCount}`);
         worker.postMessage("ucinewgame");
         worker.postMessage(`position fen ${fen}`);
         worker.postMessage(`go depth ${depthLimit}`);
@@ -174,5 +282,5 @@ export function useStockfish() {
     workerRef.current?.postMessage("stop");
   }, []);
 
-  return { ready, evaluate, stop, isMultiThreaded, threadCount };
+  return { ready, evaluate, evaluateMultiPV, stop, isMultiThreaded, threadCount };
 }

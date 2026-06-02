@@ -6438,3 +6438,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Increase default analysis depth from 16 to 18
 - [x] Add COOP/COEP headers scoped to /repertoire route for SharedArrayBuffer support
 - [x] Show thread count in engine label in RepertoireBuilder (e.g. "Stockfish 18 Lite · 3T · depth 18")
+
+## Stockfish Arrow Overlays on Chessboard
+- [x] Upgrade useStockfish hook to support MultiPV mode (evaluateMultiPV returning top N moves)
+- [x] Parse multipv lines from Stockfish UCI output with rank, cp, mate, depth, move
+- [x] Add sfArrows state to RepertoireBuilder
+- [x] Wire evaluateMultiPV into the Stockfish eval effect (top 3 moves)
+- [x] Color-code arrows: green (best), yellow (2nd), orange (3rd)
+- [x] Pass arrows and arrowOptions to Chessboard component
+- [x] Hide arrows when engine is toggled off

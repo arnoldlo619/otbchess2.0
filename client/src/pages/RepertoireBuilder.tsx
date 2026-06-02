@@ -16,7 +16,7 @@ import { Chessboard, type PieceDropHandlerArgs, type SquareHandlerArgs, type Pie
 import { Chess, type Square } from "chess.js";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useStockfish, type StockfishEval } from "@/hooks/useStockfish";
+import { useStockfish, type StockfishEval, type PVLine } from "@/hooks/useStockfish";
 import { authFetch } from "@/lib/apiFetch";
 import { useRoute, useLocation } from "wouter";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -47,6 +47,9 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+/** Arrow type matching react-chessboard v5 Arrow interface */
+type ChessArrow = { startSquare: string; endSquare: string; color: string };
 
 /** A node in the move tree */
 interface MoveNode {
@@ -663,6 +666,7 @@ export default function RepertoireBuilder() {
   const [openingName, setOpeningName] = useState<string>("");
   const [openingEco, setOpeningEco] = useState<string>("");
   const [sfEval, setSfEval] = useState<StockfishEval | null>(null);
+  const [sfArrows, setSfArrows] = useState<ChessArrow[]>([]);
   const [showEngine, setShowEngine] = useState(true);
   const [lastMove, setLastMove] = useState<[string, string] | null>(null);
   const [hoverPreview, setHoverPreview] = useState<{ fen: string; from: string; to: string } | null>(null);
@@ -751,7 +755,7 @@ export default function RepertoireBuilder() {
     };
   }, [loading]);
 
-  const { ready: sfReady, evaluate, stop: sfStop, isMultiThreaded, threadCount } = useStockfish();
+  const { ready: sfReady, evaluate, evaluateMultiPV, stop: sfStop, isMultiThreaded, threadCount } = useStockfish();
 
   const chess = useMemo(() => new Chess(currentFen), [currentFen]);
   const currentPath = useMemo(() => buildPath(moveTree, currentFen), [moveTree, currentFen]);
@@ -854,12 +858,35 @@ export default function RepertoireBuilder() {
 
   // ── Run Stockfish eval when FEN changes ─────────────────────────────────────
   useEffect(() => {
-    if (!sfReady || !showEngine) return;
+    if (!sfReady || !showEngine) {
+      setSfArrows([]);
+      return;
+    }
     let cancelled = false;
 
-    evaluate(currentFen, 16)
-      .then((result) => {
-        if (!cancelled) setSfEval(result);
+    // Run MultiPV to get top 3 moves for arrow display
+    evaluateMultiPV(currentFen, 3, 16)
+      .then((pvLines: PVLine[]) => {
+        if (cancelled) return;
+        // Build arrows: best move = bright green, 2nd = yellow, 3rd = orange
+        const ARROW_COLORS = ["#22c55e", "#eab308", "#f97316"];
+        const arrows: ChessArrow[] = pvLines
+          .filter(pv => pv.move && pv.move.length >= 4)
+          .map((pv, idx) => ({
+            startSquare: pv.move.slice(0, 2),
+            endSquare: pv.move.slice(2, 4),
+            color: ARROW_COLORS[idx] ?? "#94a3b8",
+          }));
+        setSfArrows(arrows);
+        // Also update single-PV eval display from the best line
+        if (pvLines[0]) {
+          setSfEval({
+            bestMove: pvLines[0].move,
+            cp: pvLines[0].cp,
+            mate: pvLines[0].mate,
+            depth: pvLines[0].depth,
+          });
+        }
       })
       .catch(() => {});
 
@@ -867,7 +894,7 @@ export default function RepertoireBuilder() {
       cancelled = true;
       sfStop();
     };
-  }, [currentFen, sfReady, showEngine, evaluate, sfStop]);
+  }, [currentFen, sfReady, showEngine, evaluateMultiPV, sfStop]);
 
   // ── Auto-save with debounce ─────────────────────────────────────────────────
   const autoSave = useCallback(
@@ -1760,6 +1787,22 @@ export default function RepertoireBuilder() {
                     darkSquareStyle: { backgroundColor: "#779952" },
                     lightSquareStyle: { backgroundColor: "#edeed1" },
                     animationDurationInMs: 200,
+                    // Stockfish engine arrows (top 3 moves)
+                    arrows: showEngine ? sfArrows : [],
+                    arrowOptions: {
+                      color: "#22c55e",
+                      secondaryColor: "#4caf50",
+                      tertiaryColor: "#f44336",
+                      arrowLengthReducerDenominator: 8,
+                      sameTargetArrowLengthReducerDenominator: 4,
+                      arrowWidthDenominator: 6,
+                      activeArrowWidthMultiplier: 0.9,
+                      opacity: 0.82,
+                      activeOpacity: 0.5,
+                      arrowStartOffset: 0.35,
+                    },
+                    clearArrowsOnClick: false,
+                    clearArrowsOnPositionChange: true,
                   }}
                 />
               </div>
