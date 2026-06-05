@@ -667,6 +667,7 @@ export default function RepertoireBuilder() {
   const [openingEco, setOpeningEco] = useState<string>("");
   const [sfEval, setSfEval] = useState<StockfishEval | null>(null);
   const [sfArrows, setSfArrows] = useState<ChessArrow[]>([]);
+  const [sfPVLines, setSfPVLines] = useState<PVLine[]>([]);
   const [showEngine, setShowEngine] = useState(true);
   const [lastMove, setLastMove] = useState<[string, string] | null>(null);
   const [hoverPreview, setHoverPreview] = useState<{ fen: string; from: string; to: string } | null>(null);
@@ -860,6 +861,7 @@ export default function RepertoireBuilder() {
   useEffect(() => {
     if (!sfReady || !showEngine) {
       setSfArrows([]);
+      setSfPVLines([]);
       return;
     }
     let cancelled = false;
@@ -878,6 +880,7 @@ export default function RepertoireBuilder() {
             color: ARROW_COLORS[idx] ?? "#94a3b8",
           }));
         setSfArrows(arrows);
+        setSfPVLines(pvLines);
         // Also update single-PV eval display from the best line
         if (pvLines[0]) {
           setSfEval({
@@ -1766,45 +1769,108 @@ export default function RepertoireBuilder() {
 
             {/* Board */}
             <div className="flex-1 flex flex-col" ref={boardContainerRef}>
-              <div className={`rounded-2xl overflow-hidden border-2 shadow-2xl flex-shrink-0 ${
-                isDark
-                  ? "border-emerald-500/30 shadow-emerald-500/10"
-                  : "border-emerald-600/20 shadow-emerald-600/5"
-              }`}>
-                <Chessboard
-                  options={{
-                    position: hoverPreview?.fen ?? currentFen,
-                    onPieceDrop: handlePieceDrop,
-                    onPieceClick: handlePieceClick,
-                    onSquareClick: handleSquareClick,
-                    boardOrientation: boardOrientation,
-                    squareStyles: customSquareStyles,
-                    boardStyle: {
-                      borderRadius: "0",
-                      width: `${boardSize}px`,
-                      height: `${boardSize}px`,
-                    },
-                    darkSquareStyle: { backgroundColor: "#779952" },
-                    lightSquareStyle: { backgroundColor: "#edeed1" },
-                    animationDurationInMs: 200,
-                    // Stockfish engine arrows (top 3 moves)
-                    arrows: showEngine ? sfArrows : [],
-                    arrowOptions: {
-                      color: "#22c55e",
-                      secondaryColor: "#4caf50",
-                      tertiaryColor: "#f44336",
-                      arrowLengthReducerDenominator: 8,
-                      sameTargetArrowLengthReducerDenominator: 4,
-                      arrowWidthDenominator: 6,
-                      activeArrowWidthMultiplier: 0.9,
-                      opacity: 0.82,
-                      activeOpacity: 0.5,
-                      arrowStartOffset: 0.35,
-                    },
-                    clearArrowsOnClick: false,
-                    clearArrowsOnPositionChange: true,
-                  }}
-                />
+              {/* Board wrapper — relative so the score overlay can be positioned absolutely */}
+              <div className="relative flex-shrink-0" style={{ width: `${boardSize}px`, height: `${boardSize}px` }}>
+                <div className={`rounded-2xl overflow-hidden border-2 shadow-2xl ${
+                  isDark
+                    ? "border-emerald-500/30 shadow-emerald-500/10"
+                    : "border-emerald-600/20 shadow-emerald-600/5"
+                }`}>
+                  <Chessboard
+                    options={{
+                      position: hoverPreview?.fen ?? currentFen,
+                      onPieceDrop: handlePieceDrop,
+                      onPieceClick: handlePieceClick,
+                      onSquareClick: handleSquareClick,
+                      boardOrientation: boardOrientation,
+                      squareStyles: customSquareStyles,
+                      boardStyle: {
+                        borderRadius: "0",
+                        width: `${boardSize}px`,
+                        height: `${boardSize}px`,
+                      },
+                      darkSquareStyle: { backgroundColor: "#779952" },
+                      lightSquareStyle: { backgroundColor: "#edeed1" },
+                      animationDurationInMs: 200,
+                      // Stockfish engine arrows (top 3 moves)
+                      arrows: showEngine ? sfArrows : [],
+                      arrowOptions: {
+                        color: "#22c55e",
+                        secondaryColor: "#4caf50",
+                        tertiaryColor: "#f44336",
+                        arrowLengthReducerDenominator: 8,
+                        sameTargetArrowLengthReducerDenominator: 4,
+                        arrowWidthDenominator: 6,
+                        activeArrowWidthMultiplier: 0.9,
+                        opacity: 0.82,
+                        activeOpacity: 0.5,
+                        arrowStartOffset: 0.35,
+                      },
+                      clearArrowsOnClick: false,
+                      clearArrowsOnPositionChange: true,
+                    }}
+                  />
+                </div>
+
+                {/* ── Stockfish score badges — one per PV line, at the arrowhead square ── */}
+                {showEngine && sfPVLines.length > 0 && (() => {
+                  const sqSize = boardSize / 8;
+                  const BADGE_COLORS = ["#22c55e", "#eab308", "#f97316"];
+                  const cols = ["a","b","c","d","e","f","g","h"];
+
+                  return sfPVLines.map((pv, idx) => {
+                    if (!pv.move || pv.move.length < 4) return null;
+                    const toSq = pv.move.slice(2, 4);
+                    const file = toSq[0]; // a-h
+                    const rank = parseInt(toSq[1], 10); // 1-8
+
+                    // Convert square to pixel position (top-left of that square)
+                    let col = cols.indexOf(file);
+                    let row = 8 - rank; // rank 8 = row 0 (top)
+                    if (boardOrientation === "black") {
+                      col = 7 - col;
+                      row = 7 - row;
+                    }
+
+                    const cx = col * sqSize + sqSize / 2;
+                    const cy = row * sqSize + sqSize / 2;
+
+                    const scoreText = pv.mate !== null
+                      ? `M${Math.abs(pv.mate)}`
+                      : `${pv.cp >= 0 ? "+" : ""}${(pv.cp / 100).toFixed(1)}`;
+
+                    const color = BADGE_COLORS[idx] ?? "#94a3b8";
+
+                    return (
+                      <div
+                        key={`sf-score-${idx}`}
+                        className="absolute pointer-events-none select-none"
+                        style={{
+                          left: cx,
+                          top: cy,
+                          transform: "translate(-50%, -50%)",
+                          zIndex: 20,
+                        }}
+                      >
+                        <span
+                          className="flex items-center justify-center rounded-full font-bold text-white shadow-lg"
+                          style={{
+                            backgroundColor: color,
+                            fontSize: Math.max(9, Math.round(sqSize * 0.22)) + "px",
+                            minWidth: Math.round(sqSize * 0.52) + "px",
+                            height: Math.round(sqSize * 0.34) + "px",
+                            padding: "0 4px",
+                            lineHeight: 1,
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.55)",
+                            border: "1.5px solid rgba(255,255,255,0.35)",
+                          }}
+                        >
+                          {scoreText}
+                        </span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
               {/* Board controls */}
