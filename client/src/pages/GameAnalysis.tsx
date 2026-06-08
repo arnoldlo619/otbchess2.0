@@ -37,6 +37,7 @@ import { FenScrubber, type FenEntry } from "@/components/FenScrubber";
 import { logger } from "@/lib/logger";
 
 import { authFetch } from "@/lib/apiFetch";
+import { Chess } from "chess.js";
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MoveAnalysis {
   id: string;
@@ -715,6 +716,50 @@ export default function GameAnalysis() {
     return data.analyses[currentMoveIndex]?.eval ?? 0;
   }, [data, currentMoveIndex, selectedFenEntry]);
 
+  // ── Last-move highlight squares ─────────────────────────────────────────────
+  // Derive from/to squares by replaying the SAN on the previous FEN.
+  const lastMoveSquares = useMemo<{ from: string; to: string } | null>(() => {
+    if (selectedFenEntry || !data || currentMoveIndex < 0) return null;
+    const analysis = data.analyses[currentMoveIndex];
+    if (!analysis?.san) return null;
+    const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const prevFen =
+      currentMoveIndex === 0
+        ? STARTING_FEN
+        : (data.analyses[currentMoveIndex - 1]?.fen ?? STARTING_FEN);
+    try {
+      const chess = new Chess(prevFen);
+      const move = chess.move(analysis.san);
+      if (!move) return null;
+      return { from: move.from, to: move.to };
+    } catch {
+      return null;
+    }
+  }, [data, currentMoveIndex, selectedFenEntry]);
+
+  // ── Best-move arrow ─────────────────────────────────────────────────────────
+  // Convert bestMove SAN → from/to squares using the pre-move FEN.
+  // Only show when the played move was NOT already the best move.
+  type ChessArrow = { startSquare: string; endSquare: string; color: string };
+  const bestMoveArrow = useMemo<ChessArrow[]>(() => {
+    if (selectedFenEntry || !data || currentMoveIndex < 0) return [];
+    const analysis = data.analyses[currentMoveIndex];
+    if (!analysis?.bestMove || analysis.classification === "best") return [];
+    const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    const prevFen =
+      currentMoveIndex === 0
+        ? STARTING_FEN
+        : (data.analyses[currentMoveIndex - 1]?.fen ?? STARTING_FEN);
+    try {
+      const chess = new Chess(prevFen);
+      const move = chess.move(analysis.bestMove);
+      if (!move) return [];
+      return [{ startSquare: move.from, endSquare: move.to, color: "#38bdf8" }];
+    } catch {
+      return [];
+    }
+  }, [data, currentMoveIndex, selectedFenEntry]);
+
   // ── Keyboard navigation ─────────────────────────────────────────────────
   // Use functional setState so these callbacks never need to close over `data`
   // or `currentMoveIndex` — they always see the latest state via the updater fn.
@@ -1072,6 +1117,29 @@ export default function GameAnalysis() {
                     },
                     darkSquareStyle: { backgroundColor: "#3D6B47" },
                     lightSquareStyle: { backgroundColor: "#E8E0D5" },
+                    // Last-move highlight
+                    squareStyles: lastMoveSquares
+                      ? {
+                          [lastMoveSquares.from]: { backgroundColor: "rgba(255, 213, 79, 0.45)" },
+                          [lastMoveSquares.to]: { backgroundColor: "rgba(255, 213, 79, 0.65)" },
+                        }
+                      : {},
+                    // Best-move arrow (sky blue, only when played move wasn't best)
+                    arrows: bestMoveArrow,
+                    arrowOptions: {
+                      color: "#38bdf8",
+                      secondaryColor: "#38bdf8",
+                      tertiaryColor: "#38bdf8",
+                      arrowLengthReducerDenominator: 8,
+                      sameTargetArrowLengthReducerDenominator: 4,
+                      arrowWidthDenominator: 6,
+                      activeArrowWidthMultiplier: 0.9,
+                      opacity: 0.85,
+                      activeOpacity: 0.5,
+                      arrowStartOffset: 0.35,
+                    },
+                    clearArrowsOnClick: false,
+                    clearArrowsOnPositionChange: true,
                   }}
                 />
               </div>

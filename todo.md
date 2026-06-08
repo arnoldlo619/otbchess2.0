@@ -6447,3 +6447,7 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Color-code arrows: green (best), yellow (2nd), orange (3rd)
 - [x] Pass arrows and arrowOptions to Chessboard component
 - [x] Hide arrows when engine is toggled off
+
+## Game Analysis Board Enhancements
+- [x] Add last-move highlight (yellow squares) on the chessboard in Game Analysis when navigating moves
+- [x] Add best-move arrow (sky blue) on the chessboard in Game Analysis — shown only when the played move was not the best move
