@@ -40,6 +40,7 @@ import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
 import { Users, Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
+import { AvatarCropModal } from "@/components/AvatarCropModal";
 interface EditState {
   displayName: string;
   chesscomUsername: string;
@@ -156,6 +157,8 @@ export default function ProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  // Holds the raw data URL while the crop modal is open
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState>({
     displayName: "",
     chesscomUsername: "",
@@ -381,24 +384,33 @@ export default function ProfilePage() {
       return;
     }
     setAvatarError(null);
-    setAvatarUploading(true);
+    // Read the file and open the crop modal
     const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target?.result as string;
-      // Optimistically show the new avatar immediately
-      setEditState((s) => ({ ...s, avatarDataUrl: dataUrl }));
-      try {
-        // Persist directly — no need to click Save separately for avatar changes
-        await updateProfile({ avatarUrl: dataUrl });
-      } catch (err) {
-        setAvatarError((err as Error).message ?? "Failed to save avatar");
-        // Revert preview on error
-        setEditState((s) => ({ ...s, avatarDataUrl: null }));
-      } finally {
-        setAvatarUploading(false);
-      }
+    reader.onload = (ev) => {
+      setCropSrc(ev.target?.result as string);
     };
     reader.readAsDataURL(file);
+  }
+
+  /** Called by AvatarCropModal when the user clicks Apply */
+  async function handleCropApply(croppedDataUrl: string) {
+    setCropSrc(null);
+    setAvatarUploading(true);
+    // Optimistically show the new avatar
+    setEditState((s) => ({ ...s, avatarDataUrl: croppedDataUrl }));
+    try {
+      await updateProfile({ avatarUrl: croppedDataUrl });
+    } catch (err) {
+      setAvatarError((err as Error).message ?? "Failed to save avatar");
+      setEditState((s) => ({ ...s, avatarDataUrl: null }));
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  /** Called by AvatarCropModal when the user cancels */
+  function handleCropCancel() {
+    setCropSrc(null);
   }
 
   async function handleLogout() {
@@ -452,6 +464,13 @@ export default function ProfilePage() {
         <NavLogo linked={false} />
         <AvatarNavDropdown currentPage="Tournaments" />
       </div>
+
+      {/* Avatar crop modal */}
+      <AvatarCropModal
+        imageSrc={cropSrc}
+        onApply={handleCropApply}
+        onCancel={handleCropCancel}
+      />
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         {/* Avatar + name card */}
