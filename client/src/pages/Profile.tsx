@@ -154,6 +154,8 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState>({
     displayName: "",
     chesscomUsername: "",
@@ -366,10 +368,35 @@ export default function ProfilePage() {
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+    // Validate type
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please select an image file (JPG, PNG, WebP, etc.)");
+      return;
+    }
+    // Validate size (max 5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Image must be smaller than 5 MB");
+      return;
+    }
+    setAvatarError(null);
+    setAvatarUploading(true);
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string;
+      // Optimistically show the new avatar immediately
       setEditState((s) => ({ ...s, avatarDataUrl: dataUrl }));
+      try {
+        // Persist directly — no need to click Save separately for avatar changes
+        await updateProfile({ avatarUrl: dataUrl });
+      } catch (err) {
+        setAvatarError((err as Error).message ?? "Failed to save avatar");
+        // Revert preview on error
+        setEditState((s) => ({ ...s, avatarDataUrl: null }));
+      } finally {
+        setAvatarUploading(false);
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -437,23 +464,22 @@ export default function ProfilePage() {
                   <img
                     src={editState.avatarDataUrl ?? user.avatarUrl!}
                     alt={user.displayName}
-                    className="w-16 h-16 rounded-2xl object-cover"
+                    className={`w-16 h-16 rounded-2xl object-cover transition ${avatarUploading ? "opacity-50" : ""}`}
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-[#2d6a4f] flex items-center justify-center">
+                  <div className={`w-16 h-16 rounded-2xl bg-[#2d6a4f] flex items-center justify-center transition ${avatarUploading ? "opacity-50" : ""}`}>
                     <span className="text-white text-xl font-bold">{initials}</span>
                   </div>
                 )}
-                {editing ? (
-                  <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#2d6a4f] border-2 border-white flex items-center justify-center cursor-pointer hover:bg-[#245a41] transition">
+                {/* Camera upload button — always visible */}
+                <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#2d6a4f] border-2 border-white flex items-center justify-center cursor-pointer hover:bg-[#245a41] transition" title="Change profile photo">
+                  {avatarUploading ? (
+                    <Loader2 className="w-3 h-3 text-white animate-spin" />
+                  ) : (
                     <Camera className="w-3 h-3 text-white" />
-                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                  </label>
-                ) : (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#4ade80] border-2 border-white flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 text-[#0d1f12]" />
-                  </div>
-                )}
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={avatarUploading} />
+                </label>
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -491,6 +517,16 @@ export default function ProfilePage() {
               {editing ? "Cancel" : "Edit"}
             </button>
           </div>
+
+          {/* Avatar upload error */}
+          {avatarError && (
+            <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2.5 text-sm text-red-400 flex items-center justify-between gap-3">
+              <span>{avatarError}</span>
+              <button onClick={() => setAvatarError(null)} className="flex-shrink-0 text-red-400 hover:text-red-300">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
@@ -544,6 +580,10 @@ export default function ProfilePage() {
                   placeholder="your-chess-username"
                   className={inputCls}
                 />
+                <p className={`mt-1.5 text-xs flex items-center gap-1 ${muted}`}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
+                  Used for <strong className="font-semibold">Matchup Prep</strong> opponent lookups — your games are not imported
+                </p>
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-1.5 ${muted}`}>
@@ -558,6 +598,10 @@ export default function ProfilePage() {
                   placeholder="your-lichess-username"
                   className={inputCls}
                 />
+                <p className={`mt-1.5 text-xs flex items-center gap-1 ${muted}`}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
+                  Used for <strong className="font-semibold">Matchup Prep</strong> opponent lookups — your games are not imported
+                </p>
               </div>
               <div>
                 <label className={`block text-sm font-medium mb-1.5 ${muted}`}>
@@ -631,6 +675,16 @@ export default function ProfilePage() {
                   </div>
                 </a>
               )}
+              {user.chesscomUsername && (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+                  isDark ? "bg-[#4ade80]/5 border border-[#4ade80]/15" : "bg-[#2d6a4f]/5 border border-[#2d6a4f]/15"
+                }`}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
+                  <p className="text-xs text-[#4ade80]">
+                    Linked for <strong>Matchup Prep</strong> lookups — your games are not imported
+                  </p>
+                </div>
+              )}
               {user.lichessUsername && (
                 <a
                   href={`https://lichess.org/@/${user.lichessUsername}`}
@@ -656,6 +710,16 @@ export default function ProfilePage() {
                     <ExternalLink className={`w-3.5 h-3.5 ${muted}`} />
                   </div>
                 </a>
+              )}
+              {user.lichessUsername && (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+                  isDark ? "bg-[#4ade80]/5 border border-[#4ade80]/15" : "bg-[#2d6a4f]/5 border border-[#2d6a4f]/15"
+                }`}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
+                  <p className="text-xs text-[#4ade80]">
+                    Linked for <strong>Matchup Prep</strong> lookups — your games are not imported
+                  </p>
+                </div>
               )}
               {user.fideId && (
                 <a

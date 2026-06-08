@@ -6451,3 +6451,9 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 ## Game Analysis Board Enhancements
 - [x] Add last-move highlight (yellow squares) on the chessboard in Game Analysis when navigating moves
 - [x] Add best-move arrow (sky blue) on the chessboard in Game Analysis — shown only when the played move was not the best move
+
+## Profile Settings Page Improvements
+- [x] Add "Matchup Prep lookups only — games not imported" context note below chess.com and Lichess username fields in edit mode
+- [x] Add green info chip below each linked platform in read-only view explaining Matchup Prep usage
+- [x] Make avatar Camera button always visible (not just in edit mode)
+- [x] Upgrade avatar upload: immediate save on file select, loading spinner, size/type validation, error feedback
