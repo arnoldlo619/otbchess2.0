@@ -109,3 +109,4 @@ temp/
 .webdev/
 uploads/
 .project-config.json
+.github/workflows/lint.yml
