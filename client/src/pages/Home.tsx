@@ -899,7 +899,7 @@ function HowItWorks() {
     {
       number: "02",
       icon: <Users className="w-3 h-3" />,
-      title: "Players Sign Up with chess.com",
+      title: "Players Sign Up with chess.com ELO",
       description: "Share a link. Players enter their chess.com username — we automatically pull their verified ELO rating in real time.",
       imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
       imageAlt: "Player join form with chess.com username lookup",
@@ -935,7 +935,7 @@ function HowItWorks() {
             3 Simple Steps to Launch
           </h2>
           <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
-            From setup to live pairings in minutes — no spreadsheets, no manual work.
+            Create Tournament, Share QR Code, Automate Pairings!
           </p>
         </div>
       </div>
