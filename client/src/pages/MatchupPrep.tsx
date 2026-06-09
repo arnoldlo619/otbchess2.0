@@ -12,10 +12,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import {
   Search, Target, BookOpen,
-  Shield, Clock, Crown,
-  TrendingUp, Eye, Loader2,
-  CircleDot, RefreshCw, ChevronRight, Trophy,
-  Activity, Bookmark, BookmarkCheck,
+  Shield as _Shield, Clock as _Clock, Crown,
+  TrendingUp as _TrendingUp, Eye, Loader2,
+  CircleDot as _CircleDot, RefreshCw, ChevronRight, Trophy,
+  Activity as _Activity, Bookmark, BookmarkCheck,
   Trash2, AlertCircle, Crosshair, Flame, Dumbbell, AlertTriangle, ArrowRight, PlayCircle,
   Zap, GitBranch, BarChart3, ChevronDown,
 } from "lucide-react";
@@ -817,6 +817,7 @@ function OpponentHero({
               className="w-full h-full object-cover"
               crossOrigin="anonymous"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              role="presentation"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -1754,7 +1755,7 @@ function OpeningRow({ name, winRate, count, isDark, t }: { name: string; winRate
   );
 }
 
-function EndgameBar({ profile, isDark, t }: { profile: { checkmates: number; resignations: number; timeouts: number; draws: number; total: number }; isDark: boolean; t: Tokens }) {
+function _EndgameBar({ profile, isDark, t }: { profile: { checkmates: number; resignations: number; timeouts: number; draws: number; total: number }; isDark: boolean; t: Tokens }) {
   if (profile.total === 0) return <p className={`text-xs ${t.textTertiary}`}>No endgame data</p>;
   const matePct = Math.round((profile.checkmates / profile.total) * 100);
   const resignPct = Math.round((profile.resignations / profile.total) * 100);
@@ -1808,11 +1809,12 @@ function StudyLinesTab({
       {enrichedLines.map((line, i) => {
         const priority = line.confidence === "high" ? "must-know" : line.confidence === "medium" ? "likely" : "useful";
         const confLabel = line.confidence === "high" ? "High confidence" : line.confidence === "medium" ? "Moderate confidence" : "Low confidence";
-        const sampleNote = (line as any).sampleSize ? `Based on ${(line as any).sampleSize} games` : undefined;
-        const useAs: "white" | "black" | undefined = (line as any).useAs;
-        const mainIdea: string | undefined = (line as any).mainIdea;
-        const keyPlan: string | undefined = (line as any).keyPlan;
-        const exploits: string | undefined = (line as any).exploits;
+        const lineExt = line as typeof line & { useAs?: "white" | "black"; mainIdea?: string; keyPlan?: string; exploits?: string; sampleSize?: number };
+        const useAs = lineExt.useAs;
+        const mainIdea = lineExt.mainIdea;
+        const keyPlan = lineExt.keyPlan;
+        const exploits = lineExt.exploits;
+        const sampleNote = lineExt.sampleSize ? `Based on ${lineExt.sampleSize} games` : undefined;
         return (
           <div key={i} className={`rounded-2xl border overflow-hidden ${
             isDark ? "border-[#1e2e22]/60 bg-[#0a1409]" : "border-gray-200/70 bg-white"
@@ -2062,8 +2064,9 @@ function PracticeBoardTab({
   }
 
   const currentLine = enrichedLines[practiceLineIndex ?? 0];
-  const useAs: "white" | "black" | undefined = currentLine ? (currentLine as any).useAs : undefined;
-  const exploits: string | undefined = currentLine ? (currentLine as any).exploits : undefined;
+  type LineExt = typeof currentLine & { useAs?: "white" | "black"; exploits?: string };
+  const useAs: "white" | "black" | undefined = currentLine ? (currentLine as LineExt).useAs : undefined;
+  const exploits: string | undefined = currentLine ? (currentLine as LineExt).exploits : undefined;
 
   return (
     <div className="space-y-4">
@@ -2126,7 +2129,7 @@ function PrepLoadingState({ username, isDark, t }: { username: string; isDark: b
       setStep(s => Math.min(s + 1, steps.length - 1));
     }, 1800);
     return () => clearInterval(interval);
-  }, []);
+  }, [steps.length]);
   return (
     <div className={`${t.card} py-16 flex flex-col items-center gap-5`}>
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
