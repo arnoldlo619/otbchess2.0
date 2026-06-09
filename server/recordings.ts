@@ -174,10 +174,17 @@ export function createRecordingsRouter(): Router {
         .where(inArray(processedGames.sessionId, sessionIds));
 
       // Attach session status
-      let enriched = allGames.map((g) => ({
-        ...g,
-        sessionStatus: sessionMap.get(g.sessionId)?.status ?? "unknown",
-      }));
+      let enriched = allGames.map((g) => {
+        const session = sessionMap.get(g.sessionId);
+        const gameSource = (g as typeof g & { source?: string }).source ?? "recording";
+        // chess.com imported games use a synthetic session with status 'processed'
+        // and inputSource 'chesscom_import' — always treat them as processed
+        const isImported = gameSource === "chesscom" || gameSource === "lichess";
+        return {
+          ...g,
+          sessionStatus: isImported ? "processed" : (session?.status ?? "unknown"),
+        };
+      });
 
       // ── Filter: only processed games ─────────────────────────────────────
       enriched = enriched.filter((g) => g.sessionStatus === "processed");
@@ -1299,5 +1306,349 @@ export function createRecordingsRouter(): Router {
     }
   });
 
+  // ── POST /api/games/import-chesscom — import games from chess.com ─────────────
+  // Fetches the last 3 months of games for the user's linked chess.com username,
+  // stores them as processed_games rows with source='chesscom', and returns a summary.
+  router.post("/import-chesscom", requireAuth, async (req, res) => {
+    const userId = getUserId(req);
+    try {
+      const db = await getDb();
+
+      // 1. Get the user's chess.com username
+      const { users } = await import("../shared/schema.js");
+      const [user] = await db
+        .select({ chesscomUsername: users.chesscomUsername })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user?.chesscomUsername) {
+        return res.status(400).json({
+          error: "No chess.com username linked. Add it in Profile settings first.",
+        });
+      }
+
+      const username = user.chesscomUsername.trim();
+
+      // 2. Fetch archives from chess.com (last 3 months)
+      const now = new Date();
+      const archiveUrls: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        archiveUrls.push(`https://api.chess.com/pub/player/${username}/games/${yyyy}/${mm}`);
+      }
+
+      let allGames: ChesscomGame[] = [];
+      for (const url of archiveUrls) {
+        try {
+          const resp = await fetch(url, {
+            headers: { "User-Agent": "ChessOTB.club/1.0 (contact@chessotb.club)" },
+          });
+          if (!resp.ok) continue;
+          const data = await resp.json() as { games?: ChesscomGame[] };
+          if (data.games) allGames = allGames.concat(data.games);
+        } catch {
+          // Skip months that fail
+        }
+      }
+
+      if (allGames.length === 0) {
+        return res.json({ imported: 0, skipped: 0, message: "No games found on chess.com for the last 3 months." });
+      }
+
+      // 3. Get existing external IDs to avoid duplicates
+      // Get all externalIds for this user's sessions to detect duplicates
+      const sessions = await db
+        .select({ id: recordingSessions.id })
+        .from(recordingSessions)
+        .where(eq(recordingSessions.userId, userId));
+      const sessionIds = sessions.map((s) => s.id);
+
+      let existingExternalIds = new Set<string>();
+      if (sessionIds.length > 0) {
+        const existing = await db
+          .select({ externalId: processedGames.externalId })
+          .from(processedGames)
+          .where(inArray(processedGames.sessionId, sessionIds));
+        existingExternalIds = new Set(
+          existing.map((r) => (r as { externalId: string | null }).externalId).filter(Boolean) as string[]
+        );
+      }
+
+      // 4. Create or reuse an import session for this user
+      let importSessionId: string;
+      // Find an existing import session
+      const existingImportSessions = await db
+        .select()
+        .from(recordingSessions)
+        .where(eq(recordingSessions.userId, userId))
+        .limit(200);
+      const importSession = existingImportSessions.find(
+        (s) => (s as typeof s & { inputSource?: string }).inputSource === "chesscom_import"
+      );
+
+      if (importSession) {
+        importSessionId = importSession.id;
+      } else {
+        importSessionId = nanoid();
+        await db.insert(recordingSessions).values({
+          id: importSessionId,
+          userId,
+          status: "processed",
+          inputSource: "chesscom_import",
+        } as typeof recordingSessions.$inferInsert);
+      }
+
+      // 5. Import new games
+      let imported = 0;
+      let skipped = 0;
+
+      for (const game of allGames) {
+        // Only import standard chess games with a PGN
+        if (!game.pgn || game.rules !== "chess") { skipped++; continue; }
+
+        const externalId = String(game.url?.split("/").pop() ?? game.end_time ?? nanoid());
+        if (existingExternalIds.has(externalId)) { skipped++; continue; }
+
+        // Parse PGN headers
+        const pgn = game.pgn;
+        const whiteMatch = pgn.match(/\[White\s+"([^"]+)"\]/);
+        const blackMatch = pgn.match(/\[Black\s+"([^"]+)"\]/);
+        const resultMatch = pgn.match(/\[Result\s+"([^"]+)"\]/);
+        const dateMatch = pgn.match(/\[Date\s+"([^"]+)"\]/);
+        const eventMatch = pgn.match(/\[Event\s+"([^"]+)"\]/);
+        const ecoMatch = pgn.match(/\[ECO\s+"([^"]+)"\]/);
+        const openingMatch = pgn.match(/\[Opening\s+"([^"]+)"\]/);
+        // timeControlMatch intentionally unused — reserved for future time control display
+        pgn.match(/\[TimeControl\s+"([^"]+)"\]/);
+
+        const whitePlayer = whiteMatch?.[1] ?? "White";
+        const blackPlayer = blackMatch?.[1] ?? "Black";
+        const result = resultMatch?.[1] ?? "*";
+        const date = dateMatch?.[1]?.replace(/\./g, "-") ?? new Date().toISOString().split("T")[0];
+        const event = eventMatch?.[1] ?? `Chess.com ${game.time_class ?? "game"}`;
+        let openingEco = ecoMatch?.[1] ?? null;
+        let openingName = openingMatch?.[1] ?? null;
+
+        // Count moves
+        const moveMatches = pgn.match(/\d+\./g);
+        const totalMoves = moveMatches ? moveMatches.length : 0;
+
+        // Detect opening if not in PGN headers
+        if (!openingName || !openingEco) {
+          try {
+            const { Chess: ChessForOpening } = await import("chess.js");
+            const chessForOpening = new ChessForOpening();
+            const pgnMoves = pgn.replace(/\[.*?\]\s*/g, "").trim();
+            chessForOpening.loadPgn(pgnMoves);
+            const movesForOpening = chessForOpening.history();
+            const detected = detectOpening(movesForOpening);
+            if (detected) {
+              if (!openingEco) openingEco = detected.eco;
+              if (!openingName) openingName = detected.variation
+                ? `${detected.name}: ${detected.variation}`
+                : detected.name;
+            }
+          } catch {
+            // Non-critical
+          }
+        }
+
+        const gameId = nanoid();
+        await db.insert(processedGames).values({
+          id: gameId,
+          sessionId: importSessionId,
+          pgn,
+          openingName,
+          openingEco,
+          totalMoves,
+          whitePlayer,
+          blackPlayer,
+          result,
+          event,
+          date,
+          source: "chesscom",
+          externalUrl: game.url ?? null,
+          externalId,
+        } as typeof processedGames.$inferInsert);
+
+        existingExternalIds.add(externalId);
+        imported++;
+      }
+
+      res.json({
+        imported,
+        skipped,
+        message: imported > 0
+          ? `Successfully imported ${imported} game${imported === 1 ? "" : "s"} from chess.com.`
+          : "No new games to import — all recent games are already in your history.",
+      });
+    } catch (err) {
+      logger.error("[games/import-chesscom] error:", err);
+      res.status(500).json({ error: "Failed to import games from chess.com" });
+    }
+  });
+
+  // ── POST /api/games/:id/analyze — trigger analysis for an unanalyzed imported game ──────────────────
+  router.post("/:id/analyze", async (req, res) => {
+    try {
+      const db = await getDb();
+      const userId = (req as typeof req & { userId?: string }).userId;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const [game] = await db
+        .select()
+        .from(processedGames)
+        .where(eq(processedGames.id, req.params.id));
+
+      if (!game) return res.status(404).json({ error: "Game not found" });
+
+      // Verify the game belongs to this user (via session)
+      const [session] = await db
+        .select()
+        .from(recordingSessions)
+        .where(eq(recordingSessions.id, game.sessionId));
+      if (!session || session.userId !== userId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      // Check if already analyzed
+      const existing = await db
+        .select()
+        .from(moveAnalyses)
+        .where(eq(moveAnalyses.gameId, game.id))
+        .limit(1);
+      if (existing.length > 0) {
+        return res.json({ status: "already_analyzed", message: "Game is already analyzed" });
+      }
+
+      // Check if already in progress
+      if (session.status === "analyzing") {
+        return res.json({ status: "in_progress", message: "Analysis already in progress" });
+      }
+
+      if (!game.pgn) {
+        return res.status(400).json({ error: "Game has no PGN to analyze" });
+      }
+
+      // Mark session as analyzing
+      await db
+        .update(recordingSessions)
+        .set({ status: "analyzing", updatedAt: new Date() })
+        .where(eq(recordingSessions.id, session.id));
+
+      // Respond immediately — analysis runs in background
+      res.json({ status: "started", message: "Analysis started" });
+
+      // Run analysis pipeline in background
+      const gameId = game.id;
+      const sessionId = session.id;
+      const pgn = game.pgn;
+
+      (async () => {
+        try {
+          const { Chess } = await import("chess.js");
+          const chess = new Chess();
+          // Strip PGN headers and load moves only
+          const pgnMoves = pgn.replace(/\[.*?\]\s*/g, "").trim();
+          chess.loadPgn(pgnMoves);
+          const history = chess.history({ verbose: true });
+          if (history.length === 0) {
+            await db
+              .update(recordingSessions)
+              .set({ status: "complete", updatedAt: new Date() })
+              .where(eq(recordingSessions.id, sessionId));
+            return;
+          }
+
+          const analysisChess = new Chess();
+          let prevEval = 0;
+
+          for (let i = 0; i < history.length; i++) {
+            const move = history[i];
+            const fenBefore = analysisChess.fen();
+            const beforeAnalysis = await analyzePosition(fenBefore);
+            analysisChess.move(move.san);
+            const fenAfter = analysisChess.fen();
+            const afterAnalysis = await analyzePosition(fenAfter);
+            const evalAfter = afterAnalysis?.eval ?? 0;
+            const bestMoveSan = beforeAnalysis?.san ?? "";
+            const bestEval = beforeAnalysis?.eval ?? prevEval;
+            const cpLoss =
+              move.color === "w"
+                ? Math.max(0, bestEval - evalAfter)
+                : Math.max(0, evalAfter - bestEval);
+            const classification = classifyMove(cpLoss);
+            const moveNum = Math.floor(i / 2) + 1;
+
+            await db.insert(moveAnalyses).values({
+              id: nanoid(),
+              gameId,
+              moveNumber: moveNum,
+              color: move.color,
+              san: move.san,
+              fen: fenAfter,
+              eval: Math.round(evalAfter * 100),
+              bestMove: bestMoveSan,
+              classification,
+              winChance: Math.round(afterAnalysis?.winChance ?? 50),
+              continuation: afterAnalysis?.continuation ?? "",
+            });
+
+            prevEval = evalAfter;
+            await new Promise((r) => setTimeout(r, 200));
+          }
+
+          // Compute accuracy and update game
+          const allMoveAnalyses = await db
+            .select()
+            .from(moveAnalyses)
+            .where(eq(moveAnalyses.gameId, gameId))
+            .orderBy(moveAnalyses.moveNumber);
+
+          const whiteMoves = allMoveAnalyses.filter((m) => m.color === "w");
+          const blackMoves = allMoveAnalyses.filter((m) => m.color === "b");
+          const whiteAccuracy = computePlayerAccuracy(whiteMoves.map((m) => m.eval), "w");
+          const blackAccuracy = computePlayerAccuracy(blackMoves.map((m) => m.eval), "b");
+
+          await db
+            .update(processedGames)
+            .set({ whiteAccuracy, blackAccuracy })
+            .where(eq(processedGames.id, gameId));
+
+          await db
+            .update(recordingSessions)
+            .set({ status: "complete", updatedAt: new Date() })
+            .where(eq(recordingSessions.id, sessionId));
+
+          logger.info(`[analyze] Completed analysis for game ${gameId}: ${allMoveAnalyses.length} moves`);
+        } catch (err) {
+          logger.error(`[analyze] Background analysis failed for game ${gameId}:`, err);
+          await db
+            .update(recordingSessions)
+            .set({ status: "error", updatedAt: new Date() })
+            .where(eq(recordingSessions.id, sessionId))
+            .catch(() => {});
+        }
+      })();
+    } catch (err) {
+      logger.error("[games/analyze] error:", err);
+      res.status(500).json({ error: "Failed to start analysis" });
+    }
+  });
+
   return router;
+}
+
+// ── chess.com API types ───────────────────────────────────────────────────────
+interface ChesscomGame {
+  url?: string;
+  pgn?: string;
+  time_class?: string;
+  rules?: string;
+  end_time?: number;
+  white?: { username?: string; rating?: number; result?: string };
+  black?: { username?: string; rating?: number; result?: string };
 }

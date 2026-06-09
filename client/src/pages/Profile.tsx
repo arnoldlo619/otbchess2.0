@@ -26,6 +26,7 @@ import {
   Camera,
   Link2,
   TrendingUp,
+  Download,
 } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 import { RatingProgressChart } from "@/components/RatingProgressChart";
@@ -37,7 +38,7 @@ import { useMyAnalysedGames } from "../hooks/useMyAnalysedGames";
 import AnalysedGameCard from "../components/AnalysedGameCard";
 import type { Club } from "../lib/clubRegistry";
 import { apiListMyClubs, apiLeaveClub, apiDeleteClub } from "../lib/clubsApi";
-import { Users, Settings, Crown, PlusCircle } from "lucide-react";
+import { Users, Settings as _Settings, Crown, PlusCircle } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
 import { AvatarCropModal } from "@/components/AvatarCropModal";
@@ -159,6 +160,12 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   // Holds the raw data URL while the crop modal is open
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  // chess.com import state
+  const [importState, setImportState] = useState<{
+    loading: boolean;
+    message: string | null;
+    error: boolean;
+  }>({ loading: false, message: null, error: false });
   const [editState, setEditState] = useState<EditState>({
     displayName: "",
     chesscomUsername: "",
@@ -411,6 +418,33 @@ export default function ProfilePage() {
   /** Called by AvatarCropModal when the user cancels */
   function handleCropCancel() {
     setCropSrc(null);
+  }
+
+  /** Import games from chess.com */
+  async function handleImportChesscom() {
+    setImportState({ loading: true, message: null, error: false });
+    try {
+      const res = await authFetch("/api/games/import-chesscom", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json() as { imported?: number; skipped?: number; message?: string; error?: string };
+      if (!res.ok) {
+        setImportState({ loading: false, message: data.error ?? "Import failed", error: true });
+        return;
+      }
+      setImportState({
+        loading: false,
+        message: data.message ?? `Imported ${data.imported ?? 0} games`,
+        error: false,
+      });
+    } catch (err) {
+      setImportState({
+        loading: false,
+        message: (err as Error).message ?? "Import failed",
+        error: true,
+      });
+    }
   }
 
   async function handleLogout() {
@@ -695,13 +729,35 @@ export default function ProfilePage() {
                 </a>
               )}
               {user.chesscomUsername && (
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-                  isDark ? "bg-[#4ade80]/5 border border-[#4ade80]/15" : "bg-[#2d6a4f]/5 border border-[#2d6a4f]/15"
+                <div className={`rounded-xl border p-3 ${
+                  isDark ? "bg-[#4ade80]/5 border-[#4ade80]/15" : "bg-[#2d6a4f]/5 border-[#2d6a4f]/15"
                 }`}>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
-                  <p className="text-xs text-[#4ade80]">
-                    Linked for <strong>Matchup Prep</strong> lookups — your games are not imported
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ade80] flex-shrink-0" />
+                      <p className="text-xs text-[#4ade80]">
+                        Linked for <strong>Matchup Prep</strong> lookups
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleImportChesscom}
+                      disabled={importState.loading}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#4ade80] text-[#0d1f12] hover:bg-[#22c55e] disabled:opacity-60 transition flex-shrink-0"
+                    >
+                      {importState.loading ? (
+                        <><Loader2 className="w-3 h-3 animate-spin" /> Importing…</>
+                      ) : (
+                        <><Download className="w-3 h-3" /> Import my games</>
+                      )}
+                    </button>
+                  </div>
+                  {importState.message && (
+                    <p className={`mt-2 text-xs ${
+                      importState.error ? "text-red-400" : "text-[#4ade80]"
+                    }`}>
+                      {importState.message}
+                    </p>
+                  )}
                 </div>
               )}
               {user.lichessUsername && (

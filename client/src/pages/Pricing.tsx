@@ -28,7 +28,6 @@ import {
   Brain,
   Target,
   Video,
-  ArrowLeft,
   Gift,
   Star,
   Eye,
@@ -37,6 +36,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { ProUpgradeModal } from "@/components/ProUpgradeModal";
 import AuthModal from "@/components/AuthModal";
+import { AppNavBar } from "@/components/AppNavBar";
 
 // ─── Feature table data ───────────────────────────────────────────────────────
 interface FeatureRow {
@@ -49,30 +49,31 @@ interface FeatureRow {
 
 const FEATURES: FeatureRow[] = [
   // Tournaments
-  { category: "Tournaments",  label: "Tournament creation",        icon: Trophy,   free: true,          pro: true },
-  { category: "Tournaments",  label: "Player registration",        icon: Users,    free: "Up to 16",    pro: "Unlimited" },
-  { category: "Tournaments",  label: "Swiss & Elimination formats",icon: Shield,   free: true,          pro: true },
-  { category: "Tournaments",  label: "Live scoreboard & pairings", icon: Zap,      free: true,          pro: true },
-  { category: "Tournaments",  label: "QR join links",              icon: Zap,      free: true,          pro: true },
+  { category: "Tournaments",  label: "Tournament creation",          icon: Trophy,   free: true,          pro: true },
+  { category: "Tournaments",  label: "Player registration",          icon: Users,    free: "Up to 16",    pro: "Unlimited" },
+  { category: "Tournaments",  label: "Swiss & Elimination formats",  icon: Shield,   free: true,          pro: true },
+  { category: "Tournaments",  label: "Live scoreboard & pairings",   icon: Zap,      free: true,          pro: true },
+  { category: "Tournaments",  label: "QR join links",                icon: Zap,      free: true,          pro: true },
   // Openings
-  { category: "Openings",     label: "Openings library (16+ lines)",icon: BookOpen, free: false,         pro: true },
-  { category: "Openings",     label: "Opening explorer",           icon: Target,   free: false,         pro: true },
-  { category: "Openings",     label: "Study mode",                 icon: Brain,    free: false,         pro: true },
-  { category: "Openings",     label: "Drill mode",                 icon: Target,   free: false,         pro: true },
-  { category: "Openings",     label: "Trap lines",                 icon: Zap,      free: false,         pro: true },
+  { category: "Openings",     label: "Openings library (16+ lines)", icon: BookOpen, free: false,         pro: true },
+  { category: "Openings",     label: "Opening explorer",             icon: Target,   free: false,         pro: true },
+  { category: "Openings",     label: "Study mode",                   icon: Brain,    free: false,         pro: true },
+  { category: "Openings",     label: "Drill mode",                   icon: Target,   free: false,         pro: true },
+  { category: "Openings",     label: "Trap lines",                   icon: Zap,      free: false,         pro: true },
   // Analysis
-  { category: "Analysis",     label: "Coach insights",             icon: Brain,    free: "3 / month",   pro: "Unlimited" },
-  { category: "Analysis",     label: "Prep reports",               icon: Target,   free: "3 / month",   pro: "Unlimited" },
-  { category: "Analysis",     label: "Video analysis",             icon: Video,    free: "3 / month",   pro: "Unlimited" },
-  { category: "Analysis",     label: "Game history",               icon: Shield,   free: true,          pro: true },
+  { category: "Analysis",     label: "Coach insights",               icon: Brain,    free: "3 / month",   pro: "Unlimited" },
+  { category: "Analysis",     label: "Prep reports",                 icon: Target,   free: "3 / month",   pro: "Unlimited" },
+  { category: "Analysis",     label: "Video analysis",               icon: Video,    free: "3 / month",   pro: "Unlimited" },
+  { category: "Analysis",     label: "Game history",                 icon: Shield,   free: true,          pro: true },
+  { category: "Analysis",     label: "Repertoire Builder (Beta)",    icon: BookOpen, free: true,          pro: true },
   // Clubs
-  { category: "Clubs",        label: "Club creation & management", icon: Users,    free: true,          pro: true },
-  { category: "Clubs",        label: "Club battles",               icon: Shield,   free: false,         pro: true },
-  { category: "Clubs",        label: "Club leaderboard",           icon: Trophy,   free: true,          pro: true },
+  { category: "Clubs",        label: "Club creation & management",   icon: Users,    free: true,          pro: true },
+  { category: "Clubs",        label: "Club battles",                 icon: Shield,   free: false,         pro: true },
+  { category: "Clubs",        label: "Club leaderboard",             icon: Trophy,   free: true,          pro: true },
   // Support
-  { category: "Support",      label: "Community support",          icon: Star,     free: true,          pro: true },
-  { category: "Support",      label: "Priority support",           icon: Zap,      free: false,         pro: true },
-  { category: "Support",      label: "Early access features",      icon: Crown,    free: false,         pro: true },
+  { category: "Support",      label: "Community support",            icon: Star,     free: true,          pro: true },
+  { category: "Support",      label: "Priority support",             icon: Zap,      free: false,         pro: true },
+  { category: "Support",      label: "Early access features",        icon: Crown,    free: false,         pro: true },
 ];
 
 const CATEGORIES = ["Tournaments", "Openings", "Analysis", "Clubs", "Support"];
@@ -82,8 +83,8 @@ function Cell({ value, isProCol }: { value: string | boolean; isProCol?: boolean
   if (value === true) {
     return (
       <div className="flex justify-center">
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isProCol ? "bg-[#22c55e]/15" : "bg-white/[0.06]"}`}>
-          <Check className={`w-3 h-3 ${isProCol ? "text-[#22c55e]" : "text-white/40"}`} />
+        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${isProCol ? "bg-[#22c55e]/20" : "bg-white/[0.07]"}`}>
+          <Check className={`w-3 h-3 ${isProCol ? "text-[#22c55e]" : "text-white/50"}`} />
         </div>
       </div>
     );
@@ -96,7 +97,7 @@ function Cell({ value, isProCol }: { value: string | boolean; isProCol?: boolean
     );
   }
   return (
-    <span className={`text-xs font-medium ${isProCol ? "text-[#22c55e]" : "text-white/50"}`}>
+    <span className={`text-xs font-semibold ${isProCol ? "text-[#22c55e]" : "text-white/50"}`}>
       {value}
     </span>
   );
@@ -110,48 +111,47 @@ export default function Pricing() {
   const [authOpen, setAuthOpen] = useState(false);
 
   const fadeUp = {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 0, y: 24 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.45, ease: "easeOut" as const },
+    transition: { duration: 0.5, ease: "easeOut" as const },
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-[#0a0a0a] text-white" : "bg-[#F2F7F3] text-[#1a1a1a]"}`}>
+    <div className={`min-h-screen relative ${isDark ? "bg-[#0d1a0f] text-white" : "bg-[#F2F7F3] text-[#1a1a1a]"}`}>
 
-      {/* ── Nav bar ─────────────────────────────────────────────────────────── */}
-      <nav className={`sticky top-0 z-50 border-b backdrop-blur-md ${isDark ? "bg-[#0a0a0a]/90 border-white/[0.06]" : "bg-[#F2F7F3]/90 border-[#3D6B47]/10"}`}>
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <ArrowLeft className={`w-4 h-4 transition-transform group-hover:-translate-x-0.5 ${isDark ? "text-white/40" : "text-[#3D6B47]/60"}`} />
-            <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/117675823/bWANpVvGVfpfXSpZ.png"
-              alt="OTB Chess"
-              className="h-7 w-auto object-contain"
-            />
-          </Link>
-          <div className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#3D6B47]/50"}`}>
-            Pricing
-          </div>
-        </div>
-      </nav>
+      {/* ── Micro-checkered background (same as Home hero) ─────────────────── */}
+      <div className="chess-board-bg absolute inset-0 pointer-events-none" style={{ opacity: isDark ? 1 : 0.6 }} />
+
+      {/* ── AppNavBar ───────────────────────────────────────────────────────── */}
+      <AppNavBar defaultActive="" />
 
       {/* ── Open Beta banner ────────────────────────────────────────────────── */}
-      <div className="bg-[#0d1a0f] border-b border-[#22c55e]/20">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className={`relative z-10 border-b ${isDark ? "bg-[#0a1a0c]/80 border-[#22c55e]/20" : "bg-[#f0fdf4]/80 border-[#22c55e]/25"} backdrop-blur-sm`}
+      >
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-center gap-3">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/30">
             <Sparkles className="w-3 h-3 text-[#22c55e]" />
             <span className="text-[#22c55e] text-[10px] font-bold uppercase tracking-wider">Open Beta</span>
           </div>
-          <p className="text-white/60 text-xs">
-            All Pro features are <span className="text-white font-semibold">free right now</span> — no account or credit card needed.
+          <p className={`text-xs ${isDark ? "text-white/60" : "text-[#374151]"}`}>
+            All Pro features are <span className={`font-semibold ${isDark ? "text-white" : "text-[#1a1a1a]"}`}>free right now</span> — no account or credit card needed.
           </p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="max-w-5xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-16">
 
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
         <motion.div {...fadeUp} className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-5 backdrop-blur-sm
+            bg-[#22c55e]/10 border-[#22c55e]/25">
+            <Crown className="w-3.5 h-3.5 text-[#22c55e]" />
+            <span className="text-[#22c55e] text-xs font-bold uppercase tracking-wider">Pricing</span>
+          </div>
           <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-4 ${isDark ? "text-white" : "text-[#1a1a1a]"}`}>
             Simple, honest pricing.
           </h1>
@@ -163,13 +163,21 @@ export default function Pricing() {
 
         {/* ── Plan cards ────────────────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
           className="grid md:grid-cols-2 gap-5 mb-16"
         >
           {/* Free card */}
-          <div className={`rounded-2xl border p-7 ${isDark ? "bg-white/[0.02] border-white/[0.08]" : "bg-white border-[#3D6B47]/12"}`}>
+          <motion.div
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={`rounded-2xl border p-7 cursor-default backdrop-blur-sm transition-shadow duration-300 hover:shadow-xl ${
+              isDark
+                ? "bg-white/[0.03] border-white/[0.10] hover:border-white/20 hover:shadow-black/40"
+                : "bg-white/80 border-[#3D6B47]/15 hover:border-[#3D6B47]/30 hover:shadow-[#3D6B47]/10"
+            }`}
+          >
             <div className="mb-5">
               <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-[#4B5563]"}`}>Free</p>
               <div className="flex items-baseline gap-1.5">
@@ -181,21 +189,33 @@ export default function Pricing() {
               </p>
             </div>
             <Link href="/join">
-              <button className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors border ${isDark ? "border-white/10 text-white/70 hover:bg-white/[0.05]" : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/05"}`}>
+              <button className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border group ${
+                isDark
+                  ? "border-white/10 text-white/70 hover:bg-white/[0.07] hover:border-white/20 hover:text-white"
+                  : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/40"
+              }`}>
                 Get started free
               </button>
             </Link>
-          </div>
+          </motion.div>
 
           {/* Pro card */}
-          <div className="rounded-2xl border border-[#22c55e]/30 bg-[#0d1a0f] p-7 relative overflow-hidden">
-            {/* Glow */}
+          <motion.div
+            whileHover={{ y: -4, scale: 1.01 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="rounded-2xl border border-[#22c55e]/35 bg-[#0d1a0f]/90 p-7 relative overflow-hidden cursor-default backdrop-blur-sm transition-shadow duration-300 hover:shadow-2xl hover:shadow-[#22c55e]/15 hover:border-[#22c55e]/55"
+          >
+            {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[#22c55e]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-56 h-56 bg-[#22c55e]/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#22c55e]/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
             </div>
 
+            {/* Micro-checkered overlay on Pro card */}
+            <div className="absolute inset-0 chess-board-bg opacity-[0.04] pointer-events-none rounded-2xl" />
+
             {/* Open Beta badge */}
-            <div className="absolute top-5 right-5 flex items-center gap-1 px-2 py-1 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/25">
+            <div className="absolute top-5 right-5 flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#22c55e]/15 border border-[#22c55e]/30">
               <Gift className="w-3 h-3 text-[#22c55e]" />
               <span className="text-[#22c55e] text-[10px] font-bold uppercase tracking-wider">Free now</span>
             </div>
@@ -217,7 +237,7 @@ export default function Pricing() {
 
             <button
               onClick={() => setModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-black transition-colors relative"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-black transition-all duration-200 relative hover:shadow-lg hover:shadow-[#22c55e]/30 active:scale-[0.98]"
             >
               <Sparkles className="w-4 h-4" />
               Upgrade to Pro
@@ -232,12 +252,12 @@ export default function Pricing() {
                 View Demo — explore before you upgrade
               </Link>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* ── Feature comparison table ───────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
         >
@@ -245,16 +265,16 @@ export default function Pricing() {
             Full feature breakdown
           </h2>
 
-          <div className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/[0.07]" : "border-[#3D6B47]/12"}`}>
+          <div className={`rounded-2xl border overflow-hidden backdrop-blur-sm ${isDark ? "border-white/[0.08] bg-black/20" : "border-[#3D6B47]/12 bg-white/70"}`}>
             {/* Table header */}
-            <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.02] border-white/[0.07]" : "bg-[#3D6B47]/[0.03] border-[#3D6B47]/10"}`}>
-              <div className={`px-5 py-3 text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B7280]"}`}>
+            <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.03] border-white/[0.07]" : "bg-[#3D6B47]/[0.04] border-[#3D6B47]/10"}`}>
+              <div className={`px-5 py-3.5 text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B7280]"}`}>
                 Feature
               </div>
-              <div className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B7280]"}`}>
+              <div className={`px-3 py-3.5 text-center text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-[#6B7280]"}`}>
                 Free
               </div>
-              <div className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider text-[#22c55e]">
+              <div className="px-3 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-[#22c55e]">
                 Pro
               </div>
             </div>
@@ -265,8 +285,8 @@ export default function Pricing() {
               return (
                 <div key={cat}>
                   {/* Category header */}
-                  <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.015] border-white/[0.05]" : "bg-[#3D6B47]/[0.02] border-[#3D6B47]/08"} ${catIdx > 0 ? "border-t" : ""}`}>
-                    <div className={`px-5 py-2 text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-white/20" : "text-[#9CA3AF]"}`}>
+                  <div className={`grid grid-cols-[1fr_100px_100px] border-b ${isDark ? "bg-white/[0.02] border-white/[0.05]" : "bg-[#3D6B47]/[0.025] border-[#3D6B47]/08"} ${catIdx > 0 ? "border-t" : ""}`}>
+                    <div className={`px-5 py-2 text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-white/25" : "text-[#9CA3AF]"}`}>
                       {cat}
                     </div>
                     <div />
@@ -279,15 +299,15 @@ export default function Pricing() {
                     return (
                       <div
                         key={row.label}
-                        className={`grid grid-cols-[1fr_100px_100px] items-center border-b ${
+                        className={`group grid grid-cols-[1fr_100px_100px] items-center border-b transition-colors duration-150 ${
                           isDark
-                            ? `border-white/[0.04] ${rowIdx % 2 === 0 ? "" : "bg-white/[0.01]"}`
-                            : `border-[#3D6B47]/06 ${rowIdx % 2 === 0 ? "" : "bg-[#3D6B47]/[0.015]"}`
+                            ? `border-white/[0.04] hover:bg-white/[0.03] ${rowIdx % 2 === 0 ? "" : "bg-white/[0.01]"}`
+                            : `border-[#3D6B47]/06 hover:bg-[#3D6B47]/[0.04] ${rowIdx % 2 === 0 ? "" : "bg-[#3D6B47]/[0.015]"}`
                         }`}
                       >
                         <div className="flex items-center gap-2.5 px-5 py-3">
-                          <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? "text-white/25" : "text-[#9CA3AF]"}`} />
-                          <span className={`text-sm ${isDark ? "text-white/65" : "text-[#374151]"}`}>
+                          <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${isDark ? "text-white/25 group-hover:text-[#22c55e]/60" : "text-[#9CA3AF] group-hover:text-[#3D6B47]/70"}`} />
+                          <span className={`text-sm transition-colors ${isDark ? "text-white/65 group-hover:text-white/85" : "text-[#374151] group-hover:text-[#1a1a1a]"}`}>
                             {row.label}
                           </span>
                         </div>
@@ -305,11 +325,11 @@ export default function Pricing() {
             })}
 
             {/* Footer row */}
-            <div className={`grid grid-cols-[1fr_100px_100px] ${isDark ? "bg-white/[0.02]" : "bg-[#3D6B47]/[0.02]"}`}>
+            <div className={`grid grid-cols-[1fr_100px_100px] ${isDark ? "bg-white/[0.025]" : "bg-[#3D6B47]/[0.025]"}`}>
               <div className="px-5 py-4" />
               <div className="px-3 py-4 flex justify-center">
                 <Link href="/join">
-                  <button className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${isDark ? "border-white/10 text-white/50 hover:text-white hover:border-white/20" : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/05"}`}>
+                  <button className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all duration-200 ${isDark ? "border-white/10 text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.06]" : "border-[#3D6B47]/20 text-[#3D6B47] hover:bg-[#3D6B47]/08 hover:border-[#3D6B47]/35"}`}>
                     Get free
                   </button>
                 </Link>
@@ -317,7 +337,7 @@ export default function Pricing() {
               <div className="px-3 py-4 flex justify-center">
                 <button
                   onClick={() => setModalOpen(true)}
-                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-black transition-colors"
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-black transition-all duration-200 hover:shadow-md hover:shadow-[#22c55e]/25 active:scale-95"
                 >
                   Get Pro
                 </button>
@@ -332,12 +352,12 @@ export default function Pricing() {
           </p>
         </motion.div>
 
-        {/* ── FAQ / reassurance strip ────────────────────────────────────────── */}
+        {/* ── Reassurance strip ─────────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-          className="mt-16 grid sm:grid-cols-3 gap-6"
+          className="mt-16 grid sm:grid-cols-3 gap-5"
         >
           {[
             {
@@ -356,16 +376,22 @@ export default function Pricing() {
               body: "We will never charge you without explicit opt-in. Cancel or stay free anytime.",
             },
           ].map(({ icon: Icon, title, body }) => (
-            <div
+            <motion.div
               key={title}
-              className={`rounded-xl border p-5 ${isDark ? "bg-white/[0.02] border-white/[0.06]" : "bg-white border-[#3D6B47]/10"}`}
+              whileHover={{ y: -3, scale: 1.02 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className={`rounded-xl border p-5 cursor-default backdrop-blur-sm transition-shadow duration-300 hover:shadow-lg ${
+                isDark
+                  ? "bg-white/[0.03] border-white/[0.08] hover:border-white/15 hover:shadow-black/30"
+                  : "bg-white/80 border-[#3D6B47]/10 hover:border-[#3D6B47]/25 hover:shadow-[#3D6B47]/08"
+              }`}
             >
-              <div className="w-8 h-8 rounded-lg bg-[#22c55e]/10 flex items-center justify-center mb-3">
+              <div className="w-9 h-9 rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center mb-3 transition-colors group-hover:bg-[#22c55e]/15">
                 <Icon className="w-4 h-4 text-[#22c55e]" />
               </div>
-              <p className={`text-sm font-semibold mb-1 ${isDark ? "text-white/90" : "text-[#1a1a1a]"}`}>{title}</p>
+              <p className={`text-sm font-semibold mb-1.5 ${isDark ? "text-white/90" : "text-[#1a1a1a]"}`}>{title}</p>
               <p className={`text-xs leading-relaxed ${isDark ? "text-white/40" : "text-[#6B7280]"}`}>{body}</p>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
 
@@ -373,14 +399,13 @@ export default function Pricing() {
         <div className="mt-14 text-center">
           <Link href="/">
             <button className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? "text-white/30 hover:text-white/60" : "text-[#9CA3AF] hover:text-[#4B5563]"}`}>
-              <ArrowLeft className="w-4 h-4" />
-              Back to home
+              ← Back to home
             </button>
           </Link>
         </div>
       </div>
 
-      {/* ── ProUpgradeModal ────────────────────────────────────────────────── */}
+      {/* ── Modals ────────────────────────────────────────────────────────────── */}
       <ProUpgradeModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

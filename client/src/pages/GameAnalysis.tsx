@@ -657,11 +657,16 @@ export default function GameAnalysis() {
   const [highlightStatus, setHighlightStatus] = useState<"idle" | "generating" | "done">("idle");
   const [pgnDownloadStatus, setPgnDownloadStatus] = useState<"idle" | "done">("idle");
   const [selectedFenEntry, setSelectedFenEntry] = useState<FenEntry | null>(null);
+  const [showCompletionReport, setShowCompletionReport] = useState(false);
   const highlightCardRef = useRef<HTMLDivElement>(null);
 
   const gameId = matched ? params?.gameId : null;
+  // Prevent double-firing the auto-analysis trigger
+  const autoAnalysisFired = useRef(false);
+  // Track previous analyzing state to detect the transition to complete
+  const wasAnalyzing = useRef(false);
 
-  // ── Fetch analysis data ─────────────────────────────────────────────────
+  // ── Fetch analysis data ────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!gameId) return;
 
@@ -674,9 +679,31 @@ export default function GameAnalysis() {
         setData(json);
         setLoading(false);
 
+        // Auto-trigger analysis for unanalyzed imported games
+        const hasNoAnalysis = json.analyses.length === 0;
+        const isNotAnalyzing = json.session?.status !== "analyzing";
+        const hasPgn = !!json.game.pgn;
+        if (hasNoAnalysis && isNotAnalyzing && hasPgn && !autoAnalysisFired.current) {
+          autoAnalysisFired.current = true;
+          authFetch(`/api/games/${gameId}/analyze`, { method: "POST", credentials: "include" })
+            .then(() => {
+              // Start polling now that analysis is running
+              setTimeout(() => { if (polling) fetchData(); }, 2000);
+            })
+            .catch(() => {});
+          return;
+        }
+
+        // Detect transition from analyzing → complete to show the summary report
+        const nowAnalyzing = json.session?.status === "analyzing";
+        if (wasAnalyzing.current && !nowAnalyzing && json.analyses.length > 0) {
+          setShowCompletionReport(true);
+        }
+        wasAnalyzing.current = nowAnalyzing;
+
         // If still analyzing, poll every 3 seconds
         if (
-          json.session?.status === "analyzing" &&
+          nowAnalyzing &&
           json.analyses.length < (json.game.totalMoves ?? 0) * 2
         ) {
           setTimeout(() => {
@@ -1092,6 +1119,159 @@ export default function GameAnalysis() {
                 >
                   Back to PGN
                 </button>
+              </div>
+            )}
+
+            {/* Auto-analysis progress banner — shown for imported games being analyzed */}
+            {isAnalyzing && data.analyses.length === 0 && (
+              <div
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                  isDark
+                    ? "bg-[#3D6B47]/15 border-[#3D6B47]/30 text-[#7ab88a]"
+                    : "bg-[#3D6B47]/8 border-[#3D6B47]/20 text-[#2d5235]"
+                }`}
+              >
+                <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Analyzing game with Stockfish…</p>
+                  <p className={`text-xs mt-0.5 ${
+                    isDark ? "text-white/40" : "text-gray-500"
+                  }`}>
+                    Move-by-move analysis is running in the background. This page will update automatically.
+                  </p>
+                </div>
+              </div>
+            )}
+            {isAnalyzing && data.analyses.length > 0 && (
+              <div
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${
+                  isDark
+                    ? "bg-[#3D6B47]/10 border-[#3D6B47]/20 text-[#7ab88a]"
+                    : "bg-[#3D6B47]/6 border-[#3D6B47]/15 text-[#2d5235]"
+                }`}
+              >
+                <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+                <span className="text-xs font-medium">
+                  Analyzing… {analysisProgress}% ({data.analyses.length} of {(data.game.totalMoves ?? 0) * 2} moves)
+                </span>
+                <div className={`ml-auto h-1.5 w-24 rounded-full overflow-hidden ${
+                  isDark ? "bg-white/10" : "bg-gray-200"
+                }`}>
+                  <div
+                    className="h-full bg-[#3D6B47] rounded-full transition-all duration-500"
+                    style={{ width: `${analysisProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Analysis completion report — shown once when auto-analysis finishes */}
+            {showCompletionReport && !isAnalyzing && data.analyses.length > 0 && (
+              <div
+                className={`rounded-xl border p-4 ${
+                  isDark
+                    ? "bg-[#0f2414] border-[#3D6B47]/40"
+                    : "bg-[#f0faf2] border-[#3D6B47]/30"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+                    <span className={`text-sm font-semibold ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}>
+                      Analysis complete
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const firstError = data.analyses.findIndex(
+                        (a) => a.classification === "blunder" || a.classification === "mistake"
+                      );
+                      return firstError >= 0 ? (
+                        <button
+                          onClick={() => {
+                            setCurrentMoveIndex(firstError);
+                            setShowCompletionReport(false);
+                          }}
+                          className={`text-xs px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                            isDark
+                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                              : "bg-red-50 text-red-600 hover:bg-red-100"
+                          }`}
+                        >
+                          Review Mistakes
+                        </button>
+                      ) : null;
+                    })()}
+                    <button
+                      onClick={() => setShowCompletionReport(false)}
+                      className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                        isDark
+                          ? "text-white/40 hover:text-white/70 hover:bg-white/10"
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+
+                {/* White summary */}
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  {[{ label: data.game.whitePlayer || "White", s: data.summary.white }, { label: data.game.blackPlayer || "Black", s: data.summary.black }].map(({ label, s }) => (
+                    <div
+                      key={label}
+                      className={`rounded-lg p-3 ${
+                        isDark ? "bg-white/5" : "bg-white border border-gray-100"
+                      }`}
+                    >
+                      <p className={`text-xs font-semibold mb-2 truncate ${
+                        isDark ? "text-white/70" : "text-gray-600"
+                      }`}>{label}</p>
+                      <div className="flex items-baseline gap-1 mb-2">
+                        <span className={`text-2xl font-bold ${
+                          isDark ? "text-white" : "text-gray-900"
+                        }`}>{s.accuracy}%</span>
+                        <span className={`text-xs ${
+                          isDark ? "text-white/40" : "text-gray-400"
+                        }`}>accuracy</span>
+                      </div>
+                      <div className="space-y-1">
+                        {s.blunders > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs text-red-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                              Blunders
+                            </span>
+                            <span className="text-xs font-bold text-red-400">{s.blunders}</span>
+                          </div>
+                        )}
+                        {s.mistakes > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs text-orange-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                              Mistakes
+                            </span>
+                            <span className="text-xs font-bold text-orange-400">{s.mistakes}</span>
+                          </div>
+                        )}
+                        {s.inaccuracies > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-xs text-yellow-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                              Inaccuracies
+                            </span>
+                            <span className="text-xs font-bold text-yellow-400">{s.inaccuracies}</span>
+                          </div>
+                        )}
+                        {s.blunders === 0 && s.mistakes === 0 && s.inaccuracies === 0 && (
+                          <p className="text-xs text-emerald-400 font-medium">Clean game!</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

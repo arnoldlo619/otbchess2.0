@@ -6457,3 +6457,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Add green info chip below each linked platform in read-only view explaining Matchup Prep usage
 - [x] Make avatar Camera button always visible (not just in edit mode)
 - [x] Upgrade avatar upload: immediate save on file select, loading spinner, size/type validation, error feedback
+
+## Chess.com Game Import Feature
+- [ ] Build server endpoint POST /api/games/import-chesscom — fetch last 3 months of games from chess.com API
+- [ ] Store imported games in DB with source=chesscom, avoid duplicates
+- [ ] Add Import button to Profile settings with progress/result feedback
+- [ ] Surface imported games in Games History page with chess.com badge
+- [ ] Show import count and last-imported timestamp on Profile

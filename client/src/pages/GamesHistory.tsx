@@ -135,6 +135,11 @@ function GameCard({ game, onClick }: { game: AnalysedGame; onClick: () => void }
           {formatDate(displayDate)}
         </span>
         <span className="flex items-center gap-1">
+          {(game as typeof game & { source?: string }).source === "chesscom" && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#81b64c]/20 text-[#81b64c] border border-[#81b64c]/30">
+              ♟️ chess.com
+            </span>
+          )}
           <BarChart2 className="w-3 h-3" />
           {game.totalMoves} move{game.totalMoves !== 1 ? "s" : ""}
         </span>

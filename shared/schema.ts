@@ -262,6 +262,12 @@ export const processedGames = mysqlTable(
     whiteAccuracy: float("white_accuracy"),
     blackAccuracy: float("black_accuracy"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // Import source: 'recording' | 'pgn' | 'chesscom' | 'lichess'
+    source: varchar("source", { length: 20 }).default("recording"),
+    // External game URL (for chess.com/lichess imports)
+    externalUrl: varchar("external_url", { length: 255 }),
+    // chess.com game UUID (for deduplication)
+    externalId: varchar("external_id", { length: 100 }),
   },
   (table) => ({
     sessionIdx: index("pg_session_id_idx").on(table.sessionId),
