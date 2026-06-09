@@ -394,10 +394,12 @@ describe("generateMatchupSummary", () => {
     expect(summary.likelyBattle).toContain("Sicilian");
   });
 
-  it("likelyBattle mentions opponent's first move when user is Black", () => {
+  it("likelyBattle mentions opponent's top opening when user is Black", () => {
     const blackRep: UserRepertoire = { ...d4Repertoire, expectedColor: "black" };
     const summary = generateMatchupSummary(blackRep, fullProfile, enrichedLines);
-    expect(summary.likelyBattle).toMatch(/1\.e4|e4/);
+    // New two-branch format: 'If you have White: ... | If you have Black: ...'
+    // Both branches should mention opponent openings (Sicilian or Ruy Lopez)
+    expect(summary.likelyBattle).toMatch(/Sicilian|Ruy Lopez|e4/);
   });
 
   it("studyFirst names the top collision line", () => {

@@ -6464,3 +6464,24 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Add Import button to Profile settings with progress/result feedback
 - [ ] Surface imported games in Games History page with chess.com badge
 - [ ] Show import count and last-imported timestamp on Profile
+
+## Match Prep 12-Point Overhaul (June 2026)
+
+- [x] Fix terminology in prepEngine.ts (correct "faces as White/Black" language)
+- [x] Deduplicate prep recommendations (max 3-5, priority-ordered, no repeats)
+- [x] Redesign Opening Tendencies into 4-subsection layout (plays/faces as White/Black)
+- [x] Two-branch Game Plan format (If you have White: ... | If you have Black: ...)
+- [x] Improve weakness copy (actionable, no jargon)
+- [x] Upgrade Prep Recommendation cards (coach-plan copy, Study CTA, dedup)
+- [x] Context-aware strategyNote in generateBehaviorProfile (non-contradictory advice)
+- [x] Study Lines: add "Why study this line" context header before each board
+- [x] Practice Mode: side label (You play ♔ White / ♚ Black), goal text in header
+- [x] Practice Mode: improved hint text (explains the piece/square, not just "hint shown")
+- [x] Practice Mode: mistake feedback shows move concept (capture/check/plan explanation)
+- [x] Practice Mode: Line Mastered gate requires ≥80% accuracy (3-tier: mastered/drilling/retry)
+- [x] Quick Prep Summary box added to Scout Report tab
+- [x] Premium animated loading state (4-step progress with checkmarks)
+- [x] Detailed error state with possible reasons and action buttons (retry, all formats, 100 games)
+- [x] Update matchupPrepRedesign tests for renamed sections
+- [x] Update userRepertoire test for new two-branch likelyBattle format
+- [x] Update prepEngineV2 test for "scores poorly" weakness wording

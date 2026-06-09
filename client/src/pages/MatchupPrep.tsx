@@ -166,6 +166,20 @@ interface SavedReportMeta {
   savedAt: string;
 }
 
+
+// ── Terminology helper ─────────────────────────────────────────────────────────
+/** Returns true if an opening name is a Black defense (chosen by Black) */
+function isBlackDefenseUI(name: string): boolean {
+  const n = name.toLowerCase();
+  const blackKeywords = [
+    "sicilian", "french", "caro-kann", "pirc", "modern defense", "king's indian",
+    "nimzo-indian", "queen's gambit declined", "dutch", "englund", "slav",
+    "semi-slav", "scandinavian", "alekhine", "benoni", "benko", "grunfeld",
+    "king's indian defense", "nimzo", "qgd", "defense", "defence",
+  ];
+  return blackKeywords.some(k => n.includes(k));
+}
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
 type Tokens = ReturnType<typeof useDesignTokens>;
@@ -645,28 +659,20 @@ export default function MatchupPrep() {
           />
         )}
 
-        {/* ── Loading State ── */}
-        {loading && (
-          <div className={`${t.card} py-16 flex flex-col items-center gap-4`}>
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"}`}>
-              <Loader2 className="w-6 h-6 text-[#5B9A6A] animate-spin" />
-            </div>
-            <div className="text-center space-y-1">
-              <p className={`text-sm font-medium ${t.textPrimary}`}>Analyzing {searchInput}</p>
-              <p className={`text-xs ${t.textTertiary}`}>Fetching games and building prep report…</p>
-            </div>
-          </div>
-        )}
+        {/* ── Loading State (premium animated, requirement 11) ── */}
+        {loading && <PrepLoadingState username={searchInput} isDark={isDark} t={t} />}
 
-        {/* ── Error State ── */}
+        {/* ── Error State (detailed, requirement 11) ── */}
         {error && !loading && (
-          <div className={`${t.card} p-5 flex items-start gap-3`}>
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <div>
-              <p className={`text-sm font-medium ${t.textPrimary}`}>Could not load report</p>
-              <p className={`text-xs mt-0.5 ${t.textTertiary}`}>{error}</p>
-            </div>
-          </div>
+          <PrepErrorState
+            error={error}
+            username={searchInput}
+            onRetry={() => fetchReport(searchInput)}
+            onUseAllFormats={() => { setTcFilter("all"); fetchReport(searchInput); }}
+            onAnalyze100={() => { setGameCountFilter("100"); fetchReport(searchInput); }}
+            isDark={isDark}
+            t={t}
+          />
         )}
 
         {/* ── Report ── */}
@@ -1077,7 +1083,18 @@ function ScoutReportTab({
 }: {
   report: PrepReport;
   weaknesses: { label: string; detail: string; severity: "high" | "medium" }[];
-  matchupSummary: { likelyBattle: string; studyFirst?: string | null; prepRisk?: string | null; colorAdvice?: string | null } | null;
+  matchupSummary: {
+    likelyBattle: string;
+    studyFirst?: string | null;
+    prepRisk?: string | null;
+    colorAdvice?: string | null;
+    whiteTarget?: string | null;
+    whiteWhy?: string | null;
+    whitePlan?: string | null;
+    blackTarget?: string | null;
+    blackWhy?: string | null;
+    blackPlan?: string | null;
+  } | null;
   enrichedLines: EnrichedPrepLine[];
   onViewLines: () => void;
   onPracticeProblemLine: (pl: ProblemLine) => void;
@@ -1090,25 +1107,88 @@ function ScoutReportTab({
   return (
     <div className="space-y-4">
 
-      {/* ── Opening Tendencies — Compact (moved to top) ── */}
+      {/* ── Quick Prep Summary box (requirement 10) ── */}
+      {(report.prepRecommendations && report.prepRecommendations.length > 0) && (() => {
+        const whiteRec = report.prepRecommendations!.find(r => r.useAs === "white");
+        const blackRec = report.prepRecommendations!.find(r => r.useAs === "black");
+        const avoidRec = report.prepRecommendations!.find(r => r.confidence === "high" && r.winRate >= 0.60);
+        const overallConf = report.prepRecommendations!.filter(r => r.confidence === "high").length >= 2
+          ? "High" : report.prepRecommendations!.filter(r => r.confidence !== "low").length >= 2
+          ? "Moderate" : "Low";
+        return (
+          <div className={`${t.card} p-4 sm:p-5 border-2 ${
+            isDark ? "border-[#3D6B47]/30 bg-gradient-to-br from-[#0a1409] to-[#0f1c11]" : "border-[#3D6B47]/15 bg-gradient-to-br from-[#f0fdf4] to-white"
+          }`}>
+            <div className="flex items-center gap-2 mb-3">
+              <Crown className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
+              <h3 className={`font-bold text-sm ${t.textPrimary}`}>Quick Prep Summary</h3>
+              <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                overallConf === "High"
+                  ? isDark ? "bg-emerald-500/12 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : overallConf === "Moderate"
+                  ? isDark ? "bg-amber-500/12 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-700 border-amber-200"
+                  : isDark ? "bg-red-500/12 text-red-400 border-red-500/20" : "bg-red-50 text-red-600 border-red-200"
+              }`}>{overallConf} confidence</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {whiteRec && (
+                <div className={`p-2.5 rounded-xl border ${
+                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                }`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                    isDark ? "text-white/40" : "text-gray-400"
+                  }`}>Best target as White</p>
+                  <p className={`text-sm font-bold ${t.textPrimary}`}>{whiteRec.target}</p>
+                </div>
+              )}
+              {blackRec && (
+                <div className={`p-2.5 rounded-xl border ${
+                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+                }`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                    isDark ? "text-white/40" : "text-gray-400"
+                  }`}>Best target as Black</p>
+                  <p className={`text-sm font-bold ${t.textPrimary}`}>{blackRec.target}</p>
+                </div>
+              )}
+              {avoidRec && (
+                <div className={`p-2.5 rounded-xl border sm:col-span-2 ${
+                  isDark ? "bg-amber-500/05 border-amber-500/15" : "bg-amber-50/60 border-amber-200/50"
+                }`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
+                    isDark ? "text-amber-400/60" : "text-amber-600/60"
+                  }`}>Main warning</p>
+                  <p className={`text-sm ${t.textSecondary}`}>They score well in the {avoidRec.target} — avoid entering their strongest lines unprepared.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Opening Repertoire & Matchup Patterns (4-subsection layout, requirement 2) ── */}
       <div className={`${t.card} p-4 sm:p-5`}>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-          <h3 className={`font-semibold text-lg ${t.textPrimary}`}>Opening Tendencies</h3>
+          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Repertoire &amp; Matchup Patterns</h3>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          {/* As White */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Subsection A: What they play as White */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
-              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As White</span>
-              <span className={`ml-auto text-[11px] font-bold ${
-                opp.asWhite.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-              }`}>{Math.round(opp.asWhite.winRate * 100)}%</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                isDark ? "text-white/50" : "text-gray-500"
+              }`}>What they play as White</span>
+              <span className={`ml-auto text-[10px] font-bold ${
+                opp.asWhite.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600")
+                : opp.asWhite.winRate < 0.40 ? (isDark ? "text-red-400" : "text-red-500")
+                : t.textTertiary
+              }`}>{Math.round(opp.asWhite.winRate * 100)}% overall</span>
             </div>
             {opp.firstMoveAsWhite.length > 0 && (
               <div className="flex gap-1 mb-2 flex-wrap">
-                {opp.firstMoveAsWhite.slice(0, 2).map((fm) => (
+                {opp.firstMoveAsWhite.slice(0, 3).map((fm) => (
                   <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
                     isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
                   }`}>
@@ -1118,26 +1198,123 @@ function ScoutReportTab({
               </div>
             )}
             <div className="space-y-1">
-              {opp.whiteOpenings.slice(0, 2).map((o, i) => (
-                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
-              ))}
+              {opp.whiteOpenings
+                .filter(o => !isBlackDefenseUI(o.name)) // only White systems
+                .slice(0, 3)
+                .map((o, i) => (
+                  <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+                ))}
+              {opp.whiteOpenings.filter(o => !isBlackDefenseUI(o.name)).length === 0 && (
+                <p className={`text-xs ${t.textTertiary}`}>No White system data</p>
+              )}
             </div>
           </div>
-          {/* As Black */}
+
+          {/* Subsection B: What they face as White (Black defenses used against them) */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <CircleDot className={`w-3 h-3 ${t.textTertiary}`} />
-              <span className={`text-[11px] font-semibold uppercase tracking-widest ${t.textTertiary}`}>As Black</span>
-              <span className={`ml-auto text-[11px] font-bold ${
-                opp.asBlack.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary
-              }`}>{Math.round(opp.asBlack.winRate * 100)}%</span>
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                isDark ? "text-white/50" : "text-gray-500"
+              }`}>What they face as White</span>
             </div>
             <div className="space-y-1">
-              {opp.blackOpenings.slice(0, 2).map((o, i) => (
-                <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
-              ))}
+              {opp.whiteOpenings
+                .filter(o => isBlackDefenseUI(o.name))
+                .slice(0, 3)
+                .map((o, i) => {
+                  const wr = Math.round(o.winRate * 100);
+                  const label = wr <= 35 ? "Targetable weakness" : wr >= 65 ? "Avoid if possible" : "Neutral";
+                  const labelColor = wr <= 35
+                    ? isDark ? "text-red-400" : "text-red-500"
+                    : wr >= 65
+                    ? isDark ? "text-emerald-400" : "text-emerald-600"
+                    : t.textTertiary;
+                  return (
+                    <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${
+                      isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-gray-50/70 border border-gray-200/60"
+                    }`}>
+                      <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-[10px] ${t.textTertiary}`}>{o.count}g</span>
+                        <span className={`text-xs font-semibold ${wr <= 35 ? (isDark ? "text-red-400" : "text-red-500") : wr >= 65 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary}`}>{wr}%</span>
+                        <span className={`text-[9px] font-semibold ${labelColor}`}>{label}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              {opp.whiteOpenings.filter(o => isBlackDefenseUI(o.name)).length === 0 && (
+                <p className={`text-xs ${t.textTertiary}`}>No data</p>
+              )}
             </div>
           </div>
+
+          {/* Subsection C: What they play as Black */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                isDark ? "text-white/50" : "text-gray-500"
+              }`}>What they play as Black</span>
+              <span className={`ml-auto text-[10px] font-bold ${
+                opp.asBlack.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600")
+                : opp.asBlack.winRate < 0.40 ? (isDark ? "text-red-400" : "text-red-500")
+                : t.textTertiary
+              }`}>{Math.round(opp.asBlack.winRate * 100)}% overall</span>
+            </div>
+            <div className="space-y-1">
+              {opp.blackOpenings
+                .filter(o => isBlackDefenseUI(o.name)) // only Black defenses
+                .slice(0, 3)
+                .map((o, i) => (
+                  <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+                ))}
+              {/* Fallback: show all if none match the filter */}
+              {opp.blackOpenings.filter(o => isBlackDefenseUI(o.name)).length === 0 &&
+                opp.blackOpenings.slice(0, 3).map((o, i) => (
+                  <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+                ))
+              }
+            </div>
+          </div>
+
+          {/* Subsection D: What they face as Black (White openings used against them) */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                isDark ? "text-white/50" : "text-gray-500"
+              }`}>What they face as Black</span>
+            </div>
+            <div className="space-y-1">
+              {opp.blackOpenings
+                .filter(o => !isBlackDefenseUI(o.name)) // White systems they face as Black
+                .slice(0, 3)
+                .map((o, i) => {
+                  const wr = Math.round(o.winRate * 100);
+                  const label = wr <= 35 ? "Possible target" : wr >= 65 ? "Strong for them" : "";
+                  return (
+                    <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${
+                      isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-gray-50/70 border border-gray-200/60"
+                    }`}>
+                      <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-[10px] ${t.textTertiary}`}>{o.count}g</span>
+                        <span className={`text-xs font-semibold ${
+                          wr <= 35 ? (isDark ? "text-red-400" : "text-red-500")
+                          : wr >= 65 ? (isDark ? "text-emerald-400" : "text-emerald-600")
+                          : t.textTertiary
+                        }`}>{wr}%</span>
+                        {label && <span className={`text-[9px] font-semibold ${
+                          wr <= 35 ? (isDark ? "text-amber-400" : "text-amber-600") : (isDark ? "text-emerald-400" : "text-emerald-600")
+                        }`}>{label}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              {opp.blackOpenings.filter(o => !isBlackDefenseUI(o.name)).length === 0 && (
+                <p className={`text-xs ${t.textTertiary}`}>No data</p>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -1272,15 +1449,61 @@ function ScoutReportTab({
         </div>
       )}
 
-      {/* ── Game Plan ── */}
+      {/* ── Your Game Plan (two-branch format, requirement 5) ── */}
       {matchupSummary && (
         <div className={`${t.card} p-4 sm:p-5`}>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-4">
             <Target className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
             <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Your Game Plan</h3>
           </div>
           <div className="space-y-3">
-            <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.likelyBattle}</p>
+
+            {/* Branch 1: If you have White */}
+            {matchupSummary.whiteTarget && (
+              <div className={`p-3 rounded-xl border ${
+                isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                    isDark ? "bg-white/08 text-white/80 border-white/15" : "bg-gray-100 text-gray-800 border-gray-300"
+                  }`}>♔ If you have White</span>
+                </div>
+                <p className={`text-sm font-semibold mb-1 ${t.textPrimary}`}>{matchupSummary.whiteTarget}</p>
+                {matchupSummary.whiteWhy && (
+                  <p className={`text-xs mb-2 ${t.textTertiary}`}>{matchupSummary.whiteWhy}</p>
+                )}
+                {matchupSummary.whitePlan && (
+                  <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.whitePlan}</p>
+                )}
+              </div>
+            )}
+
+            {/* Branch 2: If you have Black */}
+            {matchupSummary.blackTarget && (
+              <div className={`p-3 rounded-xl border ${
+                isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
+              }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                    isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+                  }`}>♚ If you have Black</span>
+                </div>
+                <p className={`text-sm font-semibold mb-1 ${t.textPrimary}`}>{matchupSummary.blackTarget}</p>
+                {matchupSummary.blackWhy && (
+                  <p className={`text-xs mb-2 ${t.textTertiary}`}>{matchupSummary.blackWhy}</p>
+                )}
+                {matchupSummary.blackPlan && (
+                  <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.blackPlan}</p>
+                )}
+              </div>
+            )}
+
+            {/* Fallback: likelyBattle if no two-branch data */}
+            {!matchupSummary.whiteTarget && !matchupSummary.blackTarget && (
+              <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{matchupSummary.likelyBattle}</p>
+            )}
+
+            {/* Study First */}
             {matchupSummary.studyFirst && (
               <div className={`flex items-start gap-2.5 p-3 rounded-xl ${
                 isDark ? "bg-[#3D6B47]/10 border border-[#3D6B47]/20" : "bg-[#3D6B47]/05 border border-[#3D6B47]/12"
@@ -1292,6 +1515,7 @@ function ScoutReportTab({
                 </div>
               </div>
             )}
+
           </div>
         </div>
       )}
@@ -1687,6 +1911,31 @@ function StudyLinesTab({
               </div>
             </div>
 
+            {/* Context header before board (requirement 8) */}
+            <div className={`mx-4 mb-2 p-3 rounded-xl border ${
+              isDark ? "bg-[#060e07] border-[#1e2e22]/50" : "bg-[#f0fdf4]/70 border-[#3D6B47]/10"
+            }`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${
+                isDark ? "text-[#5B9A6A]/70" : "text-[#3D6B47]/60"
+              }`}>Why study this line</p>
+              <p className={`text-xs leading-relaxed ${t.textSecondary}`}>
+                {useAs === "white"
+                  ? `You will play as White in this line. The goal is to ${
+                      exploits
+                        ? `exploit their weakness in the ${exploits}`
+                        : `steer the game into positions where your opponent is uncomfortable`
+                    }. Study the move order carefully before practicing.`
+                  : useAs === "black"
+                  ? `You will play as Black in this line. The goal is to ${
+                      exploits
+                        ? `counter their ${exploits} and reach a comfortable position`
+                        : `reach a solid position and look for counterplay`
+                    }. Study the move order carefully before practicing.`
+                  : `Study the key moves in this line before practicing. The goal is to understand the plan, not just memorize moves.`
+                }
+              </p>
+            </div>
+
             {/* Interactive board */}
             <div className="px-4 pb-2">
               <ChessLineViewer
@@ -1862,6 +2111,119 @@ function PracticeBoardTab({
 }
 
 // ── Shared Components ─────────────────────────────────────────────────────────
+
+// ── Premium Loading State (requirement 11) ───────────────────────────────────────────────────────────────────────────
+function PrepLoadingState({ username, isDark, t }: { username: string; isDark: boolean; t: Tokens }) {
+  const [step, setStep] = useState(0);
+  const steps = [
+    "Fetching recent games…",
+    "Classifying openings…",
+    "Finding targetable weaknesses…",
+    "Building your prep plan…",
+  ];
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep(s => Math.min(s + 1, steps.length - 1));
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <div className={`${t.card} py-16 flex flex-col items-center gap-5`}>
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+        isDark ? "bg-[#162018]" : "bg-[#3D6B47]/06"
+      }`}>
+        <Loader2 className="w-7 h-7 text-[#5B9A6A] animate-spin" />
+      </div>
+      <div className="text-center space-y-2 max-w-xs">
+        <p className={`text-sm font-semibold ${t.textPrimary}`}>Scouting {username}</p>
+        <div className="space-y-1.5">
+          {steps.map((s, i) => (
+            <div key={i} className={`flex items-center gap-2 justify-center transition-all duration-500 ${
+              i < step ? "opacity-40" : i === step ? "opacity-100" : "opacity-20"
+            }`}>
+              {i < step ? (
+                <span className="text-[#5B9A6A] text-xs">&#10003;</span>
+              ) : i === step ? (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#5B9A6A] animate-pulse inline-block" />
+              ) : (
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-20 inline-block" />
+              )}
+              <span className={`text-xs ${
+                i === step ? t.textSecondary : t.textTertiary
+              }`}>{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Detailed Error State (requirement 11) ───────────────────────────────────────────────────────────────────────────
+function PrepErrorState({
+  error, username, onRetry, onUseAllFormats, onAnalyze100, isDark, t
+}: {
+  error: string;
+  username: string;
+  onRetry: () => void;
+  onUseAllFormats: () => void;
+  onAnalyze100: () => void;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  return (
+    <div className={`${t.card} p-5 sm:p-6`}>
+      <div className="flex items-start gap-3 mb-4">
+        <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <div>
+          <p className={`text-sm font-semibold ${t.textPrimary}`}>We couldn’t generate a prep report for this username.</p>
+          {error && <p className={`text-xs mt-1 ${t.textTertiary}`}>{error}</p>}
+        </div>
+      </div>
+      <div className={`p-3 rounded-xl mb-4 ${
+        isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-gray-50/70 border border-gray-200/60"
+      }`}>
+        <p className={`text-xs font-semibold mb-2 ${t.textTertiary}`}>Possible reasons:</p>
+        <ul className={`space-y-1 text-xs ${t.textTertiary}`}>
+          <li>• The Chess.com username may not exist — check spelling and try again</li>
+          <li>• There may not be enough recent games in this format (try switching to All)</li>
+          <li>• Chess.com game data may be temporarily unavailable</li>
+          <li>• Try increasing depth to 100 games for players with sparse recent activity</li>
+        </ul>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={onRetry}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            isDark ? "bg-[#3D6B47] text-white hover:bg-[#4a7a56]" : "bg-[#3D6B47] text-white hover:bg-[#2e5236]"
+          }`}
+        >
+          <RefreshCw className="w-3 h-3" /> Try again
+        </button>
+        {username && (
+          <button
+            onClick={onUseAllFormats}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+              isDark ? "border-[#1e2e22]/60 text-white/70 hover:text-white hover:bg-[#162018]" : "border-gray-300 text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Use All formats
+          </button>
+        )}
+        {username && (
+          <button
+            onClick={onAnalyze100}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+              isDark ? "border-[#1e2e22]/60 text-white/70 hover:text-white hover:bg-[#162018]" : "border-gray-300 text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            Analyze 100 games
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function EmptyState({
   icon, title, description, isDark, t

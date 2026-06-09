@@ -367,7 +367,12 @@ describe("generateInsights", () => {
   it("mentions weakness when win rate is low", () => {
     const profile = makeProfile();
     const insights = generateInsights(profile);
-    const weaknessInsight = insights.find(i => i.toLowerCase().includes("struggle") || i.toLowerCase().includes("exploitability"));
+    // generateInsights uses 'struggles against' or 'scores poorly with' for low win rate openings
+    const weaknessInsight = insights.find(i =>
+      i.toLowerCase().includes("struggle") ||
+      i.toLowerCase().includes("scores poorly") ||
+      i.toLowerCase().includes("exploitability")
+    );
     expect(weaknessInsight).toBeTruthy();
   });
 

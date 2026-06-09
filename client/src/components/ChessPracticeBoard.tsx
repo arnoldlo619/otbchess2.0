@@ -428,24 +428,39 @@ export default function ChessPracticeBoard({
   // ── Line complete screen ───────────────────────────────────────────────────
   if (lineComplete) {
     const pct = totalAttempts > 0 ? Math.round((correctMoves / totalAttempts) * 100) : 100;
+    // Line Mastered = user completed the full line with ≥80% accuracy (requirement 9)
+    const trulyMastered = linePassed && pct >= 80;
     return (
       <div className={`rounded-2xl border overflow-hidden ${bg} ${border}`}>
         <div className="p-8 text-center">
-          {linePassed ? (
+          {trulyMastered ? (
             <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-400" />
           ) : (
             <XCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
           )}
           <h3 className={`text-lg font-bold mb-1 ${textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            {linePassed ? "Line Mastered!" : "Keep Practicing"}
+            {trulyMastered ? "Line Mastered!" : pct >= 60 ? "Good effort — keep drilling" : "Keep Practicing"}
           </h3>
           <p className={`text-sm mb-1 ${textSecondary}`}>{currentLine.name}</p>
-          <p className={`text-2xl font-bold mb-6 ${linePassed ? "text-green-400" : "text-red-400"}`}>
+          <p className={`text-2xl font-bold mb-2 ${trulyMastered ? "text-green-400" : pct >= 60 ? "text-amber-400" : "text-red-400"}`}>
             {pct}%
           </p>
-          <p className={`text-xs mb-6 ${textTertiary}`}>
+          <p className={`text-xs mb-2 ${textTertiary}`}>
             {correctMoves} correct out of {totalAttempts} attempts
           </p>
+          {!trulyMastered && (
+            <p className={`text-xs mb-6 ${textTertiary} max-w-xs mx-auto leading-relaxed`}>
+              {pct >= 60
+                ? "You are getting there. Retry this line until you can play it without mistakes."
+                : "Review the line in Study Lines first, then come back to practice. Focus on understanding the plan, not just the moves."
+              }
+            </p>
+          )}
+          {trulyMastered && (
+            <p className={`text-xs mb-6 ${textTertiary}`}>
+              You played this line correctly. It is now in your prep arsenal.
+            </p>
+          )}
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => initLine(lineIndex)}
@@ -483,17 +498,29 @@ export default function ChessPracticeBoard({
       ? isDark ? "bg-yellow-900/20 border-yellow-500/20" : "bg-yellow-50 border-yellow-200"
       : isDark ? "bg-[#162018]/60 border-[#1e2e22]/50" : "bg-gray-50 border-gray-200";
 
+  // Compute the correct move concept for mistake feedback
+  const expectedSan = sanMoves[moveIndex];
+  const moveConceptHint = expectedSan
+    ? expectedSan.includes("x")
+      ? `The correct move captures a piece (${expectedSan}). Captures often improve your position or remove a threat.`
+      : expectedSan.includes("+")
+      ? `The correct move gives check (${expectedSan}). Look for ways to put the king under pressure.`
+      : expectedSan.includes("=")
+      ? `The correct move promotes a pawn. Advance the pawn to the last rank.`
+      : `The correct move is ${expectedSan}. This move follows the plan for this line — it keeps the position in line with the prep.`
+    : "";
+
   const feedbackText =
     feedback === "correct"
-      ? "Correct! ✓"
+      ? "Correct! Great move ✓"
       : feedback === "wrong"
-      ? "Not quite — try again"
+      ? moveConceptHint
       : feedback === "hint"
-      ? "Hint shown on the board"
+      ? `Hint: look at the highlighted squares — that is the piece and square for the correct move.`
       : feedback === "auto"
-      ? "Opponent is thinking…"
+      ? "Opponent is playing their move…"
       : isUserTurn()
-      ? "Your turn — find the best move"
+      ? `Your turn as ${userColor === "w" ? "White" : "Black"} — find the best move in this position`
       : "Waiting…";
 
   const feedbackTextColor =
@@ -517,11 +544,21 @@ export default function ChessPracticeBoard({
       <div className={`px-4 py-3 border-b ${border} flex items-center gap-3`}>
         <Brain className={`w-4 h-4 shrink-0 ${accentText}`} />
         <div className="flex-1 min-w-0">
-          <h4 className={`text-sm font-bold truncate ${textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-            {currentLine.name}
-          </h4>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className={`text-sm font-bold truncate ${textPrimary}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              {currentLine.name}
+            </h4>
+            {/* Side label (requirement 9) */}
+            <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border shrink-0 ${
+              userColor === "w"
+                ? isDark ? "bg-white/08 text-white/70 border-white/15" : "bg-gray-100 text-gray-700 border-gray-300"
+                : isDark ? "bg-[#1a1a2e] text-gray-300 border-gray-600/30" : "bg-gray-800 text-white border-gray-700"
+            }`}>
+              You play {userColor === "w" ? "♔ White" : "♚ Black"}
+            </span>
+          </div>
           <p className={`text-[10px] ${textTertiary}`}>
-            Line {lineIndex + 1} of {lines.length}
+            Line {lineIndex + 1} of {lines.length} • Goal: play each move correctly to master this line
           </p>
         </div>
         {/* Progress */}

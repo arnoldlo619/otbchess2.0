@@ -45,12 +45,14 @@ describe("MatchupPrep Redesign — 3-Tab Interface", () => {
       expect(matchupPrepSrc).toContain("Your Game Plan");
     });
 
-    it("renders Opening Tendencies section", () => {
-      expect(matchupPrepSrc).toContain("Opening Tendencies");
+    it("renders Opening Repertoire section (renamed from Opening Tendencies)", () => {
+      // Renamed to 'Opening Repertoire & Matchup Patterns' in the 12-point overhaul
+      expect(matchupPrepSrc).toContain("Opening Repertoire");
     });
 
-    it("renders How Games End section", () => {
-      expect(matchupPrepSrc).toContain("How Games End");
+    it("renders Game Behavior & Pressure Points section (renamed from How Games End)", () => {
+      // Renamed in the 12-point overhaul to 'Game Behavior & Pressure Points'
+      expect(matchupPrepSrc).toContain("Game Behavior");
     });
 
     it("shows win rate percentages (multiplied by 100)", () => {
@@ -111,8 +113,9 @@ describe("MatchupPrep Redesign — 3-Tab Interface", () => {
       expect(chessLineViewerSrc).toContain('flex flex-col gap-0');
     });
 
-    it("constrains board width to max-w-[280px]", () => {
-      expect(chessLineViewerSrc).toContain("max-w-[280px]");
+    it("constrains board width to 280px", () => {
+      // Board width is constrained via inline style maxWidth: '280px'
+      expect(chessLineViewerSrc).toMatch(/280px/);
     });
 
     it("centers the board with mx-auto", () => {

@@ -1974,85 +1974,60 @@ function isBlackDefense(name: string): boolean {
   return blackKeywords.some(k => n.includes(k));
 }
 
-/** Generate structured prep recommendations with correct side-orientation */
+/** Generate structured prep recommendations with correct side-orientation, deduplication, and coach-plan copy */
 export function generatePrepRecommendations(
   profile: PlayStyleProfile,
   problemLines: ProblemLine[]
 ): PrepRecommendation[] {
   const recs: PrepRecommendation[] = [];
+  // Track targets already added to prevent duplicates (key = useAs + normalised target name)
+  const seen = new Set<string>();
 
-  // ── Recommendations for when user has WHITE (target opponent's Black weaknesses) ──
-  // Find openings the opponent struggles against as Black
-  const weakBlackOpenings = [...profile.blackOpenings]
-    .filter(o => o.count >= 2 && o.winRate < 0.50)
-    .sort((a, b) => a.winRate - b.winRate);
-
-  for (const opening of weakBlackOpenings.slice(0, 2)) {
-    const conf = getConfidenceLevel(opening.count);
-    const confLabel = getConfidenceLabel(opening.count);
-    const winPct = Math.round(opening.winRate * 100);
-    const lossNote = opening.count < 3 ? "possible weakness" : "consistent weakness";
-    const friendlyName = mainstreamName(opening.name);
-
-    // Determine correct phrasing based on whether it's a Black defense or a White system
-    // When opponent is Black and has low WR, it means they struggle when facing a White system
-    // OR they play a Black defense poorly
-    const isDefense = isBlackDefense(friendlyName);
-    let plan: string;
-    let evidence: string;
-    if (isDefense) {
-      // Opponent plays this defense as Black and scores poorly with it
-      plan = `When this player is Black, they play the ${friendlyName} but score poorly with it (${winPct}%). If you have White, steer the game toward positions where they must use this defense.`;
-      evidence = `They score ${winPct}% with the ${friendlyName} as Black across ${opening.count} games — ${confLabel}`;
-    } else {
-      // Opponent faces this White system as Black and struggles against it
-      plan = `When this player is Black, they struggle against the ${friendlyName}. If you have White, consider preparing this opening against them.`;
-      evidence = `They score only ${winPct}% as Black against the ${friendlyName} across ${opening.count} games — ${confLabel}`;
-    }
-
-    recs.push({
-      useAs: "white",
-      target: friendlyName,
-      evidence,
-      confidence: conf,
-      plan,
-      category: "opening",
-      sampleSize: opening.count,
-      winRate: opening.winRate,
-    });
+  function addRec(rec: PrepRecommendation) {
+    const key = `${rec.useAs}:${rec.target.toLowerCase().replace(/\s+/g, " ").trim()}`;
+    if (seen.has(key)) return; // deduplicate
+    seen.add(key);
+    recs.push(rec);
   }
 
   // ── Recommendations for when user has BLACK (target opponent's White weaknesses) ──
-  // Find openings the opponent struggles with as White
+  // Priority: highest-value targets first (lowest win rate, 6+ games)
   const weakWhiteOpenings = [...profile.whiteOpenings]
     .filter(o => o.count >= 2 && o.winRate < 0.55)
-    .sort((a, b) => a.winRate - b.winRate);
+    .sort((a, b) => {
+      // Sort by: high-confidence (6+) first, then lowest win rate
+      const aConf = a.count >= 6 ? 0 : a.count >= 3 ? 1 : 2;
+      const bConf = b.count >= 6 ? 0 : b.count >= 3 ? 1 : 2;
+      if (aConf !== bConf) return aConf - bConf;
+      return a.winRate - b.winRate;
+    });
 
   for (const opening of weakWhiteOpenings.slice(0, 2)) {
     const conf = getConfidenceLevel(opening.count);
     const confLabel = getConfidenceLabel(opening.count);
     const winPct = Math.round(opening.winRate * 100);
     const friendlyName = mainstreamName(opening.name);
-
-    // When opponent is White and has low WR in an opening:
-    // It could mean they play a White system poorly, OR they struggle against a Black defense
     const isDefense = isBlackDefense(friendlyName);
+
     let plan: string;
     let evidence: string;
+    let coachPlan: string;
     if (isDefense) {
-      // Opponent faces this defense when playing White and struggles against it
-      plan = `When this player is White, they struggle against the ${friendlyName}. If you have Black, consider preparing this defense against them.`;
-      evidence = `They score only ${winPct}% as White against the ${friendlyName} across ${opening.count} games — ${confLabel}`;
+      // Opponent faces this Black defense as White and struggles against it
+      evidence = `They scored only ${winPct}% as White against the ${friendlyName} across ${opening.count} games.`;
+      coachPlan = `This is their lowest-scoring matchup as White. If you are comfortable with ${friendlyName} structures, prepare this as your primary defense against their first move. Focus on flexible development and look for central breaks once White commits their pawn structure.`;
+      plan = coachPlan;
     } else {
-      // Opponent plays this White system but scores poorly with it
-      plan = `When this player is White, they play the ${friendlyName} but score poorly with it (${winPct}%). If you have Black, prepare a solid response to this system — they may make mistakes in it.`;
-      evidence = `They score only ${winPct}% with the ${friendlyName} as White across ${opening.count} games — ${confLabel}`;
+      // Opponent plays this White system poorly
+      evidence = `They scored only ${winPct}% with the ${friendlyName} as White across ${opening.count} games.`;
+      coachPlan = `When this player is White, they play the ${friendlyName} but score poorly with it. Prepare a solid, principled response — they are likely to make inaccuracies in this structure. Keep your setup flexible and wait for them to overextend.`;
+      plan = coachPlan;
     }
 
-    recs.push({
+    addRec({
       useAs: "black",
-      target: friendlyName,
-      evidence,
+      target: isDefense ? `Prepare the ${friendlyName}` : `Solid response to ${friendlyName}`,
+      evidence: `${evidence} — ${confLabel}`,
       confidence: conf,
       plan,
       category: "opening",
@@ -2061,7 +2036,48 @@ export function generatePrepRecommendations(
     });
   }
 
-  // ── Problem line recommendations ──
+  // ── Recommendations for when user has WHITE (target opponent's Black weaknesses) ──
+  const weakBlackOpenings = [...profile.blackOpenings]
+    .filter(o => o.count >= 2 && o.winRate < 0.50)
+    .sort((a, b) => {
+      const aConf = a.count >= 6 ? 0 : a.count >= 3 ? 1 : 2;
+      const bConf = b.count >= 6 ? 0 : b.count >= 3 ? 1 : 2;
+      if (aConf !== bConf) return aConf - bConf;
+      return a.winRate - b.winRate;
+    });
+
+  for (const opening of weakBlackOpenings.slice(0, 2)) {
+    const conf = getConfidenceLevel(opening.count);
+    const confLabel = getConfidenceLabel(opening.count);
+    const winPct = Math.round(opening.winRate * 100);
+    const friendlyName = mainstreamName(opening.name);
+    const isDefense = isBlackDefense(friendlyName);
+
+    let plan: string;
+    let evidence: string;
+    if (isDefense) {
+      // Opponent plays this defense as Black and scores poorly
+      evidence = `They scored ${winPct}% with the ${friendlyName} as Black across ${opening.count} games.`;
+      plan = `When this player is Black, they choose the ${friendlyName} but score poorly with it. If you have White, steer the game toward positions where they must use this defense. Avoid giving them easy equality — keep the position unbalanced.`;
+    } else {
+      // Opponent faces this White system as Black and struggles
+      evidence = `They scored only ${winPct}% as Black against the ${friendlyName} across ${opening.count} games.`;
+      plan = `When this player is Black, they struggle against the ${friendlyName}. If you have White, prepare this opening. Use a stable structure with ${friendlyName.includes("London") ? "d4, Bf4, e3, Nf3, and c3" : "solid central control"} and let them make the mistakes.`;
+    }
+
+    addRec({
+      useAs: "white",
+      target: isDefense ? `Exploit their ${friendlyName}` : `Prepare the ${friendlyName}`,
+      evidence: `${evidence} — ${confLabel}`,
+      confidence: conf,
+      plan,
+      category: "opening",
+      sampleSize: opening.count,
+      winRate: opening.winRate,
+    });
+  }
+
+  // ── Problem line recommendations (merged with existing if same target) ──
   for (const pl of problemLines.slice(0, 2)) {
     const conf = getConfidenceLevel(pl.gamesCount);
     const confLabel = getConfidenceLabel(pl.gamesCount);
@@ -2070,14 +2086,13 @@ export function generatePrepRecommendations(
     const moveNum = Math.ceil(pl.problemHalfMove / 2);
 
     if (pl.color === "white") {
-      // Opponent plays White and has a problem in this line → user should prepare as Black
       const isDefense = isBlackDefense(friendlyName);
       const plan = isDefense
-        ? `This player struggles as White against the ${friendlyName}, especially around move ${moveNum}. If you have Black, prepare this defense — they have a ${lossPct}% loss rate in this specific line.`
+        ? `This player struggles as White against the ${friendlyName}, especially around move ${moveNum}. If you have Black, prepare this defense — they have a ${lossPct}% loss rate in this specific line. Look for their typical inaccuracy around that move.`
         : `This player makes mistakes in the ${friendlyName} as White around move ${moveNum}. If you have Black, be ready to punish inaccuracies in this structure.`;
-      recs.push({
+      addRec({
         useAs: "black",
-        target: friendlyName,
+        target: isDefense ? `Prepare the ${friendlyName}` : `Counter the ${friendlyName}`,
         evidence: `${pl.lossCount} losses in ${pl.gamesCount} games (${lossPct}% loss rate) — ${confLabel}`,
         confidence: conf,
         plan,
@@ -2086,14 +2101,13 @@ export function generatePrepRecommendations(
         winRate: 1 - pl.lossRate,
       });
     } else {
-      // Opponent plays Black and has a problem → user should prepare as White
       const isDefense = isBlackDefense(friendlyName);
       const plan = isDefense
-        ? `This player plays the ${friendlyName} as Black but makes mistakes around move ${moveNum}. If you have White, steer into this line and look for their typical error.`
+        ? `This player plays the ${friendlyName} as Black but makes mistakes around move ${moveNum}. If you have White, steer into this line and look for their typical error — they lose ${lossPct}% of the time from this position.`
         : `This player struggles as Black against the ${friendlyName}, especially around move ${moveNum}. If you have White, prepare this system to exploit their weakness.`;
-      recs.push({
+      addRec({
         useAs: "white",
-        target: friendlyName,
+        target: isDefense ? `Target their ${friendlyName}` : `Prepare the ${friendlyName}`,
         evidence: `${pl.lossCount} losses in ${pl.gamesCount} games (${lossPct}% loss rate) — ${confLabel}`,
         confidence: conf,
         plan,
@@ -2106,35 +2120,35 @@ export function generatePrepRecommendations(
 
   // ── Middlegame/Endgame recommendations ──
   if (profile.avgGameLength < 28) {
-    recs.push({
+    addRec({
       useAs: "white",
-      target: "Long middlegame positions",
-      evidence: `Average game length is only ${profile.avgGameLength} moves`,
+      target: "Keep the middlegame complex",
+      evidence: `Average game length is only ${profile.avgGameLength} moves — games tend to end quickly`,
       confidence: profile.gamesAnalyzed >= 20 ? "high" : "moderate",
-      plan: `This player's games tend to be short (avg ${profile.avgGameLength} moves). They may be uncomfortable in long, complex middlegames. Avoid early simplifications and keep the tension on the board.`,
+      plan: `This player's games tend to be short (avg ${profile.avgGameLength} moves). They may be uncomfortable in long, complex middlegames. Avoid early piece trades and keep the tension on the board. Create imbalances that require precise calculation.`,
       category: "middlegame",
       sampleSize: profile.gamesAnalyzed,
       winRate: 0,
     });
   } else if (profile.avgGameLength > 45) {
-    recs.push({
+    addRec({
       useAs: "white",
-      target: "Active middlegame play",
-      evidence: `Average game length is ${profile.avgGameLength} moves`,
+      target: "Decide the game in the middlegame",
+      evidence: `Average game length is ${profile.avgGameLength} moves — comfortable in long games`,
       confidence: profile.gamesAnalyzed >= 20 ? "high" : "moderate",
-      plan: `This player performs well in long games (avg ${profile.avgGameLength} moves). Try to create active middlegame chances and avoid unnecessary piece trades that lead to drawn-out endgames where they are comfortable.`,
+      plan: `This player performs well in long games (avg ${profile.avgGameLength} moves). Do not trade pieces just to simplify. Create active middlegame pressure first, then convert only if you win material or structure. Avoid trading into equal endgames.`,
       category: "middlegame",
       sampleSize: profile.gamesAnalyzed,
       winRate: 0,
     });
   }
 
-  // Sort: highest confidence first, then lowest win rate
+  // Sort by priority: high confidence + lowest win rate first, limit to top 5
   return recs.sort((a, b) => {
     const confOrder = { high: 0, moderate: 1, low: 2 };
     if (confOrder[a.confidence] !== confOrder[b.confidence]) return confOrder[a.confidence] - confOrder[b.confidence];
     return a.winRate - b.winRate;
-  }).slice(0, 6);
+  }).slice(0, 5);
 }
 
 // ─── Behavior / Time Pressure Analysis ───────────────────────────────────────
@@ -2181,16 +2195,24 @@ export function analyzeBehavior(games: ChessComGame[], username: string): Behavi
     ? "opening" as const
     : middlegamePct >= endgamePct ? "middlegame" as const : "endgame" as const;
 
-  // Strategy note
+  // Strategy note — context-aware and non-contradictory (requirement 7)
   let strategyNote = "";
+  const isLongGamePlayer = avgGameLength > 45;
   if (timeoutPct >= 20) {
-    strategyNote = `Flags in ${timeoutPct}% of games — keep pieces on board and complicate.`;
+    strategyNote = `They reach time trouble in ${timeoutPct}% of games. Keep the position complex if they are low on time — do not simplify unnecessarily.`;
   } else if (blunderPhase === "opening" && openingPct >= 35) {
-    strategyNote = `${openingPct}% of losses happen in the opening — punish with sharp theory.`;
+    strategyNote = `${openingPct}% of their losses happen in the opening phase. Prepare sharp, theory-heavy lines to punish early inaccuracies.`;
   } else if (blunderPhase === "endgame" && endgamePct >= 35) {
-    strategyNote = `${endgamePct}% of losses in endgames — steer toward technical positions.`;
+    if (isLongGamePlayer) {
+      // Mixed signal: they lose in endgames but also play long games — be cautious
+      strategyNote = `The data is mixed. They are comfortable in long games (avg ${avgGameLength} moves), but ${endgamePct}% of their losses happen late. Do not simplify too early — only enter endgames when you have a clear advantage.`;
+    } else {
+      strategyNote = `${endgamePct}% of their losses happen in the endgame. If you earn a clear advantage, stay patient and convert rather than forcing tactics. Simplify only when you have a structural or material edge.`;
+    }
+  } else if (isLongGamePlayer) {
+    strategyNote = `They are comfortable in long games, averaging ${avgGameLength} moves. Do not trade pieces just to simplify. Create active middlegame pressure first, then convert if you win material or structure.`;
   } else {
-    strategyNote = `Most losses in the ${blunderPhase} — target this phase for maximum pressure.`;
+    strategyNote = `Most losses happen in the ${blunderPhase} phase. Focus your preparation on creating pressure in this phase of the game.`;
   }
 
   return {

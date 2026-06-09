@@ -356,6 +356,18 @@ export function getStructureLabel(line: { name: string; eco: string; moves: stri
   return undefined;
 }
 
+/** Client-side helper to classify whether an opening name is a Black defense */
+function isBlackDefenseClient(name: string): boolean {
+  const n = name.toLowerCase();
+  const blackKeywords = [
+    "sicilian", "french", "caro-kann", "pirc", "modern defense", "king's indian",
+    "nimzo-indian", "queen's gambit declined", "dutch", "englund", "slav",
+    "semi-slav", "scandinavian", "alekhine", "benoni", "benko", "grunfeld",
+    "king's indian defense", "nimzo", "qgd",
+  ];
+  return blackKeywords.some(k => n.includes(k));
+}
+
 /**
  * Generate a strategic matchup summary based on user repertoire + opponent profile.
  * Returns 2–4 concise strategic sentences.
@@ -376,47 +388,80 @@ export function generateMatchupSummary(
   studyFirst: string | null;
   prepRisk: string | null;
   colorAdvice: string | null;
+  whiteTarget: string | null;
+  whiteWhy: string | null;
+  whitePlan: string | null;
+  blackTarget: string | null;
+  blackWhy: string | null;
+  blackPlan: string | null;
 } {
   const topLine = enrichedLines.find(l => l.isTrainFirst) ?? enrichedLines[0] ?? null;
 
-  // Likely battle — strategic repertoire overview
+  // Build two-branch game plan (requirement 5)
+  // Branch 1: If you have White — target opponent's Black weaknesses
+  let whiteTarget = "";
+  let whiteWhy = "";
+  let whitePlan = "";
+  const weakestBlack = [...opponentProfile.blackOpenings]
+    .filter(o => o.count >= 2)
+    .sort((a, b) => a.winRate - b.winRate)[0];
+  if (weakestBlack) {
+    const wr = Math.round(weakestBlack.winRate * 100);
+    const isDefense = isBlackDefenseClient(weakestBlack.name);
+    if (isDefense) {
+      whiteTarget = `Exploit their ${weakestBlack.name}`;
+      whiteWhy = `They scored ${wr}% with the ${weakestBlack.name} as Black across ${weakestBlack.count} games.`;
+      whitePlan = `Steer the game toward positions where they must use the ${weakestBlack.name}. Keep the position unbalanced and avoid giving them easy equality.`;
+    } else {
+      whiteTarget = `Prepare the ${weakestBlack.name}`;
+      whiteWhy = `They scored only ${wr}% as Black against the ${weakestBlack.name} across ${weakestBlack.count} games.`;
+      whitePlan = `Use a stable ${weakestBlack.name} structure and let them make the mistakes. Avoid early simplifications.`;
+    }
+  } else if (opponentProfile.blackOpenings.length > 0) {
+    const top = opponentProfile.blackOpenings[0];
+    whiteTarget = `Study their ${top.name}`;
+    whiteWhy = `They play the ${top.name} as Black in ${top.count} games (${Math.round(top.winRate * 100)}% win rate).`;
+    whitePlan = `Prepare a solid response to the ${top.name}. Focus on understanding the key plans for both sides.`;
+  }
+
+  // Branch 2: If you have Black — target opponent's White weaknesses
+  let blackTarget = "";
+  let blackWhy = "";
+  let blackPlan = "";
+  const weakestWhite = [...opponentProfile.whiteOpenings]
+    .filter(o => o.count >= 2)
+    .sort((a, b) => a.winRate - b.winRate)[0];
+  if (weakestWhite) {
+    const wr = Math.round(weakestWhite.winRate * 100);
+    const isDefense = isBlackDefenseClient(weakestWhite.name);
+    if (isDefense) {
+      blackTarget = `Prepare the ${weakestWhite.name}`;
+      blackWhy = `They scored only ${wr}% as White against the ${weakestWhite.name} across ${weakestWhite.count} games.`;
+      blackPlan = `If you are comfortable with ${weakestWhite.name} structures, prepare this as your primary defense. Focus on flexible development and look for central breaks.`;
+    } else {
+      blackTarget = `Solid response to their ${weakestWhite.name}`;
+      blackWhy = `They scored only ${wr}% with the ${weakestWhite.name} as White across ${weakestWhite.count} games.`;
+      blackPlan = `Prepare a principled response to the ${weakestWhite.name}. They are likely to make inaccuracies — keep your setup flexible and wait for them to overextend.`;
+    }
+  } else if (opponentProfile.firstMoveAsWhite.length > 0) {
+    const top = opponentProfile.firstMoveAsWhite[0];
+    const yourResponse = (top.move === "e4" || top.move === "1.e4")
+      ? (repertoire.blackVsE4 ?? "your response to 1.e4")
+      : (top.move === "d4" || top.move === "1.d4")
+      ? (repertoire.blackVsD4 ?? "your response to 1.d4")
+      : "your response";
+    blackTarget = `Prepare ${yourResponse}`;
+    blackWhy = `They open ${top.move} in ${top.pct}% of White games.`;
+    blackPlan = `Prepare ${yourResponse} as your main defense. Focus on understanding the key plans for your chosen setup.`;
+  }
+
+  // Compose likelyBattle as the two-branch summary
   let likelyBattle = "Opening battle unclear — not enough data.";
-  if (repertoire.expectedColor === "white") {
-    if (opponentProfile.blackOpenings.length > 0) {
-      const top = opponentProfile.blackOpenings[0];
-      const weakest = [...opponentProfile.blackOpenings].sort((a, b) => a.winRate - b.winRate)[0];
-      const weakNote = weakest && weakest.winRate < 0.5
-        ? ` Their weakest defense is the ${weakest.name} (${Math.round(weakest.winRate * 100)}% win rate) — steer into this structure.`
-        : "";
-      likelyBattle = `As White, target their ${top.name} (${top.count} games, ${Math.round(top.winRate * 100)}% win rate).${weakNote}`;
-    }
-  } else if (repertoire.expectedColor === "black") {
-    if (opponentProfile.firstMoveAsWhite.length > 0) {
-      const top = opponentProfile.firstMoveAsWhite[0];
-      const yourResponse = (top.move === "e4" || top.move === "1.e4")
-        ? (repertoire.blackVsE4 ?? "your response to 1.e4")
-        : (top.move === "d4" || top.move === "1.d4")
-        ? (repertoire.blackVsD4 ?? "your response to 1.d4")
-        : "your response";
-      const weakestWhite = [...opponentProfile.whiteOpenings].sort((a, b) => a.winRate - b.winRate)[0];
-      const weakNote = weakestWhite && weakestWhite.winRate < 0.55
-        ? ` They struggle in the ${weakestWhite.name} (${Math.round(weakestWhite.winRate * 100)}% win rate) — aim for this structure.`
-        : "";
-      likelyBattle = `They play ${top.move} in ${top.pct}% of White games. Prepare ${yourResponse}.${weakNote}`;
-    }
-  } else {
-    // Unknown color — cover both scenarios
-    if (opponentProfile.firstMoveAsWhite.length > 0 && opponentProfile.blackOpenings.length > 0) {
-      const topW = opponentProfile.firstMoveAsWhite[0];
-      const topB = opponentProfile.blackOpenings[0];
-      const weakBlack = [...opponentProfile.blackOpenings].sort((a, b) => a.winRate - b.winRate)[0];
-      const weakWhite = [...opponentProfile.whiteOpenings].sort((a, b) => a.winRate - b.winRate)[0];
-      let advice = `If you're White: target their ${topB.name} (${Math.round(topB.winRate * 100)}% WR).`;
-      if (weakBlack && weakBlack.winRate < 0.5) advice += ` Weakest: ${weakBlack.name} (${Math.round(weakBlack.winRate * 100)}%).`;
-      advice += ` If you're Black: they open ${topW.move} (${topW.pct}%).`;
-      if (weakWhite && weakWhite.winRate < 0.55) advice += ` Weakest White line: ${weakWhite.name} (${Math.round(weakWhite.winRate * 100)}%).`;
-      likelyBattle = advice;
-    }
+  if (whiteTarget || blackTarget) {
+    const parts: string[] = [];
+    if (whiteTarget) parts.push(`If you have White: ${whiteTarget}. ${whiteWhy}`);
+    if (blackTarget) parts.push(`If you have Black: ${blackTarget}. ${blackWhy}`);
+    likelyBattle = parts.join(" | ");
   }
 
   // Study first — with specific line and why
@@ -441,5 +486,18 @@ export function generateMatchupSummary(
     }
   }
 
-  return { likelyBattle, studyFirst, prepRisk, colorAdvice };
+  // Expose two-branch data for the UI to render the new Game Plan layout
+  return {
+    likelyBattle,
+    studyFirst,
+    prepRisk,
+    colorAdvice,
+    // New two-branch fields
+    whiteTarget: whiteTarget || null,
+    whiteWhy: whiteWhy || null,
+    whitePlan: whitePlan || null,
+    blackTarget: blackTarget || null,
+    blackWhy: blackWhy || null,
+    blackPlan: blackPlan || null,
+  };
 }
