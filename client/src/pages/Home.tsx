@@ -896,7 +896,24 @@ function HowItWorks() {
       phoneLeft: true,
       mockupType: 'macbook' as const,
     },
-
+    {
+      number: "02",
+      icon: <Users className="w-3 h-3" />,
+      title: "Players Sign Up with chess.com",
+      description: "Share a link. Players enter their chess.com username — we automatically pull their verified ELO rating in real time.",
+      imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
+      imageAlt: "Player join form with chess.com username lookup",
+      phoneLeft: false,
+    },
+    {
+      number: "03",
+      icon: <Swords className="w-3 h-3" />,
+      title: "Optimal Pairings Generated",
+      description: "Our algorithm creates balanced, fair pairings based on ELO. No manual work. Standings update live as results come in.",
+      imageSrc: "/manus-storage/otb-board-pairings_41832e9e.webp",
+      imageAlt: "Board pairings screen showing matchups",
+      phoneLeft: true,
+    },
   ];
 
   return (
@@ -915,10 +932,10 @@ function HowItWorks() {
             className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground"
             style={{ fontFamily: "'Clash Display', sans-serif" }}
           >
-            How It Works
+            3 Simple Steps to Launch
           </h2>
           <p className="mt-4 text-muted-foreground text-lg max-w-xl mx-auto">
-            Set up your tournament in minutes — no spreadsheets, no manual work.
+            From setup to live pairings in minutes — no spreadsheets, no manual work.
           </p>
         </div>
       </div>
