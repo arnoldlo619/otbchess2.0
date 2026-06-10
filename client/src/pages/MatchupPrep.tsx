@@ -12,7 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthContext } from "@/context/AuthContext";
 import {
   Search, Target, BookOpen,
-  Shield as _Shield, Clock as _Clock, Crown,
+  Shield as _Shield, Clock as _Clock, Crown as _Crown,
   TrendingUp as _TrendingUp, Eye, Loader2,
   CircleDot as _CircleDot, RefreshCw, ChevronRight, Trophy,
   Activity as _Activity, Bookmark, BookmarkCheck,
@@ -1108,209 +1108,53 @@ function ScoutReportTab({
   return (
     <div className="space-y-4">
 
-      {/* ── Quick Prep Summary box (requirement 10) ── */}
-      {(report.prepRecommendations && report.prepRecommendations.length > 0) && (() => {
-        const whiteRec = report.prepRecommendations!.find(r => r.useAs === "white");
-        const blackRec = report.prepRecommendations!.find(r => r.useAs === "black");
-        const avoidRec = report.prepRecommendations!.find(r => r.confidence === "high" && r.winRate >= 0.60);
-        const overallConf = report.prepRecommendations!.filter(r => r.confidence === "high").length >= 2
-          ? "High" : report.prepRecommendations!.filter(r => r.confidence !== "low").length >= 2
-          ? "Moderate" : "Low";
-        return (
-          <div className={`${t.card} p-4 sm:p-5 border-2 ${
-            isDark ? "border-[#3D6B47]/30 bg-gradient-to-br from-[#0a1409] to-[#0f1c11]" : "border-[#3D6B47]/15 bg-gradient-to-br from-[#f0fdf4] to-white"
-          }`}>
-            <div className="flex items-center gap-2 mb-3">
-              <Crown className={`w-4 h-4 ${isDark ? "text-amber-400" : "text-amber-500"}`} />
-              <h3 className={`font-bold text-sm ${t.textPrimary}`}>Quick Prep Summary</h3>
-              <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                overallConf === "High"
-                  ? isDark ? "bg-emerald-500/12 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : overallConf === "Moderate"
-                  ? isDark ? "bg-amber-500/12 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-700 border-amber-200"
-                  : isDark ? "bg-red-500/12 text-red-400 border-red-500/20" : "bg-red-50 text-red-600 border-red-200"
-              }`}>{overallConf} confidence</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {whiteRec && (
-                <div className={`p-2.5 rounded-xl border ${
-                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
-                }`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
-                    isDark ? "text-white/40" : "text-gray-400"
-                  }`}>Best target as White</p>
-                  <p className={`text-sm font-bold ${t.textPrimary}`}>{whiteRec.target}</p>
-                </div>
-              )}
-              {blackRec && (
-                <div className={`p-2.5 rounded-xl border ${
-                  isDark ? "bg-[#0a1409] border-[#1e2e22]/60" : "bg-white border-gray-200/70"
-                }`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
-                    isDark ? "text-white/40" : "text-gray-400"
-                  }`}>Best target as Black</p>
-                  <p className={`text-sm font-bold ${t.textPrimary}`}>{blackRec.target}</p>
-                </div>
-              )}
-              {avoidRec && (
-                <div className={`p-2.5 rounded-xl border sm:col-span-2 ${
-                  isDark ? "bg-amber-500/05 border-amber-500/15" : "bg-amber-50/60 border-amber-200/50"
-                }`}>
-                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${
-                    isDark ? "text-amber-400/60" : "text-amber-600/60"
-                  }`}>Main warning</p>
-                  <p className={`text-sm ${t.textSecondary}`}>They score well in the {avoidRec.target} — avoid entering their strongest lines unprepared.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── Opening Repertoire & Matchup Patterns (4-subsection layout, requirement 2) ── */}
+      {/* ── Opening Repertoire (simplified: 2 as White, 2 as Black) ── */}
       <div className={`${t.card} p-4 sm:p-5`}>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
-          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Repertoire &amp; Matchup Patterns</h3>
+          <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Opening Repertoire</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
 
-          {/* Subsection A: What they play as White */}
+          {/* As White */}
           <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                isDark ? "text-white/50" : "text-gray-500"
-              }`}>What they play as White</span>
-              <span className={`ml-auto text-[10px] font-bold ${
-                opp.asWhite.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600")
-                : opp.asWhite.winRate < 0.40 ? (isDark ? "text-red-400" : "text-red-500")
-                : t.textTertiary
-              }`}>{Math.round(opp.asWhite.winRate * 100)}% overall</span>
-            </div>
-            {opp.firstMoveAsWhite.length > 0 && (
-              <div className="flex gap-1 mb-2 flex-wrap">
-                {opp.firstMoveAsWhite.slice(0, 3).map((fm) => (
-                  <span key={fm.move} className={`font-mono text-[11px] px-2 py-0.5 rounded-lg font-semibold ${
-                    isDark ? "bg-[#3D6B47]/15 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
-                  }`}>
-                    {fm.move} <span className={`font-normal ${t.textTertiary}`}>{fm.pct}%</span>
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="space-y-1">
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              ♔ As White
+            </p>
+            <div className="space-y-1.5">
               {opp.whiteOpenings
-                .filter(o => !isBlackDefenseUI(o.name)) // only White systems
-                .slice(0, 3)
+                .filter(o => !isBlackDefenseUI(o.name))
+                .slice(0, 2)
                 .map((o, i) => (
-                  <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
+                  <div key={i} className={`px-3 py-2 rounded-xl text-xs font-semibold truncate ${
+                    isDark ? "bg-[#1e2e22]/60 text-white/80" : "bg-gray-100 text-gray-800"
+                  }`}>
+                    {o.name}
+                  </div>
                 ))}
               {opp.whiteOpenings.filter(o => !isBlackDefenseUI(o.name)).length === 0 && (
-                <p className={`text-xs ${t.textTertiary}`}>No White system data</p>
-              )}
-            </div>
-          </div>
-
-          {/* Subsection B: What they face as White (Black defenses used against them) */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                isDark ? "text-white/50" : "text-gray-500"
-              }`}>What they face as White</span>
-            </div>
-            <div className="space-y-1">
-              {opp.whiteOpenings
-                .filter(o => isBlackDefenseUI(o.name))
-                .slice(0, 3)
-                .map((o, i) => {
-                  const wr = Math.round(o.winRate * 100);
-                  const label = wr <= 35 ? "Targetable weakness" : wr >= 65 ? "Avoid if possible" : "Neutral";
-                  const labelColor = wr <= 35
-                    ? isDark ? "text-red-400" : "text-red-500"
-                    : wr >= 65
-                    ? isDark ? "text-emerald-400" : "text-emerald-600"
-                    : t.textTertiary;
-                  return (
-                    <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${
-                      isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-gray-50/70 border border-gray-200/60"
-                    }`}>
-                      <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[10px] ${t.textTertiary}`}>{o.count}g</span>
-                        <span className={`text-xs font-semibold ${wr <= 35 ? (isDark ? "text-red-400" : "text-red-500") : wr >= 65 ? (isDark ? "text-emerald-400" : "text-emerald-600") : t.textTertiary}`}>{wr}%</span>
-                        <span className={`text-[9px] font-semibold ${labelColor}`}>{label}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              {opp.whiteOpenings.filter(o => isBlackDefenseUI(o.name)).length === 0 && (
                 <p className={`text-xs ${t.textTertiary}`}>No data</p>
               )}
             </div>
           </div>
 
-          {/* Subsection C: What they play as Black */}
+          {/* As Black */}
           <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                isDark ? "text-white/50" : "text-gray-500"
-              }`}>What they play as Black</span>
-              <span className={`ml-auto text-[10px] font-bold ${
-                opp.asBlack.winRate >= 0.55 ? (isDark ? "text-emerald-400" : "text-emerald-600")
-                : opp.asBlack.winRate < 0.40 ? (isDark ? "text-red-400" : "text-red-500")
-                : t.textTertiary
-              }`}>{Math.round(opp.asBlack.winRate * 100)}% overall</span>
-            </div>
-            <div className="space-y-1">
-              {opp.blackOpenings
-                .filter(o => isBlackDefenseUI(o.name)) // only Black defenses
-                .slice(0, 3)
-                .map((o, i) => (
-                  <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
-                ))}
-              {/* Fallback: show all if none match the filter */}
-              {opp.blackOpenings.filter(o => isBlackDefenseUI(o.name)).length === 0 &&
-                opp.blackOpenings.slice(0, 3).map((o, i) => (
-                  <OpeningRow key={i} name={o.name} winRate={o.winRate} count={o.count} isDark={isDark} t={t} />
-                ))
-              }
-            </div>
-          </div>
-
-          {/* Subsection D: What they face as Black (White openings used against them) */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                isDark ? "text-white/50" : "text-gray-500"
-              }`}>What they face as Black</span>
-            </div>
-            <div className="space-y-1">
-              {opp.blackOpenings
-                .filter(o => !isBlackDefenseUI(o.name)) // White systems they face as Black
-                .slice(0, 3)
-                .map((o, i) => {
-                  const wr = Math.round(o.winRate * 100);
-                  const label = wr <= 35 ? "Possible target" : wr >= 65 ? "Strong for them" : "";
-                  return (
-                    <div key={i} className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg ${
-                      isDark ? "bg-[#0d1a0f]/60 border border-[#1e2e22]/60" : "bg-gray-50/70 border border-gray-200/60"
-                    }`}>
-                      <span className={`text-xs truncate ${t.textSecondary}`}>{o.name}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[10px] ${t.textTertiary}`}>{o.count}g</span>
-                        <span className={`text-xs font-semibold ${
-                          wr <= 35 ? (isDark ? "text-red-400" : "text-red-500")
-                          : wr >= 65 ? (isDark ? "text-emerald-400" : "text-emerald-600")
-                          : t.textTertiary
-                        }`}>{wr}%</span>
-                        {label && <span className={`text-[9px] font-semibold ${
-                          wr <= 35 ? (isDark ? "text-amber-400" : "text-amber-600") : (isDark ? "text-emerald-400" : "text-emerald-600")
-                        }`}>{label}</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              {opp.blackOpenings.filter(o => !isBlackDefenseUI(o.name)).length === 0 && (
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-white/40" : "text-gray-400"}`}>
+              ♚ As Black
+            </p>
+            <div className="space-y-1.5">
+              {(opp.blackOpenings.filter(o => isBlackDefenseUI(o.name)).length > 0
+                ? opp.blackOpenings.filter(o => isBlackDefenseUI(o.name))
+                : opp.blackOpenings
+              ).slice(0, 2).map((o, i) => (
+                <div key={i} className={`px-3 py-2 rounded-xl text-xs font-semibold truncate ${
+                  isDark ? "bg-[#1e2e22]/60 text-white/80" : "bg-gray-100 text-gray-800"
+                }`}>
+                  {o.name}
+                </div>
+              ))}
+              {opp.blackOpenings.length === 0 && (
                 <p className={`text-xs ${t.textTertiary}`}>No data</p>
               )}
             </div>
