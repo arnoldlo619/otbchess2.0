@@ -53,7 +53,6 @@ import {
   BookOpen,
   GraduationCap,
   Building2,
-  Filter,
   Bell,
   BellOff,
   UserPlus,
@@ -643,9 +642,10 @@ export default function MyClubs() {
   const [myClubs, setMyClubs] = useState<Club[]>([]);
   const [followedClubs, setFollowedClubs] = useState<Club[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Array<ClubEvent & { clubName: string; clubAccent: string; isJoined: boolean }>>([]);
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<ClubCategory | "all">("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get("q") ?? "");
+  const [categoryFilter, setCategoryFilter] = useState<ClubCategory | "all">(() => (new URLSearchParams(window.location.search).get("cat") as ClubCategory | "all") ?? "all");
+  const [sortBy, setSortBy] = useState<"members" | "newest" | "tournaments" | "az">(() => (new URLSearchParams(window.location.search).get("sort") as "members" | "newest" | "tournaments" | "az") ?? "members");
+  const [discoverError, setDiscoverError] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [rsvpRefresh, setRsvpRefresh] = useState(0);
   const [discoverClubs, setDiscoverClubs] = useState<Club[]>([]);
@@ -664,18 +664,21 @@ export default function MyClubs() {
   }, []);
 
   // ── Server-side Discover search (debounced) ──────────────────────────────
-  const fetchDiscover = useCallback(async (q: string, cat: ClubCategory | "all", joinedIds: Set<string>) => {
+  const fetchDiscover = useCallback(async (q: string, cat: ClubCategory | "all", joinedIds: Set<string>, sort: "members" | "newest" | "tournaments" | "az" = "members") => {
     setDiscoverLoading(true);
+    setDiscoverError(false);
     try {
       const { clubs: results, total } = await apiListPublicClubs({
         search: q.trim() || undefined,
         category: cat !== "all" ? cat : undefined,
+        sort,
       });
       // Exclude clubs the user has already joined
       const filtered = results.filter((c: Club) => !joinedIds.has(c.id));
       setDiscoverClubs(filtered);
       setDiscoverTotal(total);
     } catch {
+      setDiscoverError(true);
       // Fallback: filter the already-loaded allClubs array
       setDiscoverClubs(
         allClubs.filter((c) => {
@@ -699,13 +702,20 @@ export default function MyClubs() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     // Immediate fetch for category changes, debounced for text search
     const delay = search !== "" ? 350 : 0;
+    // Sync URL params
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (categoryFilter !== "all") params.set("cat", categoryFilter);
+    if (sortBy !== "members") params.set("sort", sortBy);
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
     debounceRef.current = setTimeout(() => {
-      fetchDiscover(search, categoryFilter, joinedIds);
+      fetchDiscover(search, categoryFilter, joinedIds, sortBy);
     }, delay);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, categoryFilter, myClubs, fetchDiscover]);
+  }, [search, categoryFilter, sortBy, myClubs, fetchDiscover]);
 
   const refreshClubs = useCallback(async () => {
     seedClubsIfEmpty();
@@ -955,17 +965,19 @@ export default function MyClubs() {
             <h2 className={`text-sm font-semibold uppercase tracking-wider ${textMuted}`}>
               {user ? "Discover" : "All Clubs"}
             </h2>
-            <button
-              onClick={() => setShowFilters((v) => !v)}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl transition-colors ${
-                showFilters
-                  ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                  : isDark ? "text-white/50 hover:text-white bg-white/5" : "text-gray-400 hover:text-gray-700 bg-gray-100"
+            {/* Sort dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className={`text-xs font-medium px-3 py-1.5 rounded-xl border outline-none transition-colors cursor-pointer ${
+                isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-gray-50 border-gray-200 text-gray-600"
               }`}
             >
-              <Filter className="w-3.5 h-3.5" />
-              Filter
-            </button>
+              <option value="members">Most Members</option>
+              <option value="newest">Newest</option>
+              <option value="tournaments">Most Tournaments</option>
+              <option value="az">A → Z</option>
+            </select>
           </div>
 
           {/* Featured Clubs carousel — top 6 by member count */}
@@ -978,36 +990,47 @@ export default function MyClubs() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search clubs by name or location…"
-              className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors focus:border-[#4CAF50] ${inputBg}`}
+              placeholder="Search clubs by name, location, or description…"
+              className={`w-full pl-10 ${search ? "pr-9" : "pr-4"} py-3 rounded-2xl border text-sm outline-none transition-colors focus:border-[#4CAF50] ${inputBg}`}
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                  isDark ? "text-white/40 hover:text-white/80 bg-white/10" : "text-gray-400 hover:text-gray-700 bg-gray-100"
+                }`}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
           </div>
 
-          {/* Category filter pills */}
-          {showFilters && (
-            <div className="flex gap-2 flex-wrap mb-4">
-              {ALL_CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    categoryFilter === cat
-                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                      : isDark ? "bg-white/6 text-white/50 hover:text-white" : "bg-gray-100 text-gray-500 hover:text-gray-800"
-                  }`}
-                >
-                  {cat !== "all" && CATEGORY_ICONS[cat]}
-                  {cat === "all" ? "All" : CATEGORY_LABELS[cat]}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Category filter chips — always visible */}
+          <div className="flex gap-2 flex-wrap mb-4">
+            {ALL_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  categoryFilter === cat
+                    ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
+                    : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-gray-100 text-gray-500 hover:text-gray-800 border border-transparent"
+                }`}
+              >
+                {cat !== "all" && CATEGORY_ICONS[cat]}
+                {cat === "all" ? "All" : CATEGORY_LABELS[cat]}
+              </button>
+            ))}
+          </div>
 
           {/* Result count */}
-          {!discoverLoading && discoverTotal > 0 && (
+          {!discoverLoading && (
             <p className={`text-xs mb-3 ${textMuted}`}>
-              {discoverTotal} club{discoverTotal !== 1 ? "s" : ""}{search.trim() ? ` matching "${search.trim()}"` : ""}
-              {categoryFilter !== "all" ? ` in ${CATEGORY_LABELS[categoryFilter]}` : ""}
+              {discoverTotal > 0
+                ? <>{discoverTotal} club{discoverTotal !== 1 ? "s" : ""}{search.trim() ? <> matching <strong className="font-semibold">"{search.trim()}"</strong></> : ""}{categoryFilter !== "all" ? ` in ${CATEGORY_LABELS[categoryFilter]}` : ""}</>
+                : null
+              }
             </p>
           )}
 
@@ -1015,24 +1038,38 @@ export default function MyClubs() {
           {discoverLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`rounded-3xl border ${cardBorder} ${card} p-5 animate-pulse`}
-                >
-                  <div className={`w-12 h-12 rounded-2xl mb-3 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
-                  <div className={`h-4 w-3/4 rounded-full mb-2 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
-                  <div className={`h-3 w-full rounded-full mb-1 ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
+                <div key={i} className={`rounded-3xl border ${cardBorder} ${card} p-5 animate-pulse`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-12 h-12 rounded-2xl flex-shrink-0 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    <div className="flex-1">
+                      <div className={`h-4 w-3/4 rounded-full mb-2 ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                      <div className={`h-3 w-1/2 rounded-full ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
+                    </div>
+                  </div>
+                  <div className={`h-3 w-full rounded-full mb-1.5 ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
                   <div className={`h-3 w-2/3 rounded-full ${isDark ? "bg-white/5" : "bg-gray-50"}`} />
                 </div>
               ))}
             </div>
+          ) : discoverError ? (
+            <div className={`rounded-3xl border ${cardBorder} ${card} py-12 text-center`}>
+              <p className={`text-sm font-semibold ${textMain}`}>Couldn't load clubs</p>
+              <p className={`text-xs mt-1 mb-4 ${textMuted}`}>Check your connection and try again</p>
+              <button
+                onClick={() => fetchDiscover(search, categoryFilter, new Set(myClubs.map((c) => c.id)), sortBy)}
+                className="text-xs font-semibold px-4 py-2 rounded-xl"
+                style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
+              >Retry</button>
+            </div>
           ) : discoverClubs.length === 0 ? (
             <div className={`rounded-3xl border ${cardBorder} ${card} py-12 text-center`}>
               <Search className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
-              <p className={`text-sm font-semibold ${textMain}`}>No clubs found</p>
+              <p className={`text-sm font-semibold ${textMain}`}>
+                {search.trim() || categoryFilter !== "all" ? "No clubs match your filters" : "No clubs yet"}
+              </p>
               <p className={`text-xs mt-1 ${textMuted}`}>
                 {search.trim() || categoryFilter !== "all"
-                  ? "Try a different search or filter"
+                  ? <span>Try clearing the search or selecting <button onClick={() => { setSearch(""); setCategoryFilter("all"); }} className="underline">All categories</button></span>
                   : "Be the first to create a club!"}
               </p>
             </div>

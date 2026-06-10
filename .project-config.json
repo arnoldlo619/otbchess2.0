@@ -12,10 +12,10 @@
   "experiments": null,
   "git_remote": {
     "repo_url": "s3://vida-prod-gitrepo/webdev-git/117675823/J6FsDoRMH9x5xbUvpyzxyf",
-    "access_key_id": "ASIAZV3A2ECZIXDYJ2PM",
-    "secret_access_key": "aVCE4wz6YhS+HJbY3kNzdpa1GccV4WIrsC29sUiP",
-    "session_token": "IQoJb3JpZ2luX2VjEGcaCXVzLWVhc3QtMSJHMEUCICYLlfjU3rVttWYumn6PQKrnQYiKsm8oe5EvrKKiyOwpAiEAw7sTKHRuf7oGuVl6R2sgvcbWeLO+Gty1QY2lRoKHpZsq5AMIMBAEGgw2NjUzODYwOTg4NjYiDL/KjO5Rt7PPCb9m6SrBA181IDyZuWbzVdaHRkP5GbaiUgQCxPRF1To3vz7KLG5D8/ZybdG0VywkOrKSfR03E6evDoyH8JrvUxQqTJZ3CNbMJBnVTDpPo51Ojk8avJCN4qNvFtm/ut2nelOMk6eDKn1ys9S0qUXq6DquhH4sHjXIJifCpVVKLCqk42wBZgWAaRR5E/S2cz/j99VAvjPNautq+s7X6Lp3GHmn42mIOXMj8rK8GIC5qE7g4BOPuMRKYAt68DbRc2KFbN7frEU7YIKm0dztMRUofI0IMwp3lRvf1NsrQOpLz2HbJ8ntj2gNzF9hi04Jgw6eU4PdS0AmC2KrcXLPNgcsTKdG2pSp4Xv8eqEfND+sws4O9M+JdZf0Y93D3akFgK373xa6zXnLVXZPSYzMCLuOnvjF7KPqkX98kzm649IyjoYM8Rh3VuaNrZyb7lB9wrAWyyAeqCnMbB7CUeAlAI3oNtutkfKw4KKl5lTlpmIX8Joc2w2pdxSy7Jf5I5mh+FOqwKcVXoOdrWp4/XE2WBx5KookYcIeWPmg09TJN3ku/JMWAY6XAE5/6GnTMboFCh8bR6yKY7bNkoi2IKT8wUj+OUC6/sxrfAWTMLC9/dAGOp0B0iaLmCpyxYEjxI8t0+UGoRVcsPcmxPQmfiAcxkve0aIUjpNA05Xre7t0uEUG5l/qcyKbe/R1DaYIcO0UHwKgf3uLcGCKRwufZFmAKjD2yi66fIaIbbtWFS3grsb5/gMpLdRSYVLk+Ql0qOthcNgVHjetu0O3DxhcocAI84H+Gb/lbZgqhjDtFQJhNt1FrN/++hgrjlgTU4o6Wo33GQ==",
-    "expiration": "2026-06-03T10:52:32.000Z"
+    "access_key_id": "ASIAZV3A2ECZOFQCDTIY",
+    "secret_access_key": "abwrz/e7utOdIxsSDbcuDnkeByXWYyDDlDWBh+p/",
+    "session_token": "IQoJb3JpZ2luX2VjEBEaCXVzLWVhc3QtMSJHMEUCIC65GEa70BPsr25rSHjh7JLv4Tg1R1/e80H7KsMj/XH4AiEAxFTkhG/P/oKlg5xfuVNgnQfhwUT2+pEeAHZuOwrwl+sq7QMI2v//////////ARAEGgw2NjUzODYwOTg4NjYiDAjIRbIPNwvzc+//yirBA/m99E8wy6Rjc6ab22Nx3xdfMBcttorQ+M1/8Yj+0LASin8GNMLyTUCg46SWiHnudov5zVWTFPhXBOp+C5r10CIocZSoxrWbZ0sDXs/8a0IImL/uzSVOpGc2VCtSK+cyxaEvKpNLGoLRGggdJNN3sZZs7iphhL6qPiYM1ZNz5xhar2eNvfsVYMOyjAozztgiHlL1rNTc/vOK4pQQz2lT4muIzZnAAnfwkaHMJbbHuCF+fFHy7kvYsdzwtOW6lP4ZqOxC4LRqbqWR44jHu5Vm2bP8gkuK93EK+5zZdHl/B+5GlSXZOKsGmRJVtaGTBIPQJN39FOU8HkHb94bAWJu96Ck1qfe95cU0UbNUiShwI9ywdOjTPdmWIuFnrurw5RtMZtq/fDVYWN7CfNtswNihoDS5xBm7exQSVHUcLu1Z9MqDiuw3L5cbi0n5DMF02BP7yQ2TN+Nhv4Eoc/s19Bf4j5COFdyF5efWxoMLWgpujoylxWDpBEgbwbCaIIWRIidRn5YDQCvxkfB1oaDZz9vnz8CUPoFJCiebfoQbS8dRBqmmIf3H4CiXZSouH1Yz+sW4uTnyqHd4AxFY2vnoJvo6udPmMLDtotEGOp0B6DLrv5BwnxssSJ7KU5kcBsDzeeRpbKmAihE9BtcwCzCX6i8TC8EjRj7qKUyaKuyOod5r3XC4oZfVVkg9YmXrfHzKVGZ63hVjjUqyUw5g/dMvFH8yK69BRK32r0MG0EalMarL+slSCqRPm7qHMrAmnpkA2gXjcgdIdVyWZYoIT/reyvfWibYef3OeccmDITpMZxVCtV9AAUUI/5pB4w==",
+    "expiration": "2026-06-10T12:58:24.000Z"
   },
   "name": "otb-chess",
   "path": "/home/ubuntu/otb-chess",

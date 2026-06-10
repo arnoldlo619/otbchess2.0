@@ -111,8 +111,12 @@ import {
   Camera,
   Pencil,
   Image as ImageIcon,
+  Search,
+  Check,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
 import { apiFetch } from "@/lib/apiFetch";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
@@ -703,6 +707,18 @@ export default function ClubProfile() {
   const [creatingLeague, setCreatingLeague] = useState(false);
   const [joining, setJoining] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  // Members tab state
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberSort, setMemberSort] = useState<"name" | "joined" | "role">("role");
+  const [memberPage, setMemberPage] = useState(1);
+  const MEMBERS_PER_PAGE = 12;
+  // Events tab filter
+  const [eventsFilter, setEventsFilter] = useState<"all" | "events" | "tournaments">("all");
+  // Tournaments tab filter
+  const [tourneyFormatFilter, setTourneyFormatFilter] = useState<"all" | "swiss" | "roundrobin" | "arena">("all");
+  // Share modal
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   // Track which draft leagues the current user has already requested to join
   const [requestedLeagueIds, setRequestedLeagueIds] = useState<Set<string>>(new Set());
   const [requestingLeagueId, setRequestingLeagueId] = useState<string | null>(null);
@@ -1012,13 +1028,7 @@ export default function ClubProfile() {
   };
 
   const handleShare = () => {
-    // Always use the canonical chessotb.club domain with the slug for share links
-    const url = `https://chessotb.club/clubs/${club.slug || club.id}`;
-    if (navigator.share) {
-      navigator.share({ title: club.name, text: club.tagline, url });
-    } else {
-      navigator.clipboard.writeText(url).then(() => toast.success("Link copied!"));
-    }
+    setShowShareModal(true);
   };
 
   // ── Hero banner upload handlers ─────────────────────────────────────────────
@@ -1449,27 +1459,145 @@ export default function ClubProfile() {
                 </div>
 
         {/* ── Members tab ─────────────────────────────────────────────────── */}
-        {activeTab === "members" && (
-          <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden animate-in fade-in duration-200`}>
-            <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
-              <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                Members
-              </h2>
-              <span className={`text-xs font-medium ${textMuted}`}>{club.memberCount} total</span>
-            </div>
-            <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-              {members.map((member) => (
-                <MemberRow key={member.userId} member={member} clubId={club.id} isDark={isDark} textMuted={textMuted} />
-              ))}
-              {members.length === 0 && (
-                <div className={`py-12 text-center text-sm ${textMuted}`}>No members yet</div>
+        {activeTab === "members" && (() => {
+          // Filter and sort members
+          const filteredMembers = members.filter((m) => {
+            if (!memberSearch.trim()) return true;
+            const q = memberSearch.toLowerCase();
+            return (m.displayName ?? "").toLowerCase().includes(q) ||
+              (m.chesscomUsername ?? "").toLowerCase().includes(q);
+          });
+          const sortedMembers = [...filteredMembers].sort((a, b) => {
+            if (memberSort === "name") return (a.displayName ?? "").localeCompare(b.displayName ?? "");
+            if (memberSort === "joined") return new Date(b.joinedAt ?? 0).getTime() - new Date(a.joinedAt ?? 0).getTime();
+            // role: owner > director > member
+            const roleOrder = { owner: 0, director: 1, member: 2 };
+            return (roleOrder[a.role as keyof typeof roleOrder] ?? 2) - (roleOrder[b.role as keyof typeof roleOrder] ?? 2);
+          });
+          const totalPages = Math.ceil(sortedMembers.length / MEMBERS_PER_PAGE);
+          const paginated = sortedMembers.slice((memberPage - 1) * MEMBERS_PER_PAGE, memberPage * MEMBERS_PER_PAGE);
+          return (
+            <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden animate-in fade-in duration-200`}>
+              {/* Header */}
+              <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between gap-3`}>
+                <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                  Members
+                </h2>
+                <span className={`text-xs font-medium ${textMuted}`}>{club.memberCount} total</span>
+              </div>
+              {/* Search + Sort bar */}
+              <div className={`px-5 py-3 border-b ${divider} flex gap-2`}>
+                <div className="relative flex-1">
+                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none ${textMuted}`} />
+                  <input
+                    type="text"
+                    value={memberSearch}
+                    onChange={(e) => { setMemberSearch(e.target.value); setMemberPage(1); }}
+                    placeholder="Search members…"
+                    className={`w-full pl-8 pr-3 py-1.5 rounded-xl border text-xs outline-none transition-colors focus:border-[${accent}] ${
+                      isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"
+                    }`}
+                  />
+                </div>
+                <select
+                  value={memberSort}
+                  onChange={(e) => { setMemberSort(e.target.value as typeof memberSort); setMemberPage(1); }}
+                  className={`text-xs px-2 py-1.5 rounded-xl border outline-none cursor-pointer ${
+                    isDark ? "bg-white/5 border-white/10 text-white/70" : "bg-gray-50 border-gray-200 text-gray-600"
+                  }`}
+                >
+                  <option value="role">By Role</option>
+                  <option value="name">A → Z</option>
+                  <option value="joined">Newest</option>
+                </select>
+              </div>
+              {/* Member list */}
+              <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
+                {paginated.map((member) => (
+                  <MemberRow key={member.userId} member={member} clubId={club.id} isDark={isDark} textMuted={textMuted} />
+                ))}
+                {paginated.length === 0 && (
+                  <div className={`py-12 text-center text-sm ${textMuted}`}>
+                    {memberSearch ? `No members match "${memberSearch}"` : "No members yet"}
+                  </div>
+                )}
+              </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className={`px-5 py-3 border-t ${divider} flex items-center justify-between`}>
+                  <span className={`text-xs ${textMuted}`}>Page {memberPage} of {totalPages}</span>
+                  <div className="flex gap-2">
+                    <button
+                      disabled={memberPage === 1}
+                      onClick={() => setMemberPage((p) => p - 1)}
+                      className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >Prev</button>
+                    <button
+                      disabled={memberPage === totalPages}
+                      onClick={() => setMemberPage((p) => p + 1)}
+                      className={`text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 ${
+                        isDark ? "bg-white/8 text-white hover:bg-white/15" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >Next</button>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-        )}
+          );
+        })()}
         {/* ── Feed tab ──────────────────────────────────────────────────────── */}
         {activeTab === "feed" && (
           <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Onboarding checklist for new club owners */}
+            {isOwner && club.memberCount <= 3 && (() => {
+              const steps = [
+                { done: !!club.description && club.description.length > 20, label: "Write a club description" },
+                { done: !!club.bannerUrl, label: "Add a banner image" },
+                { done: club.memberCount > 1, label: "Invite your first member" },
+                { done: (liveTournaments.length + upcomingTournaments.length) > 0, label: "Host a tournament" },
+              ];
+              const completed = steps.filter((s) => s.done).length;
+              if (completed === steps.length) return null;
+              return (
+                <div className={`rounded-3xl border ${isDark ? "border-[#4CAF50]/25 bg-[#4CAF50]/5" : "border-[#3D6B47]/20 bg-[#3D6B47]/5"} p-5`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h2 className={`text-sm font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Set Up Your Club</h2>
+                      <p className={`text-xs ${textMuted} mt-0.5`}>{completed} of {steps.length} steps complete</p>
+                    </div>
+                    <div className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      isDark ? "bg-[#4CAF50]/15 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                    }`}>{Math.round((completed / steps.length) * 100)}%</div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className={`h-1.5 rounded-full mb-4 ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${(completed / steps.length) * 100}%`, background: "oklch(0.55 0.13 145)" }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    {steps.map((step, i) => (
+                      <div key={i} className={`flex items-center gap-3 text-sm ${
+                        step.done ? textMuted : textMain
+                      }`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${
+                          step.done
+                            ? isDark ? "bg-[#4CAF50]/20 border-[#4CAF50]/40" : "bg-[#3D6B47]/15 border-[#3D6B47]/30"
+                            : isDark ? "border-white/20 bg-transparent" : "border-gray-300 bg-transparent"
+                        }`}>
+                          {step.done && <Check className={`w-3 h-3 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />}
+                        </div>
+                        <span className={step.done ? "line-through opacity-50" : ""}>{step.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Club Description & Details (Feed tab only) */}
             {/* Description */}
             <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
@@ -1634,8 +1762,14 @@ export default function ClubProfile() {
             ...liveTournaments.map((t) => ({ type: "tournament" as const, data: t, startAt: t.date || now.toISOString() })),
           ].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
-          const upcoming = allItems.filter((e) => new Date(e.startAt) >= now);
-          const past = allItems.filter((e) => new Date(e.startAt) < now).reverse();
+          // Apply filter
+          const filteredItems = eventsFilter === "all" ? allItems
+            : eventsFilter === "events" ? allItems.filter((i) => i.type === "event")
+            : allItems.filter((i) => i.type === "tournament");
+          const filteredUpcoming = filteredItems.filter((e) => new Date(e.startAt) >= now);
+          const filteredPast = filteredItems.filter((e) => new Date(e.startAt) < now).reverse();
+          const upcoming = filteredUpcoming;
+          const past = filteredPast;
 
           return (
           <div className="space-y-4 animate-in fade-in duration-200">
@@ -1657,7 +1791,24 @@ export default function ClubProfile() {
               </div>
             )}
 
-            {allItems.length === 0 ? (
+            {/* Filter chips */}
+            <div className="flex gap-2 flex-wrap">
+              {(["all", "events", "tournaments"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setEventsFilter(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    eventsFilter === f
+                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
+                      : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-gray-100 text-gray-500 hover:text-gray-800 border border-transparent"
+                  }`}
+                >
+                  {f === "all" ? "All" : f === "events" ? "Events" : "Tournaments"}
+                </button>
+              ))}
+            </div>
+
+            {filteredItems.length === 0 ? (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
                 <Calendar className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
                 <p className={`text-sm font-semibold ${textMain} mb-1`}>No events yet</p>
@@ -1676,20 +1827,20 @@ export default function ClubProfile() {
             ) : (
               <>
                 {/* Upcoming events */}
-                {upcoming.length > 0 && (
+                {filteredUpcoming.length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                     <div className={`px-5 py-3.5 border-b ${divider} flex items-center justify-between`}>
                       <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Upcoming</h2>
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                         isDark ? "bg-[#4CAF50]/20 text-[#4CAF50]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
-                      }`}>{upcoming.length}</span>
+                      }`}>{filteredUpcoming.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {(showAllUpcoming ? upcoming : upcoming.slice(0, 4)).map((item) => (
+                      {(showAllUpcoming ? filteredUpcoming : filteredUpcoming.slice(0, 4)).map((item) => (
                         item.type === "event" ? (() => {
                           const ev = item.data as ClubEvent;
                           const myRsvp = (joined && user) ? getUserRSVP(ev.id, user.id) : null;
-                          const rsvpCount = countRSVPs(ev.id);
+                          const _rsvpCount = countRSVPs(ev.id);
                           const goingRsvps = getEventRSVPs(ev.id).filter(r => r.status === "going");
                           const dateObj = new Date(ev.startAt);
                           const endObj = ev.endAt ? new Date(ev.endAt) : null;
@@ -1859,14 +2010,14 @@ export default function ClubProfile() {
                           );
                         })()
                       ))}
-                      {upcoming.length > 4 && (
+                      {filteredUpcoming.length > 4 && (
                         <button
                           onClick={() => setShowAllUpcoming(v => !v)}
                           className={`w-full py-3 text-xs font-semibold transition-colors ${
                             isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                           }`}
                         >
-                          {showAllUpcoming ? "Show Less" : `View All ${upcoming.length} Upcoming Events`}
+                          {showAllUpcoming ? "Show Less" : `View All ${filteredUpcoming.length} Upcoming Events`}
                         </button>
                       )}
                     </div>
@@ -1874,14 +2025,14 @@ export default function ClubProfile() {
                 )}
 
                 {/* Past events */}
-                {past.length > 0 && (
+                {filteredPast.length > 0 && (
                   <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                     <div className={`px-5 py-3.5 border-b ${divider} flex items-center justify-between`}>
                       <h2 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>Past</h2>
-                      <span className={`text-xs font-medium ${textMuted}`}>{past.length}</span>
+                      <span className={`text-xs font-medium ${textMuted}`}>{filteredPast.length}</span>
                     </div>
                     <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                      {(showAllPast ? past : past.slice(0, 3)).map((item) => {
+                      {(showAllPast ? filteredPast : filteredPast.slice(0, 3)).map((item) => {
                         const isPastEvent = item.type === "event";
                         const title = isPastEvent ? (item.data as ClubEvent).title : (item.data as TournamentConfig).name;
                         const venue = isPastEvent ? (item.data as ClubEvent).venue : undefined;
@@ -1907,14 +2058,14 @@ export default function ClubProfile() {
                           </div>
                         );
                                             })}
-                      {past.length > 3 && (
+                      {filteredPast.length > 3 && (
                         <button
                           onClick={() => setShowAllPast(v => !v)}
                           className={`w-full py-3 text-xs font-semibold transition-colors ${
                             isDark ? "text-white/40 hover:text-white/70 hover:bg-white/3" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
                           }`}
                         >
-                          {showAllPast ? `Show Less` : `See All ${past.length} Past Events`}
+                          {showAllPast ? `Show Less` : `See All ${filteredPast.length} Past Events`}
                         </button>
                       )}
                     </div>
@@ -2111,7 +2262,7 @@ export default function ClubProfile() {
                         setEventForm({ title: "", description: "", startAt: "", venue: "", admissionNote: "", recurrence: "none", recurrenceEndDate: "", coverImageUrl: "" });
                         const seriesNote = eventForm.recurrence !== "none" ? " (series created)" : "";
                         toast.success(`"${newEvent.title}" created${seriesNote}`);
-                      } catch (err) {
+                      } catch {
                         toast.error("Failed to create event");
                       } finally {
                         setCreatingEvent(false);
@@ -2159,8 +2310,25 @@ export default function ClubProfile() {
               </div>
             ) : null}
 
+            {/* Format filter chips */}
+            <div className="flex gap-2 flex-wrap">
+              {(["all", "swiss", "roundrobin", "arena"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setTourneyFormatFilter(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    tourneyFormatFilter === f
+                      ? isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/30" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/20"
+                      : isDark ? "bg-white/6 text-white/50 hover:text-white border border-transparent" : "bg-gray-100 text-gray-500 hover:text-gray-800 border border-transparent"
+                  }`}
+                >
+                  {f === "all" ? "All Formats" : f === "swiss" ? "Swiss" : f === "roundrobin" ? "Round Robin" : "Arena"}
+                </button>
+              ))}
+            </div>
+
             {/* Upcoming & Active — seed data */}
-            {upcomingTournaments.length > 0 && (
+            {upcomingTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
@@ -2168,7 +2336,7 @@ export default function ClubProfile() {
                   </h2>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {upcomingTournaments.map((t) => (
+                  {upcomingTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
                     <TournamentRow key={t.tournamentId} tournament={t} isDark={isDark} textMuted={textMuted} />
                   ))}
                 </div>
@@ -2176,7 +2344,7 @@ export default function ClubProfile() {
             )}
 
             {/* Live upcoming tournaments created via wizard */}
-            {liveUpcoming.length > 0 && (
+            {liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider} flex items-center justify-between`}>
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
@@ -2187,7 +2355,7 @@ export default function ClubProfile() {
                   </span>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {liveUpcoming.map((t) => (
+                  {liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
                     <a
                       key={t.id}
                       href={`/tournament/${t.id}`}
@@ -2215,7 +2383,7 @@ export default function ClubProfile() {
             )}
 
             {/* Past tournaments — seed data */}
-            {completedTournaments.length > 0 && (
+            {completedTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
@@ -2223,7 +2391,7 @@ export default function ClubProfile() {
                   </h2>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {completedTournaments.map((t) => (
+                  {completedTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
                     <TournamentRow key={t.tournamentId} tournament={t} isDark={isDark} textMuted={textMuted} />
                   ))}
                 </div>
@@ -2231,7 +2399,7 @@ export default function ClubProfile() {
             )}
 
             {/* Live past tournaments created via wizard */}
-            {livePast.length > 0 && (
+            {livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).length > 0 && (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
                 <div className={`px-5 py-4 border-b ${divider}`}>
                   <h2 className={`text-sm font-semibold uppercase tracking-wider ${isDark ? "text-white/40" : "text-gray-400"}`}>
@@ -2239,7 +2407,7 @@ export default function ClubProfile() {
                   </h2>
                 </div>
                 <div className={`divide-y ${isDark ? "divide-white/5" : "divide-gray-100"}`}>
-                  {livePast.map((t) => (
+                  {livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter).map((t) => (
                     <a
                       key={t.id}
                       href={`/tournament/${t.id}`}
@@ -2514,24 +2682,42 @@ export default function ClubProfile() {
               </div>
             ) : clubLeagues.length === 0 && !showCreateLeague ? (
               <div className={`rounded-3xl border ${cardBorder} ${card} py-12 text-center px-6`}>
-                <Trophy className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
-                <p className={`text-sm font-semibold ${textMain} mb-1`}>No leagues yet</p>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+                  isDark ? "bg-[#4CAF50]/10" : "bg-[#3D6B47]/8"
+                }`}>
+                  <Award className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                </div>
+                <p className={`text-base font-bold ${textMain} mb-1`}>No Leagues Yet</p>
                 {isOwner ? (
-                  <p className={`text-xs ${textMuted}`}>Use the button above to create your first league.</p>
+                  <>
+                    <p className={`text-xs ${textMuted} mb-4 max-w-xs mx-auto`}>
+                      Leagues are the best way to keep your members engaged week over week. Create a round-robin or Swiss league and let the standings speak.
+                    </p>
+                    <button
+                      onClick={() => setShowCreateLeague(true)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      Create First League
+                    </button>
+                  </>
                 ) : joined ? (
                   <>
-                    <p className={`text-xs ${textMuted} mb-4`}>No active leagues right now. Ask the club director to start one!</p>
+                    <p className={`text-xs ${textMuted} mb-4 max-w-xs mx-auto`}>
+                      This club hasn't started a league yet. Let the director know you're interested — it only takes a nudge!
+                    </p>
                     <button
-                      onClick={() => toast.info("Your interest has been noted! The club director will be notified.")}
+                      onClick={() => toast.success("Your interest has been noted! The club director will be notified.")}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
                       style={{ background: "oklch(0.55 0.13 145 / 0.12)", color: "oklch(0.55 0.13 145)" }}
                     >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v6M7 9.5v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/></svg>
-                      Express Interest in a League
+                      <Bell className="w-4 h-4" />
+                      Request a League
                     </button>
                   </>
                 ) : (
-                  <p className={`text-xs ${textMuted}`}>Join the club to participate in leagues.</p>
+                  <p className={`text-xs ${textMuted}`}>Join the club to participate in leagues when they start.</p>
                 )}
               </div>
             ) : (() => {
@@ -3044,6 +3230,61 @@ export default function ClubProfile() {
           </div>
         </div>
       )}
+      {/* Share modal with QR code and copy link */}
+      {showShareModal && club && (() => {
+        const shareUrl = `https://chessotb.club/clubs/${club.slug || club.id}`;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.65)" }}
+            onClick={() => setShowShareModal(false)}
+          >
+            <div
+              className={`w-full max-w-sm rounded-3xl border ${cardBorder} ${card} p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h2 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>Share {club.name}</h2>
+                <button onClick={() => setShowShareModal(false)} className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* QR Code */}
+              <div className="flex justify-center mb-4">
+                <div className="p-3 rounded-2xl bg-white">
+                  <QRCodeSVG value={shareUrl} size={160} />
+                </div>
+              </div>
+              {/* URL copy row */}
+              <div className={`flex items-center gap-2 rounded-xl border ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-gray-50"} px-3 py-2.5 mb-4`}>
+                <span className={`flex-1 text-xs truncate ${textMuted}`}>{shareUrl}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareUrl).then(() => toast.success("Link copied!"));
+                  }}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                    isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  Copy
+                </button>
+              </div>
+              {/* Native share */}
+              {navigator.share && (
+                <button
+                  onClick={() => navigator.share({ title: club.name, text: club.tagline || `Join ${club.name} on ChessOTB.club`, url: shareUrl })}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: "oklch(0.55 0.13 145)", color: "#fff" }}
+                >
+                  Share via…
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Auth modal — shown when guest tries to join, follow, or request a league */}
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
 
@@ -3062,9 +3303,9 @@ export default function ClubProfile() {
                 setClub(updated);
                 toast.success("Club details updated successfully");
               }
-            } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Failed to update club details");
-              throw err;
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Failed to update club details");
+              throw e;
             }
           }}
         />

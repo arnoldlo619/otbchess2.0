@@ -16,6 +16,7 @@ export async function apiListPublicClubs(opts?: {
   search?: string;
   category?: string;
   limit?: number;
+  sort?: "members" | "newest" | "tournaments" | "az";
 }): Promise<{ clubs: Club[]; total: number }> {
   try {
     const params = new URLSearchParams();
@@ -23,6 +24,7 @@ export async function apiListPublicClubs(opts?: {
     if (opts?.category && opts.category !== "all")
       params.set("category", opts.category);
     if (opts?.limit) params.set("limit", String(opts.limit));
+    if (opts?.sort && opts.sort !== "members") params.set("sort", opts.sort);
     const qs = params.toString();
     const res = await authFetch(`${BASE}${qs ? `?${qs}` : ""}`);
     if (!res.ok) return { clubs: [], total: 0 };

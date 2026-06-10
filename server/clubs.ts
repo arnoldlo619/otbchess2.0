@@ -143,7 +143,7 @@ function dbMemberToMember(row: typeof dbClubMembers.$inferSelect) {
 clubsRouter.get("/", async (req: Request, res: Response) => {
   try {
     const db = await getDb();
-    const { search, category, limit } = req.query as Record<string, string>;
+    const { search, category, limit, sort } = req.query as Record<string, string>;
     let rows = await db
       .select()
       .from(dbClubs)
@@ -156,7 +156,8 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
         (r: typeof dbClubs.$inferSelect) =>
           r.name.toLowerCase().includes(q) ||
           r.location.toLowerCase().includes(q) ||
-          r.tagline.toLowerCase().includes(q)
+          r.tagline.toLowerCase().includes(q) ||
+          (r.description ?? "").toLowerCase().includes(q)
       );
     }
     if (category && category !== "all") {
@@ -164,6 +165,15 @@ clubsRouter.get("/", async (req: Request, res: Response) => {
         (r: typeof dbClubs.$inferSelect) => r.category === category
       );
     }
+    // Apply sort
+    if (sort === "newest") {
+      rows = [...rows].sort((a, b) => new Date(b.foundedAt ?? 0).getTime() - new Date(a.foundedAt ?? 0).getTime());
+    } else if (sort === "tournaments") {
+      rows = [...rows].sort((a, b) => (b.tournamentCount ?? 0) - (a.tournamentCount ?? 0));
+    } else if (sort === "az") {
+      rows = [...rows].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    // Default sort (members) is already applied by the DB query
     const limitN = limit ? parseInt(limit, 10) : undefined;
     const sliced = limitN && limitN > 0 ? rows.slice(0, limitN) : rows;
 
