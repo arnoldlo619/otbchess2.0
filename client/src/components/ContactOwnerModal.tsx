@@ -2,18 +2,20 @@
  * ContactOwnerModal
  *
  * Opens when a user clicks "Contact Club Owner" on a club profile.
- * Calls POST /api/clubs/:clubId/contact-owner to get-or-create a DM
- * conversation with the owner and send the initial message in one shot.
+ * Calls POST /api/clubs/:clubId/conversations/contact-owner to get-or-create
+ * a DM conversation with the owner and send the initial message in one shot.
  *
  * Props:
- *   isOpen       — controls visibility
- *   onClose      — called when the modal is dismissed
- *   clubId       — the club's ID
- *   ownerName    — display name of the club owner (for the heading)
- *   isDark       — theme flag
+ *   isOpen           — controls visibility
+ *   onClose          — called when the modal is dismissed
+ *   clubId           — the club's ID
+ *   ownerName        — display name of the club owner
+ *   ownerAvatarUrl   — avatar URL of the club owner (optional)
+ *   ownerUsername    — chess.com username of the club owner (optional)
+ *   isDark           — theme flag
  */
 import { useState, useRef, useEffect } from "react";
-import { X, Send, MessageSquare, CheckCircle2 } from "lucide-react";
+import { X, Send, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/apiFetch";
 
@@ -22,15 +24,26 @@ interface Props {
   onClose: () => void;
   clubId: string;
   ownerName: string;
+  ownerAvatarUrl?: string | null;
+  ownerUsername?: string | null;
   isDark: boolean;
 }
 
 const MAX_CHARS = 2000;
 
-export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }: Props) {
+export function ContactOwnerModal({
+  isOpen,
+  onClose,
+  clubId,
+  ownerName,
+  ownerAvatarUrl,
+  ownerUsername,
+  isDark,
+}: Props) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Focus the textarea when the modal opens
@@ -47,6 +60,7 @@ export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }
         setMessage("");
         setSent(false);
         setSending(false);
+        setAvatarError(false);
       }, 300);
     }
   }, [isOpen]);
@@ -57,9 +71,25 @@ export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }
   const cardBorder = isDark ? "border-white/10" : "border-gray-200";
   const textMain = isDark ? "text-white" : "text-gray-900";
   const textMuted = isDark ? "text-white/50" : "text-gray-400";
-  const inputBg = isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400";
+  const inputBg = isDark
+    ? "bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-white/25"
+    : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-400";
   const remaining = MAX_CHARS - message.length;
   const isOverLimit = remaining < 0;
+
+  // Derive avatar: prefer stored URL, fall back to chess.com CDN, then initials
+  const chesscomAvatar =
+    ownerUsername && !avatarError
+      ? `https://www.chess.com/bundles/web/images/user-image.007dad08.svg`
+      : null;
+  const resolvedAvatar =
+    ownerAvatarUrl && !avatarError ? ownerAvatarUrl : chesscomAvatar;
+  const initials = ownerName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   async function handleSend() {
     if (!message.trim() || isOverLimit || sending) return;
@@ -96,40 +126,105 @@ export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }
         className={`w-full max-w-md rounded-3xl border ${cardBorder} ${card} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/10"}`}>
-              <MessageSquare className={`w-4.5 h-4.5 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+            {/* Owner avatar */}
+            <div className="relative flex-shrink-0">
+              {resolvedAvatar ? (
+                <img
+                  src={resolvedAvatar}
+                  alt={ownerName}
+                  role="presentation"
+                  onError={() => setAvatarError(true)}
+                  className="w-11 h-11 rounded-2xl object-cover"
+                  style={{ border: "2px solid oklch(0.30 0.06 145)" }}
+                />
+              ) : (
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-bold"
+                  style={{
+                    background: "oklch(0.25 0.06 145)",
+                    color: "oklch(0.75 0.15 145)",
+                    border: "2px solid oklch(0.30 0.06 145)",
+                  }}
+                >
+                  {initials}
+                </div>
+              )}
+              {/* Online indicator dot */}
+              <span
+                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
+                style={{
+                  background: "oklch(0.55 0.13 145)",
+                  borderColor: isDark ? "#111c13" : "#fff",
+                }}
+              />
             </div>
+
+            {/* Owner name + username */}
             <div>
-              <h2 className={`text-sm font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
-                Contact Club Owner
+              <h2
+                className={`text-sm font-bold leading-tight ${textMain}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
+                {ownerName}
               </h2>
-              <p className={`text-xs ${textMuted}`}>Message to {ownerName}</p>
+              {ownerUsername ? (
+                <p className={`text-xs ${textMuted} leading-tight`}>
+                  @{ownerUsername} · Club Owner
+                </p>
+              ) : (
+                <p className={`text-xs ${textMuted} leading-tight`}>
+                  Club Owner
+                </p>
+              )}
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-xl transition-colors ${isDark ? "text-white/40 hover:text-white hover:bg-white/8" : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"}`}
+            className={`p-1.5 rounded-xl transition-colors ${
+              isDark
+                ? "text-white/40 hover:text-white hover:bg-white/8"
+                : "text-gray-400 hover:text-gray-900 hover:bg-gray-100"
+            }`}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Body */}
+        {/* Divider */}
+        <div
+          className="mx-6 mb-4 h-px"
+          style={{ background: isDark ? "oklch(0.22 0.04 145)" : "#e5e7eb" }}
+        />
+
+        {/* ── Body ───────────────────────────────────────────────────────── */}
         <div className="px-6 pb-6">
           {sent ? (
             /* Success state */
             <div className="flex flex-col items-center py-8 gap-3 text-center">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/10"}`}>
-                <CheckCircle2 className={`w-7 h-7 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+              <div
+                className={`w-14 h-14 rounded-full flex items-center justify-center ${
+                  isDark ? "bg-[#4CAF50]/15" : "bg-[#3D6B47]/10"
+                }`}
+              >
+                <CheckCircle2
+                  className={`w-7 h-7 ${
+                    isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"
+                  }`}
+                />
               </div>
-              <h3 className={`text-base font-bold ${textMain}`} style={{ fontFamily: "'Clash Display', sans-serif" }}>
+              <h3
+                className={`text-base font-bold ${textMain}`}
+                style={{ fontFamily: "'Clash Display', sans-serif" }}
+              >
                 Message Sent!
               </h3>
               <p className={`text-sm ${textMuted} max-w-xs`}>
-                {ownerName} will see your message in their club inbox. They typically respond within 24 hours.
+                {ownerName} will see your message in their club inbox. They
+                typically respond within 24 hours.
               </p>
               <button
                 onClick={onClose}
@@ -142,7 +237,9 @@ export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }
           ) : (
             /* Compose state */
             <>
-              <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${textMuted}`}>
+              <label
+                className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${textMuted}`}
+              >
                 Your message
               </label>
               <textarea
@@ -157,12 +254,26 @@ export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }
               />
               <div className="flex items-center justify-between mt-2 mb-5">
                 <p className={`text-xs ${textMuted}`}>
-                  <kbd className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${isDark ? "bg-white/8 text-white/40" : "bg-gray-100 text-gray-400"}`}>
+                  <kbd
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                      isDark
+                        ? "bg-white/8 text-white/40"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
                     ⌘ Enter
-                  </kbd>
-                  {" "}to send
+                  </kbd>{" "}
+                  to send
                 </p>
-                <span className={`text-xs font-mono ${isOverLimit ? "text-red-400" : remaining < 100 ? "text-amber-400" : textMuted}`}>
+                <span
+                  className={`text-xs font-mono ${
+                    isOverLimit
+                      ? "text-red-400"
+                      : remaining < 100
+                        ? "text-amber-400"
+                        : textMuted
+                  }`}
+                >
                   {remaining}
                 </span>
               </div>
@@ -177,7 +288,7 @@ export function ContactOwnerModal({ isOpen, onClose, clubId, ownerName, isDark }
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-                {sending ? "Sending…" : "Send Message"}
+                {sending ? "Sending…" : `Message ${ownerName}`}
               </button>
             </>
           )}

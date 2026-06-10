@@ -3314,15 +3314,20 @@ export default function ClubProfile() {
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
 
       {/* Contact Owner modal */}
-      {club && (
-        <ContactOwnerModal
-          isOpen={showContactOwner}
-          onClose={() => setShowContactOwner(false)}
-          clubId={club.id}
-          ownerName={club.ownerName || "the club owner"}
-          isDark={isDark}
-        />
-      )}
+      {club && (() => {
+        const ownerMember = members.find((m) => m.role === "owner");
+        return (
+          <ContactOwnerModal
+            isOpen={showContactOwner}
+            onClose={() => setShowContactOwner(false)}
+            clubId={club.id}
+            ownerName={club.ownerName || "the club owner"}
+            ownerAvatarUrl={ownerMember?.avatarUrl ?? null}
+            ownerUsername={ownerMember?.chesscomUsername ?? null}
+            isDark={isDark}
+          />
+        );
+      })()}
 
       {/* Edit Club Details Modal */}
       {club && (

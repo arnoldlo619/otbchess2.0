@@ -71,6 +71,41 @@ describe("ContactOwnerModal character counter", () => {
   });
 });
 
+// ── Owner avatar/username resolution tests ───────────────────────────────────
+
+describe("ContactOwnerModal owner identity resolution", () => {
+  it("derives ownerAvatarUrl from the owner member's avatarUrl", () => {
+    const members = [
+      { role: "member", avatarUrl: "https://cdn.example.com/member.jpg", chesscomUsername: "member1" },
+      { role: "owner", avatarUrl: "https://cdn.example.com/owner.jpg", chesscomUsername: "ownerchess" },
+    ];
+    const ownerMember = members.find((m) => m.role === "owner");
+    expect(ownerMember?.avatarUrl).toBe("https://cdn.example.com/owner.jpg");
+    expect(ownerMember?.chesscomUsername).toBe("ownerchess");
+  });
+
+  it("returns null when no owner member is found", () => {
+    const members = [
+      { role: "member", avatarUrl: "https://cdn.example.com/member.jpg", chesscomUsername: "member1" },
+    ];
+    const ownerMember = members.find((m) => m.role === "owner");
+    expect(ownerMember?.avatarUrl ?? null).toBeNull();
+    expect(ownerMember?.chesscomUsername ?? null).toBeNull();
+  });
+
+  it("generates correct initials from owner name", () => {
+    const ownerName = "Arnold Lo";
+    const initials = ownerName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+    expect(initials).toBe("AL");
+  });
+
+  it("generates single initial for single-word name", () => {
+    const ownerName = "Magnus";
+    const initials = ownerName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+    expect(initials).toBe("M");
+  });
+});
+
 // ── Visibility logic tests ────────────────────────────────────────────────────
 
 describe("Contact Owner button visibility", () => {
