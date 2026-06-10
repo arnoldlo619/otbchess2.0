@@ -118,6 +118,7 @@ import {
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import AuthModal from "@/components/AuthModal";
+import { ContactOwnerModal } from "@/components/ContactOwnerModal";
 import { apiFetch } from "@/lib/apiFetch";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import { EditClubDetailsModal } from "@/components/EditClubDetailsModal";
@@ -719,6 +720,8 @@ export default function ClubProfile() {
   // Share modal
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  // Contact owner modal
+  const [showContactOwner, setShowContactOwner] = useState(false);
   // Track which draft leagues the current user has already requested to join
   const [requestedLeagueIds, setRequestedLeagueIds] = useState<Set<string>>(new Set());
   const [requestingLeagueId, setRequestingLeagueId] = useState<string | null>(null);
@@ -1212,6 +1215,17 @@ export default function ClubProfile() {
             >
               <Share2 size={16} />
             </button>
+            {/* Contact Owner — shown to non-owners who are signed in */}
+            {user && !isOwner && !isDirector && (
+              <button
+                onClick={() => setShowContactOwner(true)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                style={{ color: "oklch(0.55 0.08 145)" }}
+                title="Contact Club Owner"
+              >
+                <MessageSquare size={16} />
+              </button>
+            )}
             {(isOwner || isDirector) && (
               <button
                 onClick={() => { setPendingAvatar(undefined); setShowSettings(true); }}
@@ -1435,7 +1449,18 @@ export default function ClubProfile() {
                     )}
                     {/* Join / Leave CTA */}
                     {!isOwner && !isDirector && (
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 flex items-center gap-2">
+                        {/* Contact Owner button — only for signed-in non-owners */}
+                        {user && (
+                          <button
+                            onClick={() => setShowContactOwner(true)}
+                            className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80 flex items-center gap-1.5"
+                            style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.65 0.10 145)" }}
+                          >
+                            <MessageSquare size={12} />
+                            Contact Owner
+                          </button>
+                        )}
                         {joined ? (
                           <button
                             onClick={handleLeave}
@@ -3287,6 +3312,17 @@ export default function ClubProfile() {
 
       {/* Auth modal — shown when guest tries to join, follow, or request a league */}
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+
+      {/* Contact Owner modal */}
+      {club && (
+        <ContactOwnerModal
+          isOpen={showContactOwner}
+          onClose={() => setShowContactOwner(false)}
+          clubId={club.id}
+          ownerName={club.ownerName || "the club owner"}
+          isDark={isDark}
+        />
+      )}
 
       {/* Edit Club Details Modal */}
       {club && (

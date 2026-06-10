@@ -2,10 +2,11 @@
  * Club Messaging API Routes
  * 
  * Endpoints:
- *   GET    /api/clubs/:clubId/conversations         — list all DM threads for the authenticated user in this club
- *   POST   /api/clubs/:clubId/conversations         — get-or-create a DM thread with another member
- *   GET    /api/clubs/:clubId/conversations/:convId/messages  — paginated message history
- *   POST   /api/clubs/:clubId/conversations/:convId/messages  — send a text message
+ *   POST   /api/clubs/:clubId/contact-owner                    — one-shot: get-or-create DM + send first message to owner
+ *   GET    /api/clubs/:clubId/conversations                    — list all DM threads for the authenticated user in this club
+ *   POST   /api/clubs/:clubId/conversations                    — get-or-create a DM thread with another member
+ *   GET    /api/clubs/:clubId/conversations/:convId/messages   — paginated message history
+ *   POST   /api/clubs/:clubId/conversations/:convId/messages   — send a text message
  *   POST   /api/clubs/:clubId/conversations/:convId/chess-invite — send a chess game invite
  *   POST   /api/clubs/:clubId/conversations/:convId/chess-games/:gameId/move — make a chess move
  *   POST   /api/clubs/:clubId/conversations/:convId/chess-games/:gameId/respond — accept/decline invite
@@ -22,6 +23,7 @@ import {
   clubMessages,
   clubChessGames,
   users,
+  dbClubs,
 } from "../shared/schema";
 
 const router = Router({ mergeParams: true });
@@ -123,6 +125,50 @@ router.post("/", requireAuth, async (req, res) => {
   } catch (err) {
     logger.error("[club-messaging] create conversation error:", err);
     return res.status(500).json({ error: "Failed to create conversation" });
+  }
+});
+
+// ── POST /api/clubs/:clubId/conversations/contact-owner ─────────────────────
+// One-shot endpoint: get-or-create a DM conversation with the club owner, then
+// send the initial message. Returns { conversationId, messageId }.
+// Body: { message: string }
+// NOTE: Must be registered BEFORE /:convId/* routes to avoid Express matching
+// "contact-owner" as a convId.
+router.post("/contact-owner", requireAuth, async (req, res) => {
+  const userId = (req as typeof req & { userId: string }).userId;
+  const { clubId } = req.params;
+  const { message } = req.body as { message?: string };
+  if (!message?.trim()) return res.status(400).json({ error: "Message is required" });
+  if (message.trim().length > 2000) return res.status(400).json({ error: "Message too long (max 2000 chars)" });
+  try {
+    const db = await getDb();
+    // Look up the club to find the owner
+    const [club] = await db.select({ ownerId: dbClubs.ownerId }).from(dbClubs).where(eq(dbClubs.id, clubId)).limit(1);
+    if (!club) return res.status(404).json({ error: "Club not found" });
+    const ownerId = club.ownerId;
+    if (ownerId === userId) return res.status(400).json({ error: "You are the club owner" });
+    // Get or create conversation (canonical ordering)
+    const [userAId, userBId] = userId < ownerId ? [userId, ownerId] : [ownerId, userId];
+    let convId: string;
+    const existing = await db
+      .select({ id: clubConversations.id })
+      .from(clubConversations)
+      .where(and(eq(clubConversations.clubId, clubId), eq(clubConversations.userAId, userAId), eq(clubConversations.userBId, userBId)))
+      .limit(1);
+    if (existing.length > 0) {
+      convId = existing[0].id;
+    } else {
+      convId = nanoid();
+      await db.insert(clubConversations).values({ id: convId, clubId, userAId, userBId, lastMessageAt: new Date(), createdAt: new Date() });
+    }
+    // Send the message
+    const msgId = nanoid();
+    await db.insert(clubMessages).values({ id: msgId, conversationId: convId, senderId: userId, type: "text", body: message.trim(), createdAt: new Date() });
+    await db.update(clubConversations).set({ lastMessageAt: new Date() }).where(eq(clubConversations.id, convId));
+    return res.status(201).json({ conversationId: convId, messageId: msgId });
+  } catch (err) {
+    logger.error("[club-messaging] contact-owner error:", err);
+    return res.status(500).json({ error: "Failed to send message" });
   }
 });
 
