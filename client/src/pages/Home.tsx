@@ -1906,7 +1906,7 @@ function Footer() {
               />
             </div>
             <p className="text-sm text-white/50 leading-relaxed">
-              Over The Board. Built for chess clubs that take the game seriously.
+              PLAY MORE CHESS OTB!!
             </p>
           </div>
 
