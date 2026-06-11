@@ -708,6 +708,7 @@ export default function ClubProfile() {
   const [creatingLeague, setCreatingLeague] = useState(false);
   const [joining, setJoining] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   // Members tab state
   const [memberSearch, setMemberSearch] = useState("");
   const [memberSort, setMemberSort] = useState<"name" | "joined" | "role">("role");
@@ -943,6 +944,7 @@ export default function ClubProfile() {
 
   const handleJoin = async () => {
     if (!user) {
+      setPendingAction(() => handleJoin);
       setAuthOpen(true);
       return;
     }
@@ -1176,14 +1178,19 @@ export default function ClubProfile() {
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                  className="relative flex flex-col items-center justify-center gap-0.5 w-11 rounded-xl transition-all group"
                   style={{
                     background: isActive ? accent : "transparent",
                     color: isActive ? (isDark ? "oklch(0.12 0.04 145)" : "#fff") : "oklch(0.55 0.08 145)",
+                    minHeight: "44px",
+                    paddingTop: "5px",
+                    paddingBottom: "5px",
                   }}
                   title={t.charAt(0).toUpperCase() + t.slice(1)}
+                  aria-label={t.charAt(0).toUpperCase() + t.slice(1)}
                 >
                   {iconMap[t]}
+                  <span className="text-[9px] font-medium leading-none">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
                   {badge > 0 && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
@@ -1192,7 +1199,7 @@ export default function ClubProfile() {
                       {badge}
                     </span>
                   )}
-                  {/* Tooltip */}
+                  {/* Tooltip on hover */}
                   <span
                     className="absolute left-full ml-2 px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50"
                     style={{ background: isDark ? "oklch(0.25 0.06 145)" : "#1a2e1f", color: "#fff" }}
@@ -1450,17 +1457,18 @@ export default function ClubProfile() {
                     {/* Join / Leave CTA */}
                     {!isOwner && !isDirector && (
                       <div className="flex-shrink-0 flex items-center gap-2">
-                        {/* Contact Owner button — only for signed-in non-owners */}
-                        {user && (
-                          <button
-                            onClick={() => setShowContactOwner(true)}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80 flex items-center gap-1.5"
-                            style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.65 0.10 145)" }}
-                          >
-                            <MessageSquare size={12} />
-                            Contact Owner
-                          </button>
-                        )}
+                        {/* Contact Owner button — for all non-owners; guests see auth prompt */}
+                        <button
+                          onClick={() => {
+                            if (!user) { setPendingAction(() => () => setShowContactOwner(true)); setAuthOpen(true); return; }
+                            setShowContactOwner(true);
+                          }}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all hover:opacity-80 flex items-center gap-1.5"
+                          style={{ borderColor: "oklch(0.30 0.06 145)", color: "oklch(0.65 0.10 145)" }}
+                        >
+                          <MessageSquare size={12} />
+                          {user ? "Contact Owner" : "Sign in to Contact"}
+                        </button>
                         {joined ? (
                           <button
                             onClick={handleLeave}
@@ -1743,7 +1751,11 @@ export default function ClubProfile() {
               <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
                 <Rss className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
                 <p className={`text-sm font-semibold ${textMain} mb-1`}>No activity yet</p>
-                <p className={`text-xs ${textMuted}`}>Club events will appear here.</p>
+                <p className={`text-xs ${textMuted}`}>
+                  {isOwner || isDirector
+                    ? "Post an announcement above to kick things off!"
+                    : "Announcements, events, and tournament results will appear here."}
+                </p>
               </div>
             ) : (
               <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
@@ -2459,21 +2471,37 @@ export default function ClubProfile() {
               </div>
             )}
 
-            {!hasAnyTournaments && (
-              <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
-                <Trophy className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
-                <p className={`text-sm font-semibold ${textMain} mb-1`}>No tournaments yet</p>
-                {isOwner ? (
-                  <p className={`text-xs ${textMuted}`}>
-                    Use the button above to host your first tournament.
-                  </p>
-                ) : (
-                  <p className={`text-xs ${textMuted}`}>
-                    The club owner hasn't hosted any tournaments yet.
-                  </p>
-                )}
-              </div>
-            )}
+            {(() => {
+              const filteredUpcoming = upcomingTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter);
+              const filteredLiveUpcoming = liveUpcoming.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter);
+              const filteredCompleted = completedTournaments.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter);
+              const filteredLivePast = livePast.filter((t) => tourneyFormatFilter === "all" || t.format === tourneyFormatFilter);
+              const noFilteredResults = filteredUpcoming.length === 0 && filteredLiveUpcoming.length === 0 && filteredCompleted.length === 0 && filteredLivePast.length === 0;
+              if (!hasAnyTournaments || (hasAnyTournaments && noFilteredResults && tourneyFormatFilter !== "all")) {
+                return (
+                  <div className={`rounded-3xl border ${cardBorder} ${card} py-16 text-center`}>
+                    <Trophy className={`w-10 h-10 mx-auto mb-3 ${textMuted}`} />
+                    <p className={`text-sm font-semibold ${textMain} mb-1`}>
+                      {tourneyFormatFilter !== "all" ? `No ${tourneyFormatFilter} tournaments` : "No tournaments yet"}
+                    </p>
+                    {tourneyFormatFilter !== "all" ? (
+                      <p className={`text-xs ${textMuted}`}>
+                        Try selecting "All Formats" to see all tournaments.
+                      </p>
+                    ) : isOwner ? (
+                      <p className={`text-xs ${textMuted}`}>
+                        Use the button above to host your first tournament.
+                      </p>
+                    ) : (
+                      <p className={`text-xs ${textMuted}`}>
+                        The club owner hasn't hosted any tournaments yet.
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         )}
 
@@ -3311,7 +3339,12 @@ export default function ClubProfile() {
       })()}
 
       {/* Auth modal — shown when guest tries to join, follow, or request a league */}
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} isDark />
+      <AuthModal
+        isOpen={authOpen}
+        onClose={() => { setAuthOpen(false); setPendingAction(null); }}
+        onSuccess={() => { setAuthOpen(false); pendingAction?.(); setPendingAction(null); }}
+        isDark
+      />
 
       {/* Contact Owner modal */}
       {club && (() => {
@@ -3647,11 +3680,11 @@ export default function ClubProfile() {
             <button
               key={t}
               onClick={() => setActiveTab(t)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl relative"
-              style={{ color: isActive ? accent : "oklch(0.55 0.08 145)" }}
+              className="flex flex-col items-center gap-0.5 px-3 rounded-xl relative"
+              style={{ color: isActive ? accent : "oklch(0.55 0.08 145)", minHeight: "44px", paddingTop: "6px", paddingBottom: "6px" }}
             >
               {iconMap[t]}
-              <span className="text-[9px] font-medium">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+              <span className="text-[11px] font-medium">{t.charAt(0).toUpperCase() + t.slice(1)}</span>
             </button>
           );
         })}

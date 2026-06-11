@@ -140,7 +140,9 @@ function ClubCard({
             <img
               src={club.bannerUrl}
               alt=""
+              role="presentation"
               className="w-full h-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
             <div className="absolute inset-0 chess-board-bg opacity-15" />
@@ -170,7 +172,13 @@ function ClubCard({
             style={{ background: `linear-gradient(135deg, ${club.accentColor} 0%, ${club.accentColor}88 100%)` }}
           >
             {club.avatarUrl ? (
-              <img src={club.avatarUrl} alt={club.name} className="w-full h-full object-cover" />
+              <img
+                src={club.avatarUrl}
+                alt={club.name}
+                role="presentation"
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
             ) : (
               <span>{flag}</span>
             )}
@@ -1027,9 +1035,11 @@ export default function MyClubs() {
           {/* Result count */}
           {!discoverLoading && (
             <p className={`text-xs mb-3 ${textMuted}`}>
-              {discoverTotal > 0
-                ? <>{discoverTotal} club{discoverTotal !== 1 ? "s" : ""}{search.trim() ? <> matching <strong className="font-semibold">"{search.trim()}"</strong></> : ""}{categoryFilter !== "all" ? ` in ${CATEGORY_LABELS[categoryFilter]}` : ""}</>
-                : null
+              {discoverTotal === 0 && (search.trim() || categoryFilter !== "all")
+                ? <span>No clubs found{search.trim() ? <> matching <strong className="font-semibold">"{search.trim()}"</strong></> : ""}{categoryFilter !== "all" ? ` in ${CATEGORY_LABELS[categoryFilter]}` : ""}</span>
+                : discoverTotal > 0
+                  ? <>{discoverTotal} club{discoverTotal !== 1 ? "s" : ""}{search.trim() ? <> matching <strong className="font-semibold">"{search.trim()}"</strong></> : ""}{categoryFilter !== "all" ? ` in ${CATEGORY_LABELS[categoryFilter]}` : ""}</>
+                  : null
               }
             </p>
           )}

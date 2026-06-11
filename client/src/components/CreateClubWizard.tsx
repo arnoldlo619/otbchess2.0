@@ -267,6 +267,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [animating, setAnimating] = useState(false);
   const [createdClubId, setCreatedClubId] = useState<string | null>(null);
+  const [createdClubSlug, setCreatedClubSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [creating, setCreating] = useState(false);
   const [, _startTransition] = useTransition();
@@ -366,6 +367,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         }
 
         setCreatedClubId(serverClub.id);
+        setCreatedClubSlug((serverClub as { id: string; slug?: string }).slug ?? null);
         setCreating(false);
       } catch (err) {
         logger.error("[CreateClubWizard] handleNext error:", err);
@@ -396,13 +398,11 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
     }, 180);
   };
 
-  // Use canonical chessotb.club domain with slug for share links
-  const clubSlug = createdClubId
-    ? (data.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, ""))
-    : "";
+  // Use the server-returned slug (most reliable) for share links
+  const clubSlug = createdClubSlug
+    || (createdClubId
+      ? data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+      : "");
   const clubUrl = createdClubId
     ? `https://chessotb.club/clubs/${clubSlug || createdClubId}`
     : "";
@@ -425,7 +425,8 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
 
   const handleViewClub = () => {
     onClose();
-    if (createdClubId) navigate(`/clubs/${createdClubId}`);
+    // Navigate using slug if available (matches the server-side route resolution)
+    if (createdClubId) navigate(`/clubs/${createdClubSlug || createdClubId}`);
   };
 
   // ── Colour palette ──────────────────────────────────────────────────────────
