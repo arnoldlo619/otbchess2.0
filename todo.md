@@ -6498,3 +6498,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] 5 pattern type icons: opening_trap, tactical_weakness, endgame_weakness, time_pressure, phase_blunder
 - [x] 17 vitest tests for engine analysis system (all passing)
 - [x] TypeScript: 0 errors after all changes
+
+## Match Prep Recommendations — Accuracy Fixes (v2.1.0)
+
+- [x] Fix #1: Use problem lines to identify specific defenses that beat opponent as White (not just generic ECO opening name)
+- [x] Fix #2: Show full move sequence in White problem line reason text (e.g. "after 1.d4 Nf6 2.c4 g6 3.Nc3...")
+- [x] Fix #3: Deduplicate opening family names in "As Black, they play..." — merge all Scandinavian variations, French variations, etc.
+- [x] Fix #4: Show full move sequence in Black problem line reason text
+- [x] Fix #5: Remove inaccurate avgGameLength insight from all recommendation generators, insights, and behavior analysis
+- [x] Bump ENGINE_VERSION to 2.1.0 to invalidate all cached prep reports

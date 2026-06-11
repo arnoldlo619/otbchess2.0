@@ -17,7 +17,7 @@
 // ─── Engine Version ─────────────────────────────────────────────────────────
 // Bump this whenever the ECO book, opening classification logic, or victory plan
 // generation changes. Cached reports with a different version will be auto-invalidated.
-export const ENGINE_VERSION = '2.0.0'; // Jobava London ECO + mainstream names + 20-game minimum
+export const ENGINE_VERSION = '2.1.0'; // Fix: deeper opening names, full move sequences, family dedup, remove avgGameLength // Jobava London ECO + mainstream names + 20-game minimum
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1580,12 +1580,7 @@ export function generateInsights(profile: PlayStyleProfile): string[] {
     insights.push(`Resigns frequently (${p.endgameProfile.resignations} games) — tends to give up rather than fight from behind.`);
   }
 
-  // Game length — actionable language
-  if (p.avgGameLength < 25) {
-    insights.push(`Games average only ${p.avgGameLength} moves — prefers quick, tactical positions. Dragging them into longer games may be effective.`);
-  } else if (p.avgGameLength > 45) {
-    insights.push(`Games average ${p.avgGameLength} moves — comfortable in long games. Consider creating active middlegame chances before simplifying.`);
-  }
+  // Game length insight removed — online game move counts are unreliable
 
   // Time control
   if (p.dominantTimeControl !== "mixed") {
@@ -1839,16 +1834,33 @@ export function generateVictoryPlan(
         category: "opening",
       });
     } else {
-      // Find the opening they lose against the most (opponent's response that beats them)
+      // Use problem lines to identify the specific defenses that beat them (more insightful than just the opening name)
+      const whiteProblems = problemLines.filter(pl => pl.color === "white");
+      // Collect up to 2 distinct defenses from problem lines that beat them as White
+      const beatingDefenses = whiteProblems
+        .map(pl => mainstreamName(pl.name))
+        .filter((n, i, arr) => arr.indexOf(n) === i) // unique
+        .slice(0, 2);
+      // Also check whiteOpenings for any that have low win rate (fallback)
       const weakestWhite = [...profile.whiteOpenings]
         .sort((a, b) => a.winRate - b.winRate)
         .find(o => o.count >= 5 && o.winRate < 0.5);
-      if (weakestWhite) {
+      if (beatingDefenses.length > 0) {
+        const defenseStr = beatingDefenses.length === 1
+          ? `the ${beatingDefenses[0]}`
+          : `the ${beatingDefenses[0]} and the ${beatingDefenses[1]}`;
+        const lossPct = weakestWhite ? Math.round((1 - weakestWhite.winRate) * 100) : null;
+        plan.push({
+          action: `As White, they play ${firstMoveDisplay} — They struggle against ${defenseStr}`,
+          reason: `Analysis of their lost games shows consistent difficulty against ${defenseStr}${lossPct ? ` (${lossPct}% loss rate in these lines)` : ""}. Steer into these setups when you have Black.`,
+          category: "opening",
+        });
+      } else if (weakestWhite) {
         const friendlyName = mainstreamName(weakestWhite.name, firstMove);
         const lossPct = Math.round((1 - weakestWhite.winRate) * 100);
         plan.push({
           action: `As White, they play ${firstMoveDisplay} — They struggle against the ${friendlyName}`,
-          reason: `They lose ${lossPct}% of their games when facing the ${friendlyName} (${weakestWhite.losses} losses in ${weakestWhite.count} games). Steer into this opening when you have Black.`,
+          reason: `They lose ${lossPct}% of their games in the ${friendlyName} (${weakestWhite.losses} losses in ${weakestWhite.count} games). Steer into this opening when you have Black.`,
           category: "opening",
         });
       } else {
@@ -1862,14 +1874,16 @@ export function generateVictoryPlan(
     }
   }
 
-  // ── 2. Lines of the [Opening] they struggle with ──
+  // ── 2. Lines of the [Opening] they struggle with (full move sequence shown) ──
   const whiteProblemLines = problemLines.filter(pl => pl.color === "white");
   if (whiteProblemLines.length > 0) {
     const worst = whiteProblemLines[0];
     const friendlyName = mainstreamName(worst.name);
+    // Show the full move sequence leading up to the problem move
+    const moveSeqDisplay = worst.moves ? ` after ${worst.moves}` : "";
     plan.push({
       action: `Lines of the ${friendlyName} they struggle with`,
-      reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). They blunder at move ${Math.ceil(worst.problemHalfMove / 2)} with ${worst.problemMove}${worst.betterMove ? ` — ${worst.betterMove} is stronger` : ""}.`,
+      reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). They go wrong at move ${Math.ceil(worst.problemHalfMove / 2)} with ${worst.problemMove}${worst.betterMove ? ` (${worst.betterMove} is stronger)` : ""}${moveSeqDisplay}.`,
       category: "opening",
     });
   } else if (profile.whiteOpenings.length > 1) {
@@ -1884,34 +1898,48 @@ export function generateVictoryPlan(
     }
   }
 
-  // ── 3. As Black, they play [Opening] against 1.e4 and [Opening] against 1.d4 ──
+  // ── 3. As Black, they play [Opening] — deduplicated by opening family ──
   const blackGameCount = profile.asBlack.games;
   if (profile.blackOpenings.length > 0) {
     const totalBlackGames = blackGameCount || profile.blackOpenings.reduce((s, o) => s + o.count, 0);
-    const blackOpeningsList = profile.blackOpenings.slice(0, 4);
-    const descriptions = blackOpeningsList.map(o => {
-      const pct = totalBlackGames > 0 ? Math.round((o.count / totalBlackGames) * 100) : 0;
-      const friendlyName = mainstreamName(o.name);
-      return `the ${friendlyName} (${pct}%)`;
-    });
+    // Deduplicate by opening family: merge all Scandinavian variations, all French variations, etc.
+    // Extract the base family name (everything before the first parenthesis or colon)
+    const getOpeningFamily = (name: string): string => name.split("(")[0].split(":")[0].trim();
+    const familyMap = new Map<string, number>();
+    for (const o of profile.blackOpenings) {
+      const family = getOpeningFamily(mainstreamName(o.name));
+      familyMap.set(family, (familyMap.get(family) || 0) + o.count);
+    }
+    // Sort by count descending and take top 3 unique families
+    const topFamilies = Array.from(familyMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([family]) => family);
     const caveat = totalBlackGames < MIN_GAMES
       ? ` (only ${totalBlackGames} games — ${MIN_GAMES}+ recommended for reliable insights)`
       : "";
+    const descStr = topFamilies.length === 1
+      ? `the ${topFamilies[0]}`
+      : topFamilies.length === 2
+        ? `the ${topFamilies[0]} and the ${topFamilies[1]}`
+        : `the ${topFamilies[0]}, the ${topFamilies[1]}, and the ${topFamilies[2]}`;
     plan.push({
-      action: `As Black, they play ${descriptions.join(", ")}`,
+      action: `As Black, they play ${descStr}`,
       reason: `Their Black repertoire across ${totalBlackGames} games${caveat}. Prepare your White opening to exploit their most-played defense.`,
       category: "opening",
     });
   }
 
-  // ── 4. Lines of the [Black defense] they struggle with ──
+  // ── 4. Lines of the [Black defense] they struggle with (full move sequence shown) ──
   const blackProblemLines = problemLines.filter(pl => pl.color === "black");
   if (blackProblemLines.length > 0) {
     const worst = blackProblemLines[0];
     const friendlyName = mainstreamName(worst.name);
+    // Show the full move sequence leading up to the problem move
+    const moveSeqDisplay = worst.moves ? ` after ${worst.moves}` : "";
     plan.push({
       action: `Lines of the ${friendlyName} they struggle with as Black`,
-      reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). Critical mistake at move ${Math.ceil(worst.problemHalfMove / 2)}: ${worst.problemMove}${worst.betterMove ? ` — better is ${worst.betterMove}` : ""}.`,
+      reason: `${worst.lossCount}/${worst.gamesCount} losses (${Math.round(worst.lossRate * 100)}% loss rate). Critical mistake at move ${Math.ceil(worst.problemHalfMove / 2)}: ${worst.problemMove}${worst.betterMove ? ` (better is ${worst.betterMove})` : ""}${moveSeqDisplay}.`,
       category: "opening",
     });
   } else if (profile.blackOpenings.length > 0) {
@@ -1926,35 +1954,21 @@ export function generateVictoryPlan(
     }
   }
 
-  // ── 5. Middlegame / Endgame strategic advice ──
-  if (profile.avgGameLength < 28) {
+  // ── 5. Color imbalance strategic advice (avgGameLength removed — inaccurate for online games) ──
+  const whiteWR = profile.asWhite.winRate;
+  const blackWR = profile.asBlack.winRate;
+  if (whiteWR - blackWR > 0.1) {
     plan.push({
-      action: "Keep complexity high — they collapse in long middlegames",
-      reason: `Avg game only ${profile.avgGameLength} moves. Avoid simplifications and maintain tension on the board.`,
-      category: "middlegame",
+      action: `Weaker as Black (${Math.round(blackWR * 100)}% win rate vs ${Math.round(whiteWR * 100)}% as White)`,
+      reason: `Their Black repertoire is significantly weaker. If you have White, play aggressively into their main defense.`,
+      category: "opening",
     });
-  } else if (profile.avgGameLength > 45) {
+  } else if (blackWR - whiteWR > 0.1) {
     plan.push({
-      action: "Decide the game in the middlegame — avoid long endgames",
-      reason: `Comfortable grinding ${profile.avgGameLength}-move games. Create tactical complications before the endgame.`,
-      category: "middlegame",
+      action: `Weaker as White (${Math.round(whiteWR * 100)}% win rate vs ${Math.round(blackWR * 100)}% as Black)`,
+      reason: `Their White game is less confident. As Black, challenge them with sharp defenses to exploit this.`,
+      category: "opening",
     });
-  } else {
-    const whiteWR = profile.asWhite.winRate;
-    const blackWR = profile.asBlack.winRate;
-    if (whiteWR - blackWR > 0.1) {
-      plan.push({
-        action: `Weaker as Black (${Math.round(blackWR * 100)}% win rate vs ${Math.round(whiteWR * 100)}% as White)`,
-        reason: `Their Black repertoire is significantly weaker. If you have White, play aggressively into their main defense.`,
-        category: "opening",
-      });
-    } else if (blackWR - whiteWR > 0.1) {
-      plan.push({
-        action: `Weaker as White (${Math.round(whiteWR * 100)}% win rate vs ${Math.round(blackWR * 100)}% as Black)`,
-        reason: `Their White game is less confident. As Black, challenge them with sharp defenses to exploit this.`,
-        category: "opening",
-      });
-    }
   }
 
   return plan.slice(0, 5);
@@ -2079,19 +2093,20 @@ export function generatePrepRecommendations(
     });
   }
 
-  // ── Problem line recommendations (merged with existing if same target) ──
+    // ── Problem line recommendations (includes full move sequence for context) ──
   for (const pl of problemLines.slice(0, 2)) {
     const conf = getConfidenceLevel(pl.gamesCount);
     const confLabel = getConfidenceLabel(pl.gamesCount);
     const lossPct = Math.round(pl.lossRate * 100);
     const friendlyName = mainstreamName(pl.name);
     const moveNum = Math.ceil(pl.problemHalfMove / 2);
-
+    // Include the full move sequence so the user knows exactly what line is being discussed
+    const moveSeqSuffix = pl.moves ? ` The line goes: ${pl.moves}, then they play ${pl.problemMove}${pl.betterMove ? ` instead of the stronger ${pl.betterMove}` : ""}.` : "";
     if (pl.color === "white") {
       const isDefense = isBlackDefense(friendlyName);
       const plan = isDefense
-        ? `This player struggles as White against the ${friendlyName}, especially around move ${moveNum}. If you have Black, prepare this defense — they have a ${lossPct}% loss rate in this specific line. Look for their typical inaccuracy around that move.`
-        : `This player makes mistakes in the ${friendlyName} as White around move ${moveNum}. If you have Black, be ready to punish inaccuracies in this structure.`;
+        ? `This player struggles as White against the ${friendlyName} — they have a ${lossPct}% loss rate in this specific line. If you have Black, prepare this defense and look for their typical inaccuracy at move ${moveNum}.${moveSeqSuffix}`
+        : `This player makes mistakes in the ${friendlyName} as White at move ${moveNum}. If you have Black, be ready to punish inaccuracies in this structure.${moveSeqSuffix}`;
       addRec({
         useAs: "black",
         target: isDefense ? `Prepare the ${friendlyName}` : `Counter the ${friendlyName}`,
@@ -2105,8 +2120,8 @@ export function generatePrepRecommendations(
     } else {
       const isDefense = isBlackDefense(friendlyName);
       const plan = isDefense
-        ? `This player plays the ${friendlyName} as Black but makes mistakes around move ${moveNum}. If you have White, steer into this line and look for their typical error — they lose ${lossPct}% of the time from this position.`
-        : `This player struggles as Black against the ${friendlyName}, especially around move ${moveNum}. If you have White, prepare this system to exploit their weakness.`;
+        ? `This player plays the ${friendlyName} as Black but makes mistakes at move ${moveNum}. If you have White, steer into this line — they lose ${lossPct}% of the time from this position.${moveSeqSuffix}`
+        : `This player struggles as Black against the ${friendlyName} at move ${moveNum}. If you have White, prepare this system to exploit their weakness.${moveSeqSuffix}`;
       addRec({
         useAs: "white",
         target: isDefense ? `Target their ${friendlyName}` : `Prepare the ${friendlyName}`,
@@ -2120,30 +2135,8 @@ export function generatePrepRecommendations(
     }
   }
 
-  // ── Middlegame/Endgame recommendations ──
-  if (profile.avgGameLength < 28) {
-    addRec({
-      useAs: "white",
-      target: "Keep the middlegame complex",
-      evidence: `Average game length is only ${profile.avgGameLength} moves — games tend to end quickly`,
-      confidence: profile.gamesAnalyzed >= 20 ? "high" : "moderate",
-      plan: `This player's games tend to be short (avg ${profile.avgGameLength} moves). They may be uncomfortable in long, complex middlegames. Avoid early piece trades and keep the tension on the board. Create imbalances that require precise calculation.`,
-      category: "middlegame",
-      sampleSize: profile.gamesAnalyzed,
-      winRate: 0,
-    });
-  } else if (profile.avgGameLength > 45) {
-    addRec({
-      useAs: "white",
-      target: "Decide the game in the middlegame",
-      evidence: `Average game length is ${profile.avgGameLength} moves — comfortable in long games`,
-      confidence: profile.gamesAnalyzed >= 20 ? "high" : "moderate",
-      plan: `This player performs well in long games (avg ${profile.avgGameLength} moves). Do not trade pieces just to simplify. Create active middlegame pressure first, then convert only if you win material or structure. Avoid trading into equal endgames.`,
-      category: "middlegame",
-      sampleSize: profile.gamesAnalyzed,
-      winRate: 0,
-    });
-  }
+  // avgGameLength-based recommendations removed — online game move counts are unreliable
+  // (online games often include premoves and time scrambles that inflate move counts)
 
   // Sort by priority: high confidence + lowest win rate first, limit to top 5
   return recs.sort((a, b) => {
@@ -2197,22 +2190,14 @@ export function analyzeBehavior(games: ChessComGame[], username: string): Behavi
     ? "opening" as const
     : middlegamePct >= endgamePct ? "middlegame" as const : "endgame" as const;
 
-  // Strategy note — context-aware and non-contradictory (requirement 7)
+  // Strategy note — based on loss phase distribution and time trouble (avgGameLength removed)
   let strategyNote = "";
-  const isLongGamePlayer = avgGameLength > 45;
   if (timeoutPct >= 20) {
     strategyNote = `They reach time trouble in ${timeoutPct}% of games. Keep the position complex if they are low on time — do not simplify unnecessarily.`;
   } else if (blunderPhase === "opening" && openingPct >= 35) {
     strategyNote = `${openingPct}% of their losses happen in the opening phase. Prepare sharp, theory-heavy lines to punish early inaccuracies.`;
   } else if (blunderPhase === "endgame" && endgamePct >= 35) {
-    if (isLongGamePlayer) {
-      // Mixed signal: they lose in endgames but also play long games — be cautious
-      strategyNote = `The data is mixed. They are comfortable in long games (avg ${avgGameLength} moves), but ${endgamePct}% of their losses happen late. Do not simplify too early — only enter endgames when you have a clear advantage.`;
-    } else {
-      strategyNote = `${endgamePct}% of their losses happen in the endgame. If you earn a clear advantage, stay patient and convert rather than forcing tactics. Simplify only when you have a structural or material edge.`;
-    }
-  } else if (isLongGamePlayer) {
-    strategyNote = `They are comfortable in long games, averaging ${avgGameLength} moves. Do not trade pieces just to simplify. Create active middlegame pressure first, then convert if you win material or structure.`;
+    strategyNote = `${endgamePct}% of their losses happen in the endgame. If you earn a clear advantage, stay patient and convert rather than forcing tactics. Simplify only when you have a structural or material edge.`;
   } else {
     strategyNote = `Most losses happen in the ${blunderPhase} phase. Focus your preparation on creating pressure in this phase of the game.`;
   }
