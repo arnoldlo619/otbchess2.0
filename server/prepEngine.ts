@@ -248,6 +248,8 @@ export interface PrepReport {
   behavior: BehaviorProfile;
   /** Full opening tree for interactive exploration */
   openingTree: { asWhite: OpeningTreeNode[]; asBlack: OpeningTreeNode[] };
+  /** Engine-backed pattern detection results (Stockfish analysis) */
+  enginePatterns?: import('./prepAnalysisEngine.js').EnginePatterns;
   generatedAt: string;
 }
 
@@ -2299,7 +2301,8 @@ export function buildFullOpeningTree(
 export async function buildPrepReport(
   username: string,
   timeClasses: string[] = ["rapid", "blitz"],
-  myColor: "white" | "black" = "white"
+  myColor: "white" | "black" = "white",
+  db?: Awaited<ReturnType<typeof import('./db.js').getDb>>
 ): Promise<PrepReport> {
   const games = await fetchPlayerGames(username, timeClasses, 100);
   if (games.length === 0) {
@@ -2316,6 +2319,27 @@ export async function buildPrepReport(
     asWhite: buildFullOpeningTree(games, username, "white", 6),
     asBlack: buildFullOpeningTree(games, username, "black", 6),
   };
+
+  // ── Engine Analysis (Stockfish-backed pattern detection) ──────────────────
+  // Run async engine analysis if a DB connection is provided.
+  // Falls back gracefully to statistical-only report if analysis fails.
+  let enginePatterns: import('./prepAnalysisEngine.js').EnginePatterns | undefined;
+  if (db) {
+    try {
+      const { runEngineAnalysis, loadCachedEnginePatterns } = await import('./prepAnalysisEngine.js');
+      // Check for cached patterns first (avoids re-running Stockfish analysis)
+      const cached = await loadCachedEnginePatterns(username, db);
+      if (cached) {
+        enginePatterns = cached;
+      } else {
+        // Run fresh analysis on up to 15 games
+        enginePatterns = await runEngineAnalysis(games, username, db, 15);
+      }
+    } catch {
+      // Engine analysis is non-fatal — report still works without it
+    }
+  }
+
   return {
     opponent: profile,
     prepLines,
@@ -2325,6 +2349,7 @@ export async function buildPrepReport(
     prepRecommendations,
     behavior,
     openingTree,
+    enginePatterns,
     generatedAt: new Date().toISOString(),
   };
 }

@@ -15,7 +15,7 @@ import {
   Shield as _Shield, Clock as _Clock, Crown as _Crown,
   TrendingUp as _TrendingUp, Eye, Loader2,
   CircleDot as _CircleDot, RefreshCw, ChevronRight, Trophy,
-  Activity as _Activity, Bookmark, BookmarkCheck,
+  Activity, Bookmark, BookmarkCheck,
   Trash2, AlertCircle, Crosshair, Flame, Dumbbell, AlertTriangle, ArrowRight, PlayCircle,
   Zap, GitBranch, BarChart3, ChevronDown,
 } from "lucide-react";
@@ -141,6 +141,34 @@ interface PrepRecommendation {
   winRate: number;
 }
 
+interface EnginePatternEvidence {
+  gameUrl?: string;
+  move?: string;
+  phase?: string;
+  eco?: string;
+}
+
+interface EnginePattern {
+  patternType: "opening_trap" | "tactical_weakness" | "endgame_weakness" | "time_pressure" | "phase_blunder";
+  label: string;
+  description: string;
+  frequency: number;
+  totalGames: number;
+  confidence: "high" | "moderate" | "low";
+  severityScore: number;
+  evidence: EnginePatternEvidence[];
+}
+
+interface EnginePatterns {
+  patterns: EnginePattern[];
+  gamesAnalyzed: number;
+  positionsAnalyzed: number;
+  avgBlundersPerGame: number;
+  avgMistakesPerGame: number;
+  worstPhase: "opening" | "middlegame" | "endgame";
+  weakOpenings: { eco: string; name: string; blunderRate: number; games: number }[];
+}
+
 interface PrepReport {
   opponent: PlayStyleProfile;
   prepLines: PrepLine[];
@@ -150,6 +178,7 @@ interface PrepReport {
   prepRecommendations?: PrepRecommendation[];
   behavior?: BehaviorProfile;
   openingTree?: { asWhite: OpeningTreeNode[]; asBlack: OpeningTreeNode[] };
+  enginePatterns?: EnginePatterns;
   generatedAt: string;
   _cached?: boolean;
 }
@@ -1563,6 +1592,11 @@ function ScoutReportTab({
         </div>
       )}
 
+      {/* ── Engine Analysis Patterns (Stockfish-backed) ── */}
+      {report.enginePatterns && report.enginePatterns.patterns.length > 0 && (
+        <EnginePatternSection enginePatterns={report.enginePatterns} isDark={isDark} t={t} />
+      )}
+
       {/* ── Next Step Nudge ── */}
       {enrichedLines.length > 0 && (
         <button
@@ -1580,6 +1614,186 @@ function ScoutReportTab({
           </div>
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Engine Pattern Section ────────────────────────────────────────────────────
+// Displays Stockfish-backed pattern detection results with confidence badges,
+// severity indicators, expandable evidence, and beginner-friendly descriptions.
+
+function EnginePatternSection({ enginePatterns, isDark, t }: {
+  enginePatterns: EnginePatterns;
+  isDark: boolean;
+  t: Tokens;
+}) {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  const patternTypeIcon = (type: EnginePattern["patternType"]) => {
+    switch (type) {
+      case "opening_trap":      return <AlertCircle className="w-3.5 h-3.5" />;
+      case "tactical_weakness": return <Crosshair className="w-3.5 h-3.5" />;
+      case "endgame_weakness":  return <Trophy className="w-3.5 h-3.5" />;
+      case "time_pressure":     return <Zap className="w-3.5 h-3.5" />;
+      case "phase_blunder":     return <AlertTriangle className="w-3.5 h-3.5" />;
+    }
+  };
+
+  const confidenceColors = {
+    high:     isDark ? "bg-emerald-500/12 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border-emerald-200",
+    moderate: isDark ? "bg-amber-500/12 text-amber-400 border-amber-500/20"     : "bg-amber-50 text-amber-700 border-amber-200",
+    low:      isDark ? "bg-gray-500/12 text-gray-400 border-gray-500/20"        : "bg-gray-50 text-gray-500 border-gray-200",
+  };
+
+  const severityBar = (score: number) => {
+    const pct = Math.min(100, score);
+    const color = pct >= 70
+      ? "bg-red-500"
+      : pct >= 40
+        ? "bg-amber-400"
+        : "bg-emerald-500";
+    return (
+      <div className={`h-1 rounded-full overflow-hidden ${isDark ? "bg-white/08" : "bg-gray-200"}`}>
+        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    );
+  };
+
+  return (
+    <div className={`${t.card} p-4 sm:p-5`}>
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-1">
+        <Activity className={`w-4 h-4 ${isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]"}`} />
+        <h3 className={`font-semibold text-sm ${t.textPrimary}`}>Engine Analysis</h3>
+        <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+          isDark ? "bg-[#3D6B47]/12 text-[#5B9A6A] border-[#3D6B47]/25" : "bg-[#3D6B47]/08 text-[#3D6B47] border-[#3D6B47]/15"
+        }`}>
+          Stockfish
+        </span>
+      </div>
+      <p className={`text-[11px] mb-4 ${t.textTertiary}`}>
+        {enginePatterns.gamesAnalyzed} games analyzed
+        {enginePatterns.positionsAnalyzed > 0 && ` · ${enginePatterns.positionsAnalyzed} positions evaluated`}
+      </p>
+
+      {/* Summary stats row */}
+      {(enginePatterns.avgBlundersPerGame > 0 || enginePatterns.avgMistakesPerGame > 0) && (
+        <div className={`grid grid-cols-3 gap-2 mb-4 p-3 rounded-xl ${
+          isDark ? "bg-[#0a1409] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"
+        }`}>
+          <div className="text-center">
+            <p className={`text-base font-bold ${
+              enginePatterns.avgBlundersPerGame >= 1 ? (isDark ? "text-red-400" : "text-red-600") : t.textPrimary
+            }`}>{enginePatterns.avgBlundersPerGame.toFixed(1)}</p>
+            <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Blunders/game</p>
+          </div>
+          <div className="text-center">
+            <p className={`text-base font-bold ${
+              enginePatterns.avgMistakesPerGame >= 1.5 ? (isDark ? "text-amber-400" : "text-amber-600") : t.textPrimary
+            }`}>{enginePatterns.avgMistakesPerGame.toFixed(1)}</p>
+            <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Mistakes/game</p>
+          </div>
+          <div className="text-center">
+            <p className={`text-base font-bold capitalize ${
+              enginePatterns.worstPhase === "opening" ? (isDark ? "text-red-400" : "text-red-600")
+              : enginePatterns.worstPhase === "endgame" ? (isDark ? "text-purple-400" : "text-purple-600")
+              : (isDark ? "text-amber-400" : "text-amber-600")
+            }`}>{enginePatterns.worstPhase}</p>
+            <p className={`text-[9px] font-semibold uppercase tracking-wider mt-0.5 ${t.textTertiary}`}>Worst phase</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pattern cards */}
+      <div className="space-y-2.5">
+        {enginePatterns.patterns.map((pattern, i) => (
+          <div key={i} className={`rounded-xl border overflow-hidden transition-all ${
+            isDark ? "border-[#1e2e22]/70 bg-[#0a1409]" : "border-gray-200/70 bg-white"
+          }`}>
+            {/* Pattern header — always visible */}
+            <button
+              onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
+              className={`w-full flex items-start gap-3 p-3 text-left transition-colors ${
+                isDark ? "hover:bg-white/02" : "hover:bg-gray-50/60"
+              }`}
+            >
+              {/* Pattern type icon */}
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                isDark ? "bg-[#162018] text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+              }`}>
+                {patternTypeIcon(pattern.patternType)}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {/* Label + confidence badge */}
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <p className={`text-sm font-semibold ${t.textPrimary}`}>{pattern.label}</p>
+                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${
+                    confidenceColors[pattern.confidence]
+                  }`}>
+                    {pattern.confidence === "high" ? "High confidence" : pattern.confidence === "moderate" ? "Moderate" : "Low confidence"}
+                  </span>
+                </div>
+
+                {/* Severity bar */}
+                <div className="mb-1.5">{severityBar(pattern.severityScore)}</div>
+
+                {/* Frequency */}
+                <p className={`text-[10px] ${t.textTertiary}`}>
+                  Observed in {pattern.frequency}/{pattern.totalGames} games
+                </p>
+              </div>
+
+              {/* Expand chevron */}
+              <ChevronDown className={`w-3.5 h-3.5 shrink-0 mt-1.5 transition-transform ${t.textTertiary} ${
+                expandedIdx === i ? "rotate-180" : ""
+              }`} />
+            </button>
+
+            {/* Expanded detail */}
+            {expandedIdx === i && (
+              <div className={`px-3 pb-3 border-t ${
+                isDark ? "border-[#1e2e22]/60" : "border-gray-200/60"
+              }`}>
+                {/* Description */}
+                <p className={`text-sm leading-relaxed mt-3 mb-3 ${t.textSecondary}`}>{pattern.description}</p>
+
+                {/* Evidence links */}
+                {pattern.evidence && pattern.evidence.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1.5 ${t.textTertiary}`}>Evidence</p>
+                    {pattern.evidence.map((ev, j) => (
+                      <div key={j} className={`flex items-center gap-2 p-2 rounded-lg text-[11px] ${
+                        isDark ? "bg-[#162018] border border-[#1e2e22]/60" : "bg-gray-50 border border-gray-200/60"
+                      }`}>
+                        {ev.eco && (
+                          <span className={`font-mono font-bold px-1.5 py-0.5 rounded ${t.monoBlock}`}>{ev.eco}</span>
+                        )}
+                        {ev.phase && (
+                          <span className={`capitalize ${t.textTertiary}`}>{ev.phase}</span>
+                        )}
+                        {ev.gameUrl && (
+                          <a
+                            href={ev.gameUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`ml-auto flex items-center gap-1 font-medium ${
+                              isDark ? "text-[#5B9A6A] hover:text-emerald-400" : "text-[#3D6B47] hover:text-emerald-600"
+                            } transition-colors`}
+                          >
+                            View game
+                            <ChevronRight className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

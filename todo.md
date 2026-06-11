@@ -6485,3 +6485,16 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Update matchupPrepRedesign tests for renamed sections
 - [x] Update userRepertoire test for new two-branch likelyBattle format
 - [x] Update prepEngineV2 test for "scores poorly" weakness wording
+
+## Match Prep Engine Analysis Upgrade (June 2026)
+- [x] Add 3 new DB tables: prep_engine_cache, prep_pattern_results, prep_eval_cache (via SQL)
+- [x] Build server/prepAnalysisEngine.ts: async PGN fetcher, phase classifier, blunder/mistake counter, pattern detector (5 types), eval cache layer
+- [x] Add enginePatterns field to PrepReport interface (EnginePatterns + EnginePattern + EnginePatternEvidence)
+- [x] Integrate engine analysis into buildPrepReport() in prepEngine.ts (non-blocking, graceful fallback)
+- [x] Pass db to buildPrepReport() in both call sites in index.ts (fresh fetch + force-refresh)
+- [x] Add EnginePatternSection component to MatchupPrep.tsx Scout Report tab
+- [x] Engine Analysis card: Stockfish badge, blunders/game + mistakes/game + worst phase stats row
+- [x] Pattern cards: expandable with confidence badge (high/moderate/low), severity bar, evidence links
+- [x] 5 pattern type icons: opening_trap, tactical_weakness, endgame_weakness, time_pressure, phase_blunder
+- [x] 17 vitest tests for engine analysis system (all passing)
+- [x] TypeScript: 0 errors after all changes

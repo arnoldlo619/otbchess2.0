@@ -2006,3 +2006,117 @@ export const tournamentBroadcastSettings = mysqlTable("tournament_broadcast_sett
 });
 export type TournamentBroadcastSettingsRow = typeof tournamentBroadcastSettings.$inferSelect;
 export type NewTournamentBroadcastSettingsRow = typeof tournamentBroadcastSettings.$inferInsert;
+
+// ─── prep_position_cache ──────────────────────────────────────────────────────
+// Eval cache: FEN → Stockfish evaluation result.
+// Shared across all opponents — if we've analyzed a position before, reuse it.
+// TTL: 30 days (positions don't change, but we may want to re-analyze at depth).
+export const prepPositionCache = mysqlTable(
+  "prep_position_cache",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    /** FEN string (normalized, without move clocks) */
+    fen: varchar("fen", { length: 100 }).notNull().unique(),
+    /** Centipawn evaluation from White's perspective */
+    evalCp: int("eval_cp").notNull(),
+    /** Best move in UCI notation (e.g. "e2e4") */
+    bestMove: varchar("best_move", { length: 10 }),
+    /** Win chance for side to move (0–100) */
+    winChance: float("win_chance"),
+    /** Best continuation as space-separated SAN moves */
+    continuation: varchar("continuation", { length: 200 }),
+    /** Analysis depth used */
+    depth: int("depth").notNull().default(12),
+    /** When this eval was cached */
+    cachedAt: timestamp("cached_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    fenIdx: uniqueIndex("ppc_fen_idx").on(table.fen),
+  })
+);
+export type PrepPositionCacheRow = typeof prepPositionCache.$inferSelect;
+export type NewPrepPositionCacheRow = typeof prepPositionCache.$inferInsert;
+
+// ─── prep_game_analysis ───────────────────────────────────────────────────────
+// Per-game move analysis results. One row per analyzed game.
+// Stores aggregated stats (blunder count, phase of first blunder, etc.)
+// so we don't need to re-analyze games we've already processed.
+export const prepGameAnalysis = mysqlTable(
+  "prep_game_analysis",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    /** chess.com game URL (unique identifier) */
+    gameUrl: varchar("game_url", { length: 255 }).notNull().unique(),
+    /** The opponent username this analysis is for */
+    opponentUsername: varchar("opponent_username", { length: 100 }).notNull(),
+    /** Color the opponent played ("white" | "black") */
+    opponentColor: varchar("opponent_color", { length: 5 }).notNull(),
+    /** Opening ECO code */
+    eco: varchar("eco", { length: 10 }),
+    /** Opening name */
+    openingName: varchar("opening_name", { length: 150 }),
+    /** Total moves analyzed */
+    movesAnalyzed: int("moves_analyzed").notNull().default(0),
+    /** Number of blunders (cp loss > 300) */
+    blunderCount: int("blunder_count").notNull().default(0),
+    /** Number of mistakes (cp loss 100–300) */
+    mistakeCount: int("mistake_count").notNull().default(0),
+    /** Number of inaccuracies (cp loss 30–100) */
+    inaccuracyCount: int("inaccuracy_count").notNull().default(0),
+    /** Move number of first major error (blunder/mistake), null if none */
+    firstMajorErrorMove: int("first_major_error_move"),
+    /** Phase of first major error: "opening" | "middlegame" | "endgame" | null */
+    firstMajorErrorPhase: varchar("first_major_error_phase", { length: 15 }),
+    /** Average centipawn loss per move */
+    avgCpLoss: float("avg_cp_loss"),
+    /** Game result for the opponent: "win" | "loss" | "draw" */
+    opponentResult: varchar("opponent_result", { length: 10 }).notNull(),
+    /** JSON array of move-level analysis: [{move, cpBefore, cpAfter, cpLoss, classification}] */
+    movesJson: text("moves_json"),
+    /** When this analysis was run */
+    analyzedAt: timestamp("analyzed_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    gameUrlIdx: uniqueIndex("pga_game_url_idx").on(table.gameUrl),
+    opponentIdx: index("pga_opponent_idx").on(table.opponentUsername),
+  })
+);
+export type PrepGameAnalysisRow = typeof prepGameAnalysis.$inferSelect;
+export type NewPrepGameAnalysisRow = typeof prepGameAnalysis.$inferInsert;
+
+// ─── prep_pattern_summary ─────────────────────────────────────────────────────
+// Aggregated pattern detection results per opponent.
+// One row per (opponent, patternType) combination.
+// Rebuilt whenever a fresh analysis is run for that opponent.
+export const prepPatternSummary = mysqlTable(
+  "prep_pattern_summary",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    /** Opponent chess.com username (lowercase) */
+    opponentUsername: varchar("opponent_username", { length: 100 }).notNull(),
+    /** Pattern type: "opening_trap" | "tactical_weakness" | "endgame_weakness" | "time_pressure" | "phase_blunder" */
+    patternType: varchar("pattern_type", { length: 30 }).notNull(),
+    /** Human-readable pattern label */
+    label: varchar("label", { length: 200 }).notNull(),
+    /** Beginner-friendly description of the pattern */
+    description: text("description").notNull(),
+    /** How many games this pattern was observed in */
+    frequency: int("frequency").notNull().default(0),
+    /** Total games analyzed for this opponent */
+    totalGames: int("total_games").notNull().default(0),
+    /** Confidence: "high" (>=5 games) | "moderate" (>=3) | "low" (<3) */
+    confidence: varchar("confidence", { length: 10 }).notNull().default("low"),
+    /** JSON evidence: specific game URLs, moves, positions that triggered this pattern */
+    evidenceJson: text("evidence_json"),
+    /** Severity score (0-100): higher = more exploitable */
+    severityScore: int("severity_score").notNull().default(0),
+    /** When this summary was last computed */
+    computedAt: timestamp("computed_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    opponentPatternIdx: index("pps_opponent_pattern_idx").on(table.opponentUsername, table.patternType),
+    opponentIdx: index("pps_opponent_idx").on(table.opponentUsername),
+  })
+);
+export type PrepPatternSummaryRow = typeof prepPatternSummary.$inferSelect;
+export type NewPrepPatternSummaryRow = typeof prepPatternSummary.$inferInsert;

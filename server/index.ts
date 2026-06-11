@@ -454,8 +454,10 @@ export function createApp() {
       logger.warn("[prep-cache] DB read error, falling through to live fetch:", dbErr);
     }
 
-    // Build fresh report
-    const report = await buildPrepReport(normalised, timeClasses, "white");
+    // Build fresh report (pass db for Stockfish engine analysis)
+    let _prepDb;
+    try { _prepDb = await getDb(); } catch { /* non-fatal */ }
+    const report = await buildPrepReport(normalised, timeClasses, "white", _prepDb);
 
     // Store in cache (fire-and-forget)
     try {
@@ -506,7 +508,9 @@ export function createApp() {
         const normalised = username.toLowerCase().trim();
         const tcKey = timeClasses.length === 1 ? timeClasses[0] : "all";
         const cacheKey = `${normalised}:${tcKey}`;
-        const report = await buildPrepReport(normalised, timeClasses, "white");
+        let _refreshDb;
+        try { _refreshDb = await getDb(); } catch { /* non-fatal */ }
+        const report = await buildPrepReport(normalised, timeClasses, "white", _refreshDb);
         try {
           const db = await getDb();
           const reportStr = JSON.stringify(report);
