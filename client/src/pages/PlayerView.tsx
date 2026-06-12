@@ -36,6 +36,7 @@ import {
   X,
   Timer,
   Video,
+  ChevronDown,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
@@ -594,6 +595,7 @@ function MyBoardScreen({
   } | null>(null);
   const [showStreamSheet, setShowStreamSheet] = useState(false);
   const [showFilmSheet, setShowFilmSheet] = useState(false);
+  const [showOppStats, setShowOppStats] = useState(true);
 
   useEffect(() => {
     if (!tournamentId || tournamentId === "otb-demo-2026") return;
@@ -815,53 +817,70 @@ function MyBoardScreen({
                     </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className={`mt-3 mb-3 border-t ${divider}`} />
+                  {/* Collapsible divider row — tap to show/hide stats */}
+                  <button
+                    onClick={() => setShowOppStats((v) => !v)}
+                    aria-expanded={showOppStats}
+                    aria-label={showOppStats ? "Hide opponent stats" : "Show opponent stats"}
+                    className={`w-full flex items-center justify-between mt-3 pt-2.5 border-t ${divider} focus:outline-none active:opacity-70 transition-opacity`}
+                  >
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>
+                      {showOppStats ? "Stats" : `${oppPoints} pts · ${oppWins}W ${oppDraws}D ${oppLosses}L`}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 ${textMuted} transition-transform duration-200 ${showOppStats ? "rotate-180" : "rotate-0"}`}
+                    />
+                  </button>
 
-                  {/* Tournament record + form dots */}
-                  <div className="flex items-center justify-between gap-3">
-                    {/* W / D / L record */}
-                    <div className="flex items-center gap-3">
-                      <div className="text-center">
-                        <p className="text-base font-black text-emerald-500">{oppWins}</p>
-                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>W</p>
+                  {/* Tournament record + form dots — collapsible */}
+                  <div
+                    className="overflow-hidden transition-all duration-200"
+                    style={{ maxHeight: showOppStats ? "120px" : "0px", opacity: showOppStats ? 1 : 0 }}
+                  >
+                    <div className="flex items-center justify-between gap-3 pt-2.5">
+                      {/* W / D / L record */}
+                      <div className="flex items-center gap-3">
+                        <div className="text-center">
+                          <p className="text-base font-black text-emerald-500">{oppWins}</p>
+                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>W</p>
+                        </div>
+                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                        <div className="text-center">
+                          <p className={`text-base font-black ${isDark ? "text-blue-400" : "text-blue-500"}`}>{oppDraws}</p>
+                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>D</p>
+                        </div>
+                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                        <div className="text-center">
+                          <p className="text-base font-black text-red-500">{oppLosses}</p>
+                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>L</p>
+                        </div>
+                        <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                        <div className="text-center">
+                          <p className={`text-base font-black ${accent}`}>{oppPoints}</p>
+                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>pts</p>
+                        </div>
                       </div>
-                      <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-                      <div className="text-center">
-                        <p className={`text-base font-black ${isDark ? "text-blue-400" : "text-blue-500"}`}>{oppDraws}</p>
-                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>D</p>
-                      </div>
-                      <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-                      <div className="text-center">
-                        <p className="text-base font-black text-red-500">{oppLosses}</p>
-                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>L</p>
-                      </div>
-                      <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-                      <div className="text-center">
-                        <p className={`text-base font-black ${accent}`}>{oppPoints}</p>
-                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>pts</p>
-                      </div>
+
+                      {/* Recent form dots (last 4 rounds, most recent rightmost) */}
+                      {opponentHistory.length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted} mr-0.5`}>Form</p>
+                          {opponentHistory.slice(-4).map((h, i) => (
+                            <span
+                              key={i}
+                              title={h.result === "W" ? `R${h.round}: Win` : h.result === "L" ? `R${h.round}: Loss` : `R${h.round}: Draw`}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                              style={{
+                                background: h.result === "W" ? "rgba(74,222,128,0.15)" : h.result === "L" ? "rgba(248,113,113,0.15)" : "rgba(96,165,250,0.15)",
+                                color: h.result === "W" ? "#4ade80" : h.result === "L" ? "#f87171" : "#60a5fa",
+                              }}
+                            >
+                              {h.result}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-
-                    {/* Recent form dots (last 4 rounds, most recent rightmost) */}
-                    {opponentHistory.length > 0 && (
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted} mr-0.5`}>Form</p>
-                        {opponentHistory.slice(-4).map((h, i) => (
-                          <span
-                            key={i}
-                            title={h.result === "W" ? `R${h.round}: Win` : h.result === "L" ? `R${h.round}: Loss` : `R${h.round}: Draw`}
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                            style={{
-                              background: h.result === "W" ? "rgba(74,222,128,0.15)" : h.result === "L" ? "rgba(248,113,113,0.15)" : "rgba(96,165,250,0.15)",
-                              color: h.result === "W" ? "#4ade80" : h.result === "L" ? "#f87171" : "#60a5fa",
-                            }}
-                          >
-                            {h.result}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : (
