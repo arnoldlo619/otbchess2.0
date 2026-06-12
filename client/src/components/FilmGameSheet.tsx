@@ -322,12 +322,22 @@ export function FilmGameSheet({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Initialise canvas dimensions immediately from the video element
+    // (videoWidth/videoHeight are available after loadedmetadata fires)
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+    } else {
+      canvas.width = 1280;
+      canvas.height = 720;
+    }
+
     const loop = () => {
-      if (video.readyState >= 2) {
-        // Match canvas to video dimensions
+      if (video.readyState >= 2 && video.videoWidth > 0) {
+        // Sync canvas dimensions if they change (e.g. camera flip)
         if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth || 1280;
-          canvas.height = video.videoHeight || 720;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
         }
         if (overlayStateRef.current.recordState !== "stopped") {
           drawOverlay(ctx, video, overlayStateRef.current);
@@ -350,17 +360,39 @@ export function FilmGameSheet({
     stopRaf();
     try {
       streamRef.current?.getTracks().forEach(t => t.stop());
+      // Request video first without audio to get a faster preview, then add audio
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: true,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        // Wait for the video to have enough data before starting the rAF loop
+        // This is the key fix: on mobile Safari/Chrome, readyState may be 0
+        // immediately after srcObject assignment, causing a blank black canvas
+        await new Promise<void>((resolve) => {
+          if (video.readyState >= 2) {
+            resolve();
+          } else {
+            const onReady = () => {
+              video.removeEventListener("loadeddata", onReady);
+              video.removeEventListener("canplay", onReady);
+              resolve();
+            };
+            video.addEventListener("loadeddata", onReady, { once: true });
+            video.addEventListener("canplay", onReady, { once: true });
+            // Safety timeout: proceed after 3s even if events never fire
+            setTimeout(resolve, 3000);
+          }
+        });
+        // play() can throw on some browsers if the user hasn't interacted yet;
+        // catch silently — autoPlay + playsInline handles it in most cases
+        await video.play().catch(() => {});
       }
       setCameraState("active");
-      // Start canvas compositing loop
+      // Start canvas compositing loop only after video has data
       startRaf();
       // Build canvas stream for recording (30fps)
       if (canvasRef.current) {
@@ -557,20 +589,20 @@ export function FilmGameSheet({
             <div className="flex flex-col">
               {/* Preview: show canvas (composited) or raw video */}
               <div className="relative bg-black" style={{ aspectRatio: "16/9" }}>
-                {/* Hidden raw video — source for canvas compositing */}
+                {/* Raw video — always visible as fallback; hidden by canvas when overlay is on */}
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
                   className="absolute inset-0 w-full h-full object-cover"
-                  style={{ opacity: showOverlay ? 0 : 1 }}
+                  style={{ display: "block" }}
                 />
-                {/* Canvas preview (always rendered, hidden when overlay off) */}
+                {/* Canvas overlay — composites video + HUD; shown on top when overlay is on */}
                 <canvas
                   ref={canvasRef}
                   className="absolute inset-0 w-full h-full object-cover"
-                  style={{ opacity: showOverlay ? 1 : 0 }}
+                  style={{ opacity: showOverlay ? 1 : 0, pointerEvents: "none" }}
                 />
 
                 {/* Board framing guide overlay (DOM layer, not composited) */}

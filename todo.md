@@ -6507,3 +6507,10 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix #4: Show full move sequence in Black problem line reason text
 - [x] Fix #5: Remove inaccurate avgGameLength insight from all recommendation generators, insights, and behavior analysis
 - [x] Bump ENGINE_VERSION to 2.1.0 to invalidate all cached prep reports
+
+## Film/Record Black Screen Fix
+
+- [x] Fix blank black screen after camera permission granted: wait for video loadeddata/canplay event before starting rAF loop
+- [x] Initialize canvas dimensions from videoWidth/videoHeight immediately in startRaf
+- [x] Show raw video element as always-visible base layer; canvas overlay sits on top (prevents black screen if canvas hasn't drawn yet)
+- [x] Add 3s safety timeout so startCamera never hangs if video events don't fire
