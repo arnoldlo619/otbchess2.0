@@ -730,7 +730,9 @@ function MyBoardScreen({
                   <p className={`text-sm font-semibold mt-0.5 ${accent}`}>Playing as {colorLabel}</p>
                 </div>
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${
-                  isDark ? "bg-white/05" : "bg-white"
+                  myColor === "black"
+                    ? isDark ? "bg-white/05 text-gray-900" : "bg-gray-800 text-gray-900"
+                    : isDark ? "bg-white/10 text-white" : "bg-white text-gray-800"
                 }`}>
                   {myColor === "white" ? "♔" : "♚"}
                 </div>
@@ -771,9 +773,8 @@ function MyBoardScreen({
                 </div>
               )}
             </div>
-            <div className="flex-1" />
             {/* Post-game instruction */}
-            <div className={`px-4 pb-safe pt-4 border-t ${divider} space-y-3`}>
+            <div className={`mx-4 mt-3 mb-4 pb-safe space-y-3`}>
               {opponent ? (
                 <div className={`rounded-2xl px-5 py-4 text-center ${accentBg}`}>
                   <p className="text-2xl mb-2">🏁</p>
