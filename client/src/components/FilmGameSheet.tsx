@@ -406,13 +406,17 @@ export function FilmGameSheet({
     }
   }, [startRaf, stopRaf]);
 
+  const [isFlipping, setIsFlipping] = useState(false);
+
   // Flip camera
   const flipCamera = useCallback(async () => {
-    if (recordState === "recording") return;
+    if (recordState === "recording" || isFlipping) return;
+    setIsFlipping(true);
     const next = facingMode === "environment" ? "user" : "environment";
     setFacingMode(next);
     await startCamera(next);
-  }, [facingMode, recordState, startCamera]);
+    setIsFlipping(false);
+  }, [facingMode, recordState, isFlipping, startCamera]);
 
   // Start recording — use canvas stream when overlay is on, raw stream otherwise
   const startRecording = useCallback(() => {
@@ -634,13 +638,22 @@ export function FilmGameSheet({
                   </div>
                 )}
 
-                {/* Flip camera */}
+                {/* Camera toggle — front / rear */}
                 {recordState !== "recording" && (
                   <button
                     onClick={flipCamera}
-                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 flex items-center justify-center"
+                    disabled={isFlipping}
+                    aria-label={facingMode === "environment" ? "Switch to front camera" : "Switch to rear camera"}
+                    className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full transition-opacity disabled:opacity-50"
                   >
-                    <FlipHorizontal className="w-4 h-4 text-white" />
+                    {isFlipping ? (
+                      <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                    ) : (
+                      <FlipHorizontal className="w-3.5 h-3.5 text-white" />
+                    )}
+                    <span className="text-white text-[11px] font-semibold">
+                      {facingMode === "environment" ? "Front" : "Rear"}
+                    </span>
                   </button>
                 )}
               </div>
@@ -675,6 +688,25 @@ export function FilmGameSheet({
                         }`}
                       >
                         Guide {showGuide ? "On" : "Off"}
+                      </button>
+                    )}
+
+                    {/* Camera switch toggle */}
+                    {recordState === "idle" && (
+                      <button
+                        onClick={flipCamera}
+                        disabled={isFlipping}
+                        aria-label={facingMode === "environment" ? "Switch to front camera" : "Switch to rear camera"}
+                        className={`ml-auto flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                          isDark ? "bg-white/08 text-white/70 hover:bg-white/12" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {isFlipping ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <FlipHorizontal className="w-3.5 h-3.5" />
+                        )}
+                        {facingMode === "environment" ? "Front Cam" : "Rear Cam"}
                       </button>
                     )}
                   </div>
