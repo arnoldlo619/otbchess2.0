@@ -6514,3 +6514,15 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Initialize canvas dimensions from videoWidth/videoHeight immediately in startRaf
 - [x] Show raw video element as always-visible base layer; canvas overlay sits on top (prevents black screen if canvas hasn't drawn yet)
 - [x] Add 3s safety timeout so startCamera never hangs if video events don't fire
+
+## Your Opponent Card Enhancement
+
+- [x] Add allRounds state to PlayerView — fetched from /live-state REST endpoint on mount
+- [x] Pass allRounds prop through LivePayload and MyBoardScreen
+- [x] Derive per-round opponent history (W/D/L dots) from allRounds
+- [x] Show opponent title badge (GM/IM/WGM etc.) next to name
+- [x] Show tournament pairing rating (pairingRating ?? elo) instead of raw elo
+- [x] Show opponent's current tournament rank (#N of M)
+- [x] Show W / D / L / pts record below the avatar row
+- [x] Show recent form dots (last 4 rounds, green=W, red=L, blue=D) with round tooltip
+- [x] Fall back to player.wins/draws/losses when rounds not yet available

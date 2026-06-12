@@ -46,7 +46,7 @@ import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { resolveTournament } from "@/lib/tournamentRegistry";
-import type { Game, Player } from "@/lib/tournamentData";
+import type { Game, Player, Round } from "@/lib/tournamentData";
 import { getStandings } from "@/lib/tournamentData";
 import { TournamentCompleteScreen } from "./TournamentCompleteScreen";
 
@@ -55,6 +55,7 @@ interface LivePayload {
   round: number;
   games: Game[];
   players: Player[];
+  allRounds?: Round[];
 }
 interface StandingsPayload {
   players: Player[];
@@ -575,11 +576,11 @@ function PlayerTimerBanner({ snap, isDark }: { snap: TimerSnap; isDark: boolean 
 
 function MyBoardScreen({
   tournamentId, tournamentName, username, round, totalRounds,
-  game, myColor, opponent, players, isDark, rejoinUrl, connected, timerSnapshot,
+  game, myColor, opponent, players, allRounds, isDark, rejoinUrl, connected, timerSnapshot,
 }: {
   tournamentId: string; tournamentName: string; username: string;
   round: number; totalRounds: number; game: Game; myColor: "white" | "black";
-  opponent: Player | undefined; players: Player[]; isDark: boolean;
+  opponent: Player | undefined; players: Player[]; allRounds: Round[]; isDark: boolean;
   rejoinUrl: string; connected: boolean; timerSnapshot: TimerSnap;
 }) {
   // ── Broadcast state ──────────────────────────────────────────────────────
@@ -657,6 +658,43 @@ function MyBoardScreen({
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const colorLabel = myColor === "white" ? "White ♔" : "Black ♚";
   const rank = myRank(username, players);
+
+  // ── Opponent history derived from allRounds ─────────────────────────────
+  // Build a list of per-round results for the opponent from completed rounds.
+  // Each entry: { round, result: 'W' | 'L' | 'D' }
+  const opponentHistory: { round: number; result: "W" | "L" | "D" }[] = [];
+  if (opponent) {
+    const completedRounds = allRounds.filter(
+      (r) => r.status === "completed" || r.games.some((g) => g.result !== "*")
+    );
+    for (const r of completedRounds) {
+      for (const g of r.games) {
+        if (g.result === "*") continue;
+        const isWhite = g.whiteId === opponent.id;
+        const isBlack = g.blackId === opponent.id;
+        if (!isWhite && !isBlack) continue;
+        let res: "W" | "L" | "D";
+        if (g.result === "½-½") {
+          res = "D";
+        } else if ((g.result === "1-0" && isWhite) || (g.result === "0-1" && isBlack)) {
+          res = "W";
+        } else {
+          res = "L";
+        }
+        opponentHistory.push({ round: r.number, result: res });
+        break; // one game per round
+      }
+    }
+  }
+  // Fall back to player W/D/L counters when rounds aren't available yet
+  const oppWins = opponent ? (opponentHistory.length > 0 ? opponentHistory.filter((h) => h.result === "W").length : opponent.wins) : 0;
+  const oppDraws = opponent ? (opponentHistory.length > 0 ? opponentHistory.filter((h) => h.result === "D").length : opponent.draws) : 0;
+  const oppLosses = opponent ? (opponentHistory.length > 0 ? opponentHistory.filter((h) => h.result === "L").length : opponent.losses) : 0;
+  const oppPoints = opponent ? opponent.points : 0;
+  // Tournament rank of opponent
+  const oppRank = opponent ? myRank(opponent.username, players) : 0;
+  // Pairing/tournament rating to display
+  const oppRating = opponent ? (opponent.pairingRating ?? opponent.elo) : 0;
 
   // Compute the translateX: each panel is 100vw wide
   const translateX = -(tabIndex * 100) + (dragOffset / window.innerWidth) * 100;
@@ -746,19 +784,84 @@ function MyBoardScreen({
             <div className={`mx-4 mt-3 rounded-2xl ${cardBg} px-5 py-4`}>
               <p className={`text-xs font-bold uppercase tracking-wider ${accent} mb-3`}>Your Opponent</p>
               {opponent ? (
-                <div className="flex items-center gap-4">
-                  <PlayerAvatar
-                    username={opponent.username}
-                    name={opponent.name || opponent.username}
-                    platform={opponent.platform ?? "chesscom"}
-                    avatarUrl={opponent.avatarUrl}
-                    size={56}
-                    className="flex-shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
-                    <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
-                    <p className={`text-sm font-semibold mt-0.5 ${accent}`}>{opponent.elo} ELO</p>
+                <div>
+                  {/* Top row: avatar + name + rating */}
+                  <div className="flex items-center gap-4">
+                    <PlayerAvatar
+                      username={opponent.username}
+                      name={opponent.name || opponent.username}
+                      platform={opponent.platform ?? "chesscom"}
+                      avatarUrl={opponent.avatarUrl}
+                      size={56}
+                      className="flex-shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-lg font-bold ${textMain} truncate`}>{opponent.name || opponent.username}</p>
+                        {opponent.title && (
+                          <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-700"} flex-shrink-0`}>{opponent.title}</span>
+                        )}
+                      </div>
+                      <p className={`text-sm ${textMuted}`}>@{opponent.username}</p>
+                      {/* Tournament rating + rank */}
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className={`text-sm font-semibold ${accent}`}>{oppRating} Rating</span>
+                        {oppRank > 0 && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${isDark ? "bg-white/08 text-white/60" : "bg-gray-100 text-gray-600"}`}>
+                            #{oppRank} of {players.length}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className={`mt-3 mb-3 border-t ${divider}`} />
+
+                  {/* Tournament record + form dots */}
+                  <div className="flex items-center justify-between gap-3">
+                    {/* W / D / L record */}
+                    <div className="flex items-center gap-3">
+                      <div className="text-center">
+                        <p className="text-base font-black text-emerald-500">{oppWins}</p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>W</p>
+                      </div>
+                      <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                      <div className="text-center">
+                        <p className={`text-base font-black ${isDark ? "text-blue-400" : "text-blue-500"}`}>{oppDraws}</p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>D</p>
+                      </div>
+                      <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                      <div className="text-center">
+                        <p className="text-base font-black text-red-500">{oppLosses}</p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>L</p>
+                      </div>
+                      <div className={`w-px h-6 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                      <div className="text-center">
+                        <p className={`text-base font-black ${accent}`}>{oppPoints}</p>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted}`}>pts</p>
+                      </div>
+                    </div>
+
+                    {/* Recent form dots (last 4 rounds, most recent rightmost) */}
+                    {opponentHistory.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${textMuted} mr-0.5`}>Form</p>
+                        {opponentHistory.slice(-4).map((h, i) => (
+                          <span
+                            key={i}
+                            title={h.result === "W" ? `R${h.round}: Win` : h.result === "L" ? `R${h.round}: Loss` : `R${h.round}: Draw`}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                            style={{
+                              background: h.result === "W" ? "rgba(74,222,128,0.15)" : h.result === "L" ? "rgba(248,113,113,0.15)" : "rgba(96,165,250,0.15)",
+                              color: h.result === "W" ? "#4ade80" : h.result === "L" ? "#f87171" : "#60a5fa",
+                            }}
+                          >
+                            {h.result}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -975,6 +1078,7 @@ export default function PlayerView() {
 
   const [screen, setScreen] = useState<PlayerScreen>("lobby");
   const [livePayload, setLivePayload] = useState<LivePayload | null>(null);
+  const [allRounds, setAllRounds] = useState<Round[]>([]);
   const [livePlayers, setLivePlayers] = useState<Player[]>([]);
   const [liveRound, setLiveRound] = useState(0);
   const [totalRounds, setTotalRounds] = useState(0);
@@ -1013,10 +1117,11 @@ export default function PlayerView() {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) return;
-        const { status, currentRound, totalRounds: tr, players, games } = data as {
+        const { status, currentRound, totalRounds: tr, players, games, rounds: fetchedRounds } = data as {
           status: string; currentRound: number; totalRounds: number;
-          players: Player[]; games: Game[];
+          players: Player[]; games: Game[]; rounds?: Round[];
         };
+        if (fetchedRounds?.length) setAllRounds(fetchedRounds);
         if (tr) setTotalRounds(tr);
         if (players?.length) setLivePlayers(players);
         if (status === "completed" && players?.length > 0) {
@@ -1025,7 +1130,7 @@ export default function PlayerView() {
           return;
         }
         if ((status === "in_progress" || status === "paused") && currentRound > 0 && games?.length > 0) {
-          setLivePayload({ round: currentRound, games, players });
+          setLivePayload({ round: currentRound, games, players, allRounds: fetchedRounds ?? [] });
           setLiveRound(currentRound);
           setScreen("my_board");
         }
@@ -1207,6 +1312,7 @@ export default function PlayerView() {
         myColor={boardInfo.myColor}
         opponent={boardInfo.opponent}
         players={livePlayers.length > 0 ? livePlayers : livePayload.players}
+        allRounds={allRounds.length > 0 ? allRounds : (livePayload.allRounds ?? [])}
         isDark={isDark}
         rejoinUrl={rejoinUrl}
         connected={connected}
