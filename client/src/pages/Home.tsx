@@ -694,32 +694,7 @@ function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: 
           style={{ top: 12, width: 120, height: 32, background: "#000", borderRadius: 20, zIndex: 10 }}
         />
 
-        {/* Status bar overlay */}
-        <div
-          className="absolute top-0 left-0 right-0 flex items-start justify-between px-5"
-          style={{ paddingTop: 10, zIndex: 11, background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%)" }}
-        >
-          <span className="text-white text-[10px] font-semibold" style={{ paddingTop: 2 }}>9:41</span>
-          <div className="flex items-center gap-1" style={{ paddingTop: 2 }}>
-            {/* Signal bars */}
-            <svg width="14" height="10" viewBox="0 0 14 10" fill="white">
-              <rect x="0" y="3" width="2" height="7" rx="0.5" opacity="0.9"/>
-              <rect x="3" y="2" width="2" height="8" rx="0.5" opacity="0.9"/>
-              <rect x="6" y="1" width="2" height="9" rx="0.5" opacity="0.9"/>
-              <rect x="9" y="0" width="2" height="10" rx="0.5" opacity="0.9"/>
-            </svg>
-            {/* WiFi */}
-            <svg width="12" height="9" viewBox="0 0 12 9" fill="white" opacity="0.9">
-              <path d="M6 7.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-2.5c1.1 0 2.1.4 2.8 1.1l1-1A5.5 5.5 0 0 0 6 3.5a5.5 5.5 0 0 0-3.8 1.6l1 1A3.5 3.5 0 0 1 6 5zm0-3C7.9 2 9.6 2.8 10.8 4l1-1A7.5 7.5 0 0 0 6 1 7.5 7.5 0 0 0 1.2 3l1 1A5.5 5.5 0 0 1 6 2z"/>
-            </svg>
-            {/* Battery */}
-            <svg width="20" height="10" viewBox="0 0 20 10" fill="none">
-              <rect x="0.5" y="0.5" width="16" height="9" rx="2.5" stroke="white" strokeOpacity="0.4"/>
-              <rect x="1.5" y="1.5" width="12" height="7" rx="1.5" fill="white"/>
-              <path d="M18 3.5V6.5C18.8 6.2 19.5 5.7 19.5 5C19.5 4.3 18.8 3.8 18 3.5Z" fill="white" fillOpacity="0.4"/>
-            </svg>
-          </div>
-        </div>
+
       </div>
     </div>
   );
