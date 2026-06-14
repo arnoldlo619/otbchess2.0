@@ -642,17 +642,22 @@ function MacBookMockup({ src, alt, isDark }: { src: string; alt: string; isDark:
 
 // ─── iPhone Mockup Frame ────────────────────────────────────────────────────
 function IPhoneMockup({ src, alt, isDark }: { src: string; alt: string; isDark: boolean }) {
+  // Responsive sizing: clamp between 220px (small mobile) and 320px (desktop)
+  // Height maintains the 320:650 (≈1:2.03) aspect ratio
   return (
     <div
       className="relative mx-auto select-none"
-      style={{ width: 320, height: 650 }}
+      style={{
+        width: "clamp(200px, min(80vw, 320px), 320px)",
+        height: "clamp(406px, min(162.5vw, 650px), 650px)",
+      }}
     >
-      {/* Side buttons — left */}
-      <div className="absolute left-[-3px] top-[140px] w-[3px] h-[40px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
-      <div className="absolute left-[-3px] top-[195px] w-[3px] h-[64px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
-      <div className="absolute left-[-3px] top-[275px] w-[3px] h-[64px] rounded-l-sm z-20" style={{ background: "#2a2a2a" }} />
+      {/* Side buttons — left (positions scale with the container via percentage) */}
+      <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "21.5%", width: 3, height: "6.15%", background: "#2a2a2a" }} />
+      <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "30%", width: 3, height: "9.85%", background: "#2a2a2a" }} />
+      <div className="absolute z-20 rounded-l-sm" style={{ left: -3, top: "42.3%", width: 3, height: "9.85%", background: "#2a2a2a" }} />
       {/* Side button — right */}
-      <div className="absolute right-[-3px] top-[205px] w-[3px] h-[90px] rounded-r-sm z-20" style={{ background: "#2a2a2a" }} />
+      <div className="absolute z-20 rounded-r-sm" style={{ right: -3, top: "31.5%", width: 3, height: "13.85%", background: "#2a2a2a" }} />
 
       {/* Phone outer shell — border only, transparent center */}
       <div
@@ -793,11 +798,11 @@ function ParallaxStep({
       ref={ref}
       className={`flex flex-col ${
         phoneLeft ? "lg:flex-row" : "lg:flex-row-reverse"
-      } items-center gap-12 lg:gap-20 py-20 lg:py-28`}
+      } items-center gap-8 sm:gap-12 lg:gap-20 py-12 sm:py-16 lg:py-28 px-4 sm:px-0`}
     >
       {/* Phone mockup */}
       <div
-        className="flex-1 flex justify-center lg:justify-end transition-all duration-700 ease-out"
+        className="flex-1 flex justify-center lg:justify-end transition-all duration-700 ease-out w-full"
         style={{ transitionDelay: "0ms" }}
       >
         <div
@@ -814,7 +819,7 @@ function ParallaxStep({
 
       {/* Text content */}
       <div
-        className={`flex-1 max-w-md transition-all duration-700 ease-out ${
+        className={`flex-1 w-full max-w-md transition-all duration-700 ease-out px-2 sm:px-0 ${
           inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}
         style={{ transitionDelay: "150ms" }}
