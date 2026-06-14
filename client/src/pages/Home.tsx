@@ -802,14 +802,15 @@ function ParallaxStep({
     >
       {/* Phone mockup */}
       <div
-        className="flex-1 flex justify-center lg:justify-end transition-all duration-700 ease-out w-full"
-        style={{ transitionDelay: "0ms" }}
+        className="flex-1 flex justify-center lg:justify-end w-full"
       >
         <div
-          className="transition-all duration-700 ease-out"
+          className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{
-            transform: inView ? "none" : `translateX(${phoneLeft ? "-40px" : "40px"})`,
-            transitionDelay: "60ms",
+            transform: inView
+              ? "translateY(0) scale(1)"
+              : `translateY(60px) scale(0.92)`,
+            transitionDelay: "100ms",
             opacity: inView ? 1 : 0,
           }}
         >
