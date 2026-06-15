@@ -18,17 +18,17 @@ export default function Training() {
 
   const features = [
     {
-      icon: BookOpen,
-      title: "Openings Library",
-      subtitle: "Study Lines · Drill Positions · Build Your Book",
+      icon: Swords,
+      title: "Repertoire Builder",
+      subtitle: "Interactive Board · Move Tree · Stockfish Engine",
       description:
-        "Explore a curated library of 18+ openings and 110+ annotated lines. Study move-by-move with interactive boards, drill critical positions with spaced-repetition flashcards, and build a personalized repertoire tailored to your playing style.",
-      cta: "Browse Openings",
-      href: "/openings",
+        "Build your own opening repertoire with an interactive chessboard powered by Stockfish. Explore candidate moves from the Lichess database, see frequency and win-rate data, and save your preparation lines.",
+      cta: "Build Repertoire",
+      href: "/repertoire",
       accent: isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]",
       accentBg: isDark ? "bg-[#5B9A6A]/10" : "bg-[#3D6B47]/08",
       border: isDark ? "border-[#2e4a34]/60 hover:border-[#5B9A6A]/40" : "border-gray-200 hover:border-[#3D6B47]/40",
-      highlights: ["18+ openings covered", "110+ annotated lines", "Spaced-repetition drill mode"],
+      highlights: ["Stockfish 18 engine analysis", "Lichess database explorer", "Save & manage repertoires"],
     },
     {
       icon: Target,
@@ -44,17 +44,17 @@ export default function Training() {
       highlights: ["Opening tendency analysis", "Preparation depth scoring", "Recurring mistake patterns"],
     },
     {
-      icon: Swords,
-      title: "Repertoire Builder",
-      subtitle: "Interactive Board · Move Tree · Stockfish Engine",
+      icon: BookOpen,
+      title: "Openings Library",
+      subtitle: "Study Lines · Drill Positions · Build Your Book",
       description:
-        "Build your own opening repertoire with an interactive chessboard powered by Stockfish. Explore candidate moves from the Lichess database, see frequency and win-rate data, and save your preparation lines.",
-      cta: "Build Repertoire",
-      href: "/repertoire",
+        "Explore a curated library of 18+ openings and 110+ annotated lines. Study move-by-move with interactive boards, drill critical positions with spaced-repetition flashcards, and build a personalized repertoire tailored to your playing style.",
+      cta: "Browse Openings",
+      href: "/openings",
       accent: isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]",
       accentBg: isDark ? "bg-[#5B9A6A]/10" : "bg-[#3D6B47]/08",
       border: isDark ? "border-[#2e4a34]/60 hover:border-[#5B9A6A]/40" : "border-gray-200 hover:border-[#3D6B47]/40",
-      highlights: ["Stockfish 18 engine analysis", "Lichess database explorer", "Save & manage repertoires"],
+      highlights: ["18+ openings covered", "110+ annotated lines", "Spaced-repetition drill mode"],
     },
   ];
 
