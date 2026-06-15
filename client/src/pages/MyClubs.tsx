@@ -117,7 +117,7 @@ function ClubCard({
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
   const cardBorder = isDark ? "border-white/8" : "border-gray-100";
   const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/50" : "text-gray-400";
+  const textMuted = isDark ? "text-white/70" : "text-gray-600";
   // Showcase clubs seeded as seed-club-7 through seed-club-11
   const isTrending = /^seed-club-(7|8|9|10|11)$/.test(club.id);
 
@@ -284,7 +284,7 @@ function FollowedClubCard({
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
   const cardBorder = isDark ? "border-white/8" : "border-gray-100";
   const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/50" : "text-gray-400";
+  const textMuted = isDark ? "text-white/70" : "text-gray-600";
 
   return (
     <div className={`rounded-3xl border ${cardBorder} ${card} overflow-hidden`}>
@@ -793,7 +793,7 @@ export default function MyClubs() {
   const card = isDark ? "bg-[#1a2e1d]" : "bg-white";
   const cardBorder = isDark ? "border-white/8" : "border-gray-100";
   const textMain = isDark ? "text-white" : "text-gray-900";
-  const textMuted = isDark ? "text-white/50" : "text-gray-400";
+  const textMuted = isDark ? "text-white/70" : "text-gray-600";
   const inputBg = isDark ? "bg-white/6 border-white/10 text-white placeholder:text-white/30" : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400";
   const divider = isDark ? "border-white/8" : "border-gray-100";
 

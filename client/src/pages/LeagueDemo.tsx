@@ -197,7 +197,7 @@ export default function LeagueDemo() {
   const cardBg    = isDark ? "oklch(0.20 0.06 145)" : "#ffffff";
   const cardBorder = isDark ? "oklch(0.28 0.07 145)" : "#e5e7eb";
   const textMain  = isDark ? "#f0f5ee" : "#111827";
-  const textMuted = isDark ? "oklch(0.65 0.04 145)" : "#6b7280";
+  const textMuted = isDark ? "oklch(0.78 0.04 145)" : "#4b5563";
   const accent    = "oklch(0.55 0.13 145)";
 
   const featuredMatchup = CURRENT_WEEK_MATCHUPS[0]; // Magnus vs Hikaru

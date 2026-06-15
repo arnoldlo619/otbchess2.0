@@ -6526,3 +6526,22 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Show W / D / L / pts record below the avatar row
 - [x] Show recent form dots (last 4 rounds, green=W, red=L, blue=D) with round tooltip
 - [x] Fall back to player.wins/draws/losses when rounds not yet available
+
+## UI Design System Audit & Polish
+- [ ] Create centralized design tokens (color palette, typography scale, spacing, radii)
+- [ ] Fix low-contrast text across all pages (4.5:1 ratio minimum)
+- [ ] Standardize button styles (primary, secondary, tertiary) with hover/focus states
+- [ ] Increase body text to 16px minimum, line-height 1.5
+- [ ] Fix badge/chip accessibility (icons + labels, not color alone)
+- [ ] Add visible labels to all form inputs (not just placeholders)
+- [ ] Fix Tournaments page: step descriptions contrast, form labels, button styles
+- [ ] Fix Clubs pages: card contrast, nav labels/tooltips, empty states
+- [ ] Fix League demo: sidebar nav labels, table readability, color legend
+- [ ] Fix Training page: card contrast, font sizes, icon tooltips
+- [ ] Fix 404 page: clear explanation, navigation links
+- [ ] Fix Footer: contrast, font sizes, link grouping
+- [ ] Fix CTA sections: enlarge subtext, improve contrast
+- [ ] Add skip-to-content link and semantic landmarks
+- [ ] Add ARIA labels on icons, charts, toggles
+- [ ] Add keyboard focus outlines on all interactive elements
+- [ ] Responsive: fix mobile spacing, touch targets, condensed nav

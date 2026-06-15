@@ -76,7 +76,7 @@ export default function Training() {
           <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-gray-900"}`}>
             Training
           </h1>
-          <p className={`text-base leading-relaxed max-w-md mx-auto ${isDark ? "text-white/50" : "text-gray-500"}`}>
+          <p className={`text-base leading-relaxed max-w-md mx-auto ${isDark ? "text-white/70" : "text-gray-600"}`}>
             Study openings, build your repertoire, and scout your next opponent — everything you need to prepare and improve.
           </p>
         </div>
@@ -104,7 +104,7 @@ export default function Training() {
                     <h2 className={`text-lg font-bold mb-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>
                       {f.title}
                     </h2>
-                    <p className={`text-xs font-medium ${isDark ? "text-white/35" : "text-gray-400"}`}>
+                    <p className={`text-xs font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>
                       {f.subtitle}
                     </p>
                   </div>
@@ -112,7 +112,7 @@ export default function Training() {
                 </div>
 
                 {/* Description */}
-                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/55" : "text-gray-500"}`}>
+                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/70" : "text-gray-600"}`}>
                   {f.description}
                 </p>
 
@@ -122,7 +122,7 @@ export default function Training() {
                     <span
                       key={h}
                       className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${
-                        isDark ? "bg-white/05 text-white/40" : "bg-gray-100 text-gray-500"
+                        isDark ? "bg-white/08 text-white/65" : "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {h}
@@ -148,10 +148,10 @@ export default function Training() {
             <Brain className={`w-4 h-4 ${isDark ? "text-white/20" : "text-gray-300"}`} />
             <Zap className={`w-4 h-4 ${isDark ? "text-white/20" : "text-gray-300"}`} />
           </div>
-          <p className={`text-sm font-medium mb-0.5 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+          <p className={`text-sm font-medium mb-0.5 ${isDark ? "text-white/55" : "text-gray-500"}`}>
             More training tools coming soon
           </p>
-          <p className={`text-xs ${isDark ? "text-white/18" : "text-gray-300"}`}>
+          <p className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>
             Endgame drills · Tactics trainer · Personalized study plans
           </p>
         </div>

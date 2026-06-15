@@ -193,14 +193,16 @@ export function AppNavBar({ defaultActive = "Tournaments", onSignInClick, classN
   );
 
   return (
-    <AnimeNavBar
-      items={navItems}
-      defaultActive={activeTab}
-      logo={logoEl}
-      rightSlot={rightSlotEl}
-      onActiveChange={setActiveTab}
-      isDark={isDark}
-      className={className}
-    />
+    <nav aria-label="Main navigation">
+      <AnimeNavBar
+        items={navItems}
+        defaultActive={activeTab}
+        logo={logoEl}
+        rightSlot={rightSlotEl}
+        onActiveChange={setActiveTab}
+        isDark={isDark}
+        className={className}
+      />
+    </nav>
   );
 }

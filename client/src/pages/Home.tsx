@@ -993,8 +993,8 @@ function Features() {
                   </div>
                   <span className="tag-elo">{feature.tag}</span>
                 </div>
-                <h3 className="text-base font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
+                <p className="text-base text-muted-foreground leading-relaxed">{feature.description}</p>
                 {(feature as { href?: string }).href && (
                   <p className={`text-xs font-semibold mt-3 ${isDark ? "text-[oklch(0.65_0.14_145)]" : "text-[#3D6B47]"}`}>View feature →</p>
                 )}
@@ -1827,13 +1827,13 @@ function CTASection({ onCreateTournament }: { onCreateTournament: () => void }) 
             <br />
             starts here.
           </h2>
-          <p className="text-white/75 text-lg mb-10">
+          <p className="text-white/90 text-xl mb-10">
             Free for chess club owners who sign up. No credit card required.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={onCreateTournament}
-              className="bg-white text-[#3D6B47] font-semibold text-sm px-8 py-3 rounded-md hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-white text-[#3D6B47] font-semibold text-base px-8 py-3.5 rounded-lg hover:bg-[#EEEED2] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
             >
               Create Free Tournament
             </button>
@@ -1886,20 +1886,20 @@ function Footer() {
                 className="h-9 w-auto object-contain drop-shadow-[0_0_6px_rgba(100,200,100,0.2)]"
               />
             </div>
-            <p className="text-sm text-white/50 leading-relaxed">
+            <p className="text-base text-white/70 leading-relaxed">
               PLAY MORE CHESS OTB!!
             </p>
           </div>
 
           {Object.entries(links).map(([category, items]) => (
             <div key={category}>
-              <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mb-4">{category}</p>
+              <p className="text-sm font-semibold tracking-widest uppercase text-white/60 mb-4">{category}</p>
               <ul className="space-y-2.5">
                 {items.map((item) => (
                   <li key={item.label}>
                     <a
                       href={item.href}
-                      className="text-sm text-white/60 hover:text-white transition-colors"
+                      className="text-base text-white/75 hover:text-white transition-colors"
                     >
                       {item.label}
                     </a>
@@ -1911,8 +1911,8 @@ function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/30">© 2026 OTB Chess. All rights reserved.</p>
-          <p className="text-xs text-white/30">Powered by chess.com API · Not affiliated with chess.com</p>
+          <p className="text-sm text-white/65">© 2026 OTB Chess. All rights reserved.</p>
+          <p className="text-sm text-white/65">Powered by chess.com API · Not affiliated with chess.com</p>
         </div>
       </div>
     </footer>

@@ -67,7 +67,7 @@ export default function NotFound() {
           >
             This board is empty.
           </h1>
-          <p className={`text-base mb-8 leading-relaxed ${isDark ? "text-white/50" : "text-gray-500"}`}>
+          <p className={`text-base mb-8 leading-relaxed ${isDark ? "text-white/70" : "text-gray-600"}`}>
             The page you're looking for doesn't exist or may have been moved. Check the URL or head back to the home page.
           </p>
 
@@ -92,21 +92,24 @@ export default function NotFound() {
 
           {/* Quick links */}
           <div className={`mt-10 pt-8 border-t ${isDark ? "border-white/08" : "border-gray-100"}`}>
-            <p className={`text-xs font-semibold uppercase tracking-widest mb-4 ${isDark ? "text-white/30" : "text-gray-400"}`}>
+            <p className={`text-xs font-semibold uppercase tracking-widest mb-4 ${isDark ? "text-white/55" : "text-gray-500"}`}>
               Quick links
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {[
                 { label: "Join a Tournament", href: "/join" },
+                { label: "Training", href: "/training" },
+                { label: "Clubs", href: "/clubs" },
                 { label: "Demo Tournament", href: "/tournament/otb-demo-2026" },
+                { label: "League Demo", href: "/league-demo" },
               ].map(({ label, href }) => (
                 <a
                   key={href}
                   href={href}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                     isDark
-                      ? "border-white/10 text-white/50 hover:text-white hover:border-white/20 bg-white/04"
-                      : "border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-300 bg-white"
+                      ? "border-white/10 text-white/70 hover:text-white hover:border-white/25 bg-white/05"
+                      : "border-gray-200 text-gray-600 hover:text-gray-800 hover:border-gray-300 bg-white"
                   }`}
                 >
                   {label}

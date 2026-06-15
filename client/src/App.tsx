@@ -78,6 +78,15 @@ function PageLoader() {
 
 function Router() {
   return (
+    <>
+    {/* Skip to main content — accessibility */}
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[#3D6B47] focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:shadow-lg"
+    >
+      Skip to main content
+    </a>
+    <main id="main-content">
     <Suspense fallback={<PageLoader />}>
       <Switch>
         <Route path={"/"} component={Home} />
@@ -138,6 +147,8 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
     </Suspense>
+    </main>
+    </>
   );
 }
 
