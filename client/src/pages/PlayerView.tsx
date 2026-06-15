@@ -37,6 +37,7 @@ import {
   Timer,
   Video,
   ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import { authFetch } from "@/lib/apiFetch";
 import { BoardBroadcastPlayer } from "@/components/BoardBroadcastPlayer";
@@ -286,13 +287,16 @@ function PushPromptCard({
 // ─── Lobby Screen ─────────────────────────────────────────────────────────────
 function LobbyScreen({
   tournamentName, username, isDark, tournamentId,
-  playerCount, onPlayerCountChange, rejoinUrl, connected,
+  playerCount, onPlayerCountChange, rejoinUrl, connected, onRefresh,
 }: {
   tournamentName: string; username: string; isDark: boolean; tournamentId: string;
   playerCount: number | null; onPlayerCountChange: (n: number) => void;
   rejoinUrl: string; connected: boolean;
+  onRefresh: () => Promise<void>;
 }) {
   const [dots, setDots] = useState(".");
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshResult, setRefreshResult] = useState<"found" | "not_started" | null>(null);
   useEffect(() => {
     const t = setInterval(() => setDots((d) => (d.length >= 3 ? "." : d + ".")), 600);
     return () => clearInterval(t);
@@ -303,6 +307,24 @@ function LobbyScreen({
       .then((d) => { if (d.count != null) onPlayerCountChange(d.count); })
       .catch(() => {});
   }, [tournamentId, onPlayerCountChange]);
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    setRefreshResult(null);
+    try {
+      await onRefresh();
+      // onRefresh calls applyLiveState which transitions screen if tournament started.
+      // If we're still here after the await, tournament hasn't started yet.
+      setRefreshResult("not_started");
+    } catch {
+      setRefreshResult("not_started");
+    } finally {
+      setRefreshing(false);
+      // Clear the feedback label after 3s
+      setTimeout(() => setRefreshResult(null), 3000);
+    }
+  };
 
   const bg = isDark ? "bg-[#0d1f12]" : "bg-white";
   const textMain = isDark ? "text-white" : "text-gray-900";
@@ -365,11 +387,28 @@ function LobbyScreen({
             </div>
           ))}
         </div>
+        {/* ── Manual refresh fallback ─────────────────────────────────────── */}
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95 disabled:opacity-60 ${
+              isDark
+                ? "bg-white/08 text-white/70 hover:bg-white/12 border border-white/10"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+            }`}
+          >
+            <RefreshCw className={`w-4 h-4 transition-transform ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Checking…" : "Refresh State"}
+          </button>
+          {refreshResult === "not_started" && (
+            <p className={`text-xs ${textMuted}`}>Tournament hasn't started yet — check back shortly</p>
+          )}
+        </div>
       </div>
     </div>
   );
 }
-
 // ─── Waiting Between Rounds Screen ───────────────────────────────────────────
 function WaitingRoundScreen({
   tournamentId, tournamentName, username, round, totalRounds, players, isDark, connected,
@@ -1347,6 +1386,12 @@ export default function PlayerView() {
         onPlayerCountChange={setPlayerCount}
         rejoinUrl={rejoinUrl}
         connected={connected}
+        onRefresh={async () => {
+          const data = await fetch(`/api/tournament/${encodeURIComponent(tournamentId!)}/live-state`)
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+          if (data) applyLiveState(data);
+        }}
       />
     );
   }
