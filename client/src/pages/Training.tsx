@@ -97,8 +97,8 @@ export default function Training() {
               >
                 {/* Header row */}
                 <div className="flex items-start gap-4 mb-4">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${f.accentBg}`}>
-                    <Icon className={`w-5 h-5 ${f.accent}`} />
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${f.accentBg}`}>
+                    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${f.accent}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className={`text-lg font-bold mb-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>
