@@ -167,6 +167,34 @@ function CheckInPanel({
 }) {
   const [input, setInput] = useState(username ?? "");
   const [submitted, setSubmitted] = useState(!!username);
+
+  // ── Live preview: debounced fetch while typing ──────────────────────────────
+  const [preview, setPreview] = useState<{ avatar: string | null; rapid: number; blitz: number } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleInputChange = (val: string) => {
+    setInput(val);
+    setPreview(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const trimmed = val.trim();
+    if (trimmed.length < 3) return; // don't fetch for very short inputs
+    setPreviewLoading(true);
+    debounceRef.current = setTimeout(() => {
+      fetchFromChessCom(trimmed)
+        .then((p) => {
+          setPreview({
+            avatar: p.avatar ? (toProxiedAvatarUrl(p.avatar) ?? p.avatar) : null,
+            rapid: p.rapid,
+            blitz: p.blitz,
+          });
+        })
+        .catch(() => setPreview(null))
+        .finally(() => setPreviewLoading(false));
+    }, 600);
+  };
+
+  // ── Avatar for confirmed state ──────────────────────────────────────────────
   const { url: avatarUrl, status } = useChessAvatar(submitted ? input.trim() : null);
   const proxied = toProxiedAvatarUrl(avatarUrl);
   const [ratings, setRatings] = useState<{ blitz: number; rapid: number } | null>(null);
@@ -176,6 +204,14 @@ function CheckInPanel({
     const trimmed = input.trim();
     if (!trimmed) return;
     setSubmitted(true);
+    // If we already have preview data, use it immediately
+    if (preview) {
+      const r = { blitz: preview.blitz, rapid: preview.rapid };
+      setRatings(r);
+      onConfirm(trimmed, r);
+      setRatingsLoading(false);
+      return;
+    }
     setRatingsLoading(true);
     setRatings(null);
     fetchFromChessCom(trimmed)
@@ -194,6 +230,7 @@ function CheckInPanel({
   const handleEdit = () => {
     setSubmitted(false);
     setRatings(null);
+    setPreview(null);
     onConfirm("");
   };
 
@@ -209,12 +246,21 @@ function CheckInPanel({
         width: "100%",
       }}
     >
-      {/* Avatar / icon */}
+      {/* Avatar / icon — shows live preview while typing, confirmed avatar after submit */}
       <div
-        className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(34,197,94,0.12)", border: "1.5px solid rgba(34,197,94,0.3)" }}
+        className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 transition-all duration-300"
+        style={{
+          background: "rgba(34,197,94,0.12)",
+          border: preview || (submitted && proxied)
+            ? "1.5px solid rgba(34,197,94,0.7)"
+            : "1.5px solid rgba(34,197,94,0.3)",
+        }}
       >
-        {submitted && status === "loading" ? (
+        {previewLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" style={{ color: GREEN_ACTIVE }} />
+        ) : !submitted && preview?.avatar ? (
+          <img src={preview.avatar} alt={input} className="w-full h-full object-cover" />
+        ) : submitted && status === "loading" ? (
           <Loader2 className="w-4 h-4 animate-spin" style={{ color: GREEN_ACTIVE }} />
         ) : submitted && proxied ? (
           <img src={proxied} alt={input} className="w-full h-full object-cover" />
@@ -227,29 +273,42 @@ function CheckInPanel({
 
       {!submitted ? (
         /* Input row */
-        <>
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            placeholder="chess.com username"
-            className="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs text-white placeholder-white/25 font-medium outline-none"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-          <button
-            onClick={handleSubmit}
-            disabled={!input.trim()}
-            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
-            style={{ background: GREEN_ACTIVE }}
-            aria-label="Confirm username"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-          </button>
-        </>
+        <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="chess.com username"
+              className="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs text-white placeholder-white/25 font-medium outline-none"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={!input.trim()}
+              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
+              style={{ background: GREEN_ACTIVE }}
+              aria-label="Confirm username"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+            </button>
+          </div>
+          {/* Live rating preview */}
+          {preview && (preview.rapid > 0 || preview.blitz > 0) && (
+            <div className="flex items-center gap-1.5 px-1">
+              {preview.rapid > 0 && (
+                <span className="text-[10px] font-bold" style={{ color: GREEN_ACTIVE }}>⚡{preview.rapid}</span>
+              )}
+              {preview.blitz > 0 && (
+                <span className="text-[10px] font-bold" style={{ color: "#60a5fa" }}>🔥{preview.blitz}</span>
+              )}
+            </div>
+          )}
+        </div>
       ) : (
         /* Confirmed row */
         <>
