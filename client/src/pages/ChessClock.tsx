@@ -434,12 +434,11 @@ function ClockHalf({
           onClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            top: "1rem",
-            left: "50%",
-            transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
+            ...(flipped
+              ? { top: "1rem", left: "1rem", transform: "rotate(180deg)", transformOrigin: "top left" }
+              : { bottom: "1rem", right: "1rem" }),
             zIndex: 2,
-            width: "calc(100% - 2rem)",
-            maxWidth: 320,
+            maxWidth: 260,
           }}
         >
           {playerInfo && (
@@ -526,12 +525,11 @@ function ClockHalf({
           onClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            top: "1rem",
-            left: "50%",
-            transform: flipped ? "translateX(-50%) rotate(180deg)" : "translateX(-50%)",
+            ...(flipped
+              ? { top: "1rem", left: "1rem", transform: "rotate(180deg)", transformOrigin: "top left" }
+              : { bottom: "1rem", right: "1rem" }),
             zIndex: 2,
-            width: "calc(100% - 2rem)",
-            maxWidth: 320,
+            maxWidth: 260,
           }}
         >
           <CheckInPanel
