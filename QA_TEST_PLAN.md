@@ -134,6 +134,19 @@ Run on iPhone Safari, Android Chrome, and a small desktop width:
 - Refresh page mid-round.
 - Dark/light theme contrast remains acceptable.
 
+## Manual QA checklist for PR 2 tournament lifecycle tests
+
+Use this focused checklist when reviewing the PR 2 safety-net tests before moving on to database duplicate enforcement or state revisioning:
+
+- Desktop happy path: create an 8-player Swiss test tournament, start round 1, enter all results, generate later rounds, and confirm standings update after each completed round.
+- Mobile happy path: on a narrow viewport, register from a join link, open the director console, and confirm pairings/results remain readable while entering a result.
+- Empty/error state: verify a tournament with fewer than two players cannot start and duplicate local registration returns clear duplicate handling instead of adding another player.
+- Tournament workflow: verify a 9-player event assigns exactly one bye per round and avoids repeat bye recipients while alternatives remain available.
+- Auth/permission check: no permission behavior changes are expected in this PR; use this test-only safety net before later director-capability enforcement.
+- Public page check: after correcting a result, confirm the public snapshot/standings reflect the corrected winner and updated score.
+- Edge cases: confirm a 32-player first round pairs every player exactly once and produces no validation errors.
+- Previous PR regression check: run `pnpm check` and record whether the TypeScript-check configuration from PR 1 remains usable in the local dependency set.
+
 ## Manual pre-tournament release checklist
 
 Before using production for a real event:
@@ -164,4 +177,3 @@ Medium-term:
 - Browser smoke tests for create → join → start → result → next round.
 - Mobile viewport smoke test for public tournament and director result entry.
 - Performance micro-benchmark with threshold for 100-player standings/pairings.
-
