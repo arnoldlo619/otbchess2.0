@@ -442,16 +442,20 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   }, []);
 
   // Start the tournament — transition from registration to Round 1
-  const startTournament = useCallback(() => {
+  const startTournament = useCallback((): { round1Games: Game[]; players: Player[] } | null => {
+    let result: { round1Games: Game[]; players: Player[] } | null = null;
     setState((prev) => {
       if (prev.players.length < 2) return prev;
       let games: Game[];
+      let nextState: DirectorState;
       if (prev.format === "doubleswiss") {
         games = generateDoubleSwissPairings(prev.players, [], 1);
+        const round1: Round = { number: 1, status: "in_progress", games };
+        nextState = { ...prev, rounds: [round1], currentRound: 1, status: "in_progress" };
       } else if (prev.format === "swiss_elim") {
         games = generateSwissPairings(prev.players, [], 1);
         const round1: Round = { number: 1, status: "in_progress", games };
-        return {
+        nextState = {
           ...prev,
           rounds: [round1],
           currentRound: 1,
@@ -461,10 +465,13 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         };
       } else {
         games = generateSwissPairings(prev.players, [], 1);
+        const round1: Round = { number: 1, status: "in_progress", games };
+        nextState = { ...prev, rounds: [round1], currentRound: 1, status: "in_progress" };
       }
-      const round1: Round = { number: 1, status: "in_progress", games };
-      return { ...prev, rounds: [round1], currentRound: 1, status: "in_progress" };
+      result = { round1Games: games, players: prev.players };
+      return nextState;
     });
+    return result;
   }, []);
 
   // Enter a result for a game
@@ -510,7 +517,8 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   }, []);
 
   // Generate pairings for next round using the full Swiss engine
-  const generateNextRound = useCallback(() => {
+  const generateNextRound = useCallback((): { roundNum: number; games: Game[]; players: Player[] } | null => {
+    let result: { roundNum: number; games: Game[]; players: Player[] } | null = null;
     setState((prev) => {
       const nextRoundNum = prev.currentRound + 1;
 
@@ -527,6 +535,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         if (prev.elimPhase === "swiss" && prev.currentRound < swissRoundCount) {
           const newGames = generateSwissPairings(prev.players, prev.rounds, nextRoundNum);
           const newRound: Round = { number: nextRoundNum, status: "in_progress", games: newGames };
+          result = { roundNum: nextRoundNum, games: newGames, players: prev.players };
           return {
             ...prev,
             rounds: [...prev.rounds, newRound],
@@ -542,6 +551,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
           const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
           const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
           const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+          result = { roundNum: nextRoundNum, games: elimGames, players: prev.players };
           return {
             ...prev,
             rounds: [...prev.rounds, newRound],
@@ -577,6 +587,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
           }
 
           const newRound: Round = { number: nextRoundNum, status: "in_progress", games: gamesForNewRound };
+          result = { roundNum: nextRoundNum, games: gamesForNewRound, players: prev.players };
           return {
             ...prev,
             rounds: [...prev.rounds, newRound],
@@ -602,17 +613,20 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         games: newGames,
       };
 
+      result = { roundNum: nextRoundNum, games: newGames, players: prev.players };
       return {
         ...prev,
         rounds: [...prev.rounds, newRound],
         currentRound: nextRoundNum,
       };
     });
+    return result;
   }, []);
 
   // Generate the elimination bracket with a director-chosen cutoff size (swiss_elim only)
   // Called when the Swiss phase is complete and the director confirms the cutoff in the modal
-  const generateNextRoundWithCutoff = useCallback((cutoffSize: number) => {
+  const generateNextRoundWithCutoff = useCallback((cutoffSize: number): { roundNum: number; games: Game[]; players: Player[]; elimPhase: string; elimPlayers: Player[] } | null => {
+    let result: { roundNum: number; games: Game[]; players: Player[]; elimPhase: string; elimPlayers: Player[] } | null = null;
     setState((prev) => {
       if (prev.format !== "swiss_elim" || prev.elimPhase !== "swiss") return prev;
       const currentRoundData = prev.rounds.find((r) => r.number === prev.currentRound);
@@ -624,6 +638,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
       const elimGames = generateEliminationFirstRound(advancingPlayers, nextRoundNum);
       const newRound: Round = { number: nextRoundNum, status: "in_progress", games: elimGames };
       const elimRoundsCount = Math.ceil(Math.log2(cutoffSize));
+      result = { roundNum: nextRoundNum, games: elimGames, players: prev.players, elimPhase: "elimination", elimPlayers: advancingPlayers };
       return {
         ...prev,
         rounds: [...prev.rounds, newRound],
@@ -635,6 +650,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
         elimRoundLabelText: elimRoundLabel(cutoffSize),
       };
     });
+    return result;
   }, []);
 
   // Reset/override the elimination bracket with a new cutoff size (swiss_elim only)

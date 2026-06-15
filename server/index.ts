@@ -2597,10 +2597,40 @@ export function createApp() {
     if (!round || !games || !players) {
       return res.status(400).json({ error: "Missing round, games, or players" });
     }
+    // Broadcast SSE immediately so connected players transition right away
     broadcastTournamentStarted(id, { round, games, players });
-    // Record startedAt for 24h auto-expiry (only set once, on first start)
     try {
       const db = await getDb();
+      // 1. Immediately patch tournamentState so the polling fallback (/live-state)
+      //    sees status=in_progress without waiting for the 1500ms director debounce.
+      //    We merge only the known fields, preserving everything else already in the DB.
+      const stateRows = await db
+        .select({ stateJson: tournamentState.stateJson, revision: tournamentState.revision })
+        .from(tournamentState)
+        .where(eq(tournamentState.tournamentId, id))
+        .limit(1);
+      if (stateRows.length > 0) {
+        const existing = JSON.parse(stateRows[0].stateJson) as Record<string, unknown>;
+        const otherRounds = Array.isArray(existing.rounds)
+          ? (existing.rounds as Array<{ number: number }>).filter((r) => r.number !== round)
+          : [];
+        const patched = {
+          ...existing,
+          status: "in_progress",
+          currentRound: round,
+          rounds: [...otherRounds, { number: round, status: "in_progress", games }],
+          players,
+        };
+        await db
+          .update(tournamentState)
+          .set({
+            stateJson: JSON.stringify(patched),
+            updatedAt: new Date(),
+            revision: (stateRows[0].revision ?? 0) + 1,
+          })
+          .where(eq(tournamentState.tournamentId, id));
+      }
+      // 2. Record startedAt for 24h auto-expiry (only set once, on first start)
       await db
         .update(userTournaments)
         .set({ startedAt: new Date(), status: "in_progress" })
@@ -2609,7 +2639,7 @@ export function createApp() {
           isNull(userTournaments.startedAt)
         ));
     } catch (e) {
-      logger.warn("[start] Failed to set startedAt:", e);
+      logger.warn("[start] Failed to update tournament state/startedAt:", e);
     }
     res.json({ ok: true });
   });

@@ -1663,24 +1663,22 @@ export default function Director() {
 
   const { user } = useAuthContext();
 
+  // ── Keep a ref to the latest state so pushStandingsNow always sends fresh data ──
+  // Using a ref avoids stale closure captures without needing localStorage timing hacks.
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
   // ── Immediately push current state to server, bypassing the 1.5s debounce ──
   // Called after every result entry so standings_updated SSE fires right away.
   const pushStandingsNow = useCallback(() => {
     if (tournamentId === "otb-demo-2026") return;
-    // We read the latest state from localStorage (written by the 300ms debounce)
-    // rather than from the React state closure to avoid stale captures.
+    // Use a short delay so React has flushed the setState from enterResult before we read stateRef.
     setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
-        const latestState = raw ? JSON.parse(raw) : null;
-        if (!latestState?.state) return;
-        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state: latestState.state }),
-        }).catch(() => { /* fire-and-forget */ });
-      } catch { /* ignore */ }
-    }, 350); // Wait for the 300ms localStorage debounce to flush
+      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/state`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: stateRef.current }),
+      }).catch(() => { /* fire-and-forget */ });
+    }, 50); // 50ms is enough for React to flush the state update
   }, [tournamentId]);
 
   // ── Sync tournament status to server (for My Tournaments status pills) ──
@@ -2443,27 +2441,20 @@ export default function Director() {
             <button
               onClick={() => {
                 const nextRound = state.currentRound + 1;
-                generateNextRound();
+                const generated = generateNextRound();
                 toast.success(`Round ${nextRound} pairings generated!`);
                 broadcastRoundStart(nextRound);
-                setTimeout(() => {
-                  try {
-                    const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
-                    const latestState = raw ? JSON.parse(raw) : null;
-                    const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                    if (roundData && latestState?.players) {
-                      authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          round: nextRound,
-                          games: roundData.games,
-                          players: latestState.players,
-                        }),
-                      }).catch(() => {});
-                    }
-                  } catch { /* ignore */ }
-                }, 150);
+                if (generated) {
+                  authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      round: generated.roundNum,
+                      games: generated.games,
+                      players: generated.players,
+                    }),
+                  }).catch(() => {});
+                }
               }}
               className={`group flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                 isDark
@@ -3305,27 +3296,20 @@ export default function Director() {
                                 onClick={() => {
                                   setShowNextRoundConfirm(false);
                                   const nextRound = state.currentRound + 1;
-                                  generateNextRound();
+                                  const generated = generateNextRound();
                                   toast.success(`Round ${nextRound} pairings generated!`);
                                   broadcastRoundStart(nextRound);
-                                  setTimeout(() => {
-                                    try {
-                                      const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
-                                      const latestState = raw ? JSON.parse(raw) : null;
-                                      const roundData = latestState?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                                      if (roundData && latestState?.players) {
-                                        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                                          method: "POST",
-                                          headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({
-                                            round: nextRound,
-                                            games: roundData.games,
-                                            players: latestState.players,
-                                          }),
-                                        }).catch(() => {});
-                                      }
-                                    } catch { /* ignore */ }
-                                  }, 150);
+                                  if (generated) {
+                                    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({
+                                        round: generated.roundNum,
+                                        games: generated.games,
+                                        players: generated.players,
+                                      }),
+                                    }).catch(() => {});
+                                  }
                                 }}
                                 className="flex-1 py-2.5 rounded-lg text-xs font-bold text-white transition-all active:scale-95"
                                 style={{ background: "#3D6B47" }}
@@ -5614,32 +5598,26 @@ export default function Director() {
               </button>
               <button
                 onClick={() => {
-                  startTournament();
+                  // startTournament() returns the generated games + players synchronously
+                  // so we can fire the SSE broadcast immediately without any setTimeout/localStorage race.
+                  const started = startTournament();
                   setShowStartConfirm(false);
                   syncStatusToServer("in_progress");
                   toast.success("Round 1 pairings generated! Tournament is live.");
                   // Broadcast tournament_started SSE event to all connected player lobby screens.
-                  // Read the updated state from localStorage after startTournament() runs.
-                  setTimeout(() => {
-                    try {
-                      const raw = localStorage.getItem(`otb-director-state-v2-${tournamentId}`);
-                      const latestState = raw ? JSON.parse(raw) : null;
-                      const round1 = latestState?.rounds?.find((r: { number: number }) => r.number === 1);
-                      if (round1 && latestState?.players) {
-                        authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/start`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            round: 1,
-                            games: round1.games,
-                            players: latestState.players,
-                          }),
-                        }).catch(() => {
-                          // Non-critical — players can still see their board by polling state on next load
-                        });
-                      }
-                    } catch { /* ignore */ }
-                  }, 150);
+                  if (started) {
+                    authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/start`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        round: 1,
+                        games: started.round1Games,
+                        players: started.players,
+                      }),
+                    }).catch(() => {
+                      // Non-critical — players can still see their board by polling state on next load
+                    });
+                  }
                 }}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
                 style={{ background: "#3D6B47", boxShadow: "0 4px 16px rgba(61,107,71,0.35)" }}
@@ -5722,31 +5700,23 @@ export default function Director() {
           isDark={isDark}
           onConfirm={(cutoff) => {
             setShowBracketGenerateModal(false);
-            generateNextRoundWithCutoff(cutoff);
+            const generated = generateNextRoundWithCutoff(cutoff);
             setActiveTab("bracket");
             toast.success(`Elimination bracket generated! Top ${cutoff} players advancing.`, { duration: 5000 });
-            setTimeout(() => {
-              try {
-                const raw = localStorage.getItem(`otb-director-state-v3-${tournamentId}`);
-                const latestState = raw ? JSON.parse(raw) : null;
-                const nextRound = state.currentRound + 1;
-                const roundData = latestState?.state?.rounds?.find((r: { number: number }) => r.number === nextRound);
-                if (roundData && latestState?.state?.players) {
-                  authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      round: nextRound,
-                      games: roundData.games,
-                      players: latestState.state.players,
-                      // Include elim phase info so spectators on fresh devices get the bracket
-                      elimPhase: latestState.state.elimPhase ?? "elimination",
-                      elimPlayers: latestState.state.elimPlayers ?? [],
-                    }),
-                  }).catch(() => {});
-                }
-              } catch { /* ignore */ }
-            }, 300);
+            if (generated) {
+              authFetch(`/api/tournament/${encodeURIComponent(tournamentId)}/round`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  round: generated.roundNum,
+                  games: generated.games,
+                  players: generated.players,
+                  // Include elim phase info so spectators on fresh devices get the bracket
+                  elimPhase: generated.elimPhase,
+                  elimPlayers: generated.elimPlayers,
+                }),
+              }).catch(() => {});
+            }
           }}
           onCancel={() => setShowBracketGenerateModal(false)}
         />
