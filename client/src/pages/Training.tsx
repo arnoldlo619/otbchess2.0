@@ -89,10 +89,10 @@ export default function Training() {
               <button
                 key={f.href}
                 onClick={() => navigate(f.href)}
-                className={`w-full text-left rounded-2xl border p-5 sm:p-6 transition-all duration-300 active:scale-[0.98] group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                className={`w-full text-left rounded-2xl border p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   isDark
-                    ? `bg-[#0f1c11] hover:bg-[#132817] hover:shadow-lg hover:shadow-[#5B9A6A]/20 focus-visible:ring-[#5B9A6A] focus-visible:ring-offset-[#0a1409] ${f.border}`
-                    : `bg-white shadow-sm hover:shadow-md hover:shadow-[#3D6B47]/15 focus-visible:ring-[#3D6B47] focus-visible:ring-offset-[#f8faf8] ${f.border}`
+                    ? `bg-[#0f1c11] hover:bg-[#132817] hover:shadow-xl hover:shadow-[#5B9A6A]/25 focus-visible:ring-[#5B9A6A] focus-visible:ring-offset-[#0a1409] ${f.border}`
+                    : `bg-white shadow-sm hover:shadow-xl hover:shadow-[#3D6B47]/20 focus-visible:ring-[#3D6B47] focus-visible:ring-offset-[#f8faf8] ${f.border}`
                 }`}
               >
                 {/* Header row */}
