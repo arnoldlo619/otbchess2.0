@@ -11,7 +11,7 @@
  *   new_round_flash  — brief animated transition when a new round starts
  *   tournament_complete — final standings
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams, useSearch, useLocation } from "wouter";
 import { Link } from "wouter";
@@ -1129,42 +1129,78 @@ export default function PlayerView() {
       .catch(() => {});
   }, [tournamentId]);
 
+  // ── Shared live-state applier — used by both initial fetch and polling fallback ──
+  const applyLiveState = useCallback((data: {
+    status: string; currentRound: number; totalRounds: number;
+    players: Player[]; games: Game[]; rounds?: Round[];
+    tournamentName?: string;
+  }) => {
+    const { status, currentRound, totalRounds: tr, players, games, rounds: fetchedRounds } = data;
+    if (fetchedRounds?.length) setAllRounds(fetchedRounds);
+    if (tr) setTotalRounds(tr);
+    if (players?.length) setLivePlayers(players);
+    if (status === "completed" && players?.length > 0) {
+      setEndedPayload({ players, tournamentName: data.tournamentName ?? "Tournament" });
+      setScreen("tournament_complete");
+      return;
+    }
+    if ((status === "in_progress" || status === "paused") && currentRound > 0 && games?.length > 0) {
+      setLivePayload({ round: currentRound, games, players, allRounds: fetchedRounds ?? [] });
+      setLiveRound(currentRound);
+      setScreen("my_board");
+    }
+  }, []);
+
   // Catch-up on mount: fetch live-state so reconnecting players see current state immediately
   useEffect(() => {
     if (!tournamentId || tournamentId === "otb-demo-2026") return;
     fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data) return;
-        const { status, currentRound, totalRounds: tr, players, games, rounds: fetchedRounds } = data as {
-          status: string; currentRound: number; totalRounds: number;
-          players: Player[]; games: Game[]; rounds?: Round[];
-        };
-        if (fetchedRounds?.length) setAllRounds(fetchedRounds);
-        if (tr) setTotalRounds(tr);
-        if (players?.length) setLivePlayers(players);
-        if (status === "completed" && players?.length > 0) {
-          setEndedPayload({ players, tournamentName: data.tournamentName ?? "Tournament" });
-          setScreen("tournament_complete");
-          return;
-        }
-        if ((status === "in_progress" || status === "paused") && currentRound > 0 && games?.length > 0) {
-          setLivePayload({ round: currentRound, games, players, allRounds: fetchedRounds ?? [] });
-          setLiveRound(currentRound);
-          setScreen("my_board");
-        }
-      })
+      .then((data) => { if (data) applyLiveState(data); })
       .catch(() => { /* stay on lobby */ });
-  }, [tournamentId]);
+  }, [tournamentId, applyLiveState]);
 
-  // Persistent SSE connection — lives for the full player session across all screens
+  // Polling fallback — runs only while on the lobby screen.
+  // Catches tournament_started events missed due to SSE disconnection or mobile backgrounding.
+  // Polls every 5s; stops as soon as the screen transitions away from lobby.
+  const screenRef = useRef("lobby");
+  useEffect(() => { screenRef.current = screen; }, [screen]);
+  useEffect(() => {
+    if (!tournamentId || tournamentId === "otb-demo-2026") return;
+    const poll = setInterval(() => {
+      if (screenRef.current !== "lobby") { clearInterval(poll); return; }
+      fetch(`/api/tournament/${encodeURIComponent(tournamentId)}/live-state`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => { if (data) applyLiveState(data); })
+        .catch(() => {});
+    }, 5_000);
+    return () => clearInterval(poll);
+  }, [tournamentId, applyLiveState]);
+
+  // Persistent SSE connection with auto-reconnect — lives for the full player session
   useEffect(() => {
     if (!tournamentId) return;
-    const es = new EventSource(
-      `/api/tournament/${encodeURIComponent(tournamentId)}/players/stream`
-    );
-    es.onopen = () => setConnected(true);
-    es.onerror = () => setConnected(false);
+    let es: EventSource;
+    let retryDelay = 1_000;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let destroyed = false;
+
+    function connect() {
+      if (destroyed) return;
+      es = new EventSource(
+        `/api/tournament/${encodeURIComponent(tournamentId!)}/players/stream`
+      );
+      es.onopen = () => { setConnected(true); retryDelay = 1_000; };
+      es.onerror = () => {
+        setConnected(false);
+        es.close();
+        if (!destroyed) {
+          retryTimer = setTimeout(() => {
+            retryDelay = Math.min(retryDelay * 2, 30_000);
+            connect();
+          }, retryDelay);
+        }
+      };
 
     es.addEventListener("player_joined", () => {
       setPlayerCount((c) => (c !== null ? c + 1 : 1));
@@ -1224,8 +1260,16 @@ export default function PlayerView() {
       } catch { /* ignore */ }
     });
 
-    return () => es.close();
-  }, [tournamentId, navigate]);
+      return es;
+    }
+
+    connect();
+    return () => {
+      destroyed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      es?.close();
+    };
+  }, [tournamentId, navigate, applyLiveState]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!tournamentId || !username) {
