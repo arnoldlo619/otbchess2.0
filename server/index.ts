@@ -55,8 +55,9 @@ const sseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
 // Tracks how many active SSE connections each IP address currently holds.
 // Prevents a single device from accidentally opening dozens of tabs and
 // exhausting server file-descriptor / memory budgets.
-// Limit: MAX_SSE_PER_IP concurrent connections per IP (across all tournaments).
-const MAX_SSE_PER_IP = 3;
+// IMPORTANT: In tournament venues, ALL players share the same public IP via NAT.
+// The limit must accommodate a full tournament (64+ players) on one WiFi network.
+const MAX_SSE_PER_IP = 100;
 const sseIpCount = new Map<string, number>();
 
 function sseIpIncrement(ip: string): boolean {
@@ -2629,6 +2630,20 @@ export function createApp() {
             revision: (stateRows[0].revision ?? 0) + 1,
           })
           .where(eq(tournamentState.tournamentId, id));
+      } else {
+        // Row doesn't exist yet (director started before the 1500ms debounce fired).
+        // Create it now so the polling fallback (/live-state) works immediately.
+        const freshState = {
+          status: "in_progress",
+          currentRound: round,
+          rounds: [{ number: round, status: "in_progress", games }],
+          players,
+        };
+        await db.insert(tournamentState).values({
+          tournamentId: id,
+          stateJson: JSON.stringify(freshState),
+          revision: 1,
+        });
       }
       // 2. Record startedAt for 24h auto-expiry (only set once, on first start)
       await db

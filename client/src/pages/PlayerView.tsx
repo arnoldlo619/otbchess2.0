@@ -1229,7 +1229,15 @@ export default function PlayerView() {
       es = new EventSource(
         `/api/tournament/${encodeURIComponent(tournamentId!)}/players/stream`
       );
-      es.onopen = () => { setConnected(true); retryDelay = 1_000; };
+      es.onopen = () => {
+        setConnected(true);
+        retryDelay = 1_000;
+        // Catch-up fetch on every (re)connect — recovers events missed while disconnected
+        fetch(`/api/tournament/${encodeURIComponent(tournamentId!)}/live-state`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => { if (data) applyLiveState(data); })
+          .catch(() => {});
+      };
       es.onerror = () => {
         setConnected(false);
         es.close();

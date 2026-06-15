@@ -6545,3 +6545,12 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [ ] Add ARIA labels on icons, charts, toggles
 - [ ] Add keyboard focus outlines on all interactive elements
 - [ ] Responsive: fix mobile spacing, touch targets, condensed nav
+## Tournament Lobby → Board Redirect (Critical Fix)
+
+- [x] Fix SSE IP rate limit: MAX_SSE_PER_IP raised from 3 to 100 (all players on same venue WiFi share one public IP via NAT)
+- [x] Fix /start endpoint: INSERT tournamentState row if it doesn't exist (handles director starting before 1500ms debounce fires)
+- [x] Fix startTournament() return value: returns { round1Games, players } synchronously (eliminates localStorage timing race)
+- [x] Fix Director.tsx start handler: uses returned value directly instead of setTimeout + localStorage read
+- [x] Fix PlayerView SSE onopen: catch-up fetch on every (re)connect to recover missed events
+- [x] Reduce polling interval from 5s to 3s for faster fallback recovery
+- [x] Add manual "Refresh State" button in player waiting room as user-triggered fallback
