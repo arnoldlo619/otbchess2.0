@@ -51,7 +51,15 @@ interface PersistedState {
   schemaVersion: number;
   savedAt: string;
   state: DirectorState;
+  serverRevision?: number;
 }
+
+type ServerStateResponse = {
+  state: DirectorState;
+  updatedAt: string;
+  revision?: number;
+  currentRevision?: number;
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getDemoInitialState(): DirectorState {
@@ -200,6 +208,7 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
   const [lastSaved, setLastSaved] = useState<string | null>(() => getSavedAt(tournamentId));
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const serverRevisionRef = useRef<number | null>(null);
   const isDemo = tournamentId === "otb-demo-2026";
 
   // Hydrate from server on first mount (recovers from page refresh / device switch)
@@ -207,9 +216,10 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     if (isDemo) return;
     fetch(`/api/tournament/${tournamentId}/state`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
+      .then((data: ServerStateResponse | null) => {
         if (!data?.state) return;
         const serverState = data.state as DirectorState;
+        serverRevisionRef.current = typeof data.revision === "number" ? data.revision : null;
         // Only hydrate if the server state is newer than what's in localStorage
         const localRaw = localStorage.getItem(storageKey(tournamentId));
         if (localRaw) {
@@ -245,11 +255,28 @@ export function useDirectorState(tournamentId: string = "otb-demo-2026") {
     if (isDemo) return;
     if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
     serverSaveTimerRef.current = setTimeout(() => {
+      const requestBody = serverRevisionRef.current === null
+        ? { state }
+        : { state, baseRevision: serverRevisionRef.current };
       fetch(`/api/tournament/${tournamentId}/state`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state }),
-      }).catch(() => { /* fire-and-forget — localStorage is the fallback */ });
+        body: JSON.stringify(requestBody),
+      })
+        .then(async (response) => {
+          if (response.status === 409) {
+            const conflict = await response.json().catch(() => null) as ServerStateResponse | null;
+            if (conflict?.state) {
+              serverRevisionRef.current = typeof conflict.currentRevision === "number" ? conflict.currentRevision : serverRevisionRef.current;
+              console.warn("[director-state] Stale tournament state save rejected; keeping local state until reload.", conflict);
+            }
+            return;
+          }
+          if (!response.ok) return;
+          const saved = await response.json().catch(() => null) as { revision?: number } | null;
+          if (typeof saved?.revision === "number") serverRevisionRef.current = saved.revision;
+        })
+        .catch(() => { /* fire-and-forget — localStorage is the fallback */ });
     }, 1500);
     return () => {
       if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);

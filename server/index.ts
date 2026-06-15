@@ -175,6 +175,15 @@ function broadcastTournamentStarted(
   for (const res of Array.from(subs)) {    try { res.write(data); } catch { /* client already disconnected */ }
   }
 }
+
+function getAffectedRows(result: unknown): number | null {
+  const first = Array.isArray(result) ? result[0] : result;
+  if (first && typeof first === "object" && "affectedRows" in first) {
+    const affectedRows = (first as { affectedRows?: unknown }).affectedRows;
+    return typeof affectedRows === "number" ? affectedRows : null;
+  }
+  return null;
+}
 // ─── Chess.com & Lichess proxy ──────────────────────────────────────────────────────────
 /** Server-side fetch with retry for upstream 429/503 (chess.com rate limiting). */
 async function fetchWithRetryServer(
@@ -1591,40 +1600,28 @@ export function createApp() {
       return res.status(400).json({ error: "Missing tournament id or player.username" });
     }
     const username = (player.username as string).toLowerCase().trim();
+    if (!username) {
+      return res.status(400).json({ error: "Player username cannot be empty" });
+    }
+    const registrationPlayer = { ...player, username };
     try {
       const db = await getDb();
-      // Check if this player already exists for this tournament
-      const existing = await db
-        .select({ id: tournamentPlayers.id })
-        .from(tournamentPlayers)
-        .where(
-          and(
-            eq(tournamentPlayers.tournamentId, id),
-            eq(tournamentPlayers.username, username)
-          )
-        );
-      if (existing.length > 0) {
-        // Update the player JSON (ELO may have changed)
-        await db
-          .update(tournamentPlayers)
-          .set({ playerJson: JSON.stringify(player) })
-          .where(
-            and(
-              eq(tournamentPlayers.tournamentId, id),
-              eq(tournamentPlayers.username, username)
-            )
-          );
-      } else {
-        // Insert new registration
-        await db.insert(tournamentPlayers).values({
+      await db
+        .insert(tournamentPlayers)
+        .values({
           id: nanoid(),
           tournamentId: id,
           username,
-          playerJson: JSON.stringify(player),
+          playerJson: JSON.stringify(registrationPlayer),
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            // Preserve original joinedAt/id while refreshing player details.
+            playerJson: JSON.stringify(registrationPlayer),
+          },
         });
-      }
-       // Broadcast the new/updated player to all connected SSE director clients
-      broadcastPlayerJoined(id, player);
+      // Broadcast the new/updated player to all connected SSE director clients
+      broadcastPlayerJoined(id, registrationPlayer);
       res.json({ ok: true, username });
       // Fire-and-forget cache warm-up for chess.com players
       const platform = (player.platform as string | undefined) ?? "chesscom";
@@ -1768,7 +1765,7 @@ export function createApp() {
         .from(tournamentState)
         .where(eq(tournamentState.tournamentId, id));
       if (rows.length === 0) return res.status(404).json({ error: "not_found" });
-      res.json({ state: JSON.parse(rows[0].stateJson), updatedAt: rows[0].updatedAt });
+      res.json({ state: JSON.parse(rows[0].stateJson), updatedAt: rows[0].updatedAt, revision: rows[0].revision });
     } catch (err) {
       logger.error("[state] GET error:", err);
       res.status(500).json({ error: "Database error" });
@@ -1780,8 +1777,11 @@ export function createApp() {
   // Body: { state: DirectorState }
   app.put("/api/tournament/:id/state", async (req, res) => {
     const { id } = req.params;
-    const { state } = req.body as { state: unknown };
+    const { state, baseRevision } = req.body as { state: unknown; baseRevision?: unknown };
     if (!id || !state) return res.status(400).json({ error: "Missing tournament id or state" });
+    if (baseRevision !== undefined && (typeof baseRevision !== "number" || !Number.isInteger(baseRevision) || baseRevision < 0)) {
+      return res.status(400).json({ error: "baseRevision must be a non-negative integer" });
+    }
     // Never persist the demo tournament
     if (id === "otb-demo-2026") return res.json({ ok: true, skipped: true });
     try {
@@ -1789,16 +1789,61 @@ export function createApp() {
       const stateJson = JSON.stringify(state);
       // Check if row exists
       const existing = await db
-        .select({ tournamentId: tournamentState.tournamentId })
+        .select({
+          tournamentId: tournamentState.tournamentId,
+          stateJson: tournamentState.stateJson,
+          updatedAt: tournamentState.updatedAt,
+          revision: tournamentState.revision,
+        })
         .from(tournamentState)
         .where(eq(tournamentState.tournamentId, id));
       if (existing.length > 0) {
-        await db
+        const current = existing[0];
+        if (baseRevision === undefined) {
+          return res.status(409).json({
+            error: "revision_conflict",
+            message: "Tournament state already exists on the server. Reload the latest state before saving.",
+            currentRevision: current.revision,
+            updatedAt: current.updatedAt,
+            state: JSON.parse(current.stateJson),
+          });
+        }
+        if (typeof baseRevision === "number" && baseRevision !== current.revision) {
+          return res.status(409).json({
+            error: "revision_conflict",
+            message: "Tournament state changed on another device. Reload the latest state before saving.",
+            currentRevision: current.revision,
+            updatedAt: current.updatedAt,
+            state: JSON.parse(current.stateJson),
+          });
+        }
+        const nextRevision = current.revision + 1;
+        const updateResult = await db
           .update(tournamentState)
-          .set({ stateJson, updatedAt: new Date() })
-          .where(eq(tournamentState.tournamentId, id));
+          .set({ stateJson, revision: nextRevision, updatedAt: new Date() })
+          .where(
+            and(
+              eq(tournamentState.tournamentId, id),
+              eq(tournamentState.revision, current.revision)
+            )
+          );
+        const affectedRows = getAffectedRows(updateResult);
+        if (affectedRows === 0) {
+          const latest = await db
+            .select()
+            .from(tournamentState)
+            .where(eq(tournamentState.tournamentId, id));
+          const latestRow = latest[0];
+          return res.status(409).json({
+            error: "revision_conflict",
+            message: "Tournament state changed on another device. Reload the latest state before saving.",
+            currentRevision: latestRow?.revision ?? current.revision,
+            updatedAt: latestRow?.updatedAt ?? current.updatedAt,
+            state: latestRow?.stateJson ? JSON.parse(latestRow.stateJson) : JSON.parse(current.stateJson),
+          });
+        }
       } else {
-        await db.insert(tournamentState).values({ tournamentId: id, stateJson });
+        await db.insert(tournamentState).values({ tournamentId: id, stateJson, revision: 1 });
       }
       // Invalidate public snapshot cache so next public read rebuilds from fresh data
       invalidateSnapshotCache(id);
@@ -1815,7 +1860,7 @@ export function createApp() {
           try { sub.write(payload); } catch { /* disconnected */ }
         }
       }
-      res.json({ ok: true });
+      res.json({ ok: true, revision: existing.length > 0 ? existing[0].revision + 1 : 1 });
     } catch (err) {
       logger.error("[state] PUT error:", err);
       res.status(500).json({ error: "Database error" });

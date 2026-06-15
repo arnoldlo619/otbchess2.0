@@ -153,6 +153,10 @@ export const tournamentPlayers = mysqlTable(
   },
   (table) => ({
     tournamentIdx: index("tp_tournament_id_idx").on(table.tournamentId),
+    uniqueTournamentUsername: uniqueIndex("tp_unique_tournament_username").on(
+      table.tournamentId,
+      table.username
+    ),
   })
 );
 
@@ -170,6 +174,9 @@ export const tournamentState = mysqlTable("tournament_state", {
 
   // Full DirectorState object serialised as JSON
   stateJson: text("state_json").notNull(),
+
+  // Monotonic server revision used to detect stale director-tab writes
+  revision: int("revision").notNull().default(0),
 
   // Last time this row was written
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

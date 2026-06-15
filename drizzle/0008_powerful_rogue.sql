@@ -1,0 +1,1 @@
+ALTER TABLE `tournament_state` ADD `revision` int DEFAULT 0 NOT NULL;
