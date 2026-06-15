@@ -435,7 +435,7 @@ function ClockHalf({
           style={{
             position: "absolute",
             ...(flipped
-              ? { top: "1rem", left: "1rem", transform: "rotate(180deg)", transformOrigin: "top left" }
+              ? { top: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "top right" }
               : { bottom: "1rem", right: "1rem" }),
             zIndex: 2,
             maxWidth: 260,
@@ -526,7 +526,7 @@ function ClockHalf({
           style={{
             position: "absolute",
             ...(flipped
-              ? { top: "1rem", left: "1rem", transform: "rotate(180deg)", transformOrigin: "top left" }
+              ? { top: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "top right" }
               : { bottom: "1rem", right: "1rem" }),
             zIndex: 2,
             maxWidth: 260,
