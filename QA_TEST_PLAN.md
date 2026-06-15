@@ -147,6 +147,32 @@ Use this focused checklist when reviewing the PR 2 safety-net tests before movin
 - Edge cases: confirm a 32-player first round pairs every player exactly once and produces no validation errors.
 - Previous PR regression check: run `pnpm check` and record whether the TypeScript-check configuration from PR 1 remains usable in the local dependency set.
 
+## Manual QA checklist for PR 3 unique tournament player registrations
+
+Use this focused checklist when reviewing the PR 3 duplicate-registration hardening before moving on to tournament state revisioning:
+
+- Desktop happy path: open a tournament join link, register one Chess.com player, refresh the director console, and confirm the player appears exactly once.
+- Mobile happy path: scan/open the same join link on a phone-width viewport and re-submit the same username with different casing; confirm the roster still shows one player with refreshed details.
+- Empty/error state: submit the join form with a missing username and confirm the existing validation/error copy remains clear.
+- Tournament workflow: register enough players to start a small Swiss event and confirm pairings use the deduped roster, not duplicate server rows.
+- Auth/permission check: no permission behavior changes are expected in this PR; duplicate prevention applies to the public join/add-player registration endpoint only.
+- Public page check: open the public tournament page from a fresh browser after duplicate re-submission and confirm player counts/standings do not double-count that player.
+- Edge cases: try concurrent duplicate submissions for the same tournament/username and confirm the database keeps one `(tournament_id, username)` row.
+- Previous PR regression check: rerun the PR 2 lifecycle safety tests to confirm byes, result corrections, and public snapshots still behave as expected.
+
+## Manual QA checklist for consolidated live tournament reliability
+
+Use this checklist when reviewing the consolidated duplicate-registration plus state-revision safety pass:
+
+- Desktop happy path: open the director console, add players, start round 1, enter a result, and confirm the state saves successfully after refresh.
+- Mobile happy path: repeat result entry on a phone-width viewport and confirm the public/player page receives the latest pairings or standings.
+- Empty/error state: load a fresh tournament with no saved server state and confirm local-first behavior still works without a blocking error.
+- Tournament workflow: with two director tabs open, save a result in tab A, then attempt to save stale state from tab B and confirm the server returns a revision conflict instead of overwriting tab A.
+- Auth/permission check: no director capability enforcement is included in this pass; use existing access boundaries and note this remains a later hardening item.
+- Public page check: after a successful non-conflicting save, refresh a public tournament page and confirm the snapshot reflects the latest server state.
+- Edge cases: confirm duplicate player re-submission still leaves one roster row, and stale state conflict handling does not remove localStorage fallback data.
+- Previous PR regression check: rerun focused tournament lifecycle and duplicate-registration tests.
+
 ## Manual pre-tournament release checklist
 
 Before using production for a real event:

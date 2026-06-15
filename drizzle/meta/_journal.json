@@ -50,6 +50,20 @@
       "when": 1779770871079,
       "tag": "0006_fearless_argent",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1781486810004,
+      "tag": "0007_unique_tournament_players",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1781489033285,
+      "tag": "0008_powerful_rogue",
+      "breakpoints": true
     }
   ]
 }
