@@ -675,11 +675,15 @@ export default function LeagueDashboard() {
     const d = await r.json() as { publicKey: string };
     return d.publicKey;
   }
-  function urlBase64ToUint8Array(base64: string): Uint8Array {
+  function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
     const padding = "=".repeat((4 - (base64.length % 4)) % 4);
     const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
     const raw = atob(b64);
-    return Uint8Array.from(Array.from(raw).map((c) => c.charCodeAt(0)));
+    const output = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i += 1) {
+      output[i] = raw.charCodeAt(i);
+    }
+    return output;
   }
   async function handleSubscribePush() {
     if (!leagueId || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
