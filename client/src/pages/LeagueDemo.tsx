@@ -217,45 +217,8 @@ export default function LeagueDemo() {
   return (
     <>
     <div className="min-h-screen" style={{ background: pageBg }}>
-      {/* Demo Banner */}
-      <div
-        className="sticky top-0 z-50 overflow-hidden"
-        style={{ background: "oklch(0.18 0.06 145)", borderBottom: "1px solid oklch(0.28 0.10 145)" }}
-      >
-        {/* Micro-checkered pattern overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: "repeating-conic-gradient(oklch(0.25 0.08 145) 0% 25%, transparent 0% 50%)",
-            backgroundSize: "8px 8px",
-            opacity: 0.45,
-          }}
-        />
-        {/* Content row */}
-        <div className="relative flex items-center justify-center gap-3 px-4 py-2.5">
-          {/* Demo Mode badge */}
-          <span
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase flex-shrink-0"
-            style={{ background: "oklch(0.55 0.18 85)", color: "#fff", letterSpacing: "0.08em" }}
-          >
-            <Zap size={9} />
-            Demo
-          </span>
-          <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>
-            Preview of the Chess Club League Dashboard
-          </span>
-          <button
-            onClick={() => navigate("/")}
-            className="ml-1 flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95 flex-shrink-0"
-            style={{ background: "oklch(0.55 0.18 145)", color: "#fff" }}
-          >
-            Get Started
-          </button>
-        </div>
-      </div>
-
       {/* ── MAIN LAYOUT ─────────────────────────────────────────────────────── */}
-      <div className="flex h-[calc(100vh-32px)] overflow-hidden">
+      <div className="flex h-screen overflow-hidden">
 
         {/* ── LEFT ICON RAIL (desktop) ──────────────────────────────────────── */}
         <aside
@@ -364,7 +327,7 @@ export default function LeagueDemo() {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accent }} />
-                Live · Week 14/16
+                LIVE DEMO · Week 14/16
               </div>
             </div>
 
