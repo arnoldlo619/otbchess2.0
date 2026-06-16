@@ -1,14 +1,24 @@
 /**
  * Training Hub — /training
  *
- * Central hub for all player development features:
- *   1. Video Editor — upload OTB game video + live digital board side-by-side (external)
- *   2. Repertoire Builder — study and drill opening lines
- *   3. Matchup Prep — deep scout analysis against any chess.com player
- *   4. Openings Library — study and drill opening lines
+ * Each feature card expands inline to reveal a side-by-side preview:
+ *   left: demo screenshot  |  right: description + highlights + CTA
  */
+import { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { BookOpen, Target, ChevronRight, GraduationCap, Zap, Brain, Swords, Video, ExternalLink } from "lucide-react";
+import {
+  BookOpen,
+  Target,
+  ChevronRight,
+  GraduationCap,
+  Zap,
+  Brain,
+  Swords,
+  Video,
+  ExternalLink,
+  X,
+  ArrowRight,
+} from "lucide-react";
 import { AppNavBar } from "@/components/AppNavBar";
 import { BGPattern } from "@/components/ui/bg-pattern";
 
@@ -20,15 +30,19 @@ interface FeatureCard {
   cta: string;
   href: string;
   external?: boolean;
+  previewImg: string;
+  previewAlt: string;
   accent: string;
   accentBg: string;
   border: string;
+  borderActive: string;
   highlights: string[];
 }
 
 export default function Training() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
   const features: FeatureCard[] = [
     {
@@ -38,11 +52,14 @@ export default function Training() {
       description:
         "Upload your OTB game video and open a side-by-side editor: your video plays on the left while a live interactive digital chessboard sits on the right. Register each move for White and Black as you watch, then export a polished video with the board overlay embedded — perfect for game reviews, club content, and social sharing.",
       cta: "Open Video Editor",
-      href: "https://editor.chessotb.club",
+      href: "https://otbanalysis.lovable.app",
       external: true,
+      previewImg: "/manus-storage/video-editor-demo_b4d06aa7.png",
+      previewAlt: "Video Editor — side-by-side OTB game video and interactive digital chessboard",
       accent: isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]",
       accentBg: isDark ? "bg-[#5B9A6A]/10" : "bg-[#3D6B47]/08",
-      border: isDark ? "border-[#2e4a34]/60 hover:border-[#5B9A6A]/40" : "border-gray-200 hover:border-[#3D6B47]/40",
+      border: isDark ? "border-[#2e4a34]/60" : "border-gray-200",
+      borderActive: isDark ? "border-[#5B9A6A]/50" : "border-[#3D6B47]/40",
       highlights: ["Side-by-side video + board view", "Live move registration", "Export with board overlay"],
     },
     {
@@ -53,9 +70,12 @@ export default function Training() {
         "Build your own opening repertoire with an interactive chessboard powered by Stockfish. Explore candidate moves from the Lichess database, see frequency and win-rate data, and save your preparation lines.",
       cta: "Build Repertoire",
       href: "/repertoire",
+      previewImg: "/manus-storage/video-editor-demo_b4d06aa7.png",
+      previewAlt: "Repertoire Builder — interactive opening tree with Stockfish analysis",
       accent: isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]",
       accentBg: isDark ? "bg-[#5B9A6A]/10" : "bg-[#3D6B47]/08",
-      border: isDark ? "border-[#2e4a34]/60 hover:border-[#5B9A6A]/40" : "border-gray-200 hover:border-[#3D6B47]/40",
+      border: isDark ? "border-[#2e4a34]/60" : "border-gray-200",
+      borderActive: isDark ? "border-[#5B9A6A]/50" : "border-[#3D6B47]/40",
       highlights: ["Stockfish 18 engine analysis", "Lichess database explorer", "Save & manage repertoires"],
     },
     {
@@ -66,9 +86,12 @@ export default function Training() {
         "Enter any chess.com username and get a deep pre-game scouting report in seconds. Discover your opponent's opening tendencies, preparation depth, recurring mistake patterns, and the exact moves where they most commonly go wrong.",
       cta: "Prepare for Opponent",
       href: "/prep",
+      previewImg: "/manus-storage/video-editor-demo_b4d06aa7.png",
+      previewAlt: "Matchup Prep — opponent scouting report with opening tendencies and mistake patterns",
       accent: isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]",
       accentBg: isDark ? "bg-[#5B9A6A]/10" : "bg-[#3D6B47]/08",
-      border: isDark ? "border-[#2e4a34]/60 hover:border-[#5B9A6A]/40" : "border-gray-200 hover:border-[#3D6B47]/40",
+      border: isDark ? "border-[#2e4a34]/60" : "border-gray-200",
+      borderActive: isDark ? "border-[#5B9A6A]/50" : "border-[#3D6B47]/40",
       highlights: ["Opening tendency analysis", "Preparation depth scoring", "Recurring mistake patterns"],
     },
     {
@@ -79,14 +102,17 @@ export default function Training() {
         "Explore a curated library of 18+ openings and 110+ annotated lines. Study move-by-move with interactive boards, drill critical positions with spaced-repetition flashcards, and build a personalized repertoire tailored to your playing style.",
       cta: "Browse Openings",
       href: "/openings",
+      previewImg: "/manus-storage/video-editor-demo_b4d06aa7.png",
+      previewAlt: "Openings Library — curated opening lines with interactive board and drill mode",
       accent: isDark ? "text-[#5B9A6A]" : "text-[#3D6B47]",
       accentBg: isDark ? "bg-[#5B9A6A]/10" : "bg-[#3D6B47]/08",
-      border: isDark ? "border-[#2e4a34]/60 hover:border-[#5B9A6A]/40" : "border-gray-200 hover:border-[#3D6B47]/40",
+      border: isDark ? "border-[#2e4a34]/60" : "border-gray-200",
+      borderActive: isDark ? "border-[#5B9A6A]/50" : "border-[#3D6B47]/40",
       highlights: ["18+ openings covered", "110+ annotated lines", "Spaced-repetition drill mode"],
     },
   ];
 
-  const handleCardClick = (f: FeatureCard) => {
+  const handleCta = (f: FeatureCard) => {
     if (f.external) {
       window.open(f.href, "_blank", "noopener,noreferrer");
     } else {
@@ -119,87 +145,138 @@ export default function Training() {
 
         {/* ── Feature Cards ── */}
         <div className="space-y-4">
-          {features.map((f) => {
+          {features.map((f, idx) => {
             const Icon = f.icon;
+            const isOpen = activeIdx === idx;
+
             return (
-              <button
+              <div
                 key={f.href}
-                onClick={() => handleCardClick(f)}
-                className={`w-full text-left rounded-2xl border p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
                   isDark
-                    ? `bg-[#0f1c11] hover:bg-[#132817] hover:shadow-xl hover:shadow-[#5B9A6A]/25 focus-visible:ring-[#5B9A6A] focus-visible:ring-offset-[#0a1409] ${f.border}`
-                    : `bg-white shadow-sm hover:shadow-xl hover:shadow-[#3D6B47]/20 focus-visible:ring-[#3D6B47] focus-visible:ring-offset-[#f8faf8] ${f.border}`
+                    ? `bg-[#0f1c11] ${isOpen ? f.borderActive : f.border} ${isOpen ? "shadow-xl shadow-[#5B9A6A]/20" : ""}`
+                    : `bg-white shadow-sm ${isOpen ? f.borderActive : f.border} ${isOpen ? "shadow-xl shadow-[#3D6B47]/15" : ""}`
                 }`}
               >
-                {/* Header row */}
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${f.accentBg}`}>
-                    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${f.accent}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                        {f.title}
-                      </h2>
-                      {/* In Beta badge */}
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
-                        isDark
-                          ? "bg-amber-400/12 text-amber-400 border border-amber-400/25"
-                          : "bg-amber-50 text-amber-600 border border-amber-200"
-                      }`}>
-                        <Zap className="w-2.5 h-2.5" />
-                        In Beta
-                      </span>
-                      {/* External link badge for Video Editor */}
-                      {f.external && (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${
-                          isDark
-                            ? "bg-white/06 text-white/45 border border-white/10"
-                            : "bg-gray-100 text-gray-400 border border-gray-200"
-                        }`}>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                          External
-                        </span>
-                      )}
+                {/* ── Collapsed header row (always visible, clickable) ── */}
+                <button
+                  onClick={() => setActiveIdx(isOpen ? null : idx)}
+                  className={`w-full text-left p-5 sm:p-6 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset ${
+                    isDark
+                      ? `hover:bg-[#132817] focus-visible:ring-[#5B9A6A]`
+                      : `hover:bg-gray-50/70 focus-visible:ring-[#3D6B47]`
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Icon */}
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${f.accentBg}`}>
+                      <Icon className={`w-5 h-5 ${f.accent}`} />
                     </div>
-                    <p className={`text-xs font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>
-                      {f.subtitle}
-                    </p>
+
+                    {/* Title + badges */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                          {f.title}
+                        </h2>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                          isDark
+                            ? "bg-amber-400/12 text-amber-400 border border-amber-400/25"
+                            : "bg-amber-50 text-amber-600 border border-amber-200"
+                        }`}>
+                          <Zap className="w-2.5 h-2.5" />
+                          In Beta
+                        </span>
+                        {f.external && (
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${
+                            isDark
+                              ? "bg-white/06 text-white/45 border border-white/10"
+                              : "bg-gray-100 text-gray-400 border border-gray-200"
+                          }`}>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                            External
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-xs font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>
+                        {f.subtitle}
+                      </p>
+                    </div>
+
+                    {/* Expand / collapse indicator */}
+                    <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isOpen
+                        ? isDark ? "bg-[#5B9A6A]/20 text-[#5B9A6A]" : "bg-[#3D6B47]/10 text-[#3D6B47]"
+                        : isDark ? "text-white/25" : "text-gray-300"
+                    }`}>
+                      {isOpen
+                        ? <X className="w-4 h-4" />
+                        : <ChevronRight className="w-4 h-4" />
+                      }
+                    </div>
                   </div>
-                  {f.external
-                    ? <ExternalLink className={`w-5 h-5 shrink-0 mt-1 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[#5B9A6A] ${isDark ? "text-white/20" : "text-gray-300"}`} />
-                    : <ChevronRight className={`w-5 h-5 shrink-0 mt-1 transition-all duration-300 group-hover:translate-x-1 group-hover:text-[#5B9A6A] ${isDark ? "text-white/20" : "text-gray-300"}`} />
-                  }
-                </div>
+                </button>
 
-                {/* Description */}
-                <p className={`text-sm leading-relaxed mb-4 ${isDark ? "text-white/70" : "text-gray-600"}`}>
-                  {f.description}
-                </p>
+                {/* ── Expanded preview panel ── */}
+                {isOpen && (
+                  <div className={`border-t ${isDark ? "border-[#1e3a22]" : "border-gray-100"}`}>
+                    {/* Side-by-side layout */}
+                    <div className="flex flex-col sm:flex-row">
 
-                {/* Highlight pills */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {f.highlights.map((h) => (
-                    <span
-                      key={h}
-                      className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${
-                        isDark ? "bg-white/08 text-white/65" : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {h}
-                    </span>
-                  ))}
-                </div>
+                      {/* Left: demo screenshot */}
+                      <div className={`sm:w-[55%] shrink-0 ${isDark ? "bg-[#0a1409]" : "bg-gray-950"} flex items-center justify-center overflow-hidden`}>
+                        <img
+                          src={f.previewImg}
+                          alt={f.previewAlt}
+                          className="w-full h-full object-cover object-top max-h-72 sm:max-h-none sm:h-64 lg:h-72"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
 
-                {/* CTA */}
-                <div className={`inline-flex items-center gap-1.5 text-sm font-semibold ${f.accent}`}>
-                  {f.cta}
-                  {f.external
-                    ? <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    : <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                  }
-                </div>
-              </button>
+                      {/* Right: description + highlights + CTA */}
+                      <div className={`flex-1 p-5 sm:p-6 flex flex-col justify-between gap-4 ${
+                        isDark ? "bg-[#0f1c11]" : "bg-white"
+                      }`}>
+                        {/* Description */}
+                        <p className={`text-sm leading-relaxed ${isDark ? "text-white/75" : "text-gray-600"}`}>
+                          {f.description}
+                        </p>
+
+                        {/* Highlight pills */}
+                        <div className="flex flex-wrap gap-2">
+                          {f.highlights.map((h) => (
+                            <span
+                              key={h}
+                              className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${
+                                isDark ? "bg-white/08 text-white/65" : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {h}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* CTA button */}
+                        <button
+                          onClick={() => handleCta(f)}
+                          className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.97] ${
+                            isDark
+                              ? "bg-[#5B9A6A] hover:bg-[#4e8a5c] text-white shadow-lg shadow-[#5B9A6A]/25"
+                              : "bg-[#3D6B47] hover:bg-[#2f5438] text-white shadow-md shadow-[#3D6B47]/20"
+                          }`}
+                        >
+                          {f.cta}
+                          {f.external
+                            ? <ExternalLink className="w-3.5 h-3.5" />
+                            : <ArrowRight className="w-3.5 h-3.5" />
+                          }
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
