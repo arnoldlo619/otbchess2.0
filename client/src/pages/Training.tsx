@@ -101,9 +101,19 @@ export default function Training() {
                     <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${f.accent}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className={`text-lg font-bold mb-0.5 ${isDark ? "text-white" : "text-gray-900"}`}>
-                      {f.title}
-                    </h2>
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                        {f.title}
+                      </h2>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                        isDark
+                          ? "bg-amber-400/12 text-amber-400 border border-amber-400/25"
+                          : "bg-amber-50 text-amber-600 border border-amber-200"
+                      }`}>
+                        <Zap className="w-2.5 h-2.5" />
+                        In Beta
+                      </span>
+                    </div>
                     <p className={`text-xs font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>
                       {f.subtitle}
                     </p>
