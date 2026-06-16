@@ -1,5 +1,5 @@
 /**
- * ChessClock — /tournament/:id/clock
+ * ChessClock — /tournament/:id/clock  or  /clock
  *
  * Full-screen two-player chess clock.
  * - Pre-loaded with the tournament's time control (timeBase + timeIncrement).
@@ -10,27 +10,28 @@
  * - When a player's time reaches 0, their half turns red ("flagged").
  * - Settings panel lets you adjust time/increment before the game starts.
  * - Sound effects: tap click, low-time warning tick, flag alarm (Web Audio API).
- * - Check-in panel (idle state): each player enters their chess.com username
- *   to show their avatar in a head-to-head display.
+ * - Identity card: auto-populated from signed-in user's chess.com profile (no manual input).
+ *   In tournament mode, both identity cards are pre-populated from URL params.
  */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useSearch, useLocation } from "wouter";
-import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, VolumeX, Trophy, UserCircle2, CheckCircle2, Loader2 } from "lucide-react";
+import { Settings, RotateCcw, Pause, Play, X, ChevronLeft, Flag, Volume2, VolumeX, Trophy } from "lucide-react";
 import { NavLogo } from "@/components/NavLogo";
 import { resolveTournament } from "@/lib/tournamentRegistry";
 import { useClockSounds } from "@/hooks/useClockSounds";
 import { RegisterGameModal } from "@/components/RegisterGameModal";
 import { GameResultModal } from "@/components/GameResultModal";
-import { useChessAvatar, toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
+import { toProxiedAvatarUrl } from "@/hooks/useChessAvatar";
 import { fetchFromChessCom } from "@/hooks/useChessComProfile";
+import { useAuthContext } from "@/context/AuthContext";
 
 // ─── Brand colors ─────────────────────────────────────────────────────────────
-const FOREST_BG = "#0d1f12";        // landing page hero dark green
-const GREEN_ACTIVE = "#22c55e";     // chess.com green (active clock)
-const GREEN_DIM = "#1a3d22";        // dimmed green (inactive half, idle)
-const RED_FLAG = "#c0392b";         // flagged
-const RED_WARN   = "#dc2626";       // sub-60s warning red (active half)
-const RED_DIM    = "#3d0a0a";       // dimmed red (inactive half, sub-60s)
+const FOREST_BG = "#0d1f12";
+const GREEN_ACTIVE = "#22c55e";
+const GREEN_DIM = "#1a3d22";
+const RED_FLAG = "#c0392b";
+const RED_WARN   = "#dc2626";
+const RED_DIM    = "#3d0a0a";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ClockState = "idle" | "p1_running" | "p2_running" | "paused" | "p1_flagged" | "p2_flagged";
@@ -38,6 +39,14 @@ type ClockState = "idle" | "p1_running" | "p2_running" | "paused" | "p1_flagged"
 interface ClockConfig {
   baseMs: number;
   incrementMs: number;
+}
+
+interface PlayerIdentity {
+  username: string;
+  avatarUrl?: string | null;
+  rapid?: number;
+  blitz?: number;
+  colorLabel: "White" | "Black";
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -151,195 +160,102 @@ function SettingsPanel({
   );
 }
 
-// ─── Check-in Input Panel ─────────────────────────────────────────────────────
+// ─── Identity Card ────────────────────────────────────────────────────────────
 /**
- * Compact bottom-anchored strip shown when the clock is idle.
- * Timer stays dominant; check-in lives in a slim bar at the edge of each half.
+ * Compact identity card shown in the corner of each clock half.
+ * Displays avatar, username, color badge, and ELO ratings.
  */
-function CheckInPanel({
+function IdentityCard({
+  playerInfo,
   flipped,
-  username,
-  onConfirm,
+  isIdle,
+  isPaused,
 }: {
+  playerInfo: PlayerIdentity;
   flipped: boolean;
-  username: string | null;
-    onConfirm: (u: string, ratings?: { blitz: number; rapid: number } | null) => void;
+  isIdle: boolean;
+  isPaused: boolean;
 }) {
-  const [input, setInput] = useState(username ?? "");
-  const [submitted, setSubmitted] = useState(!!username);
-
-  // ── Live preview: debounced fetch while typing ──────────────────────────────
-  const [preview, setPreview] = useState<{ avatar: string | null; rapid: number; blitz: number } | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleInputChange = (val: string) => {
-    setInput(val);
-    setPreview(null);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    const trimmed = val.trim();
-    if (trimmed.length < 3) return; // don't fetch for very short inputs
-    setPreviewLoading(true);
-    debounceRef.current = setTimeout(() => {
-      fetchFromChessCom(trimmed)
-        .then((p) => {
-          setPreview({
-            avatar: p.avatar ? (toProxiedAvatarUrl(p.avatar) ?? p.avatar) : null,
-            rapid: p.rapid,
-            blitz: p.blitz,
-          });
-        })
-        .catch(() => setPreview(null))
-        .finally(() => setPreviewLoading(false));
-    }, 600);
-  };
-
-  // ── Avatar for confirmed state ──────────────────────────────────────────────
-  const { url: avatarUrl, status } = useChessAvatar(submitted ? input.trim() : null);
-  const proxied = toProxiedAvatarUrl(avatarUrl);
-  const [ratings, setRatings] = useState<{ blitz: number; rapid: number } | null>(null);
-  const [ratingsLoading, setRatingsLoading] = useState(false);
-
-  const handleSubmit = () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-    setSubmitted(true);
-    // If we already have preview data, use it immediately
-    if (preview) {
-      const r = { blitz: preview.blitz, rapid: preview.rapid };
-      setRatings(r);
-      onConfirm(trimmed, r);
-      setRatingsLoading(false);
-      return;
-    }
-    setRatingsLoading(true);
-    setRatings(null);
-    fetchFromChessCom(trimmed)
-      .then((p) => {
-        const r = { blitz: p.blitz, rapid: p.rapid };
-        setRatings(r);
-        onConfirm(trimmed, r);
-      })
-      .catch(() => {
-        onConfirm(trimmed, null);
-        setRatings(null);
-      })
-      .finally(() => setRatingsLoading(false));
-  };
-
-  const handleEdit = () => {
-    setSubmitted(false);
-    setRatings(null);
-    setPreview(null);
-    onConfirm("");
-  };
-
   return (
     <div
-      className="flex items-center gap-2 px-4 py-2"
+      onClick={(e) => e.stopPropagation()}
       style={{
-        transform: flipped ? "rotate(180deg)" : "none",
-        background: "rgba(0,0,0,0.28)",
-        borderRadius: "0.75rem",
-        backdropFilter: "blur(8px)",
-        maxWidth: 280,
-        width: "100%",
+        position: "absolute",
+        ...(flipped
+          ? { top: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "top right" }
+          : { bottom: "1rem", right: "1rem" }),
+        zIndex: 2,
+        maxWidth: 260,
       }}
     >
-      {/* Avatar / icon — shows live preview while typing, confirmed avatar after submit */}
       <div
-        className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 transition-all duration-300"
         style={{
-          background: "rgba(34,197,94,0.12)",
-          border: preview || (submitted && proxied)
-            ? "1.5px solid rgba(34,197,94,0.7)"
-            : "1.5px solid rgba(34,197,94,0.3)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.65rem",
+          padding: "0.55rem 0.85rem",
+          background: "rgba(0,0,0,0.32)",
+          borderRadius: "0.85rem",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(34,197,94,0.18)",
+          opacity: isIdle || isPaused ? 1 : 0.72,
+          transition: "opacity 0.3s",
         }}
       >
-        {previewLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: GREEN_ACTIVE }} />
-        ) : !submitted && preview?.avatar ? (
-          <img src={preview.avatar} alt={input} className="w-full h-full object-cover" />
-        ) : submitted && status === "loading" ? (
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: GREEN_ACTIVE }} />
-        ) : submitted && proxied ? (
-          <img src={proxied} alt={input} className="w-full h-full object-cover" />
-        ) : submitted ? (
-          <span className="text-white/70 text-sm font-bold uppercase">{input.trim().charAt(0)}</span>
-        ) : (
-          <UserCircle2 className="w-4 h-4" style={{ color: "rgba(34,197,94,0.55)" }} />
-        )}
-      </div>
-
-      {!submitted ? (
-        /* Input row */
-        <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="chess.com username"
-              className="flex-1 min-w-0 px-2 py-1 rounded-lg text-xs text-white placeholder-white/25 font-medium outline-none"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!input.trim()}
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity disabled:opacity-30"
-              style={{ background: GREEN_ACTIVE }}
-              aria-label="Confirm username"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-            </button>
-          </div>
-          {/* Live rating preview */}
-          {preview && (preview.rapid > 0 || preview.blitz > 0) && (
-            <div className="flex items-center gap-1.5 px-1">
-              {preview.rapid > 0 && (
-                <span className="text-[10px] font-bold" style={{ color: GREEN_ACTIVE }}>⚡{preview.rapid}</span>
-              )}
-              {preview.blitz > 0 && (
-                <span className="text-[10px] font-bold" style={{ color: "#60a5fa" }}>🔥{preview.blitz}</span>
-              )}
-            </div>
+        {/* Avatar */}
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: "50%",
+            overflow: "hidden",
+            flexShrink: 0,
+            background: "rgba(34,197,94,0.12)",
+            border: "2px solid rgba(34,197,94,0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {playerInfo.avatarUrl ? (
+            <img src={playerInfo.avatarUrl} alt={playerInfo.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: "1rem", textTransform: "uppercase" }}>
+              {playerInfo.username.charAt(0)}
+            </span>
           )}
         </div>
-      ) : (
-        /* Confirmed row */
-        <>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-bold truncate leading-tight">{input.trim()}</p>
-            {ratingsLoading && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <Loader2 className="w-2.5 h-2.5 animate-spin" style={{ color: GREEN_ACTIVE }} />
-                <span className="text-white/30 text-[10px]">loading…</span>
-              </div>
+        {/* Name + ratings */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>
+              {playerInfo.username}
+            </span>
+            <span style={{
+              fontSize: "0.62rem",
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              padding: "0.1rem 0.45rem",
+              borderRadius: "999px",
+              background: playerInfo.colorLabel === "White" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.45)",
+              color: playerInfo.colorLabel === "White" ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.65)",
+              border: playerInfo.colorLabel === "White" ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(255,255,255,0.15)",
+              flexShrink: 0,
+            }}>
+              {playerInfo.colorLabel === "White" ? "♔ White" : "♚ Black"}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.15rem" }}>
+            {(playerInfo.rapid ?? 0) > 0 && (
+              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: GREEN_ACTIVE }}>⚡ {playerInfo.rapid}</span>
             )}
-            {!ratingsLoading && ratings && (
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {ratings.rapid > 0 && (
-                  <span className="text-[10px] font-bold" style={{ color: GREEN_ACTIVE }}>⚡{ratings.rapid}</span>
-                )}
-                {ratings.blitz > 0 && (
-                  <span className="text-[10px] font-bold" style={{ color: "#60a5fa" }}>🔥{ratings.blitz}</span>
-                )}
-              </div>
+            {(playerInfo.blitz ?? 0) > 0 && (
+              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#60a5fa" }}>🔥 {playerInfo.blitz}</span>
             )}
           </div>
-          <button
-            onClick={handleEdit}
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.45)" }}
-          >
-            ✕
-          </button>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -354,8 +270,6 @@ function ClockHalf({
   flipped,
   moveCount,
   onTap,
-  checkedInUsername,
-  onCheckIn,
   playerInfo,
 }: {
   timeMs: number;
@@ -366,14 +280,11 @@ function ClockHalf({
   flipped: boolean;
   moveCount: number;
   onTap: () => void;
-  checkedInUsername: string | null;
-  onCheckIn: (u: string, ratings?: { blitz: number; rapid: number } | null) => void;
-  playerInfo?: { username: string; avatarUrl?: string | null; rapid?: number; blitz?: number; colorLabel: "White" | "Black" };
+  playerInfo?: PlayerIdentity;
 }) {
   let bgColor: string;
   let textColor: string;
 
-  // Sub-60s warning threshold
   const isLowTime = !isFlagged && timeMs > 0 && timeMs < 60_000;
 
   if (isFlagged) {
@@ -391,14 +302,7 @@ function ClockHalf({
   }
 
   const displayTime = formatClockMs(timeMs);
-  // Urgent pulse only in final 10 s
   const isUrgent = isActive && !isFlagged && timeMs < 10_000 && timeMs > 0;
-
-  // Tournament mode (playerInfo provided): always show identity card, never the check-in input
-  // Standalone mode (no playerInfo): show check-in input strip only when idle
-  const isTournamentMode = !!playerInfo;
-  const showCheckIn = isTournamentMode ? false : isIdle;  // input strip only in standalone
-  const showIdentityCard = isTournamentMode;               // identity card only in tournament
 
   return (
     <div
@@ -412,7 +316,7 @@ function ClockHalf({
       onClick={onTap}
       onKeyDown={(e) => e.key === " " || e.key === "Enter" ? onTap() : undefined}
     >
-      {/* Subtle grid texture overlay matching landing page */}
+      {/* Subtle grid texture overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -423,7 +327,7 @@ function ClockHalf({
         }}
       />
 
-      {/* Sub-60s red pulse overlay — visible on both halves when low time */}
+      {/* Sub-60s red pulse overlay */}
       {isLowTime && (
         <div
           className="absolute inset-0 pointer-events-none animate-[lowTimePulse_1s_ease-in-out_infinite]"
@@ -431,7 +335,7 @@ function ClockHalf({
         />
       )}
 
-      {/* ── Central content (always timer-dominant) ── */}
+      {/* Central content */}
       <div
         style={{
           transform: flipped ? "rotate(180deg)" : "none",
@@ -444,10 +348,9 @@ function ClockHalf({
           zIndex: 1,
           width: "100%",
           height: "100%",
-          padding: showCheckIn ? "0 1rem 3.5rem" : "0 1rem",
+          padding: "0 1rem",
         }}
       >
-        {/* Time display — always the dominant element */}
         <span
           style={{
             color: textColor,
@@ -487,116 +390,14 @@ function ClockHalf({
         )}
       </div>
 
-      {/* ── Tournament identity card (always visible in tournament mode) ── */}
-      {showIdentityCard && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            position: "absolute",
-            ...(flipped
-              ? { top: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "top right" }
-              : { bottom: "1rem", right: "1rem" }),
-            zIndex: 2,
-            maxWidth: 260,
-          }}
-        >
-          {playerInfo && (
-            /* Tournament-mode: show pre-populated identity card */
-            <div
-              className="clock-identity-card"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.65rem",
-                padding: "0.55rem 0.85rem",
-                background: "rgba(0,0,0,0.32)",
-                borderRadius: "0.85rem",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                opacity: isIdle || isPaused ? 1 : 0.72,
-                transition: "opacity 0.3s, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
-                cursor: "default",
-              }}
-            >
-              {/* Avatar */}
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  flexShrink: 0,
-                  background: "rgba(34,197,94,0.12)",
-                  border: "2px solid rgba(34,197,94,0.35)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {playerInfo.avatarUrl ? (
-                  <img src={playerInfo.avatarUrl} alt={playerInfo.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: "1rem", textTransform: "uppercase" }}>
-                    {playerInfo.username.charAt(0)}
-                  </span>
-                )}
-              </div>
-              {/* Name + ratings */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
-                  <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>
-                    {playerInfo.username}
-                  </span>
-                  {/* Color badge */}
-                  <span style={{
-                    fontSize: "0.62rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    padding: "0.1rem 0.45rem",
-                    borderRadius: "999px",
-                    background: playerInfo.colorLabel === "White" ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.45)",
-                    color: playerInfo.colorLabel === "White" ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.65)",
-                    border: playerInfo.colorLabel === "White" ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(255,255,255,0.15)",
-                    flexShrink: 0,
-                  }}>
-                    {playerInfo.colorLabel === "White" ? "♔ White" : "♚ Black"}
-                  </span>
-                </div>
-                {/* ELO ratings row */}
-                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.15rem" }}>
-                  {(playerInfo.rapid ?? 0) > 0 && (
-                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: GREEN_ACTIVE }}>⚡ {playerInfo.rapid}</span>
-                  )}
-                  {(playerInfo.blitz ?? 0) > 0 && (
-                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#60a5fa" }}>🔥 {playerInfo.blitz}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Standalone check-in input (only when idle, no tournament context) ── */}
-      {showCheckIn && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            position: "absolute",
-            ...(flipped
-              ? { bottom: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "bottom right" }
-              : { bottom: "1rem", right: "1rem" }),
-            zIndex: 2,
-            maxWidth: 260,
-          }}
-        >
-          <CheckInPanel
-            flipped={false}
-            username={checkedInUsername}
-            onConfirm={onCheckIn}
-          />
-        </div>
+      {/* Identity card */}
+      {playerInfo && (
+        <IdentityCard
+          playerInfo={playerInfo}
+          flipped={flipped}
+          isIdle={isIdle}
+          isPaused={isPaused}
+        />
       )}
     </div>
   );
@@ -724,6 +525,7 @@ export default function ChessClock() {
   const { id: tournamentId } = useParams<{ id: string }>();
   const search = useSearch();
   const [, navigate] = useLocation();
+  const { user } = useAuthContext();
 
   const config = (() => {
     const tc = resolveTournament(tournamentId ?? "");
@@ -743,21 +545,18 @@ export default function ChessClock() {
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Check-in usernames + ratings (for pre-populating RegisterGameModal)
-  // Also pre-populated from URL params when launched from PlayerView
+  // ── URL params (tournament mode) ──────────────────────────────────────────
   const urlParams = new URLSearchParams(search);
-  const urlP1 = urlParams.get("p1") ?? null;  // White player username
-  const urlP2 = urlParams.get("p2") ?? null;  // Black player username
-  const urlMyColor = urlParams.get("myColor") as "white" | "black" | null;
+  const urlP1 = urlParams.get("p1") ?? null;   // White player username
+  const urlP2 = urlParams.get("p2") ?? null;   // Black player username
 
-  const [p1Username, setP1Username] = useState<string | null>(urlP1);
-  const [p2Username, setP2Username] = useState<string | null>(urlP2);
+  // Player identity state — populated from URL params (tournament) or auth (standalone)
   const [p1Ratings, setP1Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
   const [p2Ratings, setP2Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
   const [p1AvatarUrl, setP1AvatarUrl] = useState<string | null>(null);
   const [p2AvatarUrl, setP2AvatarUrl] = useState<string | null>(null);
 
-  // Fetch ratings + avatars for pre-populated players on mount
+  // ── Tournament mode: fetch ratings + avatars for URL-provided players ─────
   useEffect(() => {
     if (!urlP1 && !urlP2) return;
     const fetchPlayer = (username: string, setRatings: typeof setP1Ratings, setAvatar: typeof setP1AvatarUrl) => {
@@ -773,16 +572,55 @@ export default function ChessClock() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-open RegisterGameModal when both players have checked in (idle state only)
-  const prevBothCheckedIn = useRef(false);
+  // ── Standalone mode: auto-populate P1 (bottom half) from signed-in user ──
+  // If the user is signed in and has a linked chess.com account, fetch their
+  // profile and show the identity card on their half (bottom = P1).
+  // The top half (P2 / opponent) shows no card — it's the other device.
+  const [authP1Identity, setAuthP1Identity] = useState<PlayerIdentity | null>(null);
   useEffect(() => {
-    const bothNow = !!(p1Username && p2Username) && clockState === "idle";
-    if (bothNow && !prevBothCheckedIn.current) {
-      setShowRegisterGame(true);
-    }
-    prevBothCheckedIn.current = bothNow;
-  }, [p1Username, p2Username, clockState]);
+    // Only in standalone mode (no tournament URL params for this half)
+    if (urlP1) return;
+    if (!user || user.isGuest) return;
 
+    const username = user.chesscomUsername;
+    if (!username) return;
+
+    // Seed immediately from cached auth data (instant render)
+    const seed: PlayerIdentity = {
+      username,
+      avatarUrl: user.avatarUrl ? (toProxiedAvatarUrl(user.avatarUrl) ?? user.avatarUrl) : null,
+      rapid: user.chesscomRapid ?? undefined,
+      blitz: user.chesscomBlitz ?? undefined,
+      colorLabel: "White",
+    };
+    setAuthP1Identity(seed);
+
+    // Then refresh from chess.com API for latest ratings
+    fetchFromChessCom(username)
+      .then((p) => {
+        setAuthP1Identity((prev) => prev ? {
+          ...prev,
+          rapid: p.rapid || prev.rapid,
+          blitz: p.blitz || prev.blitz,
+          avatarUrl: p.avatar ? (toProxiedAvatarUrl(p.avatar) ?? p.avatar) : prev.avatarUrl,
+        } : null);
+      })
+      .catch(() => { /* keep seed data */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // ── Derived identity objects passed to ClockHalf ──────────────────────────
+  // Tournament mode: both halves get identity from URL params
+  // Standalone mode: P1 (bottom) gets identity from auth; P2 (top) gets nothing
+  const p1Identity: PlayerIdentity | undefined = urlP1
+    ? { username: urlP1, avatarUrl: p1AvatarUrl, rapid: p1Ratings?.rapid, blitz: p1Ratings?.blitz, colorLabel: "White" }
+    : authP1Identity ?? undefined;
+
+  const p2Identity: PlayerIdentity | undefined = urlP2
+    ? { username: urlP2, avatarUrl: p2AvatarUrl, rapid: p2Ratings?.rapid, blitz: p2Ratings?.blitz, colorLabel: "Black" }
+    : undefined;
+
+  // ── RegisterGameModal state ───────────────────────────────────────────────
   const [showRegisterGame, setShowRegisterGame] = useState(() => {
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     return params.get("register") === "true";
@@ -982,9 +820,12 @@ export default function ChessClock() {
     }
   }, [tournamentId, navigate, search]);
 
-  const _isFlagged = clockState === "p1_flagged" || clockState === "p2_flagged";
   const isIdle = clockState === "idle";
   const isPaused = clockState === "paused";
+
+  // Usernames for RegisterGameModal
+  const p1Username = urlP1 ?? authP1Identity?.username ?? null;
+  const p2Username = urlP2 ?? null;
 
   return (
     <div
@@ -1001,15 +842,7 @@ export default function ChessClock() {
         flipped={true}
         moveCount={p2Moves}
         onTap={handleP2Tap}
-        checkedInUsername={p2Username}
-        onCheckIn={(u, r) => { setP2Username(u || null); if (r) setP2Ratings(r); else setP2Ratings(null); }}
-        playerInfo={urlP2 ? {
-          username: urlP2,
-          avatarUrl: p2AvatarUrl,
-          rapid: p2Ratings?.rapid,
-          blitz: p2Ratings?.blitz,
-          colorLabel: "Black",
-        } : undefined}
+        playerInfo={p2Identity}
       />
 
       {/* Center divider */}
@@ -1028,15 +861,7 @@ export default function ChessClock() {
         flipped={false}
         moveCount={p1Moves}
         onTap={handleP1Tap}
-        checkedInUsername={p1Username}
-        onCheckIn={(u, r) => { setP1Username(u || null); if (r) setP1Ratings(r); else setP1Ratings(null); }}
-        playerInfo={urlP1 ? {
-          username: urlP1,
-          avatarUrl: p1AvatarUrl,
-          rapid: p1Ratings?.rapid,
-          blitz: p1Ratings?.blitz,
-          colorLabel: "White",
-        } : undefined}
+        playerInfo={p1Identity}
       />
 
       {/* Center controls overlay */}
@@ -1059,7 +884,7 @@ export default function ChessClock() {
         onClose={() => setShowRegisterGame(false)}
         baseMinutes={Math.round(clockConfig.baseMs / 60000)}
         incrementSeconds={Math.round(clockConfig.incrementMs / 1000)}
-        player1={p1Username ? { username: p1Username, rapid: p1Ratings?.rapid, blitz: p1Ratings?.blitz } : null}
+        player1={p1Username ? { username: p1Username, rapid: p1Ratings?.rapid ?? authP1Identity?.rapid, blitz: p1Ratings?.blitz ?? authP1Identity?.blitz } : null}
         player2={p2Username ? { username: p2Username, rapid: p2Ratings?.rapid, blitz: p2Ratings?.blitz } : null}
         isTournamentMode={!!tournamentId}
         onGameReady={(sessionId) => {
