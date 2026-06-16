@@ -585,7 +585,7 @@ function ClockHalf({
           style={{
             position: "absolute",
             ...(flipped
-              ? { top: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "top right" }
+              ? { bottom: "1rem", right: "1rem", transform: "rotate(180deg)", transformOrigin: "bottom right" }
               : { bottom: "1rem", right: "1rem" }),
             zIndex: 2,
             maxWidth: 260,

@@ -56,7 +56,9 @@ const sseSubscribers = new Map<string, Set<import("http").ServerResponse>>();
 // Prevents a single device from accidentally opening dozens of tabs and
 // exhausting server file-descriptor / memory budgets.
 // IMPORTANT: In tournament venues, ALL players share the same public IP via NAT.
-// The limit must accommodate a full tournament (64+ players) on one WiFi network.
+// The limit must be high enough to accommodate a full tournament (64+ players)
+// on a single WiFi network. Set to 100 to allow large events while still
+// protecting against runaway tab-spam from a single browser.
 const MAX_SSE_PER_IP = 100;
 const sseIpCount = new Map<string, number>();
 
