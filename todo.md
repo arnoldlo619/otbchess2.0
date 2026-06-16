@@ -6554,3 +6554,4 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Fix PlayerView SSE onopen: catch-up fetch on every (re)connect to recover missed events
 - [x] Reduce polling interval from 5s to 3s for faster fallback recovery
 - [x] Add manual "Refresh State" button in player waiting room as user-triggered fallback
+- [x] Training page: Add "Video Editor" as first feature card (above Repertoire Builder), linking to external URL, with In Beta badge, platform-consistent styling, and content describing the side-by-side video + digital board editor
