@@ -1575,13 +1575,13 @@ export default function JoinPage() {
                           </span>
                         )}
                       </div>
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 ${
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 ${
                         isDark ? "border-[oklch(0.22_0.06_145)]" : "border-white"
                       } ${profile.platform === "chesscom" && (profile as ChessComProfile).status === "online" ? "status-dot-online" : "status-dot-offline"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`font-bold text-lg leading-tight ${textMain}`}
+                        <span className={`font-bold text-xl leading-tight ${textMain}`}
                           style={{ fontFamily: "'Clash Display', sans-serif" }}>
                           {profile.name ?? profile.username}
                         </span>
@@ -1593,12 +1593,12 @@ export default function JoinPage() {
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <p className={`text-sm ${textMuted}`}>@{profile.username}</p>
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${
                           profile.platform === "lichess"
                             ? isDark ? "bg-orange-400/15 text-orange-300" : "bg-orange-50 text-orange-600"
-                            : isDark ? "bg-[#4CAF50]/10 text-[#4CAF50]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
+                            : isDark ? "bg-[#4CAF50]/15 text-[#4CAF50] border border-[#4CAF50]/20" : "bg-[#3D6B47]/10 text-[#3D6B47] border border-[#3D6B47]/15"
                         }`}>
-                          {profile.platform === "lichess" ? "&#9822; Lichess" : "&#9812; chess.com"}
+                          {profile.platform === "lichess" ? "♞ Lichess" : "♔ chess.com"}
                         </span>
                       </div>
                     </div>
