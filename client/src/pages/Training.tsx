@@ -43,6 +43,7 @@ export default function Training() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   const features: FeatureCard[] = [
     {
@@ -223,16 +224,27 @@ export default function Training() {
                     {/* Side-by-side layout */}
                     <div className="flex flex-col sm:flex-row">
 
-                      {/* Left: demo screenshot */}
-                      <div className={`sm:w-[55%] shrink-0 ${isDark ? "bg-[#0a1409]" : "bg-gray-950"} flex items-center justify-center overflow-hidden`}>
+                      {/* Left: demo screenshot (click to fullscreen) */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setLightboxSrc(f.previewImg); }}
+                        className={`sm:w-[55%] shrink-0 ${isDark ? "bg-[#0a1409]" : "bg-gray-950"} flex items-center justify-center overflow-hidden relative group/img cursor-zoom-in focus:outline-none`}
+                        aria-label={`View ${f.title} screenshot fullscreen`}
+                      >
                         <img
                           src={f.previewImg}
                           alt={f.previewAlt}
-                          className="w-full h-full object-cover object-top max-h-72 sm:max-h-none sm:h-64 lg:h-72"
+                          className="w-full h-full object-cover object-top max-h-72 sm:max-h-none sm:h-64 lg:h-72 transition-transform duration-300 group-hover/img:scale-[1.03]"
                           loading="lazy"
                           decoding="async"
                         />
-                      </div>
+                        {/* Zoom hint overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 bg-black/30">
+                          <div className="bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-1.5 text-white text-xs font-semibold">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0zm0 0l4 4" /><path strokeLinecap="round" strokeLinejoin="round" d="M11 8v6M8 11h6" /></svg>
+                            View fullscreen
+                          </div>
+                        </div>
+                      </button>
 
                       {/* Right: description + highlights + CTA */}
                       <div className={`flex-1 p-5 sm:p-6 flex flex-col justify-between gap-4 ${
@@ -298,6 +310,39 @@ export default function Training() {
         </div>
 
       </div>
+
+      {/* ── Lightbox overlay ── */}
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setLightboxSrc(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Screenshot fullscreen view"
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxSrc(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label="Close fullscreen view"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Image — click on image itself does NOT close (only backdrop does) */}
+          <img
+            src={lightboxSrc}
+            alt="Feature demo fullscreen"
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-[92vw] max-h-[88vh] rounded-xl shadow-2xl object-contain"
+          />
+
+          {/* Dismiss hint */}
+          <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/40 text-xs select-none">
+            Click outside to close
+          </p>
+        </div>
+      )}
     </div>
   );
 }
