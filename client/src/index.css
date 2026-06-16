@@ -1760,10 +1760,10 @@ select {
   animation: row-slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Chess Clock — sub-60s low-time amber pulse */
+/* Chess Clock — sub-60s low-time red pulse warning */
 @keyframes lowTimePulse {
-  0%, 100% { opacity: 0.15; }
-  50%       { opacity: 0.55; }
+  0%, 100% { opacity: 0.2; }
+  50%       { opacity: 0.9; }
 }
 
 /* ── Chess Clock: tournament identity card hover animation ── */
