@@ -254,7 +254,7 @@ export default function LeagueDemo() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all group"
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group hover:scale-110 active:scale-95"
                   style={{
                     background: isActive ? accent : "transparent",
                     color: isActive ? "#fff" : "oklch(0.55 0.08 145)",
@@ -350,7 +350,7 @@ export default function LeagueDemo() {
 
                   {/* Featured Matchup Hero */}
                   <div
-                    className="rounded-2xl overflow-hidden"
+                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                     style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
                   >
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -434,13 +434,13 @@ export default function LeagueDemo() {
 
                   {/* Compact Standings Preview */}
                   <div
-                    className="rounded-2xl overflow-hidden"
+                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                     style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
                   >
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center gap-2">
                         <ListOrdered size={14} style={{ color: accent }} />
-                        <span className="text-sm font-bold" style={{ color: textMain }}>Premier League Standings</span>
+                        <span className="text-sm font-bold" style={{ color: textMain }}>Premier Chess League Standings</span>
                       </div>
                       <button
                         onClick={() => setActiveTab("standings")}
@@ -479,7 +479,7 @@ export default function LeagueDemo() {
                       return (
                         <div
                           key={p.id}
-                          className="hidden sm:grid items-center px-4 py-2.5 transition-colors hover:bg-white/5"
+                          className="hidden sm:grid items-center px-4 py-2.5 transition-all duration-200 hover:bg-white/5 hover:scale-[1.005] cursor-pointer"
                           style={{
                             gridTemplateColumns: "2.5rem 1fr 4rem 2.5rem 2.5rem 2.5rem 3rem 4.5rem",
                             gap: "0.5rem",
@@ -524,7 +524,7 @@ export default function LeagueDemo() {
                     {DEMO_PLAYERS.slice(0, 8).map((p, i) => (
                       <div
                         key={`m-${p.id}`}
-                        className="sm:hidden flex items-center gap-3 px-4 py-3"
+                        className="sm:hidden flex items-center gap-3 px-4 py-3 transition-all duration-200 hover:bg-white/5 cursor-pointer"
                         style={{ borderBottom: i < 7 ? `1px solid ${cardBorder}` : "none" }}
                       >
                         <span className="text-xs font-bold w-5 text-center flex-shrink-0" style={{ color: textMuted }}>{i + 1}</span>
@@ -620,7 +620,7 @@ export default function LeagueDemo() {
                       return (
                         <div
                           key={i}
-                          className="rounded-xl p-3"
+                          className="rounded-xl p-3 transition-all duration-250 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                           style={{
                             background: cardBg,
                             border: `1px solid ${m.result ? cardBorder : `${accent}33`}`,
