@@ -590,7 +590,33 @@ export default function ReportPage() {
   // Load tournament data
   const isDemo = tournamentId === "otb-demo-2026";
   const config = getTournamentConfig(tournamentId);
-  const rawState = loadTournamentState(tournamentId);
+  const localState = loadTournamentState(tournamentId);
+
+  // ── Server hydration ─────────────────────────────────────────────────────
+  // Mobile participants have sparse localStorage (only their own player entry
+  // from addPlayerToTournament). Fetch the full DirectorState from the server
+  // so every device sees all players and all rounds in the performance report.
+  const [serverState, setServerState] = useState<import("@/lib/directorState").DirectorState | null>(null);
+  const [serverLoading, setServerLoading] = useState(!isDemo);
+  useEffect(() => {
+    if (isDemo) return;
+    fetch(`/api/tournament/${tournamentId}/state`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { state?: import("@/lib/directorState").DirectorState } | null) => {
+        if (data?.state) {
+          // Always prefer the server state — it is the authoritative full roster.
+          // The director's device also benefits: server state is always at least
+          // as fresh as localStorage after the 1500ms debounce.
+          setServerState(data.state);
+        }
+      })
+      .catch(() => { /* network unavailable — fall back to localStorage */ })
+      .finally(() => setServerLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournamentId]);
+
+  // Prefer server state (authoritative full roster) over localStorage
+  const rawState = serverState ?? localState;
 
   const players = isDemo ? DEMO_TOURNAMENT.players : (rawState?.players ?? []);
   const rounds = isDemo ? DEMO_TOURNAMENT.roundData : (rawState?.rounds ?? []);
@@ -785,6 +811,19 @@ export default function ReportPage() {
     typeof window !== "undefined"
       ? window.location.href
       : "";
+
+  // Loading state — show spinner while fetching full roster from server
+  if (serverLoading) {
+    return (
+      <div
+        className={`min-h-screen flex items-center justify-center ${
+          isDark ? "bg-[oklch(0.18_0.05_145)]" : "bg-[#F7FAF8]"
+        }`}
+      >
+        <Loader2 className="w-8 h-8 animate-spin text-[#4CAF50]" />
+      </div>
+    );
+  }
 
   // Empty state
   if (performances.length === 0) {
