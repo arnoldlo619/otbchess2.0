@@ -86,21 +86,59 @@ function playTap(ctx: AudioContext): void {
 }
 
 /**
- * Play a subtle high-pitched tick for the low-time warning.
- * Quieter and shorter than the tap — just a gentle reminder.
+ * Play a sharp mechanical clock tick for the final-10s warning.
+ * Modelled after a DGT clock: a crisp high transient ("tick") followed by
+ * a very short noise burst ("tock") to give it physical weight.
+ * Noticeably louder and more urgent than the tap sound.
  */
 function playWarningTick(ctx: AudioContext): void {
   const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "sine";
-  osc.frequency.setValueAtTime(1800, now);
-  gain.gain.setValueAtTime(0.09, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.05);
+
+  // ── Tick: sharp high transient ──────────────────────────────────────────
+  // A very short sine burst with an instant attack and fast exponential decay.
+  const tickOsc = ctx.createOscillator();
+  const tickGain = ctx.createGain();
+  tickOsc.type = "sine";
+  tickOsc.frequency.setValueAtTime(2200, now);
+  tickOsc.frequency.exponentialRampToValueAtTime(900, now + 0.025);
+  tickGain.gain.setValueAtTime(0.55, now);              // loud — unmistakable
+  tickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+  tickOsc.connect(tickGain);
+  tickGain.connect(ctx.destination);
+  tickOsc.start(now);
+  tickOsc.stop(now + 0.04);
+
+  // ── Tock: low-frequency body thud ───────────────────────────────────────
+  // Adds physical weight — the mechanical resonance of the clock body.
+  const tockOsc = ctx.createOscillator();
+  const tockGain = ctx.createGain();
+  tockOsc.type = "triangle";
+  tockOsc.frequency.setValueAtTime(220, now + 0.005);
+  tockOsc.frequency.exponentialRampToValueAtTime(90, now + 0.05);
+  tockGain.gain.setValueAtTime(0.30, now + 0.005);
+  tockGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+  tockOsc.connect(tockGain);
+  tockGain.connect(ctx.destination);
+  tockOsc.start(now + 0.005);
+  tockOsc.stop(now + 0.08);
+
+  // ── Noise burst: adds the "snap" of a physical button ───────────────────
+  // White noise shaped with a very fast envelope.
+  try {
+    const bufferSize = Math.floor(ctx.sampleRate * 0.02); // 20ms
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    const noiseGain = ctx.createGain();
+    noise.buffer = buffer;
+    noiseGain.gain.setValueAtTime(0.12, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+    noise.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.02);
+  } catch { /* ignore — buffer creation may fail in some environments */ }
 }
 
 /**
@@ -188,8 +226,8 @@ export function useClockSounds(): ClockSounds {
 
   const warningTick = useCallback(() => {
     if (muted) return;
-    // Haptic: 15ms — lighter than tap, just a nudge
-    vibrate(15);
+    // Haptic: 25ms — firm enough to feel during final 10s urgency
+    vibrate(25);
     try {
       const ctx = getOrCreateContext(ctxRef);
       playWarningTick(ctx);
