@@ -21,6 +21,7 @@ import { useChessComProfile } from "@/hooks/useChessComProfile";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TournamentWizard } from "@/components/TournamentWizard";
 import { getAllRegistrations } from "@/lib/registrationStore";
 import { resolveTournament, listTournaments, hasDirectorSession } from "@/lib/tournamentRegistry";
@@ -309,6 +310,7 @@ function Nav({
               Analyze
             </span>
           </Link>
+          <ThemeToggle />
 
         </div>
 
