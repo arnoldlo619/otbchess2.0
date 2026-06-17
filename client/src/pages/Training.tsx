@@ -80,12 +80,6 @@ export default function Training() {
 
         {/* ── Page Header ── */}
         <div className="text-center mb-12">
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-4 ${
-            isDark ? "bg-[#5B9A6A]/12 text-[#5B9A6A]" : "bg-[#3D6B47]/08 text-[#3D6B47]"
-          }`}>
-            <GraduationCap className="w-3.5 h-3.5" />
-            Player Development
-          </div>
           <h1
             className={`text-3xl sm:text-4xl font-bold tracking-tight mb-3 ${isDark ? "text-white" : "text-gray-900"}`}
             style={{ fontFamily: "'Clash Display', sans-serif" }}
