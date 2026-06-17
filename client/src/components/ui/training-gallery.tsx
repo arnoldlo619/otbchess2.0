@@ -71,21 +71,8 @@ export function TrainingGallery({
 
   return (
     <section className="w-full">
-      {/* Header */}
-      <div className="mb-8 flex items-end justify-between px-4 sm:px-0">
-        <div className="flex flex-col gap-2">
-          <h2
-            className={`text-2xl sm:text-3xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
-            style={{ fontFamily: "'Clash Display', sans-serif" }}
-          >
-            {title}
-          </h2>
-          <p className={`max-w-lg text-sm sm:text-base ${isDark ? "text-white/60" : "text-gray-500"}`}>
-            {description}
-          </p>
-        </div>
-
-        {/* Desktop nav arrows */}
+      {/* Desktop nav arrows — right-aligned */}
+      <div className="mb-6 flex items-center justify-end px-4 sm:px-0">
         <div className="hidden shrink-0 gap-2 md:flex">
           <button
             onClick={() => carouselApi?.scrollPrev()}
