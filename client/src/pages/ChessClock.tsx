@@ -170,11 +170,13 @@ function IdentityCard({
   flipped,
   isIdle,
   isPaused,
+  loading = false,
 }: {
   playerInfo: PlayerIdentity;
   flipped: boolean;
   isIdle: boolean;
   isPaused: boolean;
+  loading?: boolean;
 }) {
   return (
     <div
@@ -217,8 +219,19 @@ function IdentityCard({
             justifyContent: "center",
           }}
         >
-          {playerInfo.avatarUrl ? (
-            <img src={playerInfo.avatarUrl} alt={playerInfo.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          {loading && !playerInfo.avatarUrl ? (
+            // Skeleton pulse while avatar is being fetched
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "rgba(34,197,94,0.18)", animation: "pulse 1.5s ease-in-out infinite" }} />
+          ) : playerInfo.avatarUrl ? (
+            <img
+              src={playerInfo.avatarUrl}
+              alt={playerInfo.username}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              onError={(e) => {
+                // If the proxied URL fails, fall back to initials
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
           ) : (
             <span style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: "1rem", textTransform: "uppercase" }}>
               {playerInfo.username.charAt(0)}
@@ -271,6 +284,7 @@ function ClockHalf({
   moveCount,
   onTap,
   playerInfo,
+  identityLoading = false,
 }: {
   timeMs: number;
   isActive: boolean;
@@ -281,6 +295,7 @@ function ClockHalf({
   moveCount: number;
   onTap: () => void;
   playerInfo?: PlayerIdentity;
+  identityLoading?: boolean;
 }) {
   let bgColor: string;
   let textColor: string;
@@ -397,6 +412,7 @@ function ClockHalf({
           flipped={flipped}
           isIdle={isIdle}
           isPaused={isPaused}
+          loading={identityLoading}
         />
       )}
     </div>
@@ -555,6 +571,8 @@ export default function ChessClock() {
   const [p2Ratings, setP2Ratings] = useState<{ blitz: number; rapid: number } | null>(null);
   const [p1AvatarUrl, setP1AvatarUrl] = useState<string | null>(null);
   const [p2AvatarUrl, setP2AvatarUrl] = useState<string | null>(null);
+  // Whether the standalone auth identity fetch is still in-flight
+  const [authIdentityLoading, setAuthIdentityLoading] = useState(false);
 
   // ── Tournament mode: fetch ratings + avatars for URL-provided players ─────
   useEffect(() => {
@@ -577,37 +595,55 @@ export default function ChessClock() {
   // profile and show the identity card on their half (bottom = P1).
   // The top half (P2 / opponent) shows no card — it's the other device.
   const [authP1Identity, setAuthP1Identity] = useState<PlayerIdentity | null>(null);
+
   useEffect(() => {
     // Only in standalone mode (no tournament URL params for this half)
     if (urlP1) return;
-    if (!user || user.isGuest) return;
+    // Wait until auth has finished loading
+    if (!user) return;
+    if (user.isGuest) return;
 
     const username = user.chesscomUsername;
     if (!username) return;
 
-    // Seed immediately from cached auth data (instant render)
+    // ── Step 1: Seed immediately from cached auth data (instant render) ──
+    // Use stored avatar if available; proxy it through our server to avoid
+    // CORS / Cloudflare blocks on chess.com CDN URLs.
+    const storedAvatar = user.avatarUrl
+      ? (toProxiedAvatarUrl(user.avatarUrl) ?? user.avatarUrl)
+      : null;
+
     const seed: PlayerIdentity = {
       username,
-      avatarUrl: user.avatarUrl ? (toProxiedAvatarUrl(user.avatarUrl) ?? user.avatarUrl) : null,
+      avatarUrl: storedAvatar,
       rapid: user.chesscomRapid ?? undefined,
       blitz: user.chesscomBlitz ?? undefined,
       colorLabel: "White",
     };
     setAuthP1Identity(seed);
 
-    // Then refresh from chess.com API for latest ratings
+    // ── Step 2: Refresh from chess.com API for latest ratings + avatar ──
+    // Mark loading so callers can show a subtle skeleton on the avatar
+    // if no stored avatar exists yet.
+    if (!storedAvatar) setAuthIdentityLoading(true);
+
     fetchFromChessCom(username)
       .then((p) => {
-        setAuthP1Identity((prev) => prev ? {
+        setAuthP1Identity((prev) => (prev ? {
           ...prev,
-          rapid: p.rapid || prev.rapid,
-          blitz: p.blitz || prev.blitz,
-          avatarUrl: p.avatar ? (toProxiedAvatarUrl(p.avatar) ?? p.avatar) : prev.avatarUrl,
-        } : null);
+          rapid: p.rapid > 0 ? p.rapid : (prev.rapid ?? 0),
+          blitz: p.blitz > 0 ? p.blitz : (prev.blitz ?? 0),
+          avatarUrl: p.avatar
+            ? (toProxiedAvatarUrl(p.avatar) ?? p.avatar)
+            : prev.avatarUrl,
+        } : null));
       })
-      .catch(() => { /* keep seed data */ });
+      .catch(() => { /* keep seed data — network failure is non-fatal */ })
+      .finally(() => setAuthIdentityLoading(false));
+  // Re-run when the auth user changes (login/logout) or chesscom username changes.
+  // urlP1 is intentionally excluded — it's stable for the lifetime of the page.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, user?.chesscomUsername]);
 
   // ── Derived identity objects passed to ClockHalf ──────────────────────────
   // Tournament mode: both halves get identity from URL params
@@ -862,6 +898,7 @@ export default function ChessClock() {
         moveCount={p1Moves}
         onTap={handleP1Tap}
         playerInfo={p1Identity}
+        identityLoading={!urlP1 && authIdentityLoading}
       />
 
       {/* Center controls overlay */}
