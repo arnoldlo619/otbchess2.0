@@ -2038,12 +2038,15 @@ export default function Home() {
   );
 
   const rightSlotEl = (
-    <AvatarNavDropdown
-      currentPage={activeNavTab}
-      onSignInClick={() => setAuthOpen(true)}
-      dashboardUrl={getDashboardUrl()}
-      leagueUrl={leagueNavUrl}
-    />
+    <div className="flex items-center gap-2">
+      <ThemeToggle />
+      <AvatarNavDropdown
+        currentPage={activeNavTab}
+        onSignInClick={() => setAuthOpen(true)}
+        dashboardUrl={getDashboardUrl()}
+        leagueUrl={leagueNavUrl}
+      />
+    </div>
   );
 
   return (
