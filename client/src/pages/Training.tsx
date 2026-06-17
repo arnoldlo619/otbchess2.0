@@ -35,7 +35,7 @@ const FEATURES: TrainingFeatureItem[] = [
     cta: "Build Repertoire",
     href: "/repertoire",
     image:
-      "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
+      "/manus-storage/repertoire-builder-demo_2866e1f4.webp",
     imageAlt: "Repertoire Builder — chess pieces on a board representing opening preparation",
     highlights: ["Stockfish 18 engine", "Lichess database explorer", "Save & manage repertoires"],
   },
@@ -47,7 +47,7 @@ const FEATURES: TrainingFeatureItem[] = [
     cta: "Prepare for Opponent",
     href: "/prep",
     image:
-      "https://images.unsplash.com/photo-1580541832626-2a7131ee809f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
+      "/manus-storage/matchup-prep-demo_02ab6c2d.webp",
     imageAlt: "Matchup Prep — chess analysis and opponent scouting",
     highlights: ["Opening tendency analysis", "Preparation depth scoring", "Recurring mistake patterns"],
   },
@@ -59,7 +59,7 @@ const FEATURES: TrainingFeatureItem[] = [
     cta: "Browse Openings",
     href: "/openings",
     image:
-      "https://images.unsplash.com/photo-1560174038-594a7c4e9d3c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080",
+      "/manus-storage/openings-library-demo_29aa7bc2.webp",
     imageAlt: "Openings Library — chess board with opening position study",
     highlights: ["18+ openings covered", "110+ annotated lines", "Spaced-repetition drills"],
   },
