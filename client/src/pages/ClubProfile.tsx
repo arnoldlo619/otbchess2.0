@@ -114,6 +114,11 @@ import {
   Search,
   Check,
   Copy,
+  Play,
+  Link2,
+  Mail,
+  Phone,
+  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -1669,35 +1674,86 @@ export default function ClubProfile() {
               </div>
             </div>
 
-            {/* Social links */}
-            {(club.website || club.discord || club.twitter) && (
+            {/* Social links + meeting schedule + contact */}
+            {(club.website || club.discord || club.twitter || club.instagram || club.tiktok || club.youtube || club.linktree || club.meetingDay || club.contactEmail || club.contactPhone) && (
               <div className={`rounded-3xl border ${cardBorder} ${card} p-5 sm:p-6`}>
                 <h2 className={`text-sm font-semibold uppercase tracking-wider mb-4 ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                  Links
+                  Links & Info
                 </h2>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {club.website && (
-                    <a
-                      href={club.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
-                    >
+                    <a href={club.website} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
                       <Globe className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
                       <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Website</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
                     </a>
                   )}
                   {club.discord && (
-                    <a
-                      href={club.discord}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
-                    >
+                    <a href={club.discord} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
                       <MessageSquare className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-indigo-600"}`} />
                       <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Discord</span>
                       <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.instagram && (
+                    <a href={club.instagram.startsWith("http") ? club.instagram : `https://instagram.com/${club.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      <Camera className={`w-4 h-4 text-pink-500`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Instagram</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.tiktok && (
+                    <a href={club.tiktok.startsWith("http") ? club.tiktok : `https://tiktok.com/@${club.tiktok.replace("@", "")}`} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      <Video className={`w-4 h-4 ${isDark ? "text-white/70" : "text-gray-700"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>TikTok</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.youtube && (
+                    <a href={club.youtube} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      <Play className={`w-4 h-4 text-red-500`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>YouTube</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {club.linktree && (
+                    <a href={club.linktree} target="_blank" rel="noopener noreferrer"
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      <Link2 className={`w-4 h-4 ${isDark ? "text-[#4CAF50]" : "text-[#3D6B47]"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>Linktree</span>
+                      <ExternalLink className={`w-3 h-3 ml-auto ${textMuted}`} />
+                    </a>
+                  )}
+                  {(club.meetingDay || club.meetingTime) && (
+                    <div className={`flex items-start gap-3 p-3 rounded-xl ${isDark ? "bg-white/3" : "bg-gray-50"}`}>
+                      <Clock className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-amber-400" : "text-amber-600"}`} />
+                      <div>
+                        <p className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>
+                          {[club.meetingDay, club.meetingTime].filter(Boolean).join(" · ")}
+                        </p>
+                        {club.meetingNotes && (
+                          <p className={`text-xs mt-0.5 ${textMuted}`}>{club.meetingNotes}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {club.contactEmail && (
+                    <a href={`mailto:${club.contactEmail}`}
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      <Mail className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-400"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>{club.contactEmail}</span>
+                    </a>
+                  )}
+                  {club.contactPhone && (
+                    <a href={`tel:${club.contactPhone}`}
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+                      <Phone className={`w-4 h-4 ${isDark ? "text-white/50" : "text-gray-400"}`} />
+                      <span className={`text-sm font-medium ${isDark ? "text-white/80" : "text-gray-700"}`}>{club.contactPhone}</span>
                     </a>
                   )}
                 </div>

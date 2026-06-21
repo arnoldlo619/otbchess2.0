@@ -66,6 +66,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CreateClubWizard } from "@/components/CreateClubWizard";
+import { CreateClubAuthGate } from "@/components/CreateClubAuthGate";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -655,6 +656,8 @@ export default function MyClubs() {
   const [sortBy, setSortBy] = useState<"members" | "newest" | "tournaments" | "az">(() => (new URLSearchParams(window.location.search).get("sort") as "members" | "newest" | "tournaments" | "az") ?? "members");
   const [discoverError, setDiscoverError] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [wizardPreviewMode, setWizardPreviewMode] = useState(false);
   const [rsvpRefresh, setRsvpRefresh] = useState(0);
   const [discoverClubs, setDiscoverClubs] = useState<Club[]>([]);
   const [discoverLoading, setDiscoverLoading] = useState(false);
@@ -806,7 +809,7 @@ export default function MyClubs() {
           <NavLogo className="h-7" />
           <div className="ml-auto flex items-center gap-2">
             <button
-              onClick={() => user ? setShowWizard(true) : navigate("/")}
+              onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#3D6B47] text-white hover:bg-[#2d5236] transition-colors"
             >
               <Plus className="w-4 h-4" />
@@ -1097,7 +1100,7 @@ export default function MyClubs() {
           <div
             className="rounded-3xl border border-dashed p-8 text-center cursor-pointer transition-all hover:border-[#4CAF50]/50 group"
             style={{ borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)" }}
-            onClick={() => user ? setShowWizard(true) : navigate("/")}
+            onClick={() => user ? setShowWizard(true) : setShowAuthGate(true)}
           >
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-colors ${
               isDark ? "bg-white/5 group-hover:bg-[#4CAF50]/10" : "bg-gray-50 group-hover:bg-[#3D6B47]/8"
@@ -1123,7 +1126,16 @@ export default function MyClubs() {
 
       {/* Create Club Wizard */}
       {showWizard && (
-        <CreateClubWizard onClose={() => setShowWizard(false)} />
+        <CreateClubWizard onClose={() => { setShowWizard(false); setWizardPreviewMode(false); }} />
+      )}
+
+      {/* Auth Gate — shown to logged-out users who click Create Club */}
+      {showAuthGate && (
+        <CreateClubAuthGate
+          onClose={() => setShowAuthGate(false)}
+          onAuthenticated={() => { setShowAuthGate(false); setShowWizard(true); }}
+          onPreview={() => { setShowAuthGate(false); setWizardPreviewMode(true); setShowWizard(true); }}
+        />
       )}
     </div>
   );

@@ -44,6 +44,12 @@ import {
   MessageSquare,
   Sparkles,
   ArrowRight,
+  Camera,
+  Video,
+  Play,
+  Mail,
+  Phone,
+  KeyRound,
 } from "lucide-react";
 
 import { authFetch } from "@/lib/apiFetch";
@@ -59,6 +65,19 @@ interface WizardData {
   accentColor: string;
   website: string;
   discord: string;
+  instagram: string;
+  tiktok: string;
+  youtube: string;
+  linktree: string;
+  contactEmail: string;
+  contactPhone: string;
+  meetingSchedule: string;
+  meetingDay: string;
+  meetingTime: string;
+  meetingNotes: string;
+  joinPolicy: "public" | "approval" | "invite";
+  intakeQuestions: string;
+  status: "draft" | "published";
   isPublic: boolean;
   /** Base64 data URL for the club avatar (null = use initials) */
   avatarUrl: string | null;
@@ -74,13 +93,26 @@ const DEFAULT_DATA: WizardData = {
   accentColor: "#3D6B47",
   website: "",
   discord: "",
+  instagram: "",
+  tiktok: "",
+  youtube: "",
+  linktree: "",
+  contactEmail: "",
+  contactPhone: "",
+  meetingSchedule: "weekly",
+  meetingDay: "",
+  meetingTime: "",
+  meetingNotes: "",
+  joinPolicy: "public",
+  intakeQuestions: "",
+  status: "published",
   isPublic: true,
   avatarUrl: null,
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const _TOTAL_STEPS = 5;
+const TOTAL_STEPS = 7; // 6 input steps + 1 success screen
 
 const ACCENT_COLORS = [
   // Greens
@@ -224,28 +256,40 @@ export function validateStep(step: number, data: WizardData): string | null {
 
 const STEP_HERO = [
   {
-    eyebrow: "Step 1 of 4",
+    eyebrow: "Step 1 of 6",
     title: "Name your\nclub",
     body: "Give your club a name that players will remember. A great tagline tells visitors what you're about in one sentence.",
     icon: <img src="https://d2xsxph8kpxj0f.cloudfront.net/117675823/J6FsDoRMH9x5xbUvpyzxyf/otb-logo-thumbnail_8939ab7b.png" alt="OTB" className="w-10 h-10 object-contain drop-shadow-sm" />,
   },
   {
-    eyebrow: "Step 2 of 4",
+    eyebrow: "Step 2 of 6",
     title: "Choose a\ncategory",
     body: "Help players find you. Selecting the right category puts your club in front of the right audience.",
     icon: <Users className="w-10 h-10 text-white" strokeWidth={1.5} />,
   },
   {
-    eyebrow: "Step 3 of 4",
+    eyebrow: "Step 3 of 6",
     title: "Where are\nyou based?",
     body: "Location helps nearby players discover your club and lets you appear in local search results.",
     icon: <MapPin className="w-10 h-10 text-white" strokeWidth={1.5} />,
   },
   {
-    eyebrow: "Step 4 of 4",
+    eyebrow: "Step 4 of 6",
     title: "Tell your\nstory",
-    body: "A compelling description and a distinctive colour make your club page stand out. Add links so players can find you online.",
+    body: "A compelling description and a distinctive colour make your club page stand out.",
     icon: <Sparkles className="w-10 h-10 text-white" strokeWidth={1.5} />,
+  },
+  {
+    eyebrow: "Step 5 of 6",
+    title: "Connect &\nschedule",
+    body: "Add your social links and meeting schedule so players know when and where to find you.",
+    icon: <Link2 className="w-10 h-10 text-white" strokeWidth={1.5} />,
+  },
+  {
+    eyebrow: "Step 6 of 6",
+    title: "Membership\nsettings",
+    body: "Choose how players join your club and whether it's publicly discoverable.",
+    icon: <Globe className="w-10 h-10 text-white" strokeWidth={1.5} />,
   },
 ];
 
@@ -282,7 +326,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "Enter" && step < 5 && !animating) {
+      if (e.key === "Enter" && step < TOTAL_STEPS && !animating) {
         e.preventDefault();
         handleNext();
       }
@@ -302,14 +346,14 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   };
 
   const handleNext = async () => {
-    if (step === 5) return;
+    if (step === TOTAL_STEPS) return;
     if (creating) return;
     const err = validateStep(step, data);
     if (err) { setError(err); return; }
     setError(null);
 
-    // On step 4 → create the club (server-first)
-    if (step === 4) {
+    // On step 6 → create the club (server-first)
+    if (step === 6) {
       if (!user) { toast.error("Sign in to create a club"); return; }
       setCreating(true);
       try {
@@ -349,6 +393,19 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
           isPublic: data.isPublic,
           website: data.website.trim() || undefined,
           discord: data.discord.trim() || undefined,
+          instagram: data.instagram.trim() || undefined,
+          tiktok: data.tiktok.trim() || undefined,
+          youtube: data.youtube.trim() || undefined,
+          linktree: data.linktree.trim() || undefined,
+          contactEmail: data.contactEmail.trim() || undefined,
+          contactPhone: data.contactPhone.trim() || undefined,
+          meetingSchedule: data.meetingSchedule || undefined,
+          meetingDay: data.meetingDay.trim() || undefined,
+          meetingTime: data.meetingTime.trim() || undefined,
+          meetingNotes: data.meetingNotes.trim() || undefined,
+          joinPolicy: data.joinPolicy,
+          intakeQuestions: data.intakeQuestions.trim() || undefined,
+          status: data.status,
         };
 
         // 2. Persist to localStorage immediately (offline-capable, instant feedback)
@@ -442,7 +499,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
   const cardBorder = isDark ? "border-white/8" : "border-gray-200";
 
   // Progress bar width
-  const progressPct = step === 5 ? 100 : ((step - 1) / 4) * 100;
+  const progressPct = step === TOTAL_STEPS ? 100 : ((step - 1) / 6) * 100;
 
   // Animation classes
   const panelClass = animating
@@ -451,7 +508,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
       : "opacity-0 -translate-x-4"
     : "opacity-100 translate-x-0";
 
-  const hero = STEP_HERO[Math.min(step - 1, 3)];
+  const hero = STEP_HERO[Math.min(step - 1, 5)];
 
   return createPortal(
     <div
@@ -481,7 +538,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
         </button>
 
         <div className="flex items-center gap-2">
-          {step < 5 && Array.from({ length: 4 }).map((_, i) => (
+          {step < TOTAL_STEPS && Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
               className={`rounded-full transition-all duration-300 ${
@@ -509,8 +566,8 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
 
       {/* ── Body ─────────────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        {step < 5 ? (
-          /* Two-column layout for steps 1-4 */
+        {step < TOTAL_STEPS ? (
+          /* Two-column layout for steps 1-6 */
           <div className="flex flex-col lg:flex-row min-h-full">
 
             {/* Left hero panel (desktop only) */}
@@ -531,7 +588,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
                 <p className="text-white/60 text-sm leading-relaxed">{hero.body}</p>
               </div>
               <div className={`text-xs ${isDark ? "text-white/20" : "text-white/40"}`}>
-                Create Club · Step {step} of 4
+                Create Club · Step {step} of 6
               </div>
             </div>
 
@@ -599,6 +656,31 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
                     divider={divider}
                   />
                 )}
+                {step === 5 && (
+                  <Step5Socials
+                    data={data}
+                    patch={patch}
+                    isDark={isDark}
+                    inputBg={inputBg}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    labelCls={labelCls}
+                    divider={divider}
+                  />
+                )}
+                {step === 6 && (
+                  <Step6Membership
+                    data={data}
+                    patch={patch}
+                    isDark={isDark}
+                    inputBg={inputBg}
+                    textMain={textMain}
+                    textMuted={textMuted}
+                    labelCls={labelCls}
+                    divider={divider}
+                    cardBorder={cardBorder}
+                  />
+                )}
               </div>
 
               {/* Error message */}
@@ -622,7 +704,7 @@ export function CreateClubWizard({ onClose }: CreateClubWizardProps) {
                   </>
                 ) : (
                   <>
-                    {step === 4 ? "Create Club" : "Continue"}
+                    {step === 6 ? (creating ? "Creating Club..." : "Create Club") : "Continue"}
                     <ChevronRight className="w-5 h-5" />
                   </>
                 )}
@@ -1061,6 +1143,272 @@ function Step5Share({
           <Share2 className="w-4 h-4" />
           Share Club
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 5: Socials & Schedule ────────────────────────────────────────────────
+
+function Step5Socials({
+  data, patch, isDark, inputBg, textMain: _textMain, textMuted, labelCls, divider,
+}: {
+  data: WizardData;
+  patch: (f: Partial<WizardData>) => void;
+  isDark: boolean;
+  inputBg: string;
+  textMain: string;
+  textMuted: string;
+  labelCls: string;
+  divider: string;
+}) {
+  const iconCls = `absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${textMuted}`;
+
+  return (
+    <div className="space-y-5">
+      {/* Social links */}
+      <div className="space-y-3">
+        <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
+          Social Links (optional)
+        </p>
+        {/* Website */}
+        <div className="relative">
+          <Globe className={iconCls} />
+          <input type="url" value={data.website} onChange={(e) => patch({ website: e.target.value })}
+            placeholder="https://yourclub.org"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+        {/* Discord */}
+        <div className="relative">
+          <MessageSquare className={iconCls} />
+          <input type="url" value={data.discord} onChange={(e) => patch({ discord: e.target.value })}
+            placeholder="https://discord.gg/yourserver"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+        {/* Instagram */}
+        <div className="relative">
+          <Camera className={iconCls} />
+          <input type="text" value={data.instagram} onChange={(e) => patch({ instagram: e.target.value })}
+            placeholder="@yourclub (Instagram)"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+        {/* TikTok */}
+        <div className="relative">
+          <Video className={iconCls} />
+          <input type="text" value={data.tiktok} onChange={(e) => patch({ tiktok: e.target.value })}
+            placeholder="@yourclub (TikTok)"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+        {/* YouTube */}
+        <div className="relative">
+          <Play className={iconCls} />
+          <input type="url" value={data.youtube} onChange={(e) => patch({ youtube: e.target.value })}
+            placeholder="https://youtube.com/@yourclub"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+        {/* Linktree */}
+        <div className="relative">
+          <Link2 className={iconCls} />
+          <input type="url" value={data.linktree} onChange={(e) => patch({ linktree: e.target.value })}
+            placeholder="https://linktr.ee/yourclub"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+      </div>
+
+      {/* Meeting schedule */}
+      <div className={`pt-4 border-t ${divider} space-y-3`}>
+        <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
+          Meeting Schedule (optional)
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={`block text-xs font-medium mb-1.5 ${labelCls}`}>Day</label>
+            <input type="text" value={data.meetingDay} onChange={(e) => patch({ meetingDay: e.target.value })}
+              placeholder="e.g. Every Tuesday"
+              className={`w-full px-3 py-2.5 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+          </div>
+          <div>
+            <label className={`block text-xs font-medium mb-1.5 ${labelCls}`}>Time</label>
+            <input type="text" value={data.meetingTime} onChange={(e) => patch({ meetingTime: e.target.value })}
+              placeholder="e.g. 7:00 PM"
+              className={`w-full px-3 py-2.5 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+          </div>
+        </div>
+        <input type="text" value={data.meetingNotes} onChange={(e) => patch({ meetingNotes: e.target.value })}
+          placeholder="Additional notes (venue, parking, etc.)"
+          className={`w-full px-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+      </div>
+
+      {/* Contact */}
+      <div className={`pt-4 border-t ${divider} space-y-3`}>
+        <p className={`text-xs font-semibold uppercase tracking-wider ${textMuted}`}>
+          Contact (optional)
+        </p>
+        <div className="relative">
+          <Mail className={iconCls} />
+          <input type="email" value={data.contactEmail} onChange={(e) => patch({ contactEmail: e.target.value })}
+            placeholder="club@email.com"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+        <div className="relative">
+          <Phone className={iconCls} />
+          <input type="tel" value={data.contactPhone} onChange={(e) => patch({ contactPhone: e.target.value })}
+            placeholder="+1 (555) 000-0000"
+            className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-sm outline-none transition-colors ${inputBg}`} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 6: Membership & Publish ──────────────────────────────────────────────
+
+function Step6Membership({
+  data, patch, isDark, inputBg: _inputBg, textMain, textMuted, labelCls: _labelCls, divider, cardBorder,
+}: {
+  data: WizardData;
+  patch: (f: Partial<WizardData>) => void;
+  isDark: boolean;
+  inputBg: string;
+  textMain: string;
+  textMuted: string;
+  labelCls: string;
+  divider: string;
+  cardBorder: string;
+}) {
+  const JOIN_POLICIES = [
+    {
+      value: "public" as const,
+      label: "Open to All",
+      desc: "Anyone can join instantly — no approval needed.",
+      icon: <Globe className="w-5 h-5" />,
+    },
+    {
+      value: "approval" as const,
+      label: "Request to Join",
+      desc: "Players request membership; you approve or decline.",
+      icon: <Users className="w-5 h-5" />,
+    },
+    {
+      value: "invite" as const,
+      label: "Invite Only",
+      desc: "Members can only join via a direct invite link.",
+      icon: <KeyRound className="w-5 h-5" />,
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Join policy */}
+      <div>
+        <p className={`text-sm font-semibold mb-3 ${textMain}`}>How do players join?</p>
+        <div className="space-y-2.5">
+          {JOIN_POLICIES.map((policy) => {
+            const selected = data.joinPolicy === policy.value;
+            return (
+              <button
+                key={policy.value}
+                type="button"
+                onClick={() => patch({ joinPolicy: policy.value })}
+                className={`w-full flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all ${
+                  selected
+                    ? isDark
+                      ? "border-[#4CAF50]/60 bg-[#4CAF50]/10"
+                      : "border-[#3D6B47]/50 bg-[#3D6B47]/8"
+                    : isDark
+                    ? "border-white/8 hover:border-white/20"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <div className={`mt-0.5 flex-shrink-0 ${selected ? "text-[#4CAF50]" : textMuted}`}>
+                  {policy.icon}
+                </div>
+                <div>
+                  <p className={`text-sm font-semibold ${textMain}`}>{policy.label}</p>
+                  <p className={`text-xs mt-0.5 leading-snug ${textMuted}`}>{policy.desc}</p>
+                </div>
+                {selected && (
+                  <div className="ml-auto flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-[#4CAF50]" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Visibility */}
+      <div className={`pt-4 border-t ${divider}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`text-sm font-semibold ${textMain}`}>Public Club</p>
+            <p className={`text-xs mt-0.5 ${textMuted}`}>Visible in search and the Clubs directory</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => patch({ isPublic: !data.isPublic })}
+            className={`relative w-11 h-6 rounded-full transition-colors ${
+              data.isPublic ? "bg-[#4CAF50]" : isDark ? "bg-white/15" : "bg-gray-300"
+            }`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+              data.isPublic ? "translate-x-5" : "translate-x-0"
+            }`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Draft vs Publish */}
+      <div className={`pt-4 border-t ${divider}`}>
+        <p className={`text-sm font-semibold mb-3 ${textMain}`}>Ready to go live?</p>
+        <div className="grid grid-cols-2 gap-3">
+          {(["published", "draft"] as const).map((s) => {
+            const selected = data.status === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => patch({ status: s })}
+                className={`flex flex-col items-center gap-1.5 px-4 py-3.5 rounded-2xl border transition-all ${
+                  selected
+                    ? isDark
+                      ? "border-[#4CAF50]/60 bg-[#4CAF50]/10"
+                      : "border-[#3D6B47]/50 bg-[#3D6B47]/8"
+                    : isDark
+                    ? "border-white/8 hover:border-white/20"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                {s === "published" ? (
+                  <Globe className={`w-5 h-5 ${selected ? "text-[#4CAF50]" : textMuted}`} />
+                ) : (
+                  <BookOpen className={`w-5 h-5 ${selected ? "text-[#4CAF50]" : textMuted}`} />
+                )}
+                <p className={`text-sm font-semibold ${textMain}`}>
+                  {s === "published" ? "Publish Now" : "Save as Draft"}
+                </p>
+                <p className={`text-xs text-center leading-snug ${textMuted}`}>
+                  {s === "published" ? "Club goes live immediately" : "Finish later, not visible yet"}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Summary card */}
+      <div className={`rounded-2xl border ${cardBorder} ${isDark ? "bg-white/3" : "bg-gray-50"} p-4`}>
+        <p className={`text-xs font-semibold uppercase tracking-wider mb-2 ${textMuted}`}>Summary</p>
+        <p className={`text-sm font-bold ${textMain}`}>{data.name || "—"}</p>
+        <p className={`text-xs mt-0.5 ${textMuted}`}>{data.tagline || "No tagline"}</p>
+        <p className={`text-xs mt-1 ${textMuted}`}>
+          {data.location ? `${data.location}${data.country ? `, ${data.country}` : ""}` : "No location"}
+          {" · "}
+          {data.joinPolicy === "public" ? "Open" : data.joinPolicy === "approval" ? "Approval" : "Invite Only"}
+          {" · "}
+          {data.status === "published" ? "🟢 Live" : "📝 Draft"}
+        </p>
       </div>
     </div>
   );

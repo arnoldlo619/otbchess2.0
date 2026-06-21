@@ -59,6 +59,23 @@ export interface Club {
   website?: string;
   twitter?: string;
   discord?: string;
+  instagram?: string;
+  tiktok?: string;
+  youtube?: string;
+  linktree?: string;
+  /** Contact info */
+  contactEmail?: string;
+  contactPhone?: string;
+  /** Meeting schedule */
+  meetingSchedule?: string;
+  meetingDay?: string;
+  meetingTime?: string;
+  meetingNotes?: string;
+  /** Membership settings */
+  joinPolicy?: "public" | "approval" | "invite";
+  intakeQuestions?: string;
+  /** Publication status */
+  status?: "draft" | "published";
   /** Pinned announcement shown at the top of the profile */
   announcement?: string;
 }
