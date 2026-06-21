@@ -715,6 +715,8 @@ function ParallaxStep({
   description,
   imageSrc,
   imageAlt,
+  imageSrc2,
+  imageAlt2,
   phoneLeft,
   isDark,
   mockupType,
@@ -725,6 +727,8 @@ function ParallaxStep({
   description: string;
   imageSrc: string;
   imageAlt: string;
+  imageSrc2?: string;
+  imageAlt2?: string;
   phoneLeft: boolean;
   isDark: boolean;
   mockupType?: 'phone' | 'macbook';
@@ -802,21 +806,37 @@ function ParallaxStep({
         phoneLeft ? "lg:flex-row" : "lg:flex-row-reverse"
       } items-center gap-8 sm:gap-12 lg:gap-20 py-12 sm:py-16 lg:py-28 px-4 sm:px-0`}
     >
-      {/* Phone mockup */}
+      {/* Phone mockup(s) */}
       <div
         className="flex-1 flex justify-center lg:justify-end w-full"
       >
-        <div
-          className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
-          style={{
-            transform: inView
-              ? "translateY(0) scale(1)"
-              : `translateY(60px) scale(0.92)`,
-            transitionDelay: "100ms",
-            opacity: inView ? 1 : 0,
-          }}
-        >
-          <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+        <div className="flex items-end gap-4">
+          <div
+            className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{
+              transform: inView
+                ? "translateY(0) scale(1)"
+                : `translateY(60px) scale(0.92)`,
+              transitionDelay: "100ms",
+              opacity: inView ? 1 : 0,
+            }}
+          >
+            <IPhoneMockup src={imageSrc} alt={imageAlt} isDark={isDark} />
+          </div>
+          {imageSrc2 && (
+            <div
+              className="transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{
+                transform: inView
+                  ? "translateY(0) scale(1)"
+                  : `translateY(80px) scale(0.90)`,
+                transitionDelay: "220ms",
+                opacity: inView ? 1 : 0,
+              }}
+            >
+              <IPhoneMockup src={imageSrc2} alt={imageAlt2 ?? ""} isDark={isDark} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -886,6 +906,8 @@ function HowItWorks() {
       description: "Share a link. Players enter their chess.com username — we automatically pull their verified ELO rating in real time.",
       imageSrc: "/manus-storage/otb-join-form_28254c54.webp",
       imageAlt: "Player join form with chess.com username lookup",
+      imageSrc2: "/manus-storage/player-signup-confirm_b5b69600.webp",
+      imageAlt2: "Player profile confirmation with chess.com ELO",
       phoneLeft: false,
     },
     {
@@ -941,6 +963,8 @@ function HowItWorks() {
             description={step.description}
             imageSrc={step.imageSrc}
             imageAlt={step.imageAlt}
+            imageSrc2={(step as any).imageSrc2}
+            imageAlt2={(step as any).imageAlt2}
             phoneLeft={step.phoneLeft}
             isDark={isDark}
             mockupType={step.mockupType}
