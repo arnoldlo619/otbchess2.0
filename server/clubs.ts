@@ -1258,3 +1258,140 @@ clubsRouter.get("/:id/events/:eventId/checkins", async (req: Request, res: Respo
     return res.status(500).json({ error: "Failed to fetch check-ins" });
   }
 });
+
+// ── PATCH /api/clubs/:id/members/:memberId/role — promote/demote a member ─────
+clubsRouter.patch(
+  "/:id/members/:memberId/role",
+  requireFullAuth,
+  async (req: Request, res: Response) => {
+    const requesterId = getUserId(req, res);
+    if (!requesterId) return;
+    try {
+      const db = await getDb();
+      const { id, memberId } = req.params;
+      const { role } = req.body as { role: "director" | "member" };
+      if (!["director", "member"].includes(role)) {
+        res.status(400).json({ error: "Role must be 'director' or 'member'" });
+        return;
+      }
+      const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+      if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+      const isOwner = club.ownerId === requesterId;
+      const [requesterMembership] = await db
+        .select()
+        .from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+      const isDirector = requesterMembership?.role === "director";
+      if (!isOwner && !isDirector) {
+        res.status(403).json({ error: "Only owners and directors can change roles" });
+        return;
+      }
+      if (!isOwner && role === "director") {
+        res.status(403).json({ error: "Only the club owner can promote to director" });
+        return;
+      }
+      if (memberId === club.ownerId) {
+        res.status(400).json({ error: "Cannot change the owner's role" });
+        return;
+      }
+      await db
+        .update(dbClubMembers)
+        .set({ role })
+        .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, memberId)));
+      res.json({ success: true, role });
+    } catch (err) {
+      logger.error("[clubs] PATCH /:id/members/:memberId/role error:", err);
+      res.status(500).json({ error: "Failed to update member role" });
+    }
+  }
+);
+
+// ── POST /api/clubs/:id/events/:eventId/checkin-admin — owner checks in a user ─
+clubsRouter.post(
+  "/:id/events/:eventId/checkin-admin",
+  requireFullAuth,
+  async (req: Request, res: Response) => {
+    const requesterId = getUserId(req, res);
+    if (!requesterId) return;
+    try {
+      const db = await getDb();
+      const { id, eventId } = req.params;
+      const { userId: targetUserId, displayName, avatarUrl, chesscomUsername, isWalkIn } = req.body as {
+        userId?: string;
+        displayName?: string;
+        avatarUrl?: string | null;
+        chesscomUsername?: string | null;
+        isWalkIn?: boolean;
+      };
+      const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+      if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+      const isOwner = club.ownerId === requesterId;
+      const [requesterMembership] = await db
+        .select()
+        .from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+      const isDirectorRole = requesterMembership?.role === "director";
+      if (!isOwner && !isDirectorRole) {
+        res.status(403).json({ error: "Only owners and directors can check in attendees" });
+        return;
+      }
+      const { meetupCheckins } = await import("../shared/schema.js");
+      const effectiveUserId = targetUserId ?? `walkin_${nanoid(10)}`;
+      const effectiveName = displayName ?? effectiveUserId;
+      const existing = await db.select().from(meetupCheckins)
+        .where(and(eq(meetupCheckins.eventId, eventId), eq(meetupCheckins.userId, effectiveUserId)));
+      if (existing.length > 0) {
+        return res.json({ ...existing[0], alreadyCheckedIn: true });
+      }
+      const checkinId = nanoid(16);
+      await db.insert(meetupCheckins).values({
+        id: checkinId,
+        eventId,
+        clubId: id,
+        userId: effectiveUserId,
+        displayName: effectiveName,
+        avatarUrl: avatarUrl ?? null,
+        chesscomUsername: chesscomUsername ?? null,
+      });
+      const [created] = await db.select().from(meetupCheckins)
+        .where(and(eq(meetupCheckins.eventId, eventId), eq(meetupCheckins.userId, effectiveUserId)));
+      return res.status(201).json({ ...created, isWalkIn: isWalkIn ?? false });
+    } catch (err) {
+      logger.error("[clubs] POST /:id/events/:eventId/checkin-admin error:", err);
+      return res.status(500).json({ error: "Failed to check in attendee" });
+    }
+  }
+);
+
+// ── DELETE /api/clubs/:id/events/:eventId/checkin-admin/:userId — undo check-in
+clubsRouter.delete(
+  "/:id/events/:eventId/checkin-admin/:userId",
+  requireFullAuth,
+  async (req: Request, res: Response) => {
+    const requesterId = getUserId(req, res);
+    if (!requesterId) return;
+    try {
+      const db = await getDb();
+      const { id, eventId, userId: targetUserId } = req.params;
+      const [club] = await db.select().from(dbClubs).where(eq(dbClubs.id, id));
+      if (!club) { res.status(404).json({ error: "Club not found" }); return; }
+      const isOwner = club.ownerId === requesterId;
+      const [requesterMembership] = await db
+        .select()
+        .from(dbClubMembers)
+        .where(and(eq(dbClubMembers.clubId, id), eq(dbClubMembers.userId, requesterId)));
+      const isDirectorRole = requesterMembership?.role === "director";
+      if (!isOwner && !isDirectorRole) {
+        res.status(403).json({ error: "Only owners and directors can undo check-ins" });
+        return;
+      }
+      const { meetupCheckins } = await import("../shared/schema.js");
+      await db.delete(meetupCheckins)
+        .where(and(eq(meetupCheckins.eventId, eventId), eq(meetupCheckins.userId, targetUserId)));
+      return res.json({ success: true });
+    } catch (err) {
+      logger.error("[clubs] DELETE /:id/events/:eventId/checkin-admin/:userId error:", err);
+      return res.status(500).json({ error: "Failed to undo check-in" });
+    }
+  }
+);

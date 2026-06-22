@@ -6570,3 +6570,19 @@ The Join page then shows "Tournament not found" or silently falls back to demo d
 - [x] Server mapper updated for all new landing page fields
 - [x] Club TypeScript interface updated with all new fields
 - [x] TypeScript: 0 errors after all changes
+
+## Club Operations Dashboard
+
+- [x] Server: PATCH /api/clubs/:id/members/:memberId/role (promote/demote)
+- [x] Server: POST /api/clubs/:id/events/:eventId/checkin-admin (owner check-in)
+- [x] Server: DELETE /api/clubs/:id/events/:eventId/checkin-admin/:userId (undo check-in)
+- [x] Schema: capacity, rsvp_required, waitlist_enabled, entry_fee, event_status columns on club_events
+- [x] Client: Overview tab with stat cards, quick actions, empty states
+- [x] Client: Members tab — role management (promote/demote), remove member confirm dialog
+- [x] Client: QR Tools tab — club join QR, event RSVP QR, event check-in QR
+- [x] Client: Events tab — Manage RSVPs button on meetup cards
+- [x] Client: RSVP management panel modal — RSVP list, check-in toggle, undo, walk-in add
+- [x] Client: Settings tab — Join Settings sub-tab (policy + intake questions)
+- [x] Client: Settings tab — Danger Zone sub-tab (publish/unpublish, delete with confirm)
+- [x] Vitest: 16 tests for club operations dashboard features (all passing)
+- [x] TypeScript: 0 errors

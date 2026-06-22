@@ -10,7 +10,7 @@
  *   • Feed tab    — chronological activity stream
  */
 
-import {useState, useEffect, useRef} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { NavLogo } from "@/components/NavLogo";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -173,7 +173,16 @@ import {
   GanttChart,
   Repeat,
   CheckCircle,
+  QrCode,
+  UserMinus,
+  ShieldCheck,
+  ShieldOff,
+  LogOut,
+  Eye,
+  EyeOff,
+  Trash,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { AvatarNavDropdown } from "@/components/AvatarNavDropdown";
 import BattleTrendSparkline from "@/components/BattleTrendSparkline";
@@ -2298,8 +2307,8 @@ function ClubDashboardSkeleton() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type Tab = "events" | "members" | "feed" | "battles" | "leagues" | "settings"; // battles kept for internal use; tournaments merged into events
-type SettingsSubTab = "home" | "payments" | "profile";
+type Tab = "overview" | "events" | "members" | "feed" | "battles" | "leagues" | "settings" | "qr"; // battles kept for internal use; tournaments merged into events
+type SettingsSubTab = "home" | "payments" | "profile" | "join" | "danger";
 
 export default function ClubDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -2317,6 +2326,30 @@ export default function ClubDashboard() {
   const [feedSubTab, setFeedSubTab] = useState<"announcements">("announcements");
   const [membersSubTab, setMembersSubTab] = useState<"members" | "battles" | "attendance">("members");
   const [attendanceView, setAttendanceView] = useState<"by-meetup" | "by-member">("by-meetup");
+  // ── Member management state ───────────────────────────────────────────────
+  const [memberMenuOpenId, setMemberMenuOpenId] = useState<string | null>(null);
+  const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
+  const [removeMemberName, setRemoveMemberName] = useState<string>("");
+  const [removingMember, setRemovingMember] = useState(false);
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
+  // ── QR Tools state ────────────────────────────────────────────────────────
+  const [qrEventId, setQrEventId] = useState<string | null>(null);
+  const [qrMode, setQrMode] = useState<"join" | "rsvp" | "checkin">("join");
+  // ── RSVP management state ─────────────────────────────────────────────────
+  const [rsvpPanelEventId, setRsvpPanelEventId] = useState<string | null>(null);
+  const [eventRsvpList, setEventRsvpList] = useState<ClubEventRSVP[]>([]);
+  const [eventCheckinList, setEventCheckinList] = useState<Array<{id:string;userId:string;displayName:string;avatarUrl:string|null;checkedInAt:string}>>([]);
+  const [rsvpPanelLoading, setRsvpPanelLoading] = useState(false);
+  const [walkInName, setWalkInName] = useState("");
+  const [addingWalkIn, setAddingWalkIn] = useState(false);
+  // Join settings sub-tab state (hoisted to comply with Rules of Hooks)
+  const [localJoinPolicy, setLocalJoinPolicy] = useState<"public" | "approval" | "invite">("public");
+  const [localIntakeQ, setLocalIntakeQ] = useState("");
+  const [savingJoin, setSavingJoin] = useState(false);
+  // Danger zone sub-tab state (hoisted to comply with Rules of Hooks)
+  const [confirmDelete, setConfirmDelete] = useState("");
+  const [deletingClub, setDeletingClub] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerDragOver, setBannerDragOver] = useState(false);
@@ -2792,6 +2825,112 @@ export default function ClubDashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, club]);
 
+  // ── Member management handlers ───────────────────────────────────────────────
+  async function handleRemoveMember(memberId: string) {
+    if (!club) return;
+    setRemovingMember(true);
+    try {
+      await authFetch(`/api/clubs/${club.id}/members/${memberId}`, { method: "DELETE" });
+      setMembers(prev => prev.filter(m => m.userId !== memberId));
+      toast.success("Member removed");
+    } catch {
+      toast.error("Failed to remove member");
+    } finally {
+      setRemovingMember(false);
+      setRemoveMemberId(null);
+      setRemoveMemberName("");
+    }
+  }
+  async function handleChangeRole(memberId: string, newRole: "director" | "member") {
+    if (!club) return;
+    setChangingRoleId(memberId);
+    try {
+      await authFetch(`/api/clubs/${club.id}/members/${memberId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      setMembers(prev => prev.map(m => m.userId === memberId ? { ...m, role: newRole } : m));
+      toast.success(newRole === "director" ? "Promoted to Director" : "Demoted to Member");
+    } catch {
+      toast.error("Failed to change role");
+    } finally {
+      setChangingRoleId(null);
+      setMemberMenuOpenId(null);
+    }
+  }
+  // ── RSVP panel handlers ───────────────────────────────────────────────────
+  async function openRsvpPanel(eventId: string) {
+    if (!club) return;
+    setRsvpPanelEventId(eventId);
+    setRsvpPanelLoading(true);
+    try {
+      const [rsvpRes, checkinRes] = await Promise.all([
+        authFetch(`/api/clubs/${club.id}/events/${eventId}/rsvps`),
+        authFetch(`/api/clubs/${club.id}/events/${eventId}/checkins`),
+      ]);
+      const rsvpData = rsvpRes.ok ? await rsvpRes.json() : [];
+      const checkinData = checkinRes.ok ? await checkinRes.json() : [];
+      setEventRsvpList(Array.isArray(rsvpData) ? rsvpData : []);
+      setEventCheckinList(Array.isArray(checkinData) ? checkinData : []);
+    } catch {
+      toast.error("Failed to load RSVP data");
+    } finally {
+      setRsvpPanelLoading(false);
+    }
+  }
+  async function handleAdminCheckin(eventId: string, userId: string, displayName: string, avatarUrl?: string | null) {
+    if (!club) return;
+    try {
+      const res = await authFetch(`/api/clubs/${club.id}/events/${eventId}/checkin-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, displayName, avatarUrl }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.alreadyCheckedIn) {
+          toast.info(`${displayName} already checked in`);
+        } else {
+          setEventCheckinList(prev => [...prev, data]);
+          toast.success(`${displayName} checked in!`);
+        }
+      }
+    } catch {
+      toast.error("Failed to check in");
+    }
+  }
+  async function handleUndoCheckin(eventId: string, userId: string) {
+    if (!club) return;
+    try {
+      await authFetch(`/api/clubs/${club.id}/events/${eventId}/checkin-admin/${userId}`, { method: "DELETE" });
+      setEventCheckinList(prev => prev.filter(c => c.userId !== userId));
+      toast.success("Check-in removed");
+    } catch {
+      toast.error("Failed to undo check-in");
+    }
+  }
+  async function handleAddWalkIn(eventId: string) {
+    if (!club || !walkInName.trim()) return;
+    setAddingWalkIn(true);
+    try {
+      const res = await authFetch(`/api/clubs/${club.id}/events/${eventId}/checkin-admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName: walkInName.trim(), isWalkIn: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEventCheckinList(prev => [...prev, data]);
+        setWalkInName("");
+        toast.success(`Walk-in "${walkInName.trim()}" added!`);
+      }
+    } catch {
+      toast.error("Failed to add walk-in");
+    } finally {
+      setAddingWalkIn(false);
+    }
+  }
   const upcomingEvents = events.filter(isUpcoming);
   const pastEvents = events.filter((e) => !isUpcoming(e));
   // Tournament events: club events that are linked to a real tournament
@@ -2945,11 +3084,13 @@ export default function ClubDashboard() {
   }
 
   const clubTabs: { id: Tab; label: string; icon: React.ElementType; badge?: number; ownerOnly?: boolean }[] = [
+    { id: "overview", label: "Overview", icon: BarChart2, ownerOnly: true },
     { id: "feed", label: "Feed", icon: Megaphone },
     { id: "events", label: "Events", icon: Calendar, badge: (upcomingEvents.length + tournamentEvents.filter(isUpcoming).length) > 0 ? (upcomingEvents.filter(e => !e.tournamentId).length + tournamentEvents.filter(isUpcoming).length) : undefined },
     { id: "members", label: "Members", icon: Users },
     // battles tab removed - now a sub-tab of Feed
     { id: "leagues", label: "Leagues", icon: Trophy },
+    { id: "qr", label: "QR Tools", icon: QrCode, ownerOnly: true },
     { id: "settings", label: "Settings", icon: Settings2 },
   ];
 
@@ -3237,6 +3378,147 @@ export default function ClubDashboard() {
                     </div>
                   );
                 })()}
+        {/* ── OVERVIEW TAB (owner/director only) ─────────────────────────────── */}
+        {tab === "overview" && isOwnerOrDirector && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${accent}22` }}>
+                <BarChart2 className="w-5 h-5" style={{ color: accent }} />
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-lg">Club Overview</h2>
+                <p className="text-white/40 text-xs">Quick stats and actions for {club.name}</p>
+              </div>
+            </div>
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Members", value: members.length, icon: Users, color: accent },
+                { label: "Upcoming Events", value: upcomingEvents.length + tournamentEvents.filter(isUpcoming).length, icon: Calendar, color: "#60a5fa" },
+                { label: "Battles Played", value: battles.filter(b => b.status === "completed").length, icon: Swords, color: "#f59e0b" },
+                { label: "Feed Posts", value: feedEvents.length, icon: Megaphone, color: "#a78bfa" },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div key={label} className="rounded-2xl border border-white/08 p-4 flex flex-col gap-2" style={{ background: "oklch(0.16 0.05 145)" }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}22` }}>
+                    <Icon className="w-4 h-4" style={{ color }} />
+                  </div>
+                  <div className="text-2xl font-bold text-white">{value}</div>
+                  <div className="text-white/40 text-xs font-medium">{label}</div>
+                </div>
+              ))}
+            </div>
+            {/* Quick actions */}
+            <div>
+              <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-3">Quick Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  onClick={() => setShowMeetupWizard(true)}
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/08 hover:border-white/20 transition-all text-left group"
+                  style={{ background: "oklch(0.16 0.05 145)" }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${accent}22` }}>
+                    <Plus className="w-4 h-4" style={{ color: accent }} />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">New Meetup</p>
+                    <p className="text-white/40 text-xs">Schedule a club event</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setShowTournamentWizard(true)}
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/08 hover:border-white/20 transition-all text-left group"
+                  style={{ background: "oklch(0.16 0.05 145)" }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(96,165,250,0.15)" }}>
+                    <GanttChart className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">New Tournament</p>
+                    <p className="text-white/40 text-xs">Create a rated event</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => { setTab("qr"); setQrMode("join"); }}
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/08 hover:border-white/20 transition-all text-left group"
+                  style={{ background: "oklch(0.16 0.05 145)" }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(167,139,250,0.15)" }}>
+                    <QrCode className="w-4 h-4 text-violet-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">QR Tools</p>
+                    <p className="text-white/40 text-xs">Join & check-in codes</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+            {/* Upcoming events preview */}
+            {upcomingEvents.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Upcoming Events</h3>
+                  <button onClick={() => setTab("events")} className="text-xs font-semibold transition-colors" style={{ color: accent }}>View All</button>
+                </div>
+                <div className="space-y-2">
+                  {upcomingEvents.slice(0, 3).map(ev => (
+                    <div key={ev.id} className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/06" style={{ background: "oklch(0.14 0.04 240)" }}>
+                      <Calendar className="w-4 h-4 flex-shrink-0" style={{ color: accent }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{ev.title}</p>
+                        <p className="text-white/40 text-xs">{new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
+                      </div>
+                      <button
+                        onClick={() => openRsvpPanel(ev.id)}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-105"
+                        style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                      >
+                        <Users className="w-3 h-3" />
+                        RSVPs
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Recent members */}
+            {members.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">Recent Members</h3>
+                  <button onClick={() => setTab("members")} className="text-xs font-semibold transition-colors" style={{ color: accent }}>View All</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[...members].sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime()).slice(0, 8).map(m => (
+                    <div key={m.userId} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/06" style={{ background: "oklch(0.14 0.04 240)" }}>
+                      <PlayerAvatar username={m.displayName} name={m.displayName} avatarUrl={m.avatarUrl ?? undefined} size={24} className="rounded-full" />
+                      <span className="text-white text-xs font-medium">{m.displayName}</span>
+                      <RoleBadge role={m.role} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Empty state for new clubs */}
+            {members.length <= 1 && upcomingEvents.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-white/10 py-12 flex flex-col items-center gap-3 text-center px-6">
+                <Zap className="w-10 h-10 opacity-20 text-white" />
+                <p className="text-white/50 font-semibold">Your club is ready to grow</p>
+                <p className="text-white/30 text-sm">Invite members, create an event, and share your QR code to get started.</p>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => setTab("members")} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all" style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}>
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Invite Members
+                  </button>
+                  <button onClick={() => { setTab("qr"); setQrMode("join"); }} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border border-white/15 text-white/50 hover:text-white/80 transition-all">
+                    <QrCode className="w-3.5 h-3.5" />
+                    QR Code
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {/* ── EVENTS TAB ─────────────────────────────────────────────────────────────────────────────────────── */}
         {tab === "events" && (
           <div className="space-y-8">
@@ -3460,6 +3742,16 @@ export default function ClubDashboard() {
                                 <CheckCircle className="w-3.5 h-3.5" />
                                 RSVP
                               </span>
+                            )}
+                            {isOwnerOrDirector && !card.isVirtual && (
+                              <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); openRsvpPanel(ev.id); }}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition hover:scale-105 active:scale-95"
+                                style={{ borderColor: "rgba(96,165,250,0.4)", color: "#60a5fa", background: "rgba(96,165,250,0.1)" }}
+                              >
+                                <Users className="w-3.5 h-3.5" />
+                                Manage RSVPs
+                              </button>
                             )}
                           </div>
                         </div>
@@ -4194,6 +4486,54 @@ export default function ClubDashboard() {
                               <span className="hidden sm:inline">Challenge</span>
                             </button>
                           )}
+                          {/* ── Owner/Director member management menu ── */}
+                          {isClubOwner && m.userId !== user?.id && m.role !== "owner" && (
+                            <div className="relative">
+                              <button
+                                onClick={() => setMemberMenuOpenId(memberMenuOpenId === m.userId ? null : m.userId)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
+                                style={{ color: "rgba(255,255,255,0.35)" }}
+                                title="Member actions"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+                              {memberMenuOpenId === m.userId && (
+                                <div
+                                  className="absolute right-0 top-full mt-1 w-44 rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden"
+                                  style={{ background: "oklch(0.18 0.05 145)" }}
+                                >
+                                  {m.role === "member" && (
+                                    <button
+                                      onClick={() => handleChangeRole(m.userId, "director")}
+                                      disabled={changingRoleId === m.userId}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/08 transition-colors"
+                                    >
+                                      <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                                      Promote to Director
+                                    </button>
+                                  )}
+                                  {m.role === "director" && (
+                                    <button
+                                      onClick={() => handleChangeRole(m.userId, "member")}
+                                      disabled={changingRoleId === m.userId}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-white/70 hover:text-white hover:bg-white/08 transition-colors"
+                                    >
+                                      <ShieldOff className="w-3.5 h-3.5 text-amber-400" />
+                                      Demote to Member
+                                    </button>
+                                  )}
+                                  <div className="h-px bg-white/08 mx-2" />
+                                  <button
+                                    onClick={() => { setRemoveMemberId(m.userId); setRemoveMemberName(m.displayName); setMemberMenuOpenId(null); }}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors"
+                                  >
+                                    <UserMinus className="w-3.5 h-3.5" />
+                                    Remove Member
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -4714,6 +5054,102 @@ export default function ClubDashboard() {
           </div>
         )}
 
+        {/* ── QR TOOLS TAB (owner/director only) ─────────────────────────────── */}
+        {tab === "qr" && isOwnerOrDirector && (() => {
+          const joinUrl = `${window.location.origin}/clubs/${club.id}`;
+          const selectedEvent = qrEventId ? events.find(e => e.id === qrEventId) : null;
+          const rsvpUrl = selectedEvent ? `${window.location.origin}/clubs/${club.id}/meetup/${selectedEvent.id}` : "";
+          const checkinUrl = selectedEvent ? `${window.location.origin}/checkin/${selectedEvent.id}` : "";
+          const qrUrl = qrMode === "join" ? joinUrl : qrMode === "rsvp" ? rsvpUrl : checkinUrl;
+          return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(167,139,250,0.15)" }}>
+                <QrCode className="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-lg">QR Tools</h2>
+                <p className="text-white/40 text-xs">Generate codes for joining, RSVPs, and check-ins</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/5 border border-white/10">
+              {(["join", "rsvp", "checkin"] as const).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setQrMode(mode)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    qrMode === mode ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
+                  }`}
+                >
+                  {mode === "join" ? <UserPlus className="w-3.5 h-3.5" /> : mode === "rsvp" ? <Calendar className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {mode === "join" ? "Club Join" : mode === "rsvp" ? "Event RSVP" : "Check-In"}
+                </button>
+              ))}
+            </div>
+            {(qrMode === "rsvp" || qrMode === "checkin") && (
+              <div>
+                <label className="text-white/40 text-xs font-semibold uppercase tracking-widest block mb-2">Select Event</label>
+                <select
+                  value={qrEventId ?? ""}
+                  onChange={e => setQrEventId(e.target.value || null)}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm text-white border border-white/15 bg-white/05 focus:outline-none focus:border-white/30"
+                >
+                  <option value="">-- Choose an event --</option>
+                  {[...upcomingEvents, ...events.filter(e => !isUpcoming(e))].map(ev => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title} — {new Date(ev.startAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {(qrMode === "join" || ((qrMode === "rsvp" || qrMode === "checkin") && qrEventId)) && (
+              <div className="flex flex-col items-center gap-5">
+                <div className="p-5 rounded-3xl" style={{ background: "#fff" }}>
+                  <QRCodeSVG
+                    value={qrUrl}
+                    size={220}
+                    bgColor="#ffffff"
+                    fgColor="#0a1a0f"
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-white font-semibold text-sm">
+                    {qrMode === "join" ? `Join ${club.name}` : qrMode === "rsvp" ? `RSVP: ${selectedEvent?.title}` : `Check-In: ${selectedEvent?.title}`}
+                  </p>
+                  <p className="text-white/40 text-xs font-mono break-all max-w-xs">{qrUrl}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(qrUrl); toast.success("Link copied!"); }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                    style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Copy Link
+                  </button>
+                </div>
+              </div>
+            )}
+            {(qrMode === "rsvp" || qrMode === "checkin") && !qrEventId && (
+              <div className="text-center py-12 text-white/30">
+                <Calendar className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Select an event above to generate its QR code</p>
+              </div>
+            )}
+            <div className="rounded-2xl border border-white/08 p-4 space-y-2" style={{ background: "oklch(0.14 0.04 145 / 0.5)" }}>
+              <p className="text-white/60 text-xs font-semibold uppercase tracking-widest">Usage Tips</p>
+              <ul className="space-y-1.5 text-white/40 text-xs">
+                <li className="flex items-start gap-2"><span style={{ color: accent }}>&#8226;</span> <span><strong className="text-white/60">Club Join QR</strong> — Display at your venue so walk-ins can join the club instantly</span></li>
+                <li className="flex items-start gap-2"><span style={{ color: accent }}>&#8226;</span> <span><strong className="text-white/60">Event RSVP QR</strong> — Share before the event so members can confirm attendance</span></li>
+                <li className="flex items-start gap-2"><span style={{ color: accent }}>&#8226;</span> <span><strong className="text-white/60">Check-In QR</strong> — Display at the door on event day for quick member check-in</span></li>
+              </ul>
+            </div>
+          </div>
+          );
+        })()}
         {/* ── SETTINGS TABents) ──────────────────── */}
         {tab === "settings" && (() => {
           // ── Derived analytics data (for owner Home sub-tab) ────────────────
@@ -4759,6 +5195,8 @@ export default function ClubDashboard() {
                 { id: "home" as const, icon: <BarChart2 className="w-3.5 h-3.5" />, label: isOwnerOrDirector ? "Analytics" : "Home" },
                 { id: "payments" as const, icon: <Wallet className="w-3.5 h-3.5" />, label: "Payments" },
                 ...(isOwnerOrDirector ? [{ id: "profile" as const, icon: <Settings2 className="w-3.5 h-3.5" />, label: "Club Profile" }] : []),
+                ...(isOwnerOrDirector ? [{ id: "join" as const, icon: <UserPlus className="w-3.5 h-3.5" />, label: "Join" }] : []),
+                ...(isClubOwner ? [{ id: "danger" as const, icon: <Trash className="w-3.5 h-3.5" />, label: "Danger" }] : []),
               ]).map(({ id: v, icon, label }) => (
                 <button
                   key={v}
@@ -5129,6 +5567,197 @@ export default function ClubDashboard() {
                 }}
               />
             )}
+            {/* ── JOIN SETTINGS SUB-TAB ─────────────────────────────────────────────────── */}
+            {settingsSubTab === "join" && isOwnerOrDirector && (() => {
+              async function saveJoinSettings() {
+                if (!club) return;
+                setSavingJoin(true);
+                try {
+                  const res = await authFetch(`/api/clubs/${club.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ joinPolicy: localJoinPolicy, intakeQuestions: localIntakeQ || null }),
+                  });
+                  if (res.ok) {
+                    const updated = await res.json();
+                    setClub((prev) => prev ? { ...prev, joinPolicy: updated.joinPolicy, intakeQuestions: updated.intakeQuestions } : prev);
+                    toast.success("Join settings saved!");
+                  } else {
+                    toast.error("Failed to save join settings");
+                  }
+                } catch {
+                  toast.error("Failed to save join settings");
+                } finally {
+                  setSavingJoin(false);
+                }
+              }
+              return (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${accent}22` }}>
+                    <UserPlus className="w-5 h-5" style={{ color: accent }} />
+                  </div>
+                  <div>
+                    <h2 className="text-white font-bold text-lg">Join Settings</h2>
+                    <p className="text-white/40 text-xs">Control how new members can join {club.name}</p>
+                  </div>
+                </div>
+                {/* Join Policy */}
+                <div className="rounded-2xl border border-white/08 p-5 space-y-4" style={{ background: "oklch(0.16 0.05 145)" }}>
+                  <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Join Policy</h3>
+                  <div className="space-y-2">
+                    {([
+                      { value: "public", label: "Open", desc: "Anyone can join instantly" },
+                      { value: "approval", label: "Approval Required", desc: "Owner must approve each request" },
+                      { value: "invite", label: "Invite Only", desc: "Members can only join via invite link" },
+                    ] as const).map(opt => (
+                      <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer border transition-all ${
+                        localJoinPolicy === opt.value ? "border-white/20 bg-white/08" : "border-white/06 hover:border-white/12"
+                      }`}>
+                        <input
+                          type="radio"
+                          name="joinPolicy"
+                          value={opt.value}
+                          checked={localJoinPolicy === opt.value}
+                          onChange={() => setLocalJoinPolicy(opt.value)}
+                          className="mt-0.5 accent-current"
+                          style={{ accentColor: accent }}
+                        />
+                        <div>
+                          <p className="text-white text-sm font-semibold">{opt.label}</p>
+                          <p className="text-white/40 text-xs">{opt.desc}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {/* Intake Questions */}
+                <div className="rounded-2xl border border-white/08 p-5 space-y-3" style={{ background: "oklch(0.16 0.05 145)" }}>
+                  <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Intake Questions</h3>
+                  <p className="text-white/40 text-xs">Optional questions shown to new members when they request to join (one per line)</p>
+                  <textarea
+                    value={localIntakeQ}
+                    onChange={e => setLocalIntakeQ(e.target.value)}
+                    rows={4}
+                    placeholder={`What is your chess.com username?\nHow did you hear about us?`}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm text-white border border-white/15 bg-white/05 focus:outline-none focus:border-white/30 placeholder:text-white/20 resize-none"
+                  />
+                </div>
+                <button
+                  onClick={saveJoinSettings}
+                  disabled={savingJoin}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                  style={{ background: accent, color: "#0a1a0f" }}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {savingJoin ? "Saving…" : "Save Join Settings"}
+                </button>
+              </div>
+              );
+            })()}
+            {/* ── DANGER ZONE SUB-TAB ───────────────────────────────────────────────────── */}
+            {settingsSubTab === "danger" && isClubOwner && (() => {
+              async function handleToggleStatus() {
+                if (!club) return;
+                setTogglingStatus(true);
+                const newStatus = club.status === "published" ? "draft" : "published";
+                try {
+                  const res = await authFetch(`/api/clubs/${club.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: newStatus }),
+                  });
+                  if (res.ok) {
+                    const updated = await res.json();
+                    setClub((prev) => prev ? { ...prev, status: updated.status } : prev);
+                    toast.success(newStatus === "published" ? "Club published!" : "Club set to draft (hidden from public)");
+                  }
+                } catch {
+                  toast.error("Failed to update club status");
+                } finally {
+                  setTogglingStatus(false);
+                }
+              }
+              async function handleDeleteClub() {
+                if (!club || confirmDelete !== club.name) return;
+                setDeletingClub(true);
+                try {
+                  const res = await authFetch(`/api/clubs/${club.id}`, { method: "DELETE" });
+                  if (res.ok) {
+                    toast.success("Club deleted");
+                    navigate("/clubs");
+                  } else {
+                    toast.error("Failed to delete club");
+                  }
+                } catch {
+                  toast.error("Failed to delete club");
+                } finally {
+                  setDeletingClub(false);
+                }
+              }
+              return (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-red-500/15 flex items-center justify-center">
+                    <Trash className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-white font-bold text-lg">Danger Zone</h2>
+                    <p className="text-white/40 text-xs">Irreversible actions for {club.name}</p>
+                  </div>
+                </div>
+                {/* Publish/Unpublish */}
+                <div className="rounded-2xl border border-amber-500/20 p-5 space-y-3" style={{ background: "oklch(0.14 0.04 60 / 0.5)" }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-white font-semibold text-sm">{club.status === "published" ? "Unpublish Club" : "Publish Club"}</p>
+                      <p className="text-white/40 text-xs mt-0.5">
+                        {club.status === "published"
+                          ? "Hide the club from public discovery. Members can still access it."
+                          : "Make the club publicly visible and discoverable."}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleToggleStatus}
+                      disabled={togglingStatus}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all disabled:opacity-50"
+                      style={club.status === "published"
+                        ? { borderColor: "rgba(251,191,36,0.4)", color: "#fbbf24", background: "rgba(251,191,36,0.1)" }
+                        : { borderColor: `${accent}44`, color: accent, background: `${accent}15` }
+                      }
+                    >
+                      {club.status === "published" ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {togglingStatus ? "…" : club.status === "published" ? "Unpublish" : "Publish"}
+                    </button>
+                  </div>
+                </div>
+                {/* Delete Club */}
+                <div className="rounded-2xl border border-red-500/20 p-5 space-y-4" style={{ background: "oklch(0.14 0.04 0 / 0.5)" }}>
+                  <div>
+                    <p className="text-white font-semibold text-sm">Delete Club</p>
+                    <p className="text-white/40 text-xs mt-0.5">Permanently delete {club.name} and all its data. This cannot be undone.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-white/40 text-xs">Type <strong className="text-white/70">{club.name}</strong> to confirm:</p>
+                    <input
+                      value={confirmDelete}
+                      onChange={e => setConfirmDelete(e.target.value)}
+                      placeholder={club.name}
+                      className="w-full px-3 py-2 rounded-xl text-sm text-white border border-white/15 bg-white/05 focus:outline-none focus:border-red-500/50 placeholder:text-white/20"
+                    />
+                  </div>
+                  <button
+                    onClick={handleDeleteClub}
+                    disabled={confirmDelete !== club.name || deletingClub}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Trash className="w-4 h-4" />
+                    {deletingClub ? "Deleting…" : "Delete Club Permanently"}
+                  </button>
+                </div>
+              </div>
+              );
+            })()}
           </div>
           );
         })()}
@@ -6215,6 +6844,147 @@ export default function ClubDashboard() {
         </div>
       )}
 
+      {/* ── Remove Member Confirm Dialog ─────────────────────────────────── */}
+      {removeMemberId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
+          <div className="w-full max-w-sm rounded-3xl border border-white/10 p-6 space-y-4" style={{ background: "oklch(0.18 0.05 145)" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <UserMinus className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <p className="text-white font-bold">Remove Member</p>
+                <p className="text-white/40 text-xs">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-white/60 text-sm">
+              Remove <strong className="text-white">{removeMemberName}</strong> from {club?.name}? They will lose access to all club features.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => { setRemoveMemberId(null); setRemoveMemberName(""); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-white/15 text-white/60 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => removeMemberId && handleRemoveMember(removeMemberId)}
+                disabled={removingMember}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+              >
+                {removingMember ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── RSVP Management Panel ──────────────────────────────────────────── */}
+      {rsvpPanelEventId && (() => {
+        const panelEvent = events.find(e => e.id === rsvpPanelEventId);
+        return (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
+            <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 flex flex-col max-h-[90vh]" style={{ background: "oklch(0.18 0.05 145)" }}>
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/08">
+                <div>
+                  <p className="text-white font-bold">{panelEvent?.title ?? "Event"}</p>
+                  <p className="text-white/40 text-xs">{eventRsvpList.length} RSVPs · {eventCheckinList.length} Checked In</p>
+                </div>
+                <button onClick={() => setRsvpPanelEventId(null)} className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                {rsvpPanelLoading ? (
+                  <div className="text-center py-10 text-white/30">Loading…</div>
+                ) : (
+                  <>
+                    <div>
+                      <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">RSVPs ({eventRsvpList.length})</h4>
+                      {eventRsvpList.length === 0 ? (
+                        <p className="text-white/30 text-sm">No RSVPs yet</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {eventRsvpList.map(rsvp => {
+                            const isCheckedIn = eventCheckinList.some(c => c.userId === rsvp.userId);
+                            return (
+                              <div key={rsvp.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/06" style={{ background: "oklch(0.14 0.04 240)" }}>
+                                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-xs font-bold text-white/60">
+                                  {(rsvp.displayName ?? rsvp.userId).charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white text-sm font-medium truncate">{rsvp.displayName ?? rsvp.userId}</p>
+                                  {isCheckedIn && <p className="text-emerald-400 text-xs">Checked in</p>}
+                                </div>
+                                {!isCheckedIn ? (
+                                  <button
+                                    onClick={() => handleAdminCheckin(rsvpPanelEventId, rsvp.userId, rsvp.displayName ?? rsvp.userId, null)}
+                                    className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                                    style={{ background: `${accent}22`, color: accent, border: `1px solid ${accent}44` }}
+                                  >
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Check In
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleUndoCheckin(rsvpPanelEventId, rsvp.userId)}
+                                    className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-white/30 hover:text-red-400 border border-white/10 transition-colors"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    Undo
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">Add Walk-In</h4>
+                      <div className="flex gap-2">
+                        <input
+                          value={walkInName}
+                          onChange={e => setWalkInName(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && handleAddWalkIn(rsvpPanelEventId)}
+                          placeholder="Walk-in name…"
+                          className="flex-1 px-3 py-2 rounded-xl text-sm text-white border border-white/15 bg-white/05 focus:outline-none focus:border-white/30 placeholder:text-white/25"
+                        />
+                        <button
+                          onClick={() => handleAddWalkIn(rsvpPanelEventId)}
+                          disabled={!walkInName.trim() || addingWalkIn}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
+                          style={{ background: accent, color: "#0a1a0f" }}
+                        >
+                          {addingWalkIn ? "…" : "Add"}
+                        </button>
+                      </div>
+                    </div>
+                    {eventCheckinList.length > 0 && (
+                      <div>
+                        <h4 className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">All Check-Ins ({eventCheckinList.length})</h4>
+                        <div className="space-y-1.5">
+                          {eventCheckinList.map(c => (
+                            <div key={c.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-emerald-500/15" style={{ background: "oklch(0.14 0.06 160 / 0.5)" }}>
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                              <p className="text-white text-sm font-medium flex-1 truncate">{c.displayName}</p>
+                              <button
+                                onClick={() => handleUndoCheckin(rsvpPanelEventId, c.userId)}
+                                className="text-white/25 hover:text-red-400 transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {/* ── Mobile bottom nav bar ──────────────────────────────────────────── */}
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2"

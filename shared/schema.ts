@@ -995,6 +995,12 @@ export const clubEvents = mysqlTable(
     isPublished: tinyint("is_published").notNull().default(1),
     eventType: varchar("event_type", { length: 30 }).notNull().default("standard"),
     tournamentId: varchar("tournament_id", { length: 100 }),
+    // Extended event management fields
+    capacity: int("capacity"),
+    rsvpRequired: tinyint("rsvp_required").notNull().default(0),
+    waitlistEnabled: tinyint("waitlist_enabled").notNull().default(0),
+    entryFee: varchar("entry_fee", { length: 50 }),
+    eventStatus: varchar("event_status", { length: 20 }).notNull().default("upcoming"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
